@@ -16,6 +16,13 @@ public class MdxViewer extends AbstractMdxModelViewer {
 	private final WorldEditStrings worldEditStrings;
 	private final Vector3 defaultLighting;
 
+	public MdxViewer(final DataSource dataSource, final CanvasProvider canvas) {
+		super(dataSource, canvas);
+		MdxHandler.CURRENT_SHADER_TYPE = DEFAULT_SHADER_ENV;
+		this.defaultLighting = null;
+		this.worldEditStrings = new WorldEditStrings(this.dataSource);
+	}
+
 	public MdxViewer(final DataSource dataSource, final CanvasProvider canvas, final Vector3 defaultLighting) {
 		super(dataSource, canvas);
 		MdxHandler.CURRENT_SHADER_TYPE = DEFAULT_SHADER_ENV;
@@ -25,7 +32,10 @@ public class MdxViewer extends AbstractMdxModelViewer {
 
 	@Override
 	public SceneLightManager createLightManager(final boolean simple) {
-		return new W3xScenePortraitLightManager(this, this.defaultLighting);
+		if (this.defaultLighting != null) {
+			return new W3xScenePortraitLightManager(this, this.defaultLighting);
+		}
+		return new W3xScenePortraitLightManager(this);
 	}
 
 	@Override

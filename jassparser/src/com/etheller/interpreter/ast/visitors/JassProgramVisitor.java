@@ -9,7 +9,7 @@ import com.etheller.interpreter.JassParser.FunctionBlockContext;
 import com.etheller.interpreter.JassParser.GlobalContext;
 import com.etheller.interpreter.JassParser.ProgramContext;
 import com.etheller.interpreter.JassParser.StatementContext;
-import com.etheller.interpreter.JassParser.TypeDefinitionContext;
+import com.etheller.interpreter.JassParser.TypeDeclarationContext;
 import com.etheller.interpreter.ast.function.JassNativeManager;
 import com.etheller.interpreter.ast.function.UserJassFunction;
 import com.etheller.interpreter.ast.scope.GlobalScope;
@@ -70,7 +70,7 @@ public class JassProgramVisitor extends JassBaseVisitor<Void> {
 
 	@Override
 	public Void visitProgram(final ProgramContext ctx) {
-		for (final TypeDefinitionContext typeDefinitionContext : ctx.typeDefinitionBlock().typeDefinition()) {
+		for (final TypeDeclarationContext typeDefinitionContext : ctx.typeDeclarationBlock().typeDeclaration()) {
 			this.globals.loadTypeDefinition(typeDefinitionContext.ID(0).getText(),
 					typeDefinitionContext.ID(1).getText());
 		}

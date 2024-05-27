@@ -1,7 +1,5 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.data;
 
-import java.io.File;
-import java.io.FileReader;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -65,7 +63,6 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.def
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.definitions.impl.CAbilityTypeDefinitionCarrionSwarmDummy;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.definitions.impl.CAbilityTypeDefinitionChannelTest;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.definitions.impl.CAbilityTypeDefinitionColdArrows;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.definitions.impl.CAbilityTypeDefinitionCoupleInstant;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.definitions.impl.CAbilityTypeDefinitionDrop;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.definitions.impl.CAbilityTypeDefinitionGoldMine;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.definitions.impl.CAbilityTypeDefinitionGoldMineOverlayed;
@@ -94,15 +91,11 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.def
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.definitions.impl.CAbilityTypeDefinitionStandDown;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.definitions.impl.CAbilityTypeDefinitionWispHarvest;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.jass.CAbilityTypeJassDefinition;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.AbilityBuilderGsonBuilder;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.parser.AbilityBuilderConfiguration;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.parser.AbilityBuilderDupe;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.parser.AbilityBuilderFile;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.parser.AbilityBuilderParser;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.parser.AbilityBuilderParserUtil;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.parser.AbilityBuilderType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.types.definitions.impl.CAbilityTypeDefinitionAbilityTemplateBuilder;
-import com.google.gson.Gson;
-import com.google.gson.JsonParseException;
 
 public class CAbilityData {
 
@@ -289,42 +282,20 @@ public class CAbilityData {
 		System.err.println("Starting to load ability builder");
 		System.err.println("========================================================================");
 
-		Gson gson = AbilityBuilderGsonBuilder.create();
-
-		AbilityBuilderFile behaviors = null;
-		try {
-			File abilityBehaviorsDir = new File("abilityBehaviors");
-			File[] abilityBehaviorFiles = abilityBehaviorsDir.listFiles();
-			if (abilityBehaviorFiles != null) {
-				for (File abilityBehaviorFile : abilityBehaviorFiles) {
-					try {
-						behaviors = gson.fromJson(new FileReader(abilityBehaviorFile), AbilityBuilderFile.class);
-						for (AbilityBuilderParser behavior : behaviors.getAbilityList()) {
-							if (behavior.getType().equals(AbilityBuilderType.TEMPLATE)) {
-								for (AbilityBuilderDupe dupe : behavior.getIds()) {
-									this.codeToAbilityTypeDefinition.put(War3ID.fromString(dupe.getId()),
-											new CAbilityTypeDefinitionAbilityTemplateBuilder(behavior));
-								}
-							} else {
-								for (AbilityBuilderDupe dupe : behavior.getIds()) {
-									AbilityBuilderConfiguration config = new AbilityBuilderConfiguration(behavior, dupe);
-									this.codeToAbilityTypeDefinition.put(War3ID.fromString(config.getId()),
-											config.createDefinition());
-								}
-							}
-						}
-					} catch (JsonParseException e) {
-						System.err.println("Failed to load Ability Builder config file: " + abilityBehaviorFile.getName());
-						e.printStackTrace();
-					} catch (IllegalArgumentException e) {
-						System.err.println("Failed to load Ability Builder config file: " + abilityBehaviorFile.getName());
-						e.printStackTrace();
-					}
+		AbilityBuilderParserUtil.loadAbilityBuilderFiles(behavior -> {
+			if (behavior.getType().equals(AbilityBuilderType.TEMPLATE)) {
+				for (AbilityBuilderDupe dupe : behavior.getIds()) {
+					this.codeToAbilityTypeDefinition.put(War3ID.fromString(dupe.getId()),
+							new CAbilityTypeDefinitionAbilityTemplateBuilder(behavior));
+				}
+			} else {
+				for (AbilityBuilderDupe dupe : behavior.getIds()) {
+					AbilityBuilderConfiguration config = new AbilityBuilderConfiguration(behavior, dupe);
+					this.codeToAbilityTypeDefinition.put(War3ID.fromString(config.getId()),
+							config.createDefinition());
 				}
 			}
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
+		});
 
 		System.err.println("========================================================================");
 		System.err.println("registered abilities");

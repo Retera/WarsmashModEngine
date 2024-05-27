@@ -49,11 +49,11 @@ import com.etheller.warsmash.viewer5.gl.WebGL;
 import com.etheller.warsmash.viewer5.handlers.w3x.DynamicShadowManager;
 import com.etheller.warsmash.viewer5.handlers.w3x.SplatModel;
 import com.etheller.warsmash.viewer5.handlers.w3x.SplatModel.SplatMover;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.vision.CPlayerFogOfWar;
 import com.etheller.warsmash.viewer5.handlers.w3x.Variations;
 import com.etheller.warsmash.viewer5.handlers.w3x.W3xSceneLightManager;
 import com.etheller.warsmash.viewer5.handlers.w3x.W3xShaders;
 import com.etheller.warsmash.viewer5.handlers.w3x.War3MapViewer;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.vision.CPlayerFogOfWar;
 
 public class Terrain {
 	public static final float CELL_SIZE = 128f;
@@ -160,16 +160,16 @@ public class Terrain {
 		final int height = w3eFile.getMapSize()[1];
 		this.columns = width;
 		this.rows = height;
-		for (int i = 0; i < width - 1; i++) {
-			for (int j = 0; j < height - 1; j++) {
+		for (int i = 0; i < (width - 1); i++) {
+			for (int j = 0; j < (height - 1); j++) {
 				final RenderCorner bottomLeft = this.corners[i][j];
 				final RenderCorner bottomRight = this.corners[i + 1][j];
 				final RenderCorner topLeft = this.corners[i][j + 1];
 				final RenderCorner topRight = this.corners[i + 1][j + 1];
 
-				bottomLeft.cliff = bottomLeft.getLayerHeight() != bottomRight.getLayerHeight()
-						|| bottomLeft.getLayerHeight() != topLeft.getLayerHeight()
-						|| bottomLeft.getLayerHeight() != topRight.getLayerHeight();
+				bottomLeft.cliff = (bottomLeft.getLayerHeight() != bottomRight.getLayerHeight())
+						|| (bottomLeft.getLayerHeight() != topLeft.getLayerHeight())
+						|| (bottomLeft.getLayerHeight() != topRight.getLayerHeight());
 			}
 		}
 
@@ -243,15 +243,17 @@ public class Terrain {
 			}
 			final String dir = terrainTileInfo.getField("dir");
 			final String file = terrainTileInfo.getField("file");
-			this.groundTextures.add(new GroundTexture(dir + "\\" + file + texturesExt, terrainTileInfo, dataSource, Gdx.gl30));
+			this.groundTextures
+					.add(new GroundTexture(dir + "\\" + file + texturesExt, terrainTileInfo, dataSource, Gdx.gl30));
 			this.groundTextureToId.put(groundTile.asStringValue(), this.groundTextures.size() - 1);
 		}
 
 		final Element tilesets = worldEditData.get("TileSets");
 
 		this.blightTextureIndex = this.groundTextures.size();
-		this.groundTextures.add(new GroundTexture(
-				tilesets.getField(Character.toString(tileset)).split(",")[1] + texturesExt, null, dataSource, Gdx.gl30));
+		this.groundTextures
+				.add(new GroundTexture(tilesets.getField(Character.toString(tileset)).split(",")[1] + texturesExt, null,
+						dataSource, Gdx.gl30));
 
 		// Cliff Textures
 		for (final War3ID cliffTile : w3eFile.getCliffTiles()) {
@@ -285,10 +287,10 @@ public class Terrain {
 		updateGroundTextures(new Rectangle(0, 0, width - 1, height - 1));
 		for (int i = 0; i < width; i++) {
 			for (int j = 0; j < height; j++) {
-				this.groundCornerHeights[j * width + i] = this.corners[i][j].computeFinalGroundHeight();
-				this.waterExistsData[j * width + i] = (byte) this.corners[i][j].getWater();
-				this.groundHeights[j * width + i] = this.corners[i][j].getGroundHeight();
-				this.waterHeights[j * width + i] = this.corners[i][j].getWaterHeight();
+				this.groundCornerHeights[(j * width) + i] = this.corners[i][j].computeFinalGroundHeight();
+				this.waterExistsData[(j * width) + i] = (byte) this.corners[i][j].getWater();
+				this.groundHeights[(j * width) + i] = this.corners[i][j].getGroundHeight();
+				this.waterHeights[(j * width) + i] = this.corners[i][j].getWaterHeight();
 			}
 		}
 
@@ -377,7 +379,7 @@ public class Terrain {
 				final AnyExtensionImage imageInfo = ImageUtils.getAnyExtensionImageFixRGB(dataSource,
 						fileName + (i < 10 ? "0" : "") + Integer.toString(i) + texturesExt, "water texture");
 				final BufferedImage image = imageInfo.getImageData();
-				if (image.getWidth() != 128 || image.getHeight() != 128) {
+				if ((image.getWidth() != 128) || (image.getHeight() != 128)) {
 					System.err.println(
 							"Odd water texture size detected of " + image.getWidth() + " x " + image.getHeight());
 					waterImageDimension = image.getWidth();
@@ -416,15 +418,15 @@ public class Terrain {
 		this.uberSplatModelsList = new ArrayList<>();
 		this.defaultCameraBounds = w3iFile.getCameraBounds();
 		this.mapBounds = w3iFile.getCameraBoundsComplements();
-		this.shaderMapBounds = new float[] { this.mapBounds[0] * 128.0f + this.centerOffset[0],
-				this.mapBounds[2] * 128.0f + this.centerOffset[1],
-				(this.columns - this.mapBounds[1] - 1) * 128.0f + this.centerOffset[0],
-				(this.rows - this.mapBounds[3] - 1) * 128.0f + this.centerOffset[1] };
+		this.shaderMapBounds = new float[] { (this.mapBounds[0] * 128.0f) + this.centerOffset[0],
+				(this.mapBounds[2] * 128.0f) + this.centerOffset[1],
+				((this.columns - this.mapBounds[1] - 1) * 128.0f) + this.centerOffset[0],
+				((this.rows - this.mapBounds[3] - 1) * 128.0f) + this.centerOffset[1] };
 		this.shaderMapBoundsRectangle = new Rectangle(this.shaderMapBounds[0], this.shaderMapBounds[1],
 				this.shaderMapBounds[2] - this.shaderMapBounds[0], this.shaderMapBounds[3] - this.shaderMapBounds[1]);
 		this.mapSize = w3eFile.getMapSize();
 		this.entireMapRectangle = new Rectangle(this.centerOffset[0], this.centerOffset[1],
-				this.mapSize[0] * 128f - 128, this.mapSize[1] * 128f - 128);
+				(this.mapSize[0] * 128f) - 128, (this.mapSize[1] * 128f) - 128);
 		this.softwareGroundMesh = new SoftwareGroundMesh(this.groundHeights, this.groundCornerHeights,
 				this.centerOffset, width, height);
 		this.softwareWaterAndGroundMesh = new SoftwareWaterAndGroundMesh(this.waterHeightOffset,
@@ -450,16 +452,17 @@ public class Terrain {
 	}
 
 	private void updateGroundHeights(final Rectangle area) {
-		for (int j = (int) area.y; j < area.y + area.height; j++) {
-			for (int i = (int) area.x; i < area.x + area.width; i++) {
-				this.groundHeights[j * this.columns + i] = this.corners[i][j].getGroundHeight();
+		for (int j = (int) area.y; j < (area.y + area.height); j++) {
+			for (int i = (int) area.x; i < (area.x + area.width); i++) {
+				this.groundHeights[(j * this.columns) + i] = this.corners[i][j].getGroundHeight();
 
 				float rampHeight = 0f;
 				// Check if in one of the configurations the bottom_left is a ramp
-				XLoop: for (int xOffset = -1; xOffset <= 0; xOffset++) {
+				XLoop:
+				for (int xOffset = -1; xOffset <= 0; xOffset++) {
 					for (int yOffset = -1; yOffset <= 0; yOffset++) {
-						if (i + xOffset >= 0 && i + xOffset < this.columns - 1 && j + yOffset >= 0
-								&& j + yOffset < this.rows - 1) {
+						if (((i + xOffset) >= 0) && ((i + xOffset) < (this.columns - 1)) && ((j + yOffset) >= 0)
+								&& ((j + yOffset) < (this.rows - 1))) {
 							final RenderCorner bottomLeft = this.corners[i + xOffset][j + yOffset];
 							final RenderCorner bottomRight = this.corners[i + 1 + xOffset][j + yOffset];
 							final RenderCorner topLeft = this.corners[i + xOffset][j + 1 + yOffset];
@@ -482,9 +485,9 @@ public class Terrain {
 
 				final RenderCorner corner = this.corners[i][j];
 				final float newGroundCornerHeight = corner.computeFinalGroundHeight() + rampHeight;
-				this.groundCornerHeights[j * this.columns + i] = newGroundCornerHeight;
+				this.groundCornerHeights[(j * this.columns) + i] = newGroundCornerHeight;
 				corner.depth = corner.getWater() != 0
-						? this.waterHeightOffset + corner.getWaterHeight() - newGroundCornerHeight
+						? (this.waterHeightOffset + corner.getWaterHeight()) - newGroundCornerHeight
 						: 0;
 			}
 		}
@@ -520,8 +523,8 @@ public class Terrain {
 				"HLAB", "LAAH", "LABH", "LHAA", "LHBA" };
 
 		// Adjust terrain height inside ramps (set rampAdjust)
-		for (int y = 1; y < rows - 1; ++y) {
-			for (int x = 1; x < columns - 1; ++x) {
+		for (int y = 1; y < (rows - 1); ++y) {
+			for (int x = 1; x < (columns - 1); ++x) {
 				final RenderCorner o = this.corners[x][y];
 				if (!o.isRamp()) {
 					continue;
@@ -535,19 +538,19 @@ public class Terrain {
 				final RenderCorner g = this.corners[x + 1][y - 1];
 				final RenderCorner h = this.corners[x][y - 1];
 				final int base = o.getLayerHeight();
-				if (b.isRamp() && f.isRamp() || d.isRamp() && h.isRamp()) {
+				if ((b.isRamp() && f.isRamp()) || (d.isRamp() && h.isRamp())) {
 					float adjust = 0;
 					if (b.isRamp() && f.isRamp()) {
-						adjust = Math.max(adjust, (b.getLayerHeight() + f.getLayerHeight()) / 2 - base);
+						adjust = Math.max(adjust, ((b.getLayerHeight() + f.getLayerHeight()) / 2) - base);
 					}
 					if (d.isRamp() && h.isRamp()) {
-						adjust = Math.max(adjust, (d.getLayerHeight() + h.getLayerHeight()) / 2 - base);
+						adjust = Math.max(adjust, ((d.getLayerHeight() + h.getLayerHeight()) / 2) - base);
 					}
 					if (a.isRamp() && e.isRamp()) {
-						adjust = Math.max(adjust, ((a.getLayerHeight() + e.getLayerHeight()) / 2 - base) / 2);
+						adjust = Math.max(adjust, (((a.getLayerHeight() + e.getLayerHeight()) / 2) - base) / 2);
 					}
 					if (c.isRamp() && g.isRamp()) {
-						adjust = Math.max(adjust, ((c.getLayerHeight() + g.getLayerHeight()) / 2 - base) / 2);
+						adjust = Math.max(adjust, (((c.getLayerHeight() + g.getLayerHeight()) / 2) - base) / 2);
 					}
 					o.rampAdjust = adjust;
 				}
@@ -578,9 +581,9 @@ public class Terrain {
 		Intersector.intersectRectangles(new Rectangle(0, 0, this.columns, this.rows), adjusted, rampArea);
 
 		// Add new cliff meshes
-		final int xLimit = (int) (rampArea.getX() + rampArea.getWidth() - 1);
+		final int xLimit = (int) ((rampArea.getX() + rampArea.getWidth()) - 1);
 		for (int i = (int) rampArea.getX(); i < xLimit; i++) {
-			final int yLimit = (int) (rampArea.getY() + rampArea.getHeight() - 1);
+			final int yLimit = (int) ((rampArea.getY() + rampArea.getHeight()) - 1);
 			for (int j = (int) rampArea.getY(); j < yLimit; j++) {
 				final RenderCorner bottomLeft = this.corners[i][j];
 				final RenderCorner bottomRight = this.corners[i + 1][j];
@@ -591,10 +594,10 @@ public class Terrain {
 					final int base = Math.min(Math.min(bottomLeft.getLayerHeight(), bottomRight.getLayerHeight()),
 							Math.min(topLeft.getLayerHeight(), topRight.getLayerHeight()));
 
-					final boolean facingDown = topLeft.getLayerHeight() >= bottomLeft.getLayerHeight()
-							&& topRight.getLayerHeight() >= bottomRight.getLayerHeight();
-					final boolean facingLeft = bottomRight.getLayerHeight() >= bottomLeft.getLayerHeight()
-							&& topRight.getLayerHeight() >= topLeft.getLayerHeight();
+					final boolean facingDown = (topLeft.getLayerHeight() >= bottomLeft.getLayerHeight())
+							&& (topRight.getLayerHeight() >= bottomRight.getLayerHeight());
+					final boolean facingLeft = (bottomRight.getLayerHeight() >= bottomLeft.getLayerHeight())
+							&& (topRight.getLayerHeight() >= topLeft.getLayerHeight());
 
 					int bottomLeftCliffTex = bottomLeft.getCliffTexture();
 					if (bottomLeftCliffTex == 15) {
@@ -625,18 +628,18 @@ public class Terrain {
 							bottomLeft.setCliffTexture(bottomLeftCliffTex);
 						}
 					}
-					if (!(facingDown && j == 0) && !(!facingDown && j >= this.rows - 2) && !(facingLeft && i == 0)
-							&& !(!facingLeft && i >= this.columns - 2)) {
-						final boolean verticalRamp = bottomLeft.isRamp() != bottomRight.isRamp()
-								&& topLeft.isRamp() != topRight.isRamp();
+					if (!(facingDown && (j == 0)) && !(!facingDown && (j >= (this.rows - 2)))
+							&& !(facingLeft && (i == 0)) && !(!facingLeft && (i >= (this.columns - 2)))) {
+						final boolean verticalRamp = (bottomLeft.isRamp() != bottomRight.isRamp())
+								&& (topLeft.isRamp() != topRight.isRamp());
 
-						final boolean horizontalRamp = bottomLeft.isRamp() != topLeft.isRamp()
-								&& bottomRight.isRamp() != topRight.isRamp();
+						final boolean horizontalRamp = (bottomLeft.isRamp() != topLeft.isRamp())
+								&& (bottomRight.isRamp() != topRight.isRamp());
 
 						if (verticalRamp || horizontalRamp) {
-							final boolean rampBlockedByCliff = verticalRamp
-									&& this.corners[i][j + (facingDown ? -1 : 1)].cliff
-									|| horizontalRamp && this.corners[i + (facingLeft ? -1 : 1)][j].cliff;
+							final boolean rampBlockedByCliff = (verticalRamp
+									&& this.corners[i][j + (facingDown ? -1 : 1)].cliff)
+									|| (horizontalRamp && this.corners[i + (facingLeft ? -1 : 1)][j].cliff);
 							final int topLeftHeight = topLeft.getLayerHeight() - base;
 							final int topRightHeight = topRight.getLayerHeight() - base;
 							final int bottomRightHeight = bottomRight.getLayerHeight() - base;
@@ -681,27 +684,27 @@ public class Terrain {
 
 									for (int ji = this.cliffs.size(); ji-- > 0;) {
 										final IVec3 pos = this.cliffs.get(ji);
-										if (pos.x == i + (horizontalRamp ? 1 : 0) * (facingLeft ? -1 : 0)
-												&& pos.y == j - (verticalRamp ? 1 : 0) * (facingDown ? 1 : 0)) {
+										if ((pos.x == (i + ((horizontalRamp ? 1 : 0) * (facingLeft ? -1 : 0))))
+												&& (pos.y == (j - ((verticalRamp ? 1 : 0) * (facingDown ? 1 : 0))))) {
 											this.cliffs.remove(ji);
 											break;
 										}
 									}
 
-									this.cliffs.add(new IVec3(i + (horizontalRamp ? 1 : 0) * (facingLeft ? -1 : 0),
-											j - (verticalRamp ? 1 : 0) * (facingDown ? 1 : 0),
+									this.cliffs.add(new IVec3(i + ((horizontalRamp ? 1 : 0) * (facingLeft ? -1 : 0)),
+											j - ((verticalRamp ? 1 : 0) * (facingDown ? 1 : 0)),
 											this.pathToCliff.get(fileName)));
 									bottomLeft.romp = true;
 									bottomLeft.setCliffTexture(bottomLeftCliffTex);
 									bottomRight.setCliffTexture(bottomLeftCliffTex);
 									topLeft.setCliffTexture(bottomLeftCliffTex);
 									topRight.setCliffTexture(bottomLeftCliffTex);
-									this.corners[i + (facingLeft ? -1 : 1) * (horizontalRamp ? 1 : 0)][j
-											+ (facingDown ? -1 : 1) * (verticalRamp ? 1 : 0)]
-											.setCliffTexture(bottomLeftCliffTex);
+									this.corners[i + ((facingLeft ? -1 : 1) * (horizontalRamp ? 1 : 0))][j
+											+ ((facingDown ? -1 : 1) * (verticalRamp ? 1 : 0))]
+													.setCliffTexture(bottomLeftCliffTex);
 
-									this.corners[i + (facingLeft ? -1 : 1) * (horizontalRamp ? 1 : 0)][j
-											+ (facingDown ? -1 : 1) * (verticalRamp ? 1 : 0)].romp = true;
+									this.corners[i + ((facingLeft ? -1 : 1) * (horizontalRamp ? 1 : 0))][j
+											+ ((facingDown ? -1 : 1) * (verticalRamp ? 1 : 0))].romp = true;
 
 									continue;
 								}
@@ -721,10 +724,10 @@ public class Terrain {
 
 					// Cliff model path
 
-					String fileName = "" + (char) ('A' + topLeft.getLayerHeight() - base)
-							+ (char) ('A' + topRight.getLayerHeight() - base)
-							+ (char) ('A' + bottomRight.getLayerHeight() - base)
-							+ (char) ('A' + bottomLeft.getLayerHeight() - base);
+					String fileName = "" + (char) (('A' + topLeft.getLayerHeight()) - base)
+							+ (char) (('A' + topRight.getLayerHeight()) - base)
+							+ (char) (('A' + bottomRight.getLayerHeight()) - base)
+							+ (char) (('A' + bottomLeft.getLayerHeight()) - base);
 
 					if ("AAAA".equals(fileName)) {
 						continue;
@@ -743,7 +746,7 @@ public class Terrain {
 			}
 		}
 		for (int i = (int) rampArea.getX(); i < xLimit; i++) {
-			final int yLimit = (int) (rampArea.getY() + rampArea.getHeight() - 1);
+			final int yLimit = (int) ((rampArea.getY() + rampArea.getHeight()) - 1);
 			for (int j = (int) rampArea.getY(); j < yLimit; j++) {
 				final RenderCorner bottomLeft = this.corners[i][j];
 				if (bottomLeft.isRamp() && !bottomLeft.romp) {
@@ -765,15 +768,15 @@ public class Terrain {
 		final Rectangle updateArea = new Rectangle();
 		Intersector.intersectRectangles(new Rectangle(0, 0, this.columns - 1, this.rows - 1), adjusted, updateArea);
 
-		for (int j = (int) updateArea.getY(); j <= (int) (updateArea.getY() + updateArea.getHeight() - 1); j++) {
-			for (int i = (int) updateArea.getX(); i <= (int) (updateArea.getX() + updateArea.getWidth() - 1); i++) {
-				getTextureVariations(i, j, this.groundTextureList, (j * (this.columns - 1) + i) * 4);
+		for (int j = (int) updateArea.getY(); j <= (int) ((updateArea.getY() + updateArea.getHeight()) - 1); j++) {
+			for (int i = (int) updateArea.getX(); i <= (int) ((updateArea.getX() + updateArea.getWidth()) - 1); i++) {
+				getTextureVariations(i, j, this.groundTextureList, ((j * (this.columns - 1)) + i) * 4);
 
 				if (this.corners[i][j].cliff || this.corners[i][j].romp) {
 					if (isCornerRampEntrance(i, j)) {
 						continue;
 					}
-					this.groundTextureList[(j * (this.columns - 1) + i) * 4 + 3] |= 0b1000000000000000;
+					this.groundTextureList[(((j * (this.columns - 1)) + i) * 4) + 3] |= 0b1000000000000000;
 				}
 			}
 		}
@@ -782,7 +785,7 @@ public class Terrain {
 	}
 
 	public void removeTerrainCell(final int i, final int j) {
-		this.groundTextureList[(j * (this.columns - 1) + i) * 4 + 3] |= 0b1000000000000000;
+		this.groundTextureList[(((j * (this.columns - 1)) + i) * 4) + 3] |= 0b1000000000000000;
 		this.corners[i][j].hideCliff = true;
 		uploadGroundTexture();
 		try {
@@ -794,7 +797,7 @@ public class Terrain {
 	}
 
 	public void removeTerrainCellWithoutFlush(final int i, final int j) {
-		this.groundTextureList[(j * (this.columns - 1) + i) * 4 + 3] |= 0b1000000000000000;
+		this.groundTextureList[(((j * (this.columns - 1)) + i) * 4) + 3] |= 0b1000000000000000;
 		this.corners[i][j].hideCliff = true;
 	}
 
@@ -852,11 +855,12 @@ public class Terrain {
 	}
 
 	private int realTileTexture(final int x, final int y) {
-		ILoop: for (int i = -1; i < 1; i++) {
+		ILoop:
+		for (int i = -1; i < 1; i++) {
 			for (int j = -1; j < 1; j++) {
-				if (x + i >= 0 && x + i < this.columns && y + j >= 0 && y + j < this.rows) {
+				if (((x + i) >= 0) && ((x + i) < this.columns) && ((y + j) >= 0) && ((y + j) < this.rows)) {
 					if (this.corners[x + i][y + j].cliff) {
-						if (x + i < this.columns - 1 && y + j < this.rows - 1) {
+						if (((x + i) < (this.columns - 1)) && ((y + j) < (this.rows - 1))) {
 							final RenderCorner bottomLeft = this.corners[x + i][y + j];
 							final RenderCorner bottomRight = this.corners[x + i + 1][y + j];
 							final RenderCorner topLeft = this.corners[x + i][y + j + 1];
@@ -889,7 +893,7 @@ public class Terrain {
 	}
 
 	private boolean isCornerRampEntrance(final int x, final int y) {
-		if (x == this.columns || y == this.rows) {
+		if ((x == this.columns) || (y == this.rows)) {
 			return false;
 		}
 
@@ -899,8 +903,8 @@ public class Terrain {
 		final RenderCorner topRight = this.corners[x + 1][y + 1];
 
 		return bottomLeft.isRamp() && topLeft.isRamp() && bottomRight.isRamp() && topRight.isRamp()
-				&& !(bottomLeft.getLayerHeight() == topRight.getLayerHeight()
-						&& topLeft.getLayerHeight() == bottomRight.getLayerHeight());
+				&& !((bottomLeft.getLayerHeight() == topRight.getLayerHeight())
+						&& (topLeft.getLayerHeight() == bottomRight.getLayerHeight()));
 	}
 
 	private static void loadWaterColor(final float[] out, final String prefix, final Element waterInfo) {
@@ -973,6 +977,10 @@ public class Terrain {
 		gl.glUniform1i(this.groundShader.getUniformLocation("lightTexture"), 21);
 		gl.glUniform1f(this.groundShader.getUniformLocation("lightCount"), lightManager.getTerrainLightCount());
 		gl.glUniform1f(this.groundShader.getUniformLocation("lightTextureHeight"), unitLightsTexture.getHeight());
+		this.groundShader.setUniformf("u_fogColor", this.viewer.worldScene.fogSettings.color);
+		this.groundShader.setUniformf("u_fogParams", this.viewer.worldScene.fogSettings.style.ordinal(),
+				this.viewer.worldScene.fogSettings.start, this.viewer.worldScene.fogSettings.end,
+				this.viewer.worldScene.fogSettings.density);
 
 		gl.glUniformMatrix4fv(this.groundShader.getUniformLocation("DepthBiasMVP"), 1, false,
 				dynamicShadowManager.getDepthBiasMVP().val, 0);
@@ -1087,6 +1095,10 @@ public class Terrain {
 		gl.glUniform1i(shader.getUniformLocation("u_lightTexture"), 21);
 		gl.glUniform1f(shader.getUniformLocation("u_lightCount"), lightManager.getTerrainLightCount());
 		gl.glUniform1f(shader.getUniformLocation("u_lightTextureHeight"), terrainLightsTexture.getHeight());
+		shader.setUniformf("u_fogColor", this.viewer.worldScene.fogSettings.color);
+		shader.setUniformf("u_fogParams", this.viewer.worldScene.fogSettings.style.ordinal(),
+				this.viewer.worldScene.fogSettings.start, this.viewer.worldScene.fogSettings.end,
+				this.viewer.worldScene.fogSettings.density);
 
 		// Render the cliffs
 		for (final SplatModel splat : this.uberSplatModelsList) {
@@ -1124,6 +1136,10 @@ public class Terrain {
 		this.waterShader.setUniformi("lightTexture", 3);
 		this.waterShader.setUniformf("lightCount", lightManager.getTerrainLightCount());
 		this.waterShader.setUniformf("lightTextureHeight", terrainLightsTexture.getHeight());
+		this.waterShader.setUniformf("u_fogColor", this.viewer.worldScene.fogSettings.color);
+		this.waterShader.setUniformf("u_fogParams", this.viewer.worldScene.fogSettings.style.ordinal(),
+				this.viewer.worldScene.fogSettings.start, this.viewer.worldScene.fogSettings.end,
+				this.viewer.worldScene.fogSettings.density);
 
 		this.waterShader.setUniformi("water_height_texture", 0);
 		this.waterShader.setUniformi("ground_height_texture", 1);
@@ -1187,6 +1203,10 @@ public class Terrain {
 		gl.glUniform1i(this.cliffShader.getUniformLocation("lightTexture"), 21);
 		gl.glUniform1f(this.cliffShader.getUniformLocation("lightCount"), lightManager.getTerrainLightCount());
 		gl.glUniform1f(this.cliffShader.getUniformLocation("lightTextureHeight"), unitLightsTexture.getHeight());
+		this.cliffShader.setUniformf("u_fogColor", this.viewer.worldScene.fogSettings.color);
+		this.cliffShader.setUniformf("u_fogParams", this.viewer.worldScene.fogSettings.style.ordinal(),
+				this.viewer.worldScene.fogSettings.start, this.viewer.worldScene.fogSettings.end,
+				this.viewer.worldScene.fogSettings.density);
 
 		this.cliffShader.setUniformi("shadowMap", 2);
 		gl.glActiveTexture(GL30.GL_TEXTURE2);
@@ -1284,24 +1304,24 @@ public class Terrain {
 			for (int x = x0; x < x1; ++x) {
 				final RenderCorner c = this.corners[x >> 2][y >> 2];
 				if (c.getBoundary() != 0) {
-					this.staticShadowData[y * columns + x] = outsideArea;
+					this.staticShadowData[(y * columns) + x] = outsideArea;
 				}
 			}
 		}
 		for (int y = 0; y < rows; ++y) {
 			for (int x = 0; x < x0; ++x) {
-				this.staticShadowData[y * columns + x] = outsideArea;
+				this.staticShadowData[(y * columns) + x] = outsideArea;
 			}
 			for (int x = x1; x < columns; ++x) {
-				this.staticShadowData[y * columns + x] = outsideArea;
+				this.staticShadowData[(y * columns) + x] = outsideArea;
 			}
 		}
 		for (int x = x0; x < x1; ++x) {
 			for (int y = 0; y < y0; ++y) {
-				this.staticShadowData[y * columns + x] = outsideArea;
+				this.staticShadowData[(y * columns) + x] = outsideArea;
 			}
 			for (int y = y1; y < rows; ++y) {
-				this.staticShadowData[y * columns + x] = outsideArea;
+				this.staticShadowData[(y * columns) + x] = outsideArea;
 			}
 		}
 		reloadShadowData(centerOffset, columns, rows);
@@ -1343,15 +1363,15 @@ public class Terrain {
 		final int x0 = (int) Math.floor((v - centerOffset[0]) / 32.0) - x01;
 		final int y0 = (int) Math.floor((v2 - centerOffset[1]) / 32.0) + y01;
 		for (int y = 0; y < height; ++y) {
-			if (y0 - y < 0 || y0 - y >= rows) {
+			if (((y0 - y) < 0) || ((y0 - y) >= rows)) {
 				continue;
 			}
 			for (int x = 0; x < width; ++x) {
-				if (x0 + x < 0 || x0 + x >= columns) {
+				if (((x0 + x) < 0) || ((x0 + x) >= columns)) {
 					continue;
 				}
-				if (texture.getData().get((y * width + x) * 4 + 3) != 0) {
-					shadowData[(y0 - y) * columns + x0 + x] = (byte) 128;
+				if (texture.getData().get((((y * width) + x) * 4) + 3) != 0) {
+					shadowData[((y0 - y) * columns) + x0 + x] = (byte) 128;
 				}
 			}
 		}
@@ -1427,20 +1447,20 @@ public class Terrain {
 		final int cellX = (int) userCellSpaceX;
 		final int cellY = (int) userCellSpaceY;
 
-		if (cellX >= 0 && cellX < this.mapSize[0] - 1 && cellY >= 0 && cellY < this.mapSize[1] - 1) {
-			final float bottomLeft = this.groundCornerHeights[cellY * this.columns + cellX];
-			final float bottomRight = this.groundCornerHeights[cellY * this.columns + cellX + 1];
-			final float topLeft = this.groundCornerHeights[(cellY + 1) * this.columns + cellX];
-			final float topRight = this.groundCornerHeights[(cellY + 1) * this.columns + cellX + 1];
+		if ((cellX >= 0) && (cellX < (this.mapSize[0] - 1)) && (cellY >= 0) && (cellY < (this.mapSize[1] - 1))) {
+			final float bottomLeft = this.groundCornerHeights[(cellY * this.columns) + cellX];
+			final float bottomRight = this.groundCornerHeights[(cellY * this.columns) + cellX + 1];
+			final float topLeft = this.groundCornerHeights[((cellY + 1) * this.columns) + cellX];
+			final float topRight = this.groundCornerHeights[((cellY + 1) * this.columns) + cellX + 1];
 			final float sqX = userCellSpaceX - cellX;
 			final float sqY = userCellSpaceY - cellY;
 			float height;
 
-			if (sqX + sqY < 1) {
-				height = bottomLeft + (bottomRight - bottomLeft) * sqX + (topLeft - bottomLeft) * sqY;
+			if ((sqX + sqY) < 1) {
+				height = bottomLeft + ((bottomRight - bottomLeft) * sqX) + ((topLeft - bottomLeft) * sqY);
 			}
 			else {
-				height = topRight + (bottomRight - topRight) * (1 - sqY) + (topLeft - topRight) * (1 - sqX);
+				height = topRight + ((bottomRight - topRight) * (1 - sqY)) + ((topLeft - topRight) * (1 - sqX));
 			}
 
 			return height * 128.0f;
@@ -1456,7 +1476,7 @@ public class Terrain {
 	}
 
 	public float get128WorldCoordinateFromCellX(final int cellX) {
-		return cellX * 128.0f + this.centerOffset[0];
+		return (cellX * 128.0f) + this.centerOffset[0];
 	}
 
 	public int get128CellY(final float y) {
@@ -1466,7 +1486,7 @@ public class Terrain {
 	}
 
 	public float get128WorldCoordinateFromCellY(final int cellY) {
-		return cellY * 128.0f + this.centerOffset[1];
+		return (cellY * 128.0f) + this.centerOffset[1];
 	}
 
 	public RenderCorner getCorner(final float x, final float y) {
@@ -1475,7 +1495,7 @@ public class Terrain {
 		final int cellX = (int) userCellSpaceX;
 		final int cellY = (int) userCellSpaceY;
 
-		if (cellX >= 0 && cellX < this.mapSize[0] - 1 && cellY >= 0 && cellY < this.mapSize[1] - 1) {
+		if ((cellX >= 0) && (cellX < (this.mapSize[0] - 1)) && (cellY >= 0) && (cellY < (this.mapSize[1] - 1))) {
 			return this.corners[cellX][cellY];
 		}
 
@@ -1488,20 +1508,20 @@ public class Terrain {
 		final int cellX = (int) userCellSpaceX;
 		final int cellY = (int) userCellSpaceY;
 
-		if (cellX >= 0 && cellX < this.mapSize[0] - 1 && cellY >= 0 && cellY < this.mapSize[1] - 1) {
-			final float bottomLeft = this.waterHeights[cellY * this.columns + cellX];
-			final float bottomRight = this.waterHeights[cellY * this.columns + cellX + 1];
-			final float topLeft = this.waterHeights[(cellY + 1) * this.columns + cellX];
-			final float topRight = this.waterHeights[(cellY + 1) * this.columns + cellX + 1];
+		if ((cellX >= 0) && (cellX < (this.mapSize[0] - 1)) && (cellY >= 0) && (cellY < (this.mapSize[1] - 1))) {
+			final float bottomLeft = this.waterHeights[(cellY * this.columns) + cellX];
+			final float bottomRight = this.waterHeights[(cellY * this.columns) + cellX + 1];
+			final float topLeft = this.waterHeights[((cellY + 1) * this.columns) + cellX];
+			final float topRight = this.waterHeights[((cellY + 1) * this.columns) + cellX + 1];
 			final float sqX = userCellSpaceX - cellX;
 			final float sqY = userCellSpaceY - cellY;
 			float height;
 
-			if (sqX + sqY < 1) {
-				height = bottomLeft + (bottomRight - bottomLeft) * sqX + (topLeft - bottomLeft) * sqY;
+			if ((sqX + sqY) < 1) {
+				height = bottomLeft + ((bottomRight - bottomLeft) * sqX) + ((topLeft - bottomLeft) * sqY);
 			}
 			else {
-				height = topRight + (bottomRight - topRight) * (1 - sqY) + (topLeft - topRight) * (1 - sqX);
+				height = topRight + ((bottomRight - topRight) * (1 - sqY)) + ((topLeft - topRight) * (1 - sqX));
 			}
 
 			return (height + this.waterHeightOffset) * 128.0f;
@@ -1545,12 +1565,12 @@ public class Terrain {
 	}
 
 	public SplatMover addUberSplat(final String path, final float x, final float y, final float z, final float scale,
-			final boolean unshaded, final boolean noDepthTest, final boolean highPriority) {
+			final boolean unshaded, final boolean noDepthTest, final boolean highPriority, final boolean aboveWater) {
 		SplatModel splatModel = this.uberSplatModels.get(path);
 		if (splatModel == null) {
 			splatModel = new SplatModel(Gdx.gl30, (Texture) this.viewer.load(path, PathSolver.DEFAULT, null),
 					new ArrayList<>(), this.centerOffset, new ArrayList<>(), unshaded, noDepthTest, highPriority,
-					false);
+					aboveWater);
 			addSplatBatchModel(path, splatModel);
 		}
 		return splatModel.add(x - scale, y - scale, x + scale, y + scale, z, this.centerOffset);
@@ -1576,27 +1596,28 @@ public class Terrain {
 				final float[] centerOffset, final int columns, final int rows) {
 			this.vertices = new float[(columns - 1) * (rows - 1) * Shapes.INSTANCE.quadVertices.length * 3];
 			this.indices = new int[(columns - 1) * (rows - 1) * Shapes.INSTANCE.quadIndices.length * 3];
-			for (int y = 0; y < rows - 1; y++) {
-				for (int x = 0; x < columns - 1; x++) {
-					final int instanceId = y * (columns - 1) + x;
+			for (int y = 0; y < (rows - 1); y++) {
+				for (int x = 0; x < (columns - 1); x++) {
+					final int instanceId = (y * (columns - 1)) + x;
 					for (int vertexId = 0; vertexId < Shapes.INSTANCE.quadVertices.length; vertexId++) {
 						final float vPositionX = Shapes.INSTANCE.quadVertices[vertexId][0];
 						final float vPositionY = Shapes.INSTANCE.quadVertices[vertexId][1];
-						final int groundCornerHeightIndex = (int) ((vPositionY + y) * columns + (vPositionX + x));
+						final int groundCornerHeightIndex = (int) (((vPositionY + y) * columns) + (vPositionX + x));
 						final float height = groundCornerHeights[groundCornerHeightIndex];
-						this.vertices[instanceId * 4 * 3 + vertexId * 3] = (vPositionX + x) * 128f + centerOffset[0];
-						this.vertices[instanceId * 4 * 3 + vertexId * 3 + 1] = (vPositionY + y) * 128f
+						this.vertices[(instanceId * 4 * 3) + (vertexId * 3)] = ((vPositionX + x) * 128f)
+								+ centerOffset[0];
+						this.vertices[(instanceId * 4 * 3) + (vertexId * 3) + 1] = ((vPositionY + y) * 128f)
 								+ centerOffset[1];
-						this.vertices[instanceId * 4 * 3 + vertexId * 3 + 2] = height * 128f;
+						this.vertices[(instanceId * 4 * 3) + (vertexId * 3) + 2] = height * 128f;
 					}
 					for (int triangle = 0; triangle < Shapes.INSTANCE.quadIndices.length; triangle++) {
 						for (int vertexId = 0; vertexId < Shapes.INSTANCE.quadIndices[triangle].length; vertexId++) {
 							final int vertexIndex = Shapes.INSTANCE.quadIndices[triangle][vertexId];
-							final int indexValue = vertexIndex + instanceId * 4;
-							if (indexValue * 3 >= this.vertices.length) {
+							final int indexValue = vertexIndex + (instanceId * 4);
+							if ((indexValue * 3) >= this.vertices.length) {
 								throw new IllegalStateException();
 							}
-							this.indices[instanceId * 2 * 3 + triangle * 3 + vertexId] = indexValue;
+							this.indices[(instanceId * 2 * 3) + (triangle * 3) + vertexId] = indexValue;
 						}
 					}
 				}
@@ -1613,13 +1634,13 @@ public class Terrain {
 				final int rows) {
 			this.vertices = new float[(columns - 1) * (rows - 1) * Shapes.INSTANCE.quadVertices.length * 3];
 			this.indices = new int[(columns - 1) * (rows - 1) * Shapes.INSTANCE.quadIndices.length * 3];
-			for (int y = 0; y < rows - 1; y++) {
-				for (int x = 0; x < columns - 1; x++) {
-					final int instanceId = y * (columns - 1) + x;
+			for (int y = 0; y < (rows - 1); y++) {
+				for (int x = 0; x < (columns - 1); x++) {
+					final int instanceId = (y * (columns - 1)) + x;
 					for (int vertexId = 0; vertexId < Shapes.INSTANCE.quadVertices.length; vertexId++) {
 						final float vPositionX = Shapes.INSTANCE.quadVertices[vertexId][0];
 						final float vPositionY = Shapes.INSTANCE.quadVertices[vertexId][1];
-						final int groundCornerHeightIndex = (int) ((vPositionY + y) * columns + (vPositionX + x));
+						final int groundCornerHeightIndex = (int) (((vPositionY + y) * columns) + (vPositionX + x));
 						final float height;
 						if (waterExistsData[groundCornerHeightIndex] != 0) {
 							height = Math.max(groundCornerHeights[groundCornerHeightIndex],
@@ -1628,19 +1649,20 @@ public class Terrain {
 						else {
 							height = groundCornerHeights[groundCornerHeightIndex];
 						}
-						this.vertices[instanceId * 4 * 3 + vertexId * 3] = (vPositionX + x) * 128f + centerOffset[0];
-						this.vertices[instanceId * 4 * 3 + vertexId * 3 + 1] = (vPositionY + y) * 128f
+						this.vertices[(instanceId * 4 * 3) + (vertexId * 3)] = ((vPositionX + x) * 128f)
+								+ centerOffset[0];
+						this.vertices[(instanceId * 4 * 3) + (vertexId * 3) + 1] = ((vPositionY + y) * 128f)
 								+ centerOffset[1];
-						this.vertices[instanceId * 4 * 3 + vertexId * 3 + 2] = height * 128f;
+						this.vertices[(instanceId * 4 * 3) + (vertexId * 3) + 2] = height * 128f;
 					}
 					for (int triangle = 0; triangle < Shapes.INSTANCE.quadIndices.length; triangle++) {
 						for (int vertexId = 0; vertexId < Shapes.INSTANCE.quadIndices[triangle].length; vertexId++) {
 							final int vertexIndex = Shapes.INSTANCE.quadIndices[triangle][vertexId];
-							final int indexValue = vertexIndex + instanceId * 4;
-							if (indexValue * 3 >= this.vertices.length) {
+							final int indexValue = vertexIndex + (instanceId * 4);
+							if ((indexValue * 3) >= this.vertices.length) {
 								throw new IllegalStateException();
 							}
-							this.indices[instanceId * 2 * 3 + triangle * 3 + vertexId] = indexValue;
+							this.indices[(instanceId * 2 * 3) + (triangle * 3) + vertexId] = indexValue;
 						}
 					}
 				}
@@ -1654,13 +1676,13 @@ public class Terrain {
 		if (x < this.mapBounds[0]) {
 			return false;
 		}
-		if (x >= this.mapSize[0] - this.mapBounds[1] - 1) {
+		if (x >= (this.mapSize[0] - this.mapBounds[1] - 1)) {
 			return false;
 		}
 		if (y < this.mapBounds[2]) {
 			return false;
 		}
-		if (y >= this.mapSize[1] - this.mapBounds[3] - 1) {
+		if (y >= (this.mapSize[1] - this.mapBounds[3] - 1)) {
 			return false;
 		} // TODO why do we use floor if we can use int cast?
 		return this.corners[(int) Math.floor(x)][(int) Math.floor(y)].getBoundary() == 0;

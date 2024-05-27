@@ -104,8 +104,8 @@ public class Camera {
 		// are the unit axes
 		this.vectors = new Vector3[] { new Vector3(-1, -1, 0), new Vector3(-1, 1, 0), new Vector3(1, 1, 0),
 				new Vector3(1, -1, 0), new Vector3(1, 0, 0), new Vector3(0, 1, 0), new Vector3(0, 0, 1) };
-		this.billboardedVectorsBase = new Vector3[] { new Vector3(-1, 1, 0), new Vector3(1, 1, 0),
-				new Vector3(1, -1, 0), new Vector3(-1, -1, 0), new Vector3(1, 0, 0), new Vector3(0, 1, 0),
+		this.billboardedVectorsBase = new Vector3[] { new Vector3(1, 1, 0), new Vector3(-1, 1, 0),
+				new Vector3(-1, -1, 0), new Vector3(1, -1, 0), new Vector3(1, 0, 0), new Vector3(0, 1, 0),
 				new Vector3(0, 0, 1) };
 
 		// First four vectors are the corners of a 2x2 rectangle billboarded to the

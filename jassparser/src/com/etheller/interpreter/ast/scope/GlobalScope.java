@@ -148,7 +148,9 @@ public final class GlobalScope {
 	}
 
 	public void createGlobal(final String name, final JassType type) {
-		putGlobal(name, new GlobalScopeAssignable(type, this));
+		final GlobalScopeAssignable assignable = new GlobalScopeAssignable(type, this);
+		assignable.setValue(type.getNullValue());
+		putGlobal(name, assignable);
 	}
 
 	public void createGlobal(final String name, final JassType type, final JassValue value) {

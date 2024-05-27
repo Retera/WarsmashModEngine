@@ -1304,8 +1304,8 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 		if (WarsmashConstants.CATCH_CURSOR) {
 			Gdx.input.setCursorCatched(true);
 		}
-		this.includeFrames = new String[]{"EscMenuBackdrop", "ScriptDialog", "SmashHoverTip", "SmashHpBar"};
-		this.ignoreFrames = new String[]{"SmashHoverTip", "SmashHpBar"};
+		this.includeFrames = new String[] { "EscMenuBackdrop", "ScriptDialog", "SmashHoverTip", "SmashHpBar" };
+		this.ignoreFrames = new String[] { "SmashHoverTip", "SmashHpBar" };
 
 		this.meleeUIMinimap = createMinimap(this.war3MapViewer);
 
@@ -1891,7 +1891,8 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 		return simpleStatusBarFrame;
 	}
 
-	private UIFrame getHoveredFrame(AbstractUIFrame startFrame, float screenX, float screenY, String[] includeParent, String[] ignoreFrame) {
+	private UIFrame getHoveredFrame(final AbstractUIFrame startFrame, final float screenX, final float screenY,
+			final String[] includeParent, final String[] ignoreFrame) {
 		UIFrame outFrame = null;
 		if (startFrame.isVisible()) {
 			final ListIterator<UIFrame> curIterator = startFrame.getChildIterator();
@@ -1901,26 +1902,27 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 
 				if (child instanceof AbstractUIFrame) {
 					if (checkFrameInArray(child, includeParent)) {
-						AbstractRenderableFrame renderFrame = (AbstractRenderableFrame) child;
-						found = renderFrame.getRenderBounds().contains(screenX, screenY) &&
-								renderFrame.isVisible();
-						if(found) {
+						final AbstractRenderableFrame renderFrame = (AbstractRenderableFrame) child;
+						found = renderFrame.getRenderBounds().contains(screenX, screenY) && renderFrame.isVisible();
+						if (found) {
 							outFrame = renderFrame;
-						}	
-					} else {
-						outFrame = this.getHoveredFrame((AbstractUIFrame)child, screenX, screenY, includeParent, ignoreFrame);
+						}
+					}
+					else {
+						outFrame = getHoveredFrame((AbstractUIFrame) child, screenX, screenY, includeParent,
+								ignoreFrame);
 						found = outFrame != null;
 					}
-				} else {
-					AbstractRenderableFrame renderFrame = (AbstractRenderableFrame) child;
-					found = renderFrame.getRenderBounds().contains(screenX, screenY) &&
-							renderFrame.isVisible();
-					if(found) {
+				}
+				else {
+					final AbstractRenderableFrame renderFrame = (AbstractRenderableFrame) child;
+					found = renderFrame.getRenderBounds().contains(screenX, screenY) && renderFrame.isVisible();
+					if (found) {
 						outFrame = renderFrame;
 					}
 				}
 
-				if (outFrame != null && !checkFrameInArray(outFrame, ignoreFrame)) {
+				if ((outFrame != null) && !checkFrameInArray(outFrame, ignoreFrame)) {
 					return outFrame;
 				}
 			}
@@ -1928,10 +1930,11 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 		return outFrame;
 	}
 
-	private boolean checkFrameInArray(UIFrame frame, String[] targetFrames) {
-		if (targetFrames == null || frame == null) {
+	private boolean checkFrameInArray(final UIFrame frame, final String[] targetFrames) {
+		if ((targetFrames == null) || (frame == null)) {
 			return false;
-		} else {
+		}
+		else {
 			if (frame.getName() == null) {
 				return false;
 			}
@@ -2021,7 +2024,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 		}
 	}
 
-	public void portraitTalk(UnitSound us) {
+	public void portraitTalk(final UnitSound us) {
 		this.portrait.talk(us);
 	}
 
@@ -2415,7 +2418,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 			if (MeleeUI.this.placementCursor == null) {
 				MeleeUI.this.placementCursor = viewer.terrain.addUberSplat(
 						MeleeUI.this.rootFrame.getSkinField("PlacementCursor"), clickLocationTemp.x,
-						clickLocationTemp.y, 10, radius, true, true, true);
+						clickLocationTemp.y, 10, radius, true, true, true, true);
 			}
 			MeleeUI.this.placementCursor.setLocation(clickLocationTemp.x, clickLocationTemp.y,
 					viewer.terrain.centerOffset);
@@ -2566,7 +2569,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 			}
 		}
 
-		public void talk(UnitSound us) {
+		public void talk(final UnitSound us) {
 			// TODO we somehow called talk from null by clicking a unit right at the same
 			// time it died, so I do a null check here until I study that case further.
 			if (this.modelInstance != null) {
@@ -3908,10 +3911,11 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 					}
 				}
 				else {
-					if (this.getHoveredFrame((AbstractUIFrame)rootFrame, screenCoordsVector.x, screenCoordsVector.y, includeFrames, ignoreFrames) != null) {
+					if (getHoveredFrame(this.rootFrame, screenCoordsVector.x, screenCoordsVector.y, this.includeFrames,
+							this.ignoreFrames) != null) {
 						return false;
 					}
-					
+
 					this.war3MapViewer.getClickLocation(this.lastMouseClickLocation, screenX, (int) worldScreenY, true,
 							true);
 					this.lastMouseDragStart.set(this.lastMouseClickLocation);
@@ -4229,27 +4233,29 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 				}
 				else {
 					if (this.allowDrag) {
-						if ((button == Input.Buttons.LEFT) && (this.mouseOverUnit != null)
-								&& isUnitSelectable(this.mouseOverUnit)) {
-							final long currentMillis = TimeUtils.millis();
-							final List<RenderWidget> unitList = new ArrayList<>();
-							final boolean shiftDown = isShiftDown();
-							final boolean controlDown = isControlDown()
-									|| (((currentMillis - this.lastUnitClickTime) < 500)
-											&& (this.mouseOverUnit == this.lastClickUnit));
-							if (shiftDown) {
-								unitList.addAll(this.selectedUnits);
+						if (button == Input.Buttons.LEFT) {
+							updateMouseOverUnit(screenX, worldScreenY);
+							if ((this.mouseOverUnit != null) && isUnitSelectable(this.mouseOverUnit)) {
+								final long currentMillis = TimeUtils.millis();
+								final List<RenderWidget> unitList = new ArrayList<>();
+								final boolean shiftDown = isShiftDown();
+								final boolean controlDown = isControlDown()
+										|| (((currentMillis - this.lastUnitClickTime) < 500)
+												&& (this.mouseOverUnit == this.lastClickUnit));
+								if (shiftDown) {
+									unitList.addAll(this.selectedUnits);
+								}
+								if ((this.mouseOverUnit instanceof RenderUnit) && controlDown) {
+									processSelectNearbyUnits(unitList, shiftDown, (RenderUnit) this.mouseOverUnit);
+								}
+								else {
+									processClickSelect(unitList, shiftDown, this.mouseOverUnit);
+								}
+								this.war3MapViewer.doSelectUnit(unitList);
+								selectWidgets(unitList);
+								this.lastUnitClickTime = currentMillis;
+								this.lastClickUnit = this.mouseOverUnit;
 							}
-							if ((this.mouseOverUnit instanceof RenderUnit) && controlDown) {
-								processSelectNearbyUnits(unitList, shiftDown, (RenderUnit) this.mouseOverUnit);
-							}
-							else {
-								processClickSelect(unitList, shiftDown, this.mouseOverUnit);
-							}
-							this.war3MapViewer.doSelectUnit(unitList);
-							selectWidgets(unitList);
-							this.lastUnitClickTime = currentMillis;
-							this.lastClickUnit = this.mouseOverUnit;
 						}
 					}
 				}
@@ -4365,24 +4371,29 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 				this.tooltipFrame.setVisible(false);
 			}
 		}
-		UIFrame hover = this.getHoveredFrame( (AbstractUIFrame) this.rootFrame, screenCoordsVector.x, screenCoordsVector.y, includeFrames, ignoreFrames);
+		final UIFrame hover = getHoveredFrame(this.rootFrame, screenCoordsVector.x, screenCoordsVector.y,
+				this.includeFrames, this.ignoreFrames);
 		if (hover == null) {
-			final RenderWidget newMouseOverUnit = this.war3MapViewer.rayPickUnit(screenX, worldScreenY,
-					this.anyClickableUnitFilter);
-			if (newMouseOverUnit != this.mouseOverUnit) {
-				this.war3MapViewer.clearUnitMouseOverHighlight();
-				this.dragSelectPreviewUnits.clear();
-				if (newMouseOverUnit != null) {
-					this.war3MapViewer.showUnitMouseOverHighlight(newMouseOverUnit);
-				}
-				this.mouseOverUnit = newMouseOverUnit;
-			}
+			updateMouseOverUnit(screenX, worldScreenY);
 		}
 		else {
 			this.war3MapViewer.clearUnitMouseOverHighlight();
 			this.mouseOverUnit = null;
 		}
 		return false;
+	}
+
+	private void updateMouseOverUnit(final int screenX, final float worldScreenY) {
+		final RenderWidget newMouseOverUnit = this.war3MapViewer.rayPickUnit(screenX, worldScreenY,
+				this.anyClickableUnitFilter);
+		if (newMouseOverUnit != this.mouseOverUnit) {
+			this.war3MapViewer.clearUnitMouseOverHighlight();
+			this.dragSelectPreviewUnits.clear();
+			if (newMouseOverUnit != null) {
+				this.war3MapViewer.showUnitMouseOverHighlight(newMouseOverUnit);
+			}
+			this.mouseOverUnit = newMouseOverUnit;
+		}
 	}
 
 	private void loadTooltip(final ClickableActionFrame mousedUIFrame) {

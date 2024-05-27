@@ -155,4 +155,8 @@ public class Corner {
 	public float computeFinalWaterHeight(final float waterOffset) {
 		return this.waterHeight + waterOffset;
 	}
+	
+	public void setWaterHeight(float waterHeight) {
+		this.waterHeight = waterHeight;
+	}
 }

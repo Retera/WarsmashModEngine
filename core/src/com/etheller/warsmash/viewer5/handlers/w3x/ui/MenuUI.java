@@ -34,6 +34,7 @@ import com.etheller.warsmash.networking.GameTurnManager;
 import com.etheller.warsmash.networking.WarsmashClient;
 import com.etheller.warsmash.networking.WarsmashClientSendingOrderListener;
 import com.etheller.warsmash.networking.WarsmashClientWriter;
+import com.etheller.warsmash.parsers.fdf.GameSkin;
 import com.etheller.warsmash.parsers.fdf.GameUI;
 import com.etheller.warsmash.parsers.fdf.datamodel.AnchorDefinition;
 import com.etheller.warsmash.parsers.fdf.datamodel.FramePoint;
@@ -1205,7 +1206,16 @@ public class MenuUI {
 					MenuUI.this.glueSpriteLayerTopRight.setSequence("Death");
 					MenuUI.this.beginGameInformation = new BeginGameInformation();
 					MenuUI.this.beginGameInformation.gameMapLookup = new CurrentNetGameMapLookupPath(selectedItem);
-					MenuUI.this.beginGameInformation.localPlayerIndex = -1;
+					int localPlayerIndex = -1;
+					for (int i = 0; i < WarsmashConstants.MAX_PLAYERS; i++) {
+						final CBasePlayer configPlayer = MenuUI.this.currentMapConfig.getPlayer(i);
+						if ((configPlayer.getSlotState() == CPlayerSlotState.PLAYING)
+								&& (configPlayer.getController() == CMapControl.USER)) {
+							localPlayerIndex = i;
+							break;
+						}
+					}
+					MenuUI.this.beginGameInformation.localPlayerIndex = localPlayerIndex;
 					MenuUI.this.menuState = MenuState.GOING_TO_MAP;
 				}
 
@@ -1630,7 +1640,7 @@ public class MenuUI {
 		this.glueScreenLoop.play(this.uiScene.audioContext, 0f, 0f, 0f);
 	}
 
-	private void internalStartMap(final String mapFilename) {
+	private void internalStartMap(final String mapFilename, final int localPlayerIndex) {
 		this.loadingFrame.setVisible(true);
 		this.loadingBar.setVisible(true);
 		this.loadingCustomPanel.setVisible(true);
@@ -1657,7 +1667,22 @@ public class MenuUI {
 			final String campaignScreenModel;
 			if (campaignBackground == -1) {
 				animationSequenceIndex = 0;
-				campaignScreenModel = this.rootFrame.getSkinField("LoadingMeleeBackground");
+				String skinKey = "Default";
+				for (int j = 0; j < WarsmashConstants.RACE_MANAGER.getEntryCount(); j++) {
+					final CRaceManagerEntry entry = WarsmashConstants.RACE_MANAGER.get(j);
+					final CRacePreference racePreference = WarsmashConstants.RACE_MANAGER
+							.getRacePreferenceById(entry.getRacePrefId());
+					if (this.currentMapConfig.getPlayer(localPlayerIndex).isRacePrefSet(racePreference)) {
+						skinKey = entry.getKey();
+						break;
+					}
+				}
+				// NOTE: this is a heavy reload to get the user skin, because MeleeUI loads it
+				// again so much later in the map load pipeline. It's probably possible to
+				// optimize that, so that the stuff we load here is passed downstream to MeleeUI
+				// and only loaded once.
+				final GameSkin userSkin = GameUI.loadSkin(map, skinKey);
+				campaignScreenModel = userSkin.getSkin().getField("LoadingMeleeBackground");
 			}
 			else {
 				final Element loadingScreens = worldEditData.get("LoadingScreens");
@@ -1697,23 +1722,6 @@ public class MenuUI {
 
 		try {
 			loadAndCacheMapConfigs(mapFilename);
-			MenuUI.this.beginGameInformation = new BeginGameInformation();
-			int localPlayerIndex = -1;
-			for (int i = 0; i < WarsmashConstants.MAX_PLAYERS; i++) {
-				final CBasePlayer player = this.currentMapConfig.getPlayer(i);
-				if (player.getController() == CMapControl.USER) {
-					player.setSlotState(CPlayerSlotState.PLAYING);
-//						player.setName(MenuUI.this.profileManager.getCurrentProfile());
-//						break;
-					if (localPlayerIndex == -1) {
-						localPlayerIndex = i;
-					}
-				}
-			}
-			MenuUI.this.beginGameInformation.localPlayerIndex = localPlayerIndex;
-			this.beginGameInformation.loadingStarted = true;
-
-			MenuUI.this.menuState = MenuState.GOING_TO_MAP;
 		}
 		catch (final IOException e) {
 			e.printStackTrace();
@@ -1731,7 +1739,20 @@ public class MenuUI {
 		MenuUI.this.glueSpriteLayerTopRight.setSequence("Death");
 		MenuUI.this.beginGameInformation = new BeginGameInformation();
 		MenuUI.this.beginGameInformation.gameMapLookup = new CurrentNetGameMapLookupPath(mapFilename);
-		MenuUI.this.beginGameInformation.localPlayerIndex = -1;
+		int localPlayerIndex = -1;
+		for (int i = 0; i < WarsmashConstants.MAX_PLAYERS; i++) {
+			final CBasePlayer player = this.currentMapConfig.getPlayer(i);
+			if (player.getController() == CMapControl.USER) {
+				player.setSlotState(CPlayerSlotState.PLAYING);
+//					player.setName(MenuUI.this.profileManager.getCurrentProfile());
+//					break;
+				if (localPlayerIndex == -1) {
+					localPlayerIndex = i;
+				}
+			}
+		}
+		MenuUI.this.beginGameInformation.localPlayerIndex = localPlayerIndex;
+		this.beginGameInformation.loadingStarted = true;
 		MenuUI.this.menuState = MenuState.GOING_TO_MAP;
 	}
 
@@ -1820,10 +1841,11 @@ public class MenuUI {
 			if (!this.beginGameInformation.loadingStarted) {
 				if (this.beginGameInformation.gameMapLookup instanceof CurrentNetGameMapLookupFile) {
 					internalStartMap(((CurrentNetGameMapLookupFile) this.beginGameInformation.gameMapLookup).getFile()
-							.getAbsolutePath());
+							.getAbsolutePath(), this.beginGameInformation.localPlayerIndex);
 				}
 				else if (this.beginGameInformation.gameMapLookup instanceof CurrentNetGameMapLookupPath) {
-					internalStartMap(((CurrentNetGameMapLookupPath) this.beginGameInformation.gameMapLookup).getPath());
+					internalStartMap(((CurrentNetGameMapLookupPath) this.beginGameInformation.gameMapLookup).getPath(),
+							this.beginGameInformation.localPlayerIndex);
 				}
 				else {
 					throw new RuntimeException("Begin game information failed");
@@ -1833,7 +1855,7 @@ public class MenuUI {
 			}
 			else {
 				if (this.loadingMap != null) {
-					int localPlayerIndex = this.beginGameInformation.localPlayerIndex;
+					final int localPlayerIndex = this.beginGameInformation.localPlayerIndex;
 					try {
 						if (this.loadingMap.activeMapLoader != null) {
 							if (this.loadingMap.activeMapLoader.process()) {
@@ -1863,15 +1885,6 @@ public class MenuUI {
 								}
 								else {
 									final War3MapViewer mapViewer = this.loadingMap.viewer;
-									for (int i = 0; i < WarsmashConstants.MAX_PLAYERS; i++) {
-										final CBasePlayer configPlayer = mapViewer.getMapConfig().getPlayer(i);
-										if ((configPlayer.getSlotState() == CPlayerSlotState.PLAYING)
-												&& (configPlayer.getController() == CMapControl.USER)) {
-											localPlayerIndex = i;
-											break;
-										}
-									}
-									mapViewer.setLocalPlayerIndex(localPlayerIndex);
 									final CPlayerUnitOrderExecutor executor = new CPlayerUnitOrderExecutor(
 											this.loadingMap.viewer.simulation, localPlayerIndex);
 									final CPlayerUnitOrderListenerDelaying delayingListener = new CPlayerUnitOrderListenerDelaying(

@@ -1043,7 +1043,9 @@ public class MdxShaders {
 			"      if (u_emitter == EMITTER_RIBBON && u_filterMode == 1.0 && color.a < 0.75) {\r\n" + //
 			"        discard;\r\n" + //
 			"      }\r\n" + //
-			Shaders.fogSystem(true, "u_filterMode != 1.0 && u_filterMode != 4.0") + //
+			Shaders.fogSystem(true,
+					"(u_filterMode != 1.0 && u_filterMode != 4.0 && u_emitter != EMITTER_RIBBON) || ((u_filterMode < 3.0 || u_filterMode > 4.0) && u_emitter == EMITTER_RIBBON)")
+			+ //
 			"      gl_FragColor = color;\r\n" + //
 			"    }";
 

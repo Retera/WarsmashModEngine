@@ -121,14 +121,14 @@ public class RenderDoodad {
 		return PrimaryTag.STAND;
 	}
 
-	private byte lastFogStateColor;
+	private byte lastFogStateColor = 0;
 
 	public void updateFog(final War3MapViewer war3MapViewer) {
 		final CPlayerFogOfWar fogOfWar = war3MapViewer.getFogOfWar();
 		final PathingGrid pathingGrid = war3MapViewer.simulation.getPathingGrid();
 		final int fogOfWarIndexX = pathingGrid.getFogOfWarIndexX(this.x);
 		final int fogOfWarIndexY = pathingGrid.getFogOfWarIndexY(this.y);
-		CFogState newFogState = fogOfWar.getFogState(fogOfWarIndexX, fogOfWarIndexY);
+		final CFogState newFogState = fogOfWar.getFogState(fogOfWarIndexX, fogOfWarIndexY);
 		if (newFogState != this.fogState) {
 			this.fogState = newFogState;
 		}

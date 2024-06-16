@@ -69,8 +69,7 @@ public abstract class CTimer {
 	public float getElapsed(final CSimulation simulation) {
 		final int currentTick = simulation.getGameTurnTick();
 		final int elapsedTicks = currentTick - this.scheduleTick;
-		return Math.max(elapsedTicks * WarsmashConstants.SIMULATION_STEP_TIME, this.timeoutTime);
-
+		return Math.min(elapsedTicks * WarsmashConstants.SIMULATION_STEP_TIME, this.timeoutTime);
 	}
 
 	public float getRemaining(final CSimulation simulation) {

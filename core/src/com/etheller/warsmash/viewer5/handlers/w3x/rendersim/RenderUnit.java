@@ -29,6 +29,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.AbilityGenericSingleIconPassiveAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.CBuff;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.timers.CTimer;
 
 public class RenderUnit implements RenderWidget {
 	public static final Color ETHEREAL = new Color(0.75f, 1, 0.5f, 0.5f);
@@ -62,6 +63,7 @@ public class RenderUnit implements RenderWidget {
 
 	private boolean swimming;
 	private boolean working;
+	private boolean invisible;
 
 	private boolean dead = false;
 
@@ -77,7 +79,7 @@ public class RenderUnit implements RenderWidget {
 	public SplatMover uberSplat;
 	private float selectionHeight;
 	private RenderUnit preferredSelectionReplacement;
-	private float[] currentColor = {1,1,1,1};
+	private float[] currentColor = { 1, 1, 1, 1 };
 
 	public RenderUnit(final War3MapViewer map, final MdxModel model, final GameObject row, final float x, final float y,
 			final float z, final int playerIndex, final UnitSoundset soundset, final MdxModel portraitModel,
@@ -122,7 +124,8 @@ public class RenderUnit implements RenderWidget {
 		this.unitAnimationListenerImpl = new UnitAnimationListenerImpl(instance, animationWalkSpeed, animationRunSpeed);
 		simulationUnit.setUnitAnimationListener(this.unitAnimationListenerImpl);
 		final String requiredAnimationNames = row.getFieldAsString(ANIM_PROPS, 0);
-		TokenLoop: for (final String animationName : requiredAnimationNames.split(",")) {
+		TokenLoop:
+		for (final String animationName : requiredAnimationNames.split(",")) {
 			final String upperCaseToken = animationName.toUpperCase();
 			for (final SecondaryTag secondaryTag : SecondaryTag.values()) {
 				if (upperCaseToken.equals(secondaryTag.name())) {
@@ -143,8 +146,8 @@ public class RenderUnit implements RenderWidget {
 			red = RED;
 			green = GREEN;
 			blue = BLUE;
-			instance.setVertexColor(new float[] { (row.getFieldAsInteger(red, 0)) / 255f,
-					(row.getFieldAsInteger(green, 0)) / 255f, (row.getFieldAsInteger(blue, 0)) / 255f });
+			this.currentColor = new float[] { (row.getFieldAsInteger(red, 0)) / 255f,
+					(row.getFieldAsInteger(green, 0)) / 255f, (row.getFieldAsInteger(blue, 0)) / 255f, 1.0f };
 			instance.uniformScale(scalingValue);
 
 			this.selectionScale = row.getFieldAsFloat(War3MapViewer.UNIT_SELECT_SCALE, 0) * selectionCircleScaleFactor;
@@ -162,6 +165,9 @@ public class RenderUnit implements RenderWidget {
 
 		this.instance = instance;
 		this.row = row;
+		if (row != null) {
+			updateColor(map);
+		}
 		this.soundset = soundset;
 		this.building = simulationUnit.isBuilding();
 	}
@@ -242,6 +248,7 @@ public class RenderUnit implements RenderWidget {
 		boolean swimming = (movementType == MovementType.AMPHIBIOUS)
 				&& PathingGrid.isPathingFlag(terrainPathing, PathingGrid.PathingType.SWIMMABLE)
 				&& !PathingGrid.isPathingFlag(terrainPathing, PathingGrid.PathingType.WALKABLE);
+		final boolean invisible = this.simulationUnit.getInvisLevels() > 0;
 		final boolean working = this.simulationUnit.getBuildQueueTypes()[0] != null;
 		final float groundHeightTerrain = map.terrain.getGroundHeight(this.location[0], this.location[1]);
 		float groundHeightTerrainAndWater;
@@ -288,8 +295,24 @@ public class RenderUnit implements RenderWidget {
 		else if (!working && this.working) {
 			this.unitAnimationListenerImpl.removeSecondaryTag(AnimationTokens.SecondaryTag.WORK);
 		}
+		boolean colorNeedsUpdate = false;
+		if (invisible && !this.invisible) {
+			// turn invisible instantly
+			colorNeedsUpdate = true;
+		}
+		else if (!invisible && this.invisible) {
+			// show instantly
+			colorNeedsUpdate = true;
+		}
+		else if ((this.simulationUnit.getFadeTimer() != null) && this.simulationUnit.getFadeTimer().isRunning()) {
+			colorNeedsUpdate = true;
+		}
+		this.invisible = invisible;
 		this.swimming = swimming;
 		this.working = working;
+		if (colorNeedsUpdate) {
+			updateColor(map);
+		}
 		final boolean dead = this.simulationUnit.isDead();
 		final boolean corpse = this.simulationUnit.isCorpse();
 		final boolean boneCorpse = this.simulationUnit.isBoneCorpse();
@@ -660,24 +683,38 @@ public class RenderUnit implements RenderWidget {
 		return this.typeData;
 	}
 
-	public void setVertexColoring(Color color) {
-		this.instance.setVertexColor(color);
-		this.currentColor = new float[]{color.r, color.g, color.b, color.a};
+	public void setVertexColoring(final War3MapViewer map, final Color color) {
+		this.currentColor = new float[] { color.r, color.g, color.b, color.a };
+		updateColor(map);
 	}
 
-	public void setVertexColoring(float r, float g, float b) {
-		final float[] color = new float[] { r, g, b };
-		this.instance.setVertexColor(color);
-		this.currentColor = new float[]{r, g, b, 1};
+	public void setVertexColoring(final War3MapViewer map, final float r, final float g, final float b) {
+		this.currentColor = new float[] { r, g, b, 1 };
+		updateColor(map);
 	}
 
-	public void setVertexColoring(float r, float g, float b, float a) {
+	public void setVertexColoring(final War3MapViewer map, final float r, final float g, final float b, final float a) {
 		final float[] color = new float[] { r, g, b, a };
-		this.instance.setVertexColor(color);
 		this.currentColor = color;
+		updateColor(map);
 	}
-	
+
+	private void updateColor(final War3MapViewer map) {
+		float finalAlpha = this.currentColor[3];
+		if (this.invisible) {
+			finalAlpha *= 0.5f;
+		}
+		else {
+			final CTimer fadeTimer = this.simulationUnit.getFadeTimer();
+			if ((fadeTimer != null) && fadeTimer.isRunning()) {
+				final float fadeAmount = map.getRemainingSecondsForRender(fadeTimer) / fadeTimer.getTimeoutTime();
+				finalAlpha *= (fadeAmount * 0.5f) + 0.5f;
+			}
+		}
+		this.instance.setVertexColor(this.currentColor[0], this.currentColor[1], this.currentColor[2], finalAlpha);
+	}
+
 	public float[] getVertexColoring() {
-		return currentColor;
+		return this.currentColor;
 	}
 }

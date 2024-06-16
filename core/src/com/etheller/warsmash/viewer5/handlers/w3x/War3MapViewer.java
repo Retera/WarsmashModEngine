@@ -1335,6 +1335,9 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 
 			super.update();
 
+			final float rawDeltaTime = Gdx.graphics.getRawDeltaTime();
+			this.updateTime += rawDeltaTime;
+
 			final Iterator<TextTag> textTagIterator = this.textTags.iterator();
 			while (textTagIterator.hasNext()) {
 				if (textTagIterator.next().update(deltaTime)) {
@@ -1366,8 +1369,6 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 				}
 			}
 
-			final float rawDeltaTime = Gdx.graphics.getRawDeltaTime();
-			this.updateTime += rawDeltaTime;
 			while (this.updateTime >= WarsmashConstants.SIMULATION_STEP_TIME) {
 				if (this.gameTurnManager.getLatestCompletedTurn() >= this.simulation.getGameTurnTick()) {
 					this.updateTime -= WarsmashConstants.SIMULATION_STEP_TIME;
@@ -3393,21 +3394,21 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 							@Override
 							public void changeUnitVertexColor(final CUnit unit, final Color color) {
 								final RenderUnit renderPeer = War3MapViewer.this.unitToRenderPeer.get(unit);
-								renderPeer.setVertexColoring(color);
+								renderPeer.setVertexColoring(War3MapViewer.this, color);
 							}
 
 							@Override
 							public void changeUnitVertexColor(final CUnit unit, final float r, final float g,
 									final float b) {
 								final RenderUnit renderPeer = War3MapViewer.this.unitToRenderPeer.get(unit);
-								renderPeer.setVertexColoring(r, g, b);
+								renderPeer.setVertexColoring(War3MapViewer.this, r, g, b);
 							}
 
 							@Override
 							public void changeUnitVertexColor(final CUnit unit, final float r, final float g,
 									final float b, final float a) {
 								final RenderUnit renderPeer = War3MapViewer.this.unitToRenderPeer.get(unit);
-								renderPeer.setVertexColoring(r, g, b, a);
+								renderPeer.setVertexColoring(War3MapViewer.this, r, g, b, a);
 							}
 
 							@Override
@@ -3612,5 +3613,13 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 
 	public static interface LoadMapTask {
 		void run() throws IOException;
+	}
+
+	public float getElapsedSecondsForRender(final CTimer timer) {
+		return Math.min(timer.getElapsed(this.simulation) + this.updateTime, timer.getTimeoutTime());
+	}
+
+	public float getRemainingSecondsForRender(final CTimer timer) {
+		return timer.getTimeoutTime() - getElapsedSecondsForRender(timer);
 	}
 }

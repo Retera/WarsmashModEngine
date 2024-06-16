@@ -684,6 +684,7 @@ public abstract class AbilityBuilderGsonBuilder {
 				.registerSubtype(ABActionCreateStateModBuff.class, "createStateModBuff")
 				.registerSubtype(ABActionAddStateModBuff.class, "addStateModBuff")
 				.registerSubtype(ABActionRemoveStateModBuff.class, "removeStateModBuff")
+				.registerSubtype(ABActionSetUnitFadeTimer.class, "setUnitFadeTimer")
 
 				.registerSubtype(ABActionCreateNonStackingStatBuff.class, "createNonStackingStatBuff")
 				.registerSubtype(ABActionAddNonStackingStatBuff.class, "addNonStackingStatBuff")

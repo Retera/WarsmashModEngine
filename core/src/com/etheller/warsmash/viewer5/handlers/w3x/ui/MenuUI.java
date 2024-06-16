@@ -1752,7 +1752,7 @@ public class MenuUI {
 			}
 		}
 		MenuUI.this.beginGameInformation.localPlayerIndex = localPlayerIndex;
-		this.beginGameInformation.loadingStarted = true;
+//		this.beginGameInformation.loadingStarted = true;
 		MenuUI.this.menuState = MenuState.GOING_TO_MAP;
 	}
 

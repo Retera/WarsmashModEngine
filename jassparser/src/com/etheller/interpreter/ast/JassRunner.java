@@ -19,7 +19,9 @@ import com.etheller.interpreter.ast.scope.GlobalScope;
 import com.etheller.interpreter.ast.scope.TriggerExecutionScope;
 import com.etheller.interpreter.ast.value.CodeJassValue;
 import com.etheller.interpreter.ast.value.JassValue;
+import com.etheller.interpreter.ast.value.StringJassValue;
 import com.etheller.interpreter.ast.value.visitor.CodeJassValueVisitor;
+import com.etheller.interpreter.ast.value.visitor.IntegerJassValueVisitor;
 import com.etheller.interpreter.ast.value.visitor.RealJassValueVisitor;
 import com.etheller.interpreter.ast.value.visitor.StringJassValueVisitor;
 import com.etheller.interpreter.ast.visitors.JassProgramVisitor;
@@ -51,6 +53,24 @@ public class JassRunner {
 					System.out.println(argument.visit(StringJassValueVisitor.getInstance()));
 				}
 				return null;
+			}
+		});
+		jassProgramVisitor.getJassNativeManager().createNative("PrintString", new JassFunction() {
+			@Override
+			public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+					final TriggerExecutionScope triggerScope) {
+				for (final JassValue argument : arguments) {
+					System.out.println(argument.visit(StringJassValueVisitor.getInstance()));
+				}
+				return null;
+			}
+		});
+		jassProgramVisitor.getJassNativeManager().createNative("I2S", new JassFunction() {
+			@Override
+			public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+					final TriggerExecutionScope triggerScope) {
+				final Integer x = arguments.get(0).visit(IntegerJassValueVisitor.getInstance());
+				return new StringJassValue(x.toString());
 			}
 		});
 		jassProgramVisitor.getJassNativeManager().createNative("StartThread", new JassFunction() {

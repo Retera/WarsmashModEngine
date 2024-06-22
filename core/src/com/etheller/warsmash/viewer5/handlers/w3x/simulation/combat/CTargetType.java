@@ -12,6 +12,8 @@ public enum CTargetType {
 
 	;
 
+	public final static CTargetType[] VALUES = values();
+
 	public static CTargetType parseTargetType(final String targetTypeString) {
 		if (targetTypeString == null) {
 			return null;

@@ -172,7 +172,7 @@ public class War3Map implements DataSource {
 
 	@Override
 	public Collection<String> getListfile() {
-		return this.internalMpqContentsDataSource.getListfile();
+		return this.dataSource.getListfile();
 	}
 
 	@Override

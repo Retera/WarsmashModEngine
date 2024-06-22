@@ -86,6 +86,7 @@ public class CommonTriggerExecutionScope extends TriggerExecutionScope {
 	private int spellAbilityOrderId; // Warsmash only
 	private JassOrderButtonType spellAbilityTargetType; // Warsmash only
 	private JassOrder spellAbilityOrderCommandCard; // Warsmash only
+	private String enumFilePath; // Warsmash only
 
 	private JassGameEventsWar3 triggerEventId;
 
@@ -430,6 +431,10 @@ public class CommonTriggerExecutionScope extends TriggerExecutionScope {
 
 	public JassOrder getSpellAbilityOrderCommandCard() {
 		return this.spellAbilityOrderCommandCard;
+	}
+
+	public String getEnumFilePath() {
+		return this.enumFilePath;
 	}
 
 	public static CommonTriggerExecutionScope filterScope(final TriggerExecutionScope parentScope,
@@ -845,6 +850,14 @@ public class CommonTriggerExecutionScope extends TriggerExecutionScope {
 		scope.spellAbilityOrderId = spellAbilityOrderId;
 		scope.spellAbilityTargetType = spellAbilityTargetType;
 		scope.spellAbilityOrderCommandCard = spellAbilityOrderCommandCard;
+		return scope;
+	}
+
+	public static CommonTriggerExecutionScope enumFileScope(final TriggerExecutionScope parentScope,
+			final String enumFile) {
+		final CommonTriggerExecutionScope scope = new CommonTriggerExecutionScope(parentScope.getTriggeringTrigger(),
+				parentScope);
+		scope.enumFilePath = enumFile;
 		return scope;
 	}
 

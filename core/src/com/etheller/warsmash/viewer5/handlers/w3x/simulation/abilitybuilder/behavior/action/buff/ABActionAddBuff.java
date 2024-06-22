@@ -2,6 +2,7 @@ package com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.beh
 
 import java.util.Map;
 
+import com.etheller.warsmash.parsers.jass.JassTextGenerator;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.CBuff;
@@ -15,9 +16,17 @@ public class ABActionAddBuff implements ABAction {
 	private ABUnitCallback target;
 	private ABBuffCallback buff;
 
-	public void runAction(final CSimulation game, final CUnit caster, final Map<String, Object> localStore, final int castId) {
-		CBuff ability = buff.callback(game, caster, localStore, castId);
-		target.callback(game, caster, localStore, castId).add(game, ability);
+	@Override
+	public void runAction(final CSimulation game, final CUnit caster, final Map<String, Object> localStore,
+			final int castId) {
+		final CBuff ability = this.buff.callback(game, caster, localStore, castId);
+		this.target.callback(game, caster, localStore, castId).add(game, ability);
 		localStore.put(ABLocalStoreKeys.LASTADDEDBUFF, ability);
+	}
+
+	@Override
+	public String generateJassEquivalent(final JassTextGenerator jassTextGenerator) {
+		return "AddBuffAU(" + this.target.generateJassEquivalent(jassTextGenerator) + ", "
+				+ jassTextGenerator.getAbility() + ", " + this.buff.generateJassEquivalent(jassTextGenerator) + ")";
 	}
 }

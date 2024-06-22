@@ -1,5 +1,7 @@
 package com.etheller.warsmash.util;
 
+import java.util.List;
+
 import com.etheller.warsmash.units.DataTable;
 import com.etheller.warsmash.units.Element;
 import com.etheller.warsmash.units.GameObject;
@@ -55,7 +57,7 @@ public class WarsmashConstants {
 
 	public static CRaceManager RACE_MANAGER;
 
-	public static final String[] JASS_FILE_LIST = { "Scripts\\common.j", "Scripts\\Blizzard.j", "Scripts\\war3map.j" };
+	public static String[] JASS_FILE_LIST = { "Scripts\\common.j", "Scripts\\Blizzard.j", "Scripts\\war3map.j" };
 	public static final float GAME_SPEED_TIME_FACTOR = 0.5f;
 
 	public static void loadConstants(final GameObject emulatorConstants, final DataTable warsmashIni) {
@@ -64,6 +66,11 @@ public class WarsmashConstants {
 		CATCH_CURSOR = emulatorConstants.getFieldValue("CatchCursor") == 1;
 		if (emulatorConstants.getField("FullScreenMenuBackdrop") != null) {
 			FULL_SCREEN_MENU_BACKDROP = emulatorConstants.getFieldValue("FullScreenMenuBackdrop") == 1;
+		}
+		final List<String> jassFileList = emulatorConstants.getFieldAsList("JassFileList");
+		if (!jassFileList.isEmpty() && !((jassFileList.size() == 1) && jassFileList.get(0).isEmpty())) {
+			final String[] jassFileArray = jassFileList.toArray(new String[0]);
+			JASS_FILE_LIST = jassFileArray;
 		}
 		FIX_FLAT_FILES_TILESET_LOADING = emulatorConstants.getFieldValue("FixFlatFilesTilesetLoading") == 1;
 		ENABLE_MUSIC = emulatorConstants.getFieldValue("EnableMusic") == 1;

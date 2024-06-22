@@ -9,32 +9,44 @@ import com.google.gson.Gson;
 import com.google.gson.JsonParseException;
 
 public class AbilityBuilderParserUtil {
-	public static void loadAbilityBuilderFiles(AbilityBuilderFileListener listener) {
-		Gson gson = AbilityBuilderGsonBuilder.create();
+	public static void loadAbilityBuilderFiles(final AbilityBuilderFileListener listener) {
+		final Gson gson = AbilityBuilderGsonBuilder.create();
 		try {
-			File abilityBehaviorsDir = new File("abilityBehaviors");
-			File[] abilityBehaviorFiles = abilityBehaviorsDir.listFiles();
+			final File abilityBehaviorsDir = new File("abilityBehaviors");
+			final File[] abilityBehaviorFiles = abilityBehaviorsDir.listFiles();
 			if (abilityBehaviorFiles != null) {
-				for (File abilityBehaviorFile : abilityBehaviorFiles) {
+				for (final File abilityBehaviorFile : abilityBehaviorFiles) {
 					loadAbilityBuilderFile(gson, abilityBehaviorFile, listener);
 				}
 			}
-		} catch (Exception e) {
+		}
+		catch (final Exception e) {
 			e.printStackTrace();
 		}
 	}
 
-	public static void loadAbilityBuilderFile(Gson gson, File abilityBehaviorFile, AbilityBuilderFileListener listener)
-			throws FileNotFoundException {
+	public static void loadAbilityBuilderFile(final Gson gson, final File abilityBehaviorFile,
+			final AbilityBuilderFileListener listener) throws FileNotFoundException {
+		if (abilityBehaviorFile.isDirectory()) {
+			final File[] abilityBehaviorFiles = abilityBehaviorFile.listFiles();
+			if (abilityBehaviorFiles != null) {
+				for (final File subAbilityBehaviorFile : abilityBehaviorFiles) {
+					loadAbilityBuilderFile(gson, subAbilityBehaviorFile, listener);
+				}
+			}
+		}
 		try {
-			AbilityBuilderFile behaviors = gson.fromJson(new FileReader(abilityBehaviorFile), AbilityBuilderFile.class);
-			for (AbilityBuilderParser behavior : behaviors.getAbilityList()) {
+			final AbilityBuilderFile behaviors = gson.fromJson(new FileReader(abilityBehaviorFile),
+					AbilityBuilderFile.class);
+			for (final AbilityBuilderParser behavior : behaviors.getAbilityList()) {
 				listener.callback(behavior);
 			}
-		} catch (JsonParseException e) {
+		}
+		catch (final JsonParseException e) {
 			System.err.println("Failed to load Ability Builder config file: " + abilityBehaviorFile.getName());
 			e.printStackTrace();
-		} catch (IllegalArgumentException e) {
+		}
+		catch (final IllegalArgumentException e) {
 			System.err.println("Failed to load Ability Builder config file: " + abilityBehaviorFile.getName());
 			e.printStackTrace();
 		}

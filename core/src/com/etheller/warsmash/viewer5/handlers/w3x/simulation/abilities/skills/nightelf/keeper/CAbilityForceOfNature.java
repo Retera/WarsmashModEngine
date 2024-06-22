@@ -30,7 +30,7 @@ public class CAbilityForceOfNature extends CAbilityPointTargetSpellBase {
 
 	public CAbilityForceOfNature(final int handleId, final War3ID alias) {
 		super(handleId, alias);
-		anyMatchingDestFinder = new AnyMatchingDestFinder();
+		this.anyMatchingDestFinder = new AnyMatchingDestFinder();
 	}
 
 	@Override
@@ -40,23 +40,23 @@ public class CAbilityForceOfNature extends CAbilityPointTargetSpellBase {
 
 	@Override
 	public float getUIAreaOfEffect() {
-		return areaOfEffect;
+		return this.areaOfEffect;
 	}
 
 	@Override
 	public void populateData(final GameObject worldEditorAbility, final int level) {
-		numberOfSummonedUnits = worldEditorAbility.getFieldAsInteger(AbilityFields.DATA_A + level, 0);
-		summonedUnitId = War3ID.fromString(worldEditorAbility.getFieldAsString(AbilityFields.UNIT_ID + level, 0));
-		buffId = AbstractCAbilityTypeDefinition.getBuffId(worldEditorAbility, level);
-		areaOfEffect = worldEditorAbility.getFieldAsFloat(AbilityFields.AREA_OF_EFFECT + level, 0);
+		this.numberOfSummonedUnits = worldEditorAbility.getFieldAsInteger(AbilityFields.DATA_A + level, 0);
+		this.summonedUnitId = War3ID.fromString(worldEditorAbility.getFieldAsString(AbilityFields.UNIT_ID + level, 0));
+		this.buffId = AbstractCAbilityTypeDefinition.getBuffId(worldEditorAbility, level);
+		this.areaOfEffect = worldEditorAbility.getFieldAsFloat(AbilityFields.AREA_OF_EFFECT + level, 0);
 	}
 
 	@Override
 	protected void innerCheckCanTarget(final CSimulation game, final CUnit unit, final int orderId,
 			final AbilityPointTarget target, final AbilityTargetCheckReceiver<AbilityPointTarget> receiver) {
-		game.getWorldCollision().enumDestructablesInRange(target.getX(), target.getY(), areaOfEffect,
-				anyMatchingDestFinder.reset(game, unit));
-		if (!anyMatchingDestFinder.foundMatch) {
+		game.getWorldCollision().enumDestructablesInRange(target.getX(), target.getY(), this.areaOfEffect,
+				this.anyMatchingDestFinder.reset(game, unit));
+		if (!this.anyMatchingDestFinder.foundMatch) {
 			receiver.targetCheckFailed(CommandStringErrorKeys.MUST_TARGET_A_TREE);
 		}
 		else {
@@ -67,21 +67,25 @@ public class CAbilityForceOfNature extends CAbilityPointTargetSpellBase {
 	@Override
 	public boolean doEffect(final CSimulation simulation, final CUnit caster, final AbilityTarget target) {
 		final List<CDestructable> trees = new ArrayList<>();
-		simulation.getWorldCollision().enumDestructablesInRange(target.getX(), target.getY(), areaOfEffect,
+		simulation.getWorldCollision().enumDestructablesInRange(target.getX(), target.getY(), this.areaOfEffect,
 				(enumDest) -> {
 					if (enumDest.canBeTargetedBy(simulation, caster, getTargetsAllowed())) {
 						trees.add(enumDest);
 					}
-					return trees.size() >= numberOfSummonedUnits;
+					return false;
 				});
+		int summonedUnitCount = 0;
 		for (final CDestructable tree : trees) {
 			tree.setLife(simulation, 0);
 
-			final CUnit summonedUnit = simulation.createUnitSimple(summonedUnitId, caster.getPlayerIndex(), tree.getX(),
-					tree.getY(), simulation.getGameplayConstants().getBuildingAngle());
-			summonedUnit.addClassification(CUnitClassification.SUMMONED);
-			summonedUnit.add(simulation,
-					new CBuffTimedLife(simulation.getHandleIdAllocator().createId(), buffId, getDuration(), false));
+			if (summonedUnitCount < this.numberOfSummonedUnits) {
+				final CUnit summonedUnit = simulation.createUnitSimple(this.summonedUnitId, caster.getPlayerIndex(),
+						tree.getX(), tree.getY(), simulation.getGameplayConstants().getBuildingAngle());
+				summonedUnit.addClassification(CUnitClassification.SUMMONED);
+				summonedUnit.add(simulation, new CBuffTimedLife(simulation.getHandleIdAllocator().createId(),
+						this.buffId, getDuration(), false));
+				summonedUnitCount++;
+			}
 		}
 		return false;
 	}
@@ -100,10 +104,10 @@ public class CAbilityForceOfNature extends CAbilityPointTargetSpellBase {
 
 		@Override
 		public boolean call(final CDestructable enumDest) {
-			if (enumDest.canBeTargetedBy(game, unit, getTargetsAllowed())) {
-				foundMatch = true;
+			if (enumDest.canBeTargetedBy(this.game, this.unit, getTargetsAllowed())) {
+				this.foundMatch = true;
 			}
-			return foundMatch;
+			return this.foundMatch;
 		}
 	}
 }

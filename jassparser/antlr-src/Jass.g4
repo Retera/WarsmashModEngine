@@ -12,12 +12,12 @@ program :
 	newlines
 	|
 	newlines_opt
-	typeDefinitionBlock
+	typeDeclarationBlock
 	(block)* 
 	(functionBlock)*
 	;
 
-typeDefinition :
+typeDeclaration :
 	TYPE ID EXTENDS ID newlines
 	;  
 
@@ -190,8 +190,8 @@ paramList:
 globalsBlock :
 	GLOBALS newlines (global)* ENDGLOBALS newlines ;
 	
-typeDefinitionBlock :
-	(typeDefinition)*
+typeDeclarationBlock :
+	(typeDeclaration)*
 	;
 	
 nativeBlock:

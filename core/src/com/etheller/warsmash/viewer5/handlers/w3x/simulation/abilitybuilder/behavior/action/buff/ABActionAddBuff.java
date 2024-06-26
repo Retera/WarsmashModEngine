@@ -26,7 +26,7 @@ public class ABActionAddBuff implements ABAction {
 
 	@Override
 	public String generateJassEquivalent(final JassTextGenerator jassTextGenerator) {
-		return "AddBuffAU(" + this.target.generateJassEquivalent(jassTextGenerator) + ", "
+		return "AddUnitBuffAU(" + this.target.generateJassEquivalent(jassTextGenerator) + ", "
 				+ jassTextGenerator.getAbility() + ", " + this.buff.generateJassEquivalent(jassTextGenerator) + ")";
 	}
 }

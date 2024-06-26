@@ -29,7 +29,7 @@ public class ABActionAddNonStackingDisplayBuff implements ABAction {
 
 	@Override
 	public String generateJassEquivalent(final JassTextGenerator jassTextGenerator) {
-		return "UnitAddNonStackingDisplayBuffAU(" + this.target.generateJassEquivalent(jassTextGenerator) + ", "
+		return "AddUnitNonStackingDisplayBuffAU(" + this.target.generateJassEquivalent(jassTextGenerator) + ", "
 				+ jassTextGenerator.getAbility() + ", " + this.key.generateJassEquivalent(jassTextGenerator) + ", "
 				+ this.buff.generateJassEquivalent(jassTextGenerator) + ")";
 	}

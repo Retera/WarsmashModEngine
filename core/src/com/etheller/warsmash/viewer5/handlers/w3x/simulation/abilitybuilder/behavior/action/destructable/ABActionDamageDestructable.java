@@ -2,6 +2,7 @@ package com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.beh
 
 import java.util.Map;
 
+import com.etheller.warsmash.parsers.jass.JassTextGenerator;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.booleancallbacks.ABBooleanCallback;
@@ -26,28 +27,59 @@ public class ABActionDamageDestructable implements ABAction {
 	private ABFloatCallback damage;
 
 	@Override
-	public void runAction(CSimulation game, CUnit caster, Map<String, Object> localStore, final int castId) {
+	public void runAction(final CSimulation game, final CUnit caster, final Map<String, Object> localStore,
+			final int castId) {
 		boolean isItAttack = false;
 		boolean isItRanged = true;
 		CAttackType theAttackType = CAttackType.SPELLS;
 		CDamageType theDamageType = CDamageType.MAGIC;
 
-		if (isAttack != null) {
-			isItAttack = isAttack.callback(game, caster, localStore, castId);
+		if (this.isAttack != null) {
+			isItAttack = this.isAttack.callback(game, caster, localStore, castId);
 		}
-		if (isRanged != null) {
-			isItRanged = isRanged.callback(game, caster, localStore, castId);
+		if (this.isRanged != null) {
+			isItRanged = this.isRanged.callback(game, caster, localStore, castId);
 		}
-		if (attackType != null) {
-			theAttackType = attackType.callback(game, caster, localStore, castId);
+		if (this.attackType != null) {
+			theAttackType = this.attackType.callback(game, caster, localStore, castId);
 		}
-		if (damageType != null) {
-			theDamageType = damageType.callback(game, caster, localStore, castId);
+		if (this.damageType != null) {
+			theDamageType = this.damageType.callback(game, caster, localStore, castId);
 		}
 
-		target.callback(game, caster, localStore, castId).damage(game, source.callback(game, caster, localStore, castId), isItAttack,
-				isItRanged, theAttackType, theDamageType, CWeaponSoundTypeJass.WHOKNOWS.name(),
-				damage.callback(game, caster, localStore, castId));
+		this.target.callback(game, caster, localStore, castId).damage(game,
+				this.source.callback(game, caster, localStore, castId), isItAttack, isItRanged, theAttackType,
+				theDamageType, CWeaponSoundTypeJass.WHOKNOWS.name(),
+				this.damage.callback(game, caster, localStore, castId));
+	}
+
+	@Override
+	public String generateJassEquivalent(final JassTextGenerator jassTextGenerator) {
+		// TODO Auto-generated method stub
+//		native UnitDamageTarget takes unit whichUnit, widget target, real amount, boolean attack, boolean ranged, attacktype attackType, damagetype damageType, weapontype weaponType returns boolean
+
+		String attackExpression = "false";
+		if (this.isAttack != null) {
+			attackExpression = this.isAttack.generateJassEquivalent(jassTextGenerator);
+		}
+		String rangedExpression = "true";
+		if (this.isRanged != null) {
+			rangedExpression = this.isRanged.generateJassEquivalent(jassTextGenerator);
+		}
+		String attackTypeExpression = "ATTACK_TYPE_SPELLS";
+		String damageTypeExpression = "DAMAGE_TYPE_MAGIC";
+		if (this.attackType != null) {
+			attackTypeExpression = this.attackType.generateJassEquivalent(jassTextGenerator);
+		}
+		if (this.damageType != null) {
+			damageTypeExpression = this.damageType.generateJassEquivalent(jassTextGenerator);
+		}
+
+		return "UnitDamageTarget(" + this.source.generateJassEquivalent(jassTextGenerator) + ", "
+				+ this.target.generateJassEquivalent(jassTextGenerator) + ", "
+				+ this.damage.generateJassEquivalent(jassTextGenerator) + ", " + attackExpression + ", "
+				+ rangedExpression + ", " + attackTypeExpression + ", " + damageTypeExpression
+				+ ", WEAPON_TYPE_WHOKNOWS)";
 	}
 
 }

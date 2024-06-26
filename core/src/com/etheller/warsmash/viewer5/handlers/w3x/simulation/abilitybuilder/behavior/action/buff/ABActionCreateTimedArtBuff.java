@@ -64,10 +64,10 @@ public class ABActionCreateTimedArtBuff implements ABAction {
 			showIconJass = this.showIcon.generateJassEquivalent(jassTextGenerator);
 		}
 		else {
-			showIconJass = "false";
+			showIconJass = "true";
 		}
-		return "CreateTimedArtBuffAU(" + jassTextGenerator.getCaster() + ", " + jassTextGenerator.getAbility() + ", "
-				+ this.buffId.generateJassEquivalent(jassTextGenerator) + ", "
+		return "CreateTimedArtBuffAU(" + jassTextGenerator.getCaster() + ", " + jassTextGenerator.getTriggerLocalStore()
+				+ ", " + this.buffId.generateJassEquivalent(jassTextGenerator) + ", "
 				+ this.duration.generateJassEquivalent(jassTextGenerator) + ", " + showIconJass + ", " + artTypeJass
 				+ ")";
 	}

@@ -2,8 +2,6 @@ package com.etheller.warsmash.parsers.jass;
 
 import java.util.List;
 
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABAction;
-
 public interface JassTextGenerator {
 	void prependFunction(StringBuilder functionContents);
 
@@ -15,6 +13,8 @@ public interface JassTextGenerator {
 
 	String getAbility();
 
+	String getTriggerLocalStore();
+
 	public String setUserData(String key, JassTextGeneratorType type, String value);
 
 	/**
@@ -23,7 +23,7 @@ public interface JassTextGenerator {
 	 * @param actions
 	 * @return name for anonymously generated function
 	 */
-	public String createAnonymousFunction(List<ABAction> actions, String nameSuggestion);
+	public String createAnonymousFunction(List<? extends JassTextGeneratorExpr> actions, String nameSuggestion);
 
 	/**
 	 * Probably only works on "takes nothing returns nothing" function, but is not a
@@ -36,8 +36,6 @@ public interface JassTextGenerator {
 	public String callAnonymousFunctionByName(String functionName);
 
 	public String functionPointerByName(String functionName);
-
-	public String createAndCallFunction(List<ABAction> actions);
 
 	class Util {
 		public static void indent(final int indent, final StringBuilder sb) {

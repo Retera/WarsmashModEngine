@@ -30,7 +30,8 @@ public class ABActionCreateTargetingBuff implements ABAction {
 
 	@Override
 	public String generateJassEquivalent(final JassTextGenerator jassTextGenerator) {
-		return "CreateTargetingBuffAU(" + jassTextGenerator.getCaster() + ", " + jassTextGenerator.getAbility() + ", "
+		return "CreateTargetingBuffAU(" + jassTextGenerator.getCaster() + ", "
+				+ jassTextGenerator.getTriggerLocalStore() + ", " + jassTextGenerator.getCastId() + ", "
 				+ this.buffId.generateJassEquivalent(jassTextGenerator) + ")";
 	}
 }

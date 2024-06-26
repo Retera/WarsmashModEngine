@@ -1,5 +1,7 @@
 package com.etheller.warsmash.parsers.jass.scope;
 
+import java.util.Map;
+
 import com.etheller.interpreter.ast.scope.TriggerExecutionScope;
 import com.etheller.interpreter.ast.scope.trigger.Trigger;
 import com.etheller.warsmash.util.War3ID;
@@ -87,6 +89,8 @@ public class CommonTriggerExecutionScope extends TriggerExecutionScope {
 	private JassOrderButtonType spellAbilityTargetType; // Warsmash only
 	private JassOrder spellAbilityOrderCommandCard; // Warsmash only
 	private String enumFilePath; // Warsmash only
+	private Map<String, Object> triggerLocalStore; // warsmash only
+	private int triggerCastId; // Warsmash only
 
 	private JassGameEventsWar3 triggerEventId;
 
@@ -162,6 +166,10 @@ public class CommonTriggerExecutionScope extends TriggerExecutionScope {
 		this.triggerWidget = parentScope.triggerWidget;
 		this.clickedDialog = parentScope.clickedDialog;
 		this.clickedButton = parentScope.clickedButton;
+		this.spellAbilityTargetType = parentScope.spellAbilityTargetType;
+		this.spellAbilityOrderCommandCard = parentScope.spellAbilityOrderCommandCard;
+		this.enumFilePath = parentScope.enumFilePath;
+		this.triggerLocalStore = parentScope.triggerLocalStore;
 		this.triggerEventId = parentScope.triggerEventId;
 	}
 
@@ -435,6 +443,14 @@ public class CommonTriggerExecutionScope extends TriggerExecutionScope {
 
 	public String getEnumFilePath() {
 		return this.enumFilePath;
+	}
+
+	public Map<String, Object> getTriggerLocalStore() {
+		return this.triggerLocalStore;
+	}
+
+	public int getTriggerCastId() {
+		return this.triggerCastId;
 	}
 
 	public static CommonTriggerExecutionScope filterScope(final TriggerExecutionScope parentScope,
@@ -850,6 +866,16 @@ public class CommonTriggerExecutionScope extends TriggerExecutionScope {
 		scope.spellAbilityOrderId = spellAbilityOrderId;
 		scope.spellAbilityTargetType = spellAbilityTargetType;
 		scope.spellAbilityOrderCommandCard = spellAbilityOrderCommandCard;
+		return scope;
+	}
+
+	public static TriggerExecutionScope abilityBuilder(final CUnit caster, final Map<String, Object> localStore,
+			final int castId) {
+		final CommonTriggerExecutionScope scope = new CommonTriggerExecutionScope(null, TriggerExecutionScope.EMPTY);
+		scope.spellAbilityUnit = caster;
+		scope.triggeringUnit = caster;
+		scope.triggerLocalStore = localStore;
+		scope.triggerCastId = castId;
 		return scope;
 	}
 

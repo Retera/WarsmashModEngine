@@ -62,12 +62,12 @@ public class ABActionCreatePassiveBuff implements ABAction {
 		final String removeFunctionName = jassTextGenerator.createAnonymousFunction(this.onRemoveActions,
 				"CreatePassiveBuffAU_OnRemoveActions");
 
-		return "CreatePassiveBuffAU(" + jassTextGenerator.getCaster() + ", " + jassTextGenerator.getAbility() + ", "
-				+ this.buffId.generateJassEquivalent(jassTextGenerator) + ", "
+		return "CreatePassiveBuffAU(" + jassTextGenerator.getCaster() + ", " + jassTextGenerator.getTriggerLocalStore()
+				+ ", " + this.buffId.generateJassEquivalent(jassTextGenerator) + ", "
 				+ this.showIcon.generateJassEquivalent(jassTextGenerator) + ", "
 				+ jassTextGenerator.functionPointerByName(addFunctionName) + ", "
 				+ jassTextGenerator.functionPointerByName(removeFunctionName) + ", EFFECT_TYPE_" + this.artType.name()
 				+ ", " + this.showFx.generateJassEquivalent(jassTextGenerator) + ", "
-				+ this.playSfx.generateJassEquivalent(jassTextGenerator) + ")";
+				+ this.playSfx.generateJassEquivalent(jassTextGenerator) + ", " + jassTextGenerator.getCastId() + ")";
 	}
 }

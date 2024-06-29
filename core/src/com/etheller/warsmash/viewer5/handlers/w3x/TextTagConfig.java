@@ -3,31 +3,38 @@ package com.etheller.warsmash.viewer5.handlers.w3x;
 import com.badlogic.gdx.graphics.Color;
 
 public class TextTagConfig {
-	private Color color;
-	private float[] velocity;
-	private float lifetime;
-	private float fadeStart;
+	private final Color color;
+	private final float[] velocity;
+	private final float lifetime;
+	private final float fadeStart;
+	private final float height;
 
-	public TextTagConfig(Color color, float[] velocity, float lifetime, float fadeStart) {
+	public TextTagConfig(final Color color, final float[] velocity, final float lifetime, final float fadeStart,
+			final float height) {
 		this.color = color;
 		this.velocity = velocity;
 		this.lifetime = lifetime;
 		this.fadeStart = fadeStart;
+		this.height = height;
 	}
 
 	public Color getColor() {
-		return color;
+		return this.color;
 	}
 
 	public float[] getVelocity() {
-		return velocity;
+		return this.velocity;
 	}
 
 	public float getLifetime() {
-		return lifetime;
+		return this.lifetime;
 	}
 
 	public float getFadeStart() {
-		return fadeStart;
+		return this.fadeStart;
+	}
+
+	public float getHeight() {
+		return this.height;
 	}
 }

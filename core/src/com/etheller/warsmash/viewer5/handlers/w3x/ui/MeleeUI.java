@@ -361,7 +361,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 	private List<RenderUnit> selectedUnits = Collections.emptyList();
 	private Set<RenderUnit> dragSelectPreviewUnits = new HashSet<>();
 	private Set<RenderUnit> dragSelectPreviewUnitsUpcoming = new HashSet<>();
-	private BitmapFont textTagFont;
+	private final FreeTypeFontParameter textTagFontParam = new FreeTypeFontParameter();
 	private SetPoint uberTipNoResourcesSetPoint;
 	private SetPoint uberTipWithResourcesSetPoint;
 	private TextureFrame primaryAttributeIcon;
@@ -1321,10 +1321,6 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 		this.rallyPointInstance.hide();
 		this.waypointModel = this.war3MapViewer.loadModelMdx(this.rootFrame.getSkinField("WaypointIndicator"));
 
-		final FreeTypeFontParameter fontParam = new FreeTypeFontParameter();
-		fontParam.size = (int) GameUI.convertY(this.uiViewport, 0.012f);
-		this.textTagFont = this.rootFrame.getFontGenerator().generateFont(fontParam);
-
 		this.rootFrame.positionBounds(this.rootFrame, this.uiViewport);
 
 		selectUnit(null);
@@ -1978,28 +1974,40 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 
 		}
 
-		this.meleeUIMinimap.render(this.war3MapViewer.simulation, batch, this.war3MapViewer.units, this.war3MapViewer.simulation.getPathingGrid(), this.war3MapViewer.getFogOfWar(), this.war3MapViewer.simulation.getPlayer(this.war3MapViewer.getLocalPlayerIndex()));
+		this.meleeUIMinimap.render(this.war3MapViewer.simulation, batch, this.war3MapViewer.units,
+				this.war3MapViewer.simulation.getPathingGrid(), this.war3MapViewer.getFogOfWar(),
+				this.war3MapViewer.simulation.getPlayer(this.war3MapViewer.getLocalPlayerIndex()));
 		this.timeIndicator.setSequence(this.war3MapViewer.simulation.isFalseTimeOfDay() ? 1 : 0);
 		this.timeIndicator.setFrameByRatio(this.war3MapViewer.simulation.getGameTimeOfDay()
 				/ this.war3MapViewer.simulation.getGameplayConstants().getGameDayHours());
 		for (final TextTag textTag : this.war3MapViewer.textTags) {
-			this.war3MapViewer.worldScene.camera.worldToScreen(screenCoordsVector, textTag.getPosition());
-			if (this.war3MapViewer.worldScene.camera.rect.contains(screenCoordsVector.x,
-					(Gdx.graphics.getHeight() - screenCoordsVector.y) + textTag.getScreenCoordsZHeight())) {
-				final Vector2 unprojected = this.uiViewport.unproject(screenCoordsVector);
-				final float remainingLife = textTag.getRemainingLife();
-				final float fadeStart = textTag.getFadeStart();
-				final float lifetimeDuration = textTag.getLifetimeDuration();
-				final float fadingSeconds = lifetimeDuration - fadeStart;
-				final float alpha = remainingLife > fadingSeconds ? 1.0f : remainingLife / fadingSeconds;
-				glyphLayout.setText(this.textTagFont, textTag.getText());
-				this.textTagFont.setColor(0, 0, 0, textTag.getColor().a * alpha);
-				this.textTagFont.draw(batch, textTag.getText(), (unprojected.x - (glyphLayout.width / 2)) + 3,
-						(unprojected.y - (glyphLayout.height / 2) - 1) + textTag.getScreenCoordsZHeight());
-				this.textTagFont.setColor(textTag.getColor().r, textTag.getColor().g, textTag.getColor().b,
-						textTag.getColor().a * alpha);
-				this.textTagFont.draw(batch, textTag.getText(), unprojected.x - (glyphLayout.width / 2),
-						(unprojected.y - (glyphLayout.height / 2)) + textTag.getScreenCoordsZHeight());
+			if (textTag.isVisible()) {
+				this.war3MapViewer.worldScene.camera.worldToScreen(screenCoordsVector, textTag.getPosition());
+				if (this.war3MapViewer.worldScene.camera.rect.contains(screenCoordsVector.x,
+						(Gdx.graphics.getHeight() - screenCoordsVector.y))) {
+					final Vector2 unprojected = this.uiViewport.unproject(screenCoordsVector);
+					unprojected.add(textTag.getScreenCoordTravelOffset());
+					this.textTagFontParam.size = (int) GameUI.convertY(this.uiViewport, textTag.getFontHeight() * 0.5f);
+					// below: generateFont is a caching call, so hopefully this is not allocating
+					// font object on every loop, which would be wasteful
+					final BitmapFont myTextTagFont = this.rootFrame.getFontGenerator()
+							.generateFont(this.textTagFontParam);
+					myTextTagFont.setColor(0, 0, 0, textTag.getColor().a);
+					float x = unprojected.x;
+					float y = unprojected.y;
+					if (textTag.isCentered()) {
+						glyphLayout.setText(myTextTagFont, textTag.getText());
+						x -= (glyphLayout.width / 2);
+						y += (glyphLayout.height / 2);
+					}
+					else {
+						y += glyphLayout.height;
+					}
+					myTextTagFont.draw(batch, textTag.getText(), x + 3, (y - 1));
+					myTextTagFont.setColor(textTag.getColor().r, textTag.getColor().g, textTag.getColor().b,
+							textTag.getColor().a);
+					myTextTagFont.draw(batch, textTag.getText(), x, y);
+				}
 			}
 		}
 		if (this.draggingMouseButton == Input.Buttons.LEFT) {
@@ -3013,8 +3021,10 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 						this.cargoUnitFrames[i].setTexture(unitUI.getIcon());
 						if (cargoContainedUnit.isHero()) {
 							this.cargoUnitFrames[i].setToolTip(cargoContainedUnit.getHeroData().getProperName());
-							this.cargoUnitFrames[i].setUberTip("Level " + cargoContainedUnit.getHeroData().getHeroLevel());
-						} else {
+							this.cargoUnitFrames[i]
+									.setUberTip("Level " + cargoContainedUnit.getHeroData().getHeroLevel());
+						}
+						else {
 							this.cargoUnitFrames[i].setToolTip(cargoContainedUnit.getUnitType().getName());
 							this.cargoUnitFrames[i].setUberTip(unitUI.getUberTip());
 						}
@@ -3185,7 +3195,8 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 					this.queueIconFrames[0].setTexture(constructingUnitUI.getIcon());
 					this.queueIconFrames[0].setToolTip(constructingUnitUI.getToolTip());
 					this.queueIconFrames[0].setUberTip(constructingUnitUI.getUberTip());
-					if ((simulationUnit.getWorker() != null) && !simulationUnit.isConstructionConsumesWorker() && !simulationUnit.isConstructingPaused()) {
+					if ((simulationUnit.getWorker() != null) && !simulationUnit.isConstructionConsumesWorker()
+							&& !simulationUnit.isConstructingPaused()) {
 						this.selectWorkerInsideFrame.setVisible(true);
 						this.selectWorkerInsideFrame.setTexture(this.war3MapViewer.getAbilityDataUI()
 								.getUnitUI(simulationUnit.getWorker().getTypeId()).getIcon());
@@ -3260,7 +3271,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 						final CItemType itemType = item.getItemType();
 						// TODO: below we set menu=false, this is bad, item should be based on item abil
 						final boolean activelyUsed = itemType.isActivelyUsed() && inventoryEnabled;
-						final boolean pawnable = itemType.isPawnable();
+						final boolean pawnable = item.isPawnable();
 						final String uberTip = iconUI.getUberTip();
 						this.recycleStringBuilder.setLength(0);
 						if (pawnable) {
@@ -4482,8 +4493,8 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 				}
 				break;
 			case 1:
-				final List<RenderWidget> unitList = Arrays.asList(
-						this.war3MapViewer.getRenderPeer(this.selectedUnit.getSimulationUnit().getWorker()));
+				final List<RenderWidget> unitList = Arrays
+						.asList(this.war3MapViewer.getRenderPeer(this.selectedUnit.getSimulationUnit().getWorker()));
 				this.war3MapViewer.doSelectUnit(unitList);
 				selectWidgets(unitList);
 				break;

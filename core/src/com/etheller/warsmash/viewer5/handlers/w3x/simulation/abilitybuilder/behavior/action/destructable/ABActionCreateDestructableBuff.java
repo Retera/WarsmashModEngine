@@ -39,6 +39,12 @@ public class ABActionCreateDestructableBuff implements ABAction {
 		final String deathFunctionName = jassTextGenerator.createAnonymousFunction(this.onDeathActions,
 				"CreateDestructableBuffAU_OnDeathActions");
 
-		return null;
+		return "CreateDestructableBuffAU(" + jassTextGenerator.getCaster() + ", "
+				+ this.buffId.generateJassEquivalent(jassTextGenerator) + ", "
+				+ jassTextGenerator.getTriggerLocalStore() + ", "
+				+ jassTextGenerator.functionPointerByName(addFunctionName) + ", "
+				+ jassTextGenerator.functionPointerByName(removeFunctionName) + ", "
+				+ jassTextGenerator.functionPointerByName(deathFunctionName) + ", " + jassTextGenerator.getCastId()
+				+ ")";
 	}
 }

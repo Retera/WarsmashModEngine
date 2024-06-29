@@ -23,7 +23,7 @@ public class CBehaviorGiveItemToHero extends CAbstractRangedBehavior {
 		this.inventory = inventory;
 	}
 
-	public CBehavior reset(CSimulation game, final CItem targetItem, final CUnit targetHero) {
+	public CBehavior reset(final CSimulation game, final CItem targetItem, final CUnit targetHero) {
 		this.targetItem = targetItem;
 		this.targetHero = targetHero;
 		return innerReset(game, targetHero);
@@ -64,7 +64,7 @@ public class CBehaviorGiveItemToHero extends CAbstractRangedBehavior {
 			 * note: below: pawnable check is not enforced by ability targeting because of
 			 * the dual targets "drop item @ unit" concept, which is a bit of a hack
 			 */
-			if ((shopPurchaseItemAbility != null) && this.targetItem.getItemType().isPawnable()) {
+			if ((shopPurchaseItemAbility != null) && this.targetItem.isPawnable()) {
 				final CPlayer player = simulation.getPlayer(this.unit.getPlayerIndex());
 
 				final int goldCost = this.targetItem.getItemType().getGoldCost();
@@ -82,7 +82,7 @@ public class CBehaviorGiveItemToHero extends CAbstractRangedBehavior {
 					simulation.unitGainResourceEvent(this.targetHero, player.getId(), ResourceType.LUMBER,
 							lumberGained);
 				}
-				simulation.removeItem(targetItem);
+				simulation.removeItem(this.targetItem);
 				simulation.unitSoundEffectEvent(this.targetHero, shopPurchaseItemAbility.getAlias());
 			}
 		}

@@ -5,6 +5,8 @@ import java.io.FileNotFoundException;
 import java.io.PrintStream;
 import java.util.List;
 
+import com.etheller.warsmash.parsers.jass.JassTextGenerator;
+import com.etheller.warsmash.parsers.jass.JassTextGeneratorImpl1;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.autocast.AutocastType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABAction;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.AbilityBuilderGsonBuilder;
@@ -43,24 +45,18 @@ public class AbilityBuilderJassBrainstorm {
 		}
 	}
 
-	private static void generateFunctions(final PrintStream out, final StringBuilder initCode,
+	private static void generateFunctions(final JassTextGenerator out, final StringBuilder initCode,
 			final List<ABAction> actions, final String functionName) {
 		if ((actions != null) && !actions.isEmpty()) {
-			out.println("function " + functionName + " takes nothing returns nothing");
 
-			for (final ABAction action : actions) {
-
-			}
-
-			out.println("endfunction");
-			out.println();
+			final String finalFuncName = out.createAnonymousFunction(actions, functionName);
 
 			final String funcSuffix = functionName.substring(functionName.lastIndexOf("On") + 2);
-			initCode.append("    call AddABConf" + funcSuffix + "Action(abc, function " + functionName + ")\n");
+			initCode.append("    call AddABConf" + funcSuffix + "Action(abc, function " + finalFuncName + ")\n");
 		}
 	}
 
-	private static void generateJassForConf(final PrintStream out, final AbilityBuilderDupe dupe,
+	private static void generateJassForConf(final PrintStream outStream, final AbilityBuilderDupe dupe,
 			final AbilityBuilderConfiguration abilityBuilderConfiguration) {
 
 		String abilityName = null;
@@ -132,6 +128,7 @@ public class AbilityBuilderJassBrainstorm {
 //		private List<ABAction> onEndCasting;
 //		private List<ABAction> onChannelTick;
 //		private List<ABAction> onEndChannel;
+		final JassTextGeneratorImpl1 out = new JassTextGeneratorImpl1();
 		generateFunctions(out, initCode, abilityBuilderConfiguration.getOnAddAbility(), abilityName + "_OnAddAbility");
 		generateFunctions(out, initCode, abilityBuilderConfiguration.getOnAddDisabledAbility(),
 				abilityName + "_OnAddDisabledAbility");
@@ -161,9 +158,9 @@ public class AbilityBuilderJassBrainstorm {
 
 		initCode.append("    call RegisterABConf('" + dupe.getId() + "', abc)\n");
 
-		out.println("function main takes nothing returns nothing");
-		out.print(initCode.toString());
-		out.println("endfunction");
+		outStream.println("function main takes nothing returns nothing");
+		outStream.print(initCode.toString());
+		outStream.println("endfunction");
 	}
 
 }

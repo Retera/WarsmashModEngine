@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.etheller.interpreter.ast.util.CHandle;
 import com.etheller.warsmash.units.GameObject;
 import com.etheller.warsmash.units.ObjectData;
 import com.etheller.warsmash.units.custom.Change;
@@ -980,8 +981,13 @@ public final class MutableObjectData {
 				: "".equals(text) ? 0 : "-".equals(text) ? 0 : "_".equals(text) ? 0 : Float.parseFloat(text);
 	}
 
-	public enum WorldEditorDataType {
-		UNITS("w3u"), ITEM("w3t"), DESTRUCTIBLES("w3b"), DOODADS("w3d"), ABILITIES("w3a"), BUFFS_EFFECTS("w3h"),
+	public enum WorldEditorDataType implements CHandle {
+		UNITS("w3u"),
+		ITEM("w3t"),
+		DESTRUCTIBLES("w3b"),
+		DOODADS("w3d"),
+		ABILITIES("w3a"),
+		BUFFS_EFFECTS("w3h"),
 		UPGRADES("w3q");
 
 		private String extension;
@@ -992,6 +998,13 @@ public final class MutableObjectData {
 
 		public String getExtension() {
 			return this.extension;
+		}
+
+		public static final WorldEditorDataType[] VALUES = values();
+
+		@Override
+		public int getHandleId() {
+			return ordinal();
 		}
 	}
 

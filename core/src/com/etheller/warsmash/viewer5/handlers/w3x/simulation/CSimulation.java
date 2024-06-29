@@ -29,6 +29,7 @@ import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.util.WarsmashConstants;
 import com.etheller.warsmash.viewer5.handlers.w3x.AnimationTokens.PrimaryTag;
 import com.etheller.warsmash.viewer5.handlers.w3x.SequenceUtils;
+import com.etheller.warsmash.viewer5.handlers.w3x.TextTag;
 import com.etheller.warsmash.viewer5.handlers.w3x.environment.PathingGrid;
 import com.etheller.warsmash.viewer5.handlers.w3x.environment.PathingGrid.RemovablePathingMapInstance;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbility;
@@ -247,7 +248,7 @@ public class CSimulation implements CPlayerAPI {
 	}
 
 	private void internalRegisterTimer(final CTimer timer) {
-		if(this.activeTimers.contains(timer)) {
+		if (this.activeTimers.contains(timer)) {
 			this.activeTimers.remove(timer);
 		}
 		final ListIterator<CTimer> listIterator = this.activeTimers.listIterator();
@@ -508,13 +509,16 @@ public class CSimulation implements CPlayerAPI {
 			if (!this.falseTimeOfDay.tick()) {
 				this.falseTimeOfDay = null;
 			}
-		} else {
+		}
+		else {
 			if (this.nextGameTime != null) {
-				this.currentGameDayTimeElapsed = (this.nextGameTime / this.gameplayConstants.getGameDayHours()) * this.gameplayConstants.getGameDayLength();
+				this.currentGameDayTimeElapsed = (this.nextGameTime / this.gameplayConstants.getGameDayHours())
+						* this.gameplayConstants.getGameDayLength();
 				this.nextGameTime = null;
-			} else if (!this.timeOfDaySuspended) {
-				this.currentGameDayTimeElapsed = (this.currentGameDayTimeElapsed + WarsmashConstants.SIMULATION_STEP_TIME)
-						% this.gameplayConstants.getGameDayLength();
+			}
+			else if (!this.timeOfDaySuspended) {
+				this.currentGameDayTimeElapsed = (this.currentGameDayTimeElapsed
+						+ WarsmashConstants.SIMULATION_STEP_TIME) % this.gameplayConstants.getGameDayLength();
 			}
 		}
 		final float timeOfDayAfter = getGameTimeOfDay();
@@ -564,7 +568,7 @@ public class CSimulation implements CPlayerAPI {
 	}
 
 	public float getGameTimeOfDay() {
-		if (this.falseTimeOfDay != null && this.falseTimeOfDay.isInitialized()) {
+		if ((this.falseTimeOfDay != null) && this.falseTimeOfDay.isInitialized()) {
 			return this.falseTimeOfDay.getTimeOfDay();
 		}
 		return (this.currentGameDayTimeElapsed / this.gameplayConstants.getGameDayLength())
@@ -574,7 +578,7 @@ public class CSimulation implements CPlayerAPI {
 	public void setGameTimeOfDay(final float value) {
 		this.nextGameTime = value;
 	}
-	
+
 	private void checkTimeOfDayEvents(final float timeOfDayBefore, final float timeOfDayAfter) {
 		for (final TimeOfDayEvent timeOfDayEvent : this.timeOfDayVariableEvents) {
 			if (!timeOfDayEvent.isMatching(timeOfDayBefore) && timeOfDayEvent.isMatching(timeOfDayAfter)) {
@@ -582,15 +586,16 @@ public class CSimulation implements CPlayerAPI {
 			}
 		}
 	}
-	
-	public void addFalseTimeOfDay(int hour, int minute, float duration) {
-		float timeOfDayBefore = this.getGameTimeOfDay();
-		this.falseTimeOfDay = new FalseTimeOfDay(hour, minute, (int) (duration / WarsmashConstants.SIMULATION_STEP_TIME));
-		checkTimeOfDayEvents(timeOfDayBefore, this.getGameTimeOfDay());
+
+	public void addFalseTimeOfDay(final int hour, final int minute, final float duration) {
+		final float timeOfDayBefore = getGameTimeOfDay();
+		this.falseTimeOfDay = new FalseTimeOfDay(hour, minute,
+				(int) (duration / WarsmashConstants.SIMULATION_STEP_TIME));
+		checkTimeOfDayEvents(timeOfDayBefore, getGameTimeOfDay());
 	}
-	
+
 	public boolean isFalseTimeOfDay() {
-		return (this.falseTimeOfDay!=null && this.falseTimeOfDay.isInitialized());
+		return ((this.falseTimeOfDay != null) && this.falseTimeOfDay.isInitialized());
 	}
 
 	public int getGameTurnTick() {
@@ -698,13 +703,22 @@ public class CSimulation implements CPlayerAPI {
 		}
 	}
 
-	public void spawnTextTag(final CUnit unit, final int playerIndex, final TextTagConfigType type, final int amount) {
-		this.simulationRenderController.spawnTextTag(unit, type, amount);
+	public TextTag spawnTextTag(final CUnit unit, final int playerIndex, final TextTagConfigType type,
+			final int amount) {
+		return this.simulationRenderController.spawnTextTag(unit, type, amount);
 	}
 
-	public void spawnTextTag(final CUnit unit, final int playerIndex, final TextTagConfigType type,
+	public TextTag spawnTextTag(final CUnit unit, final int playerIndex, final TextTagConfigType type,
 			final String message) {
-		this.simulationRenderController.spawnTextTag(unit, type, message);
+		return this.simulationRenderController.spawnTextTag(unit, type, message);
+	}
+
+	public TextTag createTextTag() {
+		return this.simulationRenderController.createTextTag();
+	}
+
+	public void destroyTextTag(final TextTag textTag) {
+		this.simulationRenderController.destroyTextTag(textTag);
 	}
 
 	public void unitGainLevelEvent(final CUnit unit) {
@@ -838,14 +852,14 @@ public class CSimulation implements CPlayerAPI {
 		return this.eventTypeToEvents.get(eventType);
 	}
 
-	public RemovableTriggerEvent registerGlobalUnitEvent(final Trigger whichTrigger,
-			final JassGameEventsWar3 eventType, final TriggerBooleanExpression filter) {
+	public RemovableTriggerEvent registerGlobalUnitEvent(final Trigger whichTrigger, final JassGameEventsWar3 eventType,
+			final TriggerBooleanExpression filter) {
 		final CGlobalEvent newEvent = new CGlobalWidgetEvent(this, this.globalScope, whichTrigger, eventType, filter);
 		getOrCreateEventList(eventType).add(newEvent);
 		return newEvent;
 	}
 
-	public void addGlobalEvent(CGlobalEvent newEvent) {
+	public void addGlobalEvent(final CGlobalEvent newEvent) {
 		getOrCreateEventList(newEvent.getEventType()).add(newEvent);
 	}
 
@@ -856,7 +870,7 @@ public class CSimulation implements CPlayerAPI {
 		}
 	}
 
-	public void fireSpellEventsNoTarget(JassGameEventsWar3 eventId, final CAbility spellAbility,
+	public void fireSpellEventsNoTarget(final JassGameEventsWar3 eventId, final CAbility spellAbility,
 			final CUnit spellAbilityUnit) {
 		final List<CGlobalEvent> eventList = getEventList(eventId);
 		if (eventList != null) {
@@ -867,18 +881,19 @@ public class CSimulation implements CPlayerAPI {
 		}
 	}
 
-	public void fireSpellEventsPointTarget(JassGameEventsWar3 eventId, final CAbility spellAbility,
+	public void fireSpellEventsPointTarget(final JassGameEventsWar3 eventId, final CAbility spellAbility,
 			final CUnit spellAbilityUnit, final AbilityPointTarget abilityPointTarget) {
 		final List<CGlobalEvent> eventList = getEventList(eventId);
 		if (eventList != null) {
 			for (final CGlobalEvent event : eventList) {
-				event.fire(spellAbilityUnit, CommonTriggerExecutionScope.unitSpellPointScope(eventId,
-						event.getTrigger(), spellAbility, spellAbilityUnit, abilityPointTarget, spellAbility.getAlias()));
+				event.fire(spellAbilityUnit,
+						CommonTriggerExecutionScope.unitSpellPointScope(eventId, event.getTrigger(), spellAbility,
+								spellAbilityUnit, abilityPointTarget, spellAbility.getAlias()));
 			}
 		}
 	}
 
-	public void fireSpellEventsUnitTarget(JassGameEventsWar3 eventId, final CAbility spellAbility,
+	public void fireSpellEventsUnitTarget(final JassGameEventsWar3 eventId, final CAbility spellAbility,
 			final CUnit spellAbilityUnit, final CUnit unitTarget) {
 		final List<CGlobalEvent> eventList = getEventList(eventId);
 		if (eventList != null) {
@@ -889,7 +904,7 @@ public class CSimulation implements CPlayerAPI {
 		}
 	}
 
-	public void fireSpellEventsItemTarget(JassGameEventsWar3 eventId, final CAbility spellAbility,
+	public void fireSpellEventsItemTarget(final JassGameEventsWar3 eventId, final CAbility spellAbility,
 			final CUnit spellAbilityUnit, final CItem itemTarget) {
 		final List<CGlobalEvent> eventList = getEventList(eventId);
 		if (eventList != null) {
@@ -900,7 +915,7 @@ public class CSimulation implements CPlayerAPI {
 		}
 	}
 
-	public void fireSpellEventsDestructableTarget(JassGameEventsWar3 eventId, final CAbility spellAbility,
+	public void fireSpellEventsDestructableTarget(final JassGameEventsWar3 eventId, final CAbility spellAbility,
 			final CUnit spellAbilityUnit, final CDestructable destTarget) {
 		final List<CGlobalEvent> eventList = getEventList(eventId);
 		if (eventList != null) {
@@ -952,7 +967,7 @@ public class CSimulation implements CPlayerAPI {
 	public boolean isTreeOwned(final CDestructable tree) {
 		return this.ownedTreeSet.contains(tree);
 	}
-	
+
 	public static interface TimeOfDayEvent {
 		public void fire();
 
@@ -968,6 +983,7 @@ public class CSimulation implements CPlayerAPI {
 			this.globalScope = globalScope;
 		}
 
+		@Override
 		public void fire() {
 			this.fire(this.globalScope);
 		}

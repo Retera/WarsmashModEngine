@@ -3,9 +3,11 @@ package com.etheller.warsmash.parsers.jass;
 import java.util.List;
 
 public interface JassTextGenerator {
-	void prependFunction(StringBuilder functionContents);
+	// void prependFunction(StringBuilder functionContents);
 
 	public String getUserData(String key, JassTextGeneratorType type);
+
+	public String getUserDataExpr(String keyExpr, JassTextGeneratorType type);
 
 	public String getCastId();
 
@@ -25,6 +27,8 @@ public interface JassTextGenerator {
 	 */
 	public String createAnonymousFunction(List<? extends JassTextGeneratorExpr> actions, String nameSuggestion);
 
+	public String createAnonymousBooleanFunction(List<? extends JassTextGeneratorExpr> actions, String nameSuggestion);
+
 	/**
 	 * Probably only works on "takes nothing returns nothing" function, but is not a
 	 * code func. Probably implemented by returning "arg()" for a given "arg".
@@ -33,7 +37,7 @@ public interface JassTextGenerator {
 	 *                 "createAnonymousFunction")
 	 * @return a call expression that calls the given function
 	 */
-	public String callAnonymousFunctionByName(String functionName);
+	// public String callAnonymousFunctionByName(String functionName);
 
 	public String functionPointerByName(String functionName);
 

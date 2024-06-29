@@ -2,6 +2,7 @@ package com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.beh
 
 import java.util.Map;
 
+import com.etheller.warsmash.parsers.jass.JassTextGenerator;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.eventcallbacks.timeeventcallbacks.ABTimeOfDayEventCallback;
@@ -11,7 +12,14 @@ public class ABActionUnregisterTimeOfDayEvent implements ABAction {
 
 	private ABTimeOfDayEventCallback event;
 
-	public void runAction(final CSimulation game, final CUnit caster, final Map<String, Object> localStore, final int castId) {
-		game.unregisterTimeOfDayEvent(event.callback(game, caster, localStore, castId));
+	@Override
+	public void runAction(final CSimulation game, final CUnit caster, final Map<String, Object> localStore,
+			final int castId) {
+		game.unregisterTimeOfDayEvent(this.event.callback(game, caster, localStore, castId));
+	}
+
+	@Override
+	public String generateJassEquivalent(final JassTextGenerator jassTextGenerator) {
+		return "UnregisterABTimeOfDayEvent(" + this.event.generateJassEquivalent(jassTextGenerator) + ")";
 	}
 }

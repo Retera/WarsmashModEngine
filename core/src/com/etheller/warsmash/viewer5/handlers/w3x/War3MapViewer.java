@@ -66,6 +66,7 @@ import com.etheller.warsmash.util.RenderMathUtils;
 import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.util.WarsmashConstants;
 import com.etheller.warsmash.util.WorldEditStrings;
+import com.etheller.warsmash.viewer5.Bounds;
 import com.etheller.warsmash.viewer5.CanvasProvider;
 import com.etheller.warsmash.viewer5.GenericResource;
 import com.etheller.warsmash.viewer5.Grid;
@@ -156,6 +157,8 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 
 	public static int DEBUG_DEPTH = 9999;
 
+	private static final float DEFAULT_TEXT_TAG_HEIGHT = 0.024f;
+	private static final int BUILTIN_TEXT_TAG_REPORTED_HANDLE_ID = -1;
 	private static final War3ID ABILITY_HERO_RAWCODE = War3ID.fromString("AHer");
 	private static final War3ID ABILITY_REVIVE_RAWCODE = War3ID.fromString("Arev");
 	private static final Color PLACEHOLDER_LUMBER_COLOR = new Color(0.0f, 200f / 255f, 80f / 255f, 1.0f);
@@ -453,7 +456,8 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 				misc.getFieldFloatValue(velocityKey, 2) };
 		final float lifetime = misc.getFieldFloatValue(name + "TextLifetime");
 		final float fadeStart = misc.getFieldFloatValue(name + "TextFadeStart");
-		return new TextTagConfig(color, velocity, lifetime, fadeStart);
+		final float height = misc.getFieldFloatValue(name + "TextHeight");
+		return new TextTagConfig(color, velocity, lifetime, fadeStart, height);
 	}
 
 	private void loadLightningData(final WorldEditStrings worldEditStrings) throws IOException {
@@ -3418,7 +3422,7 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 							}
 
 							@Override
-							public void spawnTextTag(final CUnit unit, final TextTagConfigType configType,
+							public TextTag spawnTextTag(final CUnit unit, final TextTagConfigType configType,
 									final int displayAmount) {
 								final RenderUnit renderPeer = War3MapViewer.this.unitToRenderPeer.get(unit);
 								final TextTagConfig textTagConfig = getTextTagConfig(configType.getKey());
@@ -3444,19 +3448,54 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 									break;
 								}
 								}
-								War3MapViewer.this.textTags.add(
-										new TextTag(new Vector3(renderPeer.location), text, textTagConfig.getColor(),
-												textTagConfig.getLifetime(), textTagConfig.getFadeStart()));
+								final Vector3 unitPosition = new Vector3(renderPeer.location);
+								final Bounds bounds = renderPeer.instance.getBounds();
+								final TextTag textTag = new TextTag(unitPosition, new Vector2(0, 60f), text,
+										textTagConfig.getColor(), textTagConfig.getLifetime(),
+										textTagConfig.getFadeStart(), textTagConfig.getHeight(),
+										BUILTIN_TEXT_TAG_REPORTED_HANDLE_ID);
+								War3MapViewer.this.textTags.add(textTag);
+								return textTag;
 							}
 
 							@Override
-							public void spawnTextTag(final CUnit unit, final TextTagConfigType configType,
+							public TextTag spawnTextTag(final CUnit unit, final TextTagConfigType configType,
 									final String message) {
 								final RenderUnit renderPeer = War3MapViewer.this.unitToRenderPeer.get(unit);
 								final TextTagConfig textTagConfig = getTextTagConfig(configType.getKey());
-								War3MapViewer.this.textTags.add(
-										new TextTag(new Vector3(renderPeer.location), message, textTagConfig.getColor(),
-												textTagConfig.getLifetime(), textTagConfig.getFadeStart()));
+								final Vector3 unitPosition = new Vector3(renderPeer.location);
+								final Bounds bounds = renderPeer.instance.getBounds();
+								final TextTag textTag = new TextTag(unitPosition, new Vector2(0, 60f), message,
+										textTagConfig.getColor(), textTagConfig.getLifetime(),
+										textTagConfig.getFadeStart(), textTagConfig.getHeight(),
+										BUILTIN_TEXT_TAG_REPORTED_HANDLE_ID);
+								War3MapViewer.this.textTags.add(textTag);
+								return textTag;
+							}
+
+							int nextUserTextTagId = 0;
+
+							@Override
+							public TextTag createTextTag() {
+								// Read online in the jassdoc that the API expects us
+								// to be limited to 100 text tags, and that they return
+								// from 0 to 99 as their handle ID. At the moment,
+								// we're using the same class for builtins and user tags,
+								// so they are async and would be desync prone in jass.
+								// Please don't rely on TextTag handle ID in Warsmash,
+								// but if you attempt to do so, builtins report -1 and
+								// custom tags report an ever-increasing unique number
+								// for now (see below)
+								final TextTag genericTextTag = new TextTag(new Vector3(Vector3.Zero), new Vector2(0, 0),
+										"", Color.WHITE, 100, 0, DEFAULT_TEXT_TAG_HEIGHT, this.nextUserTextTagId++);
+								genericTextTag.setPermanent(true);
+								War3MapViewer.this.textTags.add(genericTextTag);
+								return genericTextTag;
+							}
+
+							@Override
+							public void destroyTextTag(final TextTag textTag) {
+								War3MapViewer.this.textTags.remove(textTag);
 							}
 
 							@Override

@@ -3695,9 +3695,9 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 	}
 
 	@Override
-	public boolean scrolled(final int amount) {
-		this.cameraManager.scrolled(amount);
-		return true;
+	public boolean scrolled(final float amountX, final float amountY) {
+		this.cameraManager.scrolled((int) amountY);
+		return false;
 	}
 
 	@Override

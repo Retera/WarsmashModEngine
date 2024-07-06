@@ -19,10 +19,11 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.beha
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABAction;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABCondition;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABLocalStoreKeys;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABSingleAction;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.projectile.ABCollisionProjectileListener;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.projectile.CProjectile;
 
-public class ABActionCreateLocationTargetedCollisionProjectile implements ABAction {
+public class ABActionCreateLocationTargetedCollisionProjectile implements ABSingleAction {
 
 	private ABUnitCallback source;
 	private ABLocationCallback sourceLoc;
@@ -125,7 +126,7 @@ public class ABActionCreateLocationTargetedCollisionProjectile implements ABActi
 				"CreateLocationTargetedCollisionProjectileAU_OnLaunch");
 		final String preHitsFunctionName = jassTextGenerator.createAnonymousFunction(this.onPreHits,
 				"CreateLocationTargetedCollisionProjectileAU_OnPreHits");
-		final String canHitTargetFunctionName = jassTextGenerator.createAnonymousBooleanFunction(this.onHit,
+		final String canHitTargetFunctionName = jassTextGenerator.createAnonymousBooleanFunction(this.canHitTarget,
 				"CreateLocationTargetedCollisionProjectileAU_CanHitTarget");
 		final String hitFunctionName = jassTextGenerator.createAnonymousFunction(this.onHit,
 				"CreateLocationTargetedCollisionProjectileAU_OnHit");
@@ -137,11 +138,6 @@ public class ABActionCreateLocationTargetedCollisionProjectile implements ABActi
 		}
 		else {
 			sourceLocExpression = "GetUnitLoc(" + sourceUnitExpression + ")";
-		}
-
-		String homingExpression = "true";
-		if (this.homing != null) {
-			homingExpression = this.homing.generateJassEquivalent(jassTextGenerator);
 		}
 
 		String maxHitsExpression = "0";
@@ -182,13 +178,39 @@ public class ABActionCreateLocationTargetedCollisionProjectile implements ABActi
 		if (this.provideCounts != null) {
 			provideCountsExpression = this.provideCounts.generateJassEquivalent(jassTextGenerator);
 		}
+		if (this.speed != null) {
+			if (this.homing != null) {
+				String homingExpression = "true";
+				if (this.homing != null) {
+					homingExpression = this.homing.generateJassEquivalent(jassTextGenerator);
+				}
+				return "CreateLocationTargetedCollisionProjectileAnySpeedAU(" + jassTextGenerator.getCaster() + ", "
+						+ jassTextGenerator.getTriggerLocalStore() + ", " + jassTextGenerator.getCastId() + ", "
+						+ this.source.generateJassEquivalent(jassTextGenerator) + ", " + sourceLocExpression + ", "
+						+ this.target.generateJassEquivalent(jassTextGenerator) + ", "
+						+ this.id.generateJassEquivalent(jassTextGenerator) + ", "
+						+ this.speed.generateJassEquivalent(jassTextGenerator) + ", " + homingExpression + ", "
+						+ jassTextGenerator.functionPointerByName(launchFunctionName) + ", "
+						+ jassTextGenerator.functionPointerByName(preHitsFunctionName) + ", Condition("
+						+ jassTextGenerator.functionPointerByName(canHitTargetFunctionName) + "), "
+						+ jassTextGenerator.functionPointerByName(hitFunctionName) + ", " + maxHitsExpression + ", "
+						+ hitsPerTargetExpression + ", " + startingRadiusExpression + ", " + endingRadiusExpression
+						+ ", " + collisionIntervalExpression + ", " + provideCountsExpression + ")";
+
+			}
+			else {
+				throw new UnsupportedOperationException();
+			}
+		}
+		else if (this.homing != null) {
+			throw new UnsupportedOperationException();
+		}
 
 		return "CreateLocationTargetedCollisionProjectileAU(" + jassTextGenerator.getCaster() + ", "
-				+ jassTextGenerator.getTriggerLocalStore() + ", "
+				+ jassTextGenerator.getTriggerLocalStore() + ", " + jassTextGenerator.getCastId() + ", "
 				+ this.source.generateJassEquivalent(jassTextGenerator) + ", " + sourceLocExpression + ", "
 				+ this.target.generateJassEquivalent(jassTextGenerator) + ", "
 				+ this.id.generateJassEquivalent(jassTextGenerator) + ", "
-				+ this.speed.generateJassEquivalent(jassTextGenerator) + ", " + homingExpression + ", "
 				+ jassTextGenerator.functionPointerByName(launchFunctionName) + ", "
 				+ jassTextGenerator.functionPointerByName(preHitsFunctionName) + ", Condition("
 				+ jassTextGenerator.functionPointerByName(canHitTargetFunctionName) + "), "

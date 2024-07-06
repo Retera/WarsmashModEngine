@@ -58,20 +58,17 @@ public class MeleeUIMinimap {
 		final float mapYMod = this.minimapFilledArea.height / (maxY - minY);
 
 		for (int y = 0; y < (maxY - minY); y++) {
-			for (int x =  0; x < (maxX - minX); x++) {
-				CFogState state = fogOfWar.getFogState(x+minX, y+minY);
+			for (int x = 0; x < (maxX - minX); x++) {
+				final CFogState state = fogOfWar.getFogState(x + minX, y + minY);
 				if (CFogState.FOGGED.equals(state)) {
-					batch.setColor(0f,0f,0f,0.5f);
-					batch.draw(this.teamColors[0],
-							this.minimapFilledArea.x + x * mapXMod,
-							this.minimapFilledArea.y + y * mapYMod,
-							mapXMod, mapYMod);
-				} else if (CFogState.MASKED.equals(state)) {
-					batch.setColor(0f,0f,0f,1f);
-					batch.draw(this.teamColors[0],
-							this.minimapFilledArea.x + x * mapXMod,
-							this.minimapFilledArea.y + y * mapYMod,
-							mapXMod, mapYMod);
+					batch.setColor(0f, 0f, 0f, 0.5f);
+					batch.draw(this.teamColors[0], this.minimapFilledArea.x + (x * mapXMod),
+							this.minimapFilledArea.y + (y * mapYMod), mapXMod, mapYMod);
+				}
+				else if (CFogState.MASKED.equals(state)) {
+					batch.setColor(0f, 0f, 0f, 1f);
+					batch.draw(this.teamColors[0], this.minimapFilledArea.x + (x * mapXMod),
+							this.minimapFilledArea.y + (y * mapYMod), mapXMod, mapYMod);
 				}
 			}
 		}
@@ -129,7 +126,7 @@ public class MeleeUIMinimap {
 						(this.minimapFilledArea.y + (((unit.location[1] - this.playableMapArea.getY())
 								/ (this.playableMapArea.getHeight())) * this.minimapFilledArea.height)) - offset,
 						dimensions, dimensions);
-				batch.setColor(og);
+				batch.setColor(1, 1, 1, 1);
 			}
 		}
 	}

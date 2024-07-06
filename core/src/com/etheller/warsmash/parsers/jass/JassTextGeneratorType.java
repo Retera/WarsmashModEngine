@@ -1,5 +1,6 @@
 package com.etheller.warsmash.parsers.jass;
 
 public enum JassTextGeneratorType {
-	String, Integer, Boolean, Ability, AbilityLevelData, Unit, Destructable
+	String, Integer, Boolean, AbilityHandle, AbilityTypeLevelDataHandle, UnitHandle, DestructableHandle, DestructableBuffHandle, BuffHandle,
+	NonStackingStatBuffHandle, ProjectileHandle
 }

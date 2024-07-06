@@ -11,10 +11,10 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.abil
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.ability.GetABAbilityByRawcodeVisitor;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.idcallbacks.ABIDCallback;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.unitcallbacks.ABUnitCallback;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABAction;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABLocalStoreKeys;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABSingleAction;
 
-public class ABActionResetCooldown implements ABAction {
+public class ABActionResetCooldown implements ABSingleAction {
 
 	private ABIDCallback alias;
 	private ABUnitCallback unit;
@@ -55,7 +55,8 @@ public class ABActionResetCooldown implements ABAction {
 		}
 		else {
 			return "EndAbilityCooldown(" + unitExpression + ", "
-					+ jassTextGenerator.getUserData(ABLocalStoreKeys.ABILITY, JassTextGeneratorType.Ability) + ")";
+					+ jassTextGenerator.getUserDataExpr("AB_LOCAL_STORE_KEY_ABILITY", JassTextGeneratorType.AbilityHandle)
+					+ ")";
 		}
 	}
 }

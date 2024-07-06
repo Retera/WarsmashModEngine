@@ -5,8 +5,13 @@ import java.util.LinkedList;
 import java.util.List;
 
 public class JassTextGeneratorImpl1 implements JassTextGenerator {
+	private final String abilityName;
 	private int nextUniqueFuncId = 0;
 	private LinkedList<String> lines = new LinkedList<>();
+
+	public JassTextGeneratorImpl1(final String abilityName) {
+		this.abilityName = abilityName;
+	}
 
 	@Override
 	public String getUserData(final String key, final JassTextGeneratorType type) {
@@ -20,44 +25,57 @@ public class JassTextGeneratorImpl1 implements JassTextGenerator {
 
 	@Override
 	public String getCastId() {
-		return "GetTriggerCastId()";
+		return "castId";// "GetTriggerCastId()";
 	}
 
 	@Override
 	public String getCaster() {
-		return "GetTriggerUnit()";
+		return "caster"; // "GetSpellAbilityUnit()";
 	}
 
 	@Override
 	public String getAbility() {
-		return getUserData("AB_LOCAL_STORE_KEY_ABILITY", JassTextGeneratorType.Ability);
+		return getUserDataExpr("AB_LOCAL_STORE_KEY_ABILITY", JassTextGeneratorType.AbilityHandle);
 	}
 
 	@Override
 	public String getTriggerLocalStore() {
-		return "GetTriggerLocalStore()";
+		return "myLocalStore";// "GetTriggerLocalStore()";
 	}
 
 	@Override
 	public String setUserData(final String key, final JassTextGeneratorType type, final String value) {
-		return "SetLocalStore" + type.toString() + "(" + getTriggerLocalStore() + ", " + key + ", " + value + ")";
+		return "SetLocalStore" + type.toString() + "(" + getTriggerLocalStore() + ", \"" + key + "\", " + value + ")";
 	}
 
 	@Override
-	public String createAnonymousFunction(final List<? extends JassTextGeneratorExpr> actions,
+	public String setUserDataExpr(final String keyExpr, final JassTextGeneratorType type, final String value) {
+		return "SetLocalStore" + type.toString() + "(" + getTriggerLocalStore() + ", " + keyExpr + ", " + value + ")";
+	}
+
+	@Override
+	public void println(final String line) {
+		this.lines.add(line);
+	}
+
+	@Override
+	public String createAnonymousFunction(final List<? extends JassTextGeneratorStmt> actions,
 			final String nameSuggestion) {
 		if (actions == null) {
 			return null;
 		}
 		final LinkedList<String> localLines = new LinkedList<>();
-		final String functionName = nameSuggestion + "_Func"
+		final String functionName = this.abilityName + "_" + nameSuggestion + "_Func"
 				+ String.format("%3s", this.nextUniqueFuncId++).replace(" ", "0");
-		this.lines.add("function " + functionName + " takes nothing returns nothing");
+		localLines.add("function " + functionName + " takes nothing returns nothing");
+		localLines.add("    local unit caster = GetSpellAbilityUnit()");
+		localLines.add("    local localstore myLocalStore = GetTriggerLocalStore()");
+		localLines.add("    local integer castId = GetTriggerCastId()");
 
 		final LinkedList<String> prevLines = this.lines;
 		this.lines = localLines;
-		for (final JassTextGeneratorExpr action : actions) {
-			this.lines.add("    call " + action.generateJassEquivalent(this));
+		for (final JassTextGeneratorStmt action : actions) {
+			action.generateJassEquivalent(1, this);
 		}
 		this.lines = prevLines;
 
@@ -71,9 +89,10 @@ public class JassTextGeneratorImpl1 implements JassTextGenerator {
 	public String createAnonymousBooleanFunction(final List<? extends JassTextGeneratorExpr> conditions,
 			final String nameSuggestion) {
 		final LinkedList<String> localLines = new LinkedList<>();
-		final String functionName = nameSuggestion + "_Func"
+		final String functionName = this.abilityName + "_" + nameSuggestion + "_Func"
 				+ String.format("%3s", this.nextUniqueFuncId++).replace(" ", "0");
-		this.lines.add("function " + functionName + " takes nothing returns nothing");
+		localLines.add("function " + functionName + " takes nothing returns nothing");
+		localLines.add("    local localstore myLocalStore = GetTriggerLocalStore()");
 
 		final LinkedList<String> prevLines = this.lines;
 		this.lines = localLines;

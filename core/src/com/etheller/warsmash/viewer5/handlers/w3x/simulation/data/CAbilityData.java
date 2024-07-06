@@ -125,8 +125,8 @@ public class CAbilityData {
 				(handleId, alias) -> new CAbilitySummonWaterElemental(handleId, alias)));
 		this.codeToAbilityTypeDefinition.put(War3ID.fromString("AHbz"),
 				new CAbilityTypeDefinitionSpellBase((handleId, alias) -> new CAbilityBlizzard(handleId, alias)));
-		this.codeToAbilityTypeDefinition.put(War3ID.fromString("AHab"),
-				new CAbilityTypeDefinitionSpellBase((handleId, alias) -> new CAbilityBrilliance(handleId, alias, alias)));
+		this.codeToAbilityTypeDefinition.put(War3ID.fromString("AHab"), new CAbilityTypeDefinitionSpellBase(
+				(handleId, alias) -> new CAbilityBrilliance(handleId, alias, alias)));
 		this.codeToAbilityTypeDefinition.put(War3ID.fromString("AHmt"),
 				new CAbilityTypeDefinitionSpellBase((handleId, alias) -> new CAbilityMassTeleport(handleId, alias)));
 		// Mountain King:
@@ -192,8 +192,8 @@ public class CAbilityData {
 				new CAbilityTypeDefinitionCargoHoldEntangledMine());
 		this.codeToAbilityTypeDefinition.put(War3ID.fromString("Aent"), new CAbilityTypeDefinitionSpellBase(
 				(handleId, alias) -> new CAbilityEntangleGoldMine(handleId, alias)));
-		this.codeToAbilityTypeDefinition.put(War3ID.fromString("Aegm"),
-				new CAbilityTypeDefinitionSpellBase((handleId, alias) -> new CAbilityEntangledMine(handleId, alias, alias)));
+		this.codeToAbilityTypeDefinition.put(War3ID.fromString("Aegm"), new CAbilityTypeDefinitionSpellBase(
+				(handleId, alias) -> new CAbilityEntangledMine(handleId, alias, alias)));
 
 		// Ancients:
 		this.codeToAbilityTypeDefinition.put(War3ID.fromString("Aeat"),
@@ -246,7 +246,8 @@ public class CAbilityData {
 		this.codeToAbilityTypeDefinition.put(War3ID.fromString("Apit"), new CAbilityTypeDefinitionShopPurchaseItem());
 		this.codeToAbilityTypeDefinition.put(War3ID.fromString("Aneu"), new CAbilityTypeDefinitionNeutralBuilding());
 		this.codeToAbilityTypeDefinition.put(War3ID.fromString("Aall"), new CAbilityTypeDefinitionShopSharing());
-		//this.codeToAbilityTypeDefinition.put(War3ID.fromString("Acoi"), new CAbilityTypeDefinitionCoupleInstant());
+		// this.codeToAbilityTypeDefinition.put(War3ID.fromString("Acoi"), new
+		// CAbilityTypeDefinitionCoupleInstant());
 		this.codeToAbilityTypeDefinition.put(CAbilityItemHeal.CODE, new CAbilityTypeDefinitionItemHeal());
 		this.codeToAbilityTypeDefinition.put(CAbilityItemManaRegain.CODE, new CAbilityTypeDefinitionItemManaRegain());
 		this.codeToAbilityTypeDefinition.put(War3ID.fromString("AIat"), new CAbilityTypeDefinitionItemAttackBonus());
@@ -274,8 +275,8 @@ public class CAbilityData {
 		this.codeToAbilityTypeDefinition.put(War3ID.fromString("Acar"), new CAbilityTypeDefinitionCargoHold());
 		this.codeToAbilityTypeDefinition.put(War3ID.fromString("Aloa"), new CAbilityTypeDefinitionLoad());
 		this.codeToAbilityTypeDefinition.put(War3ID.fromString("Adro"), new CAbilityTypeDefinitionDrop());
-		this.codeToAbilityTypeDefinition.put(War3ID.fromString("Adri"),
-				new CAbilityTypeDefinitionSpellBase((handleId, alias) -> new CAbilityDropInstant(handleId, alias, alias)));
+		this.codeToAbilityTypeDefinition.put(War3ID.fromString("Adri"), new CAbilityTypeDefinitionSpellBase(
+				(handleId, alias) -> new CAbilityDropInstant(handleId, alias, alias)));
 		this.codeToAbilityTypeDefinition.put(War3ID.fromString("Aroo"), new CAbilityTypeDefinitionRoot());
 
 		System.err.println("========================================================================");
@@ -284,15 +285,15 @@ public class CAbilityData {
 
 		AbilityBuilderParserUtil.loadAbilityBuilderFiles(behavior -> {
 			if (behavior.getType().equals(AbilityBuilderType.TEMPLATE)) {
-				for (AbilityBuilderDupe dupe : behavior.getIds()) {
+				for (final AbilityBuilderDupe dupe : behavior.getIds()) {
 					this.codeToAbilityTypeDefinition.put(War3ID.fromString(dupe.getId()),
 							new CAbilityTypeDefinitionAbilityTemplateBuilder(behavior));
 				}
-			} else {
-				for (AbilityBuilderDupe dupe : behavior.getIds()) {
-					AbilityBuilderConfiguration config = new AbilityBuilderConfiguration(behavior, dupe);
-					this.codeToAbilityTypeDefinition.put(War3ID.fromString(config.getId()),
-							config.createDefinition());
+			}
+			else {
+				for (final AbilityBuilderDupe dupe : behavior.getIds()) {
+					final AbilityBuilderConfiguration config = new AbilityBuilderConfiguration(behavior, dupe);
+					this.codeToAbilityTypeDefinition.put(War3ID.fromString(config.getId()), config.createDefinition());
 				}
 			}
 		});
@@ -305,6 +306,10 @@ public class CAbilityData {
 
 	public void registerJassType(final War3ID war3id, final CAbilityTypeJassDefinition whichAbilityType) {
 		this.codeToAbilityTypeDefinition.put(war3id, whichAbilityType);
+	}
+
+	public void registerAbilityBuilderType(final War3ID war3id, final AbilityBuilderConfiguration configuration) {
+		this.codeToAbilityTypeDefinition.put(war3id, configuration.createDefinition());
 	}
 
 	public CAbilityType<?> getAbilityType(final War3ID alias) {

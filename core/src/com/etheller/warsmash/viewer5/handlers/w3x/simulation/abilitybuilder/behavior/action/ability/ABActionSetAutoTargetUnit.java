@@ -7,10 +7,10 @@ import com.etheller.warsmash.parsers.jass.JassTextGeneratorType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.unitcallbacks.ABUnitCallback;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABAction;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABLocalStoreKeys;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABSingleAction;
 
-public class ABActionSetAutoTargetUnit implements ABAction {
+public class ABActionSetAutoTargetUnit implements ABSingleAction {
 
 	private ABUnitCallback unit;
 
@@ -25,6 +25,6 @@ public class ABActionSetAutoTargetUnit implements ABAction {
 	public String generateJassEquivalent(final JassTextGenerator jassTextGenerator) {
 		return jassTextGenerator.setUserData(
 				ABLocalStoreKeys.ABILITYTARGETEDUNIT + " + " + jassTextGenerator.getCastId(),
-				JassTextGeneratorType.Unit, this.unit.generateJassEquivalent(jassTextGenerator));
+				JassTextGeneratorType.UnitHandle, this.unit.generateJassEquivalent(jassTextGenerator));
 	}
 }

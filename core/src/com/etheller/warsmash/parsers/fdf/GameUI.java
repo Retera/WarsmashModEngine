@@ -1114,7 +1114,8 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 			}
 			else if ("LISTBOX".equals(frameDefinition.getFrameType())) {
 				// TODO advanced components here
-				final ListBoxFrame controlFrame = new ListBoxFrame(frameDefinition.getName(), parent, viewport2, dataSource);
+				final ListBoxFrame controlFrame = new ListBoxFrame(frameDefinition.getName(), parent, viewport2,
+						this.dataSource);
 				// TODO: we should not need to put ourselves in this map 2x, but we do
 				// since there are nested inflate calls happening before the general case
 				// mapping
@@ -1453,7 +1454,7 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 				width = frameDefinition.getFloat("TextLength");
 				if (width != null) {
 					if (frameFont != null) {
-						inflatedFrame.setWidth(convertX(viewport2, width * frameFont.getSpaceWidth()));
+						inflatedFrame.setWidth(convertX(viewport2, width * frameFont.getSpaceXadvance()));
 					}
 				}
 			}

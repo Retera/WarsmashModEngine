@@ -9,10 +9,10 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.C
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.buffcallbacks.ABBuffCallback;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.stringcallbacks.ABStringCallback;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.unitcallbacks.ABUnitCallback;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABAction;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABLocalStoreKeys;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABSingleAction;
 
-public class ABActionAddNonStackingDisplayBuff implements ABAction {
+public class ABActionAddNonStackingDisplayBuff implements ABSingleAction {
 
 	private ABUnitCallback target;
 	private ABStringCallback key;
@@ -30,7 +30,7 @@ public class ABActionAddNonStackingDisplayBuff implements ABAction {
 	@Override
 	public String generateJassEquivalent(final JassTextGenerator jassTextGenerator) {
 		return "AddUnitNonStackingDisplayBuffAU(" + this.target.generateJassEquivalent(jassTextGenerator) + ", "
-				+ jassTextGenerator.getAbility() + ", " + this.key.generateJassEquivalent(jassTextGenerator) + ", "
-				+ this.buff.generateJassEquivalent(jassTextGenerator) + ")";
+				+ jassTextGenerator.getTriggerLocalStore() + ", " + this.key.generateJassEquivalent(jassTextGenerator)
+				+ ", " + this.buff.generateJassEquivalent(jassTextGenerator) + ")";
 	}
 }

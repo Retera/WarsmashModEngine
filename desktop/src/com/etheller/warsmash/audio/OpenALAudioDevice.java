@@ -262,4 +262,14 @@ public class OpenALAudioDevice implements AudioDevice {
 	public int getLatency() {
 		return (int) (this.secondsPerBuffer * this.bufferCount * 1000);
 	}
+
+	@Override
+	public void pause() {
+		// A buffer underflow will cause the source to stop.
+	}
+
+	@Override
+	public void resume() {
+		// Automatically resumes when samples are written
+	}
 }

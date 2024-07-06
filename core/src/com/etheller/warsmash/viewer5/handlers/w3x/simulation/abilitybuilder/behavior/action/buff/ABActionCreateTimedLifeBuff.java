@@ -9,10 +9,10 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.skills.ut
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.booleancallbacks.ABBooleanCallback;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.floatcallbacks.ABFloatCallback;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.idcallbacks.ABIDCallback;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABAction;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABLocalStoreKeys;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABSingleAction;
 
-public class ABActionCreateTimedLifeBuff implements ABAction {
+public class ABActionCreateTimedLifeBuff implements ABSingleAction {
 
 	private ABIDCallback buffId;
 	private ABFloatCallback duration;

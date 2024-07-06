@@ -8,12 +8,12 @@ import com.etheller.warsmash.parsers.jass.JassTextGenerator;
 import com.etheller.warsmash.parsers.jass.JassTextGeneratorType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABAction;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABLocalStoreKeys;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABSingleAction;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.types.impl.CAbilityTypeAbilityBuilderLevelData;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CTargetType;
 
-public class ABActionRemoveTargetAllowed implements ABAction {
+public class ABActionRemoveTargetAllowed implements ABSingleAction {
 
 	private CTargetType targetType;
 
@@ -31,8 +31,10 @@ public class ABActionRemoveTargetAllowed implements ABAction {
 	@Override
 	public String generateJassEquivalent(final JassTextGenerator jassTextGenerator) {
 		return "AbilityTypeLevelDataRemoveTargetAllowed("
-				+ jassTextGenerator.getUserData(ABLocalStoreKeys.LEVELDATA, JassTextGeneratorType.AbilityLevelData)
-				+ ", " + jassTextGenerator.getUserData(ABLocalStoreKeys.CURRENTLEVEL, JassTextGeneratorType.Integer)
+				+ jassTextGenerator.getUserDataExpr("AB_LOCAL_STORE_KEY_LEVELDATA",
+						JassTextGeneratorType.AbilityTypeLevelDataHandle)
+				+ ", "
+				+ jassTextGenerator.getUserDataExpr("AB_LOCAL_STORE_KEY_CURRENTLEVEL", JassTextGeneratorType.Integer)
 				+ " - 1, TARGET_TYPE_" + this.targetType.name() + ")";
 	}
 }

@@ -68,7 +68,8 @@ public class WarsmashConstants {
 			FULL_SCREEN_MENU_BACKDROP = emulatorConstants.getFieldValue("FullScreenMenuBackdrop") == 1;
 		}
 		final List<String> jassFileList = emulatorConstants.getFieldAsList("JassFileList");
-		if (!jassFileList.isEmpty() && !((jassFileList.size() == 1) && jassFileList.get(0).isEmpty())) {
+		if ((jassFileList != null) && !jassFileList.isEmpty()
+				&& !((jassFileList.size() == 1) && jassFileList.get(0).isEmpty())) {
 			final String[] jassFileArray = jassFileList.toArray(new String[0]);
 			JASS_FILE_LIST = jassFileArray;
 		}

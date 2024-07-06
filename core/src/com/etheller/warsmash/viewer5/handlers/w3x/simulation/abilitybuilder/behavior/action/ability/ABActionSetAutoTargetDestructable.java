@@ -7,10 +7,10 @@ import com.etheller.warsmash.parsers.jass.JassTextGeneratorType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.destructable.ABDestructableCallback;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABAction;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABLocalStoreKeys;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABSingleAction;
 
-public class ABActionSetAutoTargetDestructable implements ABAction {
+public class ABActionSetAutoTargetDestructable implements ABSingleAction {
 
 	private ABDestructableCallback dest;
 
@@ -25,6 +25,6 @@ public class ABActionSetAutoTargetDestructable implements ABAction {
 	public String generateJassEquivalent(final JassTextGenerator jassTextGenerator) {
 		return jassTextGenerator.setUserData(
 				ABLocalStoreKeys.ABILITYTARGETEDDESTRUCTABLE + " + " + jassTextGenerator.getCastId(),
-				JassTextGeneratorType.Destructable, this.dest.generateJassEquivalent(jassTextGenerator));
+				JassTextGeneratorType.DestructableHandle, this.dest.generateJassEquivalent(jassTextGenerator));
 	}
 }

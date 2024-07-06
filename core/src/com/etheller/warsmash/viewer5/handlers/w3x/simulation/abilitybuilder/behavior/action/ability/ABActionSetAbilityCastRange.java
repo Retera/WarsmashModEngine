@@ -8,10 +8,10 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.ability.AbilityBuilderActiveAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.floatcallbacks.ABFloatCallback;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABAction;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABLocalStoreKeys;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABSingleAction;
 
-public class ABActionSetAbilityCastRange implements ABAction {
+public class ABActionSetAbilityCastRange implements ABSingleAction {
 
 	private ABFloatCallback range;
 
@@ -26,7 +26,7 @@ public class ABActionSetAbilityCastRange implements ABAction {
 	@Override
 	public String generateJassEquivalent(final JassTextGenerator jassTextGenerator) {
 		return "SetAbilityCastRange(" + jassTextGenerator.getCaster() + ", "
-				+ jassTextGenerator.getUserData(ABLocalStoreKeys.TOGGLEDABILITY, JassTextGeneratorType.Ability) + ", "
-				+ this.range.generateJassEquivalent(jassTextGenerator) + ")";
+				+ jassTextGenerator.getUserDataExpr("AB_LOCAL_STORE_KEY_TOGGLEDABILITY", JassTextGeneratorType.AbilityHandle)
+				+ ", " + this.range.generateJassEquivalent(jassTextGenerator) + ")";
 	}
 }

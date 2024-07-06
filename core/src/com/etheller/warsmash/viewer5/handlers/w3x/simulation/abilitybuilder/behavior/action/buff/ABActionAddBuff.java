@@ -8,10 +8,10 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.CBuff;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.buffcallbacks.ABBuffCallback;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.unitcallbacks.ABUnitCallback;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABAction;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABLocalStoreKeys;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABSingleAction;
 
-public class ABActionAddBuff implements ABAction {
+public class ABActionAddBuff implements ABSingleAction {
 
 	private ABUnitCallback target;
 	private ABBuffCallback buff;
@@ -27,6 +27,7 @@ public class ABActionAddBuff implements ABAction {
 	@Override
 	public String generateJassEquivalent(final JassTextGenerator jassTextGenerator) {
 		return "AddUnitBuffAU(" + this.target.generateJassEquivalent(jassTextGenerator) + ", "
-				+ jassTextGenerator.getAbility() + ", " + this.buff.generateJassEquivalent(jassTextGenerator) + ")";
+				+ jassTextGenerator.getTriggerLocalStore() + ", " + this.buff.generateJassEquivalent(jassTextGenerator)
+				+ ")";
 	}
 }

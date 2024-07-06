@@ -12,10 +12,10 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.abil
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.floatcallbacks.ABFloatCallback;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.idcallbacks.ABIDCallback;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.unitcallbacks.ABUnitCallback;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABAction;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABLocalStoreKeys;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABSingleAction;
 
-public class ABActionStartCooldown implements ABAction {
+public class ABActionStartCooldown implements ABSingleAction {
 
 	private ABIDCallback alias;
 	private ABUnitCallback unit;
@@ -75,12 +75,13 @@ public class ABActionStartCooldown implements ABAction {
 		else {
 			if (this.cooldown != null) {
 				return "StartUnitAbilityCooldown(" + unitExpression + ", "
-						+ jassTextGenerator.getUserData(ABLocalStoreKeys.ALIAS, JassTextGeneratorType.Integer) + ", "
-						+ this.cooldown.generateJassEquivalent(jassTextGenerator) + ")";
+						+ jassTextGenerator.getUserDataExpr("AB_LOCAL_STORE_KEY_ALIAS", JassTextGeneratorType.Integer)
+						+ ", " + this.cooldown.generateJassEquivalent(jassTextGenerator) + ")";
 			}
 			else {
 				return "StartAbilityDefaultCooldown(" + unitExpression + ", "
-						+ jassTextGenerator.getUserData(ABLocalStoreKeys.ABILITY, JassTextGeneratorType.Ability) + ")";
+						+ jassTextGenerator.getUserDataExpr("AB_LOCAL_STORE_KEY_ABILITY", JassTextGeneratorType.AbilityHandle)
+						+ ")";
 			}
 		}
 	}

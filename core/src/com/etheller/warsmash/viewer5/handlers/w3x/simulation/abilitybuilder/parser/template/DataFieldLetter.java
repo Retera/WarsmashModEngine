@@ -1,6 +1,9 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.parser.template;
 
-public enum DataFieldLetter {
+import com.etheller.interpreter.ast.util.CHandle;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.unit.NonStackingStatBuffType;
+
+public enum DataFieldLetter implements CHandle {
 	A(0),
 	B(1),
 	C(2),
@@ -21,4 +24,11 @@ public enum DataFieldLetter {
 	public int getIndex() {
 		return index;
 	}
+
+	@Override
+	public int getHandleId() {
+		return ordinal();
+	}
+	
+	public static final DataFieldLetter[] VALUES = values();
 }

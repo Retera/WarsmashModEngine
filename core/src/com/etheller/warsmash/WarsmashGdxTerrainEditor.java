@@ -78,7 +78,7 @@ public class WarsmashGdxTerrainEditor extends ApplicationAdapter implements Inpu
 				"ReplaceableTextures\\TeamColor\\TeamColor06.blp");
 
 		System.out.println("Loaded");
-		previewScene = this.viewer.addSimpleScene();
+		this.previewScene = this.viewer.addSimpleScene();
 
 		try {
 			this.viewer.loadAfterUI();
@@ -132,7 +132,7 @@ public class WarsmashGdxTerrainEditor extends ApplicationAdapter implements Inpu
 		this.uiCamera.update();
 
 		this.batch = new SpriteBatch();
-		defaultFont = new BitmapFont();
+		this.defaultFont = new BitmapFont();
 
 //		this.consoleUITexture = new Texture(new DataSourceFileHandle(this.viewer.dataSource, "AlphaUi.png"));
 
@@ -173,7 +173,7 @@ public class WarsmashGdxTerrainEditor extends ApplicationAdapter implements Inpu
 		this.uiViewport.apply();
 		this.batch.setProjectionMatrix(this.uiCamera.combined);
 		this.batch.begin();
-		final Iterator<Message> errorMessageIterator = errorMessages.iterator();
+		final Iterator<Message> errorMessageIterator = this.errorMessages.iterator();
 		final long nowTime = TimeUtils.millis();
 		int messageIndex = 0;
 		while (errorMessageIterator.hasNext()) {
@@ -182,7 +182,8 @@ public class WarsmashGdxTerrainEditor extends ApplicationAdapter implements Inpu
 				errorMessageIterator.remove();
 			}
 			else {
-				defaultFont.draw(batch, errorMessage.text, 0, ((++messageIndex) * defaultFont.getLineHeight()));
+				this.defaultFont.draw(this.batch, errorMessage.text, 0,
+						((++messageIndex) * this.defaultFont.getLineHeight()));
 			}
 		}
 		this.batch.end();
@@ -193,7 +194,7 @@ public class WarsmashGdxTerrainEditor extends ApplicationAdapter implements Inpu
 
 	@Override
 	public void dispose() {
-		batch.dispose();
+		this.batch.dispose();
 	}
 
 	@Override
@@ -259,8 +260,13 @@ public class WarsmashGdxTerrainEditor extends ApplicationAdapter implements Inpu
 	}
 
 	@Override
-	public boolean scrolled(final int amount) {
+	public boolean scrolled(final float amountX, final float amountY) {
 		return true;
+	}
+
+	@Override
+	public boolean touchCancelled(final int screenX, final int screenY, final int pointer, final int button) {
+		return false;
 	}
 
 	private static class Message {

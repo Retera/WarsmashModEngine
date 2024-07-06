@@ -2,9 +2,13 @@ package com.etheller.warsmash.desktop.editor.abilitybuilder;
 
 import java.lang.reflect.Field;
 
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.autocast.AutocastType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.definitions.impl.AbilityFields;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABLocalStoreKeys;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.parser.AbilityBuilderType;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.parser.template.DataFieldLetter;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CTargetType;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.unit.NonStackingStatBuffType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.TextTagConfigType;
 
 public class JassGeneratorForType {
@@ -16,6 +20,24 @@ public class JassGeneratorForType {
 		for (final TextTagConfigType type : TextTagConfigType.values()) {
 			System.out.println(String.format(
 					"    constant texttagconfigtype TEXT_TAG_CONFIG_TYPE_%-34s= ConvertTextTagConfigType(%d)",
+					type.name(), type.ordinal()));
+		}
+		for (final NonStackingStatBuffType type : NonStackingStatBuffType.values()) {
+			System.out.println(String.format(
+					"    constant nonstackingstatbufftype NON_STACKING_STAT_BUFF_TYPE_%-34s= ConvertNonStackingStatBuffType(%d)",
+					type.name(), type.ordinal()));
+		}
+		for (final DataFieldLetter type : DataFieldLetter.values()) {
+			System.out.println(
+					String.format("    constant datafieldletter DATA_FIELD_LETTER_%-34s= ConvertDataFieldLetter(%d)",
+							type.name(), type.ordinal()));
+		}
+		for (final AutocastType type : AutocastType.values()) {
+			System.out.println(String.format("    constant autocasttype AUTOCAST_TYPE_%-34s= ConvertAutocastType(%d)",
+					type.name(), type.ordinal()));
+		}
+		for (final AbilityBuilderType type : AbilityBuilderType.values()) {
+			System.out.println(String.format("    constant abconftype AB_CONF_TYPE_%-34s= ConvertABConfType(%d)",
 					type.name(), type.ordinal()));
 		}
 

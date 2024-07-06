@@ -9,9 +9,9 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.C
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.buffcallbacks.ABBuffCallback;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.stringcallbacks.ABStringCallback;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.unitcallbacks.ABUnitCallback;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABAction;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABSingleAction;
 
-public class ABActionRemoveNonStackingDisplayBuff implements ABAction {
+public class ABActionRemoveNonStackingDisplayBuff implements ABSingleAction {
 
 	private ABUnitCallback target;
 	private ABStringCallback key;

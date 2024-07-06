@@ -6,7 +6,8 @@ import java.util.Map;
 
 import com.badlogic.gdx.math.Rectangle;
 import com.etheller.warsmash.parsers.jass.JassTextGenerator;
-import com.etheller.warsmash.parsers.jass.JassTextGeneratorExpr;
+import com.etheller.warsmash.parsers.jass.JassTextGeneratorCallStmt;
+import com.etheller.warsmash.parsers.jass.JassTextGeneratorStmt;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CDestructable;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CDestructableEnumFunction;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
@@ -16,8 +17,9 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.beha
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.locationcallbacks.ABLocationCallback;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABAction;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABLocalStoreKeys;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABSingleAction;
 
-public class ABActionIterateDestructablesInRangeOfLocation implements ABAction {
+public class ABActionIterateDestructablesInRangeOfLocation implements ABSingleAction {
 
 	private static final Rectangle recycleRect = new Rectangle();
 
@@ -49,8 +51,8 @@ public class ABActionIterateDestructablesInRangeOfLocation implements ABAction {
 
 	@Override
 	public String generateJassEquivalent(final JassTextGenerator jassTextGenerator) {
-		final List<JassTextGeneratorExpr> modifiedActionList = new ArrayList<>(this.iterationActions);
-		modifiedActionList.add(0, new JassTextGeneratorExpr() {
+		final List<JassTextGeneratorStmt> modifiedActionList = new ArrayList<>(this.iterationActions);
+		modifiedActionList.add(0, new JassTextGeneratorCallStmt() {
 			@Override
 			public String generateJassEquivalent(final JassTextGenerator jassTextGenerator) {
 				return "SetLocalStoreDestructableHandle(" + jassTextGenerator.getTriggerLocalStore()

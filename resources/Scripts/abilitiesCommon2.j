@@ -1,21 +1,59 @@
 // ability customization API types
-type abilitytypeleveldata extends handle
+type abilitytypeleveldata extends handle // GetHandleId(myAbilityTypeLevelData) is a crash case, dont' do it
 type targettype extends handle
 type texttagconfigtype extends handle
-//type activeability extends ability
-type localstore extends handle
+//type activeability extends ability (this comment is a reminder to either scap or implement this type for real)
+type localstore extends handle // GetHandleId(myLocalStore) is a crash case, dont' do it
 type destructablebuff extends handle // a buff that is applied to a destructable
 type projectile extends handle
 type gameobject extends handle
 type worldeditordatatype extends handle
+type nonstackingstatbuff extends handle
+type nonstackingstatbufftype extends handle
+type abilitybuilderconfiguration extends handle
+type autocasttype extends handle
+type abconftype extends handle
 
-type abtimeofdayevent // Ability Builder time of day event (doesnt have handleid for now)
+type datafieldletter extends handle
+
+type abtimeofdayevent extends handle // Ability Builder time of day event (doesnt have handleid for now)
 
 constant native ConvertTargetType takes integer x returns targettype
 constant native ConvertTextTagConfigType takes integer x returns texttagconfigtype
 constant native ConvertWorldEditorDataType takes integer x returns worldeditordatatype
+constant native ConvertNonStackingStatBuffType takes integer x returns nonstackingstatbufftype
+constant native ConvertDataFieldLetter takes integer x returns datafieldletter
+constant native ConvertAutocastType takes integer x returns autocasttype
+constant native ConvertABConfType takes integer x returns abconftype
 
 globals
+    constant autocasttype AUTOCAST_TYPE_NONE                              = ConvertAutocastType(0)
+    constant autocasttype AUTOCAST_TYPE_LOWESTHP                          = ConvertAutocastType(1)
+    constant autocasttype AUTOCAST_TYPE_HIGESTHP                          = ConvertAutocastType(2)
+    constant autocasttype AUTOCAST_TYPE_ATTACKTARGETING                   = ConvertAutocastType(3)
+    constant autocasttype AUTOCAST_TYPE_ATTACKINGALLY                     = ConvertAutocastType(4)
+    constant autocasttype AUTOCAST_TYPE_ATTACKINGENEMY                    = ConvertAutocastType(5)
+    constant autocasttype AUTOCAST_TYPE_NEARESTVALID                      = ConvertAutocastType(6)
+    constant autocasttype AUTOCAST_TYPE_NEARESTENEMY                      = ConvertAutocastType(7)
+    constant autocasttype AUTOCAST_TYPE_NOTARGET                          = ConvertAutocastType(8)
+    constant autocasttype AUTOCAST_TYPE_ATTACKREPLACEMENT                 = ConvertAutocastType(9)
+    
+    constant abconftype AB_CONF_TYPE_NORMAL_AUTOTARGET                 = ConvertABConfType(0)
+    constant abconftype AB_CONF_TYPE_NORMAL_PAIRING                    = ConvertABConfType(1)
+    constant abconftype AB_CONF_TYPE_NORMAL_FLEXTARGET_SIMPLE          = ConvertABConfType(2)
+    constant abconftype AB_CONF_TYPE_NORMAL_UNITTARGET_SIMPLE          = ConvertABConfType(3)
+    constant abconftype AB_CONF_TYPE_NORMAL_POINTTARGET_SIMPLE         = ConvertABConfType(4)
+    constant abconftype AB_CONF_TYPE_NORMAL_NOTARGET_SIMPLE            = ConvertABConfType(5)
+    constant abconftype AB_CONF_TYPE_NORMAL_FLEXTARGET                 = ConvertABConfType(6)
+    constant abconftype AB_CONF_TYPE_NORMAL_UNITTARGET                 = ConvertABConfType(7)
+    constant abconftype AB_CONF_TYPE_NORMAL_POINTTARGET                = ConvertABConfType(8)
+    constant abconftype AB_CONF_TYPE_NORMAL_NOTARGET                   = ConvertABConfType(9)
+    constant abconftype AB_CONF_TYPE_TOGGLE                            = ConvertABConfType(10)
+    constant abconftype AB_CONF_TYPE_SMART                             = ConvertABConfType(11)
+    constant abconftype AB_CONF_TYPE_PASSIVE                           = ConvertABConfType(12)
+    constant abconftype AB_CONF_TYPE_TEMPLATE                          = ConvertABConfType(13)
+    constant abconftype AB_CONF_TYPE_HIDDEN                            = ConvertABConfType(14)
+    
     constant texttagconfigtype TEXT_TAG_CONFIG_TYPE_GOLD                              = ConvertTextTagConfigType(0)
     constant texttagconfigtype TEXT_TAG_CONFIG_TYPE_LUMBER                            = ConvertTextTagConfigType(1)
     constant texttagconfigtype TEXT_TAG_CONFIG_TYPE_GOLD_BOUNTY                       = ConvertTextTagConfigType(2)
@@ -61,26 +99,54 @@ globals
     constant targettype TARGET_TYPE_NON_MAGIC_IMMUNE                  = ConvertTargetType(31)
     constant targettype TARGET_TYPE_NON_ETHEREAL                      = ConvertTargetType(32)
 	
-	constant gameobjecttype WORLD_EDITOR_DATA_TYPE_UNITS                    = ConvertWorldEditorDataType(0)
-	constant gameobjecttype WORLD_EDITOR_DATA_TYPE_ITEMS                    = ConvertWorldEditorDataType(1)
-	constant gameobjecttype WORLD_EDITOR_DATA_TYPE_DESTRUCTABLES            = ConvertWorldEditorDataType(2)
-	constant gameobjecttype WORLD_EDITOR_DATA_TYPE_DOODADS                  = ConvertWorldEditorDataType(3)
-	constant gameobjecttype WORLD_EDITOR_DATA_TYPE_ABILITIES                = ConvertWorldEditorDataType(4)
-	constant gameobjecttype WORLD_EDITOR_DATA_TYPE_BUFFS_EFFECTS            = ConvertWorldEditorDataType(5)
-	constant gameobjecttype WORLD_EDITOR_DATA_TYPE_UPGRADES                 = ConvertWorldEditorDataType(6)
+	constant worldeditordatatype WORLD_EDITOR_DATA_TYPE_UNITS                    = ConvertWorldEditorDataType(0)
+	constant worldeditordatatype WORLD_EDITOR_DATA_TYPE_ITEMS                    = ConvertWorldEditorDataType(1)
+	constant worldeditordatatype WORLD_EDITOR_DATA_TYPE_DESTRUCTABLES            = ConvertWorldEditorDataType(2)
+	constant worldeditordatatype WORLD_EDITOR_DATA_TYPE_DOODADS                  = ConvertWorldEditorDataType(3)
+	constant worldeditordatatype WORLD_EDITOR_DATA_TYPE_ABILITIES                = ConvertWorldEditorDataType(4)
+	constant worldeditordatatype WORLD_EDITOR_DATA_TYPE_BUFFS_EFFECTS            = ConvertWorldEditorDataType(5)
+	constant worldeditordatatype WORLD_EDITOR_DATA_TYPE_UPGRADES                 = ConvertWorldEditorDataType(6)
+	
+    constant nonstackingstatbufftype NON_STACKING_STAT_BUFF_TYPE_MELEEATK                          = ConvertNonStackingStatBuffType(0)
+    constant nonstackingstatbufftype NON_STACKING_STAT_BUFF_TYPE_MELEEATKPCT                       = ConvertNonStackingStatBuffType(1)
+    constant nonstackingstatbufftype NON_STACKING_STAT_BUFF_TYPE_RNGDATK                           = ConvertNonStackingStatBuffType(2)
+    constant nonstackingstatbufftype NON_STACKING_STAT_BUFF_TYPE_RNGDATKPCT                        = ConvertNonStackingStatBuffType(3)
+    constant nonstackingstatbufftype NON_STACKING_STAT_BUFF_TYPE_ATKSPD                            = ConvertNonStackingStatBuffType(4)
+    constant nonstackingstatbufftype NON_STACKING_STAT_BUFF_TYPE_DEF                               = ConvertNonStackingStatBuffType(5)
+    constant nonstackingstatbufftype NON_STACKING_STAT_BUFF_TYPE_DEFPCT                            = ConvertNonStackingStatBuffType(6)
+    constant nonstackingstatbufftype NON_STACKING_STAT_BUFF_TYPE_HPGEN                             = ConvertNonStackingStatBuffType(7)
+    constant nonstackingstatbufftype NON_STACKING_STAT_BUFF_TYPE_HPGENPCT                          = ConvertNonStackingStatBuffType(8)
+    constant nonstackingstatbufftype NON_STACKING_STAT_BUFF_TYPE_MAXHPGENPCT                       = ConvertNonStackingStatBuffType(9)
+    constant nonstackingstatbufftype NON_STACKING_STAT_BUFF_TYPE_MPGEN                             = ConvertNonStackingStatBuffType(10)
+    constant nonstackingstatbufftype NON_STACKING_STAT_BUFF_TYPE_MPGENPCT                          = ConvertNonStackingStatBuffType(11)
+    constant nonstackingstatbufftype NON_STACKING_STAT_BUFF_TYPE_MAXMPGENPCT                       = ConvertNonStackingStatBuffType(12)
+    constant nonstackingstatbufftype NON_STACKING_STAT_BUFF_TYPE_MVSPD                             = ConvertNonStackingStatBuffType(13)
+    constant nonstackingstatbufftype NON_STACKING_STAT_BUFF_TYPE_MVSPDPCT                          = ConvertNonStackingStatBuffType(14)
+    constant nonstackingstatbufftype NON_STACKING_STAT_BUFF_TYPE_HPSTEAL                           = ConvertNonStackingStatBuffType(15)
+    constant nonstackingstatbufftype NON_STACKING_STAT_BUFF_TYPE_THORNS                            = ConvertNonStackingStatBuffType(16)
+    constant nonstackingstatbufftype NON_STACKING_STAT_BUFF_TYPE_THORNSPCT                         = ConvertNonStackingStatBuffType(17)
+    constant nonstackingstatbufftype NON_STACKING_STAT_BUFF_TYPE_MAXHP                             = ConvertNonStackingStatBuffType(18)
+    constant nonstackingstatbufftype NON_STACKING_STAT_BUFF_TYPE_MAXHPPCT                          = ConvertNonStackingStatBuffType(19)
+    constant nonstackingstatbufftype NON_STACKING_STAT_BUFF_TYPE_MAXMP                             = ConvertNonStackingStatBuffType(20)
+    constant nonstackingstatbufftype NON_STACKING_STAT_BUFF_TYPE_MAXMPPCT                          = ConvertNonStackingStatBuffType(21)
+    // These are for parsing
+    constant nonstackingstatbufftype NON_STACKING_STAT_BUFF_TYPE_ALLATK                            = ConvertNonStackingStatBuffType(22)
+    constant nonstackingstatbufftype NON_STACKING_STAT_BUFF_TYPE_ALLATKPCT                         = ConvertNonStackingStatBuffType(23)
+    
+    constant datafieldletter DATA_FIELD_LETTER_A                                 = ConvertDataFieldLetter(0)
+    constant datafieldletter DATA_FIELD_LETTER_B                                 = ConvertDataFieldLetter(1)
+    constant datafieldletter DATA_FIELD_LETTER_C                                 = ConvertDataFieldLetter(2)
+    constant datafieldletter DATA_FIELD_LETTER_D                                 = ConvertDataFieldLetter(3)
+    constant datafieldletter DATA_FIELD_LETTER_E                                 = ConvertDataFieldLetter(4)
+    constant datafieldletter DATA_FIELD_LETTER_F                                 = ConvertDataFieldLetter(5)
+    constant datafieldletter DATA_FIELD_LETTER_G                                 = ConvertDataFieldLetter(6)
+    constant datafieldletter DATA_FIELD_LETTER_H                                 = ConvertDataFieldLetter(7)
+    constant datafieldletter DATA_FIELD_LETTER_I                                 = ConvertDataFieldLetter(8)
+    constant datafieldletter DATA_FIELD_LETTER_J                                 = ConvertDataFieldLetter(9)
 endglobals
 
 //=================================================================================================
-// AbilityTypeLevelData API
-//=================================================================================================
-// This is exposed to the AbilityBuilder for some reason. At a glance, it looks like whatever
-// ability might be using these is probably broken, not MUI, and in need of fix. Worth testing.
-// For now the API is provided in order to achieve 1:1 parity with JSON AbilityBuilder code.
-native AbilityTypeLevelDataAddTargetAllowed takes abilitytypeleveldata whichData, integer level, targettype whichType returns nothing
-native AbilityTypeLevelDataRemoveTargetAllowed takes abilitytypeleveldata whichData, integer level, targettype whichType returns nothing
-
-//=================================================================================================
-// Ability "user data" API
+// Ability "user data" API (DEPRECATED)
 //=================================================================================================
 // used for just storing to a hashtable built into the ability, basically
 // (maybe later we replace it with direct use of jass hashtables)
@@ -118,30 +184,52 @@ native FlushChildAbilityUserData takes ability whichAbility, string childKey ret
 native CreateLocalStore takes nothing returns localstore
 
 native GetLocalStoreString takes localstore whichLocalStore, string childKey returns string
+// NOTE: there's some wonk in the json; it does a Warsmash thing and stores 'A000' and 97
+// as two different "kinds" of things. One is called War3ID and the other is called Integer.
+// At the moment "native GetLocalStoreInteger" has special handling, so if you try to look
+// up something of type War3ID on the jass side it will normalize this against integer,
+// and all will be the integer type, for consistency with jass. SetLocalStoreInteger
+// does not have the special handling at the time of writing, so this may impede your
+// ability to overwrite system values if they are required to be of type War3ID
 native GetLocalStoreInteger takes localstore whichLocalStore, string childKey returns integer
 native GetLocalStoreBoolean takes localstore whichLocalStore, string childKey returns boolean
+native GetLocalStoreReal takes localstore whichLocalStore, string childKey returns real
 native GetLocalStoreAbilityTypeLevelDataHandle takes localstore whichLocalStore, string childKey returns abilitytypeleveldata
 native GetLocalStoreAbilityHandle takes localstore whichLocalStore, string childKey returns ability
+native GetLocalStoreBuffHandle takes localstore whichLocalStore, string childKey returns buff
 native GetLocalStoreUnitHandle takes localstore whichLocalStore, string childKey returns unit
 native GetLocalStoreDestructableHandle takes localstore whichLocalStore, string childKey returns destructable
 native GetLocalStoreDestructableBuffHandle takes localstore whichLocalStore, string childKey returns destructablebuff
 native GetLocalStoreABTimeOfDayEventHandle takes localstore whichLocalStore, string childKey returns abtimeofdayevent
+native GetLocalStoreGameObjectHandle takes localstore whichLocalStore, string childKey returns gameobject
+native GetLocalStoreNonStackingStatBuffHandle takes localstore whichLocalStore, string childKey returns nonstackingstatbuff
+native GetLocalStoreProjectileHandle takes localstore whichLocalStore, string childKey returns projectile
 
 // setters: return true if there was some previous value stored at the child key
 native SetLocalStoreString takes localstore whichLocalStore, string childKey, string value returns boolean
 native SetLocalStoreInteger takes localstore whichLocalStore, string childKey, integer value returns boolean
 native SetLocalStoreBoolean takes localstore whichLocalStore, string childKey, boolean value returns boolean
+native SetLocalStoreReal takes localstore whichLocalStore, string childKey, real value returns boolean
 native SetLocalStoreAbilityTypeLevelDataHandle takes localstore whichLocalStore, string childKey, abilitytypeleveldata value returns boolean
 native SetLocalStoreAbilityHandle takes localstore whichLocalStore, string childKey, ability value returns boolean
+native SetLocalStoreBuffHandle takes localstore whichLocalStore, string childKey, buff value returns boolean
 native SetLocalStoreUnitHandle takes localstore whichLocalStore, string childKey, unit value returns boolean
 native SetLocalStoreDestructableHandle takes localstore whichLocalStore, string childKey, destructable value returns boolean
 native SetLocalStoreDestructableBuffHandle takes localstore whichLocalStore, string childKey, destructablebuff value returns boolean
 native SetLocalStoreABTimeOfDayEventHandle takes localstore whichLocalStore, string childKey, abtimeofdayevent value returns boolean
+native SetLocalStoreGameObjectHandle takes localstore whichLocalStore, string childKey, gameobject value returns boolean
+native SetLocalStoreNonStackingStatBuffHandle takes localstore whichLocalStore, string childKey, nonstackingstatbuff value returns boolean
+native SetLocalStoreProjectileHandle takes localstore whichLocalStore, string childKey, projectile value returns boolean
+native SetLocalStoreHandle takes localstore whichLocalStore, string childKey, handle value returns boolean
 
 native LocalStoreContainsKey takes localstore whichLocalStore, string childKey returns boolean
 
 native FlushParentLocalStore takes localstore whichLocalStore returns nothing
 native FlushChildLocalStore takes localstore whichLocalStore, string childKey returns boolean
+
+// this native is the same as calling FlushChildLocalStore on every key in the store whose
+// key name ends with `"#" + I2S(castId)`
+native LocalStoreCleanUpCastInstance takes localstore whichLocalStore, integer castId returns nothing
 
 // NOTE: only works on abilities defined by Ability Builder. At the moment, hard-coded engine abilities
 // dont have this
@@ -152,7 +240,78 @@ native GetTriggerLocalStore takes nothing returns localstore
 
 // NOTE: java does not use destroy functions, this was kept for consistency with war3 stuff
 // but at the moment it is identical to FlushParentLocalStore to help you with performance
-native DestroyLocalStore takes localstore returns nothing
+native DestroyLocalStore takes localstore whichStore returns nothing
+
+//=================================================================================================
+// GameObject API
+//=================================================================================================
+// These are the state store that contains information loaded from SLK or INI "profile"
+
+// For general use I added a native "GetGameObjectById" that takes worldeditordatatype
+// and id, so we could for example say
+//   local gameobject paladinData = GetGameObjectById(WORLD_EDITOR_DATA_TYPE_UNITS, 'Hpal')
+//   local string name = GetGameObjectFieldAsString(paladinData, "Name", 0) // returns "Paladin"
+//   local string properName1 = GetGameObjectFieldAsString(paladinData, "Propernames", 0) // returns "Granis Darkhammer"
+//   local string properName2 = GetGameObjectFieldAsString(paladinData, "Propernames", 1) // returns "Jorn the Redeemer"
+//
+// ... however at the time of writing, GetGameObjectById is not getting used in existing code.
+// Intead of it, the AbilityBuilder uses GetLocalStoreGameObjectHandle in combination
+// with the hardcoded key "_abilityEditorData" to get the game object for the active ability,
+// which is populated inside the engine automatically rather than being set from JASS/json.
+
+native GetGameObjectFieldAsString takes gameobject editorData, string key, integer index returns string
+native GetGameObjectFieldAsInteger takes gameobject editorData, string key, integer index returns integer
+native GetGameObjectFieldAsReal takes gameobject editorData, string key, integer index returns real
+native GetGameObjectFieldAsBoolean takes gameobject editorData, string key, integer index returns boolean
+
+native GetGameObjectById takes worldeditordatatype whichDataType, integer aliasId returns gameobject
+
+//=================================================================================================
+// AbilityBuilderConfiguration API
+//=================================================================================================
+// Defines stuff for the "kind" of ability, such as in object editor
+
+// Create a configuration that can be assigned to an ability to describe what it
+// does if given to a unit.
+native CreateAbilityBuilderConfiguration takes nothing returns abilitybuilderconfiguration
+
+// Sets the Base Order ID
+native SetABConfCastId takes abilitybuilderconfiguration abc, string castId returns nothing
+
+// Sets the Base Order ID (turn off)
+native SetABConfUcastId takes abilitybuilderconfiguration abc, string castId returns nothing
+
+// Sets the Base Order ID for Auto Cast On
+native SetABConfAutoCastOnId takes abilitybuilderconfiguration abc, string castId returns nothing
+
+// Sets the Base Order ID for Auto Cast Off
+native SetABConfAutoCastOffId takes abilitybuilderconfiguration abc, string castId returns nothing
+
+// Sets the type of autocast available to the ability
+native SetABConfAutoCastType takes abilitybuilderconfiguration abc, autocasttype whichType returns nothing
+
+// Sets the type of ability to configure/create... See AB_CONF_TYPE_XYZ constants.
+native SetABConfType takes abilitybuilderconfiguration abc, abconftype whichType returns nothing
+
+native AddABConfAddAbilityAction takes abilitybuilderconfiguration abc, code func returns nothing
+native AddABConfAddDisabledAbilityAction takes abilitybuilderconfiguration abc, code func returns nothing
+native AddABConfRemoveAbilityAction takes abilitybuilderconfiguration abc, code func returns nothing
+native AddABConfRemoveDisabledAbilityAction takes abilitybuilderconfiguration abc, code func returns nothing
+native AddABConfDeathPreCastAction takes abilitybuilderconfiguration abc, code func returns nothing
+native AddABConfCancelPreCastAction takes abilitybuilderconfiguration abc, code func returns nothing
+native AddABConfOrderIssuedAction takes abilitybuilderconfiguration abc, code func returns nothing
+native AddABConfActivateAction takes abilitybuilderconfiguration abc, code func returns nothing
+native AddABConfDeactivateAction takes abilitybuilderconfiguration abc, code func returns nothing
+native AddABConfLevelChangeAction takes abilitybuilderconfiguration abc, code func returns nothing
+native AddABConfBeginCastingAction takes abilitybuilderconfiguration abc, code func returns nothing
+native AddABConfEndCastingAction takes abilitybuilderconfiguration abc, code func returns nothing
+native AddABConfChannelTickAction takes abilitybuilderconfiguration abc, code func returns nothing
+native AddABConfEndChannelAction takes abilitybuilderconfiguration abc, code func returns nothing
+
+// Register this Ability Builder Configuration with the ability subsystem!! Now any unit
+// with an ability who inherits from this rawcode will have the configured code used for
+// that ability!
+native RegisterABConf takes integer codeId, abilitybuilderconfiguration abc returns nothing
 
 //=================================================================================================
 // Ability API (general stuff)
@@ -169,7 +328,7 @@ native GetUnitAbilityByIndex takes unit whichUnit, integer index returns ability
 native AddUnitAbility takes unit whichUnit, ability whichAbility returns nothing
 
 // same idea here, see comment on AddUnitAbility. Returns true if something was removed.
-native RemoveUnitAbility takes unit whichUnit, ability whichAbiilty reutrns nothing
+native RemoveUnitAbility takes unit whichUnit, ability whichAbiilty returns nothing
 
 native GetAbilityAliasId takes ability whichAbility returns integer
 native GetAbilityCodeId takes ability whichAbility returns integer
@@ -204,7 +363,7 @@ native StartUnitAbilityDefaultCooldown takes unit whichUnit, integer whichAbilit
 //native StartAbilityCooldown takes unit caster, ability whichAbility, real cooldown returns nothing
 
 // Below: uses the cooldown setting of the ability (should include level, etc)
-native StartAbilityDefaultCooldown takes unit caster, takes ability whichAbility returns nothing
+native StartAbilityDefaultCooldown takes unit caster, ability whichAbility returns nothing
 
 // NOTE: above notes are not quite correct... seems "End" cooldown functions are handling the item case
 // but only "start default" are handling item case... start (non-default) is passing thru rawcode
@@ -240,6 +399,32 @@ native AbilityDeactivate takes unit caster, ability whichAbility returns boolean
 // (the one that is actually used rather than an editor stat, which would change on skill level up)
 native SetAbilityCastRange takes ability whichAbility, real range returns nothing
 
+//=================================================================================================
+// Projectile API
+//=================================================================================================
+// Shoot projectiles using the built in engine to do so
+
+// the first 3 args are used as Event Response when triggering the "code" func handlers
+native CreateLocationTargetedCollisionProjectile takes unit casterUnit, localstore sourceAbility, integer castId, unit sourceUnit, location sourceLocation, location target, integer projectileId, real speed, boolean homing, code onLaunch, code onPreHits, boolexpr canHitTarget, code onHit, integer maxHits, integer hitsPerTarget, real startingRadius, real endingRadius, real collisionInterval, boolean provideCounts returns projectile
+
+native CreateLocationTargetedProjectile takes unit casterUnit, localstore sourceAbility, integer castId, unit sourceUnit, location sourceLocation, location target, integer projectileId, real speed, boolean homing, code onLaunch, code onHit returns projectile
+
+// I think this native creates the Impale effect, via a repeating delayed line of special effects spawned.
+// So I assume the repeating effects spawned have collision against units they hit.
+native CreateLocationTargetedPseudoProjectile takes unit casterUnit, localstore sourceAbility, integer castId, unit sourceUnit, location sourceLocation, location target, integer projectileId, effecttype whichEffectType, integer effectArtIndex, real speed, boolean homing, code onLaunch, code onPreHits, boolexpr canHitTarget, code onHit, integer maxHits, integer hitsPerTarget, real startingRadius, real endingRadius, real projectileStepInterval, integer projectileArtSkip, boolean provideCounts returns projectile
+
+native CreateUnitTargetedCollisionProjectile takes unit casterUnit, localstore sourceAbility, integer castId, unit sourceUnit, location sourceLocation, unit target, integer projectileId, real speed, boolean homing, code onLaunch, code onPreHits, boolexpr canHitTarget, code onHit, integer maxHits, integer hitsPerTarget, real startingRadius, real endingRadius, real collisionInterval, boolean provideCounts returns projectile
+
+native CreateUnitTargetedProjectile takes unit casterUnit, localstore sourceAbility, integer castId, unit sourceUnit, location sourceLocation, unit targetUnit, integer projectileId, real speed, boolean homing, code onLaunch, code onHit returns projectile
+
+// See "CreateLocationTargetedPseudoProjectile" but this one chases a unit (?)
+native CreateUnitTargetedPseudoProjectile takes unit casterUnit, localstore sourceAbility, integer castId, unit sourceUnit, location sourceLocation, unit target, integer projectileId, effecttype whichEffectType, integer effectArtIndex, real speed, boolean homing, code onLaunch, code onPreHits, boolexpr canHitTarget, code onHit, integer maxHits, integer hitsPerTarget, real startingRadius, real endingRadius, real projectileStepInterval, integer projectileArtSkip, boolean provideCounts returns projectile
+
+native SetAttackProjectileDamage takes projectile whichAttackProjectile, real damage returns nothing
+native SetProjectileDone takes projectile whichProjectile, boolean done returns nothing
+native SetProjectileReflected takes projectile whichProjectile, boolean reflected returns nothing
+native SetProjectileTargetUnit takes projectile whichProjectile, unit target returns nothing
+native SetProjectileTargetLoc takes projectile whichProjectile, location target returns nothing
 
 //=================================================================================================
 // Buff API
@@ -254,7 +439,7 @@ native AddUnitNonStackingDisplayBuff takes unit target, string stackingKey, buff
 // TODO what happens if you remove a buff with RemoveAbility natives?? seems broken...
 // For now, I guess if you add it with "add non stacking display buff" then you have to
 // remove it with this function, or else memory leaks stacking key stuff and you break the system
-native AddUnitNonStackingDisplayBuff takes unit target, string stackingKey, buff whichBuff returns nothing
+native RemoveUnitNonStackingDisplayBuff takes unit target, string stackingKey, buff whichBuff returns nothing
 
 // NOTE: full function of the json native moved to CreatePassiveBuffAU
 // NOTE: sourceAbilLocalStore will be used as GetTriggerLocalStore() in the on add/remove actions
@@ -346,6 +531,13 @@ native CreateIntTextTagFromConfig takes unit sourceUnit, texttagconfigtype which
 // this is the Moonstone ability effect. It makes the clock purple or yellow
 native SetFalseTimeOfDay takes integer hour, integer minute, real duration returns nothing
 
+// Returns an ever-increasing number to indicate the "turn" that the game is on.
+// There are roughly 20 turns per second, unless someone changes the emulator constants.
+native GetGameTurnTick takes nothing returns integer
+
+// Returns the number of seconds between each game turn tick (probably 0.05)
+constant native GetSimulationStepTime takes nothing returns real
+
 //=================================================================================================
 // Item API
 //=================================================================================================
@@ -359,6 +551,122 @@ native IsItemIdPerishable takes integer itemId returns boolean
 //=================================================================================================
 // Unit API
 //=================================================================================================
+
+// might fire some code, might return false if you're blocked by spell shield, etc
+native CheckUnitForAbilityEffectReaction takes unit target, unit caster, ability whichAbility returns boolean
+
+// similar to the above, but allows for Defend to actually reflect the projectile or something
+native CheckUnitForAbilityProjReaction takes unit target, unit caster, projectile whichProjectile returns boolean
+
+// NOTE: Percents dont work in the ability builder json "AddDefenseBonus"
+// according to a comment, so they might not be working
+// in the jass binding either. Maybe just use "BlzGetUnitArmor" for the base?
+// (NOTE: in addition to the above comment, "BlzGetUnitArmor" has been provided in Warsmash so it should function)
+// NOTE: This adds or subtracts from the GREEN number (+1.5) not the base.
+//native UnitAddDefenseBonus takes unit targetUnit, real defenseValue, boolean percentage returns nothing
+native UnitAddDefenseBonus takes unit targetUnit, real defenseValue returns nothing
+
+// green numbers
+native UnitSetTemporaryDefenseBonus takes unit targetUnit, real defenseValue returns nothing
+native UnitGetTemporaryDefenseBonus takes unit targetUnit returns real
+
+// As with any Blz native, using them would cause Warsmash to stop working on patches < 1.32, so here is a
+// non-blz binding to get the defense of a unit. "BlzGetUnitArmor" reroutes to this.
+native GetUnitDefense takes unit whichUnit returns real
+
+// This could have been written as a function instead of a native, but then that way it would
+// have to be maintained. This one is just reading the java variables, so if somebody
+// adds a damage type then this native updates likewise basically. Not sure why it
+// needs to exist, though; where possible, replace with references to DAMAGE_TYPE_FORCE
+// and friends (native ConvertDamageType)
+native String2DamageType takes string x returns damagetype
+
+//=================================================================================================
+// Non Stacking Stat Buff API
+//=================================================================================================
+// These are not buffs. They appear to be stat modifiers, but scoped on a name.
+// So I assume that if you `CreateNonStackingStatBuff(NON_STACKING_STAT_BUFF_TYPE_DEF, "My Devotion Aura Thing", 10)`
+// and also `CreateNonStackingStatBuff(NON_STACKING_STAT_BUFF_TYPE_DEF, "My Devotion Aura Thing", 12)` and
+// add them together on a unit, since they are non stacking I'm guessing this means the unit would gain a total of 12
+// and not 22 defense, because they were both applied by "My Devotion Aura Thing"??
+native CreateNonStackingStatBuff takes nonstackingstatbufftype whichType, string stackingKey, real value returns nonstackingstatbuff
+
+native AddUnitNonStackingStatBuff takes unit targetUnit, nonstackingstatbuff whichBuff returns nothing
+
+native RemoveUnitNonStackingStatBuff takes unit targetUnit, nonstackingstatbuff whichBuff returns nothing
+
+native RecomputeStatBuffsOnUnit takes unit targetUnit, nonstackingstatbufftype whichBuffType returns nothing
+
+// NOTE: seems like, if you call `UpdateNonStackingStatBuff`, you probably also have to call `RecomputeStatBuffsOnUnit`,
+// otherwise you update some invisible thing without applying it to the unit.
+native UpdateNonStackingStatBuff takes nonstackingstatbuff whichBuff, real value returns nothing
+
+// See "String2DamageType" for notes on how "String2Thing" native is probably not good, and you
+// should probably use NON_STACKING_STAT_BUFF_TYPE_MVSPDPCT values
+native String2NonStackingStatBuffType takes string x returns nonstackingstatbufftype
+
+//=================================================================================================
+// Code API
+//=================================================================================================
+
+// redeclaration of native from common.ai, so that we can run a code func such as for ability
+native StartThread takes code func returns nothing
+
+// runs the code func, but where:
+// -  GetTriggerUnit()/GetSpellAbilityUnit() return the passed in unit
+// -  GetTriggerLocalStore() returns the passed in local store
+// -  GetTriggerCastId() returns the passed in cast id
+native StartAbilityBuilderThread takes code func, unit spellAbilityUnit, localstore triggerLocalStore, integer triggerCastId returns nothing
+
+
+//=================================================================================================
+// AbilityTypeLevelData API
+//=================================================================================================
+// This is exposed to the AbilityBuilder for some reason. At a glance, it looks like whatever
+// ability might be using these is probably broken, not MUI, and in need of fix. Worth testing.
+// For now the API is provided in order to achieve 1:1 parity with JSON AbilityBuilder code.
+native AbilityTypeLevelDataAddTargetAllowed takes abilitytypeleveldata whichData, integer level, targettype whichType returns nothing
+native AbilityTypeLevelDataRemoveTargetAllowed takes abilitytypeleveldata whichData, integer level, targettype whichType returns nothing
+
+// okay, maybe these function(s) below make a little more sense and are less broken than non MUI editing
+// of targets allowed (still probably better to use GameObject API though):
+native GetAbilityTypeLevelDataReal takes abilitytypeleveldata whichData, integer level, datafieldletter whichLetter returns real
+
+// NOTE: Regarding Warsmash development history, originally "type level data" here was created
+// as a high performance cache of data parsed by the GameObject api, so my note about how it is
+// "better to use GameObject API" would have been false because it would have been worse
+// performance. However, those types of micro optimizations become pointless when everything
+// is defined in user space. Even in the json ability builder, the equivalent to
+// "native GetAbilityTypeLevelDataReal" is doing float parsing of a string every time
+// that we query the value off of it. The idea that program variables are holding
+// the ability parameters for each level in a symbol table ("class") instead of
+// as strings in a property map is already lost. So, just do whatever you want.
+// It doesn't matter anymore, and "type level data" was too confusing to teach to
+// anyone anyway, and too time consuming to implement abilities for. It's a similar
+// reason to why the outside sees "ABILITY_RLF_CASTING_TIME = ConvertAbilityRealLevelField('acas')"
+// as this overcomplex nonsense on Reforged, whereas a World Editor user might advocate he should
+// have a native "SetAbilityDataReal" so that he can just call it on "Cast1" or "Cast2", the
+// casting time fields from world editor. He is completely estranged from how performance
+// is achieved in professional software, and has no access to the necessary information
+// nor any way to apply the information on Warcraft 3 if he had it, so it is most
+// likely the case that to even try is a fool's errand and we may as well simply
+// do our best writing whatever code is fun to write with what limited time
+// is given to us in life -- thus the "AbilitySpellBase" classes in Java, and my
+// video making Cluster Rockets in only an hour on YouTube, when I realized that
+// no one cares, it's all a waste of time to have done that, and it's fun to just
+// query GameObject once when the ability is created or levels up, even though
+// calling to a giant property map like that is worse performance. It just
+// doesn't matter. And likewise does ability builder call to something that
+// re-parses strings to floats just to get a floating point data field at runtime
+
+// returns 'B000' or whatever from `Stats - Buffs` in object editor; if multiple comma separated values,
+// it returns the first one.
+native GetAbilityTypeLevelDataFirstBuffId takes abilitytypeleveldata whichData, integer level returns integer
+
+native GetAbilityTypeLevelDataDurationNormal takes abilitytypeleveldata whichData, integer level returns real
+native GetAbilityTypeLevelDataDurationHero takes abilitytypeleveldata whichData, integer level returns real
+native GetAbilityTypeLevelDataCastTime takes abilitytypeleveldata whichData, integer level returns real
+
 
 //=================================================================================================
 // Extra

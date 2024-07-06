@@ -32,6 +32,15 @@ task runGame(dependsOn: classes, type: JavaExec) {
     args cmdargs.split()
 }
 
+task runViewer(dependsOn: classes, type: JavaExec) {
+    main = "com.etheller.warsmash.desktop.editor.mdx.MdxEditorMain"
+    classpath = sourceSets.main.runtimeClasspath
+    standardInput = System.in
+    workingDir = project.assetsDir
+    ignoreExitValue = true
+    args cmdargs.split()
+}
+
 task debug(dependsOn: classes, type: JavaExec) {
     main = project.mainClassName
     classpath = sourceSets.main.runtimeClasspath

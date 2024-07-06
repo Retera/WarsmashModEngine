@@ -33,7 +33,8 @@ public class JassTest {
 			JassLexer lexer;
 			try {
 				lexer = new JassLexer(CharStreams.fromStream(dataSource.getResourceAsStream("Scripts\\common.j")));
-			} catch (final IOException e) {
+			}
+			catch (final IOException e) {
 				throw new RuntimeException(e);
 			}
 			final JassParser parser = new JassParser(new CommonTokenStream(lexer));
@@ -54,9 +55,11 @@ public class JassTest {
 				}
 			});
 			jassProgramVisitor.visit(parser.program());
-		} catch (final Exception e) {
+		}
+		catch (final Exception e) {
 			e.printStackTrace();
 		}
+
 	}
 
 }

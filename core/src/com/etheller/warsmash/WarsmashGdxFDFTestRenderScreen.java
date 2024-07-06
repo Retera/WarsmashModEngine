@@ -276,7 +276,7 @@ public class WarsmashGdxFDFTestRenderScreen implements InputProcessor, Screen, S
 	}
 
 	private void singleModelScene(final Scene scene, final String path, final String animName) {
-		final MdxModel model2 = War3MapViewer.loadModelMdx(this.viewer.dataSource, viewer, path, new PathSolver() {
+		final MdxModel model2 = War3MapViewer.loadModelMdx(this.viewer.dataSource, this.viewer, path, new PathSolver() {
 			@Override
 			public SolvedPath solve(final String src, final Object solverParams) {
 				return new SolvedPath(src, src.substring(src.lastIndexOf('.')), true);
@@ -751,8 +751,12 @@ public class WarsmashGdxFDFTestRenderScreen implements InputProcessor, Screen, S
 	}
 
 	@Override
-	public boolean scrolled(final int amount) {
-		// TODO Auto-generated method stub
+	public boolean scrolled(final float amountX, final float amountY) {
+		return false;
+	}
+
+	@Override
+	public boolean touchCancelled(final int screenX, final int screenY, final int pointer, final int button) {
 		return false;
 	}
 

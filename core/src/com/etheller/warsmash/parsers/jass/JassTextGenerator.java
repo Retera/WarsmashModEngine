@@ -19,13 +19,15 @@ public interface JassTextGenerator {
 
 	public String setUserData(String key, JassTextGeneratorType type, String value);
 
+	public String setUserDataExpr(String keyExpr, JassTextGeneratorType type, String value);
+
 	/**
 	 * Creates a jass function containing the given actions
 	 *
 	 * @param actions
 	 * @return name for anonymously generated function
 	 */
-	public String createAnonymousFunction(List<? extends JassTextGeneratorExpr> actions, String nameSuggestion);
+	public String createAnonymousFunction(List<? extends JassTextGeneratorStmt> actions, String nameSuggestion);
 
 	public String createAnonymousBooleanFunction(List<? extends JassTextGeneratorExpr> actions, String nameSuggestion);
 
@@ -41,9 +43,11 @@ public interface JassTextGenerator {
 
 	public String functionPointerByName(String functionName);
 
+	void println(String line);
+
 	class Util {
 		public static void indent(final int indent, final StringBuilder sb) {
-			for (int i = 0; i < (indent * 4); i++) {
+			for (int i = 0, l = indent * 4; i < l; i++) {
 				sb.append(' ');
 			}
 		}

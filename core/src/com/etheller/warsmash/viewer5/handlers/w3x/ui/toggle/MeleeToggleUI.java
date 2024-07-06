@@ -157,8 +157,8 @@ public class MeleeToggleUI implements WarsmashUI {
 	}
 
 	@Override
-	public boolean scrolled(final int amount) {
-		return this.currentUI.scrolled(amount);
+	public boolean scrolled(final float amountX, final float amountY) {
+		return this.currentUI.scrolled(amountX, amountY);
 	}
 
 	@Override

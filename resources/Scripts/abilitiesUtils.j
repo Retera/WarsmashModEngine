@@ -146,11 +146,13 @@ globals
     constant string ABILITY_FIELD_REQUIREMENTS                      = "Requires"
     constant string ABILITY_FIELD_REQUIREMENT_LEVELS                = "Requiresamount"
 
+    constant real au_SIMULTION_STEP_TIME                            = GetSimulationStepTime()
 endglobals
 
 function AddUnitBuffAU takes unit target, localstore sourceAbility, buff whichBuff returns nothing
 	call AddUnitAbility(target, whichBuff)
 	call SetLocalStoreAbilityHandle(sourceAbility, AB_LOCAL_STORE_KEY_LASTADDEDBUFF, whichBuff)
+endfunction
 
 function AddUnitNonStackingDisplayBuffAU takes unit target, localstore sourceAbility, string stackingKey, buff whichBuff returns nothing
 	call AddUnitNonStackingDisplayBuff(target, stackingKey, whichBuff)
@@ -159,7 +161,7 @@ endfunction
 
 
 function StoreCreatedBuffAU takes unit casterUnit, localstore sourceAbility, buff whichBuff returns nothing
-	call SetLocalStoreAbilityHandle(sourceAbility, AB_LOCAL_STORE_KEY_LASTCREATEDBUFF, theBuff)
+	call SetLocalStoreAbilityHandle(sourceAbility, AB_LOCAL_STORE_KEY_LASTCREATEDBUFF, whichBuff)
 	if not LocalStoreContainsKey(sourceAbility, AB_LOCAL_STORE_KEY_BUFFCASTINGUNIT) then
 		call SetLocalStoreUnitHandle(sourceAbility, AB_LOCAL_STORE_KEY_BUFFCASTINGUNIT, casterUnit)
 	endif
@@ -201,19 +203,19 @@ function CreateTimedTargetingBuffAU takes unit casterUnit, localstore sourceAbil
     return theBuff
 endfunction
 
-function CreateTimedTickingBuffAU takes unit casterUnit, localstore sourceAbility, takes integer buffId, real duration, boolean showTimedLifeBar, code onAddAction, code onRemoveAction, code onExpireAction, code onTickAction, boolean showIcon, effecttype artType, localstore sourceAbility, integer castId returns buff
+function CreateTimedTickingBuffAU takes unit casterUnit, localstore sourceAbility, integer buffId, real duration, boolean showTimedLifeBar, code onAddAction, code onRemoveAction, code onExpireAction, code onTickAction, boolean showIcon, effecttype artType, integer castId returns buff
     local buff theBuff = CreateTimedTickingBuff(buffId, duration, showTimedLifeBar, onAddAction, onRemoveAction, onExpireAction, onTickAction, showIcon, artType, sourceAbility, castId)
     call StoreCreatedBuffAU(casterUnit, sourceAbility, theBuff)
     return theBuff
 endfunction
 
-function CreateTimedTickingPausedBuffAU takes unit casterUnit, localstore sourceAbility, takes integer buffId, real duration, boolean showTimedLifeBar, code onAddAction, code onRemoveAction, code onExpireAction, code onTickAction, boolean showIcon, effecttype artType, localstore sourceAbility, integer castId returns buff
+function CreateTimedTickingPausedBuffAU takes unit casterUnit, localstore sourceAbility, integer buffId, real duration, boolean showTimedLifeBar, code onAddAction, code onRemoveAction, code onExpireAction, code onTickAction, boolean showIcon, effecttype artType, integer castId returns buff
     local buff theBuff = CreateTimedTickingPausedBuff(buffId, duration, showTimedLifeBar, onAddAction, onRemoveAction, onExpireAction, onTickAction, showIcon, artType, sourceAbility, castId)
     call StoreCreatedBuffAU(casterUnit, sourceAbility, theBuff)
     return theBuff
 endfunction
 
-function CreateTimedTickingPostDeathBuffAU takes unit casterUnit, localstore sourceAbility, takes integer buffId, real duration, boolean showTimedLifeBar, code onAddAction, code onRemoveAction, code onExpireAction, code onTickAction, boolean showIcon, effecttype artType, localstore sourceAbility, integer castId returns buff
+function CreateTimedTickingPostDeathBuffAU takes unit casterUnit, localstore sourceAbility, integer buffId, real duration, boolean showTimedLifeBar, code onAddAction, code onRemoveAction, code onExpireAction, code onTickAction, boolean showIcon, effecttype artType, integer castId returns buff
     local buff theBuff = CreateTimedTickingPostDeathBuff(buffId, duration, showTimedLifeBar, onAddAction, onRemoveAction, onExpireAction, onTickAction, showIcon, artType, sourceAbility, castId)
     call StoreCreatedBuffAU(casterUnit, sourceAbility, theBuff)
     return theBuff
@@ -221,7 +223,7 @@ endfunction
 
 function CreateDestructableBuffAU takes unit casterUnit, integer buffId, localstore sourceAbilLocalStore, code onAddAction, code onRemoveAction, code onDeathAction, integer castId returns destructablebuff
     local destructablebuff theBuff = CreateDestructableBuff(casterUnit, buffId, GetLocalStoreInteger(sourceAbilLocalStore, AB_LOCAL_STORE_KEY_CURRENTLEVEL), sourceAbilLocalStore, onAddAction, onRemoveAction, onDeathAction, castId)
-	call SetLocalStoreDestructableBuffHandle(sourceAbility, AB_LOCAL_STORE_KEY_LASTCREATEDDESTBUFF, theBuff)
+	call SetLocalStoreDestructableBuffHandle(sourceAbilLocalStore, AB_LOCAL_STORE_KEY_LASTCREATEDDESTBUFF, theBuff)
     return theBuff
 endfunction
 
@@ -234,9 +236,9 @@ endfunction
 function ChargeItemAU takes item whichItem, boolean checkForPerish, localstore whichLocalStore returns nothing
 	local item it
 	if whichItem == null then
-		it = GetAbilityItem(GetLocalStoreAbilityHandle(whichLocalStore, AB_LOCAL_STORE_KEY_ABILITY))
+		set it = GetAbilityItem(GetLocalStoreAbilityHandle(whichLocalStore, AB_LOCAL_STORE_KEY_ABILITY))
 	else
-		it = whichItem
+		set it = whichItem
 	endif
 	call SetItemCharges(GetItemCharges(it) - 1)
 	if checkForPerish and IsItemIdPerishable(whichItem) and GetItemCharges(it) == 0 then
@@ -251,13 +253,282 @@ function GiveResourcesToPlayerAU takes player whichPlayer, integer gold, integer
 	call SetPlayerState(whichPlayer, PLAYER_STATE_RESOURCE_LUMBER, GetPlayerState(whichPlayer, PLAYER_STATE_RESOURCE_LUMBER) + lumber)
 endfunction
 
-function CreateLocationTargetedCollisionProjectileAU takes unit casterUnit, localstore sourceAbility, unit sourceUnit, location sourceLocation, location target, integer projectileId, real speed, boolean homing, code onLaunch, code onPreHits, boolexpr canHitTarget, code onHit, integer maxHits, integer hitsPerTarget, real startingRadius, real endingRadius, real collisionInterval, boolean provideCounts returns projectile
-	local projectile theProjectile
-	set theProjectile = CreateLocationTargetedCollisionProjectile(sourceUnit, sourceLocation, target, projectileId, speed, homing, onLaunch, onPreHits, onHit, maxHits, hitsPerTarget, startingRadius, endingRadius, collisionInterval, provideCounts)
-	call StoreCreatedProjectileAU(casterUnit, sourceAbility, theProjectile)
+function StoreCreatedProjectileAU takes localstore sourceAbility, integer castId, projectile whichProjectile returns nothing
+	call SetLocalStoreProjectileHandle(sourceAbility, AB_LOCAL_STORE_KEY_LASTCREATEDPROJECTILE + I2S(castId), whichProjectile)
+endfunction
+
+function CreateLocationTargetedCollisionProjectileAnySpeedAU takes unit casterUnit, localstore sourceAbility, integer castId, unit sourceUnit, location sourceLocation, location target, integer projectileId, real speed, boolean homing, code onLaunch, code onPreHits, boolexpr canHitTarget, code onHit, integer maxHits, integer hitsPerTarget, real startingRadius, real endingRadius, real collisionInterval, boolean provideCounts returns projectile
+	local projectile theProjectile = CreateLocationTargetedCollisionProjectile(casterUnit, sourceAbility, castId, sourceUnit, sourceLocation, target, projectileId, speed, homing, onLaunch, onPreHits, canHitTarget, onHit, maxHits, hitsPerTarget, startingRadius, endingRadius, collisionInterval, provideCounts)
+	call StoreCreatedProjectileAU(sourceAbility, castId, theProjectile)
 	return theProjectile
 endfunction
 
-function CheckAbilityEffectReactionAU takes unit target, ability whichAbility, code onHitFunc, code onBlockFunc returns nothing
-	
+function CreateLocationTargetedCollisionProjectileAU takes unit casterUnit, localstore sourceAbility, integer castId, unit sourceUnit, location sourceLocation, location target, integer projectileId, code onLaunch, code onPreHits, boolexpr canHitTarget, code onHit, integer maxHits, integer hitsPerTarget, real startingRadius, real endingRadius, real collisionInterval, boolean provideCounts returns projectile
+    // NOTE: at the time of writing, AB_LOCAL_STORE_KEY_ABILITYEDITORDATA is populated by the game engine and does not need to be "Set" prior to "Get".
+    local gameobject editorData = GetLocalStoreGameObjectHandle(sourceAbility, AB_LOCAL_STORE_KEY_ABILITYEDITORDATA)
+    local real speed = GetGameObjectFieldAsReal(editorData, ABILITY_FIELD_PROJECTILE_SPEED, 0)
+    local boolean homing = GetGameObjectFieldAsBoolean(editorData, ABILITY_FIELD_PROJECTILE_HOMING_ENABLED, 0)
+	return CreateLocationTargetedCollisionProjectileAnySpeedAU(casterUnit, sourceAbility, castId, sourceUnit, sourceLocation, target, projectileId, speed, homing, onLaunch, onPreHits, canHitTarget, onHit, maxHits, hitsPerTarget, startingRadius, endingRadius, collisionInterval, provideCounts)
+endfunction
+
+function CreateLocationTargetedProjectileAnySpeedAU takes unit casterUnit, localstore sourceAbility, integer castId, unit sourceUnit, location sourceLocation, location target, integer projectileId, real speed, boolean homing, code onLaunch, code onHit returns projectile
+	local projectile theProjectile = CreateLocationTargetedProjectile(casterUnit, sourceAbility, castId, sourceUnit, sourceLocation, target, projectileId, speed, homing, onLaunch, onHit)
+	call StoreCreatedProjectileAU(sourceAbility, castId, theProjectile)
+	return theProjectile
+endfunction
+
+function CreateLocationTargetedProjectileAU takes unit casterUnit, localstore sourceAbility, integer castId, unit sourceUnit, location sourceLocation, location target, integer projectileId, code onLaunch, code onHit returns projectile
+    local gameobject editorData = GetLocalStoreGameObjectHandle(sourceAbility, AB_LOCAL_STORE_KEY_ABILITYEDITORDATA)
+    local real speed = GetGameObjectFieldAsReal(editorData, ABILITY_FIELD_PROJECTILE_SPEED, 0)
+    local boolean homing = GetGameObjectFieldAsBoolean(editorData, ABILITY_FIELD_PROJECTILE_HOMING_ENABLED, 0)
+	return CreateLocationTargetedProjectileAnySpeedAU(casterUnit, sourceAbility, castId, sourceUnit, sourceLocation, target, projectileId, speed, homing, onLaunch, onHit)
+endfunction
+
+function CreateLocationTargetedPseudoProjectileAnySpeedAU takes unit casterUnit, localstore sourceAbility, integer castId, unit sourceUnit, location sourceLocation, location target, integer projectileId, effecttype whichEffectType, integer effectArtIndex, real speed, boolean homing, code onLaunch, code onPreHits, boolexpr canHitTarget, code onHit, integer maxHits, integer hitsPerTarget, real startingRadius, real endingRadius, real projectileStepInterval, integer projectileArtSkip, boolean provideCounts returns projectile
+    local projectile theProjectile = CreateLocationTargetedPseudoProjectile(casterUnit, sourceAbility, castId, sourceUnit, sourceLocation, target, projectileId, whichEffectType, effectArtIndex, speed, homing, onLaunch, onPreHits, canHitTarget, onHit, maxHits, hitsPerTarget, startingRadius, endingRadius, projectileStepInterval, projectileArtSkip, provideCounts)
+    call StoreCreatedProjectileAU(sourceAbility, castId, theProjectile)
+    return theProjectile
+endfunction
+
+function CreateLocationTargetedPseudoProjectileAU takes unit casterUnit, localstore sourceAbility, integer castId, unit sourceUnit, location sourceLocation, location target, integer projectileId, effecttype whichEffectType, integer effectArtIndex, code onLaunch, code onPreHits, boolexpr canHitTarget, code onHit, integer maxHits, integer hitsPerTarget, real startingRadius, real endingRadius, real projectileStepInterval, integer projectileArtSkip, boolean provideCounts returns projectile
+    local gameobject editorData = GetLocalStoreGameObjectHandle(sourceAbility, AB_LOCAL_STORE_KEY_ABILITYEDITORDATA)
+    local real speed = GetGameObjectFieldAsReal(editorData, ABILITY_FIELD_PROJECTILE_SPEED, 0)
+    local boolean homing = GetGameObjectFieldAsBoolean(editorData, ABILITY_FIELD_PROJECTILE_HOMING_ENABLED, 0)
+    return CreateLocationTargetedPseudoProjectileAnySpeedAU(casterUnit, sourceAbility, castId, sourceUnit, sourceLocation, target, projectileId, whichEffectType, effectArtIndex, speed, homing, onLaunch, onPreHits, canHitTarget, onHit, maxHits, hitsPerTarget, startingRadius, endingRadius, projectileStepInterval, projectileArtSkip, provideCounts)
+endfunction
+
+function CreateUnitTargetedCollisionProjectileAnySpeedAU takes unit casterUnit, localstore sourceAbility, integer castId, unit sourceUnit, location sourceLocation, unit target, integer projectileId, real speed, boolean homing, code onLaunch, code onPreHits, boolexpr canHitTarget, code onHit, integer maxHits, integer hitsPerTarget, real startingRadius, real endingRadius, real collisionInterval, boolean provideCounts returns projectile
+	local projectile theProjectile = CreateUnitTargetedCollisionProjectile(casterUnit, sourceAbility, castId, sourceUnit, sourceLocation, target, projectileId, speed, homing, onLaunch, onPreHits, canHitTarget, onHit, maxHits, hitsPerTarget, startingRadius, endingRadius, collisionInterval, provideCounts)
+	call StoreCreatedProjectileAU(sourceAbility, castId, theProjectile)
+	return theProjectile
+endfunction
+
+function CreateUnitTargetedCollisionProjectileAU takes unit casterUnit, localstore sourceAbility, integer castId, unit sourceUnit, location sourceLocation, unit target, integer projectileId, code onLaunch, code onPreHits, boolexpr canHitTarget, code onHit, integer maxHits, integer hitsPerTarget, real startingRadius, real endingRadius, real collisionInterval, boolean provideCounts returns projectile
+    // NOTE: at the time of writing, AB_LOCAL_STORE_KEY_ABILITYEDITORDATA is populated by the game engine and does not need to be "Set" prior to "Get".
+    local gameobject editorData = GetLocalStoreGameObjectHandle(sourceAbility, AB_LOCAL_STORE_KEY_ABILITYEDITORDATA)
+    local real speed = GetGameObjectFieldAsReal(editorData, ABILITY_FIELD_PROJECTILE_SPEED, 0)
+    local boolean homing = GetGameObjectFieldAsBoolean(editorData, ABILITY_FIELD_PROJECTILE_HOMING_ENABLED, 0)
+	return CreateUnitTargetedCollisionProjectileAnySpeedAU(casterUnit, sourceAbility, castId, sourceUnit, sourceLocation, target, projectileId, speed, homing, onLaunch, onPreHits, canHitTarget, onHit, maxHits, hitsPerTarget, startingRadius, endingRadius, collisionInterval, provideCounts)
+endfunction
+
+function CreateUnitTargetedProjectileAnySpeedAU takes unit casterUnit, localstore sourceAbility, integer castId, unit sourceUnit, location sourceLocation, unit targetUnit, integer projectileId, real speed, boolean homing, code onLaunch, code onHit returns projectile
+	local projectile theProjectile = CreateUnitTargetedProjectile(casterUnit, sourceAbility, castId, sourceUnit, sourceLocation, targetUnit, projectileId, speed, homing, onLaunch, onHit)
+	call StoreCreatedProjectileAU(sourceAbility, castId, theProjectile)
+	return theProjectile
+endfunction
+
+function CreateUnitTargetedProjectileAU takes unit casterUnit, localstore sourceAbility, integer castId, unit sourceUnit, location sourceLocation, unit targetUnit, integer projectileId, code onLaunch, code onHit returns projectile
+    local gameobject editorData = GetLocalStoreGameObjectHandle(sourceAbility, AB_LOCAL_STORE_KEY_ABILITYEDITORDATA)
+    local real speed = GetGameObjectFieldAsReal(editorData, ABILITY_FIELD_PROJECTILE_SPEED, 0)
+    local boolean homing = GetGameObjectFieldAsBoolean(editorData, ABILITY_FIELD_PROJECTILE_HOMING_ENABLED, 0)
+	return CreateUnitTargetedProjectileAnySpeedAU(casterUnit, sourceAbility, castId, sourceUnit, sourceLocation, targetUnit, projectileId, speed, homing, onLaunch, onHit)
+endfunction
+
+function CreateUnitTargetedPseudoProjectileAnySpeedAU takes unit casterUnit, localstore sourceAbility, integer castId, unit sourceUnit, location sourceLocation, unit target, integer projectileId, effecttype whichEffectType, integer effectArtIndex, real speed, boolean homing, code onLaunch, code onPreHits, boolexpr canHitTarget, code onHit, integer maxHits, integer hitsPerTarget, real startingRadius, real endingRadius, real projectileStepInterval, integer projectileArtSkip, boolean provideCounts returns projectile
+    local projectile theProjectile = CreateUnitTargetedPseudoProjectile(casterUnit, sourceAbility, castId, sourceUnit, sourceLocation, target, projectileId, whichEffectType, effectArtIndex, speed, homing, onLaunch, onPreHits, canHitTarget, onHit, maxHits, hitsPerTarget, startingRadius, endingRadius, projectileStepInterval, projectileArtSkip, provideCounts)
+    call StoreCreatedProjectileAU(sourceAbility, castId, theProjectile)
+    return theProjectile
+endfunction
+
+function CreateUnitTargetedPseudoProjectileAU takes unit casterUnit, localstore sourceAbility, integer castId, unit sourceUnit, location sourceLocation, unit target, integer projectileId, effecttype whichEffectType, integer effectArtIndex, code onLaunch, code onPreHits, boolexpr canHitTarget, code onHit, integer maxHits, integer hitsPerTarget, real startingRadius, real endingRadius, real projectileStepInterval, integer projectileArtSkip, boolean provideCounts returns projectile
+    local gameobject editorData = GetLocalStoreGameObjectHandle(sourceAbility, AB_LOCAL_STORE_KEY_ABILITYEDITORDATA)
+    local real speed = GetGameObjectFieldAsReal(editorData, ABILITY_FIELD_PROJECTILE_SPEED, 0)
+    local boolean homing = GetGameObjectFieldAsBoolean(editorData, ABILITY_FIELD_PROJECTILE_HOMING_ENABLED, 0)
+    return CreateUnitTargetedPseudoProjectileAnySpeedAU(casterUnit, sourceAbility, castId, sourceUnit, sourceLocation, target, projectileId, whichEffectType, effectArtIndex, speed, homing, onLaunch, onPreHits, canHitTarget, onHit, maxHits, hitsPerTarget, startingRadius, endingRadius, projectileStepInterval, projectileArtSkip, provideCounts)
+endfunction
+
+function CheckAbilityEffectReactionAU takes unit caster, localstore localStore, integer castId, unit target, ability whichAbility, code onHitFunc, code onBlockFunc returns nothing
+    // TODO use of "StartAbilityBuilderThread" here is most likely not identical to what JSON was doing, because code executed after
+    // this function can happen before the new simulated "thread" runs even though it should probably run before the game engine proceeds.
+    // If that's a problem, we could maybe change this in the future to have a different native to inline immediately run the code func
+	if CheckUnitForAbilityEffectReaction(target, caster, whichAbility) then
+	    call StartAbilityBuilderThread(onHitFunc, caster, localStore, castId)
+	else
+	    call StartAbilityBuilderThread(onBlockFunc, caster, localStore, castId)
+	endif
+endfunction
+
+function CheckAbilityProjReactionAU takes unit caster, localstore localStore, integer castId, unit target, projectile whichProjectile, code onHitFunc, code onBlockFunc returns nothing
+    // TODO use of "StartAbilityBuilderThread" here is most likely not identical to what JSON was doing, because code executed after
+    // this function can happen before the new simulated "thread" runs even though it should probably run before the game engine proceeds.
+    // If that's a problem, we could maybe change this in the future to have a different native to inline immediately run the code func
+	if CheckUnitForAbilityProjReaction(target, caster, whichProjectile) then
+	    call StartAbilityBuilderThread(onHitFunc, caster, localStore, castId)
+	else
+	    call StartAbilityBuilderThread(onBlockFunc, caster, localStore, castId)
+	endif
+endfunction
+
+function CreateNonStackingStatBuffAU takes localstore whichLocalStore, nonstackingstatbufftype whichType, string stackingKey, real value returns nonstackingstatbuff
+    local nonstackingstatbuff theBuff = CreateNonStackingStatBuff(whichType, stackingKey, value)
+    call SetLocalStoreNonStackingStatBuffHandle(whichLocalStore, AB_LOCAL_STORE_KEY_LASTCREATEDNSSB, theBuff)
+    return theBuff
+endfunction
+
+function UnitDamageTargetAU takes unit whichUnit, widget target, real amount, boolean attack, boolean ranged, attacktype attackType, damagetype damageType, boolean ignoreLTEZero returns boolean
+    if not ignoreLTEZero or amount > 0 then
+        call UnitDamageTarget(whichUnit, target, amount, attack, ranged, attackType, damageType, WEAPON_TYPE_WHOKNOWS)
+    endif
+endfunction
+
+function GetAbilityDataAsFloatAU takes localstore x, datafieldletter whichDataField returns real
+    local abilitytypeleveldata d = GetLocalStoreAbilityTypeLevelDataHandle(x, AB_LOCAL_STORE_KEY_LEVELDATA)
+    local integer lvl = GetLocalStoreInteger(x, AB_LOCAL_STORE_KEY_CURRENTLEVEL) - 1 // starts at 0
+    return GetAbilityTypeLevelDataReal(d, lvl, whichDataField)
+endfunction
+
+function GetFirstBuffIdAU takes localstore x returns integer
+    local abilitytypeleveldata d = GetLocalStoreAbilityTypeLevelDataHandle(x, AB_LOCAL_STORE_KEY_LEVELDATA)
+    local integer lvl = GetLocalStoreInteger(x, AB_LOCAL_STORE_KEY_CURRENTLEVEL) - 1 // starts at 0
+    return GetAbilityTypeLevelDataFirstBuffId(d, lvl)
+endfunction
+
+function GetAbilityDurationForTargetAU takes localstore x, unit target returns real
+    local localstore x = GetTriggerLocalStore()
+    local abilitytypeleveldata d = GetLocalStoreAbilityTypeLevelDataHandle(x, AB_LOCAL_STORE_KEY_LEVELDATA)
+    local integer lvl = GetLocalStoreInteger(x, AB_LOCAL_STORE_KEY_CURRENTLEVEL) - 1 // starts at 0
+    if IsUnitType(target, UNIT_TYPE_HERO) or IsUnitType(target, UNIT_TYPE_RESISTANT) then
+        return GetAbilityTypeLevelDataDurationHero(d, lvl)
+    endif
+    return GetAbilityTypeLevelDataDurationNormal(d, lvl)
+endfunction
+
+function GetAbilityDurationAU takes localstore x returns real
+    local abilitytypeleveldata d = GetLocalStoreAbilityTypeLevelDataHandle(x, AB_LOCAL_STORE_KEY_LEVELDATA)
+    local integer lvl = GetLocalStoreInteger(x, AB_LOCAL_STORE_KEY_CURRENTLEVEL) - 1 // starts at 0
+    return GetAbilityTypeLevelDataDurationNormal(d, lvl)
+endfunction
+
+function GetAbilityCastTimeAU takes localstore x returns real
+    local abilitytypeleveldata d = GetLocalStoreAbilityTypeLevelDataHandle(x, AB_LOCAL_STORE_KEY_LEVELDATA)
+    local integer lvl = GetLocalStoreInteger(x, AB_LOCAL_STORE_KEY_CURRENTLEVEL) - 1 // starts at 0
+    return GetAbilityTypeLevelDataCastTime(d, lvl)
+endfunction
+
+function SetLocalStoreUserStringAU takes localstore whichLocalStore, string childKey, string value returns boolean
+    return SetLocalStoreString(whichLocalStore, "__" + childKey, value)
+endfunction
+
+function SetLocalStoreUserCastStringAU takes localstore whichLocalStore, string childKey, integer castId, string value returns boolean
+    return SetLocalStoreString(whichLocalStore, "__" + childKey + "#" + I2S(castId), value)
+endfunction
+
+function SetLocalStoreUserIntegerAU takes localstore whichLocalStore, string childKey, integer value returns boolean
+    return SetLocalStoreInteger(whichLocalStore, "__" + childKey, value)
+endfunction
+
+function SetLocalStoreUserCastIntegerAU takes localstore whichLocalStore, string childKey, integer castId, integer value returns boolean
+    return SetLocalStoreInteger(whichLocalStore, "__" + childKey + "#" + I2S(castId), value)
+endfunction
+
+function SetLocalStoreUserRealAU takes localstore whichLocalStore, string childKey, real value returns boolean
+    return SetLocalStoreReal(whichLocalStore, "__" + childKey, value)
+endfunction
+
+function SetLocalStoreUserCastRealAU takes localstore whichLocalStore, string childKey, integer castId, real value returns boolean
+    return SetLocalStoreReal(whichLocalStore, "__" + childKey + "#" + I2S(castId), value)
+endfunction
+
+function SetLocalStoreUserBooleanAU takes localstore whichLocalStore, string childKey, boolean value returns boolean
+    return SetLocalStoreBoolean(whichLocalStore, "__" + childKey, value)
+endfunction
+
+function SetLocalStoreUserCastBooleanAU takes localstore whichLocalStore, string childKey, integer castId, boolean value returns boolean
+    return SetLocalStoreBoolean(whichLocalStore, "__" + childKey + "#" + I2S(castId), value)
+endfunction
+
+function SetLocalStoreUserHandleAU takes localstore whichLocalStore, string childKey, handle value returns boolean
+    return SetLocalStoreHandle(whichLocalStore, "__" + childKey, value)
+endfunction
+
+function SetLocalStoreUserCastHandleAU takes localstore whichLocalStore, string childKey, integer castId, handle value returns boolean
+    return SetLocalStoreHandle(whichLocalStore, "__" + childKey + "#" + I2S(castId), value)
+endfunction
+
+function StoreStringLocallyAU takes localstore whichLocalStore, string childKey, integer castId, string value, boolean instanceValue returns boolean
+    if instanceValue then
+        return SetLocalStoreUserCastStringAU(whichLocalStore, childKey, castId, value)
+    else
+        return SetLocalStoreUserStringAU(whichLocalStore, childKey, value)
+    endif
+endfunction
+
+function StoreIntegerLocallyAU takes localstore whichLocalStore, string childKey, integer castId, integer value, boolean instanceValue returns boolean
+    if instanceValue then
+        return SetLocalStoreUserCastIntegerAU(whichLocalStore, childKey, castId, value)
+    else
+        return SetLocalStoreUserIntegerAU(whichLocalStore, childKey, value)
+    endif
+endfunction
+
+function StoreBooleanLocallyAU takes localstore whichLocalStore, string childKey, integer castId, boolean value, boolean instanceValue returns boolean
+    if instanceValue then
+        return SetLocalStoreUserCastBooleanAU(whichLocalStore, childKey, castId, value)
+    else
+        return SetLocalStoreUserBooleanAU(whichLocalStore, childKey, value)
+    endif
+endfunction
+
+function StoreHandleLocallyAU takes localstore whichLocalStore, string childKey, integer castId, handle value, boolean instanceValue returns boolean
+    if instanceValue then
+        return SetLocalStoreUserCastHandleAU(whichLocalStore, childKey, castId, value)
+    else
+        return SetLocalStoreUserHandleAU(whichLocalStore, childKey, value)
+    endif
+endfunction
+
+function GetLocalStoreUserNonStackingStatBuffHandleAU takes localstore whichLocalStore, string childKey returns nonstackingstatbuff
+    return GetLocalStoreNonStackingStatBuffHandle(whichLocalStore, "__" + childKey)
+endfunction 
+
+function GetLocalStoreUserCastNonStackingStatBuffHandleAU takes localstore whichLocalStore, string childKey, integer castId returns nonstackingstatbuff
+    return GetLocalStoreNonStackingStatBuffHandle(whichLocalStore, "__" + childKey + "#" + I2S(castId))
+endfunction 
+
+function GetStoredNonStackingStatBuffAU takes localstore whichLocalStore, string childKey, integer castId, boolean instanceValue returns nonstackingstatbuff
+    if instanceValue then
+        return GetLocalStoreUserCastNonStackingStatBuffHandleAU(whichLocalStore, childKey, castId)
+    else
+        return GetLocalStoreUserNonStackingStatBuffHandleAU(whichLocalStore, childKey)
+    endif
+endfunction
+
+function GetLocalStoreUserRealAU takes localstore whichLocalStore, string childKey returns real
+    return GetLocalStoreReal(whichLocalStore, "__" + childKey)
+endfunction 
+
+function GetLocalStoreUserCastRealAU takes localstore whichLocalStore, string childKey, integer castId returns real
+    return GetLocalStoreReal(whichLocalStore, "__" + childKey + "#" + I2S(castId))
+endfunction 
+
+function GetStoredRealAU takes localstore whichLocalStore, string childKey, integer castId, boolean instanceValue returns real
+    if instanceValue then
+        return GetLocalStoreUserCastRealAU(whichLocalStore, childKey, castId)
+    else
+        return GetLocalStoreUserRealAU(whichLocalStore, childKey)
+    endif
+endfunction
+
+// NOTE: So, in Warsmash, some objects (such as buffs) have a "tick" method that fires about 20
+// times per second, whenever the lock-step synchronized game does a step of game logic.
+// In those situations, you might be inside of a callback that is called on every "tick,"
+// but you actually only want to perform an action every so many seconds. Rather than
+// implementing your own check every time, or whatever, PeriodicExecuteAU can be called
+// on each tick and it will return true when you should _actually_ perform your logic.
+// (Maybe in the future we could just replace this with a timer)
+function PeriodicExecuteAU takes localstore whichLocalStore, real delaySeconds, boolean initialTick, string uniquenessKey returns boolean
+    local integer nextActiveTick = GetLocalStoreInteger(whichLocalStore, AB_LOCAL_STORE_KEY_PERIODICNEXTTICK + uniquenessKey)
+    local integer currentTick = GetGameTurnTick()
+    local integer delayTicks
+    local boolean runActions = false
+    if currentTick >= nextActiveTick then
+        set delayTicks = R2I(delaySeconds / au_SIMULTION_STEP_TIME)
+        
+        if nextActiveTick != 0 or initialTick then
+            set runActions = true
+        endif
+        set nextActiveTick = currentTick + delayTicks
+        call SetLocalStoreInteger(whichLocalStore, AB_LOCAL_STORE_KEY_PERIODICNEXTTICK + uniquenessKey, nextActiveTick)
+    endif
+    return runActions
 endfunction

@@ -787,8 +787,12 @@ public class WarsmashGdxMenuScreen implements InputProcessor, Screen, SingleMode
 	}
 
 	@Override
-	public boolean scrolled(final int amount) {
-		// TODO Auto-generated method stub
+	public boolean scrolled(final float amountX, final float amountY) {
+		return false;
+	}
+
+	@Override
+	public boolean touchCancelled(final int screenX, final int screenY, final int pointer, final int button) {
 		return false;
 	}
 

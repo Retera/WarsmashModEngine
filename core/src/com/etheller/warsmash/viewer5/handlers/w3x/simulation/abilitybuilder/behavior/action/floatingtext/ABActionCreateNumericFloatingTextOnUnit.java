@@ -7,10 +7,10 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.floatcallbacks.ABFloatCallback;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.unitcallbacks.ABUnitCallback;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABAction;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABSingleAction;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.TextTagConfigType;
 
-public class ABActionCreateNumericFloatingTextOnUnit implements ABAction {
+public class ABActionCreateNumericFloatingTextOnUnit implements ABSingleAction {
 
 	private ABUnitCallback target;
 	private TextTagConfigType textType;
@@ -30,7 +30,7 @@ public class ABActionCreateNumericFloatingTextOnUnit implements ABAction {
 
 	@Override
 	public String generateJassEquivalent(final JassTextGenerator jassTextGenerator) {
-		return "CreateTextTagFromConfig(" + this.target.generateJassEquivalent(jassTextGenerator)
+		return "CreateIntTextTagFromConfig(" + this.target.generateJassEquivalent(jassTextGenerator)
 				+ ", TEXT_TAG_CONFIG_TYPE_" + this.textType.name() + ", R2I("
 				+ this.amount.generateJassEquivalent(jassTextGenerator) + "))";
 	}

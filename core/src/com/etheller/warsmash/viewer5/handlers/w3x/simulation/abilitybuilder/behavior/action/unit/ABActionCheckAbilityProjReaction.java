@@ -9,8 +9,9 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.projectile.ABProjectileCallback;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.unitcallbacks.ABUnitCallback;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABAction;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABSingleAction;
 
-public class ABActionCheckAbilityProjReaction implements ABAction {
+public class ABActionCheckAbilityProjReaction implements ABSingleAction {
 
 	private ABUnitCallback target;
 	private ABProjectileCallback projectile;
@@ -49,13 +50,82 @@ public class ABActionCheckAbilityProjReaction implements ABAction {
 				"CheckAbilityProjReactionAU_OnHit");
 		String tarU;
 		if (this.target != null) {
-			tarU = jassTextGenerator.getCaster();
+			tarU = this.target.generateJassEquivalent(jassTextGenerator);
 		}
 		else {
 			tarU = jassTextGenerator.getCaster();
 		}
-		return "CheckAbilityProjReactionAU(" + tarU + ", " + this.projectile.generateJassEquivalent(jassTextGenerator)
-				+ ", " + jassTextGenerator.functionPointerByName(onHitFunc) + ", "
+		return "CheckAbilityProjReactionAU(" + jassTextGenerator.getCaster() + ", "
+				+ jassTextGenerator.getTriggerLocalStore() + ", " + jassTextGenerator.getCastId() + ", " + tarU + ", "
+				+ this.projectile.generateJassEquivalent(jassTextGenerator) + ", "
+				+ jassTextGenerator.functionPointerByName(onHitFunc) + ", "
 				+ jassTextGenerator.functionPointerByName(onBlockFunc) + ")";
+	}
+
+	@Override
+	public void generateJassEquivalent(final int indent, final JassTextGenerator jassTextGenerator) {
+		String tarU;
+		if (this.target != null) {
+			tarU = this.target.generateJassEquivalent(jassTextGenerator);
+		}
+		else {
+			tarU = jassTextGenerator.getCaster();
+		}
+
+		final StringBuilder sb = new StringBuilder();
+		if ((this.onHitActions == null) || this.onHitActions.isEmpty()) {
+			if ((this.onBlockActions != null) && !this.onBlockActions.isEmpty()) {
+				JassTextGenerator.Util.indent(indent, sb);
+				sb.append("if not CheckUnitForAbilityProjReaction(");
+				sb.append(tarU);
+				sb.append(", ");
+				sb.append(jassTextGenerator.getCaster());
+				sb.append(", ");
+				sb.append(this.projectile.generateJassEquivalent(jassTextGenerator));
+				sb.append(") then");
+				jassTextGenerator.println(sb.toString());
+
+				for (final ABAction onHitAction : this.onBlockActions) {
+					onHitAction.generateJassEquivalent(indent + 1, jassTextGenerator);
+				}
+
+				sb.setLength(0);
+				JassTextGenerator.Util.indent(indent, sb);
+				sb.append("endif");
+				jassTextGenerator.println(sb.toString());
+			}
+		}
+		else {
+			JassTextGenerator.Util.indent(indent, sb);
+			sb.append("if CheckUnitForAbilityProjReaction(");
+			sb.append(tarU);
+			sb.append(", ");
+			sb.append(jassTextGenerator.getCaster());
+			sb.append(", ");
+			sb.append(this.projectile.generateJassEquivalent(jassTextGenerator));
+			sb.append(") then");
+			jassTextGenerator.println(sb.toString());
+
+			for (final ABAction onHitAction : this.onHitActions) {
+				onHitAction.generateJassEquivalent(indent + 1, jassTextGenerator);
+			}
+
+			if ((this.onBlockActions != null) && !this.onBlockActions.isEmpty()) {
+				sb.setLength(0);
+				JassTextGenerator.Util.indent(indent, sb);
+				sb.append("else");
+				jassTextGenerator.println(sb.toString());
+
+				for (final ABAction onHitAction : this.onBlockActions) {
+					onHitAction.generateJassEquivalent(indent + 1, jassTextGenerator);
+				}
+			}
+
+			sb.setLength(0);
+			JassTextGenerator.Util.indent(indent, sb);
+			sb.append("endif");
+			jassTextGenerator.println(sb.toString());
+		}
+
 	}
 }

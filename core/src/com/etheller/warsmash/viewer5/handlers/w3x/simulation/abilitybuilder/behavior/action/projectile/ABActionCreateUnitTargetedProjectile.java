@@ -16,11 +16,12 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.beha
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.unitcallbacks.ABUnitCallback;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABAction;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABLocalStoreKeys;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABSingleAction;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.projectile.ABProjectileListener;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.projectile.CAbilityProjectileListener;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.projectile.CProjectile;
 
-public class ABActionCreateUnitTargetedProjectile implements ABAction {
+public class ABActionCreateUnitTargetedProjectile implements ABSingleAction {
 
 	private ABUnitCallback source;
 	private ABLocationCallback sourceLoc;
@@ -96,7 +97,6 @@ public class ABActionCreateUnitTargetedProjectile implements ABAction {
 						+ this.id.generateJassEquivalent(jassTextGenerator) + ", "
 						+ this.speed.generateJassEquivalent(jassTextGenerator) + ", "
 						+ this.homing.generateJassEquivalent(jassTextGenerator) + ", "
-						+ this.id.generateJassEquivalent(jassTextGenerator) + ", "
 						+ jassTextGenerator.functionPointerByName(onLaunchFunc) + ", "
 						+ jassTextGenerator.functionPointerByName(onHitFunc) + ")";
 

@@ -26,7 +26,7 @@ public interface WarsmashBaseUI {
 
 	boolean mouseMoved(int screenX, int screenY, float worldScreenY);
 
-	boolean scrolled(int amount);
+	boolean scrolled(float amountX, float amountY);
 
 	void gameClosed();
 

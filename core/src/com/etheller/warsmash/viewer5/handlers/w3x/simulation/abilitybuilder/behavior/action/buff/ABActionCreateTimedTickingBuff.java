@@ -12,9 +12,10 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.beha
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.buff.ABTimedTickingBuff;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABAction;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABLocalStoreKeys;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABSingleAction;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CEffectType;
 
-public class ABActionCreateTimedTickingBuff implements ABAction {
+public class ABActionCreateTimedTickingBuff implements ABSingleAction {
 
 	private ABIDCallback buffId;
 	private ABFloatCallback duration;
@@ -69,7 +70,7 @@ public class ABActionCreateTimedTickingBuff implements ABAction {
 				"CreateTimedTickingBuffAU_OnRemoveActions");
 		final String expireFunctionName = jassTextGenerator.createAnonymousFunction(this.onExpireActions,
 				"CreateTimedTickingBuffAU_OnExpireActions");
-		final String tickFunctionName = jassTextGenerator.createAnonymousFunction(this.onExpireActions,
+		final String tickFunctionName = jassTextGenerator.createAnonymousFunction(this.onTickActions,
 				"CreateTimedTickingBuffAU_OnTickActions");
 
 		String showTimedLife = "false";
@@ -100,6 +101,6 @@ public class ABActionCreateTimedTickingBuff implements ABAction {
 				+ jassTextGenerator.functionPointerByName(removeFunctionName) + ", "
 				+ jassTextGenerator.functionPointerByName(expireFunctionName) + ", "
 				+ jassTextGenerator.functionPointerByName(tickFunctionName) + ", " + showIconExpression + ", "
-				+ artTypeExpression + ")";
+				+ artTypeExpression + ", " + jassTextGenerator.getCastId() + ")";
 	}
 }

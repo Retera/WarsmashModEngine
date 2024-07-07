@@ -470,4 +470,116 @@ public class War3MapW3i {
 	public boolean hasFlag(final int mapFlag) {
 		return (this.flags & mapFlag) != 0;
 	}
+
+	public void setVersion(int version) {
+		this.version = version;
+	}
+
+	public void setSaves(int saves) {
+		this.saves = saves;
+	}
+
+	public void setEditorVersion(int editorVersion) {
+		this.editorVersion = editorVersion;
+	}
+
+	public void setGameVersionMajor(int gameVersionMajor) {
+		this.gameVersionMajor = gameVersionMajor;
+	}
+
+	public void setGameVersionMinor(int gameVersionMinor) {
+		this.gameVersionMinor = gameVersionMinor;
+	}
+
+	public void setGameVersionPatch(int gameVersionPatch) {
+		this.gameVersionPatch = gameVersionPatch;
+	}
+
+	public void setGameVersionBuild(int gameVersionBuild) {
+		this.gameVersionBuild = gameVersionBuild;
+	}
+
+	public void setName(String name) {
+		this.name = name;
+	}
+
+	public void setAuthor(String author) {
+		this.author = author;
+	}
+
+	public void setDescription(String description) {
+		this.description = description;
+	}
+
+	public void setRecommendedPlayers(String recommendedPlayers) {
+		this.recommendedPlayers = recommendedPlayers;
+	}
+
+	public void setFlags(long flags) {
+		this.flags = flags;
+	}
+
+	public void setTileset(char tileset) {
+		this.tileset = tileset;
+	}
+
+	public void setCampaignBackground(int campaignBackground) {
+		this.campaignBackground = campaignBackground;
+	}
+
+	public void setLoadingScreenModel(String loadingScreenModel) {
+		this.loadingScreenModel = loadingScreenModel;
+	}
+
+	public void setLoadingScreenText(String loadingScreenText) {
+		this.loadingScreenText = loadingScreenText;
+	}
+
+	public void setLoadingScreenTitle(String loadingScreenTitle) {
+		this.loadingScreenTitle = loadingScreenTitle;
+	}
+
+	public void setLoadingScreenSubtitle(String loadingScreenSubtitle) {
+		this.loadingScreenSubtitle = loadingScreenSubtitle;
+	}
+
+	public void setLoadingScreen(int loadingScreen) {
+		this.loadingScreen = loadingScreen;
+	}
+
+	public void setPrologueScreenModel(String prologueScreenModel) {
+		this.prologueScreenModel = prologueScreenModel;
+	}
+
+	public void setPrologueScreenText(String prologueScreenText) {
+		this.prologueScreenText = prologueScreenText;
+	}
+
+	public void setPrologueScreenTitle(String prologueScreenTitle) {
+		this.prologueScreenTitle = prologueScreenTitle;
+	}
+
+	public void setPrologueScreenSubtitle(String prologueScreenSubtitle) {
+		this.prologueScreenSubtitle = prologueScreenSubtitle;
+	}
+
+	public void setUseTerrainFog(int useTerrainFog) {
+		this.useTerrainFog = useTerrainFog;
+	}
+
+	public void setFogDensity(float fogDensity) {
+		this.fogDensity = fogDensity;
+	}
+
+	public void setGlobalWeather(int globalWeather) {
+		this.globalWeather = globalWeather;
+	}
+
+	public void setSoundEnvironment(String soundEnvironment) {
+		this.soundEnvironment = soundEnvironment;
+	}
+
+	public void setLightEnvironmentTileset(char lightEnvironmentTileset) {
+		this.lightEnvironmentTileset = lightEnvironmentTileset;
+	}
 }

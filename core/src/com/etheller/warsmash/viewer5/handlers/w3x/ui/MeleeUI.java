@@ -309,8 +309,6 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 	private RenderUnit selectedUnit;
 	private final List<Integer> subMenuOrderIdStack = new ArrayList<>();
 
-	// TODO remove this & replace with FDF
-	private final Texture activeButtonTexture;
 	private UIFrame inventoryCover;
 	private SpriteFrame cursorFrame;
 	private MeleeUIMinimap meleeUIMinimap;
@@ -441,8 +439,6 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 		this.cameraManager.target.x = startLocation[0];
 		this.cameraManager.target.y = startLocation[1];
 
-		this.activeButtonTexture = ImageUtils.getAnyExtensionTexture(war3MapViewer.mapMpq,
-				"UI\\Widgets\\Console\\Human\\CommandButton\\human-activebutton.blp");
 		this.activeCommandUnitTargetFilter = new ActiveCommandUnitTargetFilter();
 		this.widthRatioCorrection = this.uiViewport.getMinWorldWidth() / 1600f;
 		this.heightRatioCorrection = this.uiViewport.getMinWorldHeight() / 1200f;
@@ -472,18 +468,20 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 				13.75f * this.heightRatioCorrection, 278.75f * this.widthRatioCorrection,
 				276.25f * this.heightRatioCorrection);
 		Texture minimapTexture = null;
-		if (war3MapViewer.dataSource.has("war3mapMap.tga")) {
+		if (war3MapViewer.dataSource.has(WarsmashConstants.MAP_CONTENTS_PREFIX + "Map.tga")) {
 			try {
-				minimapTexture = ImageUtils.getTextureNoColorCorrection(TgaFile.readTGA("war3mapMap.tga",
-						war3MapViewer.dataSource.getResourceAsStream("war3mapMap.tga")));
+				minimapTexture = ImageUtils.getTextureNoColorCorrection(
+						TgaFile.readTGA(WarsmashConstants.MAP_CONTENTS_PREFIX + "Map.tga", war3MapViewer.dataSource
+								.getResourceAsStream(WarsmashConstants.MAP_CONTENTS_PREFIX + "Map.tga")));
 			}
 			catch (final IOException e) {
 				System.err.println("Could not load minimap TGA file");
 				e.printStackTrace();
 			}
 		}
-		else if (war3MapViewer.dataSource.has("war3mapMap.blp")) {
-			minimapTexture = ImageUtils.getAnyExtensionTexture(war3MapViewer.dataSource, "war3mapMap.blp");
+		else if (war3MapViewer.dataSource.has(WarsmashConstants.MAP_CONTENTS_PREFIX + "Map.blp")) {
+			minimapTexture = ImageUtils.getAnyExtensionTexture(war3MapViewer.dataSource,
+					WarsmashConstants.MAP_CONTENTS_PREFIX + "Map.blp");
 		}
 		final Texture[] teamColors = new Texture[WarsmashConstants.MAX_PLAYERS];
 		for (int i = 0; i < teamColors.length; i++) {
@@ -491,14 +489,16 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 					"ReplaceableTextures\\" + ReplaceableIds.getPathString(1) + ReplaceableIds.getIdString(i) + ".blp");
 		}
 		final Texture[] specialIcons = new Texture[5];
-		specialIcons[0] = ImageUtils.getAnyExtensionTexture(war3MapViewer.mapMpq, "UI\\MiniMap\\minimap-gold.blp");
+		specialIcons[0] = ImageUtils.getAnyExtensionTexture(war3MapViewer.mapMpq,
+				this.rootFrame.getSkinField("MinimapResourceTexture"));
 		specialIcons[1] = ImageUtils.getAnyExtensionTexture(war3MapViewer.mapMpq,
-				"UI\\MiniMap\\minimap-neutralbuilding.blp");
-		specialIcons[2] = ImageUtils.getAnyExtensionTexture(war3MapViewer.mapMpq, "UI\\MiniMap\\minimap-hero.blp");
+				this.rootFrame.getSkinField("MinimapNeutralTexture"));
+		specialIcons[2] = ImageUtils.getAnyExtensionTexture(war3MapViewer.mapMpq,
+				this.rootFrame.getSkinField("MinimapHeroTexture"));
 		specialIcons[3] = ImageUtils.getAnyExtensionTexture(war3MapViewer.mapMpq,
-				"UI\\MiniMap\\minimap-gold-entangled.blp");
+				this.rootFrame.getSkinField("MinimapEntangledResourceTexture"));
 		specialIcons[4] = ImageUtils.getAnyExtensionTexture(war3MapViewer.mapMpq,
-				"UI\\MiniMap\\minimap-gold-haunted.blp");
+				this.rootFrame.getSkinField("MinimapHauntedResourceTexture"));
 		final Rectangle playableMapArea = war3MapViewer.terrain.getPlayableMapArea();
 		return new MeleeUIMinimap(minimapDisplayArea, playableMapArea, minimapTexture, teamColors, specialIcons);
 	}
@@ -1104,6 +1104,8 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 			this.inventoryBarFrame.add(placeholderPreview);
 		}
 
+		final String defaultButton = this.rootFrame.getSkinField("DefaultButton");
+
 		int commandButtonIndex = 0;
 		final BitmapFont inventoryNumberOverlayFont = this.rootFrame.generateFont(DEFAULT_INVENTORY_ICON_WIDTH * 0.25f);
 		for (int j = 0; j < INVENTORY_HEIGHT; j++) {
@@ -1126,7 +1128,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 				iconFrame.addSetPoint(new SetPoint(FramePoint.CENTER, commandCardIcon, FramePoint.CENTER, 0, 0));
 				iconFrame.setWidth(GameUI.convertX(this.uiViewport, DEFAULT_INVENTORY_ICON_WIDTH));
 				iconFrame.setHeight(GameUI.convertY(this.uiViewport, DEFAULT_INVENTORY_ICON_WIDTH));
-				iconFrame.setTexture(ImageUtils.DEFAULT_ICON_PATH, this.rootFrame);
+				iconFrame.setTexture(defaultButton, this.rootFrame);
 				cooldownFrame.addSetPoint(new SetPoint(FramePoint.CENTER, commandCardIcon, FramePoint.CENTER, 0, 0));
 				this.rootFrame.setSpriteFrameModel(cooldownFrame, this.rootFrame.getSkinField("CommandButtonCooldown"));
 				cooldownFrame.setWidth(GameUI.convertX(this.uiViewport, DEFAULT_INVENTORY_ICON_WIDTH));
@@ -1220,7 +1222,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 				iconFrame.addSetPoint(new SetPoint(FramePoint.CENTER, commandCardIcon, FramePoint.CENTER, 0, 0));
 				iconFrame.setWidth(GameUI.convertX(this.uiViewport, DEFAULT_COMMAND_CARD_ICON_WIDTH));
 				iconFrame.setHeight(GameUI.convertY(this.uiViewport, DEFAULT_COMMAND_CARD_ICON_WIDTH));
-				iconFrame.setTexture(ImageUtils.DEFAULT_ICON_PATH, this.rootFrame);
+				iconFrame.setTexture(defaultButton, this.rootFrame);
 				activeHighlightFrame
 						.addSetPoint(new SetPoint(FramePoint.CENTER, commandCardIcon, FramePoint.CENTER, 0, 0));
 				activeHighlightFrame.setWidth(GameUI.convertX(this.uiViewport, DEFAULT_COMMAND_CARD_ICON_WIDTH));
@@ -1304,8 +1306,8 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 		if (WarsmashConstants.CATCH_CURSOR) {
 			Gdx.input.setCursorCatched(true);
 		}
-		this.includeFrames = new String[]{"EscMenuBackdrop", "ScriptDialog", "SmashHoverTip", "SmashHpBar"};
-		this.ignoreFrames = new String[]{"SmashHoverTip", "SmashHpBar"};
+		this.includeFrames = new String[] { "EscMenuBackdrop", "ScriptDialog", "SmashHoverTip", "SmashHpBar" };
+		this.ignoreFrames = new String[] { "SmashHoverTip", "SmashHpBar" };
 
 		this.meleeUIMinimap = createMinimap(this.war3MapViewer);
 
@@ -1891,7 +1893,8 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 		return simpleStatusBarFrame;
 	}
 
-	private UIFrame getHoveredFrame(AbstractUIFrame startFrame, float screenX, float screenY, String[] includeParent, String[] ignoreFrame) {
+	private UIFrame getHoveredFrame(AbstractUIFrame startFrame, float screenX, float screenY, String[] includeParent,
+			String[] ignoreFrame) {
 		UIFrame outFrame = null;
 		if (startFrame.isVisible()) {
 			final ListIterator<UIFrame> curIterator = startFrame.getChildIterator();
@@ -1901,26 +1904,27 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 
 				if (child instanceof AbstractUIFrame) {
 					if (checkFrameInArray(child, includeParent)) {
-						AbstractRenderableFrame renderFrame = (AbstractRenderableFrame) child;
-						found = renderFrame.getRenderBounds().contains(screenX, screenY) &&
-								renderFrame.isVisible();
-						if(found) {
+						final AbstractRenderableFrame renderFrame = (AbstractRenderableFrame) child;
+						found = renderFrame.getRenderBounds().contains(screenX, screenY) && renderFrame.isVisible();
+						if (found) {
 							outFrame = renderFrame;
-						}	
-					} else {
-						outFrame = this.getHoveredFrame((AbstractUIFrame)child, screenX, screenY, includeParent, ignoreFrame);
+						}
+					}
+					else {
+						outFrame = getHoveredFrame((AbstractUIFrame) child, screenX, screenY, includeParent,
+								ignoreFrame);
 						found = outFrame != null;
 					}
-				} else {
-					AbstractRenderableFrame renderFrame = (AbstractRenderableFrame) child;
-					found = renderFrame.getRenderBounds().contains(screenX, screenY) &&
-							renderFrame.isVisible();
-					if(found) {
+				}
+				else {
+					final AbstractRenderableFrame renderFrame = (AbstractRenderableFrame) child;
+					found = renderFrame.getRenderBounds().contains(screenX, screenY) && renderFrame.isVisible();
+					if (found) {
 						outFrame = renderFrame;
 					}
 				}
 
-				if (outFrame != null && !checkFrameInArray(outFrame, ignoreFrame)) {
+				if ((outFrame != null) && !checkFrameInArray(outFrame, ignoreFrame)) {
 					return outFrame;
 				}
 			}
@@ -1929,9 +1933,10 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 	}
 
 	private boolean checkFrameInArray(UIFrame frame, String[] targetFrames) {
-		if (targetFrames == null || frame == null) {
+		if ((targetFrames == null) || (frame == null)) {
 			return false;
-		} else {
+		}
+		else {
 			if (frame.getName() == null) {
 				return false;
 			}
@@ -3904,10 +3909,11 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 					}
 				}
 				else {
-					if (this.getHoveredFrame((AbstractUIFrame)rootFrame, screenCoordsVector.x, screenCoordsVector.y, includeFrames, ignoreFrames) != null) {
+					if (getHoveredFrame(this.rootFrame, screenCoordsVector.x, screenCoordsVector.y, this.includeFrames,
+							this.ignoreFrames) != null) {
 						return false;
 					}
-					
+
 					this.war3MapViewer.getClickLocation(this.lastMouseClickLocation, screenX, (int) worldScreenY, true,
 							true);
 					this.lastMouseDragStart.set(this.lastMouseClickLocation);
@@ -4361,7 +4367,8 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 				this.tooltipFrame.setVisible(false);
 			}
 		}
-		UIFrame hover = this.getHoveredFrame( (AbstractUIFrame) this.rootFrame, screenCoordsVector.x, screenCoordsVector.y, includeFrames, ignoreFrames);
+		final UIFrame hover = getHoveredFrame(this.rootFrame, screenCoordsVector.x, screenCoordsVector.y,
+				this.includeFrames, this.ignoreFrames);
 		if (hover == null) {
 			final RenderWidget newMouseOverUnit = this.war3MapViewer.rayPickUnit(screenX, worldScreenY,
 					this.anyClickableUnitFilter);

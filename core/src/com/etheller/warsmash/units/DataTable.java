@@ -169,6 +169,16 @@ public class DataTable implements ObjectData {
 		int colCount = 0;
 		int rowCount = 0;
 		boolean flipMode = false;
+		if ((xIndex == 0) && (yIndex == 0)) {
+			final String check = reader.readLine();
+			if ("E".equals(check)) {
+				return;
+			}
+			else {
+				throw new IOException(
+						"The custom SLK parser encountered something it does not understand; please review the implementation.");
+			}
+		}
 		if (xIndex > yIndex) {
 			colCount = Integer.parseInt(input.substring(xIndex, input.lastIndexOf(";")));
 			rowCount = Integer.parseInt(input.substring(yIndex, xIndex - 2));

@@ -111,7 +111,7 @@ import net.warsmash.uberserver.LobbyPlayerType;
 import net.warsmash.uberserver.LoginFailureReason;
 import net.warsmash.uberserver.ServerErrorMessageType;
 
-public class MenuUI {
+public class MenuUI implements WarsmashMenuUI {
 	private static final Vector2 screenCoordsVector = new Vector2();
 	private static boolean ENABLE_NOT_YET_IMPLEMENTED_BUTTONS = false;
 
@@ -236,7 +236,7 @@ public class MenuUI {
 	private DialogWar3 dialog;
 	private Task gameListQueryTask;
 	private boolean hideUI;
-	private final DataTable miscData;
+	private DataTable miscData;
 	private FogSettings menuFogSettings;
 
 	public MenuUI(final DataSource dataSource, final Viewport uiViewport, final Scene uiScene, final MdxViewer viewer,
@@ -267,27 +267,6 @@ public class MenuUI {
 			catch (final IOException e) {
 				e.printStackTrace();
 			}
-		}
-		this.miscData = new DataTable(worldEditStrings);
-		try (InputStream miscDataTxtStream = this.dataSource.getResourceAsStream("UI\\MiscData.txt")) {
-			this.miscData.readTXT(miscDataTxtStream, true);
-		}
-		catch (final IOException e) {
-			e.printStackTrace();
-		}
-		final Element zFogElement = this.miscData.get("MenuZFog");
-		if (zFogElement != null) {
-			final int styleValue = zFogElement.getFieldAsInteger("Style", WarsmashConstants.GAME_VERSION) + 1;
-			menuFogSettings = new FogSettings();
-			menuFogSettings.setStyleByIndex(styleValue);
-			menuFogSettings.start = zFogElement.getFieldAsFloat("Start", WarsmashConstants.GAME_VERSION);
-			menuFogSettings.end = zFogElement.getFieldAsFloat("End", WarsmashConstants.GAME_VERSION);
-			menuFogSettings.density = zFogElement.getFieldAsFloat("Density", WarsmashConstants.GAME_VERSION);
-			final float a = zFogElement.getFieldAsFloat("Color", WarsmashConstants.GAME_VERSION * 4) / 255f;
-			final float r = zFogElement.getFieldAsFloat("Color", 1 + (WarsmashConstants.GAME_VERSION * 4)) / 255f;
-			final float g = zFogElement.getFieldAsFloat("Color", 2 + (WarsmashConstants.GAME_VERSION * 4)) / 255f;
-			final float b = zFogElement.getFieldAsFloat("Color", 3 + (WarsmashConstants.GAME_VERSION * 4)) / 255f;
-			menuFogSettings.color = new Color(r, g, b, a);
 		}
 
 		gamingNetworkConnection.addListener(new GamingNetworkServerToClientListener() {
@@ -774,14 +753,17 @@ public class MenuUI {
 	 * Called "main" because this was originally written in JASS so that maps could
 	 * override it, and I may convert it back to the JASS at some point.
 	 */
+	@Override
 	public void main() {
 		// =================================
 		// Load skins and templates
 		// =================================
+		loadWEStrings();
+		loadFog();
 		this.rootFrame = new GameUI(this.dataSource, GameUI.loadSkin(this.dataSource, WarsmashConstants.GAME_VERSION),
 				this.uiViewport, this.uiScene, this.viewer, 0, WTS.DO_NOTHING);
 
-		this.menuScreen.setModel(this.rootFrame.getSkinField("GlueSpriteLayerBackground"), menuFogSettings);
+		this.menuScreen.setModel(this.rootFrame.getSkinField("GlueSpriteLayerBackground"), this.menuFogSettings);
 		this.rootFrameListener.onCreate(this.rootFrame);
 		try {
 			this.rootFrame.loadTOCFile("UI\\FrameDef\\FrameDef.toc");
@@ -1634,6 +1616,35 @@ public class MenuUI {
 		this.glueScreenLoop.play(this.uiScene.audioContext, 0f, 0f, 0f);
 	}
 
+	private void loadWEStrings() {
+		this.worldEditStrings = new WorldEditStrings(this.dataSource);
+	}
+
+	private void loadFog() {
+		this.miscData = new DataTable(this.worldEditStrings);
+		try (InputStream miscDataTxtStream = this.dataSource.getResourceAsStream("UI\\MiscData.txt")) {
+			this.miscData.readTXT(miscDataTxtStream, true);
+		}
+		catch (final IOException e) {
+			e.printStackTrace();
+		}
+		final Element zFogElement = this.miscData.get("MenuZFog");
+		if (zFogElement != null) {
+			final int styleValue = zFogElement.getFieldAsInteger("Style", WarsmashConstants.GAME_VERSION) + 1;
+			this.menuFogSettings = new FogSettings();
+			this.menuFogSettings.setStyleByIndex(styleValue);
+			this.menuFogSettings.start = zFogElement.getFieldAsFloat("Start", WarsmashConstants.GAME_VERSION);
+			this.menuFogSettings.end = zFogElement.getFieldAsFloat("End", WarsmashConstants.GAME_VERSION);
+			this.menuFogSettings.density = zFogElement.getFieldAsFloat("Density", WarsmashConstants.GAME_VERSION);
+			final float a = zFogElement.getFieldAsFloat("Color", WarsmashConstants.GAME_VERSION * 4) / 255f;
+			final float r = zFogElement.getFieldAsFloat("Color", 1 + (WarsmashConstants.GAME_VERSION * 4)) / 255f;
+			final float g = zFogElement.getFieldAsFloat("Color", 2 + (WarsmashConstants.GAME_VERSION * 4)) / 255f;
+			final float b = zFogElement.getFieldAsFloat("Color", 3 + (WarsmashConstants.GAME_VERSION * 4)) / 255f;
+			this.menuFogSettings.color = new Color(r, g, b, a);
+		}
+	}
+
+	@Override
 	public void show() {
 		playMusic(this.rootFrame.trySkinField("GlueMusic"), true, 0);
 		this.glueScreenLoop.play(this.uiScene.audioContext, 0f, 0f, 0f);
@@ -1701,6 +1712,7 @@ public class MenuUI {
 		return string;
 	}
 
+	@Override
 	public void startMap(final String mapFilename) {
 		this.mainMenuFrame.setVisible(false);
 
@@ -1792,12 +1804,14 @@ public class MenuUI {
 		this.warcraftIIILogo.setVisible(visible);
 	}
 
+	@Override
 	public void resize() {
 
 	}
 
+	@Override
 	public void render(final SpriteBatch batch, final GlyphLayout glyphLayout) {
-		if (!hideUI) {
+		if (!this.hideUI) {
 			final BitmapFont font = this.rootFrame.getFont();
 			final BitmapFont font20 = this.rootFrame.getFont20();
 			font.setColor(Color.YELLOW);
@@ -1823,6 +1837,7 @@ public class MenuUI {
 		return this.uiViewport.getWorldHeight();
 	}
 
+	@Override
 	public void update(final float deltaTime) {
 		if ((this.beginGameInformation != null) && (this.menuState != MenuState.GOING_TO_MAP)) {
 			this.campaignFade.setVisible(false);
@@ -2094,7 +2109,8 @@ public class MenuUI {
 				this.glueScreenLoop.stop();
 				this.glueScreenLoop = this.mainMenuGlueScreenLoop;
 				this.glueScreenLoop.play(this.uiScene.audioContext, 0f, 0f, 0f);
-				this.menuScreen.setModel(this.rootFrame.getSkinField("GlueSpriteLayerBackground"), menuFogSettings);
+				this.menuScreen.setModel(this.rootFrame.getSkinField("GlueSpriteLayerBackground"),
+						this.menuFogSettings);
 				this.rootFrame.setSpriteFrameModel(this.cursorFrame, this.rootFrame.getSkinField("Cursor"));
 				this.menuState = MenuState.GOING_TO_SINGLE_PLAYER;
 				break;
@@ -2191,8 +2207,8 @@ public class MenuUI {
 				Gdx.app.exit();
 				break;
 			case RESTARTING:
-				MenuUI.this.screenManager
-						.setScreen(new WarsmashGdxMenuScreen(MenuUI.this.warsmashIni, this.screenManager));
+				MenuUI.this.screenManager.setScreen(new WarsmashGdxMenuScreen(MenuUI.this.warsmashIni,
+						this.screenManager, WarsmashMenuUIBuilder.DEFAULT));
 				break;
 			default:
 				break;
@@ -2205,6 +2221,7 @@ public class MenuUI {
 		return this.rootFrame.getNextFocusFrame();
 	}
 
+	@Override
 	public boolean touchDown(final int screenX, final int screenY, final float worldScreenY, final int button) {
 		screenCoordsVector.set(screenX, screenY);
 		this.uiViewport.unproject(screenCoordsVector);
@@ -2234,6 +2251,7 @@ public class MenuUI {
 		}
 	}
 
+	@Override
 	public boolean touchUp(final int screenX, final int screenY, final float worldScreenY, final int button) {
 		screenCoordsVector.set(screenX, screenY);
 		this.uiViewport.unproject(screenCoordsVector);
@@ -2252,6 +2270,7 @@ public class MenuUI {
 		return false;
 	}
 
+	@Override
 	public boolean touchDragged(final int screenX, final int screenY, final float worldScreenY, final int pointer) {
 		screenCoordsVector.set(screenX, screenY);
 		this.uiViewport.unproject(screenCoordsVector);
@@ -2262,6 +2281,7 @@ public class MenuUI {
 		return false;
 	}
 
+	@Override
 	public boolean mouseMoved(final int screenX, final int screenY, final float worldScreenY) {
 		screenCoordsVector.set(screenX, screenY);
 		this.uiViewport.unproject(screenCoordsVector);
@@ -2283,7 +2303,6 @@ public class MenuUI {
 	}
 
 	private void loadSounds() {
-		this.worldEditStrings = new WorldEditStrings(this.dataSource);
 		this.uiSoundsTable = new DataTable(this.worldEditStrings);
 		try {
 			try (InputStream miscDataTxtStream = this.dataSource.getResourceAsStream("UI\\SoundInfo\\UISounds.slk")) {
@@ -2377,28 +2396,58 @@ public class MenuUI {
 	}
 
 	private static enum MenuState {
-		GOING_TO_MAIN_MENU, MAIN_MENU, GOING_TO_BATTLE_NET_LOGIN, GOING_TO_BATTLE_NET_LOGIN_PART2, BATTLE_NET_LOGIN,
-		LEAVING_BATTLE_NET, LEAVING_BATTLE_NET_FROM_LOGGED_IN, GOING_TO_BATTLE_NET_CUSTOM_GAME_MENU,
-		BATTLE_NET_CUSTOM_GAME_MENU, GOING_TO_BATTLE_NET_CREATE_CUSTOM_GAME_MENU, BATTLE_NET_CREATE_CUSTOM_GAME_MENU,
-		GOING_TO_BATTLE_NET_CHANNEL_MENU, BATTLE_NET_CHANNEL_MENU, GOING_TO_BATTLE_NET_WELCOME, BATTLE_NET_WELCOME,
-		GOING_TO_SINGLE_PLAYER, LEAVING_CAMPAIGN, SINGLE_PLAYER, GOING_TO_SINGLE_PLAYER_SKIRMISH,
-		SINGLE_PLAYER_SKIRMISH, GOING_TO_MAP, GOING_TO_CAMPAIGN, GOING_TO_CAMPAIGN_PART2, GOING_TO_MISSION_SELECT,
-		MISSION_SELECT, CAMPAIGN, GOING_TO_SINGLE_PLAYER_PROFILE, SINGLE_PLAYER_PROFILE, GOING_TO_LOADING_SCREEN,
-		QUITTING, RESTARTING, GOING_TO_BATTLE_NET_CHAT_CHANNEL, GOING_TO_BATTLE_NET_CHAT_CHANNEL_FROM_OUTSIDE,
-		BATTLE_NET_CHAT_CHANNEL, GOING_TO_BATTLE_NET_CUSTOM_GAME_LOBBY, BATTLE_NET_CUSTOM_GAME_LOBBY;
+		GOING_TO_MAIN_MENU,
+		MAIN_MENU,
+		GOING_TO_BATTLE_NET_LOGIN,
+		GOING_TO_BATTLE_NET_LOGIN_PART2,
+		BATTLE_NET_LOGIN,
+		LEAVING_BATTLE_NET,
+		LEAVING_BATTLE_NET_FROM_LOGGED_IN,
+		GOING_TO_BATTLE_NET_CUSTOM_GAME_MENU,
+		BATTLE_NET_CUSTOM_GAME_MENU,
+		GOING_TO_BATTLE_NET_CREATE_CUSTOM_GAME_MENU,
+		BATTLE_NET_CREATE_CUSTOM_GAME_MENU,
+		GOING_TO_BATTLE_NET_CHANNEL_MENU,
+		BATTLE_NET_CHANNEL_MENU,
+		GOING_TO_BATTLE_NET_WELCOME,
+		BATTLE_NET_WELCOME,
+		GOING_TO_SINGLE_PLAYER,
+		LEAVING_CAMPAIGN,
+		SINGLE_PLAYER,
+		GOING_TO_SINGLE_PLAYER_SKIRMISH,
+		SINGLE_PLAYER_SKIRMISH,
+		GOING_TO_MAP,
+		GOING_TO_CAMPAIGN,
+		GOING_TO_CAMPAIGN_PART2,
+		GOING_TO_MISSION_SELECT,
+		MISSION_SELECT,
+		CAMPAIGN,
+		GOING_TO_SINGLE_PLAYER_PROFILE,
+		SINGLE_PLAYER_PROFILE,
+		GOING_TO_LOADING_SCREEN,
+		QUITTING,
+		RESTARTING,
+		GOING_TO_BATTLE_NET_CHAT_CHANNEL,
+		GOING_TO_BATTLE_NET_CHAT_CHANNEL_FROM_OUTSIDE,
+		BATTLE_NET_CHAT_CHANNEL,
+		GOING_TO_BATTLE_NET_CUSTOM_GAME_LOBBY,
+		BATTLE_NET_CUSTOM_GAME_LOBBY;
 	}
 
+	@Override
 	public void hide() {
 		this.glueScreenLoop.stop();
 		stopMusic();
 	}
 
+	@Override
 	public void dispose() {
 		if (this.rootFrame != null) {
 			this.rootFrame.dispose();
 		}
 	}
 
+	@Override
 	public boolean keyDown(final int keycode) {
 		if (this.focusUIFrame != null) {
 			this.focusUIFrame.keyDown(keycode);
@@ -2406,6 +2455,7 @@ public class MenuUI {
 		return false;
 	}
 
+	@Override
 	public boolean keyUp(final int keycode) {
 		if (keycode == Input.Keys.TAB) {
 			// accessibility tab focus ui
@@ -2427,6 +2477,7 @@ public class MenuUI {
 		return false;
 	}
 
+	@Override
 	public boolean keyTyped(final char character) {
 		if (this.focusUIFrame != null) {
 			this.focusUIFrame.keyTyped(character);
@@ -2438,6 +2489,7 @@ public class MenuUI {
 		return false;
 	}
 
+	@Override
 	public void onReturnFromGame() {
 //		MenuUI.this.campaignMenu.setVisible(true);
 //		MenuUI.this.campaignBackButton.setVisible(true);
@@ -2453,7 +2505,7 @@ public class MenuUI {
 			this.glueScreenLoop.stop();
 			this.glueScreenLoop = this.mainMenuGlueScreenLoop;
 			this.glueScreenLoop.play(this.uiScene.audioContext, 0f, 0f, 0f);
-			this.menuScreen.setModel(this.rootFrame.getSkinField("GlueSpriteLayerBackground"), menuFogSettings);
+			this.menuScreen.setModel(this.rootFrame.getSkinField("GlueSpriteLayerBackground"), this.menuFogSettings);
 			this.rootFrame.setSpriteFrameModel(this.cursorFrame, this.rootFrame.getSkinField("Cursor"));
 			break;
 		case CAMPAIGN:
@@ -2470,7 +2522,7 @@ public class MenuUI {
 			this.rootFrame.setSpriteFrameModel(this.cursorFrame, skinData.get(cursorSkin).getField("Cursor"));
 			break;
 		case BATTLE_NET_CUSTOM_GAME_LOBBY: {
-			this.menuScreen.setModel(this.rootFrame.getSkinField("GlueSpriteLayerBackground"), menuFogSettings);
+			this.menuScreen.setModel(this.rootFrame.getSkinField("GlueSpriteLayerBackground"), this.menuFogSettings);
 			MenuUI.this.menuScreen.alternateModelToBattlenet();
 			this.rootFrame.setSpriteFrameModel(this.cursorFrame, this.rootFrame.getSkinField("Cursor"));
 			requestEnterDefaultChat();

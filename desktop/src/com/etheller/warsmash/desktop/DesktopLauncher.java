@@ -42,6 +42,7 @@ import com.etheller.warsmash.viewer5.gl.AudioExtension;
 import com.etheller.warsmash.viewer5.gl.DynamicShadowExtension;
 import com.etheller.warsmash.viewer5.gl.Extensions;
 import com.etheller.warsmash.viewer5.gl.WireframeExtension;
+import com.etheller.warsmash.viewer5.handlers.w3x.ui.WarsmashMenuUIBuilder;
 
 public class DesktopLauncher {
 	public static void main(final String[] arg) {
@@ -65,12 +66,16 @@ public class DesktopLauncher {
 		String fileToLoad = null;
 		String iniPath = null;
 		boolean noLogs = false;
+		boolean simpleMode = false;
 		for (int argIndex = 0; argIndex < arg.length; argIndex++) {
 			if ("-window".equals(arg[argIndex])) {
 				config.fullscreen = false;
 			}
 			else if ("-nolog".equals(arg[argIndex])) {
 				noLogs = true;
+			}
+			else if ("-simple".equals(arg[argIndex])) {
+				simpleMode = true;
 			}
 			else if ((arg.length > (argIndex + 1)) && "-loadfile".equals(arg[argIndex])) {
 				argIndex++;
@@ -109,6 +114,7 @@ public class DesktopLauncher {
 		final WarsmashGdxMultiScreenGame warsmashGdxMultiScreenGame = new WarsmashGdxMultiScreenGame();
 		new LwjglApplication(warsmashGdxMultiScreenGame, config);
 		final String finalFileToLoad = fileToLoad;
+		final boolean finalSimpleMode = simpleMode;
 		Gdx.app.postRunnable(new Runnable() {
 			@Override
 			public void run() {
@@ -117,8 +123,10 @@ public class DesktopLauncher {
 							warsmashGdxMultiScreenGame, finalFileToLoad));
 				}
 				else {
+					final WarsmashMenuUIBuilder menuUIBuilder = finalSimpleMode ? WarsmashMenuUIBuilder.SIMPLE_GAME
+							: WarsmashMenuUIBuilder.DEFAULT;
 					final WarsmashGdxMenuScreen menuScreen = new WarsmashGdxMenuScreen(warsmashIni,
-							warsmashGdxMultiScreenGame);
+							warsmashGdxMultiScreenGame, menuUIBuilder);
 					warsmashGdxMultiScreenGame.setScreen(menuScreen);
 					if (finalFileToLoad != null) {
 						menuScreen.startMap(finalFileToLoad);
@@ -200,7 +208,8 @@ public class DesktopLauncher {
 			public long play(final Sound buffer, final float volume, final float pitch, final float x, final float y,
 					final float z, final boolean is3dSound, final float maxDistance, final float refDistance,
 					final boolean looping) {
-				return ((OpenALSound) buffer).play(volume, pitch, x, y, z, is3dSound, maxDistance, refDistance, looping);
+				return ((OpenALSound) buffer).play(volume, pitch, x, y, z, is3dSound, maxDistance, refDistance,
+						looping);
 			}
 
 			@Override

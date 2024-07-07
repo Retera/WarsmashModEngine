@@ -28,7 +28,6 @@ import com.etheller.warsmash.viewer5.handlers.tga.TgaFile;
  */
 public final class ImageUtils {
 	private static final int BYTES_PER_PIXEL = 4;
-	public static final String DEFAULT_ICON_PATH = "ReplaceableTextures\\CommandButtons\\BTNTemp.blp";
 
 	public static Texture getAnyExtensionTexture(final DataSource dataSource, final String path) {
 		BufferedImage image;

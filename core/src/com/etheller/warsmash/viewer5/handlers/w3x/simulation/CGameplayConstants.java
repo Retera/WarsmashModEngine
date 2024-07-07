@@ -27,7 +27,7 @@ public class CGameplayConstants {
 	private final float structureDecayTime;
 	private final float buildingAngle;
 	private final float rootAngle;
-	
+
 	private final float fogFlashTime;
 	private final float dyingRevealRadius;
 	private final float foggedAttackRevealRadius;
@@ -37,7 +37,7 @@ public class CGameplayConstants {
 	private final float etherealDamageBonusSpells;
 	private final float etherealDamageBonusMagic;
 	private final boolean etherealDamageBonusAlly;
-	
+
 	private final boolean magicImmuneResistsDamage;
 	private final boolean magicImmuneResistsLeech;
 	private final boolean magicImmuneResistsThorns;
@@ -123,7 +123,7 @@ public class CGameplayConstants {
 	private final float maxUnitSpeed;
 	private final float minBldgSpeed;
 	private final float maxBldgSpeed;
-	
+
 	private final float chanceToMiss;
 	private final float missDamageReduction;
 
@@ -158,7 +158,7 @@ public class CGameplayConstants {
 			Arrays.fill(this.damageBonusTable[i], 1.0f);
 			final CAttackType attackType = CAttackType.VALUES[i];
 			String fieldName = "DamageBonus" + attackType.getDamageKey();
-			if (!miscData.hasField(fieldName) && attackType == CAttackType.SPELLS) {
+			if (!miscData.hasField(fieldName) && (attackType == CAttackType.SPELLS)) {
 				fieldName = "DamageBonus" + CAttackType.MAGIC.getDamageKey();
 			}
 			final String damageBonus = miscData.getField(fieldName);
@@ -193,7 +193,8 @@ public class CGameplayConstants {
 						throw new RuntimeException("EtherealDamageBonus", e);
 					}
 				}
-			} else if (j == 5) {
+			}
+			else if (j == 5) {
 				if (damageComponents[j].length() > 0) {
 					try {
 						spellBonus = Float.parseFloat(damageComponents[j]);
@@ -373,15 +374,15 @@ public class CGameplayConstants {
 	}
 
 	public float getFogFlashTime() {
-		return fogFlashTime;
+		return this.fogFlashTime;
 	}
 
 	public float getDyingRevealRadius() {
-		return dyingRevealRadius;
+		return this.dyingRevealRadius;
 	}
 
 	public float getFoggedAttackRevealRadius() {
-		return foggedAttackRevealRadius;
+		return this.foggedAttackRevealRadius;
 	}
 
 	public float getDefenseArmor() {
@@ -389,31 +390,31 @@ public class CGameplayConstants {
 	}
 
 	public float getEtherealDamageBonusSpells() {
-		return etherealDamageBonusSpells;
+		return this.etherealDamageBonusSpells;
 	}
 
 	public float getEtherealDamageBonusMagic() {
-		return etherealDamageBonusMagic;
+		return this.etherealDamageBonusMagic;
 	}
 
 	public boolean isEtherealDamageBonusAlly() {
-		return etherealDamageBonusAlly;
+		return this.etherealDamageBonusAlly;
 	}
 
 	public boolean isMagicImmuneResistsDamage() {
-		return magicImmuneResistsDamage;
+		return this.magicImmuneResistsDamage;
 	}
 
 	public boolean isMagicImmuneResistsLeech() {
-		return magicImmuneResistsLeech;
+		return this.magicImmuneResistsLeech;
 	}
 
 	public boolean isMagicImmuneResistsThorns() {
-		return magicImmuneResistsThorns;
+		return this.magicImmuneResistsThorns;
 	}
 
 	public boolean isMagicImmuneResistsUltimates() {
-		return magicImmuneResistsUltimates;
+		return this.magicImmuneResistsUltimates;
 	}
 
 	public boolean isGlobalExperience() {
@@ -574,27 +575,27 @@ public class CGameplayConstants {
 	}
 
 	public float getMinUnitSpeed() {
-		return minUnitSpeed;
+		return this.minUnitSpeed;
 	}
 
 	public float getMaxUnitSpeed() {
-		return maxUnitSpeed;
+		return this.maxUnitSpeed;
 	}
 
 	public float getMinBldgSpeed() {
-		return minBldgSpeed;
+		return this.minBldgSpeed;
 	}
 
 	public float getMaxBldgSpeed() {
-		return maxBldgSpeed;
+		return this.maxBldgSpeed;
 	}
 
 	public float getChanceToMiss() {
-		return chanceToMiss;
+		return this.chanceToMiss;
 	}
 
 	public float getMissDamageReduction() {
-		return missDamageReduction;
+		return this.missDamageReduction;
 	}
 
 	private static int getTableValue(final int[] table, int level) {
@@ -627,6 +628,9 @@ public class CGameplayConstants {
 	}
 
 	private static int[] parseIntArray(final String txt) {
+		if (txt.isEmpty()) {
+			return new int[0];
+		}
 		final String[] splitTxt = txt.split(",");
 		final int[] result = new int[splitTxt.length];
 		for (int i = 0; i < splitTxt.length; i++) {

@@ -52,7 +52,8 @@ import com.etheller.warsmash.viewer5.handlers.w3x.AnimationTokens.PrimaryTag;
 import com.etheller.warsmash.viewer5.handlers.w3x.AnimationTokens.SecondaryTag;
 import com.etheller.warsmash.viewer5.handlers.w3x.SequenceUtils;
 import com.etheller.warsmash.viewer5.handlers.w3x.War3MapViewer;
-import com.etheller.warsmash.viewer5.handlers.w3x.ui.MenuUI;
+import com.etheller.warsmash.viewer5.handlers.w3x.ui.WarsmashMenuUI;
+import com.etheller.warsmash.viewer5.handlers.w3x.ui.WarsmashMenuUIBuilder;
 
 public class WarsmashGdxMenuScreen implements InputProcessor, Screen, SingleModelScreen {
 	private static final String MAPS_DOWNLOAD_DEFAULT = "Maps/Download";
@@ -71,15 +72,18 @@ public class WarsmashGdxMenuScreen implements InputProcessor, Screen, SingleMode
 
 	private final DataTable warsmashIni;
 	private Scene uiScene;
-	private MenuUI menuUI;
+	private WarsmashMenuUI menuUI;
 	private final WarsmashGdxMultiScreenGame game;
 	private boolean hasPlayedStandHack = false;
 	private boolean loaded = false;
 	private EnumSet<SecondaryTag> tags = SequenceUtils.EMPTY;
+	private final WarsmashMenuUIBuilder menuUIBuilder;
 
-	public WarsmashGdxMenuScreen(final DataTable warsmashIni, final WarsmashGdxMultiScreenGame game) {
+	public WarsmashGdxMenuScreen(final DataTable warsmashIni, final WarsmashGdxMultiScreenGame game,
+			WarsmashMenuUIBuilder menuUIBuilder) {
 		this.warsmashIni = warsmashIni;
 		this.game = game;
+		this.menuUIBuilder = menuUIBuilder;
 	}
 
 	@Override
@@ -193,8 +197,8 @@ public class WarsmashGdxMenuScreen implements InputProcessor, Screen, SingleMode
 				server = "localhost";
 				mapDownloadDir = MAPS_DOWNLOAD_DEFAULT;
 			}
-			this.menuUI = new MenuUI(this.viewer.dataSource, this.uiViewport, this.uiScene, this.viewer, this.game,
-					this, this.warsmashIni, new RootFrameListener() {
+			this.menuUI = this.menuUIBuilder.buildMenuUI(this.viewer.dataSource, this.uiViewport, this.uiScene,
+					this.viewer, this.game, this, this.warsmashIni, new RootFrameListener() {
 						@Override
 						public void onCreate(final GameUI rootFrame) {
 //						WarsmashGdxMapGame.this.viewer.setGameUI(rootFrame);
@@ -924,5 +928,9 @@ public class WarsmashGdxMenuScreen implements InputProcessor, Screen, SingleMode
 
 	public void onReturnFromGame() {
 		this.menuUI.onReturnFromGame();
+	}
+
+	public SpriteBatch getBatch() {
+		return this.batch;
 	}
 }

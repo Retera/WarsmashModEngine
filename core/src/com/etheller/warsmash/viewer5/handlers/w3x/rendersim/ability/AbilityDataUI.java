@@ -238,7 +238,7 @@ public class AbilityDataUI {
 			final List<War3ID> LightningEffects = new ArrayList<>();
 
 			for (final String lightning : LightningEffectList) {
-				if (lightning != null && !lightning.isBlank()) {
+				if ((lightning != null) && !lightning.isBlank()) {
 					LightningEffects.add(War3ID.fromString(lightning));
 				}
 			}
@@ -246,11 +246,12 @@ public class AbilityDataUI {
 			final String effectSound = abilityTypeData.getFieldAsString(ABILITY_EFFECT_SOUND, 0);
 			final String effectSoundLooped = abilityTypeData.getFieldAsString(ABILITY_EFFECT_SOUND_LOOPED, 0);
 
-			this.rawcodeToUI.put(War3ID.fromString(alias), new AbilityUI(
-					new IconUI(iconResearch, iconResearchDisabled, iconResearchX, iconResearchY, iconResearchTip,
-							iconResearchUberTip, iconResearchHotkey),
-					normalIconUIs, turnOffIconUIs, casterArt, targetArt, specialArt, effectArt, areaEffectArt,
-					missileArt, LightningEffects, effectSound, effectSoundLooped));
+			this.rawcodeToUI.put(War3ID.fromString(alias),
+					new AbilityUI(
+							new IconUI(iconResearch, iconResearchDisabled, iconResearchX, iconResearchY,
+									iconResearchTip, iconResearchUberTip, iconResearchHotkey),
+							normalIconUIs, turnOffIconUIs, casterArt, targetArt, specialArt, effectArt, areaEffectArt,
+							missileArt, LightningEffects, effectSound, effectSoundLooped));
 		}
 		for (final String alias : buffData.keySet()) {
 			// TODO pretty sure that in WC3 the buffs and abilities are stored in the same
@@ -270,7 +271,8 @@ public class AbilityDataUI {
 			final int targetAttachmentIndexMax = Math.min(targetAttachmentCount - 1, targetArtPaths.size() - 1);
 			final int targetIteratorCount = Math.max(targetAttachmentCount, targetArtPaths.size());
 			for (int i = 0; i < targetIteratorCount; i++) {
-				final String modelPath = targetArtPaths.isEmpty() ? "" : targetArtPaths.get(Math.max(0, Math.min(i, targetAttachmentIndexMax)));
+				final String modelPath = targetArtPaths.isEmpty() ? ""
+						: targetArtPaths.get(Math.max(0, Math.min(i, targetAttachmentIndexMax)));
 				final String attachmentPointKey = tryGet(BUFF_TARGET_ART_ATTACHMENT_POINT, i);
 				final List<String> attachmentPoints = abilityTypeData.getFieldAsList(attachmentPointKey);
 				targetArt.add(new EffectAttachmentUI(modelPath, attachmentPoints));
@@ -382,7 +384,13 @@ public class AbilityDataUI {
 		this.cancelTrainUI = createBuiltInIconUI(gameUI, "CmdCancelTrain", this.disabledPrefix);
 		this.rallyUI = createBuiltInIconUI(gameUI, "CmdRally", this.disabledPrefix);
 		this.selectSkillUI = createBuiltInIconUI(gameUI, "CmdSelectSkill", this.disabledPrefix);
-		this.neutralInteractUI = getUI(War3ID.fromString("Anei")).getOnIconUI(0);
+		final AbilityUI aneuUi = getUI(War3ID.fromString("Anei"));
+		if (aneuUi != null) {
+			this.neutralInteractUI = aneuUi.getOnIconUI(0);
+		}
+		else {
+			this.neutralInteractUI = this.selectSkillUI;
+		}
 	}
 
 	private static String parseUbertip(final Warcraft3MapRuntimeObjectData allObjectData, final String originalText) {
@@ -440,8 +448,16 @@ public class AbilityDataUI {
 	}
 
 	private IconUI createBuiltInIconUI(final GameUI gameUI, final String key, final String disabledPrefix) {
-		final Element builtInAbility = gameUI.getSkinData().get(key);
-		final String iconPath = gameUI.trySkinField(builtInAbility.getField("Art"));
+		GameObject builtInAbility = gameUI.getSkinData().get(key);
+		String art;
+		if (builtInAbility != null) {
+			art = builtInAbility.getField("Art");
+		}
+		else {
+			art = "DefaultButton";
+			builtInAbility = Element.EMPTY;
+		}
+		final String iconPath = gameUI.trySkinField(art);
 		final Texture icon = gameUI.loadTexture(iconPath);
 		final Texture iconDisabled = gameUI.loadTexture(disable(iconPath, disabledPrefix));
 		final int buttonPositionX = builtInAbility.getFieldValue("Buttonpos", 0);
@@ -454,10 +470,24 @@ public class AbilityDataUI {
 	}
 
 	private IconUI createBuiltInIconUISplit(final GameUI gameUI, final String key, final String funckey,
-			final GameObject worldEditorObject, final String disabledPrefix) {
-		final Element builtInAbility = gameUI.getSkinData().get(key);
-		final Element builtInAbilityFunc = gameUI.getSkinData().get(funckey);
-		String iconPath = gameUI.trySkinField(builtInAbilityFunc.getField("Art"));
+			GameObject worldEditorObject, final String disabledPrefix) {
+		GameObject builtInAbility = gameUI.getSkinData().get(key);
+		GameObject builtInAbilityFunc = gameUI.getSkinData().get(funckey);
+		String art;
+		if (builtInAbilityFunc != null) {
+			art = builtInAbilityFunc.getField("Art");
+		}
+		else {
+			art = "DefaultButton";
+			builtInAbilityFunc = GameObject.EMPTY;
+		}
+		if (builtInAbility == null) {
+			builtInAbility = GameObject.EMPTY;
+		}
+		if (worldEditorObject == null) {
+			worldEditorObject = GameObject.EMPTY;
+		}
+		String iconPath = gameUI.trySkinField(art);
 		final String worldEditorValue = worldEditorObject.getField("Art");
 		if (worldEditorValue.length() > 0) {
 			iconPath = worldEditorValue;

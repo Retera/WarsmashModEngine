@@ -156,8 +156,6 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 
 	private static final War3ID ABILITY_HERO_RAWCODE = War3ID.fromString("AHer");
 	private static final War3ID ABILITY_REVIVE_RAWCODE = War3ID.fromString("Arev");
-	private static final Color PLACEHOLDER_LUMBER_COLOR = new Color(0.0f, 200f / 255f, 80f / 255f, 1.0f);
-	private static final Color PLACEHOLDER_GOLD_COLOR = new Color(1.0f, 220f / 255f, 0f, 1.0f);
 	private static final String UNIT_FILE = "file"; // replaced from 'umdl'
 	private static final String UNIT_SPECIAL = "Specialart"; // replaced from 'uspa'
 	private static final String UBER_SPLAT = "uberSplat"; // replaced from 'uubs'
@@ -201,16 +199,11 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 	public boolean terrainReady;
 	public boolean cliffsReady;
 	public boolean doodadsAndDestructiblesLoaded;
-	public MappedData doodadsData = new MappedData();
-	public MappedData doodadMetaData = new MappedData();
-	public MappedData destructableMetaData = new MappedData();
 	public List<RenderDoodad> doodads = new ArrayList<>();
 	public List<RenderDoodad> decals = new ArrayList<>();
 	public List<TerrainDoodad> terrainDoodads = new ArrayList<>();
 	public boolean doodadsReady;
 	public boolean unitsAndItemsLoaded;
-	public MappedData unitsData = new MappedData();
-	public MappedData unitMetaData = new MappedData();
 	public List<RenderWidget> widgets = new ArrayList<>();
 	public List<RenderUnit> units = new ArrayList<>();
 	public List<RenderEffect> projectiles = new ArrayList<>();
@@ -326,10 +319,6 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 
 		// == when loaded, which is always in our system ==
 		this.doodadsAndDestructiblesLoaded = true;
-		this.doodadsData.load(doodads.data.toString());
-		this.doodadMetaData.load(doodadMetaData.data.toString());
-		this.doodadsData.load(destructableData.data.toString());
-		this.destructableMetaData.load(destructableData.data.toString());
 		// emit doodads loaded
 
 		final GenericResource unitData = loadMapGeneric("Units\\UnitData.slk", FetchDataTypeName.SLK,
@@ -344,10 +333,6 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 
 		// == when loaded, which is always in our system ==
 		this.unitsAndItemsLoaded = true;
-		this.unitsData.load(unitData.data.toString());
-		this.unitsData.load(unitUi.data.toString());
-		this.unitsData.load(itemData.data.toString());
-		this.unitMetaData.load(unitMetaData.data.toString());
 		// emit loaded
 
 		this.unitAckSoundsTable = new DataTable(worldEditStrings);
@@ -375,8 +360,9 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 		try (InputStream miscDataTxtStream = this.dataSource.getResourceAsStream("UI\\SoundInfo\\MiscData.txt")) {
 			this.miscData.readTXT(miscDataTxtStream, true);
 		}
-		if (this.dataSource.has("war3mapMisc.txt")) {
-			try (InputStream miscDataTxtStream = this.dataSource.getResourceAsStream("war3mapMisc.txt")) {
+		if (this.dataSource.has(WarsmashConstants.MAP_CONTENTS_PREFIX + "Misc.txt")) {
+			try (InputStream miscDataTxtStream = this.dataSource
+					.getResourceAsStream(WarsmashConstants.MAP_CONTENTS_PREFIX + "Misc.txt")) {
 				this.miscData.readTXT(miscDataTxtStream, true);
 			}
 		}
@@ -605,13 +591,6 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 		// Override the grid based on the map.
 		this.worldScene.grid = new Grid(centerOffset[0], centerOffset[1], (mapSize[0] * 128) - 128,
 				(mapSize[1] * 128) - 128, 16 * 128, 16 * 128);
-
-		final MdxModel confirmation = (MdxModel) load("UI\\Feedback\\Confirmation\\Confirmation.mdx",
-				PathSolver.DEFAULT, null);
-		this.confirmationInstance = (MdxComplexInstance) confirmation.addInstance();
-		this.confirmationInstance.setSequenceLoopMode(SequenceLoopMode.NEVER_LOOP_AND_HIDE_WHEN_DONE);
-		this.confirmationInstance.setSequence(0);
-		this.confirmationInstance.setScene(this.worldScene);
 
 		if (this.preloadedWTS != null) {
 			this.allObjectData = this.mapMpq.readModifications(this.preloadedWTS);
@@ -904,8 +883,7 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 						// RenderUnit class:
 						final String originalRequiredAnimationNames = War3MapViewer.this.allObjectData.getUnits()
 								.get(unit.getTypeId()).getFieldAsString(RenderUnit.ANIM_PROPS, 0);
-						TokenLoop:
-						for (final String animationName : originalRequiredAnimationNames.split(",")) {
+						TokenLoop: for (final String animationName : originalRequiredAnimationNames.split(",")) {
 							final String upperCaseToken = animationName.toUpperCase();
 							for (final SecondaryTag secondaryTag : SecondaryTag.values()) {
 								if (upperCaseToken.equals(secondaryTag.name())) {
@@ -917,8 +895,7 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 						// TODO this should be behind some auto lookup so it isn't copied from
 						// RenderUnit class:
 						final String requiredAnimationNames = upgrade.getFieldAsString(RenderUnit.ANIM_PROPS, 0);
-						TokenLoop:
-						for (final String animationName : requiredAnimationNames.split(",")) {
+						TokenLoop: for (final String animationName : requiredAnimationNames.split(",")) {
 							final String upperCaseToken = animationName.toUpperCase();
 							for (final SecondaryTag secondaryTag : SecondaryTag.values()) {
 								if (upperCaseToken.equals(secondaryTag.name())) {
@@ -936,8 +913,7 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 						// TODO this should be behind some auto lookup so it isn't copied from
 						// RenderUnit class:
 						final String requiredAnimationNames = upgrade.getFieldAsString(RenderUnit.ANIM_PROPS, 0);
-						TokenLoop:
-						for (final String animationName : requiredAnimationNames.split(",")) {
+						TokenLoop: for (final String animationName : requiredAnimationNames.split(",")) {
 							final String upperCaseToken = animationName.toUpperCase();
 							for (final SecondaryTag secondaryTag : SecondaryTag.values()) {
 								if (upperCaseToken.equals(secondaryTag.name())) {
@@ -949,8 +925,7 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 
 						final String originalRequiredAnimationNames = War3MapViewer.this.allObjectData.getUnits()
 								.get(unit.getTypeId()).getFieldAsString(RenderUnit.ANIM_PROPS, 0);
-						TokenLoop:
-						for (final String animationName : originalRequiredAnimationNames.split(",")) {
+						TokenLoop: for (final String animationName : originalRequiredAnimationNames.split(",")) {
 							final String upperCaseToken = animationName.toUpperCase();
 							for (final SecondaryTag secondaryTag : SecondaryTag.values()) {
 								if (upperCaseToken.equals(secondaryTag.name())) {
@@ -1705,10 +1680,6 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 
 	private void loadDoodadsAndDestructibles(final Warcraft3MapRuntimeObjectData modifications,
 			final War3MapW3i w3iFile) throws IOException {
-		applyModificationFile(this.doodadsData, this.doodadMetaData, modifications.getDoodads(),
-				WorldEditorDataType.DOODADS);
-		applyModificationFile(this.doodadsData, this.destructableMetaData, modifications.getDestructibles(),
-				WorldEditorDataType.DESTRUCTIBLES);
 
 		final War3MapDoo doo = this.mapMpq.readDoodads(w3iFile);
 
@@ -1961,7 +1932,8 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 
 		this.soundsetNameToSoundset = new HashMap<>();
 
-		if (this.dataSource.has("war3mapUnits.doo") && WarsmashConstants.LOAD_UNITS_FROM_WORLDEDIT_DATA) {
+		if (this.dataSource.has(WarsmashConstants.MAP_CONTENTS_PREFIX + "Units.doo")
+				&& WarsmashConstants.LOAD_UNITS_FROM_WORLDEDIT_DATA) {
 			final War3MapUnitsDoo dooFile = mpq.readUnits(mapInformation);
 
 			// Collect the units and items data.
@@ -2317,8 +2289,7 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 			final EnumSet<SecondaryTag> requiredAnimationNamesForAttachments = EnumSet.noneOf(SecondaryTag.class);
 			final String requiredAnimationNamesForAttachmentsString = row
 					.getFieldAsString(RenderUnit.ATTACHMENT_ANIM_PROPS, 0);
-			TokenLoop:
-			for (final String animationName : requiredAnimationNamesForAttachmentsString.split(",")) {
+			TokenLoop: for (final String animationName : requiredAnimationNamesForAttachmentsString.split(",")) {
 				final String upperCaseToken = animationName.toUpperCase();
 				for (final SecondaryTag secondaryTag : SecondaryTag.values()) {
 					if (upperCaseToken.equals(secondaryTag.name())) {
@@ -2503,7 +2474,7 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 						break;
 					}
 				}
-				if (!path.toLowerCase().endsWith(".blp")) {
+				if (!path.toLowerCase().endsWith(".blp") && !path.toLowerCase().endsWith(".tga")) {
 					path += ".blp";
 				}
 				if (unit instanceof RenderUnit) {
@@ -2622,7 +2593,7 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 					break;
 				}
 			}
-			if (!path.toLowerCase().endsWith(".blp")) {
+			if (!path.toLowerCase().endsWith(".blp") && !path.toLowerCase().endsWith(".tga")) {
 				path += ".blp";
 			}
 			if (unit instanceof RenderUnit) {
@@ -2986,6 +2957,12 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 	public void setGameUI(final GameUI gameUI) {
 		this.gameUI = gameUI;
 		this.abilityDataUI = new AbilityDataUI(this.allObjectData, gameUI, this);
+
+		final MdxModel confirmation = loadModelMdx(this.gameUI.getSkinField("TargetPointConfirm"));
+		this.confirmationInstance = (MdxComplexInstance) confirmation.addInstance();
+		this.confirmationInstance.setSequenceLoopMode(SequenceLoopMode.NEVER_LOOP_AND_HIDE_WHEN_DONE);
+		this.confirmationInstance.setSequence(0);
+		this.confirmationInstance.setScene(this.worldScene);
 	}
 
 	public GameUI getGameUI() {

@@ -122,7 +122,7 @@ public class SimpleButtonFrame extends AbstractRenderableFrame implements Clicka
 		if (this.activeTextChild != null) {
 			this.activeTextChild.render(batch, baseFont, glyphLayout);
 		}
-		if (this.mouseOver) {
+		if (this.mouseOver && (this.controlMouseOverHighlight != null)) {
 			this.controlMouseOverHighlight.render(batch, baseFont, glyphLayout);
 		}
 	}

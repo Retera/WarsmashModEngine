@@ -90,4 +90,40 @@ public class Player {
 	public long getEnemyHighPrioritiesFlags() {
 		return this.enemyHighPrioritiesFlags;
 	}
+
+	public void setId(int id) {
+		this.id = id;
+	}
+
+	public void setType(int type) {
+		this.type = type;
+	}
+
+	public void setRace(int race) {
+		this.race = race;
+	}
+
+	public void setIsFixedStartPosition(int isFixedStartPosition) {
+		this.isFixedStartPosition = isFixedStartPosition;
+	}
+
+	public void setName(String name) {
+		this.name = name;
+	}
+
+	public void setAllyLowPriorities(long allyLowPriorities) {
+		this.allyLowPriorities = allyLowPriorities;
+	}
+
+	public void setAllyHighPriorities(long allyHighPriorities) {
+		this.allyHighPriorities = allyHighPriorities;
+	}
+
+	public void setEnemyLowPrioritiesFlags(long enemyLowPrioritiesFlags) {
+		this.enemyLowPrioritiesFlags = enemyLowPrioritiesFlags;
+	}
+
+	public void setEnemyHighPrioritiesFlags(long enemyHighPrioritiesFlags) {
+		this.enemyHighPrioritiesFlags = enemyHighPrioritiesFlags;
+	}
 }

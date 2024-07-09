@@ -2,7 +2,6 @@ package com.etheller.interpreter.ast.scope;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Deque;
 import java.util.HashMap;
 import java.util.List;
@@ -457,12 +456,15 @@ public final class GlobalScope {
 			final Trigger trigger, final TriggerExecutionScope evaluateScope,
 			final TriggerExecutionScope executeScope) {
 		if (trigger.isEnabled()) {
-			this.triggerQueue.add(new QueuedTrigger(filter, filterScope, trigger, evaluateScope, executeScope));
+			if (filter != null) {
+				if (!filter.evaluate(this, filterScope)) {
+					return;
+				}
+			}
+			if (trigger.evaluate(this, evaluateScope)) {
+				trigger.execute(this, executeScope);
+			}
 		}
-	}
-
-	public void queueFunction(final JassFunction function, final TriggerExecutionScope scope) {
-		this.triggerQueue.add(new QueuedFunction(function, scope));
 	}
 
 	public void replayQueuedTriggers() {
@@ -476,21 +478,6 @@ public final class GlobalScope {
 
 	private static interface QueuedCallback {
 		void fire(GlobalScope globalScope);
-	}
-
-	private static final class QueuedFunction implements QueuedCallback {
-		private final JassFunction function;
-		private final TriggerExecutionScope scope;
-
-		public QueuedFunction(final JassFunction function, final TriggerExecutionScope scope) {
-			this.function = function;
-			this.scope = scope;
-		}
-
-		@Override
-		public void fire(final GlobalScope globalScope) {
-			this.function.call(Collections.<JassValue>emptyList(), globalScope, this.scope);
-		}
 	}
 
 	private static final class QueuedTrigger implements QueuedCallback {

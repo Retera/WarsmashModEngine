@@ -5,11 +5,13 @@ import java.util.EnumSet;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.math.Quaternion;
+import com.badlogic.gdx.math.Vector3;
 import com.etheller.warsmash.parsers.fdf.GameUI;
 import com.etheller.warsmash.units.GameObject;
 import com.etheller.warsmash.util.RenderMathUtils;
 import com.etheller.warsmash.viewer5.handlers.mdx.MdxComplexInstance;
 import com.etheller.warsmash.viewer5.handlers.mdx.MdxModel;
+import com.etheller.warsmash.viewer5.handlers.mdx.Sequence;
 import com.etheller.warsmash.viewer5.handlers.w3x.AnimationTokens;
 import com.etheller.warsmash.viewer5.handlers.w3x.AnimationTokens.PrimaryTag;
 import com.etheller.warsmash.viewer5.handlers.w3x.AnimationTokens.SecondaryTag;
@@ -30,6 +32,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.AbilityGenericSingleIconPassiveAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.CBuff;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.timers.CTimer;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CRarityControl;
 
 public class RenderUnit implements RenderWidget {
 	public static final Color ETHEREAL = new Color(0.75f, 1, 0.5f, 0.5f);
@@ -124,8 +127,7 @@ public class RenderUnit implements RenderWidget {
 		this.unitAnimationListenerImpl = new UnitAnimationListenerImpl(instance, animationWalkSpeed, animationRunSpeed);
 		simulationUnit.setUnitAnimationListener(this.unitAnimationListenerImpl);
 		final String requiredAnimationNames = row.getFieldAsString(ANIM_PROPS, 0);
-		TokenLoop:
-		for (final String animationName : requiredAnimationNames.split(",")) {
+		TokenLoop: for (final String animationName : requiredAnimationNames.split(",")) {
 			final String upperCaseToken = animationName.toUpperCase();
 			for (final SecondaryTag secondaryTag : SecondaryTag.values()) {
 				if (upperCaseToken.equals(secondaryTag.name())) {
@@ -716,5 +718,72 @@ public class RenderUnit implements RenderWidget {
 
 	public float[] getVertexColoring() {
 		return this.currentColor;
+	}
+
+	public void queueAnimation(String whichAnimation) {
+		final EnumSet<AnimationTokens.PrimaryTag> primaryTags = EnumSet.noneOf(AnimationTokens.PrimaryTag.class);
+		final EnumSet<AnimationTokens.SecondaryTag> secondaryTag = EnumSet.noneOf(AnimationTokens.SecondaryTag.class);
+		Sequence.populateTags(primaryTags, secondaryTag, whichAnimation);
+		final AnimationTokens.PrimaryTag primaryTag = Sequence.any(primaryTags);
+		this.unitAnimationListenerImpl.queueAnimation(primaryTag, secondaryTag, true);
+	}
+
+	public void playAnimation(String whichAnimation) {
+		final EnumSet<AnimationTokens.PrimaryTag> primaryTags = EnumSet.noneOf(AnimationTokens.PrimaryTag.class);
+		final EnumSet<AnimationTokens.SecondaryTag> secondaryTag = EnumSet.noneOf(AnimationTokens.SecondaryTag.class);
+		Sequence.populateTags(primaryTags, secondaryTag, whichAnimation);
+		final AnimationTokens.PrimaryTag primaryTag = Sequence.any(primaryTags);
+		this.unitAnimationListenerImpl.playAnimation(true, primaryTag, secondaryTag, 1.0f, true);
+	}
+
+	public void playAnimation(int index) {
+		this.unitAnimationListenerImpl.playAnimation(true, index, 1.0f, true);
+	}
+
+	public void playAnimationWithRarity(String whichAnimation, CRarityControl control) {
+		final EnumSet<AnimationTokens.PrimaryTag> primaryTags = EnumSet.noneOf(AnimationTokens.PrimaryTag.class);
+		final EnumSet<AnimationTokens.SecondaryTag> secondaryTag = EnumSet.noneOf(AnimationTokens.SecondaryTag.class);
+		Sequence.populateTags(primaryTags, secondaryTag, whichAnimation);
+		final AnimationTokens.PrimaryTag primaryTag = Sequence.any(primaryTags);
+		// TODO: below is not doing probably what it should.... We can assume "control
+		// == RARE" means to INTENTIONALLY PLAY THE RARE ONES but at the moment, this
+		// flag we are passing means to ALLOW SOMETIMES playing the rare ones
+		this.unitAnimationListenerImpl.playAnimation(true, primaryTag, secondaryTag, 1.0f,
+				control == CRarityControl.RARE);
+	}
+
+	public void addAnimationProperties(String properties, boolean add) {
+		final EnumSet<AnimationTokens.PrimaryTag> primaryTags = EnumSet.noneOf(AnimationTokens.PrimaryTag.class);
+		final EnumSet<AnimationTokens.SecondaryTag> secondaryTags = EnumSet.noneOf(AnimationTokens.SecondaryTag.class);
+		Sequence.populateTags(primaryTags, secondaryTags, properties);
+		if (add) {
+			for (final AnimationTokens.SecondaryTag tag : secondaryTags) {
+				this.unitAnimationListenerImpl.addSecondaryTag(tag);
+			}
+		}
+		else {
+			for (final AnimationTokens.SecondaryTag tag : secondaryTags) {
+				this.unitAnimationListenerImpl.removeSecondaryTag(tag);
+			}
+		}
+	}
+
+	public void lockTargetFacing(String boneNameString, RenderUnit renderPeerTarget, float offsetX, float offsetY,
+			float offsetZ) {
+		if (boneNameString != null) {
+			if ("head".equals(boneNameString.toLowerCase())) {
+				this.unitAnimationListenerImpl.lockHeadFacing(renderPeerTarget.instance,
+						new Vector3(offsetX, offsetY, offsetZ));
+			}
+			else if ("turret".equals(boneNameString.toLowerCase())) {
+				this.unitAnimationListenerImpl.lockTurretFacing(renderPeerTarget.instance,
+						new Vector3(offsetX, offsetY, offsetZ));
+			}
+		}
+	}
+
+	public void resetLookAt() {
+		this.unitAnimationListenerImpl.clearHeadFacing();
+		this.unitAnimationListenerImpl.clearTurretFacing();
 	}
 }

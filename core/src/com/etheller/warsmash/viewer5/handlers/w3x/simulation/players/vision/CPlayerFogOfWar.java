@@ -2,6 +2,7 @@ package com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.vision;
 
 import java.nio.ByteBuffer;
 
+import com.badlogic.gdx.math.Rectangle;
 import com.etheller.warsmash.viewer5.handlers.w3x.environment.PathingGrid;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CFogState;
@@ -15,33 +16,33 @@ public class CPlayerFogOfWar {
 	private final ByteBuffer detectionBuffer;
 
 	public CPlayerFogOfWar(final PathingGrid pathingGrid) {
-		width = (pathingGrid.getWidth() / PATHING_RATIO) + 1;
-		height = (pathingGrid.getHeight() / PATHING_RATIO) + 1;
-		final int fogOfWarBufferLen = width * height;
+		this.width = (pathingGrid.getWidth() / PATHING_RATIO) + 1;
+		this.height = (pathingGrid.getHeight() / PATHING_RATIO) + 1;
+		final int fogOfWarBufferLen = this.width * this.height;
 		this.fogOfWarBuffer = ByteBuffer.allocateDirect(fogOfWarBufferLen);
 		this.detectionBuffer = ByteBuffer.allocateDirect(fogOfWarBufferLen);
-		fogOfWarBuffer.clear();
-		while (fogOfWarBuffer.hasRemaining()) {
-			fogOfWarBuffer.put((byte) -1);
+		this.fogOfWarBuffer.clear();
+		while (this.fogOfWarBuffer.hasRemaining()) {
+			this.fogOfWarBuffer.put((byte) -1);
 		}
-		fogOfWarBuffer.clear();
-		detectionBuffer.clear();
-		while (detectionBuffer.hasRemaining()) {
-			detectionBuffer.put((byte) 0);
+		this.fogOfWarBuffer.clear();
+		this.detectionBuffer.clear();
+		while (this.detectionBuffer.hasRemaining()) {
+			this.detectionBuffer.put((byte) 0);
 		}
-		detectionBuffer.clear();
+		this.detectionBuffer.clear();
 	}
 
 	public int getWidth() {
-		return width;
+		return this.width;
 	}
 
 	public int getHeight() {
-		return height;
+		return this.height;
 	}
 
 	public ByteBuffer getFogOfWarBuffer() {
-		return fogOfWarBuffer;
+		return this.fogOfWarBuffer;
 	}
 
 	private byte getState(final PathingGrid pathingGrid, final float x, final float y) {
@@ -52,16 +53,16 @@ public class CPlayerFogOfWar {
 
 	private byte getState(final int indexX, final int indexY) {
 		final int index = (indexY * getWidth()) + indexX;
-		if ((index >= 0) && (index < fogOfWarBuffer.capacity())) {
-			return fogOfWarBuffer.get(index);
+		if ((index >= 0) && (index < this.fogOfWarBuffer.capacity())) {
+			return this.fogOfWarBuffer.get(index);
 		}
 		return 0;
 	}
 
 	private byte getDetectionState(final int indexX, final int indexY) {
 		final int index = (indexY * getWidth()) + indexX;
-		if ((index >= 0) && (index < detectionBuffer.capacity())) {
-			return detectionBuffer.get(index);
+		if ((index >= 0) && (index < this.detectionBuffer.capacity())) {
+			return this.detectionBuffer.get(index);
 		}
 		return 0;
 	}
@@ -71,25 +72,25 @@ public class CPlayerFogOfWar {
 	}
 
 	public CFogState getFogState(final int indexX, final int indexY) {
-		return CFogState.getByMask(getState(indexX,indexY));
+		return CFogState.getByMask(getState(indexX, indexY));
 	}
 
 	public boolean isVisible(final PathingGrid pathingGrid, final float x, final float y) {
-		return getState(pathingGrid, x, y)==0;
+		return getState(pathingGrid, x, y) == 0;
 	}
-	
+
 	public boolean isVisible(final int indexX, final int indexY) {
-		return getState(indexX, indexY)==0;
+		return getState(indexX, indexY) == 0;
 	}
 
 	public boolean isDetecting(PathingGrid pathingGrid, float x, float y, byte invisLevels) {
 		final int indexX = pathingGrid.getFogOfWarIndexX(x);
 		final int indexY = pathingGrid.getFogOfWarIndexY(y);
-		return getState(indexX,indexY)==0 && (getDetectionState(indexX,indexY) & invisLevels) == invisLevels;
+		return (getState(indexX, indexY) == 0) && ((getDetectionState(indexX, indexY) & invisLevels) == invisLevels);
 	}
 
 	public boolean isDetecting(final int indexX, final int indexY, byte invisLevels) {
-		return getState(indexX,indexY)==0 && (getDetectionState(indexX,indexY) & invisLevels) == invisLevels;
+		return (getState(indexX, indexY) == 0) && ((getDetectionState(indexX, indexY) & invisLevels) == invisLevels);
 	}
 
 	private void setState(final PathingGrid pathingGrid, final float x, final float y, final byte fogOfWarState) {
@@ -100,8 +101,8 @@ public class CPlayerFogOfWar {
 
 	private void setState(final int indexX, final int indexY, final byte fogOfWarState) {
 		final int writeIndex = (indexY * getWidth()) + indexX;
-		if ((writeIndex >= 0) && (writeIndex < fogOfWarBuffer.capacity())) {
-			fogOfWarBuffer.put(writeIndex, fogOfWarState);
+		if ((writeIndex >= 0) && (writeIndex < this.fogOfWarBuffer.capacity())) {
+			this.fogOfWarBuffer.put(writeIndex, fogOfWarState);
 		}
 	}
 
@@ -113,7 +114,20 @@ public class CPlayerFogOfWar {
 		setState(indexX, indexY, fogOfWarState.getMask());
 	}
 
-	public void setDetecting(final PathingGrid pathingGrid, final float x, final float y, final CFogState fogOfWarState, byte detectLevels) {
+	public void setFogStateRect(PathingGrid pathingGrid, Rectangle rectangle, CFogState fogOfWarState) {
+		final int xMin = pathingGrid.getFogOfWarIndexX((float) Math.floor(rectangle.x));
+		final int yMin = pathingGrid.getFogOfWarIndexY((float) Math.floor(rectangle.y));
+		final int xMax = pathingGrid.getFogOfWarIndexX((float) Math.ceil(rectangle.x + rectangle.width));
+		final int yMax = pathingGrid.getFogOfWarIndexY((float) Math.ceil(rectangle.y + rectangle.height));
+		for (int i = xMin; i <= xMax; i += 1) {
+			for (int j = yMin; j <= yMax; j += 1) {
+				setVisible(i, j, fogOfWarState);
+			}
+		}
+	}
+
+	public void setDetecting(final PathingGrid pathingGrid, final float x, final float y, final CFogState fogOfWarState,
+			byte detectLevels) {
 		final int indexX = pathingGrid.getFogOfWarIndexX(x);
 		final int indexY = pathingGrid.getFogOfWarIndexY(y);
 		setDetecting(indexX, indexY, fogOfWarState, detectLevels);
@@ -121,9 +135,9 @@ public class CPlayerFogOfWar {
 
 	public void setDetecting(final int indexX, final int indexY, final CFogState fogOfWarState, byte detectLevels) {
 		final int writeIndex = (indexY * getWidth()) + indexX;
-		if ((writeIndex >= 0) && (writeIndex < fogOfWarBuffer.capacity())) {
-			fogOfWarBuffer.put(writeIndex, fogOfWarState.getMask());
-			detectionBuffer.put(writeIndex, (byte) (detectionBuffer.get(writeIndex) | detectLevels));
+		if ((writeIndex >= 0) && (writeIndex < this.fogOfWarBuffer.capacity())) {
+			this.fogOfWarBuffer.put(writeIndex, fogOfWarState.getMask());
+			this.detectionBuffer.put(writeIndex, (byte) (this.detectionBuffer.get(writeIndex) | detectLevels));
 		}
 	}
 
@@ -131,7 +145,7 @@ public class CPlayerFogOfWar {
 			final int dx, final int dy, final int dxp, final int dyp, final float dxf, final float dyf,
 			final float dxfp, final float dyfp, final int myZ) {
 		if ((flying || game.isTerrainWater(dxf, dyf) || (myZ > game.getTerrainHeight(dxf, dyf))
-				|| (!game.isTerrainRomp(dxf, dyf) && myZ == game.getTerrainHeight(dxf, dyf)))
+				|| (!game.isTerrainRomp(dxf, dyf) && (myZ == game.getTerrainHeight(dxf, dyf))))
 				&& (flying || !pathingGrid.isBlockVision(dxfp, dyfp)) && this.isVisible(dxp, dyp)) {
 			this.setVisible(dx, dy, CFogState.VISIBLE);
 		}
@@ -141,7 +155,7 @@ public class CPlayerFogOfWar {
 			final boolean flying, final int dx, final int dy, final int dxp, final int dyp, final float dxf,
 			final float dyf, final float dxfp, final float dyfp, final int myZ) {
 		if ((flying || game.isTerrainWater(dxf, dyf) || (myZ > game.getTerrainHeight(dxf, dyf))
-				|| (!game.isTerrainRomp(dxf, dyf) && myZ == game.getTerrainHeight(dxf, dyf)))
+				|| (!game.isTerrainRomp(dxf, dyf) && (myZ == game.getTerrainHeight(dxf, dyf))))
 				&& (flying || !pathingGrid.isBlockVision(dxfp, dyfp)) && this.isVisible(dxp, dyp)) {
 			this.setDetecting(dx, dy, CFogState.VISIBLE, detections);
 		}
@@ -151,10 +165,11 @@ public class CPlayerFogOfWar {
 			final int x, final int y, final int dx, final int dy, final int dxp, final int dyp, final float dxf,
 			final float dyf, final float dxfp, final float dyfp, final int myZ) {
 		if ((flying || game.isTerrainWater(dxf, dyf) || (myZ > game.getTerrainHeight(dxf, dyf))
-				|| (!game.isTerrainRomp(dxf, dyf) && myZ == game.getTerrainHeight(dxf, dyf)))
+				|| (!game.isTerrainRomp(dxf, dyf) && (myZ == game.getTerrainHeight(dxf, dyf))))
 				&& (flying || !pathingGrid.isBlockVision(dxfp, dyfp)) && this.isVisible(dxp, dyp)
-				&& (x == y || (x > y && this.isVisible(dxp, dy) && (flying || !pathingGrid.isBlockVision(dxfp, dyf)))
-						|| (x < y && this.isVisible(dx, dyp) && (flying || !pathingGrid.isBlockVision(dxf, dyfp))))) {
+				&& ((x == y)
+						|| ((x > y) && this.isVisible(dxp, dy) && (flying || !pathingGrid.isBlockVision(dxfp, dyf)))
+						|| ((x < y) && this.isVisible(dx, dyp) && (flying || !pathingGrid.isBlockVision(dxf, dyfp))))) {
 			this.setVisible(dx, dy, CFogState.VISIBLE);
 		}
 	}
@@ -163,21 +178,38 @@ public class CPlayerFogOfWar {
 			final boolean flying, final int x, final int y, final int dx, final int dy, final int dxp, final int dyp,
 			final float dxf, final float dyf, final float dxfp, final float dyfp, final int myZ) {
 		if ((flying || game.isTerrainWater(dxf, dyf) || (myZ > game.getTerrainHeight(dxf, dyf))
-				|| (!game.isTerrainRomp(dxf, dyf) && myZ == game.getTerrainHeight(dxf, dyf)))
+				|| (!game.isTerrainRomp(dxf, dyf) && (myZ == game.getTerrainHeight(dxf, dyf))))
 				&& (flying || !pathingGrid.isBlockVision(dxfp, dyfp)) && this.isVisible(dxp, dyp)
-				&& (x == y || (x > y && this.isVisible(dxp, dy) && (flying || !pathingGrid.isBlockVision(dxfp, dyf)))
-						|| (x < y && this.isVisible(dx, dyp) && (flying || !pathingGrid.isBlockVision(dxf, dyfp))))) {
+				&& ((x == y)
+						|| ((x > y) && this.isVisible(dxp, dy) && (flying || !pathingGrid.isBlockVision(dxfp, dyf)))
+						|| ((x < y) && this.isVisible(dx, dyp) && (flying || !pathingGrid.isBlockVision(dxf, dyfp))))) {
 			this.setDetecting(dx, dy, CFogState.VISIBLE, detections);
 		}
 	}
 
-
 	public void convertVisibleToFogged() {
-		for (int i = 0; i < fogOfWarBuffer.capacity(); i++) {
-			if (fogOfWarBuffer.get(i) == 0) {
-				fogOfWarBuffer.put(i, (byte) 127);
+		for (int i = 0; i < this.fogOfWarBuffer.capacity(); i++) {
+			if (this.fogOfWarBuffer.get(i) == 0) {
+				this.fogOfWarBuffer.put(i, (byte) 127);
 			}
-			detectionBuffer.put(i, (byte)0);
+			this.detectionBuffer.put(i, (byte) 0);
+		}
+	}
+
+	public void setFogStateRadius(PathingGrid pathingGrid, float myX, float myY, float radius, CFogState state) {
+		final float radSq = radius * radius;
+		setVisible(pathingGrid.getFogOfWarIndexX(myX), pathingGrid.getFogOfWarIndexY(myY), state);
+
+		for (int y = 0; y <= (int) Math.floor(radius); y += 128) {
+			for (int x = 0; x <= (int) Math.floor(radius); x += 128) {
+				final float distance = (x * x) + (y * y);
+				if (distance <= radSq) {
+					setVisible(pathingGrid.getFogOfWarIndexX(myX - x), pathingGrid.getFogOfWarIndexY(myY - y), state);
+					setVisible(pathingGrid.getFogOfWarIndexX(myX - x), pathingGrid.getFogOfWarIndexY(myY + y), state);
+					setVisible(pathingGrid.getFogOfWarIndexX(myX + x), pathingGrid.getFogOfWarIndexY(myY - y), state);
+					setVisible(pathingGrid.getFogOfWarIndexX(myX + x), pathingGrid.getFogOfWarIndexY(myY + y), state);
+				}
+			}
 		}
 	}
 }

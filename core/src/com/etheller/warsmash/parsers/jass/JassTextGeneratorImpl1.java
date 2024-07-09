@@ -1,11 +1,12 @@
 package com.etheller.warsmash.parsers.jass;
 
-import java.io.PrintStream;
+import java.io.PrintWriter;
 import java.util.LinkedList;
 import java.util.List;
 
 public class JassTextGeneratorImpl1 implements JassTextGenerator {
 	private final String abilityName;
+	private int localIndex = 0;
 	private int nextUniqueFuncId = 0;
 	private LinkedList<String> lines = new LinkedList<>();
 
@@ -51,6 +52,12 @@ public class JassTextGeneratorImpl1 implements JassTextGenerator {
 	@Override
 	public String setUserDataExpr(final String keyExpr, final JassTextGeneratorType type, final String value) {
 		return "SetLocalStore" + type.toString() + "(" + getTriggerLocalStore() + ", " + keyExpr + ", " + value + ")";
+	}
+
+	@Override
+	public String declareLocal(String type, String name) {
+		this.lines.add(this.localIndex++, "    local " + type + " " + name);
+		return name;
 	}
 
 	@Override
@@ -117,7 +124,7 @@ public class JassTextGeneratorImpl1 implements JassTextGenerator {
 		return "function " + functionName;
 	}
 
-	public void finish(final PrintStream out) {
+	public void finish(final PrintWriter out) {
 		for (final String line : this.lines) {
 			out.println(line);
 		}

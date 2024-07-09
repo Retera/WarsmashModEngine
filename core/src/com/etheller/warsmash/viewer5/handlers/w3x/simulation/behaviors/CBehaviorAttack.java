@@ -127,14 +127,14 @@ public class CBehaviorAttack extends CAbstractRangedBehavior {
 	@Override
 	public void begin(final CSimulation game) {
 		if (unit.isMovementDisabled()) {
-			unit.getUnitAnimationListener().lockTurrentFacing(this.target);
+			unit.getUnitAnimationListener().lockTurretFacing(this.target);
 		}
 	}
 
 	@Override
 	public void end(final CSimulation game, final boolean interrupted) {
 		if (unit.isMovementDisabled()) {
-			unit.getUnitAnimationListener().clearTurrentFacing();
+			unit.getUnitAnimationListener().clearTurretFacing();
 		}
 	}
 

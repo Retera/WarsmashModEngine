@@ -25,16 +25,18 @@ public class ABActionCreateLocationVisionModifier implements ABAction {
 	@Override
 	public void runAction(CSimulation game, CUnit caster, Map<String, Object> localStore, int castId) {
 		CFogModifier vision;
-		AbilityPointTarget loc = location.callback(game, caster, localStore, castId);
-		if (duration == null) {
-			vision = new CCircleFogModifier(CFogState.VISIBLE, radius.callback(game, caster, localStore, castId),
+		final AbilityPointTarget loc = this.location.callback(game, caster, localStore, castId);
+		if (this.duration == null) {
+			vision = new CCircleFogModifier(CFogState.VISIBLE, this.radius.callback(game, caster, localStore, castId),
 					loc.getX(), loc.getY());
-		} else {
-			vision = new CTimedCircleFogModifier(CFogState.VISIBLE, radius.callback(game, caster, localStore, castId),
-					loc.getX(), loc.getY(), duration.callback(game, caster, localStore, castId));
 		}
-		if (player != null) {
-			player.callback(game, caster, localStore, castId).addFogModifer(game, vision);
+		else {
+			vision = new CTimedCircleFogModifier(CFogState.VISIBLE,
+					this.radius.callback(game, caster, localStore, castId), loc.getX(), loc.getY(),
+					this.duration.callback(game, caster, localStore, castId));
+		}
+		if (this.player != null) {
+			this.player.callback(game, caster, localStore, castId).addFogModifer(game, vision, false);
 		}
 		localStore.put(ABLocalStoreKeys.LASTCREATEDVISIONMODIFIER, vision);
 	}

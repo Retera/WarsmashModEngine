@@ -174,6 +174,8 @@ public class CUnit extends CWidget {
 
 	private int cooldownEndTime = 0;
 	private float flyHeight;
+	private float turnRate;
+	private float propWindow;
 	private int playerIndex;
 
 	private final List<CAbility> abilities = new ArrayList<>();
@@ -300,6 +302,8 @@ public class CUnit extends CWidget {
 		this.maximumMana = maximumMana;
 		this.speed = speed;
 		this.flyHeight = unitType.getDefaultFlyingHeight();
+		this.turnRate = unitType.getTurnRate();
+		this.propWindow = unitType.getPropWindow();
 		this.unitType = unitType;
 		this.defenseType = unitType.getDefenseType();
 		this.classifications.addAll(unitType.getClassifications());
@@ -1748,6 +1752,8 @@ public class CUnit extends CWidget {
 		if (updateArt) {
 			this.flyHeight = this.unitType.getDefaultFlyingHeight();
 		}
+		this.turnRate = this.unitType.getTurnRate();
+		this.propWindow = this.unitType.getPropWindow();
 		this.speed = this.unitType.getSpeed();
 		this.classifications.clear();
 		this.classifications.addAll(this.unitType.getClassifications());
@@ -2218,7 +2224,7 @@ public class CUnit extends CWidget {
 								game.getPlayer(this.attackFogMod.getPlayerIndex()).removeFogModifer(game,
 										this.attackFogMod);
 								this.attackFogMod.setPlayerIndex(target.getPlayerIndex());
-								game.getPlayer(target.getPlayerIndex()).addFogModifer(game, this.attackFogMod);
+								game.getPlayer(target.getPlayerIndex()).addFogModifer(game, this.attackFogMod, false);
 							}
 						}
 						else {
@@ -2593,6 +2599,22 @@ public class CUnit extends CWidget {
 		this.flyHeight = flyHeight;
 	}
 
+	public float getTurnRate() {
+		return this.turnRate;
+	}
+
+	public void setTurnRate(float turnRate) {
+		this.turnRate = turnRate;
+	}
+
+	public float getPropWindow() {
+		return this.propWindow;
+	}
+
+	public void setPropWindow(float propWindow) {
+		this.propWindow = propWindow;
+	}
+
 	public int getPlayerIndex() {
 		return this.playerIndex;
 	}
@@ -2935,10 +2957,10 @@ public class CUnit extends CWidget {
 			// iteration order
 			this.abilities.get(i).onDeath(simulation, this);
 		}
-		simulation.getPlayer(this.playerIndex).addFogModifer(simulation, new CUnitDeathVisionFogModifier(this));
+		simulation.getPlayer(this.playerIndex).addFogModifer(simulation, new CUnitDeathVisionFogModifier(this), false);
 		if (source != null) {
 			simulation.getPlayer(source.getPlayerIndex()).addFogModifer(simulation,
-					new CUnitDeathVisionFogModifier(this));
+					new CUnitDeathVisionFogModifier(this), false);
 		}
 		if (this.attackFogMod.getPlayerIndex() != this.playerIndex) {
 			simulation.getPlayer(this.attackFogMod.getPlayerIndex()).removeFogModifer(simulation, this.attackFogMod);

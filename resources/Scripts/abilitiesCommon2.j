@@ -16,7 +16,12 @@ type abconftype extends handle
 
 type datafieldletter extends handle
 
-type abtimeofdayevent extends handle // Ability Builder time of day event (doesnt have handleid for now)
+type abtimeofdayevent extends handle // Ability Builder time of day event (doesnt have handleid for now)  
+type abilitydisabletype extends handle
+type resourcetype extends handle
+
+// In general don't use abtimer unless you have to; was made to match json. 
+type abtimer extends timer // "call StartTimer(...)" on an abtimer will crash, must use "StartABTimer"
 
 constant native ConvertTargetType takes integer x returns targettype
 constant native ConvertTextTagConfigType takes integer x returns texttagconfigtype
@@ -25,6 +30,8 @@ constant native ConvertNonStackingStatBuffType takes integer x returns nonstacki
 constant native ConvertDataFieldLetter takes integer x returns datafieldletter
 constant native ConvertAutocastType takes integer x returns autocasttype
 constant native ConvertABConfType takes integer x returns abconftype
+constant native ConvertAbilityDisableType takes integer x returns abilitydisabletype
+constant native ConvertResourceType takes integer x returns resourcetype
 
 globals
     constant autocasttype AUTOCAST_TYPE_NONE                              = ConvertAutocastType(0)
@@ -37,6 +44,13 @@ globals
     constant autocasttype AUTOCAST_TYPE_NEARESTENEMY                      = ConvertAutocastType(7)
     constant autocasttype AUTOCAST_TYPE_NOTARGET                          = ConvertAutocastType(8)
     constant autocasttype AUTOCAST_TYPE_ATTACKREPLACEMENT                 = ConvertAutocastType(9)
+    
+    constant abilitydisabletype ABILITY_DISABLE_TYPE_REQUIREMENTS                      = ConvertAbilityDisableType(0)
+    constant abilitydisabletype ABILITY_DISABLE_TYPE_CONSTRUCTION                      = ConvertAbilityDisableType(1)
+    constant abilitydisabletype ABILITY_DISABLE_TYPE_TRANSFORMATION                    = ConvertAbilityDisableType(2)
+    constant abilitydisabletype ABILITY_DISABLE_TYPE_TRIGGER                           = ConvertAbilityDisableType(3)
+    constant abilitydisabletype ABILITY_DISABLE_TYPE_ATTACKDISABLED                    = ConvertAbilityDisableType(4)
+    constant abilitydisabletype ABILITY_DISABLE_TYPE_PLAYER                            = ConvertAbilityDisableType(5)
     
     constant abconftype AB_CONF_TYPE_NORMAL_AUTOTARGET                 = ConvertABConfType(0)
     constant abconftype AB_CONF_TYPE_NORMAL_PAIRING                    = ConvertABConfType(1)
@@ -133,6 +147,14 @@ globals
     constant nonstackingstatbufftype NON_STACKING_STAT_BUFF_TYPE_ALLATK                            = ConvertNonStackingStatBuffType(22)
     constant nonstackingstatbufftype NON_STACKING_STAT_BUFF_TYPE_ALLATKPCT                         = ConvertNonStackingStatBuffType(23)
     
+    // These are exposing resource types from within the code system, not offering a mechanism for adding more. At the moment, if you
+    // want to add more, you should edit the Java code and fork the engine, copy the ResourceType enum values in the Java, and then
+    // add a corresponding entry below.
+    constant resourcetype RESOURCE_TYPE_GOLD                              = ConvertResourceType(0)
+    constant resourcetype RESOURCE_TYPE_LUMBER                            = ConvertResourceType(1)
+    constant resourcetype RESOURCE_TYPE_FOOD                              = ConvertResourceType(2)
+    constant resourcetype RESOURCE_TYPE_MANA                              = ConvertResourceType(3)
+    
     constant datafieldletter DATA_FIELD_LETTER_A                                 = ConvertDataFieldLetter(0)
     constant datafieldletter DATA_FIELD_LETTER_B                                 = ConvertDataFieldLetter(1)
     constant datafieldletter DATA_FIELD_LETTER_C                                 = ConvertDataFieldLetter(2)
@@ -180,9 +202,31 @@ native FlushChildAbilityUserData takes ability whichAbility, string childKey ret
 // Local Store API
 //=================================================================================================
 // one dimensional (smaller) hashtables
+// ... Also, the local stores are slightly different from Jass "hashtable" on Warsmash, because
+// of a performance thing. At the moment our emulator "hashtable" type is storing the data in its
+// wrapped Jass representation, whereas Local Store is storing it as the original Java thing
+// being represented. In principle, this means that "Get" functions on Local Store are less
+// performant in Jass than the equivalent "Load" functions from Jass hashtables on Warsmash,
+// because the handle wrappers are recreated when calling "get" for whatever,
+// but the computer memory storage used by live "localstore" objects will be a smaller amount
+// of memory, and when the non-jass system accesses them it might be faster.
+// Most likely the difference will be pointless, though.
+// - Above does not apply to "GetLocalStoreCode" and "SetLocalStoreCode" which are not
+// compatible with corresponding JSON. i.e. if you manage to define an ability in JSON but then
+// access it in JASS, the JSON "create subroutine" native that stores JSON instructions into
+// a local store are storing something that JASS can't load and would simply cause errors.
+// (I do not anticipate a need for that manner of cross compatibility, wherein we would run
+// both JASS and JSON simultaneously, however.)
 
+// The current ability implementations don't use "CreateLocalStore" because there already
+// is one by default in Ability Builder-based abilities. Instead they use "GetAbilityLocalStore(...)"
+// As such, "CreateLocalStore" is entirely a forward-thinking convenience with no current
+// purpose.
+// NOTE: then after writing the above, I started using "CreateLocalStore" for some hacks
+// in abilitiesUtils.j to try to match behaviors from json with stupid short term solution(s)
 native CreateLocalStore takes nothing returns localstore
 
+// Below are called "get" but they're the same idea as "load" natives on hashtables.
 native GetLocalStoreString takes localstore whichLocalStore, string childKey returns string
 // NOTE: there's some wonk in the json; it does a Warsmash thing and stores 'A000' and 97
 // as two different "kinds" of things. One is called War3ID and the other is called Integer.
@@ -193,7 +237,8 @@ native GetLocalStoreString takes localstore whichLocalStore, string childKey ret
 // ability to overwrite system values if they are required to be of type War3ID
 native GetLocalStoreInteger takes localstore whichLocalStore, string childKey returns integer
 native GetLocalStoreBoolean takes localstore whichLocalStore, string childKey returns boolean
-native GetLocalStoreReal takes localstore whichLocalStore, string childKey returns real
+native GetLocalStoreReal takes localstore whichLocalStore, string childKey returns real             
+native GetLocalStoreCode takes localstore whichLocalStore, string childKey returns code
 native GetLocalStoreAbilityTypeLevelDataHandle takes localstore whichLocalStore, string childKey returns abilitytypeleveldata
 native GetLocalStoreAbilityHandle takes localstore whichLocalStore, string childKey returns ability
 native GetLocalStoreBuffHandle takes localstore whichLocalStore, string childKey returns buff
@@ -204,12 +249,19 @@ native GetLocalStoreABTimeOfDayEventHandle takes localstore whichLocalStore, str
 native GetLocalStoreGameObjectHandle takes localstore whichLocalStore, string childKey returns gameobject
 native GetLocalStoreNonStackingStatBuffHandle takes localstore whichLocalStore, string childKey returns nonstackingstatbuff
 native GetLocalStoreProjectileHandle takes localstore whichLocalStore, string childKey returns projectile
+native GetLocalStoreLocationHandle takes localstore whichLocalStore, string childKey returns location
+native GetLocalStoreTimerHandle takes localstore whichLocalStore, string childKey returns timer
+native GetLocalStoreABTimerHandle takes localstore whichLocalStore, string childKey returns abtimer
+
+// below function used by some dumb stuff in abilitiesUtils.j; it was not originally part of JSON AbilityBuilder
+native GetLocalStoreLocalStoreHandle takes localstore whichLocalStore, string childKey returns localstore
 
 // setters: return true if there was some previous value stored at the child key
 native SetLocalStoreString takes localstore whichLocalStore, string childKey, string value returns boolean
 native SetLocalStoreInteger takes localstore whichLocalStore, string childKey, integer value returns boolean
 native SetLocalStoreBoolean takes localstore whichLocalStore, string childKey, boolean value returns boolean
-native SetLocalStoreReal takes localstore whichLocalStore, string childKey, real value returns boolean
+native SetLocalStoreReal takes localstore whichLocalStore, string childKey, real value returns boolean      
+native SetLocalStoreCode takes localstore whichLocalStore, string childKey, code func returns boolean
 native SetLocalStoreAbilityTypeLevelDataHandle takes localstore whichLocalStore, string childKey, abilitytypeleveldata value returns boolean
 native SetLocalStoreAbilityHandle takes localstore whichLocalStore, string childKey, ability value returns boolean
 native SetLocalStoreBuffHandle takes localstore whichLocalStore, string childKey, buff value returns boolean
@@ -220,6 +272,7 @@ native SetLocalStoreABTimeOfDayEventHandle takes localstore whichLocalStore, str
 native SetLocalStoreGameObjectHandle takes localstore whichLocalStore, string childKey, gameobject value returns boolean
 native SetLocalStoreNonStackingStatBuffHandle takes localstore whichLocalStore, string childKey, nonstackingstatbuff value returns boolean
 native SetLocalStoreProjectileHandle takes localstore whichLocalStore, string childKey, projectile value returns boolean
+native SetLocalStoreTimerHandle takes localstore whichLocalStore, string childKey, timer value returns boolean
 native SetLocalStoreHandle takes localstore whichLocalStore, string childKey, handle value returns boolean
 
 native LocalStoreContainsKey takes localstore whichLocalStore, string childKey returns boolean
@@ -279,7 +332,7 @@ native CreateAbilityBuilderConfiguration takes nothing returns abilitybuildercon
 native SetABConfCastId takes abilitybuilderconfiguration abc, string castId returns nothing
 
 // Sets the Base Order ID (turn off)
-native SetABConfUcastId takes abilitybuilderconfiguration abc, string castId returns nothing
+native SetABConfUncastId takes abilitybuilderconfiguration abc, string castId returns nothing
 
 // Sets the Base Order ID for Auto Cast On
 native SetABConfAutoCastOnId takes abilitybuilderconfiguration abc, string castId returns nothing
@@ -317,6 +370,25 @@ native RegisterABConf takes integer codeId, abilitybuilderconfiguration abc retu
 // Ability API (general stuff)
 //=================================================================================================
 
+// On Warcraft 3, folks always made abilities using "UnitAddAbility(myUnit, 'AUan')" for example
+// if we wanted to provide the unit with Animate Dead. That native enforced a rule that a unit
+// could only have 1 of an ability. But elsewhere the game violated its own rule, such as
+// when an item would add an ability to a unit; two "Claws of Attack +3" stack by adding
+// 'AIat' to the unit twice, not by modifying the statistical values on the unit's one
+// and only instance of 'AIat'.
+// In premise, the following example:
+//```
+//    if BlzGetUnitAbility(myUnit, 'AIat') == null then
+//        call AddUnitAbility(myUnit, CreateAbility('AIat'))
+//    endif
+//```
+// ... would be nearly
+// identical to "call UnitAddAbility(myUnit, 'AUan')" but different because decomposing into
+// these lower level natives gives us more control, and allows us to violate the rule,
+// similar to items. In the case of Ability Builder, it also allows us to save a reference
+// to the exact ability created.
+native CreateAbility takes integer whichAbilityId returns ability
+
 // These do the same thing as similar Blz functions if user simulation includes newer patch,
 // but are distinct because our simulation will include them regardless of patch version
 native GetUnitAbility takes unit whichUnit, integer whichAbilityId returns ability
@@ -335,6 +407,11 @@ native GetAbilityCodeId takes ability whichAbility returns integer
 
 // might be the same as BlzUnitHideAbility, but this one is for ability handles
 native SetAbilityIconShowing takes ability whichAbility, boolean showing returns nothing
+
+// below is some low level thing, ability builder changes added concept of disable type so it
+// was exposed here, but maybe you want to always use type ABILITY_DISABLE_TYPE_TRIGGER so we don't bork the low level
+// system
+native SetAbilityDisabled takes unit abilityUnit, ability whichAbility, boolean disabled, abilitydisabletype reason returns nothing
 
 //=================================================================================================
 // AbilityBuilderAbility API
@@ -393,6 +470,7 @@ native GetAbilityItem takes ability whichAbility returns item
 // which can't look it up for you. Thanks, Retera!)
 native AbilityActivate takes unit caster, ability whichAbility returns boolean
 native AbilityDeactivate takes unit caster, ability whichAbility returns boolean
+native IsToggleAbilityActive takes ability whichAbility returns boolean
 
 // NOTE: maybe eventually this could be replaced by BlzSetAbilityRealLevelField(whichAbility, ABILITY_RLF_CAST_RANGE, 0, value)
 // but at the moment it is not the same, because it sets the cast range independent of level
@@ -425,6 +503,7 @@ native SetProjectileDone takes projectile whichProjectile, boolean done returns 
 native SetProjectileReflected takes projectile whichProjectile, boolean reflected returns nothing
 native SetProjectileTargetUnit takes projectile whichProjectile, unit target returns nothing
 native SetProjectileTargetLoc takes projectile whichProjectile, location target returns nothing
+native IsProjectileReflected takes projectile whichProjectile returns boolean
 
 //=================================================================================================
 // Buff API
@@ -465,11 +544,20 @@ native CreateTimedTargetingBuff takes integer buffId, real duration returns buff
 native CreateTimedTickingBuff takes integer buffId, real duration, boolean showTimedLifeBar, code onAddAction, code onRemoveAction, code onExpireAction, code onTickAction, boolean showIcon, effecttype artType, localstore sourceAbilLocalStore, integer castId returns buff
 
 // see CreateTimedTickingPausedBuffAU
+// - from what I could tell, a "paused" buff is one who is capable of being affected by unit pausing, not one who operates while paused
+// - the concept of "paused" for a unit on Warsmash was edited with Ability Builder changes. Rather than a shut down of unit tick,
+//   including the ticking of the unit's abilities, it only shuts down some stuff if its registered as pausable stuff
+//   (attempt to mimic nonsense behaviors on Warcraft; perhaps a cleaned version of this code would be a way to register
+//    unit specific timers that shut down if unit paused, and game timers that dont shut down if unit paused, but this
+//    would require a sensible programming language where the game-registered timers knew what unit to operate on via
+//    some local scoping mechanics)
 native CreateTimedTickingPausedBuff takes integer buffId, real duration, boolean showTimedLifeBar, code onAddAction, code onRemoveAction, code onExpireAction, code onTickAction, boolean showIcon, effecttype artType, localstore sourceAbilLocalStore, integer castId returns buff
 
 // see CreateTimedTickingPostDeathBuffAU
 native CreateTimedTickingPostDeathBuff takes integer buffId, real duration, boolean showTimedLifeBar, code onAddAction, code onRemoveAction, code onExpireAction, code onTickAction, boolean showIcon, effecttype artType, localstore sourceAbilLocalStore, integer castId returns buff
 
+// see CreateStunBuffAU
+native CreateStunBuff takes integer buffId, real duration returns buff
 
 //=================================================================================================
 // DestructableBuff API
@@ -558,6 +646,13 @@ native CheckUnitForAbilityEffectReaction takes unit target, unit caster, ability
 // similar to the above, but allows for Defend to actually reflect the projectile or something
 native CheckUnitForAbilityProjReaction takes unit target, unit caster, projectile whichProjectile returns boolean
 
+// A targeted effect can't hit an invisible unit who would otherwise be a valid target, but an AoE can
+native IsUnitValidTarget takes unit target, unit caster, abilitytypeleveldata abilData, integer level, boolean targetedEffect returns boolean
+// the idea that all non-unit widgets are visible is trivially disproven by the counter example of fog of war,
+// so I'm guessing we will end up wanting to replace both of these with one "is valid target" native that takes into account
+// whether it's a targeted effect for both units and nonunits
+native IsValidTarget takes widget target, unit caster, abilitytypeleveldata abilData, integer level returns boolean
+
 // NOTE: Percents dont work in the ability builder json "AddDefenseBonus"
 // according to a comment, so they might not be working
 // in the jass binding either. Maybe just use "BlzGetUnitArmor" for the base?
@@ -574,12 +669,81 @@ native UnitGetTemporaryDefenseBonus takes unit targetUnit returns real
 // non-blz binding to get the defense of a unit. "BlzGetUnitArmor" reroutes to this.
 native GetUnitDefense takes unit whichUnit returns real
 
+// At the moment, "HealUnit" is identical to setting UNIT_STATE_LIFE to a higher value.
+// However, in the foreseeable future, if we create "Heal Events" or whatever, then this
+// would fire them. Or, if we add the Orb of Fire effect from Reforged, which reduces
+// healing by 50% or whatever, this function would be affected, hypothetically. 
+native HealUnit takes unit whichUnit, real amount returns nothing
+
+// NOTE: below, YOU WOULD THINK this would be the same as `IssueImmediateOrder(whichUnit, "stop")`
+// however the function getting called by the JSON isn't, and was updating what the unit was doing
+// without firing the issued order system so it probably wouldn't fire order triggers, etc, and
+// so I added this native to make JASS match the JSON hypothetically. We should delete this and
+// use `IssueImmediateOrder(whichUnit, "stop")` in the future.
+native DoStopOrder takes unit whichUnit returns nothing
+
+// Causes a worker who is currently carrying gold or lumber to have their
+// carried resources instantly be gained to the player.
+native UnitInstantReturnResources takes unit whichWorker returns nothing
+
+// When we call RemoveUnit on something that the player had selected, sometimes we want to automatically
+// select something else. Instead of manipulating their selection directly with a bunch of busywork,
+// this tags a unit to replace a different one for selection... if the first was selected. If it's not,
+// nothing happens.
+native SetPreferredSelectionReplacement takes unit whichUnitIsGoingToBeRemoved, unit whichUnitWeWantToSelect returns nothing
+
+// The function of the resurrect ability
+native ResurrectUnit takes unit whichUnit returns nothing
+
+// If possible, this function checks if a unit is a worker and if so sends it back to work.
+// Currently this is called in the natively hacked in Stand Down ability, maybe we can move it to jass later
+// Also used in the JSON for Call to Arms.
+// It's OK to pass null as the input resource type. The function returns the type that
+// was actually selected -- so if you declare the "default" type to be lumber, but the worker was
+// carrying gold at the moment, the function might return RESOURCE_TYPE_GOLD to indicate that we
+// sent them back to a gold mine
+native SendUnitBackToWork takes unit whichUnit, resourcetype defaultResourceType returns resourcetype
+
+// SetUnitPathing lets units walk through stuff if I recall.. totally turns it off.
+// This natively, unlike that, enables the special movement type of windwalk and harvesting workers,
+// wherein the unit is a land unit but it can pass through other units. Use with "active = false"
+// to go back to default unit movement type.
+native SetUnitMovementTypeNoCollision takes unit whichUnit, boolean active returns nothing
+
+// This field only functions if we cancel construction or if we SetUnitExploded(...)
+// What it does is to make the unit use this buff as the one whose art to show when the
+// unit explodes, instead of the unit's special art blood splat.
+native SetUnitExplodeOnDeathBuffId takes unit whichUnit, integer buffId returns nothing
+// similar to above, this function unsets the buff ID -- not whether the unit explodes
+native UnsetUnitExplodeOnDeathBuffId takes unit whichUnit returns nothing
+
+native StartSacrificingUnit takes unit factory, unit toSacrifice, integer resultUnitId returns nothing
+
+// This is the low level function that for the moment is totally separate from whether that unit
+// is even allowed to be trained by that building... It also doesn't generate "issued order" events,
+// because it is not. It is here for feature parity with whatever Ability Builder was doing.
+// Where possible, do something like "IssueTrainOrderByIdBJ" instead.
+native StartTrainingUnit takes unit factory, integer trainedUnitId returns nothing
+
 // This could have been written as a function instead of a native, but then that way it would
 // have to be maintained. This one is just reading the java variables, so if somebody
 // adds a damage type then this native updates likewise basically. Not sure why it
 // needs to exist, though; where possible, replace with references to DAMAGE_TYPE_FORCE
 // and friends (native ConvertDamageType)
 native String2DamageType takes string x returns damagetype
+
+// UnitGroup API extensions:
+
+// - enum units in range of unit... considers collision sizes of both units, so it's not quite the same
+//   as if we enumerated units in range of the location of the center unit
+native GroupEnumUnitsInRangeOfUnit takes group whichGroup, unit whichUnit, real radius, boolexpr filter returns nothing
+
+// same function as "blz" versions, but the ones declared here are available regardless
+// of which game version being emulated:
+native GroupAddGroupFast takes group whichGroup, group addGroup returns integer
+native GroupRemoveGroupFast takes group whichGroup, group removeGroup returns integer
+native GroupGetSize takes group whichGroup returns integer
+native GroupUnitAt takes group whichGroup, integer index returns unit
 
 //=================================================================================================
 // Non Stacking Stat Buff API
@@ -631,6 +795,18 @@ native AbilityTypeLevelDataRemoveTargetAllowed takes abilitytypeleveldata whichD
 // okay, maybe these function(s) below make a little more sense and are less broken than non MUI editing
 // of targets allowed (still probably better to use GameObject API though):
 native GetAbilityTypeLevelDataReal takes abilitytypeleveldata whichData, integer level, datafieldletter whichLetter returns real
+// still these functions are terrible, reinvent the parsing of SLK, exposing bad designs, shouldn't have been like this
+// ( Retera SLK stores everything as string, but all access to the data is meant to be through an API that converts to
+//   number or boolean with one methodology of conversion, not multiply copies, thus avoiding bugs. But this code copies
+//   out the string then re-parses to numbers on its own. The JSON version of this had signs of bugs, including
+//   a check where any "-" in a floating point number makes it 0, so "-2.00" will parse as 0.00 with these functions
+//   where as the one-for-all copy of the code in the parser used by the GameObject classes "GetAsReal" / "GetAsFloat"
+//   functions would not match this behavior... I patched the presumed bug in the jass copy, but now there are three copies
+//   !! and it should not be so, and the culprit is Ability Builder Type Level Data )
+native GetAbilityTypeLevelDataInteger takes abilitytypeleveldata whichData, integer level, datafieldletter whichLetter returns integer
+native GetAbilityTypeLevelDataID takes abilitytypeleveldata whichData, integer level, datafieldletter whichLetter returns integer
+native GetAbilityTypeLevelDataBoolean takes abilitytypeleveldata whichData, integer level, datafieldletter whichLetter returns boolean
+native GetAbilityTypeLevelDataString takes abilitytypeleveldata whichData, integer level, datafieldletter whichLetter returns string
 
 // NOTE: Regarding Warsmash development history, originally "type level data" here was created
 // as a high performance cache of data parsed by the GameObject api, so my note about how it is
@@ -666,7 +842,21 @@ native GetAbilityTypeLevelDataFirstBuffId takes abilitytypeleveldata whichData, 
 native GetAbilityTypeLevelDataDurationNormal takes abilitytypeleveldata whichData, integer level returns real
 native GetAbilityTypeLevelDataDurationHero takes abilitytypeleveldata whichData, integer level returns real
 native GetAbilityTypeLevelDataCastTime takes abilitytypeleveldata whichData, integer level returns real
+                                                                                     
+//=================================================================================================
+// ABTimer API
+//=================================================================================================
 
+// Unlike CreateTimer, when this thing fires GetTriggerUnit, GetTriggerLocalStore, and GetTriggerCastId
+// will populate with these values... atm GetExpiredTimer not populated, it's not a jass timer,
+// but you can get the timer via the local store. The FIRINGTIMER key in utils is populated by the
+// engine itself (Yes, that's super redundant and pointless now that Ability Builder is ported to jass)
+native CreateABTimer takes unit caster, localstore localStore, integer castId, code actionsFunc returns abtimer
+
+native ABTimerSetRepeats takes abtimer whichTimer, boolean flag returns nothing
+native ABTimerSetTimeoutTime takes abtimer whichTimer, real timeout returns nothing
+native ABTimerStart takes abtimer whichTimer returns nothing
+native ABTimerStartRepeatingTimerWithDelay takes abtimer whichTimer, real delay returns nothing
 
 //=================================================================================================
 // Extra

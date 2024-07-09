@@ -122,6 +122,8 @@ public class CSimulation implements CPlayerAPI {
 	private boolean daytime;
 	private final Set<CDestructable> ownedTreeSet = new HashSet<>();
 	private GlobalScope globalScope;
+	private boolean fogMaskEnabled = true;
+	private boolean fogEnabled = true;
 
 	public CSimulation(final War3MapConfig config, final int mapVersion, final DataTable miscData,
 			final ObjectData parsedUnitData, final ObjectData parsedItemData, final ObjectData parsedDestructableData,
@@ -468,6 +470,9 @@ public class CSimulation implements CPlayerAPI {
 		}
 		for (final CUnit unit : this.units) {
 			unit.updateFogOfWar(this);
+		}
+		for (final CPlayer player : this.players) {
+			player.updateFogModifiersAfterUnits(this);
 		}
 	}
 
@@ -1095,6 +1100,22 @@ public class CSimulation implements CPlayerAPI {
 
 	public boolean isMapReignOfChaos() {
 		return this.mapVersion <= 24;
+	}
+
+	public void setFogMaskEnabled(boolean enable) {
+		this.fogMaskEnabled = enable;
+	}
+
+	public boolean isFogMaskEnabled() {
+		return this.fogMaskEnabled;
+	}
+
+	public void setFogEnabled(boolean fogEnabled) {
+		this.fogEnabled = fogEnabled;
+	}
+
+	public boolean isFogEnabled() {
+		return this.fogEnabled;
 	}
 
 }

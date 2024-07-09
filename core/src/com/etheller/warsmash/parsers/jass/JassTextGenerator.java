@@ -21,6 +21,8 @@ public interface JassTextGenerator {
 
 	public String setUserDataExpr(String keyExpr, JassTextGeneratorType type, String value);
 
+	String declareLocal(String type, String name);
+
 	/**
 	 * Creates a jass function containing the given actions
 	 *

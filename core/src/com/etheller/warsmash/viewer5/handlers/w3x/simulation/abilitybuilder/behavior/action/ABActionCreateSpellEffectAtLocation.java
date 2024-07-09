@@ -20,14 +20,16 @@ public class ABActionCreateSpellEffectAtLocation implements ABAction {
 	private ABIDCallback id;
 	private CEffectType effectType;
 
-	public void runAction(final CSimulation game, final CUnit caster, final Map<String, Object> localStore, final int castId) {
-		AbilityPointTarget loc = location.callback(game, caster, localStore, castId);
+	@Override
+	public void runAction(final CSimulation game, final CUnit caster, final Map<String, Object> localStore,
+			final int castId) {
+		final AbilityPointTarget loc = this.location.callback(game, caster, localStore, castId);
 		float dir = 0;
-		if (facing != null) {
-			dir = facing.callback(game, caster, localStore, castId);
+		if (this.facing != null) {
+			dir = this.facing.callback(game, caster, localStore, castId);
 		}
-		SimulationRenderComponent ret = game.spawnSpellEffectOnPoint(loc.getX(), loc.getY(), dir,
-				this.id.callback(game, caster, localStore, castId), effectType, 0);
+		final SimulationRenderComponent ret = game.spawnSpellEffectOnPoint(loc.getX(), loc.getY(), dir,
+				this.id.callback(game, caster, localStore, castId), this.effectType, 0);
 		localStore.put(ABLocalStoreKeys.LASTCREATEDFX, ret);
 	}
 }

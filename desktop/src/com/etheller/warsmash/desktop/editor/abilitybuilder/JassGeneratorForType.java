@@ -2,6 +2,7 @@ package com.etheller.warsmash.desktop.editor.abilitybuilder;
 
 import java.lang.reflect.Field;
 
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityDisableType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.autocast.AutocastType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.definitions.impl.AbilityFields;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABLocalStoreKeys;
@@ -9,6 +10,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.pars
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.parser.template.DataFieldLetter;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CTargetType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.unit.NonStackingStatBuffType;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.ResourceType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.TextTagConfigType;
 
 public class JassGeneratorForType {
@@ -38,6 +40,15 @@ public class JassGeneratorForType {
 		}
 		for (final AbilityBuilderType type : AbilityBuilderType.values()) {
 			System.out.println(String.format("    constant abconftype AB_CONF_TYPE_%-34s= ConvertABConfType(%d)",
+					type.name(), type.ordinal()));
+		}
+		for (final CAbilityDisableType type : CAbilityDisableType.values()) {
+			System.out.println(String.format(
+					"    constant abilitydisabletype ABILITY_DISABLE_TYPE_%-34s= ConvertAbilityDisableType(%d)",
+					type.name(), type.ordinal()));
+		}
+		for (final ResourceType type : ResourceType.values()) {
+			System.out.println(String.format("    constant resourcetype RESOURCE_TYPE_%-34s= ConvertResourceType(%d)",
 					type.name(), type.ordinal()));
 		}
 

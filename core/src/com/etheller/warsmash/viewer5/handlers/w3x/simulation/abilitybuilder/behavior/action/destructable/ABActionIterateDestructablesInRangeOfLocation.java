@@ -17,9 +17,8 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.beha
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.locationcallbacks.ABLocationCallback;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABAction;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABLocalStoreKeys;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABSingleAction;
 
-public class ABActionIterateDestructablesInRangeOfLocation implements ABSingleAction {
+public class ABActionIterateDestructablesInRangeOfLocation implements ABAction {
 
 	private static final Rectangle recycleRect = new Rectangle();
 
@@ -50,23 +49,32 @@ public class ABActionIterateDestructablesInRangeOfLocation implements ABSingleAc
 	}
 
 	@Override
-	public String generateJassEquivalent(final JassTextGenerator jassTextGenerator) {
+	public void generateJassEquivalent(int indent, final JassTextGenerator jassTextGenerator) {
 		final List<JassTextGeneratorStmt> modifiedActionList = new ArrayList<>(this.iterationActions);
 		modifiedActionList.add(0, new JassTextGeneratorCallStmt() {
 			@Override
 			public String generateJassEquivalent(final JassTextGenerator jassTextGenerator) {
 				return "SetLocalStoreDestructableHandle(" + jassTextGenerator.getTriggerLocalStore()
-						+ ", AB_STORE_LOCAL_STORE_KEYS_ENUMDESTRUCTABLE + I2S(" + jassTextGenerator.getCastId() + "), "
+						+ ", AB_LOCAL_STORE_KEY_ENUMDESTRUCTABLE + I2S(" + jassTextGenerator.getCastId() + "), "
 						+ "GetEnumDestructable()" + ")";
 			}
 		});
-		final String iterationActionsName = jassTextGenerator.createAnonymousFunction(this.iterationActions,
+		final String iterationActionsName = jassTextGenerator.createAnonymousFunction(modifiedActionList,
 				"DestsInRangeEnumActions");
 
+		final StringBuilder sb = new StringBuilder();
+		JassTextGenerator.Util.indent(indent, sb);
 		// TODO this BJ function uses <= range instead of < range
-		return "EnumDestructablesInCircleBJ(" + this.range.generateJassEquivalent(jassTextGenerator) + ", "
+		sb.append("call EnumDestructablesInCircleBJ(" + this.range.generateJassEquivalent(jassTextGenerator) + ", "
 				+ this.location.generateJassEquivalent(jassTextGenerator) + ", "
-				+ jassTextGenerator.functionPointerByName(iterationActionsName) + ")";
+				+ jassTextGenerator.functionPointerByName(iterationActionsName) + ")");
+		jassTextGenerator.println(sb.toString());
+
+		sb.setLength(0);
+		JassTextGenerator.Util.indent(indent, sb);
+		sb.append("call FlushChildLocalStore(" + jassTextGenerator.getTriggerLocalStore()
+				+ ", AB_LOCAL_STORE_KEY_ENUMDESTRUCTABLE + I2S(" + jassTextGenerator.getCastId() + "))");
+		jassTextGenerator.println(sb.toString());
 	}
 
 }

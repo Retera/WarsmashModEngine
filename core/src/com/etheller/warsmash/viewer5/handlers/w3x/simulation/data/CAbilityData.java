@@ -82,6 +82,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.def
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.definitions.impl.CAbilityTypeDefinitionLoad;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.definitions.impl.CAbilityTypeDefinitionNeutralBuilding;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.definitions.impl.CAbilityTypeDefinitionPhoenixFire;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.definitions.impl.CAbilityTypeDefinitionRally;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.definitions.impl.CAbilityTypeDefinitionRepair;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.definitions.impl.CAbilityTypeDefinitionReturnResources;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.definitions.impl.CAbilityTypeDefinitionRoot;
@@ -278,25 +279,29 @@ public class CAbilityData {
 		this.codeToAbilityTypeDefinition.put(War3ID.fromString("Adri"), new CAbilityTypeDefinitionSpellBase(
 				(handleId, alias) -> new CAbilityDropInstant(handleId, alias, alias)));
 		this.codeToAbilityTypeDefinition.put(War3ID.fromString("Aroo"), new CAbilityTypeDefinitionRoot());
+		this.codeToAbilityTypeDefinition.put(War3ID.fromString("ARal"), new CAbilityTypeDefinitionRally());
 
 		System.err.println("========================================================================");
 		System.err.println("Starting to load ability builder");
 		System.err.println("========================================================================");
 
-		AbilityBuilderParserUtil.loadAbilityBuilderFiles(behavior -> {
-			if (behavior.getType().equals(AbilityBuilderType.TEMPLATE)) {
-				for (final AbilityBuilderDupe dupe : behavior.getIds()) {
-					this.codeToAbilityTypeDefinition.put(War3ID.fromString(dupe.getId()),
-							new CAbilityTypeDefinitionAbilityTemplateBuilder(behavior));
+		if (false) {
+			AbilityBuilderParserUtil.loadAbilityBuilderFiles(behavior -> {
+				if (behavior.getType().equals(AbilityBuilderType.TEMPLATE)) {
+					for (final AbilityBuilderDupe dupe : behavior.getIds()) {
+						this.codeToAbilityTypeDefinition.put(War3ID.fromString(dupe.getId()),
+								new CAbilityTypeDefinitionAbilityTemplateBuilder(behavior));
+					}
 				}
-			}
-			else {
-				for (final AbilityBuilderDupe dupe : behavior.getIds()) {
-					final AbilityBuilderConfiguration config = new AbilityBuilderConfiguration(behavior, dupe);
-					this.codeToAbilityTypeDefinition.put(War3ID.fromString(config.getId()), config.createDefinition());
+				else {
+					for (final AbilityBuilderDupe dupe : behavior.getIds()) {
+						final AbilityBuilderConfiguration config = new AbilityBuilderConfiguration(behavior, dupe);
+						this.codeToAbilityTypeDefinition.put(War3ID.fromString(config.getId()),
+								config.createDefinition());
+					}
 				}
-			}
-		});
+			});
+		}
 
 		System.err.println("========================================================================");
 		System.err.println("registered abilities");

@@ -233,7 +233,12 @@ public class InstructionAppendingJassStatementVisitor
 	@Override
 	public Void visit(final DebuggingJassStatement statement) {
 		this.instructions.add(new SetDebugLineNoInstruction(statement.getLineNo()));
-		statement.getDelegate().accept(this);
+		try {
+			statement.getDelegate().accept(this);
+		}
+		catch (final Exception exc) {
+			throw new IllegalStateException("pseudocompile fail beneath line no: " + statement.getLineNo(), exc);
+		}
 		return null;
 	}
 

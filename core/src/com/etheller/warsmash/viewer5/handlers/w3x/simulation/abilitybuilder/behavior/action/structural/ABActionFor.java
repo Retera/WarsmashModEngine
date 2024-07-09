@@ -35,6 +35,14 @@ public class ABActionFor implements ABAction {
 	@Override
 	public void generateJassEquivalent(final int indent, final JassTextGenerator jassTextGenerator) {
 		final StringBuilder sb = new StringBuilder();
+
+		final String keyExpression = "AB_LOCAL_STORE_KEY_ITERATORCOUNT + I2S(" + jassTextGenerator.getCastId() + ")";
+		sb.setLength(0);
+		JassTextGenerator.Util.indent(indent, sb);
+		sb.append("call " + jassTextGenerator.setUserDataExpr(keyExpression, JassTextGeneratorType.Integer, "0"));
+		jassTextGenerator.println(sb.toString());
+
+		sb.setLength(0);
 		JassTextGenerator.Util.indent(indent, sb);
 		sb.append("loop");
 		jassTextGenerator.println(sb.toString());
@@ -42,7 +50,6 @@ public class ABActionFor implements ABAction {
 		sb.setLength(0);
 		JassTextGenerator.Util.indent(childIndent, sb);
 		sb.append("exitwhen ");
-		final String keyExpression = "AB_LOCAL_STORE_KEY_ITERATORCOUNT + I2S(" + jassTextGenerator.getCastId() + ")";
 		sb.append(jassTextGenerator.getUserDataExpr(keyExpression, JassTextGeneratorType.Integer));
 		sb.append(" >= ");
 		sb.append(this.times.generateJassEquivalent(jassTextGenerator));
@@ -77,7 +84,7 @@ public class ABActionFor implements ABAction {
 
 		sb.setLength(0);
 		JassTextGenerator.Util.indent(childIndent, sb);
-		sb.append(jassTextGenerator.setUserDataExpr(keyExpression, JassTextGeneratorType.Integer,
+		sb.append("call " + jassTextGenerator.setUserDataExpr(keyExpression, JassTextGeneratorType.Integer,
 				jassTextGenerator.getUserDataExpr(keyExpression, JassTextGeneratorType.Integer) + " + 1"));
 		jassTextGenerator.println(sb.toString());
 

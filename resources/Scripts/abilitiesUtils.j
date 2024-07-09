@@ -147,6 +147,9 @@ globals
     constant string ABILITY_FIELD_REQUIREMENT_LEVELS                = "Requiresamount"
 
     constant real au_SIMULTION_STEP_TIME                            = GetSimulationStepTime()
+    
+    group au_tempGroup = CreateGroup()
+    group au_swapGroup
 endglobals
 
 function AddUnitBuffAU takes unit target, localstore sourceAbility, buff whichBuff returns nothing
@@ -218,6 +221,12 @@ endfunction
 function CreateTimedTickingPostDeathBuffAU takes unit casterUnit, localstore sourceAbility, integer buffId, real duration, boolean showTimedLifeBar, code onAddAction, code onRemoveAction, code onExpireAction, code onTickAction, boolean showIcon, effecttype artType, integer castId returns buff
     local buff theBuff = CreateTimedTickingPostDeathBuff(buffId, duration, showTimedLifeBar, onAddAction, onRemoveAction, onExpireAction, onTickAction, showIcon, artType, sourceAbility, castId)
     call StoreCreatedBuffAU(casterUnit, sourceAbility, theBuff)
+    return theBuff
+endfunction
+
+function CreateStunBuffAU takes localstore localStore, integer buffId, real duration returns buff
+    local buff theBuff = CreateStunBuff(buffId, duration)
+	call SetLocalStoreAbilityHandle(localStore, AB_LOCAL_STORE_KEY_LASTCREATEDBUFF, theBuff)
     return theBuff
 endfunction
 
@@ -377,6 +386,30 @@ function GetAbilityDataAsFloatAU takes localstore x, datafieldletter whichDataFi
     return GetAbilityTypeLevelDataReal(d, lvl, whichDataField)
 endfunction
 
+function GetAbilityDataAsBooleanAU takes localstore x, datafieldletter whichDataField returns boolean
+    local abilitytypeleveldata d = GetLocalStoreAbilityTypeLevelDataHandle(x, AB_LOCAL_STORE_KEY_LEVELDATA)
+    local integer lvl = GetLocalStoreInteger(x, AB_LOCAL_STORE_KEY_CURRENTLEVEL) - 1 // starts at 0
+    return GetAbilityTypeLevelDataBoolean(d, lvl, whichDataField)
+endfunction
+
+function GetAbilityDataAsIntegerAU takes localstore x, datafieldletter whichDataField returns integer
+    local abilitytypeleveldata d = GetLocalStoreAbilityTypeLevelDataHandle(x, AB_LOCAL_STORE_KEY_LEVELDATA)
+    local integer lvl = GetLocalStoreInteger(x, AB_LOCAL_STORE_KEY_CURRENTLEVEL) - 1 // starts at 0
+    return GetAbilityTypeLevelDataInteger(d, lvl, whichDataField)
+endfunction 
+
+function GetAbilityDataAsIDAU takes localstore x, datafieldletter whichDataField returns integer
+    local abilitytypeleveldata d = GetLocalStoreAbilityTypeLevelDataHandle(x, AB_LOCAL_STORE_KEY_LEVELDATA)
+    local integer lvl = GetLocalStoreInteger(x, AB_LOCAL_STORE_KEY_CURRENTLEVEL) - 1 // starts at 0
+    return GetAbilityTypeLevelDataID(d, lvl, whichDataField)
+endfunction 
+
+function GetAbilityDataAsStringAU takes localstore x, datafieldletter whichDataField returns string
+    local abilitytypeleveldata d = GetLocalStoreAbilityTypeLevelDataHandle(x, AB_LOCAL_STORE_KEY_LEVELDATA)
+    local integer lvl = GetLocalStoreInteger(x, AB_LOCAL_STORE_KEY_CURRENTLEVEL) - 1 // starts at 0
+    return GetAbilityTypeLevelDataString(d, lvl, whichDataField)
+endfunction
+
 function GetFirstBuffIdAU takes localstore x returns integer
     local abilitytypeleveldata d = GetLocalStoreAbilityTypeLevelDataHandle(x, AB_LOCAL_STORE_KEY_LEVELDATA)
     local integer lvl = GetLocalStoreInteger(x, AB_LOCAL_STORE_KEY_CURRENTLEVEL) - 1 // starts at 0
@@ -493,6 +526,22 @@ function GetStoredNonStackingStatBuffAU takes localstore whichLocalStore, string
     endif
 endfunction
 
+function GetLocalStoreUserAbilityHandleAU takes localstore whichLocalStore, string childKey returns ability
+    return GetLocalStoreAbilityHandle(whichLocalStore, "__" + childKey)
+endfunction 
+
+function GetLocalStoreUserCastAbilityHandleAU takes localstore whichLocalStore, string childKey, integer castId returns ability
+    return GetLocalStoreAbilityHandle(whichLocalStore, "__" + childKey + "#" + I2S(castId))
+endfunction 
+
+function GetStoredAbilityAU takes localstore whichLocalStore, string childKey, integer castId, boolean instanceValue returns ability
+    if instanceValue then
+        return GetLocalStoreUserCastAbilityHandleAU(whichLocalStore, childKey, castId)
+    else
+        return GetLocalStoreUserAbilityHandleAU(whichLocalStore, childKey)
+    endif
+endfunction
+
 function GetLocalStoreUserRealAU takes localstore whichLocalStore, string childKey returns real
     return GetLocalStoreReal(whichLocalStore, "__" + childKey)
 endfunction 
@@ -506,6 +555,54 @@ function GetStoredRealAU takes localstore whichLocalStore, string childKey, inte
         return GetLocalStoreUserCastRealAU(whichLocalStore, childKey, castId)
     else
         return GetLocalStoreUserRealAU(whichLocalStore, childKey)
+    endif
+endfunction
+
+function GetLocalStoreUserBooleanAU takes localstore whichLocalStore, string childKey returns boolean
+    return GetLocalStoreBoolean(whichLocalStore, "__" + childKey)
+endfunction 
+
+function GetLocalStoreUserCastBooleanAU takes localstore whichLocalStore, string childKey, integer castId returns boolean
+    return GetLocalStoreBoolean(whichLocalStore, "__" + childKey + "#" + I2S(castId))
+endfunction 
+
+function GetStoredBooleanAU takes localstore whichLocalStore, string childKey, integer castId, boolean instanceValue returns boolean
+    if instanceValue then
+        return GetLocalStoreUserCastBooleanAU(whichLocalStore, childKey, castId)
+    else
+        return GetLocalStoreUserBooleanAU(whichLocalStore, childKey)
+    endif
+endfunction
+
+function GetLocalStoreUserIntegerAU takes localstore whichLocalStore, string childKey returns integer
+    return GetLocalStoreInteger(whichLocalStore, "__" + childKey)
+endfunction 
+
+function GetLocalStoreUserCastIntegerAU takes localstore whichLocalStore, string childKey, integer castId returns integer
+    return GetLocalStoreInteger(whichLocalStore, "__" + childKey + "#" + I2S(castId))
+endfunction 
+
+function GetStoredIntegerAU takes localstore whichLocalStore, string childKey, integer castId, boolean instanceValue returns integer
+    if instanceValue then
+        return GetLocalStoreUserCastIntegerAU(whichLocalStore, childKey, castId)
+    else
+        return GetLocalStoreUserIntegerAU(whichLocalStore, childKey)
+    endif
+endfunction
+
+function GetLocalStoreUserBuffHandleAU takes localstore whichLocalStore, string childKey returns buff
+    return GetLocalStoreBuffHandle(whichLocalStore, "__" + childKey)
+endfunction 
+
+function GetLocalStoreUserCastBuffHandleAU takes localstore whichLocalStore, string childKey, integer castId returns buff
+    return GetLocalStoreBuffHandle(whichLocalStore, "__" + childKey + "#" + I2S(castId))
+endfunction 
+
+function GetStoredBuffAU takes localstore whichLocalStore, string childKey, integer castId, boolean instanceValue returns buff
+    if instanceValue then
+        return GetLocalStoreUserCastBuffHandleAU(whichLocalStore, childKey, castId)
+    else
+        return GetLocalStoreUserBuffHandleAU(whichLocalStore, childKey)
     endif
 endfunction
 
@@ -532,3 +629,282 @@ function PeriodicExecuteAU takes localstore whichLocalStore, real delaySeconds, 
     endif
     return runActions
 endfunction
+
+function StoreSubroutineAU takes localstore whichLocalStore, string key, code func returns nothing
+    call SetLocalStoreCode(whichLocalStore, "_!" + key, func)
+endfunction
+
+function StoreCastSubroutineAU takes localstore whichLocalStore, string key, integer castId, code func returns nothing
+    call SetLocalStoreCode(whichLocalStore, "_!" + key + "#" + I2S(castId), func)
+endfunction
+
+function CreateSubroutineAU takes localstore whichLocalStore, string key, integer castId, boolean instanceValue, code func returns nothing
+    if instanceValue then
+        call StoreCastSubroutineAU(whichLocalStore, key, castId, func)
+    else
+        call StoreSubroutineAU(whichLocalStore, key, func)
+    endif
+endfunction
+
+function RunSubroutineAU takes unit caster, localstore whichLocalStore, integer castId, string key, boolean instanceValue returns nothing
+    local string innerKey = "_!" + key
+    local code subroutine
+    if instanceValue then
+        set innerKey = innerKey + "#" + I2S(castId)
+    endif
+    set subroutine = GetLocalStoreCode(whichLocalStore, innerKey)
+    if subroutine != null then
+        call StartAbilityBuilderThread(subroutine, caster, whichLocalStore, castId)
+    endif
+endfunction
+
+function CreateTimerDelayedAU takes unit caster, localstore whichLocalStore, integer castId, real timeout, boolean repeats, code actionsFunc, boolean startTimer, real delay returns abtimer
+    local abtimer t = CreateABTimer(caster, whichLocalStore, castId, actionsFunc)
+    call ABTimerSetTimeoutTime(t, timeout) 
+    call SetLocalStoreHandle(whichLocalStore, AB_LOCAL_STORE_KEY_LASTCREATEDTIMER, t)
+    
+    if repeats then                                  
+        call ABTimerSetRepeats(t, true)
+        if startTimer then
+            call ABTimerStartRepeatingTimerWithDelay(t, delay)
+            call SetLocalStoreHandle(whichLocalStore, AB_LOCAL_STORE_KEY_LASTSTARTEDTIMER, t)
+        endif
+    else       
+        if startTimer then
+            call ABTimerStart(t)
+            call SetLocalStoreHandle(whichLocalStore, AB_LOCAL_STORE_KEY_LASTSTARTEDTIMER, t)
+        endif
+    endif
+    return t
+endfunction
+
+function CreateTimerAU takes unit caster, localstore whichLocalStore, integer castId, real timeout, boolean repeats, code actionsFunc, boolean startTimer returns abtimer
+    local abtimer t = CreateABTimer(caster, whichLocalStore, castId, actionsFunc)
+    call ABTimerSetTimeoutTime(t, timeout) 
+    call SetLocalStoreHandle(whichLocalStore, AB_LOCAL_STORE_KEY_LASTCREATEDTIMER, t)
+                                     
+    if repeats then                                  
+        call ABTimerSetRepeats(t, true)
+    endif
+    if startTimer then
+        call ABTimerStart(t)
+        call SetLocalStoreHandle(whichLocalStore, AB_LOCAL_STORE_KEY_LASTSTARTEDTIMER, t)
+    endif       
+    return t
+endfunction
+
+function StartTimerAU takes abtimer t, localstore localStore returns nothing
+    call ABTimerStart(t)
+    call SetLocalStoreHandle(localStore, AB_LOCAL_STORE_KEY_LASTSTARTEDTIMER, t)
+endfunction
+
+function AddMpAU takes unit target, real amount, boolean percent returns nothing
+    local real maxMana = GetUnitState(target, UNIT_STATE_MAX_MANA)
+    if percent then
+        call SetUnitState(target, UNIT_STATE_MANA, RMaxBJ(RMinBJ(GetUnitState(target, UNIT_STATE_MANA) + amount * maxMana, maxMana), 0))
+    else
+        call SetUnitState(target, UNIT_STATE_MANA, RMaxBJ(RMinBJ(GetUnitState(target, UNIT_STATE_MANA) + amount, maxMana), 0)) 
+    endif
+endfunction
+
+function HealUnitAU takes unit target, real amount, boolean percent returns nothing
+    if percent then
+        call HealUnit(target, amount * GetUnitState(target, UNIT_STATE_MAX_LIFE))
+    else
+        call HealUnit(target, amount)
+    endif
+endfunction
+
+function AddNewAbilityAU takes localstore whichLocalStore, unit whichUnit, integer whichAbilityId returns ability
+    local ability abil = CreateAbility(whichAbilityId)
+    call SetLocalStoreHandle(whichLocalStore, AB_LOCAL_STORE_KEY_LASTCREATEDABILITY, abil)
+    call AddUnitAbility(whichUnit, abil)
+    return abil
+endfunction
+
+function IsWorkerAbilityAU takes ability whichAbility returns boolean
+    local integer code = GetAbilityCodeId(whichAbility)
+    if code == 'Aaha' then //CAbilityAcolyteHarvest 
+        return true 
+    elseif code == 'Ahar' then //CAbilityHarvest
+        return true 
+    elseif code == 'Awha' then //CAbilityWispHarvest
+        return true 
+    elseif code == 'AHbu' then //CAbilityHumanBuild
+        return true 
+    elseif code == 'Arep' then //CAbilityHumanRepair
+        return true 
+    elseif code == 'AGbu' then //CAbilityNagaBuild
+        return true 
+    elseif code == 'ANbu' then //CAbilityNeutralBuild
+        return true 
+    elseif code == 'AEbu' then //CAbilityNightElfBuild
+        return true 
+    elseif code == 'AObu' then //CAbilityOrcBuild
+        return true 
+    elseif code == 'Aren' then //CAbilityRepair
+        return true 
+    elseif code == 'Arst' then //CAbilityRepair (maybe later on Warsmash "Restore" will have a different code class if it's found to be legitimately functionally different)
+        return true 
+    elseif code == 'AUbu' then //CAbilityUndeadBuild
+        return true 
+    endif
+    return false
+endfunction
+
+function DisableWorkerAbilitiesAU takes unit whichUnit, boolean flag returns nothing
+    local ability a
+    local integer idx = 0
+    loop
+        set a = GetUnitAbilityByIndex(whichUnit, idx)
+        exitwhen a == null
+        if IsWorkerAbilityAU(a) then
+            call SetAbilityIconShowing(a, not flag)
+            // NOTE: At the time of writing, the "disable worker abilities" json native was set up
+            // to always publish TRANSFORMATION as the reason in Ability Builder, so we are just
+            // matching that
+            call SetAbilityDisabled(whichUnit, a, flag, ABILITY_DISABLE_TYPE_TRANSFORMATION)
+        endif
+        set idx = idx + 1
+    endloop
+endfunction
+
+function MergeUnitsAU takes localstore whichLocalStore, unit unit1, unit unit2, integer newUnitId, location loc, real facing, player whichPlayer, boolean resetHpMp returns unit
+    local real newHPPcnt = ((GetUnitState(unit1, UNIT_STATE_LIFE) / GetUnitState(unit1, UNIT_STATE_MAX_LIFE)) + (GetUnitState(unit2, UNIT_STATE_LIFE) / GetUnitState(unit2, UNIT_STATE_MAX_LIFE))) / 2
+    local real newMPPcnt = ((GetUnitState(unit1, UNIT_STATE_MANA) / GetUnitState(unit1, UNIT_STATE_MAX_MANA)) + (GetUnitState(unit2, UNIT_STATE_MANA) / GetUnitState(unit2, UNIT_STATE_MAX_MANA))) / 2
+    local unit createdUnit = CreateUnit(whichPlayer, newUnitId, GetLocationX(loc), GetLocationY(loc), facing)
+    if not resetHpMp then
+        call SetUnitState(createdUnit, UNIT_STATE_LIFE, newHPPcnt * GetUnitState(createdUnit, UNIT_STATE_MAX_LIFE))
+        call SetUnitState(createdUnit, UNIT_STATE_MANA, newMPPcnt * GetUnitState(createdUnit, UNIT_STATE_MAX_MANA))
+    endif
+    call SetPreferredSelectionReplacement(unit1, createdUnit)
+    call SetPreferredSelectionReplacement(unit2, createdUnit)
+    call RemoveUnit(unit1)
+    call RemoveUnit(unit2)
+    call SetLocalStoreHandle(whichLocalStore, AB_LOCAL_STORE_KEY_LASTCREATEDUNIT, createdUnit)
+    return createdUnit
+endfunction
+
+function SendUnitBackToWorkAU_TimerActions takes nothing returns nothing
+    call SendUnitBackToWork(GetTriggerUnit())
+endfunction
+
+function SendUnitBackToWorkAU takes unit whichUnit, localstore localStore, integer castId returns nothing
+    // below: doesn't quite match the JSON, which usedthe original caster
+    // as the timer's trigger unit, and referenced the "whichUnit" via better language features jass
+    // doesn't have (lambda capture)... So, passing "whichUnit" as the caster unit in the ABTimer
+    // is used as an instancing hack here. Better system for scoping (vJASS etc) would be nice in the future
+    local abtimer t = CreateABTimer(whichUnit, localStore, castId, function SendUnitBackToWorkAU_TimerActions)
+    call ABTimerSetRepeats(t, false)
+    call ABTimerSetTimeoutTime(0)
+    call ABTimerStart(t)
+endfunction
+
+function SetUnitHpAU takes unit whichUnit, real amount, boolean percent returns nothing
+    if percent then
+        call SetUnitState(whichUnit, UNIT_STATE_LIFE, amount * GetUnitState(whichUnit, UNIT_STATE_MAX_LIFE))
+    else
+        call SetUnitState(whichUnit, UNIT_STATE_LIFE, amount)
+    endif
+endfunction      
+
+function SetUnitMpAU takes unit whichUnit, real amount, boolean percent returns nothing
+    local real maxMana = GetUnitState(whichUnit, UNIT_STATE_MAX_MANA)
+    if percent then
+        call SetUnitState(whichUnit, UNIT_STATE_MANA, RMaxBJ(RMinBJ(amount * maxMana, maxMana), 0))
+    else
+        call SetUnitState(whichUnit, UNIT_STATE_MANA, RMaxBJ(RMinBJ(amount, maxMana), 0)) 
+    endif
+endfunction
+
+function GroupAddUnitAU takes localstore localStore, group whichGroup, unit whichUnit returns nothing
+    call GroupAddUnit(whichGroup, whichUnit)
+    call SetLocalStoreHandle(whichGroup, AB_LOCAL_STORE_KEY_LASTADDEDUNIT, whichUnit)
+endfunction
+
+function CreateGroupAU takes localstore localStore returns group
+    local group g = CreateGroup()
+    call SetLocalStoreHandle(localStore, AB_LOCAL_STORE_KEY_LASTCREATEDUNITGROUP, g)
+    return g
+endfunction
+
+function CreateNamedGroupAU takes localstore localStore, string name returns group
+    local group g = CreateGroupAU(localStore)
+    call SetLocalStoreHandle(localStore, "_unitgroup_" + name, g)
+    return g
+endfunction
+
+function GroupRemoveUnitAU takes localstore localStore, group whichGroup, unit whichUnit returns nothing
+    call GroupRemoveUnit(whichGroup, whichUnit)
+    call SetLocalStoreHandle(localStore, AB_LOCAL_STORE_KEY_LASTREMOVEDDUNIT, whichUnit)
+endfunction
+
+function CreateQueueAU takes localstore localStore returns group
+    local group g = CreateGroup()
+    call SetLocalStoreHandle(localStore, AB_LOCAL_STORE_KEY_LASTCREATEDUNITQUEUE, g)
+    return g
+endfunction
+
+function CreateNamedQueueAU takes localstore localStore, string name returns group
+    local group g = CreateQueueAU(localStore)
+    call SetLocalStoreHandle(localStore, "_unitqueue_" + name, g)
+    return g
+endfunction
+
+function AddUnitAbilityAU takes localstore localStore, unit whichUnit, ability whichAbility returns nothing
+    call AddUnitAbility(whichUnit, whichAbility)
+    call SetLocalStoreHandle(localStore, AB_LOCAL_STORE_KEY_LASTADDEDABILITY, whichAbility)
+endfunction
+
+function CreateAbilityFromIdAU takes localstore whichLocalStore, integer whichAbilityId returns ability
+    local ability abil = CreateAbility(whichAbilityId)
+    call SetLocalStoreHandle(whichLocalStore, AB_LOCAL_STORE_KEY_LASTCREATEDABILITY, abil)
+    return abil
+endfunction
+
+function IsUnitValidTargetAU takes unit target, unit caster, boolean targetedEffect, localstore localStore returns boolean
+    local abilitytypeleveldata d = GetLocalStoreAbilityTypeLevelDataHandle(localStore, AB_LOCAL_STORE_KEY_LEVELDATA)
+    local integer lvl = GetLocalStoreInteger(localStore, AB_LOCAL_STORE_KEY_CURRENTLEVEL) - 1 // starts at 0
+    return IsUnitValidTarget(target, caster, d, lvl, targetedEffect)
+endfunction
+
+function IsValidTargetAU takes widget target, unit caster, localstore localStore returns boolean
+    local abilitytypeleveldata d = GetLocalStoreAbilityTypeLevelDataHandle(localStore, AB_LOCAL_STORE_KEY_LEVELDATA)
+    local integer lvl = GetLocalStoreInteger(localStore, AB_LOCAL_STORE_KEY_CURRENTLEVEL) - 1 // starts at 0
+    return IsValidTarget(target, caster, d, lvl)
+endfunction
+
+function IsUnitMaxHpAU takes unit u returns boolean
+    if u != null then
+        return GetUnitState(u, UNIT_STATE_LIFE) >= GetUnitState(u, UNIT_STATE_MAX_LIFE)
+    endif
+    return false
+endfunction
+
+function IsUnitMaxMpAU takes unit u returns boolean
+    if u != null then
+        return GetUnitState(u, UNIT_STATE_MANA) >= GetUnitState(u, UNIT_STATE_MAX_MANA)
+    endif
+    return false
+endfunction
+
+function GetProjectileHitWidgetAU takes nothing returns widget
+    local localstore x = GetTriggerLocalStore()
+    local integer castId = GetTriggerCastId()
+    local unit hitUnit = GetLocalStoreUnitHandle(x, AB_LOCAL_STORE_KEY_PROJECTILEHITUNIT + I2S(castId))
+    local destructable hitDest = GetLocalStoreDestructableHandle(x, AB_LOCAL_STORE_KEY_PROJECTILEHITDEST + I2S(castId))
+endfunction
+
+// different from PolarProjectionBJ because it doesnt involve DEGTORAD
+function PolarProjectionAU takes location source, real dist, real angle returns location
+    local real x = GetLocationX(source) + dist * Cos(angle)
+    local real y = GetLocationY(source) + dist * Sin(angle)
+    return Location(x, y)
+endfunction
+
+// same as polar Proj
+function AngleBetweenPointsAU takes location locA, location locB returns real
+    return Atan2(GetLocationY(locB) - GetLocationY(locA), GetLocationX(locB) - GetLocationX(locA))
+endfunction
+
+//function AddSpellEffectLocAU takes integer abilityId, effecttype effectType, 

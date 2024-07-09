@@ -1,5 +1,7 @@
 package com.etheller.warsmash.parsers.jass;
 
 public interface JassTextGeneratorExpr {
-	String generateJassEquivalent(JassTextGenerator jassTextGenerator);
+	default String generateJassEquivalent(JassTextGenerator jassTextGenerator) {
+		throw new IllegalStateException();
+	}
 }

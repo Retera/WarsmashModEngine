@@ -16,6 +16,8 @@ public interface CUnitAnimationListener {
 
 	void playWalkAnimation(boolean force, float currentMovementSpeed, boolean allowRarityVariations);
 
+	void playAnimation(boolean force, int sequenceIndex, float speedRatio, boolean allowRarityVariations);
+
 	void queueAnimation(final PrimaryTag animationName, final EnumSet<SecondaryTag> secondaryAnimationTags,
 			boolean allowRarityVariations);
 
@@ -28,9 +30,13 @@ public interface CUnitAnimationListener {
 	void removeSecondaryTagForFutureAnimations(SecondaryTag secondaryTag);
 
 	EnumSet<SecondaryTag> getSecondaryTags();
-	
-	void lockTurrentFacing(AbilityTarget target);
 
-	void clearTurrentFacing();
+	void lockTurretFacing(AbilityTarget target);
+
+	void clearTurretFacing();
+
+	void lockHeadFacing(AbilityTarget target);
+
+	void clearHeadFacing();
 
 }

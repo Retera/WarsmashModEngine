@@ -1307,8 +1307,7 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 			final EnumSet<SecondaryTag> requiredAnimationNamesForAttachments = EnumSet.noneOf(SecondaryTag.class);
 			final String requiredAnimationNamesForAttachmentsString = row
 					.getFieldAsString(RenderUnit.ATTACHMENT_ANIM_PROPS, 0);
-			TokenLoop:
-			for (final String animationName : requiredAnimationNamesForAttachmentsString.split(",")) {
+			TokenLoop: for (final String animationName : requiredAnimationNamesForAttachmentsString.split(",")) {
 				final String upperCaseToken = animationName.toUpperCase();
 				for (final SecondaryTag secondaryTag : SecondaryTag.values()) {
 					if (upperCaseToken.equals(secondaryTag.name())) {
@@ -2126,7 +2125,7 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 		this.gameTurnManager = gameTurnManager;
 	}
 
-	public RenderSpellEffect spawnSpellEffectOnUnitEx(final CUnit unit, final War3ID alias,
+	public RenderSpellEffect spawnSpellEffectOnUnitEx(final CWidget unit, final War3ID alias,
 			final CEffectType effectType, final int index) {
 		final EffectAttachmentUI effectAttachmentUI = getEffectAttachmentUI(alias, effectType, index);
 		if (effectAttachmentUI == null) {
@@ -2135,6 +2134,18 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 		final String modelPath = effectAttachmentUI.getModelPath();
 		final List<String> attachmentPoint = effectAttachmentUI.getAttachmentPoint();
 		final RenderSpellEffect specialEffect = addSpecialEffectTarget(modelPath, unit, attachmentPoint);
+		return specialEffect;
+	}
+
+	public RenderSpellEffect spawnSpellEffectOnUnitEx(final CWidget unit, final War3ID alias,
+			final CEffectType effectType, final int index, String attachPointName) {
+		final EffectAttachmentUI effectAttachmentUI = getEffectAttachmentUI(alias, effectType, index);
+		if (effectAttachmentUI == null) {
+			return null;
+		}
+		final String modelPath = effectAttachmentUI.getModelPath();
+		final RenderSpellEffect specialEffect = addSpecialEffectTarget(modelPath, unit,
+				Arrays.asList(attachPointName.split(",")));
 		return specialEffect;
 	}
 
@@ -2902,8 +2913,8 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 								// RenderUnit class:
 								final String originalRequiredAnimationNames = War3MapViewer.this.allObjectData
 										.getUnits().get(unit.getTypeId()).getFieldAsString(RenderUnit.ANIM_PROPS, 0);
-								TokenLoop:
-								for (final String animationName : originalRequiredAnimationNames.split(",")) {
+								TokenLoop: for (final String animationName : originalRequiredAnimationNames
+										.split(",")) {
 									final String upperCaseToken = animationName.toUpperCase();
 									for (final SecondaryTag secondaryTag : SecondaryTag.values()) {
 										if (upperCaseToken.equals(secondaryTag.name())) {
@@ -2916,8 +2927,7 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 								// RenderUnit class:
 								final String requiredAnimationNames = upgrade.getFieldAsString(RenderUnit.ANIM_PROPS,
 										0);
-								TokenLoop:
-								for (final String animationName : requiredAnimationNames.split(",")) {
+								TokenLoop: for (final String animationName : requiredAnimationNames.split(",")) {
 									final String upperCaseToken = animationName.toUpperCase();
 									for (final SecondaryTag secondaryTag : SecondaryTag.values()) {
 										if (upperCaseToken.equals(secondaryTag.name())) {
@@ -2937,8 +2947,7 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 								// RenderUnit class:
 								final String requiredAnimationNames = upgrade.getFieldAsString(RenderUnit.ANIM_PROPS,
 										0);
-								TokenLoop:
-								for (final String animationName : requiredAnimationNames.split(",")) {
+								TokenLoop: for (final String animationName : requiredAnimationNames.split(",")) {
 									final String upperCaseToken = animationName.toUpperCase();
 									for (final SecondaryTag secondaryTag : SecondaryTag.values()) {
 										if (upperCaseToken.equals(secondaryTag.name())) {
@@ -2950,8 +2959,8 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 
 								final String originalRequiredAnimationNames = War3MapViewer.this.allObjectData
 										.getUnits().get(unit.getTypeId()).getFieldAsString(RenderUnit.ANIM_PROPS, 0);
-								TokenLoop:
-								for (final String animationName : originalRequiredAnimationNames.split(",")) {
+								TokenLoop: for (final String animationName : originalRequiredAnimationNames
+										.split(",")) {
 									final String upperCaseToken = animationName.toUpperCase();
 									for (final SecondaryTag secondaryTag : SecondaryTag.values()) {
 										if (upperCaseToken.equals(secondaryTag.name())) {

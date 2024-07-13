@@ -1,20 +1,13 @@
-package com.etheller.interpreter.ast;
+package net.warsmash.parsers.jass.util;
 
+import java.io.FileReader;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
-import org.antlr.v4.runtime.BaseErrorListener;
-import org.antlr.v4.runtime.CharStreams;
-import org.antlr.v4.runtime.CommonTokenStream;
-import org.antlr.v4.runtime.RecognitionException;
-import org.antlr.v4.runtime.Recognizer;
-
-import com.etheller.interpreter.JassLexer;
-import com.etheller.interpreter.JassParser;
 import com.etheller.interpreter.ast.execution.JassThread;
 import com.etheller.interpreter.ast.function.JassFunction;
+import com.etheller.interpreter.ast.function.JassNativeManager;
 import com.etheller.interpreter.ast.scope.GlobalScope;
 import com.etheller.interpreter.ast.scope.TriggerExecutionScope;
 import com.etheller.interpreter.ast.value.CodeJassValue;
@@ -24,9 +17,10 @@ import com.etheller.interpreter.ast.value.visitor.CodeJassValueVisitor;
 import com.etheller.interpreter.ast.value.visitor.IntegerJassValueVisitor;
 import com.etheller.interpreter.ast.value.visitor.RealJassValueVisitor;
 import com.etheller.interpreter.ast.value.visitor.StringJassValueVisitor;
-import com.etheller.interpreter.ast.visitors.JassProgramVisitor;
 
-public class JassRunner {
+import net.warsmash.parsers.jass.SmashJassParser;
+
+public class SmashJassRunner {
 	public static final boolean REPORT_SYNTAX_ERRORS = true;
 
 	static class SleepingData {
@@ -45,8 +39,9 @@ public class JassRunner {
 			return;
 		}
 		final long start = System.currentTimeMillis();
-		final JassProgramVisitor jassProgramVisitor = new JassProgramVisitor();
-		jassProgramVisitor.getJassNativeManager().createNative("BJDebugMsg", new JassFunction() {
+		final GlobalScope globals = new GlobalScope();
+		final JassNativeManager jassNativeManager = new JassNativeManager();
+		jassNativeManager.createNative("BJDebugMsg", new JassFunction() {
 			@Override
 			public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
 					final TriggerExecutionScope triggerScope) {
@@ -56,7 +51,7 @@ public class JassRunner {
 				return null;
 			}
 		});
-		jassProgramVisitor.getJassNativeManager().createNative("PrintString", new JassFunction() {
+		jassNativeManager.createNative("PrintString", new JassFunction() {
 			@Override
 			public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
 					final TriggerExecutionScope triggerScope) {
@@ -66,7 +61,7 @@ public class JassRunner {
 				return null;
 			}
 		});
-		jassProgramVisitor.getJassNativeManager().createNative("I2S", new JassFunction() {
+		jassNativeManager.createNative("I2S", new JassFunction() {
 			@Override
 			public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
 					final TriggerExecutionScope triggerScope) {
@@ -74,7 +69,7 @@ public class JassRunner {
 				return new StringJassValue(x.toString());
 			}
 		});
-		jassProgramVisitor.getJassNativeManager().createNative("StartThread", new JassFunction() {
+		jassNativeManager.createNative("StartThread", new JassFunction() {
 			@Override
 			public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
 					final TriggerExecutionScope triggerScope) {
@@ -84,7 +79,7 @@ public class JassRunner {
 			}
 		});
 		final List<SleepingData> sleepingThreadData = new ArrayList<>();
-		jassProgramVisitor.getJassNativeManager().createNative("Sleep", new JassFunction() {
+		jassNativeManager.createNative("Sleep", new JassFunction() {
 			@Override
 			public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
 					final TriggerExecutionScope triggerScope) {
@@ -98,35 +93,17 @@ public class JassRunner {
 		});
 		for (final String arg : args) {
 			try {
-				jassProgramVisitor.setCurrentFileName(arg);
-				final JassLexer lexer = new JassLexer(CharStreams.fromFileName(arg));
-				final JassParser parser = new JassParser(new CommonTokenStream(lexer));
-				parser.addErrorListener(new BaseErrorListener() {
-					@Override
-					public void syntaxError(final Recognizer<?, ?> recognizer, final Object offendingSymbol,
-							final int line, final int charPositionInLine, final String msg,
-							final RecognitionException e) {
-						if (!REPORT_SYNTAX_ERRORS) {
-							return;
-						}
-
-						String sourceName = recognizer.getInputStream().getSourceName();
-						if (!sourceName.isEmpty()) {
-							sourceName = String.format("%s:%d:%d: ", sourceName, line, charPositionInLine);
-						}
-
-						System.err.println(sourceName + "line " + line + ":" + charPositionInLine + " " + msg);
-					}
-				});
-				jassProgramVisitor.visit(parser.program());
+				try (FileReader reader = new FileReader(arg)) {
+					final SmashJassParser smashJassParser = new SmashJassParser(reader);
+					smashJassParser.scanAndParse(arg, globals, jassNativeManager);
+				}
 			}
 			catch (final Exception e) {
 				e.printStackTrace();
 			}
 		}
-		final JassThread myJassThread = jassProgramVisitor.getGlobals().createThread("main", Collections.emptyList(),
-				TriggerExecutionScope.EMPTY);
-		jassProgramVisitor.getGlobals().queueThread(myJassThread);
+		final JassThread myJassThread = globals.createThread(globals.getUserFunctionInstructionPtr("main"));
+		globals.queueThread(myJassThread);
 		boolean done = false;
 		do {
 			final long currentTimeMillis = System.currentTimeMillis();
@@ -138,7 +115,7 @@ public class JassRunner {
 					iterator.remove();
 				}
 			}
-			done = jassProgramVisitor.getGlobals().runThreads();
+			done = globals.runThreads();
 		}
 		while (!done);
 

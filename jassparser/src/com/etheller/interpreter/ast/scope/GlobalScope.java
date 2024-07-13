@@ -15,6 +15,7 @@ import com.etheller.interpreter.ast.execution.JassStackFrame;
 import com.etheller.interpreter.ast.execution.JassThread;
 import com.etheller.interpreter.ast.execution.instruction.BeginFunctionInstruction;
 import com.etheller.interpreter.ast.execution.instruction.InstructionAppendingJassStatementVisitor;
+import com.etheller.interpreter.ast.execution.instruction.InstructionWriter;
 import com.etheller.interpreter.ast.execution.instruction.JassInstruction;
 import com.etheller.interpreter.ast.execution.instruction.PushLiteralInstruction;
 import com.etheller.interpreter.ast.execution.instruction.ReturnInstruction;
@@ -242,6 +243,14 @@ public final class GlobalScope {
 		this.instructions.add(new ReturnInstruction());
 	}
 
+	public InstructionWriter beginDefiningFunction(final int lineNo, final String sourceFile, final String name,
+			final List<JassParameter> parameters) {
+		this.functionNameToInstructionPtr.put(name, this.instructions.size());
+		this.instructions.add(new BeginFunctionInstruction(lineNo, sourceFile, name));
+		final InstructionWriter visitor = new InstructionWriter(this.instructions, this, parameters);
+		return visitor;
+	}
+
 	public JassFunction getFunctionByName(final String name) {
 		return this.functions.get(name);
 	}
@@ -307,7 +316,11 @@ public final class GlobalScope {
 	}
 
 	public JassThread createThread(final CodeJassValue codeValue) {
-		return createThread(codeValue, TriggerExecutionScope.EMPTY);
+		return createThread(codeValue.getUserFunctionInstructionPtr());
+	}
+
+	public JassThread createThread(final int instructionPtr) {
+		return createThread(instructionPtr, TriggerExecutionScope.EMPTY);
 	}
 
 	public void queueThread(final JassThread thread) {
@@ -315,10 +328,13 @@ public final class GlobalScope {
 	}
 
 	public JassThread createThread(final CodeJassValue codeValue, final TriggerExecutionScope triggerScope) {
+		return createThread(codeValue.getUserFunctionInstructionPtr(), triggerScope);
+	}
+
+	public JassThread createThread(final int instructionPtr, final TriggerExecutionScope triggerScope) {
 		final JassStackFrame jassStackFrame = new JassStackFrame();
 		jassStackFrame.returnAddressInstructionPtr = -1;
-		final JassThread jassThread = new JassThread(jassStackFrame, this, triggerScope,
-				codeValue.getUserFunctionInstructionPtr());
+		final JassThread jassThread = new JassThread(jassStackFrame, this, triggerScope, instructionPtr);
 		return jassThread;
 	}
 

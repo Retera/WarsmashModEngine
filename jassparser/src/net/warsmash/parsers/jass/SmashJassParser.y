@@ -57,6 +57,7 @@
 import com.etheller.interpreter.ast.scope.GlobalScope;
 import com.etheller.interpreter.ast.execution.instruction.*;
 import com.etheller.interpreter.ast.value.*;
+import com.etheller.interpreter.ast.value.visitor.*;
 import com.etheller.interpreter.ast.function.JassParameter;
 import com.etheller.interpreter.ast.function.JassNativeManager;
 import com.etheller.interpreter.ast.expression.ArithmeticSigns;
@@ -120,9 +121,33 @@ constant_opt:
 	;
 
 global : 
-	constant_opt type ID newlines
+	constant_opt type ID
+	{
+		final JassType type = $2;
+		final JassType arrayPrimType = type.visit(ArrayPrimitiveTypeVisitor.getInstance());
+		if (arrayPrimType != null) {
+			globalScope.createGlobalArray($3, type);
+		}
+		else {
+			globalScope.createGlobal($3, type);
+		}
+	}
 	|
-	constant_opt type ID assignTail newlines
+	constant_opt type ID
+	{
+		final JassType type = $2;
+		final JassType arrayPrimType = type.visit(ArrayPrimitiveTypeVisitor.getInstance());
+		if (arrayPrimType != null) {
+			globalScope.createGlobalArray($3, type);
+		}
+		else {
+			globalScope.createGlobal($3, type);
+		}
+	}
+	assignTail
+	{
+		instructionWriter.setGlobal($3);
+	}
 	;
 local : 
 	LOCAL type ID
@@ -459,11 +484,25 @@ paramList:
 globals:
 	global
 	|
-	globals global
+	globals newlines global
+	;
+	
+globals_opt:
+	newlines globals newlines
+	|
+	newlines
 	;
 
 globalsBlock :
-	GLOBALS newlines globals ENDGLOBALS;
+	GLOBALS
+	{
+		instructionWriter = globalScope.beginDefiningGlobals(getLine(), currentParsingFilePath);
+	}
+	globals_opt ENDGLOBALS
+	{
+		globalScope.endDefiningGlobals();
+		instructionWriter.endGlobals();
+	};
 	
 nativeBlock:
 	constant_opt NATIVE ID TAKES paramList RETURNS type

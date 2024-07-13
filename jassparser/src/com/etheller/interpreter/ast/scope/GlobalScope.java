@@ -2,6 +2,7 @@ package com.etheller.interpreter.ast.scope;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Deque;
 import java.util.HashMap;
 import java.util.List;
@@ -14,6 +15,7 @@ import com.etheller.interpreter.ast.debug.JassStackElement;
 import com.etheller.interpreter.ast.execution.JassStackFrame;
 import com.etheller.interpreter.ast.execution.JassThread;
 import com.etheller.interpreter.ast.execution.instruction.BeginFunctionInstruction;
+import com.etheller.interpreter.ast.execution.instruction.BranchInstruction;
 import com.etheller.interpreter.ast.execution.instruction.InstructionAppendingJassStatementVisitor;
 import com.etheller.interpreter.ast.execution.instruction.InstructionWriter;
 import com.etheller.interpreter.ast.execution.instruction.JassInstruction;
@@ -43,6 +45,7 @@ import com.etheller.interpreter.ast.value.visitor.HandleTypeSuperTypeLoadingVisi
 import com.etheller.interpreter.ast.value.visitor.JassTypeGettingValueVisitor;
 
 public final class GlobalScope {
+	public static final String INIT_GLOBALS_AUTOGEN_FXN_NAME = "{init-globals}";
 	private final List<GlobalScopeAssignable> indexedGlobals = new ArrayList<GlobalScopeAssignable>();
 	private final List<JassInstruction> instructions = new ArrayList<JassInstruction>();
 	private final Map<String, Integer> globals = new HashMap<>();
@@ -59,6 +62,7 @@ public final class GlobalScope {
 	private final List<JassThread> newThreads = new ArrayList<>();
 	private JassThread currentThread;
 	private boolean yieldedCurrentThread = false;
+	private int lastGlobalsBlockEndInstructionPtr = -1;
 
 	public final HandleJassType handleType;
 
@@ -249,6 +253,22 @@ public final class GlobalScope {
 		this.instructions.add(new BeginFunctionInstruction(lineNo, sourceFile, name));
 		final InstructionWriter visitor = new InstructionWriter(this.instructions, this, parameters);
 		return visitor;
+	}
+
+	public void endDefiningGlobals() {
+		this.lastGlobalsBlockEndInstructionPtr = this.instructions.size();
+	}
+
+	public InstructionWriter beginDefiningGlobals(final int lineNo, final String sourceFile) {
+		final int newSectionStart = this.instructions.size();
+		if (this.lastGlobalsBlockEndInstructionPtr != -1) {
+			this.instructions.set(this.lastGlobalsBlockEndInstructionPtr, new BranchInstruction(newSectionStart));
+		}
+		else {
+			this.functionNameToInstructionPtr.put(INIT_GLOBALS_AUTOGEN_FXN_NAME, this.instructions.size());
+		}
+		this.instructions.add(new BeginFunctionInstruction(lineNo, sourceFile, INIT_GLOBALS_AUTOGEN_FXN_NAME));
+		return new InstructionWriter(this.instructions, this, Collections.emptyList());
 	}
 
 	public JassFunction getFunctionByName(final String name) {

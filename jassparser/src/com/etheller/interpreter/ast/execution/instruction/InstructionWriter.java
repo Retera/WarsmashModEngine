@@ -164,6 +164,13 @@ public class InstructionWriter {
 		}
 	}
 
+	public void setGlobal(final String identifier) {
+		final int globalId = this.globalScope.getGlobalId(identifier);
+		if (globalId != -1) {
+			this.instructions.add(new GlobalAssignmentInstruction(globalId));
+		}
+	}
+
 	public void setLineNo(final int lineNo) {
 		this.instructions.add(new SetDebugLineNoInstruction(lineNo));
 	}
@@ -259,7 +266,12 @@ public class InstructionWriter {
 
 	public void endFunction() {
 		this.instructions.add(new PushLiteralInstruction(JassType.NOTHING.getNullValue()));
-		this.instructions.add(new ReturnInstruction());
+		this.instructions.add(ReturnInstruction.INSTANCE);
+	}
+
+	public void endGlobals() {
+		this.instructions.add(new PushLiteralInstruction(JassType.NOTHING.getNullValue()));
+		this.instructions.add(ReturnInstruction.INSTANCE);
 	}
 
 	private static final class LoopImpl {

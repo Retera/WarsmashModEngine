@@ -102,6 +102,8 @@ public class SmashJassRunner {
 				e.printStackTrace();
 			}
 		}
+		globals.runThreadUntilCompletion(
+				globals.createThread(globals.getUserFunctionInstructionPtr(GlobalScope.INIT_GLOBALS_AUTOGEN_FXN_NAME)));
 		final JassThread myJassThread = globals.createThread(globals.getUserFunctionInstructionPtr("main"));
 		globals.queueThread(myJassThread);
 		boolean done = false;

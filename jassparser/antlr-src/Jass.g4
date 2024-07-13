@@ -13,8 +13,7 @@ program :
 	|
 	newlines_opt
 	typeDeclarationBlock
-	(block)* 
-	(functionBlock)*
+	(block)*
 	;
 
 typeDeclaration :
@@ -145,13 +144,25 @@ argsList:
 //#booleanExpression:
 //	simpleArithmeticExpression # PassBooleanThroughExpression
 //	|
+
+setPart:
+	ID EQUALS expression #SetStatement
+	|
+	ID '[' expression ']' EQUALS expression # ArrayedAssignmentStatement
+	;
+	
+callPart:
+	functionExpression #CallStatement
+	;
 	
 statement:
-	CALL functionExpression newlines #CallStatement
+	CALL callPart newlines # CallCallPart
 	|
-	SET ID EQUALS expression newlines #SetStatement
+	callPart newlines # EasyCallPart
 	|
-	SET ID '[' expression ']' EQUALS expression newlines # ArrayedAssignmentStatement
+	SET setPart newlines # SetSetPart
+	|
+	setPart newlines # EasySetPart
 	|
 	RETURN expression newlines # ReturnStatement
 	|
@@ -198,14 +209,16 @@ nativeBlock:
 	CONSTANT? NATIVE ID TAKES paramList RETURNS type newlines
 	;
 	
+functionBlock:
+	CONSTANT? FUNCTION ID TAKES paramList RETURNS type newlines statements ENDFUNCTION newlines
+	;
+	
 block:
 	globalsBlock
 	|
 	nativeBlock
-	;
-	
-functionBlock:
-	CONSTANT? FUNCTION ID TAKES paramList RETURNS type newlines statements ENDFUNCTION newlines
+	|
+	functionBlock
 	;
 	
 statements:
@@ -231,6 +244,14 @@ pnewlines:
 	;
 
 EQUALS : '=';
+
+PLUSEQUALS : '+=';
+
+MINUSEQUALS : '-=';
+
+PLUSPLUS : '++';
+
+MINUSMINUS : '--';
 
 
 GLOBALS : 'globals' ; // globals

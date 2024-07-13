@@ -23,6 +23,9 @@ type resourcetype extends handle
 // In general don't use abtimer unless you have to; was made to match json. 
 type abtimer extends timer // "call StartTimer(...)" on an abtimer will crash, must use "StartABTimer"
 
+// the IntExpr is like BoolExpr but it's for integers
+type intexpr extends handle
+
 constant native ConvertTargetType takes integer x returns targettype
 constant native ConvertTextTagConfigType takes integer x returns texttagconfigtype
 constant native ConvertWorldEditorDataType takes integer x returns worldeditordatatype
@@ -165,7 +168,15 @@ globals
     constant datafieldletter DATA_FIELD_LETTER_H                                 = ConvertDataFieldLetter(7)
     constant datafieldletter DATA_FIELD_LETTER_I                                 = ConvertDataFieldLetter(8)
     constant datafieldletter DATA_FIELD_LETTER_J                                 = ConvertDataFieldLetter(9)
-endglobals
+endglobals                                                                                             
+
+//=================================================================================================
+// IntExpr API
+//=================================================================================================
+// These are like boolexpr, but they are for integers
+native IntExpr takes code func returns intexpr
+native DestroyIntExpr takes intexpr x returns nothing
+
 
 //=================================================================================================
 // Ability "user data" API (DEPRECATED)
@@ -315,7 +326,8 @@ native DestroyLocalStore takes localstore whichStore returns nothing
 native GetGameObjectFieldAsString takes gameobject editorData, string key, integer index returns string
 native GetGameObjectFieldAsInteger takes gameobject editorData, string key, integer index returns integer
 native GetGameObjectFieldAsReal takes gameobject editorData, string key, integer index returns real
-native GetGameObjectFieldAsBoolean takes gameobject editorData, string key, integer index returns boolean
+native GetGameObjectFieldAsBoolean takes gameobject editorData, string key, integer index returns boolean   
+native GetGameObjectFieldAsID takes gameobject editorData, string key, integer index returns integer
 
 native GetGameObjectById takes worldeditordatatype whichDataType, integer aliasId returns gameobject
 
@@ -345,6 +357,39 @@ native SetABConfAutoCastType takes abilitybuilderconfiguration abc, autocasttype
 
 // Sets the type of ability to configure/create... See AB_CONF_TYPE_XYZ constants.
 native SetABConfType takes abilitybuilderconfiguration abc, abconftype whichType returns nothing
+
+// AbilityBuilderSpecialDisplayFields
+native SetABConfShowOnAndOffIcons takes abilitybuilderconfiguration abc, boolexpr condition returns nothing
+native SetABConfFoodCost takes abilitybuilderconfiguration abc, intexpr valueFunc returns nothing    
+native SetABConfGoldCost takes abilitybuilderconfiguration abc, intexpr valueFunc returns nothing
+native SetABConfLumberCost takes abilitybuilderconfiguration abc, intexpr valueFunc returns nothing 
+native SetABConfHideAreaCursor takes abilitybuilderconfiguration abc, boolexpr condition returns nothing
+native SetABConfInstantCast takes abilitybuilderconfiguration abc, boolexpr condition returns nothing
+native SetABConfCastlessNoTarget takes abilitybuilderconfiguration abc, boolexpr condition returns nothing
+native SetABConfToggleable takes abilitybuilderconfiguration abc, boolexpr condition returns nothing
+native SetABConfCastToggleOff takes abilitybuilderconfiguration abc, boolexpr condition returns nothing
+native SetABConfSeparateOnAndOff takes abilitybuilderconfiguration abc, boolexpr condition returns nothing
+native SetABConfAlternateUnitID takes abilitybuilderconfiguration abc, intexpr unitTypeIdFunc returns nothing
+
+// AbilityBuilderSpecialConfigFields
+native SetABConfBufferManaRequired takes abilitybuilderconfiguration abc, intexpr valueFunc returns nothing
+native SetABConfManaDrainedPerSecond takes abilitybuilderconfiguration abc, intexpr valueFunc returns nothing
+native SetABConfPointTargeted takes abilitybuilderconfiguration abc, boolexpr condition returns nothing
+native SetABConfTargetedSpell takes abilitybuilderconfiguration abc, boolexpr condition returns nothing
+native SetABConfAutoAcquireTarget takes abilitybuilderconfiguration abc, code actionFunc returns nothing
+native SetABConfPairAbilityId takes abilitybuilderconfiguration abc, intexpr abilityIdFunc returns nothing
+native SetABConfPairUnitId takes abilitybuilderconfiguration abc, intexpr unitIdFunc returns nothing
+
+// TODO for the "commandStringsErrorKey" generally I want this to be open-ended and disagree with current
+// AbilityBuilder design to have it locked down to an enum. So at the time of writing, if you pass a string
+// that isn't explicitly a constant value COMMAND_STRINGS_ERROR_KEY_<XYZ> then these natives would most
+// likely crash. Longterm, I'm happy to have them userspace strings that lookup other userspace values
+// from the file "Units\CommandStrings.txt" at which point they shouldn't be enums and shouldn't be
+// hardcoded in the engine as far as I can figure.
+native SetABConfPairUnitTypeError takes abilitybuilderconfiguration abc, string commandStringsErrorKey returns nothing
+native SetABConfCantTargetError takes abilitybuilderconfiguration abc, string commandStringsErrorKey returns nothing
+native SetABConfCantPairError takes abilitybuilderconfiguration abc, string commandStringsErrorKey returns nothing
+native SetABConfCantPairOffError takes abilitybuilderconfiguration abc, string commandStringsErrorKey returns nothing
 
 native AddABConfAddAbilityAction takes abilitybuilderconfiguration abc, code func returns nothing
 native AddABConfAddDisabledAbilityAction takes abilitybuilderconfiguration abc, code func returns nothing
@@ -807,6 +852,7 @@ native GetAbilityTypeLevelDataInteger takes abilitytypeleveldata whichData, inte
 native GetAbilityTypeLevelDataID takes abilitytypeleveldata whichData, integer level, datafieldletter whichLetter returns integer
 native GetAbilityTypeLevelDataBoolean takes abilitytypeleveldata whichData, integer level, datafieldletter whichLetter returns boolean
 native GetAbilityTypeLevelDataString takes abilitytypeleveldata whichData, integer level, datafieldletter whichLetter returns string
+native GetAbilityTypeLevelUnitID takes abilitytypeleveldata whichData, integer level returns integer
 
 // NOTE: Regarding Warsmash development history, originally "type level data" here was created
 // as a high performance cache of data parsed by the GameObject api, so my note about how it is

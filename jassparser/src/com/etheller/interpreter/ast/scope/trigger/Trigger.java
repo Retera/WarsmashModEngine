@@ -131,10 +131,7 @@ public class Trigger implements CHandle {
 		public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
 				final TriggerExecutionScope triggerScope) {
 			final JassThread triggerThread = globalScope.createThread(this.codeJassValue, triggerScope);
-			globalScope.runThreadUntilCompletion(triggerThread);
-			if (isWaitOnSleeps() && (triggerThread.instructionPtr != -1)) {
-				globalScope.queueThread(triggerThread);
-			}
+			globalScope.queueThread(triggerThread);
 			return null;
 		}
 

@@ -6,15 +6,19 @@ import java.util.List;
 import com.etheller.interpreter.JassBaseVisitor;
 import com.etheller.interpreter.JassParser.ArrayedAssignmentStatementContext;
 import com.etheller.interpreter.JassParser.BasicLocalContext;
+import com.etheller.interpreter.JassParser.CallCallPartContext;
 import com.etheller.interpreter.JassParser.CallStatementContext;
 import com.etheller.interpreter.JassParser.DebugStatementContext;
 import com.etheller.interpreter.JassParser.DefinitionLocalContext;
+import com.etheller.interpreter.JassParser.EasyCallPartContext;
+import com.etheller.interpreter.JassParser.EasySetPartContext;
 import com.etheller.interpreter.JassParser.ExitWhenStatementContext;
 import com.etheller.interpreter.JassParser.IfElseIfStatementContext;
 import com.etheller.interpreter.JassParser.IfElseStatementContext;
 import com.etheller.interpreter.JassParser.LoopStatementContext;
 import com.etheller.interpreter.JassParser.ReturnNothingStatementContext;
 import com.etheller.interpreter.JassParser.ReturnStatementContext;
+import com.etheller.interpreter.JassParser.SetSetPartContext;
 import com.etheller.interpreter.JassParser.SetStatementContext;
 import com.etheller.interpreter.JassParser.SimpleIfStatementContext;
 import com.etheller.interpreter.JassParser.StatementContext;
@@ -58,9 +62,29 @@ public class JassStatementVisitor extends JassBaseVisitor<JassStatement> {
 	}
 
 	@Override
+	public JassStatement visitCallCallPart(CallCallPartContext ctx) {
+		return visit(ctx.callPart());
+	}
+
+	@Override
+	public JassStatement visitEasyCallPart(EasyCallPartContext ctx) {
+		return visit(ctx.callPart());
+	}
+
+	@Override
 	public JassStatement visitSetStatement(final SetStatementContext ctx) {
 		return wrap(ctx.getStart().getLine(), new JassSetStatement(ctx.ID().getText(),
 				this.argumentExpressionHandler.expressionVisitor.visit(ctx.expression())));
+	}
+
+	@Override
+	public JassStatement visitSetSetPart(SetSetPartContext ctx) {
+		return visit(ctx.setPart());
+	}
+
+	@Override
+	public JassStatement visitEasySetPart(EasySetPartContext ctx) {
+		return visit(ctx.setPart());
 	}
 
 	@Override

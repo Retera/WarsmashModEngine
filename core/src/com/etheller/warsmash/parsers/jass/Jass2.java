@@ -34,6 +34,7 @@ import com.etheller.interpreter.ast.scope.TriggerExecutionScope;
 import com.etheller.interpreter.ast.scope.trigger.RemovableTriggerEvent;
 import com.etheller.interpreter.ast.scope.trigger.Trigger;
 import com.etheller.interpreter.ast.scope.trigger.TriggerBooleanExpression;
+import com.etheller.interpreter.ast.scope.trigger.TriggerIntegerExpression;
 import com.etheller.interpreter.ast.scope.variableevent.CLimitOp;
 import com.etheller.interpreter.ast.util.CHandle;
 import com.etheller.interpreter.ast.util.JassSettings;
@@ -70,6 +71,7 @@ import com.etheller.warsmash.parsers.jass.triggers.BoolExprCondition;
 import com.etheller.warsmash.parsers.jass.triggers.BoolExprFilter;
 import com.etheller.warsmash.parsers.jass.triggers.BoolExprNot;
 import com.etheller.warsmash.parsers.jass.triggers.BoolExprOr;
+import com.etheller.warsmash.parsers.jass.triggers.IntExpr;
 import com.etheller.warsmash.parsers.jass.triggers.TriggerAction;
 import com.etheller.warsmash.parsers.jass.triggers.TriggerCondition;
 import com.etheller.warsmash.parsers.jass.triggers.UnitGroup;
@@ -669,6 +671,7 @@ public class Jass2 {
 			final HandleJassType abtimerType = globals.registerHandleType("abtimer");
 			final HandleJassType abilitydisabletypeType = globals.registerHandleType("abilitydisabletype");
 			final HandleJassType resourcetypeType = globals.registerHandleType("resourcetype");
+			final HandleJassType intexprType = globals.registerHandleType("intexpr");
 
 			registerTypingNatives(jassProgramVisitor, raceType, alliancetypeType, racepreferenceType, igamestateType,
 					fgamestateType, playerstateType, playerscoreType, playergameresultType, unitstateType,
@@ -4099,18 +4102,21 @@ public class Jass2 {
 					});
 			jassProgramVisitor.getJassNativeManager().createNative("TriggerSleepAction",
 					(arguments, globalScope, triggerScope) -> {
-						final Double seconds = arguments.get(0).visit(RealJassValueVisitor.getInstance());
-						final JassThread currentThread = globalScope.getCurrentThread();
-						if (currentThread != null) {
-							currentThread.setSleeping(true);
-							final CTimerSleepAction timer = new CTimerSleepAction(currentThread);
-							timer.setRepeats(false);
-							timer.setTimeoutTime(seconds.floatValue());
-							timer.start(this.simulation);
-						}
-						else {
-							throw new JassException(globalScope,
-									"Needs to sleep " + seconds + " but no thread was found", null);
+						final Trigger triggeringTrigger = triggerScope.getTriggeringTrigger();
+						if ((triggeringTrigger == null) || triggeringTrigger.isWaitOnSleeps()) {
+							final Double seconds = arguments.get(0).visit(RealJassValueVisitor.getInstance());
+							final JassThread currentThread = globalScope.getCurrentThread();
+							if (currentThread != null) {
+								currentThread.setSleeping(true);
+								final CTimerSleepAction timer = new CTimerSleepAction(currentThread);
+								timer.setRepeats(false);
+								timer.setTimeoutTime(seconds.floatValue());
+								timer.start(this.simulation);
+							}
+							else {
+								throw new JassException(globalScope,
+										"Needs to sleep " + seconds + " but no thread was found", null);
+							}
 						}
 						return null;
 					});
@@ -5572,6 +5578,20 @@ public class Jass2 {
 					});
 
 			// Ability Builder from jass natives:
+			jassProgramVisitor.getJassNativeManager().createNative("IntExpr",
+					(arguments, globalScope, triggerScope) -> {
+						final CodeJassValue func = arguments.get(0).visit(CodeJassValueVisitor.getInstance());
+						return new HandleJassValue(intexprType, new IntExpr(func));
+					});
+			jassProgramVisitor.getJassNativeManager().createNative("DestroyIntExpr",
+					(arguments, globalScope, triggerScope) -> {
+						final TriggerIntegerExpression boolexpr = nullable(arguments, 0,
+								ObjectJassValueVisitor.getInstance());
+						System.err.println(
+								"DestroyIntExpr called but in Java we don't have a destructor, so we need to unregister later when that is implemented");
+						return null;
+					});
+
 			jassProgramVisitor.getJassNativeManager().createNative("ConvertTargetType",
 					(arguments, globalScope, triggerScope) -> {
 						final int i = arguments.get(0).visit(IntegerJassValueVisitor.getInstance());
@@ -7284,6 +7304,17 @@ public class Jass2 {
 						}
 						return JassType.BOOLEAN.getNullValue();
 					});
+			jassProgramVisitor.getJassNativeManager().createNative("GetGameObjectFieldAsID",
+					(arguments, globalScope, triggerScope) -> {
+						final GameObject gameObject = nullable(arguments, 0, ObjectJassValueVisitor.getInstance());
+						final String key = nullable(arguments, 1, StringJassValueVisitor.getInstance());
+						final int index = arguments.get(2).visit(IntegerJassValueVisitor.getInstance());
+						if (gameObject != null) {
+							return IntegerJassValue
+									.of(War3ID.fromString(gameObject.getFieldAsString(key, index)).getValue());
+						}
+						return JassType.INTEGER.getNullValue();
+					});
 
 			// unit api
 			jassProgramVisitor.getJassNativeManager().createNative("CheckUnitForAbilityEffectReaction",
@@ -8003,7 +8034,7 @@ public class Jass2 {
 			return new HandleJassValue(boolexprType, new BoolExprNot(operand));
 		});
 		jassProgramVisitor.getJassNativeManager().createNative("Condition", (arguments, globalScope, triggerScope) -> {
-			final JassFunction func = arguments.get(0).visit(JassFunctionJassValueVisitor.getInstance());
+			final CodeJassValue func = arguments.get(0).visit(CodeJassValueVisitor.getInstance());
 			return new HandleJassValue(conditionfuncType, new BoolExprCondition(func));
 		});
 		jassProgramVisitor.getJassNativeManager().createNative("DestroyCondition",
@@ -8015,7 +8046,7 @@ public class Jass2 {
 					return null;
 				});
 		jassProgramVisitor.getJassNativeManager().createNative("Filter", (arguments, globalScope, triggerScope) -> {
-			final JassFunction func = arguments.get(0).visit(JassFunctionJassValueVisitor.getInstance());
+			final CodeJassValue func = arguments.get(0).visit(CodeJassValueVisitor.getInstance());
 			return new HandleJassValue(filterfuncType, new BoolExprFilter(func));
 		});
 		jassProgramVisitor.getJassNativeManager().createNative("DestroyFilter",

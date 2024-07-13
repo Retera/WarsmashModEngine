@@ -4,28 +4,28 @@ import com.etheller.interpreter.ast.debug.JassException;
 import com.etheller.interpreter.ast.execution.JassThread;
 import com.etheller.interpreter.ast.scope.GlobalScope;
 import com.etheller.interpreter.ast.scope.TriggerExecutionScope;
-import com.etheller.interpreter.ast.scope.trigger.TriggerBooleanExpression;
+import com.etheller.interpreter.ast.scope.trigger.TriggerIntegerExpression;
 import com.etheller.interpreter.ast.util.JassSettings;
 import com.etheller.interpreter.ast.value.CodeJassValue;
 import com.etheller.interpreter.ast.value.JassValue;
-import com.etheller.interpreter.ast.value.visitor.BooleanJassValueVisitor;
+import com.etheller.interpreter.ast.value.visitor.IntegerJassValueVisitor;
 
-public class BoolExprCondition implements TriggerBooleanExpression {
-	private final CodeJassValue takesNothingReturnsBooleanFunction;
+public class IntExpr implements TriggerIntegerExpression {
+	private final CodeJassValue takesNothingReturnsIntegerFunction;
 
-	public BoolExprCondition(final CodeJassValue returnsBooleanFunction) {
-		this.takesNothingReturnsBooleanFunction = returnsBooleanFunction;
+	public IntExpr(CodeJassValue takesNothingReturnsIntegerFunction) {
+		this.takesNothingReturnsIntegerFunction = takesNothingReturnsIntegerFunction;
 	}
 
 	@Override
-	public boolean evaluate(final GlobalScope globalScope, final TriggerExecutionScope triggerScope) {
-		final JassThread thread = globalScope.createThreadCapturingReturnValue(this.takesNothingReturnsBooleanFunction,
+	public int evaluate(GlobalScope globalScope, TriggerExecutionScope triggerScope) {
+		final JassThread thread = globalScope.createThreadCapturingReturnValue(this.takesNothingReturnsIntegerFunction,
 				triggerScope);
-		final JassValue booleanJassReturnValue;
+		final JassValue jassReturnValue;
 		try {
 			globalScope.runThreadUntilCompletion(thread);
 			if (thread.instructionPtr == -1) {
-				booleanJassReturnValue = thread.stackFrame.getLast(0);
+				jassReturnValue = thread.stackFrame.getLast(0);
 			}
 			else {
 				if (!JassSettings.CONTINUE_EXECUTING_ON_ERROR) {
@@ -33,15 +33,15 @@ public class BoolExprCondition implements TriggerBooleanExpression {
 							"The BoolExpr created a thread that did not immediately return; did you call TriggerSleepAction in a Condition??");
 				}
 				else {
-					return false;
+					return 0;
 				}
 			}
 		}
 		catch (final Exception e) {
 			throw new JassException(globalScope, "Exception during BoolExprCondition.evaluate()", e);
 		}
-		final Boolean booleanReturnValue = booleanJassReturnValue.visit(BooleanJassValueVisitor.getInstance());
-		return booleanReturnValue.booleanValue();
+		final Integer integerReturnValue = jassReturnValue.visit(IntegerJassValueVisitor.getInstance());
+		return integerReturnValue.intValue();
 	}
 
 }

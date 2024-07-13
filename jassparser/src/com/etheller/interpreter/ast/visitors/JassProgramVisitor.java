@@ -53,6 +53,9 @@ public class JassProgramVisitor extends JassBaseVisitor<Void> {
 					this.jassParametersVisitor.visit(ctx.nativeBlock().paramList()),
 					this.jassTypeVisitor.visit(ctx.nativeBlock().type()), this.globals);
 		}
+		else if (ctx.functionBlock() != null) {
+			visit(ctx.functionBlock());
+		}
 		return null;
 	}
 
@@ -65,6 +68,9 @@ public class JassProgramVisitor extends JassBaseVisitor<Void> {
 		final UserJassFunction userJassFunction = new UserJassFunction(statements,
 				this.jassParametersVisitor.visit(ctx.paramList()), this.jassTypeVisitor.visit(ctx.type()));
 		this.globals.defineFunction(ctx.getStart().getLine(), this.jassFileName, ctx.ID().getText(), userJassFunction);
+		if (JassSettings.LOG_FUNCTION_DEFINITIONS) {
+			System.out.println("Defining jass user function: " + ctx.ID().getText());
+		}
 		return null;
 	}
 
@@ -76,20 +82,6 @@ public class JassProgramVisitor extends JassBaseVisitor<Void> {
 		}
 		for (final BlockContext blockContext : ctx.block()) {
 			visit(blockContext);
-		}
-		for (final FunctionBlockContext functionBlockContext : ctx.functionBlock()) {
-			final List<JassStatement> statements = new ArrayList<>();
-			for (final StatementContext statementContext : functionBlockContext.statements().statement()) {
-				statements.add(this.jassStatementVisitor.visit(statementContext));
-			}
-			final UserJassFunction userJassFunction = new UserJassFunction(statements,
-					this.jassParametersVisitor.visit(functionBlockContext.paramList()),
-					this.jassTypeVisitor.visit(functionBlockContext.type()));
-			this.globals.defineFunction(ctx.getStart().getLine(), this.jassFileName,
-					functionBlockContext.ID().getText(), userJassFunction);
-			if (JassSettings.LOG_FUNCTION_DEFINITIONS) {
-				System.out.println("Defining jass user function: " + functionBlockContext.ID().getText());
-			}
 		}
 		return null;
 	}

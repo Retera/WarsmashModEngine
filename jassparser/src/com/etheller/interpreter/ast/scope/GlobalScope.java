@@ -322,6 +322,16 @@ public final class GlobalScope {
 		return jassThread;
 	}
 
+	public JassThread createThreadCapturingReturnValue(final CodeJassValue codeValue,
+			final TriggerExecutionScope triggerScope) {
+		final JassStackFrame jassStackFrame = new JassStackFrame();
+		jassStackFrame.returnAddressInstructionPtr = -1;
+		jassStackFrame.stackBase = new JassStackFrame();
+		final JassThread jassThread = new JassThread(jassStackFrame, this, triggerScope,
+				codeValue.getUserFunctionInstructionPtr());
+		return jassThread;
+	}
+
 	public JassThread createThread(final String functionName, final List<JassValue> arguments,
 			final TriggerExecutionScope triggerExecutionScope) {
 		JassFunction functionByName = getFunctionByName(functionName);

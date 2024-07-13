@@ -10,6 +10,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.pars
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.parser.template.DataFieldLetter;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CTargetType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.unit.NonStackingStatBuffType;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.CommandStringErrorKeysEnum;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.ResourceType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.TextTagConfigType;
 
@@ -50,6 +51,10 @@ public class JassGeneratorForType {
 		for (final ResourceType type : ResourceType.values()) {
 			System.out.println(String.format("    constant resourcetype RESOURCE_TYPE_%-34s= ConvertResourceType(%d)",
 					type.name(), type.ordinal()));
+		}
+		for (final CommandStringErrorKeysEnum type : CommandStringErrorKeysEnum.values()) {
+			System.out.println(String.format("    constant string COMMAND_STRING_ERROR_KEY_%-85s= \"%s\"", type.name(),
+					type.getKey()));
 		}
 
 		{

@@ -5726,6 +5726,19 @@ public class Jass2 {
 						}
 						return JassType.REAL.getNullValue();
 					});
+			jassProgramVisitor.getJassNativeManager().createNative("GetAbilityTypeLevelUnitID",
+					(arguments, globalScope, triggerScope) -> {
+						final List<CAbilityTypeAbilityBuilderLevelData> levelData = nullable(arguments, 0,
+								ObjectJassValueVisitor.getInstance());
+						final int level = arguments.get(1).visit(IntegerJassValueVisitor.getInstance());
+						if (levelData != null) {
+							final War3ID data = levelData.get(level).getUnitId();
+							if (data != null) {
+								return IntegerJassValue.of(data.getValue());
+							}
+						}
+						return JassType.INTEGER.getNullValue();
+					});
 			jassProgramVisitor.getJassNativeManager().createNative("GetAbilityUserDataString",
 					(arguments, globalScope, triggerScope) -> {
 						final CAbility abilityFromHandle = nullable(arguments, 0, ObjectJassValueVisitor.getInstance());
@@ -5782,6 +5795,22 @@ public class Jass2 {
 			registerAbilityUserDataHandleNatives(jassProgramVisitor, timerType, "Timer");
 			registerAbilityUserDataHandleNatives(jassProgramVisitor, abtimerType, "ABTimer");
 			registerAbilityUserDataHandleNatives(jassProgramVisitor, localstoreType, "LocalStore");
+			// TODO below is overwriting what already exists
+			jassProgramVisitor.getJassNativeManager().createNative("GetLocalStoreLocationHandle",
+					(arguments, globalScope, triggerScope) -> {
+						final Map<String, Object> localStore = nullable(arguments, 0,
+								ObjectJassValueVisitor.getInstance());
+						final String childKey = nullable(arguments, 1, StringJassValueVisitor.getInstance());
+						Object object = localStore.get(childKey);
+						if (object != null) {
+							if (object instanceof AbilityPointTarget) {
+								final AbilityPointTarget apt = (AbilityPointTarget) object;
+								object = new Point2D.Double(apt.x, apt.y);
+							}
+							return new HandleJassValue(locationType, object);
+						}
+						return locationType.getNullValue();
+					});
 			jassProgramVisitor.getJassNativeManager().createNative("SetLocalStoreHandle",
 					(arguments, globalScope, triggerScope) -> {
 						final Map<String, Object> localStore = nullable(arguments, 0,

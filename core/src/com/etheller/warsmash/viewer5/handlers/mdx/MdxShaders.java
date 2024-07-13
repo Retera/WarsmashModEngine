@@ -883,10 +883,10 @@ public class MdxShaders {
 				"          vy[0] = -vx[1];\r\n" + //
 				"          vy[1] = vx[0];\r\n" + //
 				"          vy[2] = 0.0;\r\n" + //
-				"          vertices[2] = - vx - vy;\r\n" + //
-				"          vertices[1] = vx - vy;\r\n" + //
-				"          vertices[0] = -vertices[2];\r\n" + //
-				"          vertices[3] = -vertices[1];\r\n" + //
+				"          vertices[3] = - vx - vy;\r\n" + //
+				"          vertices[0] = vx - vy;\r\n" + //
+				"          vertices[1] = -vertices[3];\r\n" + //
+				"          vertices[2] = -vertices[0];\r\n" + //
 				"        } else {\r\n" + //
 				"          lightingNormal = normalize(u_cameraZ);\r\n" + //
 				"          vertices[0] = u_vertices[0];\r\n" + //

@@ -112,7 +112,7 @@ public class GeometryEmitterFuncs {
 					final Vector3 velocity = object.velocity;
 					floatView.put(p0Offset + 3, velocity.x);
 					floatView.put(p0Offset + 4, velocity.y);
-					floatView.put(p0Offset + 5, velocity.z);
+//					floatView.put(p0Offset + 5, velocity.z);
 				}
 				else {
 					floatView.put(p0Offset + 3, 0);

@@ -39,4 +39,10 @@ public class BeginFunctionInstruction implements JassInstruction {
 		return this.name;
 	}
 
+	@Override
+	public String toString() {
+		return "BeginFunctionInstruction [lineNo=" + this.lineNo + ", sourceFile=" + this.sourceFile + ", name="
+				+ this.name + "]";
+	}
+
 }

@@ -25,14 +25,14 @@ public class AbilityBuilderJassBrainstorm {
 		final Gson gson = AbilityBuilderGsonBuilder.create();
 		AbilityBuilderParserUtil.loadAbilityBuilderFiles(new AbilityBuilderFileListener() {
 			@Override
-			public void callback(AbilityBuilderParser behavior) {
+			public void callback(final AbilityBuilderParser behavior) {
 				System.out.println(behavior);
 				convertTheThing(behavior);
 			}
 		});
 	}
 
-	private static void convertTheThing(AbilityBuilderParser behavior) {
+	private static void convertTheThing(final AbilityBuilderParser behavior) {
 		if (behavior.getType() == AbilityBuilderType.TEMPLATE) {
 			for (final AbilityBuilderDupe dupe : behavior.getIds()) {
 				System.out.println("//template: " + dupe.getId());
@@ -158,7 +158,7 @@ public class AbilityBuilderJassBrainstorm {
 		generateFunctions(out, initCode, abilityBuilderConfiguration.getOnChannelTick(), "OnChannelTick");
 		generateFunctions(out, initCode, abilityBuilderConfiguration.getOnEndChannel(), "OnEndChannel");
 
-		try (PrintWriter outStream = new PrintWriter(new File("C:\\Warsmash\\GeneratedJass\\" + abilityName + ".j"))) {
+		try (PrintWriter outStream = new PrintWriter(new File("GeneratedJass/" + abilityName + ".j"))) {
 			outStream.println("//==============================================================");
 			outStream.println("//                           " + abilityName);
 			outStream.println("//==============================================================");

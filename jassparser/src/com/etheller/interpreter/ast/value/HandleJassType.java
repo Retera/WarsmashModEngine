@@ -5,6 +5,7 @@ import com.etheller.interpreter.ast.value.visitor.SuperTypeVisitor;
 public class HandleJassType implements JassType {
 	private HandleJassType superType;
 	private final String name;
+	private HandleJassTypeConstructor constructorNative;
 
 	public HandleJassType(final HandleJassType superType, final String name) {
 		this.superType = superType;
@@ -48,6 +49,14 @@ public class HandleJassType implements JassType {
 	@Override
 	public HandleJassValue getNullValue() {
 		return new HandleJassValue(this, null);
+	}
+
+	public void setConstructorNative(final HandleJassTypeConstructor constructorNative) {
+		this.constructorNative = constructorNative;
+	}
+
+	public HandleJassTypeConstructor getConstructorNative() {
+		return this.constructorNative;
 	}
 
 }

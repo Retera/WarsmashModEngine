@@ -53,6 +53,13 @@ RETURNS = "returns"
 ENDFUNCTION = "endfunction"
 NOTHING = "nothing"
 
+STRUCT = "struct"
+ENDSTRUCT = "endstruct"
+
+METHOD = "method"
+ENDMETHOD = "endmethod"
+STATIC = "static"
+
 CALL = "call"
 SET = "set"
 RETURN = "return"
@@ -75,7 +82,7 @@ ENDLOOP = "endloop"
 EXITWHEN = "exitwhen"
 DEBUG = "debug"
 
-STRING_LITERAL =   "\"" ( "\\\\" | "\\\"" | . )*? "\""
+STRING_LITERAL =   "\"" ( "\\\\" | "\\\"" | [^"\""] )*? "\""
 
  
 INTEGER = [0]|([1-9][0-9]*)
@@ -83,9 +90,9 @@ INTEGER = [0]|([1-9][0-9]*)
 HEX_CONSTANT = "0x"(([0-9]|[a-f]|[A-F])*)
 DOLLAR_HEX_CONSTANT = "$"(([0-9]|[A-F])*)
 
-RAWCODE = ("\'".*?"\'")
+RAWCODE = ("\'"[^"\'"]*?"\'")
 
-REAL = (([0]|([1-9][0-9]*))'.'[0-9]*)|('.'([0-9]*)) ;
+REAL = (([0]|([1-9][0-9]*))"."[0-9]*)|("."([0-9]*)) ;
 
 NULL = "null"
 TRUE = "true"
@@ -99,7 +106,7 @@ ID = ([a-zA-Z_][a-zA-Z_0-9]*)
 
 WS = [ \t]+
 
-NEWLINE = "//".*?"\r\n" | "//".*?"\n" | "//".*?"\r" | "\r" "\n" | "\n" | "\r"
+NEWLINE = "//".*?"\r\n" | "//".*?"\n" | "//".*?"\r" | "\r" "\n" | "\n" | "\r" | "//".*?
 
 TIMES="*"
 DIVIDE="/"
@@ -118,6 +125,8 @@ CLOSE_PARENS=")"
 
 COMMA=","
 
+DOT="."
+
 %%
 
 {EQUALS} { return SmashJassParser.Lexer.EQUALS; }
@@ -133,6 +142,11 @@ COMMA=","
 {RETURNS} { return SmashJassParser.Lexer.RETURNS; }
 {ENDFUNCTION} { return SmashJassParser.Lexer.ENDFUNCTION; }
 {NOTHING} { return SmashJassParser.Lexer.NOTHING; }
+{STRUCT} { return SmashJassParser.Lexer.STRUCT; }
+{ENDSTRUCT} { return SmashJassParser.Lexer.ENDSTRUCT; }
+{METHOD} { return SmashJassParser.Lexer.METHOD; }
+{ENDMETHOD} { return SmashJassParser.Lexer.ENDMETHOD; }
+{STATIC} { return SmashJassParser.Lexer.STATIC; }
 {CALL} { return SmashJassParser.Lexer.CALL; }
 {SET} { return SmashJassParser.Lexer.SET; }
 {RETURN} { return SmashJassParser.Lexer.RETURN; }
@@ -202,6 +216,7 @@ COMMA=","
 {CLOSE_PARENS} { return SmashJassParser.Lexer.CLOSE_PAREN; }
 
 {COMMA} { return SmashJassParser.Lexer.COMMA; }
+{DOT} { return SmashJassParser.Lexer.DOT; }
 
 /* detect errors, print unknown chars */
 [^] { throw new IllegalStateException("Unexpected character '" + yytext() + "'"); }

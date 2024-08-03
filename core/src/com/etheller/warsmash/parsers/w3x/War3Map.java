@@ -22,6 +22,7 @@ import com.etheller.warsmash.parsers.w3x.objectdata.Warcraft3MapRuntimeObjectDat
 import com.etheller.warsmash.parsers.w3x.unitsdoo.War3MapUnitsDoo;
 import com.etheller.warsmash.parsers.w3x.w3e.War3MapW3e;
 import com.etheller.warsmash.parsers.w3x.w3i.War3MapW3i;
+import com.etheller.warsmash.parsers.w3x.w3r.War3MapW3r;
 import com.etheller.warsmash.parsers.w3x.wpm.War3MapWpm;
 import com.etheller.warsmash.units.custom.WTS;
 import com.google.common.io.LittleEndianDataInputStream;
@@ -130,6 +131,15 @@ public class War3Map implements DataSource {
 		try (LittleEndianDataInputStream stream = new LittleEndianDataInputStream(
 				this.dataSource.getResourceAsStream("war3mapUnits.doo"))) {
 			unitsFile = new War3MapUnitsDoo(stream, war3MapW3i);
+		}
+		return unitsFile;
+	}
+
+	public War3MapW3r readRegions() throws IOException {
+		War3MapW3r unitsFile;
+		try (LittleEndianDataInputStream stream = new LittleEndianDataInputStream(
+				this.dataSource.getResourceAsStream("war3map.w3r"))) {
+			unitsFile = new War3MapW3r(stream);
 		}
 		return unitsFile;
 	}

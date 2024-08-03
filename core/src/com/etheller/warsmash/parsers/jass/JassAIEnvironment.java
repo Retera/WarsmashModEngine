@@ -7,6 +7,7 @@ import com.badlogic.gdx.utils.viewport.Viewport;
 import com.etheller.interpreter.ast.debug.JassException;
 import com.etheller.interpreter.ast.function.JassFunction;
 import com.etheller.interpreter.ast.scope.GlobalScope;
+import com.etheller.interpreter.ast.util.JassProgram;
 import com.etheller.interpreter.ast.value.HandleJassType;
 import com.etheller.interpreter.ast.value.visitor.JassFunctionJassValueVisitor;
 import com.etheller.interpreter.ast.value.visitor.RealJassValueVisitor;
@@ -21,9 +22,9 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.config.War3MapConfi
 public class JassAIEnvironment {
 	private final GameUI gameUI;
 	private Element skin;
-	private final JassProgramVisitor jassProgramVisitor;
+	private final JassProgram jassProgramVisitor;
 
-	private JassAIEnvironment(final JassProgramVisitor jassProgramVisitor, final DataSource dataSource,
+	private JassAIEnvironment(final JassProgram jassProgramVisitor, final DataSource dataSource,
 			final Viewport uiViewport, final Scene uiScene, final GameUI gameUI, final War3MapConfig mapConfig,
 			final CSimulation simulation) {
 		this.jassProgramVisitor = jassProgramVisitor;

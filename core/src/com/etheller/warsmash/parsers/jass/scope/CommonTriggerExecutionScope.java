@@ -14,9 +14,10 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityPointTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.jass.CAbilityTypeJassDefinition.JassOrder;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.jass.CAbilityTypeJassDefinition.JassOrderButtonType;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABLocalStoreKeys;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayerJass;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.region.CRegion;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.timers.CTimerJass;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.timers.CTimer;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.JassGameEventsWar3;
 import com.etheller.warsmash.viewer5.handlers.w3x.ui.dialog.CScriptDialog;
 import com.etheller.warsmash.viewer5.handlers.w3x.ui.dialog.CScriptDialogButton;
@@ -31,7 +32,7 @@ public class CommonTriggerExecutionScope extends TriggerExecutionScope {
 	private CItem enumItem;
 	private CPlayerJass filterPlayer;
 	private CPlayerJass enumPlayer;
-	private CTimerJass expiringTimer;
+	private CTimer expiringTimer;
 	private CUnit enteringUnit;
 	private CUnit leavingUnit;
 	private CRegion triggeringRegion;
@@ -213,7 +214,7 @@ public class CommonTriggerExecutionScope extends TriggerExecutionScope {
 		return this.enumPlayer;
 	}
 
-	public CTimerJass getExpiringTimer() {
+	public CTimer getExpiringTimer() {
 		return this.expiringTimer;
 	}
 
@@ -515,7 +516,7 @@ public class CommonTriggerExecutionScope extends TriggerExecutionScope {
 		return scope;
 	}
 
-	public static CommonTriggerExecutionScope expiringTimer(final Trigger trigger, final CTimerJass cTimerJass) {
+	public static CommonTriggerExecutionScope expiringTimer(final Trigger trigger, final CTimer cTimerJass) {
 		final CommonTriggerExecutionScope scope = new CommonTriggerExecutionScope(trigger, TriggerExecutionScope.EMPTY);
 		scope.expiringTimer = cTimerJass;
 		return scope;
@@ -876,6 +877,15 @@ public class CommonTriggerExecutionScope extends TriggerExecutionScope {
 		scope.triggeringUnit = caster;
 		scope.triggerLocalStore = localStore;
 		scope.triggerCastId = castId;
+		// TODO: below: makes it easier on the outside, but it still is very bad for
+		// performance
+		scope.spellTargetUnit = (CUnit) localStore.get(ABLocalStoreKeys.ABILITYTARGETEDUNIT + castId);
+		scope.spellTargetItem = (CItem) localStore.get(ABLocalStoreKeys.ABILITYTARGETEDITEM + castId);
+		scope.spellTargetDestructable = (CDestructable) localStore
+				.get(ABLocalStoreKeys.ABILITYTARGETEDDESTRUCTABLE + castId);
+		scope.spellTargetPoint = (AbilityPointTarget) localStore.get(ABLocalStoreKeys.ABILITYTARGETEDLOCATION + castId);
+		scope.spellAbility = (CAbility) localStore.get(ABLocalStoreKeys.ABILITY);
+		scope.spellAbilityId = (War3ID) localStore.get(ABLocalStoreKeys.ALIAS);
 		return scope;
 	}
 

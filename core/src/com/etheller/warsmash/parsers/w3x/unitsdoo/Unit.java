@@ -151,6 +151,7 @@ public class Unit {
 			if (skinToWrite == null) {
 				skinToWrite = this.id;
 			}
+			ParseUtils.writeWar3ID(stream, skinToWrite);
 		}
 
 		ParseUtils.writeUInt8(stream, this.flags);

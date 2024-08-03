@@ -30,11 +30,14 @@ public final class UserJassFunction extends AbstractJassFunction {
 	@Override
 	public JassValue innerCall(final List<JassValue> arguments, final GlobalScope globalScope,
 			final TriggerExecutionScope triggerScope, final LocalScope localScope) {
+		if (true) {
+			throw new RuntimeException("Calling functions was deleted from the Jass language");
+		}
 		for (final JassStatement statement : this.statements) {
-			final JassValue returnValue = statement.execute(globalScope, localScope, triggerScope);
-			if (returnValue != null) {
-				return returnByValue(globalScope, returnValue);
-			}
+//			final JassValue returnValue = statement.execute(globalScope, localScope, triggerScope);
+//			if (returnValue != null) {
+//				return returnByValue(globalScope, returnValue);
+//			}
 		}
 		if (JassType.NOTHING != this.returnType) {
 			throw new JassException(globalScope, "Invalid return type", null);

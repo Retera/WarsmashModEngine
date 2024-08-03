@@ -9,19 +9,19 @@ import com.badlogic.gdx.math.Rectangle;
 import com.etheller.interpreter.ast.scope.GlobalScope;
 import com.etheller.interpreter.ast.scope.trigger.RemovableTriggerEvent;
 import com.etheller.interpreter.ast.scope.trigger.Trigger;
+import com.etheller.interpreter.ast.util.CExtensibleHandleAbstract;
 import com.etheller.interpreter.ast.util.CHandle;
 import com.etheller.warsmash.parsers.jass.scope.CommonTriggerExecutionScope;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CAttackType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CTargetType;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CWeaponType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.JassGameEventsWar3;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CDamageType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.unit.CWidgetEvent;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetCheckReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.BooleanAbilityTargetCheckReceiver;
 
-public abstract class CWidget implements AbilityTarget, CHandle {
+public abstract class CWidget extends CExtensibleHandleAbstract implements AbilityTarget, CHandle {
 	protected static final Rectangle tempRect = new Rectangle();
 	private final int handleId;
 	private float x;
@@ -70,11 +70,13 @@ public abstract class CWidget implements AbilityTarget, CHandle {
 		this.life = life;
 	}
 
-	public abstract float damage(final CSimulation simulation, final CUnit source, final boolean isAttack, final boolean isRanged, final CAttackType attackType,
-			final CDamageType damageType, final String weaponSoundType, final float damage);
+	public abstract float damage(final CSimulation simulation, final CUnit source, final boolean isAttack,
+			final boolean isRanged, final CAttackType attackType, final CDamageType damageType,
+			final String weaponSoundType, final float damage);
 
-	public abstract float damage(final CSimulation simulation, final CUnit source, final boolean isAttack, final boolean isRanged, final CAttackType attackType,
-			final CDamageType damageType, final String weaponSoundType, final float damage, final float bonusDamage);
+	public abstract float damage(final CSimulation simulation, final CUnit source, final boolean isAttack,
+			final boolean isRanged, final CAttackType attackType, final CDamageType damageType,
+			final String weaponSoundType, final float damage, final float bonusDamage);
 
 	public abstract float getFlyHeight();
 
@@ -87,9 +89,10 @@ public abstract class CWidget implements AbilityTarget, CHandle {
 	}
 
 	public abstract boolean canBeTargetedBy(CSimulation simulation, CUnit source,
-											final EnumSet<CTargetType> targetsAllowed, AbilityTargetCheckReceiver<CWidget> receiver);
+			final EnumSet<CTargetType> targetsAllowed, AbilityTargetCheckReceiver<CWidget> receiver);
 
-	public boolean canBeTargetedBy(CSimulation simulation, CUnit source, final EnumSet<CTargetType> targetsAllowed) {
+	public boolean canBeTargetedBy(final CSimulation simulation, final CUnit source,
+			final EnumSet<CTargetType> targetsAllowed) {
 		return canBeTargetedBy(simulation, source, targetsAllowed,
 				BooleanAbilityTargetCheckReceiver.<CWidget>getInstance().reset());
 	}

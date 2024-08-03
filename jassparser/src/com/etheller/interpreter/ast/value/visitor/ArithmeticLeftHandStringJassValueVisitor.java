@@ -10,7 +10,9 @@ import com.etheller.interpreter.ast.value.IntegerJassValue;
 import com.etheller.interpreter.ast.value.JassValue;
 import com.etheller.interpreter.ast.value.JassValueVisitor;
 import com.etheller.interpreter.ast.value.RealJassValue;
+import com.etheller.interpreter.ast.value.StaticStructTypeJassValue;
 import com.etheller.interpreter.ast.value.StringJassValue;
+import com.etheller.interpreter.ast.value.StructJassValue;
 
 public class ArithmeticLeftHandStringJassValueVisitor implements JassValueVisitor<JassValue> {
 	public static final ArithmeticLeftHandStringJassValueVisitor INSTANCE = new ArithmeticLeftHandStringJassValueVisitor();
@@ -30,13 +32,12 @@ public class ArithmeticLeftHandStringJassValueVisitor implements JassValueVisito
 
 	@Override
 	public JassValue accept(final IntegerJassValue value) {
-		throw new UnsupportedOperationException(
-				"Cannot perform string operation on integer (Did you mean to use I2S?)");
+		return this.sign.apply(this.leftHand.getValue(), value.toString());
 	}
 
 	@Override
 	public JassValue accept(final RealJassValue value) {
-		throw new UnsupportedOperationException("Cannot perform string operation on real (Did you mean to use I2R?)");
+		return this.sign.apply(this.leftHand.getValue(), value.toString());
 	}
 
 	@Override
@@ -62,6 +63,16 @@ public class ArithmeticLeftHandStringJassValueVisitor implements JassValueVisito
 	@Override
 	public JassValue accept(final DummyJassValue value) {
 		return value;
+	}
+
+	@Override
+	public JassValue accept(final StructJassValue value) {
+		throw new UnsupportedOperationException("Cannot perform arithmetic on struct");
+	}
+
+	@Override
+	public JassValue accept(final StaticStructTypeJassValue value) {
+		throw new UnsupportedOperationException("Cannot perform arithmetic on struct type");
 	}
 
 }

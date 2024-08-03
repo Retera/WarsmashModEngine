@@ -10,6 +10,7 @@ import com.etheller.interpreter.ast.function.JassFunction;
 import com.etheller.interpreter.ast.function.JassNativeManager;
 import com.etheller.interpreter.ast.scope.GlobalScope;
 import com.etheller.interpreter.ast.scope.TriggerExecutionScope;
+import com.etheller.interpreter.ast.util.JassProgram;
 import com.etheller.interpreter.ast.value.CodeJassValue;
 import com.etheller.interpreter.ast.value.JassValue;
 import com.etheller.interpreter.ast.value.StringJassValue;
@@ -39,8 +40,9 @@ public class SmashJassRunner {
 			return;
 		}
 		final long start = System.currentTimeMillis();
-		final GlobalScope globals = new GlobalScope();
-		final JassNativeManager jassNativeManager = new JassNativeManager();
+		final JassProgram jassProgram = new JassProgram();
+		final GlobalScope globals = jassProgram.globalScope;
+		final JassNativeManager jassNativeManager = jassProgram.jassNativeManager;
 		jassNativeManager.createNative("BJDebugMsg", new JassFunction() {
 			@Override
 			public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
@@ -66,6 +68,14 @@ public class SmashJassRunner {
 			public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
 					final TriggerExecutionScope triggerScope) {
 				final Integer x = arguments.get(0).visit(IntegerJassValueVisitor.getInstance());
+				return new StringJassValue(x.toString());
+			}
+		});
+		jassNativeManager.createNative("R2S", new JassFunction() {
+			@Override
+			public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+					final TriggerExecutionScope triggerScope) {
+				final Double x = arguments.get(0).visit(RealJassValueVisitor.getInstance());
 				return new StringJassValue(x.toString());
 			}
 		});
@@ -95,16 +105,17 @@ public class SmashJassRunner {
 			try {
 				try (FileReader reader = new FileReader(arg)) {
 					final SmashJassParser smashJassParser = new SmashJassParser(reader);
-					smashJassParser.scanAndParse(arg, globals, jassNativeManager);
+					smashJassParser.scanAndParse(arg, jassProgram);
 				}
 			}
 			catch (final Exception e) {
 				e.printStackTrace();
 			}
 		}
-		globals.runThreadUntilCompletion(
-				globals.createThread(globals.getUserFunctionInstructionPtr(GlobalScope.INIT_GLOBALS_AUTOGEN_FXN_NAME)));
-		final JassThread myJassThread = globals.createThread(globals.getUserFunctionInstructionPtr("main"));
+		jassProgram.initialize();
+		final Integer userFunctionInstructionPtr = globals.getUserFunctionInstructionPtr("main");
+		System.out.println(userFunctionInstructionPtr);
+		final JassThread myJassThread = globals.createThread(userFunctionInstructionPtr);
 		globals.queueThread(myJassThread);
 		boolean done = false;
 		do {

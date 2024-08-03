@@ -1,18 +1,19 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities;
 
+import com.etheller.interpreter.ast.util.CExtensibleHandleAbstract;
 import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CItem;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityActivationReceiver;
 
-public abstract class AbstractCAbility implements CAbility {
+public abstract class AbstractCAbility extends CExtensibleHandleAbstract implements CAbility {
 	private final int handleId;
 	private byte disabled = 0;
 	private boolean iconShowing = true;
 	private boolean permanent = false;
-	
-	private War3ID code;
+
+	private final War3ID code;
 
 	public AbstractCAbility(final int handleId, final War3ID code) {
 		this.handleId = handleId;
@@ -23,11 +24,12 @@ public abstract class AbstractCAbility implements CAbility {
 	public final int getHandleId() {
 		return this.handleId;
 	}
-	
-	public War3ID getCode() { 
+
+	@Override
+	public War3ID getCode() {
 		return this.code;
 	}
-	
+
 	@Override
 	public War3ID getAlias() {
 		return this.getCode();
@@ -39,10 +41,11 @@ public abstract class AbstractCAbility implements CAbility {
 	}
 
 	@Override
-	public final void setDisabled(final boolean disabled, CAbilityDisableType type) {
+	public final void setDisabled(final boolean disabled, final CAbilityDisableType type) {
 		if (disabled) {
 			this.disabled |= type.getMask();
-		} else {
+		}
+		else {
 			this.disabled &= ~type.getMask();
 		}
 	}
@@ -66,15 +69,15 @@ public abstract class AbstractCAbility implements CAbility {
 	public void setPermanent(final boolean permanent) {
 		this.permanent = permanent;
 	}
-	
-	@Override 
-	public void setItemAbility(CItem item, int slot) {
-		//do nothing
+
+	@Override
+	public void setItemAbility(final CItem item, final int slot) {
+		// do nothing
 	}
 
 	@Override
 	public CItem getItem() {
-		//do nothing
+		// do nothing
 		return null;
 	}
 
@@ -98,22 +101,23 @@ public abstract class AbstractCAbility implements CAbility {
 	}
 
 	@Override
-	public void checkRequirementsMet(CSimulation game, CUnit unit, AbilityActivationReceiver receiver) {
-		
+	public void checkRequirementsMet(final CSimulation game, final CUnit unit,
+			final AbilityActivationReceiver receiver) {
+
 	}
-	
+
 	@Override
-	public boolean isRequirementsMet(CSimulation game, CUnit unit) {
+	public boolean isRequirementsMet(final CSimulation game, final CUnit unit) {
 		return true;
 	}
-	
+
 	@Override
-	public void onAddDisabled(CSimulation game, CUnit unit) {
-		//do nothing
+	public void onAddDisabled(final CSimulation game, final CUnit unit) {
+		// do nothing
 	}
-	
+
 	@Override
-	public void onRemoveDisabled(CSimulation game, CUnit unit) {
-		//do nothing
+	public void onRemoveDisabled(final CSimulation game, final CUnit unit) {
+		// do nothing
 	}
 }

@@ -43,9 +43,10 @@ public class JassGlobalsVisitor extends JassBaseVisitor<Void> {
 				this.globals.createGlobalArray(ctx.ID().getText(), type);
 			}
 			else {
-				this.globals.createGlobal(ctx.ID().getText(), type,
-						this.jassExpressionVisitor.visit(ctx.assignTail().expression()).evaluate(this.globals,
-								EMPTY_LOCAL_SCOPE, JassProgramVisitor.EMPTY_TRIGGER_SCOPE));
+				throw new RuntimeException(ctx.getText());
+//				this.globals.createGlobal(ctx.ID().getText(), type,
+//						this.jassExpressionVisitor.visit(ctx.assignTail().expression()).evaluate(this.globals,
+//								EMPTY_LOCAL_SCOPE, JassProgramVisitor.EMPTY_TRIGGER_SCOPE));
 			}
 		}
 		catch (final Exception exc) {

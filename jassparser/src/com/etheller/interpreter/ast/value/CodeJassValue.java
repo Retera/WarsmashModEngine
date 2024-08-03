@@ -1,5 +1,6 @@
 package com.etheller.interpreter.ast.value;
 
+import com.etheller.interpreter.ast.execution.JassStackFrame;
 import com.etheller.interpreter.ast.function.JassFunction;
 
 public class CodeJassValue implements JassValue {
@@ -17,6 +18,9 @@ public class CodeJassValue implements JassValue {
 
 	public Integer getUserFunctionInstructionPtr() {
 		return this.userFunctionInstructionPtr;
+	}
+
+	public void initStack(final JassStackFrame stackFrame) {
 	}
 
 	@Override

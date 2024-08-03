@@ -4,9 +4,13 @@ import com.etheller.interpreter.ast.value.BooleanJassValue;
 import com.etheller.interpreter.ast.value.CodeJassValue;
 import com.etheller.interpreter.ast.value.HandleJassValue;
 import com.etheller.interpreter.ast.value.IntegerJassValue;
+import com.etheller.interpreter.ast.value.JassType;
 import com.etheller.interpreter.ast.value.JassValue;
 import com.etheller.interpreter.ast.value.RealJassValue;
 import com.etheller.interpreter.ast.value.StringJassValue;
+import com.etheller.interpreter.ast.value.StructJassValue;
+import com.etheller.interpreter.ast.value.visitor.ObjectJassValueVisitor;
+import com.etheller.interpreter.ast.value.visitor.StructSuperJassValueVisitor;
 
 public enum ArithmeticSigns implements ArithmeticSign {
 	ADD() {
@@ -49,6 +53,32 @@ public enum ArithmeticSigns implements ArithmeticSign {
 		public JassValue apply(final CodeJassValue left, final CodeJassValue right) {
 			throw new UnsupportedOperationException("Cannot perform arithmetic on code");
 		}
+
+		@Override
+		public JassValue apply(final HandleJassValue left, final StructJassValue right) {
+			throw new UnsupportedOperationException("Cannot perform arithmetic on handle");
+		}
+
+		@Override
+		public JassValue apply(final StructJassValue left, final HandleJassValue right) {
+			throw new UnsupportedOperationException("Cannot perform arithmetic on struct");
+		}
+
+		@Override
+		public JassValue apply(final StructJassValue left, final StructJassValue right) {
+			throw new UnsupportedOperationException("Cannot perform arithmetic on struct");
+		}
+
+		@Override
+		public JassType predictType(final JassType leftType, final JassType rightType) {
+			if ((leftType == JassType.STRING) || (rightType == JassType.STRING)) {
+				return JassType.STRING;
+			}
+			if ((leftType == JassType.INTEGER) || (rightType == JassType.INTEGER)) {
+				return JassType.INTEGER;
+			}
+			return JassType.REAL;
+		}
 	},
 	SUBTRACT() {
 		@Override
@@ -89,6 +119,29 @@ public enum ArithmeticSigns implements ArithmeticSign {
 		@Override
 		public JassValue apply(final CodeJassValue left, final CodeJassValue right) {
 			throw new UnsupportedOperationException("Cannot perform arithmetic on code");
+		}
+
+		@Override
+		public JassValue apply(final HandleJassValue left, final StructJassValue right) {
+			throw new UnsupportedOperationException("Cannot perform arithmetic on handle");
+		}
+
+		@Override
+		public JassValue apply(final StructJassValue left, final StructJassValue right) {
+			throw new UnsupportedOperationException("Cannot perform arithmetic on struct");
+		}
+
+		@Override
+		public JassValue apply(final StructJassValue left, final HandleJassValue right) {
+			throw new UnsupportedOperationException("Cannot perform arithmetic on struct");
+		}
+
+		@Override
+		public JassType predictType(final JassType leftType, final JassType rightType) {
+			if ((leftType == JassType.INTEGER) || (rightType == JassType.INTEGER)) {
+				return JassType.INTEGER;
+			}
+			return JassType.REAL;
 		}
 	},
 	MULTIPLY() {
@@ -131,6 +184,29 @@ public enum ArithmeticSigns implements ArithmeticSign {
 		public JassValue apply(final CodeJassValue left, final CodeJassValue right) {
 			throw new UnsupportedOperationException("Cannot perform arithmetic on code");
 		}
+
+		@Override
+		public JassValue apply(final HandleJassValue left, final StructJassValue right) {
+			throw new UnsupportedOperationException("Cannot perform arithmetic on handle");
+		}
+
+		@Override
+		public JassValue apply(final StructJassValue left, final StructJassValue right) {
+			throw new UnsupportedOperationException("Cannot perform arithmetic on struct");
+		}
+
+		@Override
+		public JassValue apply(final StructJassValue left, final HandleJassValue right) {
+			throw new UnsupportedOperationException("Cannot perform arithmetic on struct");
+		}
+
+		@Override
+		public JassType predictType(final JassType leftType, final JassType rightType) {
+			if ((leftType == JassType.INTEGER) || (rightType == JassType.INTEGER)) {
+				return JassType.INTEGER;
+			}
+			return JassType.REAL;
+		}
 	},
 	DIVIDE() {
 		@Override
@@ -171,6 +247,29 @@ public enum ArithmeticSigns implements ArithmeticSign {
 		@Override
 		public JassValue apply(final CodeJassValue left, final CodeJassValue right) {
 			throw new UnsupportedOperationException("Cannot perform arithmetic on code");
+		}
+
+		@Override
+		public JassValue apply(final HandleJassValue left, final StructJassValue right) {
+			throw new UnsupportedOperationException("Cannot perform arithmetic on handle");
+		}
+
+		@Override
+		public JassValue apply(final StructJassValue left, final StructJassValue right) {
+			throw new UnsupportedOperationException("Cannot perform arithmetic on struct");
+		}
+
+		@Override
+		public JassValue apply(final StructJassValue left, final HandleJassValue right) {
+			throw new UnsupportedOperationException("Cannot perform arithmetic on struct");
+		}
+
+		@Override
+		public JassType predictType(final JassType leftType, final JassType rightType) {
+			if ((leftType == JassType.INTEGER) || (rightType == JassType.INTEGER)) {
+				return JassType.INTEGER;
+			}
+			return JassType.REAL;
 		}
 	},
 	OR() {
@@ -213,6 +312,26 @@ public enum ArithmeticSigns implements ArithmeticSign {
 		public JassValue apply(final CodeJassValue left, final CodeJassValue right) {
 			throw new UnsupportedOperationException("Cannot perform boolean arithmetic on code");
 		}
+
+		@Override
+		public JassValue apply(final HandleJassValue left, final StructJassValue right) {
+			throw new UnsupportedOperationException("Cannot perform arithmetic on handle");
+		}
+
+		@Override
+		public JassValue apply(final StructJassValue left, final StructJassValue right) {
+			throw new UnsupportedOperationException("Cannot perform arithmetic on struct");
+		}
+
+		@Override
+		public JassValue apply(final StructJassValue left, final HandleJassValue right) {
+			throw new UnsupportedOperationException("Cannot perform arithmetic on struct");
+		}
+
+		@Override
+		public JassType predictType(final JassType leftType, final JassType rightType) {
+			return JassType.BOOLEAN;
+		}
 	},
 	AND() {
 		@Override
@@ -253,6 +372,26 @@ public enum ArithmeticSigns implements ArithmeticSign {
 		@Override
 		public JassValue apply(final CodeJassValue left, final CodeJassValue right) {
 			throw new UnsupportedOperationException("Cannot perform boolean arithmetic on code");
+		}
+
+		@Override
+		public JassValue apply(final HandleJassValue left, final StructJassValue right) {
+			throw new UnsupportedOperationException("Cannot perform arithmetic on handle");
+		}
+
+		@Override
+		public JassValue apply(final StructJassValue left, final StructJassValue right) {
+			throw new UnsupportedOperationException("Cannot perform arithmetic on struct");
+		}
+
+		@Override
+		public JassValue apply(final StructJassValue left, final HandleJassValue right) {
+			throw new UnsupportedOperationException("Cannot perform arithmetic on struct");
+		}
+
+		@Override
+		public JassType predictType(final JassType leftType, final JassType rightType) {
+			return JassType.BOOLEAN;
 		}
 	},
 	EQUALS() {
@@ -295,6 +434,26 @@ public enum ArithmeticSigns implements ArithmeticSign {
 		public BooleanJassValue apply(final CodeJassValue left, final CodeJassValue right) {
 			return BooleanJassValue.of(isEqual(left, right));
 		}
+
+		@Override
+		public JassValue apply(final HandleJassValue left, final StructJassValue right) {
+			return BooleanJassValue.of(isEqual(left, right));
+		}
+
+		@Override
+		public JassValue apply(final StructJassValue left, final HandleJassValue right) {
+			return BooleanJassValue.of(isEqual(left, right));
+		}
+
+		@Override
+		public JassValue apply(final StructJassValue left, final StructJassValue right) {
+			return BooleanJassValue.of(isEqual(left, right));
+		}
+
+		@Override
+		public JassType predictType(final JassType leftType, final JassType rightType) {
+			return JassType.BOOLEAN;
+		}
 	},
 	NOT_EQUALS() {
 		@Override
@@ -335,6 +494,26 @@ public enum ArithmeticSigns implements ArithmeticSign {
 		@Override
 		public BooleanJassValue apply(final CodeJassValue left, final CodeJassValue right) {
 			return BooleanJassValue.of(!isEqual(left, right));
+		}
+
+		@Override
+		public JassValue apply(final HandleJassValue left, final StructJassValue right) {
+			return BooleanJassValue.of(!isEqual(left, right));
+		}
+
+		@Override
+		public JassValue apply(final StructJassValue left, final HandleJassValue right) {
+			return BooleanJassValue.of(!isEqual(left, right));
+		}
+
+		@Override
+		public JassValue apply(final StructJassValue left, final StructJassValue right) {
+			return BooleanJassValue.of(!isEqual(left, right));
+		}
+
+		@Override
+		public JassType predictType(final JassType leftType, final JassType rightType) {
+			return JassType.BOOLEAN;
 		}
 	},
 	LESS() {
@@ -377,6 +556,26 @@ public enum ArithmeticSigns implements ArithmeticSign {
 		public BooleanJassValue apply(final CodeJassValue left, final CodeJassValue right) {
 			throw new UnsupportedOperationException("Invalid type for specified operator");
 		}
+
+		@Override
+		public JassValue apply(final HandleJassValue left, final StructJassValue right) {
+			throw new UnsupportedOperationException("Invalid type for specified operator");
+		}
+
+		@Override
+		public JassValue apply(final StructJassValue left, final HandleJassValue right) {
+			throw new UnsupportedOperationException("Invalid type for specified operator");
+		}
+
+		@Override
+		public JassValue apply(final StructJassValue left, final StructJassValue right) {
+			throw new UnsupportedOperationException("Invalid type for specified operator");
+		}
+
+		@Override
+		public JassType predictType(final JassType leftType, final JassType rightType) {
+			return JassType.BOOLEAN;
+		}
 	},
 	LESS_OR_EQUALS() {
 		@Override
@@ -417,6 +616,26 @@ public enum ArithmeticSigns implements ArithmeticSign {
 		@Override
 		public BooleanJassValue apply(final CodeJassValue left, final CodeJassValue right) {
 			throw new UnsupportedOperationException("Invalid type for specified operator");
+		}
+
+		@Override
+		public JassValue apply(final HandleJassValue left, final StructJassValue right) {
+			throw new UnsupportedOperationException("Invalid type for specified operator");
+		}
+
+		@Override
+		public JassValue apply(final StructJassValue left, final HandleJassValue right) {
+			throw new UnsupportedOperationException("Invalid type for specified operator");
+		}
+
+		@Override
+		public JassValue apply(final StructJassValue left, final StructJassValue right) {
+			throw new UnsupportedOperationException("Invalid type for specified operator");
+		}
+
+		@Override
+		public JassType predictType(final JassType leftType, final JassType rightType) {
+			return JassType.BOOLEAN;
 		}
 	},
 	GREATER() {
@@ -459,6 +678,26 @@ public enum ArithmeticSigns implements ArithmeticSign {
 		public BooleanJassValue apply(final CodeJassValue left, final CodeJassValue right) {
 			throw new UnsupportedOperationException("Invalid type for specified operator");
 		}
+
+		@Override
+		public JassValue apply(final HandleJassValue left, final StructJassValue right) {
+			throw new UnsupportedOperationException("Invalid type for specified operator");
+		}
+
+		@Override
+		public JassValue apply(final StructJassValue left, final HandleJassValue right) {
+			throw new UnsupportedOperationException("Invalid type for specified operator");
+		}
+
+		@Override
+		public JassValue apply(final StructJassValue left, final StructJassValue right) {
+			throw new UnsupportedOperationException("Invalid type for specified operator");
+		}
+
+		@Override
+		public JassType predictType(final JassType leftType, final JassType rightType) {
+			return JassType.BOOLEAN;
+		}
 	},
 	GREATER_OR_EQUALS() {
 		@Override
@@ -500,6 +739,26 @@ public enum ArithmeticSigns implements ArithmeticSign {
 		public BooleanJassValue apply(final CodeJassValue left, final CodeJassValue right) {
 			throw new UnsupportedOperationException("Invalid type for specified operator");
 		}
+
+		@Override
+		public JassValue apply(final HandleJassValue left, final StructJassValue right) {
+			throw new UnsupportedOperationException("Invalid type for specified operator");
+		}
+
+		@Override
+		public JassValue apply(final StructJassValue left, final HandleJassValue right) {
+			throw new UnsupportedOperationException("Invalid type for specified operator");
+		}
+
+		@Override
+		public JassValue apply(final StructJassValue left, final StructJassValue right) {
+			throw new UnsupportedOperationException("Invalid type for specified operator");
+		}
+
+		@Override
+		public JassType predictType(final JassType leftType, final JassType rightType) {
+			return JassType.BOOLEAN;
+		}
 	};
 
 	private static boolean isEqual(final String left, final String right) {
@@ -519,7 +778,9 @@ public enum ArithmeticSigns implements ArithmeticSign {
 	}
 
 	private static boolean isEqual(final HandleJassValue left, final HandleJassValue right) {
-		return (left.getJavaValue() == right.getJavaValue()) && (left.getType() == right.getType());
+		// NOTE: removed the type check on handle equality so that a unit and widget
+		// variable who are the same will return as being equal
+		return (left.getJavaValue() == right.getJavaValue());// && (left.getType() == right.getType());
 	}
 
 	private static boolean isEqual(final CodeJassValue left, final CodeJassValue right) {
@@ -539,5 +800,23 @@ public enum ArithmeticSigns implements ArithmeticSign {
 				return (left.getValue() == right.getValue());
 			}
 		}
+	}
+
+	private static boolean isEqual(final StructJassValue left, final HandleJassValue right) {
+		final Object leftJavaValue = left.visit(ObjectJassValueVisitor.getInstance());
+		if (leftJavaValue != null) {
+			return leftJavaValue == right.getJavaValue();
+		}
+		return false;
+	}
+
+	private static boolean isEqual(final HandleJassValue left, final StructJassValue right) {
+		return isEqual(right, left);
+	}
+
+	private static boolean isEqual(final StructJassValue left, final StructJassValue right) {
+		final JassValue leftValue = left.visit(StructSuperJassValueVisitor.getInstance());
+		final JassValue rightValue = right.visit(StructSuperJassValueVisitor.getInstance());
+		return leftValue == rightValue;
 	}
 }

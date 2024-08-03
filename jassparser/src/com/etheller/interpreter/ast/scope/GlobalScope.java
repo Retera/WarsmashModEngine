@@ -31,6 +31,7 @@ import com.etheller.interpreter.ast.scope.trigger.TriggerBooleanExpression;
 import com.etheller.interpreter.ast.scope.variableevent.CLimitOp;
 import com.etheller.interpreter.ast.scope.variableevent.VariableEvent;
 import com.etheller.interpreter.ast.statement.JassStatement;
+import com.etheller.interpreter.ast.util.JassLog;
 import com.etheller.interpreter.ast.util.JassSettings;
 import com.etheller.interpreter.ast.value.ArrayJassType;
 import com.etheller.interpreter.ast.value.ArrayJassValue;
@@ -39,6 +40,8 @@ import com.etheller.interpreter.ast.value.HandleJassType;
 import com.etheller.interpreter.ast.value.JassType;
 import com.etheller.interpreter.ast.value.JassValue;
 import com.etheller.interpreter.ast.value.PrimitiveJassType;
+import com.etheller.interpreter.ast.value.StaticStructTypeJassValue;
+import com.etheller.interpreter.ast.value.StructJassType;
 import com.etheller.interpreter.ast.value.visitor.ArrayPrimitiveTypeVisitor;
 import com.etheller.interpreter.ast.value.visitor.HandleJassTypeVisitor;
 import com.etheller.interpreter.ast.value.visitor.HandleTypeSuperTypeLoadingVisitor;
@@ -46,6 +49,8 @@ import com.etheller.interpreter.ast.value.visitor.JassTypeGettingValueVisitor;
 
 public final class GlobalScope {
 	public static final String INIT_GLOBALS_AUTOGEN_FXN_NAME = "{init-globals}";
+	public static final String KEYWORD_THIS = "this";
+	public static final String KEYNAME_THIS = "{this}";
 	private final List<GlobalScopeAssignable> indexedGlobals = new ArrayList<GlobalScopeAssignable>();
 	private final List<JassInstruction> instructions = new ArrayList<JassInstruction>();
 	private final Map<String, Integer> globals = new HashMap<>();
@@ -232,10 +237,33 @@ public final class GlobalScope {
 		this.indexedNativeFunctions.add(definedFunction);
 	}
 
+	public int defineMethod(final int lineNo, final String sourceFile, final String name,
+			final UserJassFunction function, final StructJassType type) {
+		final int instructionPtr = this.instructions.size();
+
+		final List<JassStatement> statements = function.getStatements();
+		this.instructions.add(new BeginFunctionInstruction(lineNo, sourceFile, name));
+		final InstructionAppendingJassStatementVisitor visitor = new InstructionAppendingJassStatementVisitor(
+				this.instructions, this, function.getParameters());
+		visitor.setEnclosingStructType(type);
+		for (final JassStatement statement : statements) {
+			statement.accept(visitor);
+		}
+		this.instructions.add(new PushLiteralInstruction(JassType.NOTHING.getNullValue()));
+		this.instructions.add(new ReturnInstruction());
+
+		return instructionPtr;
+	}
+
 	public void defineFunction(final int lineNo, final String sourceFile, final String name,
 			final UserJassFunction function) {
 		internalDefineFunction(lineNo, sourceFile, name, function);
 		this.functionNameToInstructionPtr.put(name, this.instructions.size());
+		writeFunctionInstructions(lineNo, sourceFile, name, function);
+	}
+
+	private void writeFunctionInstructions(final int lineNo, final String sourceFile, final String name,
+			final UserJassFunction function) {
 		final List<JassStatement> statements = function.getStatements();
 		this.instructions.add(new BeginFunctionInstruction(lineNo, sourceFile, name));
 		final InstructionAppendingJassStatementVisitor visitor = new InstructionAppendingJassStatementVisitor(
@@ -245,6 +273,29 @@ public final class GlobalScope {
 		}
 		this.instructions.add(new PushLiteralInstruction(JassType.NOTHING.getNullValue()));
 		this.instructions.add(new ReturnInstruction());
+	}
+
+	public void defineGlobals(final int lineNo, final String sourceFile, final List<JassStatement> globalStatements) {
+		innerBeginDefiningGlobals(lineNo, sourceFile);
+		final InstructionAppendingJassStatementVisitor visitor = new InstructionAppendingJassStatementVisitor(
+				this.instructions, this, Collections.emptyList());
+		for (final JassStatement statement : globalStatements) {
+			statement.accept(visitor);
+		}
+		endDefiningGlobals();
+		this.instructions.add(new PushLiteralInstruction(JassType.NOTHING.getNullValue()));
+		this.instructions.add(new ReturnInstruction());
+	}
+
+	public void allowIncompleteStructReferencing(final StructJassType structJassType) {
+		this.types.put(structJassType.getName(), structJassType);
+		final StaticStructTypeJassValue staticTypeInfo = new StaticStructTypeJassValue(structJassType);
+		createGlobal(structJassType.getName(), staticTypeInfo);
+	}
+
+	public void defineStruct(final StructJassType structJassType) {
+		this.types.put(structJassType.getName(), structJassType);
+		structJassType.buildMethodTable(this);
 	}
 
 	public InstructionWriter beginDefiningFunction(final int lineNo, final String sourceFile, final String name,
@@ -259,7 +310,16 @@ public final class GlobalScope {
 		this.lastGlobalsBlockEndInstructionPtr = this.instructions.size();
 	}
 
+	public void resetGlobalInitialization() {
+		this.lastGlobalsBlockEndInstructionPtr = -1;
+	}
+
 	public InstructionWriter beginDefiningGlobals(final int lineNo, final String sourceFile) {
+		innerBeginDefiningGlobals(lineNo, sourceFile);
+		return new InstructionWriter(this.instructions, this, Collections.emptyList());
+	}
+
+	public void innerBeginDefiningGlobals(final int lineNo, final String sourceFile) {
 		final int newSectionStart = this.instructions.size();
 		if (this.lastGlobalsBlockEndInstructionPtr != -1) {
 			this.instructions.set(this.lastGlobalsBlockEndInstructionPtr, new BranchInstruction(newSectionStart));
@@ -268,7 +328,6 @@ public final class GlobalScope {
 			this.functionNameToInstructionPtr.put(INIT_GLOBALS_AUTOGEN_FXN_NAME, this.instructions.size());
 		}
 		this.instructions.add(new BeginFunctionInstruction(lineNo, sourceFile, INIT_GLOBALS_AUTOGEN_FXN_NAME));
-		return new InstructionWriter(this.instructions, this, Collections.emptyList());
 	}
 
 	public JassFunction getFunctionByName(final String name) {
@@ -336,7 +395,9 @@ public final class GlobalScope {
 	}
 
 	public JassThread createThread(final CodeJassValue codeValue) {
-		return createThread(codeValue.getUserFunctionInstructionPtr());
+		final JassThread newThread = createThread(codeValue.getUserFunctionInstructionPtr());
+		codeValue.initStack(newThread.stackFrame);
+		return newThread;
 	}
 
 	public JassThread createThread(final int instructionPtr) {
@@ -348,7 +409,9 @@ public final class GlobalScope {
 	}
 
 	public JassThread createThread(final CodeJassValue codeValue, final TriggerExecutionScope triggerScope) {
-		return createThread(codeValue.getUserFunctionInstructionPtr(), triggerScope);
+		final JassThread newThread = createThread(codeValue.getUserFunctionInstructionPtr(), triggerScope);
+		codeValue.initStack(newThread.stackFrame);
+		return newThread;
 	}
 
 	public JassThread createThread(final int instructionPtr, final TriggerExecutionScope triggerScope) {
@@ -365,6 +428,7 @@ public final class GlobalScope {
 		jassStackFrame.stackBase = new JassStackFrame();
 		final JassThread jassThread = new JassThread(jassStackFrame, this, triggerScope,
 				codeValue.getUserFunctionInstructionPtr());
+		codeValue.initStack(jassStackFrame);
 		return jassThread;
 	}
 
@@ -438,7 +502,9 @@ public final class GlobalScope {
 			}
 		}
 		catch (final Exception exc) {
-			throw new JassException(this, "runThreads() encountered exception", exc);
+			final JassException jassException = new JassException(this, "runThreads() encountered exception", exc);
+			JassLog.report(jassException);
+			throw jassException;
 		}
 		this.currentThread = parentThread;
 	}
@@ -460,7 +526,9 @@ public final class GlobalScope {
 				}
 			}
 			catch (final Exception exc) {
-				throw new JassException(this, "runThreads() encountered exception", exc);
+				final JassException jassException = new JassException(this, "runThreads() encountered exception", exc);
+				JassLog.report(jassException);
+				throw jassException;
 			}
 			if (this.yieldedCurrentThread) {
 				this.currentThread.setSleeping(false);

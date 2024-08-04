@@ -10,6 +10,7 @@ import com.etheller.interpreter.JassParser.GlobalContext;
 import com.etheller.interpreter.JassParser.ProgramContext;
 import com.etheller.interpreter.JassParser.StatementContext;
 import com.etheller.interpreter.JassParser.TypeDeclarationContext;
+import com.etheller.interpreter.ast.definition.JassParameterDefinition;
 import com.etheller.interpreter.ast.function.JassNativeManager;
 import com.etheller.interpreter.ast.function.UserJassFunction;
 import com.etheller.interpreter.ast.scope.GlobalScope;
@@ -32,7 +33,8 @@ public class JassProgramVisitor extends JassBaseVisitor<Void> {
 	}
 	private final JassGlobalsVisitor jassGlobalsVisitor = new JassGlobalsVisitor(this.globals, this.jassTypeVisitor,
 			this.jassExpressionVisitor);
-	private final JassParametersVisitor jassParametersVisitor = new JassParametersVisitor(this.jassTypeVisitor);
+	private final JassParametersVisitor jassParametersVisitor = new JassParametersVisitor(this.jassTypeVisitor,
+			this.globals);
 	private final JassStatementVisitor jassStatementVisitor = new JassStatementVisitor(this.argumentExpressionHandler,
 			this.jassTypeVisitor);
 	private String jassFileName;
@@ -66,8 +68,10 @@ public class JassProgramVisitor extends JassBaseVisitor<Void> {
 			statements.add(this.jassStatementVisitor.visit(statementContext));
 		}
 		final UserJassFunction userJassFunction = new UserJassFunction(statements,
-				this.jassParametersVisitor.visit(ctx.paramList()), this.jassTypeVisitor.visit(ctx.type()));
-		this.globals.defineFunction(ctx.getStart().getLine(), this.jassFileName, ctx.ID().getText(), userJassFunction);
+				JassParameterDefinition.resolve(this.jassParametersVisitor.visit(ctx.paramList()), this.globals),
+				this.jassTypeVisitor.visit(ctx.type()).resolve(this.globals));
+		this.globals.defineFunction(ctx.getStart().getLine(), this.jassFileName, ctx.ID().getText(), userJassFunction,
+				"");
 		if (JassSettings.LOG_FUNCTION_DEFINITIONS) {
 			System.out.println("Defining jass user function: " + ctx.ID().getText());
 		}

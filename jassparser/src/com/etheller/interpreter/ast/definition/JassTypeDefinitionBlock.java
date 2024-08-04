@@ -12,7 +12,7 @@ public class JassTypeDefinitionBlock implements JassDefinitionBlock {
 	}
 
 	@Override
-	public void define(final JassProgram jassProgram) {
+	public void define(final String mangledNameScope, final JassProgram jassProgram) {
 		jassProgram.globalScope.loadTypeDefinition(this.id, this.supertype);
 	}
 

@@ -1,10 +1,9 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.jass;
 
-import java.util.Collections;
-
-import com.etheller.interpreter.ast.function.JassFunction;
 import com.etheller.interpreter.ast.scope.GlobalScope;
 import com.etheller.interpreter.ast.scope.TriggerExecutionScope;
+import com.etheller.interpreter.ast.value.CodeJassValue;
+import com.etheller.interpreter.ast.value.JassValue;
 import com.etheller.interpreter.ast.value.visitor.ObjectJassValueVisitor;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.jass.CAbilityJass;
@@ -14,11 +13,12 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehavior
 
 public class CBehaviorJass implements CBehavior {
 	private final int highlightOrderId;
-	private final JassFunction updateFunction;
+	private final CodeJassValue updateFunction;
 	private final GlobalScope globalScope;
 	private CAbilityJass jassAbility;
 
-	public CBehaviorJass(final int highlightOrderId, final JassFunction updateFunction, final GlobalScope globalScope) {
+	public CBehaviorJass(final int highlightOrderId, final CodeJassValue updateFunction,
+			final GlobalScope globalScope) {
 		this.highlightOrderId = highlightOrderId;
 		this.updateFunction = updateFunction;
 		this.globalScope = globalScope;
@@ -30,10 +30,13 @@ public class CBehaviorJass implements CBehavior {
 
 	@Override
 	public CBehavior update(final CSimulation game) {
-		return this.updateFunction
-				.call(Collections.emptyList(), this.globalScope,
-						TriggerExecutionScope.EMPTY /* TODO this.jassAbility.getJassAbilityBasicScope() */)
-				.visit(ObjectJassValueVisitor.getInstance());
+		final JassValue jassReturnValue = this.updateFunction.callAndExecuteCapturingReturnValue(this.globalScope,
+				TriggerExecutionScope.EMPTY /* TODO this.jassAbility.getJassAbilityBasicScope() */, "CBehaviorJass",
+				null);
+		if (jassReturnValue == null) {
+			return null;
+		}
+		return jassReturnValue.visit(ObjectJassValueVisitor.getInstance());
 	}
 
 	@Override

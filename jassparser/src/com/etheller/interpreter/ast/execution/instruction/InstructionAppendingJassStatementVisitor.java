@@ -26,7 +26,6 @@ import com.etheller.interpreter.ast.expression.NotJassExpression;
 import com.etheller.interpreter.ast.expression.ParentlessMethodCallJassExpression;
 import com.etheller.interpreter.ast.expression.ReferenceJassExpression;
 import com.etheller.interpreter.ast.expression.visitor.JassTypeExpressionVisitor;
-import com.etheller.interpreter.ast.function.JassFunction;
 import com.etheller.interpreter.ast.function.JassParameter;
 import com.etheller.interpreter.ast.scope.GlobalScope;
 import com.etheller.interpreter.ast.statement.JassArrayedAssignmentStatement;
@@ -65,6 +64,7 @@ public class InstructionAppendingJassStatementVisitor
 			JassReturnNothingStatement.RETURN_NOTHING_NOTICE);
 	private final List<JassInstruction> instructions;
 	private final GlobalScope globalScope;
+	private final String mangledNameScope;
 	private final Map<String, Integer> nameToLocalId = new HashMap<>();
 	private final Map<String, JassType> nameToLocalType = new HashMap<>();
 	private int nextLocalId;
@@ -72,9 +72,10 @@ public class InstructionAppendingJassStatementVisitor
 	private StructJassType enclosingStructType;
 
 	public InstructionAppendingJassStatementVisitor(final List<JassInstruction> instructions,
-			final GlobalScope globalScope, final List<JassParameter> parameters) {
+			final GlobalScope globalScope, final String mangledNameScope, final List<JassParameter> parameters) {
 		this.instructions = instructions;
 		this.globalScope = globalScope;
+		this.mangledNameScope = mangledNameScope;
 		this.nextLocalId = 0;
 		for (final JassParameter parameter : parameters) {
 			this.nameToLocalId.put(parameter.getIdentifier(), this.nextLocalId++);
@@ -195,10 +196,10 @@ public class InstructionAppendingJassStatementVisitor
 	public Void visit(final JassLocalDefinitionStatement statement) {
 		final String identifier = statement.getIdentifier();
 		this.nameToLocalId.put(identifier, this.nextLocalId++);
-		this.nameToLocalType.put(identifier, statement.getType());
+		this.nameToLocalType.put(identifier, statement.getType().resolve(this.globalScope));
 		insertExpressionInstructions(statement.getExpression());
 		if (CHECK_TYPES) {
-			this.instructions.add(new TypeCheckInstruction(statement.getType()));
+			this.instructions.add(new TypeCheckInstruction(statement.getType().resolve(this.globalScope)));
 		}
 		return null;
 	}
@@ -206,7 +207,7 @@ public class InstructionAppendingJassStatementVisitor
 	@Override
 	public Void visit(final JassLocalStatement statement) {
 		final String identifier = statement.getIdentifier();
-		final JassType type = statement.getType();
+		final JassType type = statement.getType().resolve(this.globalScope);
 		this.nameToLocalId.put(identifier, this.nextLocalId++);
 		this.nameToLocalType.put(identifier, type);
 		final ArrayJassType arrayType = type.visit(ArrayTypeVisitor.getInstance());
@@ -221,7 +222,7 @@ public class InstructionAppendingJassStatementVisitor
 
 	@Override
 	public Void visit(final JassGlobalStatement statement) {
-		final JassType type = statement.getType();
+		final JassType type = statement.getType().resolve(this.globalScope);
 		final JassType arrayPrimType = type.visit(ArrayPrimitiveTypeVisitor.getInstance());
 		if (arrayPrimType != null) {
 			this.globalScope.createGlobalArray(statement.getIdentifier(), type);
@@ -235,7 +236,7 @@ public class InstructionAppendingJassStatementVisitor
 	@Override
 	public Void visit(final JassGlobalDefinitionStatement statement) {
 		final String identifier = statement.getIdentifier();
-		final JassType type = statement.getType();
+		final JassType type = statement.getType().resolve(this.globalScope);
 		final JassType arrayPrimType = type.visit(ArrayPrimitiveTypeVisitor.getInstance());
 		if (arrayPrimType != null) {
 			this.globalScope.createGlobalArray(identifier, type);
@@ -505,13 +506,11 @@ public class InstructionAppendingJassStatementVisitor
 	@Override
 	public Void visit(final FunctionReferenceJassExpression expression) {
 		final String identifier = expression.getIdentifier();
-		final JassFunction functionByName = this.globalScope.getFunctionByName(identifier);
 		final Integer userFunctionInstructionPtr = this.globalScope.getUserFunctionInstructionPtr(identifier);
-		if ((functionByName == null) || (userFunctionInstructionPtr == null)) {
+		if (userFunctionInstructionPtr == null) {
 			throw new RuntimeException("Unable to find function: " + identifier);
 		}
-		this.instructions
-				.add(new PushLiteralInstruction(new CodeJassValue(functionByName, userFunctionInstructionPtr)));
+		this.instructions.add(new PushLiteralInstruction(new CodeJassValue(userFunctionInstructionPtr)));
 		return null;
 	}
 
@@ -530,7 +529,7 @@ public class InstructionAppendingJassStatementVisitor
 			// TODO looking in method table here means that a static struct method call
 			// cannot be called recursively, nor from above its declaration
 			final Integer nonvirtualBranchInstructionPtr = staticType.getMethodTable().get(tableIndex);
-			this.instructions.add(new PushLiteralInstruction(new CodeJassValue(null, nonvirtualBranchInstructionPtr)));
+			this.instructions.add(new PushLiteralInstruction(new CodeJassValue(nonvirtualBranchInstructionPtr)));
 		}
 		else {
 			insertExpressionInstructions(structExpression);

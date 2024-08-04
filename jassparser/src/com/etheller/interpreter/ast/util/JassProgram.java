@@ -13,6 +13,9 @@ public class JassProgram {
 	public final List<JassDefinitionBlock> definitionBlocks = new ArrayList<>();
 
 	public void initialize() {
+		for (final JassDefinitionBlock definitionBlock : this.definitionBlocks) {
+			definitionBlock.define("", this);
+		}
 		this.globalScope.runThreadUntilCompletion(this.globalScope.createThread(
 				this.globalScope.getUserFunctionInstructionPtr(GlobalScope.INIT_GLOBALS_AUTOGEN_FXN_NAME)));
 		this.globalScope.resetGlobalInitialization();

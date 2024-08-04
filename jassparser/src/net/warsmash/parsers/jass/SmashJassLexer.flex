@@ -56,6 +56,29 @@ NOTHING = "nothing"
 STRUCT = "struct"
 ENDSTRUCT = "endstruct"
 
+LIBRARY = "library"
+LIBRARY_ONCE = "library_once"
+ENDLIBRARY = "endlibrary"
+
+SCOPE = "scope"
+ENDSCOPE = "endscope"
+
+INTERFACE = "interface"
+ENDINTERFACE = "endinterface"
+REQUIRES = "requires"
+OPTIONAL = "optional"
+
+PRIVATE = "private"
+PUBLIC = "public"
+READONLY = "readonly"
+
+OPERATOR = "operator"
+
+IMPLEMENT = "implement"
+
+MODULE = "module"
+ENDMODULE = "endmodule"
+
 METHOD = "method"
 ENDMETHOD = "endmethod"
 STATIC = "static"
@@ -144,6 +167,22 @@ DOT="."
 {NOTHING} { return SmashJassParser.Lexer.NOTHING; }
 {STRUCT} { return SmashJassParser.Lexer.STRUCT; }
 {ENDSTRUCT} { return SmashJassParser.Lexer.ENDSTRUCT; }
+{LIBRARY} { return SmashJassLexer.Lexer.LIBRARY; }
+{LIBRARY_ONCE} { return SmashJassLexer.Lexer.LIBRARY_ONCE; }
+{ENDLIBRARY} { return SmashJassLexer.Lexer.ENDLIBRARY; }
+{SCOPE} { return SmashJassLexer.Lexer.SCOPE; }
+{ENDSCOPE} { return SmashJassLexer.Lexer.ENDSCOPE; }
+{INTERFACE} { return SmashJassLexer.Lexer.INTERFACE; }
+{ENDINTERFACE} { return SmashJassLexer.Lexer.ENDINTERFACE; }
+{REQUIRES} { return SmashJassLexer.Lexer.REQUIRES; }
+{OPTIONAL} { return SmashJassLexer.Lexer.OPTIONAL; }
+{PRIVATE} { return SmashJassLexer.Lexer.PRIVATE; }
+{PUBLIC} { return SmashJassLexer.Lexer.PUBLIC; }
+{READONLY} { return SmashJassLexer.Lexer.READONLY; }
+{OPERATOR} { return SmashJassLexer.Lexer.OPERATOR; }
+{IMPLEMENT} { return SmashJassLexer.Lexer.IMPLEMENT; }
+{MODULE} { return SmashJassLexer.Lexer.MODULE; }
+{ENDMODULE} { return SmashJassLexer.Lexer.ENDMODULE; }
 {METHOD} { return SmashJassParser.Lexer.METHOD; }
 {ENDMETHOD} { return SmashJassParser.Lexer.ENDMETHOD; }
 {STATIC} { return SmashJassParser.Lexer.STATIC; }

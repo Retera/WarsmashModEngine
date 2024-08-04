@@ -23,7 +23,7 @@ public class JassGlobalsVisitor extends JassBaseVisitor<Void> {
 
 	@Override
 	public Void visitBasicGlobal(final BasicGlobalContext ctx) {
-		final JassType type = this.jassTypeVisitor.visit(ctx.type());
+		final JassType type = this.jassTypeVisitor.visit(ctx.type()).resolve(this.globals);
 		final JassType arrayPrimType = type.visit(ArrayPrimitiveTypeVisitor.getInstance());
 		if (arrayPrimType != null) {
 			this.globals.createGlobalArray(ctx.ID().getText(), type);
@@ -36,7 +36,7 @@ public class JassGlobalsVisitor extends JassBaseVisitor<Void> {
 
 	@Override
 	public Void visitDefinitionGlobal(final DefinitionGlobalContext ctx) {
-		final JassType type = this.jassTypeVisitor.visit(ctx.type());
+		final JassType type = this.jassTypeVisitor.visit(ctx.type()).resolve(this.globals);
 		final JassType arrayPrimType = type.visit(ArrayPrimitiveTypeVisitor.getInstance());
 		try {
 			if (arrayPrimType != null) {

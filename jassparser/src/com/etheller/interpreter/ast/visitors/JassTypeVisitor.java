@@ -5,9 +5,12 @@ import com.etheller.interpreter.JassParser.ArrayTypeContext;
 import com.etheller.interpreter.JassParser.BasicTypeContext;
 import com.etheller.interpreter.JassParser.NothingTypeContext;
 import com.etheller.interpreter.ast.scope.GlobalScope;
-import com.etheller.interpreter.ast.value.JassType;
+import com.etheller.interpreter.ast.type.ArrayJassTypeToken;
+import com.etheller.interpreter.ast.type.JassTypeToken;
+import com.etheller.interpreter.ast.type.NothingJassTypeToken;
+import com.etheller.interpreter.ast.type.PrimitiveJassTypeToken;
 
-public class JassTypeVisitor extends JassBaseVisitor<JassType> {
+public class JassTypeVisitor extends JassBaseVisitor<JassTypeToken> {
 	private final GlobalScope globals;
 
 	public JassTypeVisitor(final GlobalScope globals) {
@@ -15,17 +18,17 @@ public class JassTypeVisitor extends JassBaseVisitor<JassType> {
 	}
 
 	@Override
-	public JassType visitArrayType(final ArrayTypeContext ctx) {
-		return globals.parseArrayType(ctx.ID().getText());
+	public JassTypeToken visitArrayType(final ArrayTypeContext ctx) {
+		return new ArrayJassTypeToken(ctx.ID().getText());
 	}
 
 	@Override
-	public JassType visitBasicType(final BasicTypeContext ctx) {
-		return globals.parseType(ctx.ID().getText());
+	public JassTypeToken visitBasicType(final BasicTypeContext ctx) {
+		return new PrimitiveJassTypeToken(ctx.ID().getText());
 	}
 
 	@Override
-	public JassType visitNothingType(final NothingTypeContext ctx) {
-		return JassType.NOTHING;
+	public JassTypeToken visitNothingType(final NothingTypeContext ctx) {
+		return NothingJassTypeToken.INSTANCE;
 	}
 }

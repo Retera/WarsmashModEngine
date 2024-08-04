@@ -21,7 +21,7 @@ public class MethodReferenceInstruction implements JassInstruction {
 		final JassType jassType = struct.visit(JassTypeGettingValueVisitor.getInstance());
 		final StructJassType structType = jassType.visit(StructJassTypeVisitor.getInstance());
 		final int instructionPtr = structType.getMethodTable().get(this.methodTableIndex);
-		thread.stackFrame.push(new MethodJassValue(struct, null, instructionPtr));
+		thread.stackFrame.push(new MethodJassValue(struct, instructionPtr));
 	}
 
 }

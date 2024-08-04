@@ -19,8 +19,6 @@ import com.etheller.interpreter.ast.expression.NegateJassExpression;
 import com.etheller.interpreter.ast.expression.NotJassExpression;
 import com.etheller.interpreter.ast.expression.ParentlessMethodCallJassExpression;
 import com.etheller.interpreter.ast.expression.ReferenceJassExpression;
-import com.etheller.interpreter.ast.function.AbstractJassFunction;
-import com.etheller.interpreter.ast.function.JassFunction;
 import com.etheller.interpreter.ast.function.UserJassFunction;
 import com.etheller.interpreter.ast.scope.GlobalScope;
 import com.etheller.interpreter.ast.scope.GlobalScopeAssignable;
@@ -53,7 +51,7 @@ public class JassTypeExpressionVisitor implements JassExpressionVisitor<JassType
 
 	private JassType getTypeForIdentifier(final String identifier) {
 		JassType localType = this.nameToLocalType.get(identifier);
-		if (localType == null && GlobalScope.KEYWORD_THIS.equals(identifier)) {
+		if ((localType == null) && GlobalScope.KEYWORD_THIS.equals(identifier)) {
 			localType = this.nameToLocalType.get(GlobalScope.KEYNAME_THIS);
 		}
 		if (localType != null) {
@@ -84,11 +82,9 @@ public class JassTypeExpressionVisitor implements JassExpressionVisitor<JassType
 
 	@Override
 	public JassType visit(final FunctionCallJassExpression expression) {
-		final JassFunction functionByName = this.globalScope.getFunctionByName(expression.getFunctionName());
-		if (functionByName instanceof AbstractJassFunction) {
-			return ((AbstractJassFunction) functionByName).getReturnType();
-		}
-		return JassType.NOTHING;
+		final UserJassFunction functionByName = this.globalScope
+				.getFunctionDefinitionByName(expression.getFunctionName());
+		return functionByName.getReturnType();
 	}
 
 	@Override
@@ -106,11 +102,7 @@ public class JassTypeExpressionVisitor implements JassExpressionVisitor<JassType
 			structType = staticStruct.getStaticType();
 		}
 		final JassCodeDefinitionBlock methodBlock = structType.getMethodInefficientlyByName(functionName);
-		final UserJassFunction functionByName = methodBlock.getCode();
-		if (functionByName instanceof AbstractJassFunction) {
-			return ((AbstractJassFunction) functionByName).getReturnType();
-		}
-		return JassType.NOTHING;
+		return methodBlock.getReturnType().resolve(this.globalScope);
 	}
 
 	@Override

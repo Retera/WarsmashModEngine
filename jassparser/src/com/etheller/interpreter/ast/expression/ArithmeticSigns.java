@@ -797,7 +797,7 @@ public enum ArithmeticSigns implements ArithmeticSign {
 				return false;
 			}
 			else {
-				return (left.getValue() == right.getValue());
+				return (left.equals(right));
 			}
 		}
 	}

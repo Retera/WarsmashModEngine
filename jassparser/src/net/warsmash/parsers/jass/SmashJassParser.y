@@ -39,8 +39,7 @@
 	private GlobalScope globalScope;
 	private JassNativeManager jassNativeManager;
 	private JassProgram jassProgram;
-	private InstructionWriter instructionWriter;
-	private StructJassType currentStruct;
+	private JassStructDefinitionBlock currentStruct;
 	
 	public void scanAndParse(String currentParsingFilePath, JassProgram jassProgram) throws IOException {
 		this.currentParsingFilePath = currentParsingFilePath;
@@ -68,6 +67,7 @@ import com.etheller.interpreter.ast.expression.*;
 import com.etheller.interpreter.ast.statement.*;
 import com.etheller.interpreter.ast.debug.*;
 import com.etheller.interpreter.ast.struct.*;
+import com.etheller.interpreter.ast.type.*;
 import com.etheller.interpreter.ast.util.JassProgram;
 import java.io.IOException;
 import java.io.Reader;
@@ -83,22 +83,24 @@ import com.etheller.interpreter.ast.util.JassSettings;
 %define api.package {net.warsmash.parsers.jass}
 %define api.parser.public
 
-%token EQUALS PLUSEQUALS MINUSEQUALS PLUSPLUS MINUSMINUS GLOBALS ENDGLOBALS NATIVE FUNCTION TAKES RETURNS ENDFUNCTION NOTHING CALL SET RETURN ARRAY TYPE EXTENDS IF THEN ELSE ENDIF ELSEIF CONSTANT LOCAL LOOP ENDLOOP EXITWHEN DEBUG NULL TRUE FALSE NOT OR AND NEWLINE TIMES DIVIDE PLUS MINUS LESS GREATER LESS_EQUALS GREATER_EQUALS DOUBLE_EQUALS NOT_EQUALS OPEN_BRACKET CLOSE_BRACKET OPEN_PAREN CLOSE_PAREN COMMA STRUCT ENDSTRUCT METHOD ENDMETHOD DOT STATIC
+%token EQUALS PLUSEQUALS MINUSEQUALS PLUSPLUS MINUSMINUS GLOBALS ENDGLOBALS NATIVE FUNCTION TAKES RETURNS ENDFUNCTION NOTHING CALL SET RETURN ARRAY TYPE EXTENDS IF THEN ELSE ENDIF ELSEIF CONSTANT LOCAL LOOP ENDLOOP EXITWHEN DEBUG NULL TRUE FALSE NOT OR AND NEWLINE TIMES DIVIDE PLUS MINUS LESS GREATER LESS_EQUALS GREATER_EQUALS DOUBLE_EQUALS NOT_EQUALS OPEN_BRACKET CLOSE_BRACKET OPEN_PAREN CLOSE_PAREN COMMA STRUCT ENDSTRUCT METHOD ENDMETHOD DOT STATIC  LIBRARY LIBRARY_ONCE ENDLIBRARY SCOPE ENDSCOPE INTERFACE ENDINTERFACE REQUIRES OPTIONAL PRIVATE PUBLIC READONLY OPERATOR IMPLEMENT MODULE ENDMODULE
 %token <String> ID STRING_LITERAL
 %token <int> INTEGER HEX_CONSTANT DOLLAR_HEX_CONSTANT RAWCODE
 %token <double> REAL
 
-%type <JassType> type extends_opt
-%type <LinkedList<JassParameter>> paramList
-%type <JassParameter> param
+%type <JassTypeToken> type extends_opt
+%type <LinkedList<JassParameterDefinition>> paramList
+%type <LinkedList<String>> idList
+%type <JassParameterDefinition> param
 %type <LinkedList<JassExpression>> argsList
 %type <JassExpression> multDivExpression assignTail simpleArithmeticExpression boolComparisonExpression boolEqualityExpression boolAndsExpression boolExpression baseExpression negatableExpression expression functionExpression methodExpression
 %type <JassStatement> statement setPart callPart local ifStatementPartial global
-%type <JassStructMemberType> member
+%type <JassStructMemberTypeDefinition> member
 %type <LinkedList<JassStatement>> statements_opt statements globals globals_opt
-%type <JassCodeDefinitionBlock> methodBlock
+%type <JassMethodDefinitionBlock> methodBlock
 %type <JassFunctionDefinitionBlock> functionBlock
-%type <JassDefinitionBlock> nativeBlock typeDeclarationBlock structDeclarationBlock globalsBlock
+%type <JassDefinitionBlock> nativeBlock typeDeclarationBlock structDeclarationBlock globalsBlock libraryBlock scopeBlock block
+%type <LinkedList<JassDefinitionBlock>> blocks blocks_opt
 
 %%
 
@@ -108,6 +110,9 @@ program :
 	newlines_opt
 	blocks
 	newlines_opt
+	{
+		jassProgram.definitionBlocks.addAll($2);
+	}
 	;
 
 typeDeclarationBlock :
@@ -120,17 +125,17 @@ typeDeclarationBlock :
 type :
 	ID
 	{
-		$$ = globalScope.parseType($1);
+		$$ = new PrimitiveJassTypeToken($1);
 	}
 	|
 	ID ARRAY
 	{
-		$$ = globalScope.parseArrayType($1);
+		$$ = new ArrayJassTypeToken($1);
 	}
 	|
 	NOTHING
 	{
-		$$ = JassType.NOTHING;
+		$$ = NothingJassTypeToken.INSTANCE;
 	}
 	;
 
@@ -175,12 +180,12 @@ local :
 member:
 	type ID
 	{
-		$$ = new JassStructMemberType($1, $2, null);
+		$$ = new JassStructMemberTypeDefinition($1, $2, null);
 	}
 	|
 	type ID assignTail
 	{
-		$$ = new JassStructMemberType($1, $2, $3);
+		$$ = new JassStructMemberTypeDefinition($1, $2, $3);
 	}
 	;
 	
@@ -537,31 +542,47 @@ ifStatementPartial:
 param:
 	type ID
 	{
-		$$ = new JassParameter($1, $2);
+		$$ = new JassParameterDefinition($1, $2);
 	}
 	;
 	
 paramList:
 	param // SingleParameter
 	{
-		LinkedList<JassParameter> list = new LinkedList<JassParameter>();
+		LinkedList<JassParameterDefinition> list = new LinkedList<JassParameterDefinition>();
 		list.addFirst($1);
 		$$ = list;
 	}
 	|
 	param COMMA paramList // ListParameter
 	{
-		LinkedList<JassParameter> list = $3;
+		LinkedList<JassParameterDefinition> list = $3;
 		list.addFirst($1);
 		$$ = list;
 	}
 	|
 	NOTHING // NothingParameter
 	{
-		$$ = new LinkedList<JassParameter>();
+		$$ = new LinkedList<JassParameterDefinition>();
 	}
 	;
 	
+idList:
+	ID
+	{
+		LinkedList<String> list = new LinkedList<>();
+		list.addFirst($1);
+		$$ = list;
+	}
+	|
+	idList COMMA ID
+	{
+		LinkedList<String> list = $1;
+		list.addLast($3);
+		$$ = list;
+	}
+	;	
+
 globals:
 	global
 	{
@@ -590,7 +611,7 @@ globals_opt:
 	}
 	;
 
-globalsBlock :
+globalsBlock:
 	GLOBALS globals_opt ENDGLOBALS
 	{
 		$$ = new JassGlobalsDefinitionBlock(getLine(), currentParsingFilePath, $2);
@@ -607,27 +628,27 @@ nativeBlock:
 functionBlock:
 	constant_opt FUNCTION ID TAKES paramList RETURNS type statements_opt ENDFUNCTION
 	{
-		final UserJassFunction userJassFunction = new UserJassFunction($8, $5, $7);
-		$$ = new JassFunctionDefinitionBlock(getLine(), currentParsingFilePath, $3, userJassFunction);
+		$$ = new JassFunctionDefinitionBlock(getLine(), currentParsingFilePath, $3, $8, $5, $7);
 	}
 	;
 	
 methodBlock:
 	constant_opt METHOD ID TAKES paramList RETURNS type statements_opt ENDMETHOD
 	{
-		final List<JassParameter> parameters = new ArrayList<>();
-		parameters.add(new JassParameter(currentStruct, GlobalScope.KEYNAME_THIS));
-		parameters.addAll($5);
-		final UserJassFunction userJassFunction = new UserJassFunction($8, parameters, $7);
-		$$ = new JassCodeDefinitionBlock(getLine(), currentParsingFilePath, $3, userJassFunction);
+		$$ = new JassMethodDefinitionBlock(getLine(), currentParsingFilePath, $3, $8, $5, $7, false);
 	}
 	|
 	constant_opt STATIC METHOD ID TAKES paramList RETURNS type statements_opt ENDMETHOD
 	{
-		final UserJassFunction userJassFunction = new UserJassFunction($9, $6, $8);
-		$$ = new JassCodeDefinitionBlock(getLine(), currentParsingFilePath, $4, userJassFunction);
+		$$ = new JassMethodDefinitionBlock(getLine(), currentParsingFilePath, $4, $9, $6, $8, true);
 	}
 	;
+	
+libraryBlock:
+	LIBRARY ID blocks_opt ENDLIBRARY
+	{
+		
+	}
 	
 extends_opt:
 	EXTENDS type
@@ -636,53 +657,62 @@ extends_opt:
 	}
 	|
 	{
-		$$ = JassType.NOTHING;
+		$$ = NothingJassTypeToken.INSTANCE;
 	}
 	;
 	
 structDeclarationBlock:
 	STRUCT ID extends_opt
 	{
-		currentStruct = new StructJassType($3, $2);
-		globalScope.allowIncompleteStructReferencing(currentStruct);
+		currentStruct = new JassStructDefinitionBlock($2, $3);
 	}
 	structStatements_opt ENDSTRUCT
 	{
-		$$ = new JassStructDefinitionBlock(currentStruct);
+		$$ = currentStruct;
 	}
 	;
 	
 block:
 	globalsBlock
 	{
-		$1.define(jassProgram);
+		$$ = $1;
 	}
 	|
 	nativeBlock
 	{
-		$1.define(jassProgram);
+		$$ = $1;
 	}
 	|
 	functionBlock
 	{
-		$1.define(jassProgram);
+		$$ = $1;
 	}
 	|
 	typeDeclarationBlock
 	{
-		$1.define(jassProgram);
+		$$ = $1;
 	}
 	|
 	structDeclarationBlock
 	{
-		$1.define(jassProgram);
+		$$ = $1;
 	}
 	;
 	
 blocks:
 	block
+	{
+		LinkedList<JassDefinitionBlock> list = new LinkedList<>();
+		list.addFirst($1);
+		$$ = list;
+	}
 	|
 	blocks newlines block
+	{
+		LinkedList<JassDefinitionBlock> list = $1;
+		list.addLast($3);
+		$$ = list;
+	}
 	;
 	
 statements:
@@ -722,6 +752,18 @@ statements_opt:
 	newlines
 	{
 		$$ = new LinkedList<JassStatement>();
+	}
+	;
+	
+blocks_opt:
+	newlines blocks newlines
+	{
+		$$ = $2;
+	}
+	|
+	newlines
+	{
+		$$ = new LinkedList<JassDefinitionBlock>();
 	}
 	;
 	

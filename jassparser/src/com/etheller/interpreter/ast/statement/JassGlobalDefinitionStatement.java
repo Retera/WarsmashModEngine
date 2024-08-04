@@ -1,14 +1,14 @@
 package com.etheller.interpreter.ast.statement;
 
 import com.etheller.interpreter.ast.expression.JassExpression;
-import com.etheller.interpreter.ast.value.JassType;
+import com.etheller.interpreter.ast.type.JassTypeToken;
 
 public class JassGlobalDefinitionStatement implements JassStatement {
 	private final String identifier;
 	private final JassExpression expression;
-	private final JassType type;
+	private final JassTypeToken type;
 
-	public JassGlobalDefinitionStatement(final String identifier, final JassType type,
+	public JassGlobalDefinitionStatement(final String identifier, final JassTypeToken type,
 			final JassExpression expression) {
 		this.identifier = identifier;
 		this.type = type;
@@ -28,7 +28,7 @@ public class JassGlobalDefinitionStatement implements JassStatement {
 		return this.expression;
 	}
 
-	public JassType getType() {
+	public JassTypeToken getType() {
 		return this.type;
 	}
 

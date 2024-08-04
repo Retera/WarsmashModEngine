@@ -3,7 +3,7 @@ package com.etheller.interpreter.ast.execution.instruction;
 import java.util.LinkedList;
 
 import com.etheller.interpreter.ast.execution.JassThread;
-import com.etheller.interpreter.ast.function.JassFunction;
+import com.etheller.interpreter.ast.function.NativeJassFunction;
 import com.etheller.interpreter.ast.value.JassValue;
 
 public class NativeInstruction implements JassInstruction {
@@ -17,7 +17,7 @@ public class NativeInstruction implements JassInstruction {
 
 	@Override
 	public void run(final JassThread thread) {
-		final JassFunction nativeFromId = thread.globalScope.getNativeById(this.nativeId);
+		final NativeJassFunction nativeFromId = thread.globalScope.getNativeById(this.nativeId);
 		final LinkedList<JassValue> arguments = new LinkedList<>();
 		for (int i = 0; i < this.argumentCount; i++) {
 			arguments.addFirst(thread.stackFrame.pop());

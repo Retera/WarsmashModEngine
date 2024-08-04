@@ -1,13 +1,13 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.jass;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 import com.etheller.interpreter.ast.function.JassFunction;
 import com.etheller.interpreter.ast.scope.GlobalScope;
 import com.etheller.interpreter.ast.scope.TriggerExecutionScope;
 import com.etheller.interpreter.ast.scope.trigger.TriggerBooleanExpression;
+import com.etheller.interpreter.ast.value.CodeJassValue;
 import com.etheller.interpreter.ast.value.JassValue;
 import com.etheller.interpreter.ast.value.visitor.BooleanJassValueVisitor;
 import com.etheller.interpreter.ast.value.visitor.ObjectJassValueVisitor;
@@ -36,11 +36,11 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.CommandStringE
 
 public class CAbilityTypeJassDefinition extends AbstractCAbilityTypeDefinition<CAbilityTypeLevelData>
 		implements CAbilityTypeDefinition {
-	private JassFunction onAddJass;
-	private JassFunction onRemoveJass;
-	private JassFunction onTickJass;
-	private JassFunction onDeathJass;
-	private JassFunction onCancelFromQueueJass;
+	private CodeJassValue onAddJass;
+	private CodeJassValue onRemoveJass;
+	private CodeJassValue onTickJass;
+	private CodeJassValue onDeathJass;
+	private CodeJassValue onCancelFromQueueJass;
 	private BehaviorExpr beginJass;
 	private TriggerBooleanExpression checkBeforeQueueJass;
 	private TriggerBooleanExpression checkTargetJass;
@@ -75,23 +75,23 @@ public class CAbilityTypeJassDefinition extends AbstractCAbilityTypeDefinition<C
 		return new CAbilityTypeJass(alias, this.code, levelData, this.jassGlobalScope, this);
 	}
 
-	public void setOnAddJass(final JassFunction onAddJass) {
+	public void setOnAddJass(final CodeJassValue onAddJass) {
 		this.onAddJass = onAddJass;
 	}
 
-	public void setOnRemoveJass(final JassFunction onRemoveJass) {
+	public void setOnRemoveJass(final CodeJassValue onRemoveJass) {
 		this.onRemoveJass = onRemoveJass;
 	}
 
-	public void setOnTickJass(final JassFunction onTickJass) {
+	public void setOnTickJass(final CodeJassValue onTickJass) {
 		this.onTickJass = onTickJass;
 	}
 
-	public void setOnDeathJass(final JassFunction onDeathJass) {
+	public void setOnDeathJass(final CodeJassValue onDeathJass) {
 		this.onDeathJass = onDeathJass;
 	}
 
-	public void setOnCancelFromQueueJass(final JassFunction onCancelFromQueueJass) {
+	public void setOnCancelFromQueueJass(final CodeJassValue onCancelFromQueueJass) {
 		this.onCancelFromQueueJass = onCancelFromQueueJass;
 	}
 
@@ -139,9 +139,9 @@ public class CAbilityTypeJassDefinition extends AbstractCAbilityTypeDefinition<C
 		return this.jassOrders;
 	}
 
-	private void execute(final JassFunction function, final List<JassValue> args, final TriggerExecutionScope scope) {
+	private void execute(final CodeJassValue function, final TriggerExecutionScope scope) {
 		if (function != null) {
-			function.call(args, this.jassGlobalScope, scope);
+			function.call(this.jassGlobalScope, scope);
 		}
 	}
 
@@ -173,24 +173,24 @@ public class CAbilityTypeJassDefinition extends AbstractCAbilityTypeDefinition<C
 	}
 
 	public void onAdd(final CSimulation game, final CAbilityJass abilityJass, final CUnit unit) {
-		execute(this.onAddJass, Collections.emptyList(), abilityJass.getJassAbilityBasicScope());
+		execute(this.onAddJass, abilityJass.getJassAbilityBasicScope());
 	}
 
 	public void onRemove(final CSimulation game, final CAbilityJass abilityJass, final CUnit unit) {
-		execute(this.onRemoveJass, Collections.emptyList(), abilityJass.getJassAbilityBasicScope());
+		execute(this.onRemoveJass, abilityJass.getJassAbilityBasicScope());
 	}
 
 	public void onTick(final CSimulation game, final CAbilityJass abilityJass, final CUnit unit) {
-		execute(this.onTickJass, Collections.emptyList(), abilityJass.getJassAbilityBasicScope());
+		execute(this.onTickJass, abilityJass.getJassAbilityBasicScope());
 	}
 
 	public void onDeath(final CSimulation game, final CAbilityJass abilityJass, final CUnit unit) {
-		execute(this.onDeathJass, Collections.emptyList(), abilityJass.getJassAbilityBasicScope());
+		execute(this.onDeathJass, abilityJass.getJassAbilityBasicScope());
 	}
 
 	public void onCancelFromQueue(final CSimulation game, final CAbilityJass abilityJass, final CUnit unit,
 			final int orderId) {
-		execute(this.onCancelFromQueueJass, Collections.emptyList(),
+		execute(this.onCancelFromQueueJass,
 				CommonTriggerExecutionScope.jassAbilityBasicScope(abilityJass, unit, abilityJass.getAlias(), orderId));
 	}
 
@@ -698,7 +698,12 @@ public class CAbilityTypeJassDefinition extends AbstractCAbilityTypeDefinition<C
 	}
 
 	public static enum JassOrderButtonType {
-		INSTANT_NO_TARGET, UNIT_TARGET, POINT_TARGET, UNIT_OR_POINT_TARGET, INSTANT_NO_TARGET_NO_INTERRUPT, PASSIVE,
+		INSTANT_NO_TARGET,
+		UNIT_TARGET,
+		POINT_TARGET,
+		UNIT_OR_POINT_TARGET,
+		INSTANT_NO_TARGET_NO_INTERRUPT,
+		PASSIVE,
 		MENU;
 
 		public static JassOrderButtonType[] VALUES = values();

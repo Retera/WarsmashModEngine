@@ -8,6 +8,8 @@ import java.util.List;
 import java.util.Map;
 
 import com.etheller.interpreter.ast.definition.JassCodeDefinitionBlock;
+import com.etheller.interpreter.ast.definition.JassMethodDefinitionBlock;
+import com.etheller.interpreter.ast.definition.JassParameterDefinition;
 import com.etheller.interpreter.ast.expression.AllocateAsNewTypeExpression;
 import com.etheller.interpreter.ast.expression.ExtendHandleExpression;
 import com.etheller.interpreter.ast.expression.FunctionCallJassExpression;
@@ -18,11 +20,11 @@ import com.etheller.interpreter.ast.expression.ReferenceJassExpression;
 import com.etheller.interpreter.ast.function.AbstractJassFunction;
 import com.etheller.interpreter.ast.function.JassFunction;
 import com.etheller.interpreter.ast.function.JassParameter;
-import com.etheller.interpreter.ast.function.UserJassFunction;
 import com.etheller.interpreter.ast.scope.GlobalScope;
 import com.etheller.interpreter.ast.statement.JassReturnStatement;
 import com.etheller.interpreter.ast.statement.JassStatement;
 import com.etheller.interpreter.ast.struct.JassStructMemberType;
+import com.etheller.interpreter.ast.type.LiteralJassTypeToken;
 import com.etheller.interpreter.ast.value.visitor.HandleJassTypeVisitor;
 import com.etheller.interpreter.ast.value.visitor.StructJassTypeVisitor;
 
@@ -32,13 +34,34 @@ public class StructJassType implements JassType {
 	private final JassType superType;
 	private final String name;
 	private final List<JassStructMemberType> memberTypes = new ArrayList<>();
-	private final List<JassCodeDefinitionBlock> methods = new ArrayList<>();
+	private final List<JassMethodDefinitionBlock> methods = new ArrayList<>();
 	private final List<Integer> methodTable = new ArrayList<>();
 	private final Map<String, Integer> methodNameToTableIndex = new HashMap<>();
 
 	public StructJassType(final JassType superType, final String name) {
 		this.superType = superType;
 		this.name = name;
+	}
+
+	private void addDefaultAllocateMethod(final GlobalScope globalScope) {
+		add(new JassMethodDefinitionBlock(0, "<init>", ALLOCATE,
+				Arrays.<JassStatement>asList(new JassReturnStatement(new JassNewExpression(this))),
+				Collections.emptyList(), new LiteralJassTypeToken(this), true));
+	}
+
+	private void add(final JassMethodDefinitionBlock methodBlock) {
+		this.methods.add(methodBlock);
+		Integer tableIndex = this.methodNameToTableIndex.get(methodBlock.getName());
+		if (tableIndex == null) {
+			// this method not is an override, needs its own index
+			tableIndex = this.methodTable.size();
+			this.methodNameToTableIndex.put(methodBlock.getName(), tableIndex);
+			this.methodTable.add(-1); // to be set later
+		}
+	}
+
+	public void buildMethodTable(final GlobalScope globalScope, final List<JassMethodDefinitionBlock> methodDefinitions,
+			final String mangledNameScope) {
 		final StructJassType superStructType = this.superType.visit(StructJassTypeVisitor.getInstance());
 		if (superStructType != null) {
 			this.memberTypes.addAll(superStructType.getMemberTypes());
@@ -47,19 +70,18 @@ public class StructJassType implements JassType {
 			this.methodTable.addAll(superStructType.methodTable);
 			final JassCodeDefinitionBlock superCreateMethod = superStructType.tryGetMethodInefficientlyByName(CREATE);
 			if (superCreateMethod != null) {
-				final UserJassFunction superCreateMethodCode = superCreateMethod.getCode();
 				final List<JassStatement> newStatements = new ArrayList<>();
 				final List<JassExpression> passThroughArguments = new ArrayList<>();
-				for (final JassParameter parameter : superCreateMethodCode.getParameters()) {
+				for (final JassParameterDefinition parameter : superCreateMethod.getParameterDefinitions()) {
 					passThroughArguments.add(new ReferenceJassExpression(parameter.getIdentifier()));
 				}
 				newStatements.add(new JassReturnStatement(new AllocateAsNewTypeExpression(new MethodCallJassExpression(
 						new ReferenceJassExpression(superStructType.getName()), CREATE, passThroughArguments), this)));
-				add(new JassCodeDefinitionBlock(0, "<init>", ALLOCATE,
-						new UserJassFunction(newStatements, superCreateMethodCode.getParameters(), this)));
+				add(new JassMethodDefinitionBlock(0, "<init>", ALLOCATE, newStatements,
+						superCreateMethod.getParameterDefinitions(), new LiteralJassTypeToken(this), true));
 			}
 			else {
-				addDefaultAllocateMethod();
+				addDefaultAllocateMethod(globalScope);
 			}
 		}
 		else {
@@ -78,42 +100,27 @@ public class StructJassType implements JassType {
 					final List<JassStatement> newStatements = new ArrayList<>();
 					newStatements.add(new JassReturnStatement(new ExtendHandleExpression(
 							new FunctionCallJassExpression(constructorNative.getName(), passThroughArguments), this)));
-					add(new JassCodeDefinitionBlock(0, "<init>", ALLOCATE,
-							new UserJassFunction(newStatements, Collections.emptyList() /* TODO args */, this)));
+					add(new JassMethodDefinitionBlock(0, "<init>", ALLOCATE, newStatements,
+							Collections.emptyList() /* TODO args */, new LiteralJassTypeToken(this), true));
 				}
 				else {
-					addDefaultAllocateMethod();
+					addDefaultAllocateMethod(globalScope);
 				}
 			}
 			else {
-				addDefaultAllocateMethod();
+				addDefaultAllocateMethod(globalScope);
 			}
 		}
-	}
 
-	private void addDefaultAllocateMethod() {
-		add(new JassCodeDefinitionBlock(0, "<init>", ALLOCATE,
-				new UserJassFunction(Arrays.<JassStatement>asList(new JassReturnStatement(new JassNewExpression(this))),
-						Collections.emptyList(), this)));
-	}
-
-	public void add(final JassCodeDefinitionBlock methodBlock) {
-		this.methods.add(methodBlock);
-		Integer tableIndex = this.methodNameToTableIndex.get(methodBlock.getName());
-		if (tableIndex == null) {
-			// this method not is an override, needs its own index
-			tableIndex = this.methodTable.size();
-			this.methodNameToTableIndex.put(methodBlock.getName(), tableIndex);
-			this.methodTable.add(-1); // to be set later
+		for (final JassMethodDefinitionBlock methodDefinition : methodDefinitions) {
+			add(methodDefinition);
 		}
-	}
 
-	public void buildMethodTable(final GlobalScope globalScope) {
-
-		for (final JassCodeDefinitionBlock methodBlock : this.methods) {
+		for (final JassMethodDefinitionBlock methodBlock : this.methods) {
 			final Integer tableIndex = this.methodNameToTableIndex.get(methodBlock.getName());
 			final int methodInstructionPtr = globalScope.defineMethod(methodBlock.getLineNo(),
-					methodBlock.getSourceFile(), methodBlock.getName(), methodBlock.getCode(), this);
+					methodBlock.getSourceFile(), methodBlock.getName(), methodBlock.createCode(globalScope, this), this,
+					mangledNameScope);
 			this.methodTable.set(tableIndex, methodInstructionPtr);
 		}
 		for (int i = 0; i < this.methodTable.size(); i++) {
@@ -139,7 +146,7 @@ public class StructJassType implements JassType {
 		return this.memberTypes;
 	}
 
-	public List<JassCodeDefinitionBlock> getMethods() {
+	public List<JassMethodDefinitionBlock> getMethods() {
 		return this.methods;
 	}
 

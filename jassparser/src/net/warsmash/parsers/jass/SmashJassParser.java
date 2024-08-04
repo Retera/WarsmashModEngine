@@ -40,7 +40,7 @@ package net.warsmash.parsers.jass;
 
 import java.text.MessageFormat;
 /* "%code imports" blocks.  */
-/* "SmashJassParser.y":59  */
+/* "SmashJassParser.y":58  */
 
 import com.etheller.interpreter.ast.scope.GlobalScope;
 import com.etheller.interpreter.ast.execution.instruction.*;
@@ -53,6 +53,7 @@ import com.etheller.interpreter.ast.expression.*;
 import com.etheller.interpreter.ast.statement.*;
 import com.etheller.interpreter.ast.debug.*;
 import com.etheller.interpreter.ast.struct.*;
+import com.etheller.interpreter.ast.type.*;
 import com.etheller.interpreter.ast.util.JassProgram;
 import java.io.IOException;
 import java.io.Reader;
@@ -61,7 +62,7 @@ import java.util.LinkedList;
 import java.util.ArrayList;
 import com.etheller.interpreter.ast.util.JassSettings;
 
-/* "SmashJassParser.java":65  */
+/* "SmashJassParser.java":66  */
 
 /**
  * A Bison parser, automatically generated from <tt>SmashJassParser.y</tt>.
@@ -612,7 +613,7 @@ public class SmashJassParser
 		this.currentFile = currentFile;
 	}
 
-/* "SmashJassParser.java":616  */
+/* "SmashJassParser.java":617  */
 
   }
 
@@ -796,9 +797,18 @@ public class SmashJassParser
 
     switch (yyn)
       {
-          case 4: /* typeDeclarationBlock: TYPE ID EXTENDS ID  */
+          case 3: /* program: newlines_opt blocks newlines_opt  */
+  if (yyn == 3)
+    /* "SmashJassParser.y":112  */
+        {
+		jassProgram.definitionBlocks.addAll(((LinkedList<JassDefinitionBlock>)(yystack.valueAt (1))));
+	};
+  break;
+
+
+  case 4: /* typeDeclarationBlock: TYPE ID EXTENDS ID  */
   if (yyn == 4)
-    /* "SmashJassParser.y":115  */
+    /* "SmashJassParser.y":119  */
         {
 		yyval = new JassTypeDefinitionBlock(((String)(yystack.valueAt (2))), ((String)(yystack.valueAt (0))));
 	};
@@ -807,106 +817,106 @@ public class SmashJassParser
 
   case 5: /* type: ID  */
   if (yyn == 5)
-    /* "SmashJassParser.y":122  */
+    /* "SmashJassParser.y":126  */
         {
-		yyval = globalScope.parseType(((String)(yystack.valueAt (0))));
+		yyval = new PrimitiveJassTypeToken(((String)(yystack.valueAt (0))));
 	};
   break;
 
 
   case 6: /* type: ID ARRAY  */
   if (yyn == 6)
-    /* "SmashJassParser.y":127  */
+    /* "SmashJassParser.y":131  */
         {
-		yyval = globalScope.parseArrayType(((String)(yystack.valueAt (1))));
+		yyval = new ArrayJassTypeToken(((String)(yystack.valueAt (1))));
 	};
   break;
 
 
   case 7: /* type: NOTHING  */
   if (yyn == 7)
-    /* "SmashJassParser.y":132  */
+    /* "SmashJassParser.y":136  */
         {
-		yyval = JassType.NOTHING;
+		yyval = NothingJassTypeToken.INSTANCE;
 	};
   break;
 
 
   case 10: /* global: constant_opt type ID  */
   if (yyn == 10)
-    /* "SmashJassParser.y":144  */
+    /* "SmashJassParser.y":148  */
         {
-		yyval = new JassGlobalStatement(((String)(yystack.valueAt (0))), ((JassType)(yystack.valueAt (1))));
+		yyval = new JassGlobalStatement(((String)(yystack.valueAt (0))), ((JassTypeToken)(yystack.valueAt (1))));
 	};
   break;
 
 
   case 11: /* global: constant_opt type ID assignTail  */
   if (yyn == 11)
-    /* "SmashJassParser.y":149  */
+    /* "SmashJassParser.y":153  */
         {
-		yyval = new JassGlobalDefinitionStatement(((String)(yystack.valueAt (1))), ((JassType)(yystack.valueAt (2))), ((JassExpression)(yystack.valueAt (0))));
+		yyval = new JassGlobalDefinitionStatement(((String)(yystack.valueAt (1))), ((JassTypeToken)(yystack.valueAt (2))), ((JassExpression)(yystack.valueAt (0))));
 	};
   break;
 
 
   case 12: /* local: LOCAL type ID  */
   if (yyn == 12)
-    /* "SmashJassParser.y":155  */
+    /* "SmashJassParser.y":159  */
         {
-		yyval = new JassLocalStatement(((String)(yystack.valueAt (0))), ((JassType)(yystack.valueAt (1))));
+		yyval = new JassLocalStatement(((String)(yystack.valueAt (0))), ((JassTypeToken)(yystack.valueAt (1))));
 	};
   break;
 
 
   case 13: /* local: LOCAL type ID assignTail  */
   if (yyn == 13)
-    /* "SmashJassParser.y":160  */
+    /* "SmashJassParser.y":164  */
         {
-		yyval = new JassLocalDefinitionStatement(((String)(yystack.valueAt (1))), ((JassType)(yystack.valueAt (2))), ((JassExpression)(yystack.valueAt (0))));
+		yyval = new JassLocalDefinitionStatement(((String)(yystack.valueAt (1))), ((JassTypeToken)(yystack.valueAt (2))), ((JassExpression)(yystack.valueAt (0))));
 	};
   break;
 
 
   case 14: /* local: type ID  */
   if (yyn == 14)
-    /* "SmashJassParser.y":165  */
+    /* "SmashJassParser.y":169  */
         {
-		yyval = new JassLocalStatement(((String)(yystack.valueAt (0))), ((JassType)(yystack.valueAt (1))));
+		yyval = new JassLocalStatement(((String)(yystack.valueAt (0))), ((JassTypeToken)(yystack.valueAt (1))));
 	};
   break;
 
 
   case 15: /* local: type ID assignTail  */
   if (yyn == 15)
-    /* "SmashJassParser.y":170  */
+    /* "SmashJassParser.y":174  */
         {
-		yyval = new JassLocalDefinitionStatement(((String)(yystack.valueAt (1))), ((JassType)(yystack.valueAt (2))), ((JassExpression)(yystack.valueAt (0))));
+		yyval = new JassLocalDefinitionStatement(((String)(yystack.valueAt (1))), ((JassTypeToken)(yystack.valueAt (2))), ((JassExpression)(yystack.valueAt (0))));
 	};
   break;
 
 
   case 16: /* member: type ID  */
   if (yyn == 16)
-    /* "SmashJassParser.y":177  */
+    /* "SmashJassParser.y":181  */
         {
-		yyval = new JassStructMemberType(((JassType)(yystack.valueAt (1))), ((String)(yystack.valueAt (0))), null);
+		yyval = new JassStructMemberTypeDefinition(((JassTypeToken)(yystack.valueAt (1))), ((String)(yystack.valueAt (0))), null);
 	};
   break;
 
 
   case 17: /* member: type ID assignTail  */
   if (yyn == 17)
-    /* "SmashJassParser.y":182  */
+    /* "SmashJassParser.y":186  */
         {
-		yyval = new JassStructMemberType(((JassType)(yystack.valueAt (2))), ((String)(yystack.valueAt (1))), ((JassExpression)(yystack.valueAt (0))));
+		yyval = new JassStructMemberTypeDefinition(((JassTypeToken)(yystack.valueAt (2))), ((String)(yystack.valueAt (1))), ((JassExpression)(yystack.valueAt (0))));
 	};
   break;
 
 
   case 18: /* assignTail: EQUALS expression  */
   if (yyn == 18)
-    /* "SmashJassParser.y":189  */
+    /* "SmashJassParser.y":193  */
         {
 		yyval = ((JassExpression)(yystack.valueAt (0)));
 	};
@@ -915,7 +925,7 @@ public class SmashJassParser
 
   case 19: /* multDivExpression: multDivExpression TIMES negatableExpression  */
   if (yyn == 19)
-    /* "SmashJassParser.y":195  */
+    /* "SmashJassParser.y":199  */
         {
 		yyval = new ArithmeticJassExpression(((JassExpression)(yystack.valueAt (2))), ((JassExpression)(yystack.valueAt (0))), ArithmeticSigns.MULTIPLY);
 	};
@@ -924,7 +934,7 @@ public class SmashJassParser
 
   case 20: /* multDivExpression: multDivExpression DIVIDE negatableExpression  */
   if (yyn == 20)
-    /* "SmashJassParser.y":200  */
+    /* "SmashJassParser.y":204  */
         {
 		yyval = new ArithmeticJassExpression(((JassExpression)(yystack.valueAt (2))), ((JassExpression)(yystack.valueAt (0))), ArithmeticSigns.DIVIDE);
 	};
@@ -933,7 +943,7 @@ public class SmashJassParser
 
   case 22: /* simpleArithmeticExpression: simpleArithmeticExpression PLUS multDivExpression  */
   if (yyn == 22)
-    /* "SmashJassParser.y":209  */
+    /* "SmashJassParser.y":213  */
         {
 		yyval = new ArithmeticJassExpression(((JassExpression)(yystack.valueAt (2))), ((JassExpression)(yystack.valueAt (0))), ArithmeticSigns.ADD);
 	};
@@ -942,7 +952,7 @@ public class SmashJassParser
 
   case 23: /* simpleArithmeticExpression: simpleArithmeticExpression MINUS multDivExpression  */
   if (yyn == 23)
-    /* "SmashJassParser.y":214  */
+    /* "SmashJassParser.y":218  */
         {
 		yyval = new ArithmeticJassExpression(((JassExpression)(yystack.valueAt (2))), ((JassExpression)(yystack.valueAt (0))), ArithmeticSigns.SUBTRACT);
 	};
@@ -951,7 +961,7 @@ public class SmashJassParser
 
   case 25: /* boolComparisonExpression: boolComparisonExpression LESS simpleArithmeticExpression  */
   if (yyn == 25)
-    /* "SmashJassParser.y":223  */
+    /* "SmashJassParser.y":227  */
         {
 		yyval = new ArithmeticJassExpression(((JassExpression)(yystack.valueAt (2))), ((JassExpression)(yystack.valueAt (0))), ArithmeticSigns.LESS);
 	};
@@ -960,7 +970,7 @@ public class SmashJassParser
 
   case 26: /* boolComparisonExpression: boolComparisonExpression GREATER simpleArithmeticExpression  */
   if (yyn == 26)
-    /* "SmashJassParser.y":228  */
+    /* "SmashJassParser.y":232  */
         {
 		yyval = new ArithmeticJassExpression(((JassExpression)(yystack.valueAt (2))), ((JassExpression)(yystack.valueAt (0))), ArithmeticSigns.GREATER);
 	};
@@ -969,7 +979,7 @@ public class SmashJassParser
 
   case 27: /* boolComparisonExpression: boolComparisonExpression LESS_EQUALS simpleArithmeticExpression  */
   if (yyn == 27)
-    /* "SmashJassParser.y":233  */
+    /* "SmashJassParser.y":237  */
         {
 		yyval = new ArithmeticJassExpression(((JassExpression)(yystack.valueAt (2))), ((JassExpression)(yystack.valueAt (0))), ArithmeticSigns.LESS_OR_EQUALS);
 	};
@@ -978,7 +988,7 @@ public class SmashJassParser
 
   case 28: /* boolComparisonExpression: boolComparisonExpression GREATER_EQUALS simpleArithmeticExpression  */
   if (yyn == 28)
-    /* "SmashJassParser.y":238  */
+    /* "SmashJassParser.y":242  */
         {
 		yyval = new ArithmeticJassExpression(((JassExpression)(yystack.valueAt (2))), ((JassExpression)(yystack.valueAt (0))), ArithmeticSigns.GREATER_OR_EQUALS);
 	};
@@ -987,7 +997,7 @@ public class SmashJassParser
 
   case 30: /* boolEqualityExpression: boolEqualityExpression DOUBLE_EQUALS boolComparisonExpression  */
   if (yyn == 30)
-    /* "SmashJassParser.y":247  */
+    /* "SmashJassParser.y":251  */
         {
 		yyval = new ArithmeticJassExpression(((JassExpression)(yystack.valueAt (2))), ((JassExpression)(yystack.valueAt (0))), ArithmeticSigns.EQUALS);
 	};
@@ -996,7 +1006,7 @@ public class SmashJassParser
 
   case 31: /* boolEqualityExpression: boolEqualityExpression NOT_EQUALS boolComparisonExpression  */
   if (yyn == 31)
-    /* "SmashJassParser.y":252  */
+    /* "SmashJassParser.y":256  */
         {
 		yyval = new ArithmeticJassExpression(((JassExpression)(yystack.valueAt (2))), ((JassExpression)(yystack.valueAt (0))), ArithmeticSigns.NOT_EQUALS);
 	};
@@ -1005,7 +1015,7 @@ public class SmashJassParser
 
   case 33: /* boolAndsExpression: boolAndsExpression AND boolEqualityExpression  */
   if (yyn == 33)
-    /* "SmashJassParser.y":261  */
+    /* "SmashJassParser.y":265  */
         {
 		yyval = new ArithmeticJassExpression(((JassExpression)(yystack.valueAt (2))), ((JassExpression)(yystack.valueAt (0))), ArithmeticSigns.AND);
 	};
@@ -1014,7 +1024,7 @@ public class SmashJassParser
 
   case 35: /* boolExpression: boolExpression OR boolAndsExpression  */
   if (yyn == 35)
-    /* "SmashJassParser.y":270  */
+    /* "SmashJassParser.y":274  */
         {
 		yyval = new ArithmeticJassExpression(((JassExpression)(yystack.valueAt (2))), ((JassExpression)(yystack.valueAt (0))), ArithmeticSigns.OR);
 	};
@@ -1023,7 +1033,7 @@ public class SmashJassParser
 
   case 37: /* baseExpression: ID  */
   if (yyn == 37)
-    /* "SmashJassParser.y":279  */
+    /* "SmashJassParser.y":283  */
         {
 		yyval = new ReferenceJassExpression(((String)(yystack.valueAt (0))));
 	};
@@ -1032,7 +1042,7 @@ public class SmashJassParser
 
   case 38: /* baseExpression: STRING_LITERAL  */
   if (yyn == 38)
-    /* "SmashJassParser.y":284  */
+    /* "SmashJassParser.y":288  */
         {
 		yyval = new LiteralJassExpression(StringJassValue.of(((String)(yystack.valueAt (0)))));
 	};
@@ -1041,7 +1051,7 @@ public class SmashJassParser
 
   case 39: /* baseExpression: INTEGER  */
   if (yyn == 39)
-    /* "SmashJassParser.y":289  */
+    /* "SmashJassParser.y":293  */
         {
 		yyval = new LiteralJassExpression(IntegerJassValue.of(((int)(yystack.valueAt (0)))));
 	};
@@ -1050,7 +1060,7 @@ public class SmashJassParser
 
   case 40: /* baseExpression: HEX_CONSTANT  */
   if (yyn == 40)
-    /* "SmashJassParser.y":294  */
+    /* "SmashJassParser.y":298  */
         {
 		yyval = new LiteralJassExpression(IntegerJassValue.of(((int)(yystack.valueAt (0)))));
 	};
@@ -1059,7 +1069,7 @@ public class SmashJassParser
 
   case 41: /* baseExpression: DOLLAR_HEX_CONSTANT  */
   if (yyn == 41)
-    /* "SmashJassParser.y":299  */
+    /* "SmashJassParser.y":303  */
         {
 		yyval = new LiteralJassExpression(IntegerJassValue.of(((int)(yystack.valueAt (0)))));
 	};
@@ -1068,7 +1078,7 @@ public class SmashJassParser
 
   case 42: /* baseExpression: RAWCODE  */
   if (yyn == 42)
-    /* "SmashJassParser.y":304  */
+    /* "SmashJassParser.y":308  */
         {
 		yyval = new LiteralJassExpression(IntegerJassValue.of(((int)(yystack.valueAt (0)))));
 	};
@@ -1077,7 +1087,7 @@ public class SmashJassParser
 
   case 43: /* baseExpression: REAL  */
   if (yyn == 43)
-    /* "SmashJassParser.y":309  */
+    /* "SmashJassParser.y":313  */
         {
 		yyval = new LiteralJassExpression(RealJassValue.of(((double)(yystack.valueAt (0)))));
 	};
@@ -1086,7 +1096,7 @@ public class SmashJassParser
 
   case 44: /* baseExpression: FUNCTION ID  */
   if (yyn == 44)
-    /* "SmashJassParser.y":314  */
+    /* "SmashJassParser.y":318  */
         {
 		yyval = new FunctionReferenceJassExpression(((String)(yystack.valueAt (0))));
 	};
@@ -1095,7 +1105,7 @@ public class SmashJassParser
 
   case 45: /* baseExpression: baseExpression DOT ID  */
   if (yyn == 45)
-    /* "SmashJassParser.y":319  */
+    /* "SmashJassParser.y":323  */
         {
 		yyval = new MemberJassExpression(((JassExpression)(yystack.valueAt (2))), ((String)(yystack.valueAt (0))));
 	};
@@ -1104,7 +1114,7 @@ public class SmashJassParser
 
   case 46: /* baseExpression: NULL  */
   if (yyn == 46)
-    /* "SmashJassParser.y":324  */
+    /* "SmashJassParser.y":328  */
         {
 		yyval = new LiteralJassExpression(null);
 	};
@@ -1113,7 +1123,7 @@ public class SmashJassParser
 
   case 47: /* baseExpression: TRUE  */
   if (yyn == 47)
-    /* "SmashJassParser.y":329  */
+    /* "SmashJassParser.y":333  */
         {
 		yyval = new LiteralJassExpression(BooleanJassValue.TRUE);
 	};
@@ -1122,7 +1132,7 @@ public class SmashJassParser
 
   case 48: /* baseExpression: FALSE  */
   if (yyn == 48)
-    /* "SmashJassParser.y":334  */
+    /* "SmashJassParser.y":338  */
         {
 		yyval = new LiteralJassExpression(BooleanJassValue.FALSE);
 	};
@@ -1131,7 +1141,7 @@ public class SmashJassParser
 
   case 49: /* baseExpression: ID OPEN_BRACKET expression CLOSE_BRACKET  */
   if (yyn == 49)
-    /* "SmashJassParser.y":339  */
+    /* "SmashJassParser.y":343  */
         {
 		yyval = new ArrayRefJassExpression(((String)(yystack.valueAt (3))), ((JassExpression)(yystack.valueAt (1))));
 	};
@@ -1140,7 +1150,7 @@ public class SmashJassParser
 
   case 50: /* baseExpression: functionExpression  */
   if (yyn == 50)
-    /* "SmashJassParser.y":344  */
+    /* "SmashJassParser.y":348  */
         {
 		yyval = ((JassExpression)(yystack.valueAt (0)));
 		// Handled by functionExpression, no need to extra code in a call expr
@@ -1150,7 +1160,7 @@ public class SmashJassParser
 
   case 51: /* baseExpression: methodExpression  */
   if (yyn == 51)
-    /* "SmashJassParser.y":350  */
+    /* "SmashJassParser.y":354  */
         {
 		yyval = ((JassExpression)(yystack.valueAt (0)));
 	};
@@ -1159,7 +1169,7 @@ public class SmashJassParser
 
   case 52: /* baseExpression: OPEN_PAREN expression CLOSE_PAREN  */
   if (yyn == 52)
-    /* "SmashJassParser.y":355  */
+    /* "SmashJassParser.y":359  */
         {
 		yyval = ((JassExpression)(yystack.valueAt (1)));
 		// handled by expression
@@ -1169,7 +1179,7 @@ public class SmashJassParser
 
   case 53: /* negatableExpression: baseExpression  */
   if (yyn == 53)
-    /* "SmashJassParser.y":363  */
+    /* "SmashJassParser.y":367  */
         {
 		yyval = ((JassExpression)(yystack.valueAt (0)));
 	};
@@ -1178,7 +1188,7 @@ public class SmashJassParser
 
   case 54: /* negatableExpression: NOT baseExpression  */
   if (yyn == 54)
-    /* "SmashJassParser.y":368  */
+    /* "SmashJassParser.y":372  */
         {
 		yyval = new NotJassExpression(((JassExpression)(yystack.valueAt (0))));
 	};
@@ -1187,7 +1197,7 @@ public class SmashJassParser
 
   case 55: /* negatableExpression: MINUS baseExpression  */
   if (yyn == 55)
-    /* "SmashJassParser.y":373  */
+    /* "SmashJassParser.y":377  */
         {
 		yyval = new NegateJassExpression(((JassExpression)(yystack.valueAt (0))));
 	};
@@ -1196,7 +1206,7 @@ public class SmashJassParser
 
   case 56: /* negatableExpression: METHOD baseExpression DOT ID  */
   if (yyn == 56)
-    /* "SmashJassParser.y":378  */
+    /* "SmashJassParser.y":382  */
         {
 		yyval = new MethodReferenceJassExpression(((JassExpression)(yystack.valueAt (2))), ((String)(yystack.valueAt (0))));
 	};
@@ -1205,7 +1215,7 @@ public class SmashJassParser
 
   case 57: /* expression: boolExpression  */
   if (yyn == 57)
-    /* "SmashJassParser.y":385  */
+    /* "SmashJassParser.y":389  */
         {
 		yyval = ((JassExpression)(yystack.valueAt (0)));
 	};
@@ -1214,7 +1224,7 @@ public class SmashJassParser
 
   case 58: /* functionExpression: ID OPEN_PAREN argsList CLOSE_PAREN  */
   if (yyn == 58)
-    /* "SmashJassParser.y":391  */
+    /* "SmashJassParser.y":395  */
         {
 		yyval = new FunctionCallJassExpression(((String)(yystack.valueAt (3))), ((LinkedList<JassExpression>)(yystack.valueAt (1))));
 	};
@@ -1223,7 +1233,7 @@ public class SmashJassParser
 
   case 59: /* methodExpression: baseExpression DOT ID OPEN_PAREN argsList CLOSE_PAREN  */
   if (yyn == 59)
-    /* "SmashJassParser.y":398  */
+    /* "SmashJassParser.y":402  */
         {
 		yyval = new MethodCallJassExpression(((JassExpression)(yystack.valueAt (5))), ((String)(yystack.valueAt (3))), ((LinkedList<JassExpression>)(yystack.valueAt (1))));
 	};
@@ -1232,7 +1242,7 @@ public class SmashJassParser
 
   case 60: /* methodExpression: DOT ID OPEN_PAREN argsList CLOSE_PAREN  */
   if (yyn == 60)
-    /* "SmashJassParser.y":403  */
+    /* "SmashJassParser.y":407  */
         {
 		yyval = new ParentlessMethodCallJassExpression(((String)(yystack.valueAt (3))), ((LinkedList<JassExpression>)(yystack.valueAt (1))));
 	};
@@ -1241,7 +1251,7 @@ public class SmashJassParser
 
   case 61: /* argsList: expression  */
   if (yyn == 61)
-    /* "SmashJassParser.y":410  */
+    /* "SmashJassParser.y":414  */
         {
 		LinkedList<JassExpression> list = new LinkedList<JassExpression>();
 		list.addFirst(((JassExpression)(yystack.valueAt (0))));
@@ -1252,7 +1262,7 @@ public class SmashJassParser
 
   case 62: /* argsList: expression COMMA argsList  */
   if (yyn == 62)
-    /* "SmashJassParser.y":417  */
+    /* "SmashJassParser.y":421  */
         {
 		LinkedList<JassExpression> list = ((LinkedList<JassExpression>)(yystack.valueAt (0)));
 		list.addFirst(((JassExpression)(yystack.valueAt (2))));
@@ -1263,7 +1273,7 @@ public class SmashJassParser
 
   case 63: /* argsList: %empty  */
   if (yyn == 63)
-    /* "SmashJassParser.y":424  */
+    /* "SmashJassParser.y":428  */
         {
 		yyval = new LinkedList<JassExpression>();
 	};
@@ -1272,7 +1282,7 @@ public class SmashJassParser
 
   case 64: /* setPart: ID EQUALS expression  */
   if (yyn == 64)
-    /* "SmashJassParser.y":435  */
+    /* "SmashJassParser.y":439  */
         {
 		yyval = new JassSetStatement(((String)(yystack.valueAt (2))), ((JassExpression)(yystack.valueAt (0))));
 	};
@@ -1281,7 +1291,7 @@ public class SmashJassParser
 
   case 65: /* setPart: ID OPEN_BRACKET expression CLOSE_BRACKET EQUALS expression  */
   if (yyn == 65)
-    /* "SmashJassParser.y":440  */
+    /* "SmashJassParser.y":444  */
         {
 		yyval = new JassArrayedAssignmentStatement(((String)(yystack.valueAt (5))), ((JassExpression)(yystack.valueAt (3))), ((JassExpression)(yystack.valueAt (0))));
 	};
@@ -1290,7 +1300,7 @@ public class SmashJassParser
 
   case 66: /* setPart: baseExpression DOT ID EQUALS expression  */
   if (yyn == 66)
-    /* "SmashJassParser.y":445  */
+    /* "SmashJassParser.y":449  */
         {
 		yyval = new JassSetMemberStatement(((JassExpression)(yystack.valueAt (4))), ((String)(yystack.valueAt (2))), ((JassExpression)(yystack.valueAt (0))));
 	};
@@ -1299,7 +1309,7 @@ public class SmashJassParser
 
   case 67: /* callPart: functionExpression  */
   if (yyn == 67)
-    /* "SmashJassParser.y":452  */
+    /* "SmashJassParser.y":456  */
         {
 		yyval = new JassCallExpressionStatement(((JassExpression)(yystack.valueAt (0))));
 	};
@@ -1308,7 +1318,7 @@ public class SmashJassParser
 
   case 68: /* callPart: methodExpression  */
   if (yyn == 68)
-    /* "SmashJassParser.y":457  */
+    /* "SmashJassParser.y":461  */
         {
 		yyval = new JassCallExpressionStatement(((JassExpression)(yystack.valueAt (0))));
 	};
@@ -1317,7 +1327,7 @@ public class SmashJassParser
 
   case 69: /* statement: CALL callPart  */
   if (yyn == 69)
-    /* "SmashJassParser.y":464  */
+    /* "SmashJassParser.y":468  */
         {
 		yyval = ((JassStatement)(yystack.valueAt (0)));
 	};
@@ -1326,7 +1336,7 @@ public class SmashJassParser
 
   case 70: /* statement: callPart  */
   if (yyn == 70)
-    /* "SmashJassParser.y":469  */
+    /* "SmashJassParser.y":473  */
         {
 		yyval = ((JassStatement)(yystack.valueAt (0)));
 	};
@@ -1335,7 +1345,7 @@ public class SmashJassParser
 
   case 71: /* statement: SET setPart  */
   if (yyn == 71)
-    /* "SmashJassParser.y":474  */
+    /* "SmashJassParser.y":478  */
         {
 		yyval = ((JassStatement)(yystack.valueAt (0)));
 	};
@@ -1344,7 +1354,7 @@ public class SmashJassParser
 
   case 72: /* statement: setPart  */
   if (yyn == 72)
-    /* "SmashJassParser.y":479  */
+    /* "SmashJassParser.y":483  */
         {
 		yyval = ((JassStatement)(yystack.valueAt (0)));
 	};
@@ -1353,7 +1363,7 @@ public class SmashJassParser
 
   case 73: /* statement: RETURN expression  */
   if (yyn == 73)
-    /* "SmashJassParser.y":484  */
+    /* "SmashJassParser.y":488  */
         {
 		yyval = new JassReturnStatement(((JassExpression)(yystack.valueAt (0))));
 	};
@@ -1362,7 +1372,7 @@ public class SmashJassParser
 
   case 74: /* statement: RETURN  */
   if (yyn == 74)
-    /* "SmashJassParser.y":489  */
+    /* "SmashJassParser.y":493  */
         {
 		yyval = new JassReturnNothingStatement();
 	};
@@ -1371,7 +1381,7 @@ public class SmashJassParser
 
   case 75: /* statement: EXITWHEN expression  */
   if (yyn == 75)
-    /* "SmashJassParser.y":494  */
+    /* "SmashJassParser.y":498  */
         {
 		yyval = new JassExitWhenStatement(((JassExpression)(yystack.valueAt (0))));
 	};
@@ -1380,7 +1390,7 @@ public class SmashJassParser
 
   case 76: /* statement: local  */
   if (yyn == 76)
-    /* "SmashJassParser.y":499  */
+    /* "SmashJassParser.y":503  */
         {
 		yyval = ((JassStatement)(yystack.valueAt (0)));
 	};
@@ -1389,7 +1399,7 @@ public class SmashJassParser
 
   case 77: /* statement: LOOP statements_opt ENDLOOP  */
   if (yyn == 77)
-    /* "SmashJassParser.y":504  */
+    /* "SmashJassParser.y":508  */
         {
 		yyval = new JassLoopStatement(((LinkedList<JassStatement>)(yystack.valueAt (1))));
 	};
@@ -1398,7 +1408,7 @@ public class SmashJassParser
 
   case 78: /* statement: IF ifStatementPartial  */
   if (yyn == 78)
-    /* "SmashJassParser.y":509  */
+    /* "SmashJassParser.y":513  */
         {
 		yyval = ((JassStatement)(yystack.valueAt (0)));
 	};
@@ -1407,7 +1417,7 @@ public class SmashJassParser
 
   case 79: /* statement: DEBUG statement  */
   if (yyn == 79)
-    /* "SmashJassParser.y":514  */
+    /* "SmashJassParser.y":518  */
         {
 		yyval = ((JassStatement)(yystack.valueAt (0)));
 	};
@@ -1416,7 +1426,7 @@ public class SmashJassParser
 
   case 80: /* ifStatementPartial: expression THEN statements_opt ENDIF  */
   if (yyn == 80)
-    /* "SmashJassParser.y":522  */
+    /* "SmashJassParser.y":526  */
         {
 		yyval = new JassIfStatement(((JassExpression)(yystack.valueAt (3))), ((LinkedList<JassStatement>)(yystack.valueAt (1))));
 	};
@@ -1425,7 +1435,7 @@ public class SmashJassParser
 
   case 81: /* ifStatementPartial: expression THEN statements_opt ELSE statements_opt ENDIF  */
   if (yyn == 81)
-    /* "SmashJassParser.y":527  */
+    /* "SmashJassParser.y":531  */
         {
 		yyval = new JassIfElseStatement(((JassExpression)(yystack.valueAt (5))), ((LinkedList<JassStatement>)(yystack.valueAt (3))), ((LinkedList<JassStatement>)(yystack.valueAt (1))));
 	};
@@ -1434,7 +1444,7 @@ public class SmashJassParser
 
   case 82: /* ifStatementPartial: expression THEN statements_opt ELSEIF ifStatementPartial  */
   if (yyn == 82)
-    /* "SmashJassParser.y":532  */
+    /* "SmashJassParser.y":536  */
         {
 		yyval = new JassIfElseIfStatement(((JassExpression)(yystack.valueAt (4))), ((LinkedList<JassStatement>)(yystack.valueAt (2))), ((JassStatement)(yystack.valueAt (0))));
 	};
@@ -1443,19 +1453,19 @@ public class SmashJassParser
 
   case 83: /* param: type ID  */
   if (yyn == 83)
-    /* "SmashJassParser.y":539  */
+    /* "SmashJassParser.y":543  */
         {
-		yyval = new JassParameter(((JassType)(yystack.valueAt (1))), ((String)(yystack.valueAt (0))));
+		yyval = new JassParameterDefinition(((JassTypeToken)(yystack.valueAt (1))), ((String)(yystack.valueAt (0))));
 	};
   break;
 
 
   case 84: /* paramList: param  */
   if (yyn == 84)
-    /* "SmashJassParser.y":546  */
+    /* "SmashJassParser.y":550  */
         {
-		LinkedList<JassParameter> list = new LinkedList<JassParameter>();
-		list.addFirst(((JassParameter)(yystack.valueAt (0))));
+		LinkedList<JassParameterDefinition> list = new LinkedList<JassParameterDefinition>();
+		list.addFirst(((JassParameterDefinition)(yystack.valueAt (0))));
 		yyval = list;
 	};
   break;
@@ -1463,10 +1473,10 @@ public class SmashJassParser
 
   case 85: /* paramList: param COMMA paramList  */
   if (yyn == 85)
-    /* "SmashJassParser.y":553  */
+    /* "SmashJassParser.y":557  */
         {
-		LinkedList<JassParameter> list = ((LinkedList<JassParameter>)(yystack.valueAt (0)));
-		list.addFirst(((JassParameter)(yystack.valueAt (2))));
+		LinkedList<JassParameterDefinition> list = ((LinkedList<JassParameterDefinition>)(yystack.valueAt (0)));
+		list.addFirst(((JassParameterDefinition)(yystack.valueAt (2))));
 		yyval = list;
 	};
   break;
@@ -1474,16 +1484,16 @@ public class SmashJassParser
 
   case 86: /* paramList: NOTHING  */
   if (yyn == 86)
-    /* "SmashJassParser.y":560  */
+    /* "SmashJassParser.y":564  */
         {
-		yyval = new LinkedList<JassParameter>();
+		yyval = new LinkedList<JassParameterDefinition>();
 	};
   break;
 
 
   case 87: /* globals: global  */
   if (yyn == 87)
-    /* "SmashJassParser.y":567  */
+    /* "SmashJassParser.y":571  */
         {
 		LinkedList<JassStatement> list = new LinkedList<JassStatement>();
 		list.addFirst(((JassStatement)(yystack.valueAt (0))));
@@ -1494,7 +1504,7 @@ public class SmashJassParser
 
   case 88: /* globals: globals newlines global  */
   if (yyn == 88)
-    /* "SmashJassParser.y":574  */
+    /* "SmashJassParser.y":578  */
         {
 		LinkedList<JassStatement> list = ((LinkedList<JassStatement>)(yystack.valueAt (2)));
 		list.addLast(((JassStatement)(yystack.valueAt (0))));
@@ -1505,7 +1515,7 @@ public class SmashJassParser
 
   case 89: /* globals_opt: newlines globals newlines  */
   if (yyn == 89)
-    /* "SmashJassParser.y":583  */
+    /* "SmashJassParser.y":587  */
         {
 		yyval = ((LinkedList<JassStatement>)(yystack.valueAt (1)));
 	};
@@ -1514,7 +1524,7 @@ public class SmashJassParser
 
   case 90: /* globals_opt: newlines  */
   if (yyn == 90)
-    /* "SmashJassParser.y":588  */
+    /* "SmashJassParser.y":592  */
         {
 		yyval = new LinkedList<JassStatement>();
 	};
@@ -1523,7 +1533,7 @@ public class SmashJassParser
 
   case 91: /* globalsBlock: GLOBALS globals_opt ENDGLOBALS  */
   if (yyn == 91)
-    /* "SmashJassParser.y":595  */
+    /* "SmashJassParser.y":599  */
         {
 		yyval = new JassGlobalsDefinitionBlock(getLine(), currentParsingFilePath, ((LinkedList<JassStatement>)(yystack.valueAt (1))));
 	};
@@ -1532,132 +1542,147 @@ public class SmashJassParser
 
   case 92: /* nativeBlock: constant_opt NATIVE ID TAKES paramList RETURNS type  */
   if (yyn == 92)
-    /* "SmashJassParser.y":601  */
+    /* "SmashJassParser.y":605  */
         {
 		final String text = ((String)(yystack.valueAt (4)));
-		yyval = new JassNativeDefinitionBlock(getLine(), currentParsingFilePath, text, ((LinkedList<JassParameter>)(yystack.valueAt (2))), ((JassType)(yystack.valueAt (0))));
+		yyval = new JassNativeDefinitionBlock(getLine(), currentParsingFilePath, text, ((LinkedList<JassParameterDefinition>)(yystack.valueAt (2))), ((JassTypeToken)(yystack.valueAt (0))));
 	};
   break;
 
 
   case 93: /* functionBlock: constant_opt FUNCTION ID TAKES paramList RETURNS type statements_opt ENDFUNCTION  */
   if (yyn == 93)
-    /* "SmashJassParser.y":609  */
+    /* "SmashJassParser.y":613  */
         {
-		final UserJassFunction userJassFunction = new UserJassFunction(((LinkedList<JassStatement>)(yystack.valueAt (1))), ((LinkedList<JassParameter>)(yystack.valueAt (4))), ((JassType)(yystack.valueAt (2))));
-		yyval = new JassFunctionDefinitionBlock(getLine(), currentParsingFilePath, ((String)(yystack.valueAt (6))), userJassFunction);
+		yyval = new JassFunctionDefinitionBlock(getLine(), currentParsingFilePath, ((String)(yystack.valueAt (6))), ((LinkedList<JassStatement>)(yystack.valueAt (1))), ((LinkedList<JassParameterDefinition>)(yystack.valueAt (4))), ((JassTypeToken)(yystack.valueAt (2))));
 	};
   break;
 
 
   case 94: /* methodBlock: constant_opt METHOD ID TAKES paramList RETURNS type statements_opt ENDMETHOD  */
   if (yyn == 94)
-    /* "SmashJassParser.y":617  */
+    /* "SmashJassParser.y":620  */
         {
-		final List<JassParameter> parameters = new ArrayList<>();
-		parameters.add(new JassParameter(currentStruct, GlobalScope.KEYNAME_THIS));
-		parameters.addAll(((LinkedList<JassParameter>)(yystack.valueAt (4))));
-		final UserJassFunction userJassFunction = new UserJassFunction(((LinkedList<JassStatement>)(yystack.valueAt (1))), parameters, ((JassType)(yystack.valueAt (2))));
-		yyval = new JassCodeDefinitionBlock(getLine(), currentParsingFilePath, ((String)(yystack.valueAt (6))), userJassFunction);
+		yyval = new JassMethodDefinitionBlock(getLine(), currentParsingFilePath, ((String)(yystack.valueAt (6))), ((LinkedList<JassStatement>)(yystack.valueAt (1))), ((LinkedList<JassParameterDefinition>)(yystack.valueAt (4))), ((JassTypeToken)(yystack.valueAt (2))), false);
 	};
   break;
 
 
   case 95: /* methodBlock: constant_opt STATIC METHOD ID TAKES paramList RETURNS type statements_opt ENDMETHOD  */
   if (yyn == 95)
-    /* "SmashJassParser.y":626  */
+    /* "SmashJassParser.y":625  */
         {
-		final UserJassFunction userJassFunction = new UserJassFunction(((LinkedList<JassStatement>)(yystack.valueAt (1))), ((LinkedList<JassParameter>)(yystack.valueAt (4))), ((JassType)(yystack.valueAt (2))));
-		yyval = new JassCodeDefinitionBlock(getLine(), currentParsingFilePath, ((String)(yystack.valueAt (6))), userJassFunction);
+		yyval = new JassMethodDefinitionBlock(getLine(), currentParsingFilePath, ((String)(yystack.valueAt (6))), ((LinkedList<JassStatement>)(yystack.valueAt (1))), ((LinkedList<JassParameterDefinition>)(yystack.valueAt (4))), ((JassTypeToken)(yystack.valueAt (2))), true);
 	};
   break;
 
 
   case 96: /* extends_opt: EXTENDS type  */
   if (yyn == 96)
-    /* "SmashJassParser.y":634  */
+    /* "SmashJassParser.y":632  */
         {
-		yyval = ((JassType)(yystack.valueAt (0)));
+		yyval = ((JassTypeToken)(yystack.valueAt (0)));
 	};
   break;
 
 
   case 97: /* extends_opt: %empty  */
   if (yyn == 97)
-    /* "SmashJassParser.y":638  */
+    /* "SmashJassParser.y":636  */
         {
-		yyval = JassType.NOTHING;
+		yyval = NothingJassTypeToken.INSTANCE;
 	};
   break;
 
 
   case 98: /* $@1: %empty  */
   if (yyn == 98)
-    /* "SmashJassParser.y":645  */
+    /* "SmashJassParser.y":643  */
         {
-		currentStruct = new StructJassType(((JassType)(yystack.valueAt (0))), ((String)(yystack.valueAt (1))));
-		globalScope.allowIncompleteStructReferencing(currentStruct);
+		currentStruct = new JassStructDefinitionBlock(((String)(yystack.valueAt (1))), ((JassTypeToken)(yystack.valueAt (0))));
 	};
   break;
 
 
   case 99: /* structDeclarationBlock: STRUCT ID extends_opt $@1 structStatements_opt ENDSTRUCT  */
   if (yyn == 99)
-    /* "SmashJassParser.y":650  */
+    /* "SmashJassParser.y":647  */
         {
-		yyval = new JassStructDefinitionBlock(currentStruct);
+		yyval = currentStruct;
 	};
   break;
 
 
   case 100: /* block: globalsBlock  */
   if (yyn == 100)
-    /* "SmashJassParser.y":657  */
+    /* "SmashJassParser.y":654  */
         {
-		((JassDefinitionBlock)(yystack.valueAt (0))).define(jassProgram);
+		yyval = ((JassDefinitionBlock)(yystack.valueAt (0)));
 	};
   break;
 
 
   case 101: /* block: nativeBlock  */
   if (yyn == 101)
-    /* "SmashJassParser.y":662  */
+    /* "SmashJassParser.y":659  */
         {
-		((JassDefinitionBlock)(yystack.valueAt (0))).define(jassProgram);
+		yyval = ((JassDefinitionBlock)(yystack.valueAt (0)));
 	};
   break;
 
 
   case 102: /* block: functionBlock  */
   if (yyn == 102)
-    /* "SmashJassParser.y":667  */
+    /* "SmashJassParser.y":664  */
         {
-		((JassFunctionDefinitionBlock)(yystack.valueAt (0))).define(jassProgram);
+		yyval = ((JassFunctionDefinitionBlock)(yystack.valueAt (0)));
 	};
   break;
 
 
   case 103: /* block: typeDeclarationBlock  */
   if (yyn == 103)
-    /* "SmashJassParser.y":672  */
+    /* "SmashJassParser.y":669  */
         {
-		((JassDefinitionBlock)(yystack.valueAt (0))).define(jassProgram);
+		yyval = ((JassDefinitionBlock)(yystack.valueAt (0)));
 	};
   break;
 
 
   case 104: /* block: structDeclarationBlock  */
   if (yyn == 104)
-    /* "SmashJassParser.y":677  */
+    /* "SmashJassParser.y":674  */
         {
-		((JassDefinitionBlock)(yystack.valueAt (0))).define(jassProgram);
+		yyval = ((JassDefinitionBlock)(yystack.valueAt (0)));
+	};
+  break;
+
+
+  case 105: /* blocks: block  */
+  if (yyn == 105)
+    /* "SmashJassParser.y":681  */
+        {
+		LinkedList<JassDefinitionBlock> list = new LinkedList<>();
+		list.addFirst(((JassDefinitionBlock)(yystack.valueAt (0))));
+		yyval = list;
+	};
+  break;
+
+
+  case 106: /* blocks: blocks newlines block  */
+  if (yyn == 106)
+    /* "SmashJassParser.y":688  */
+        {
+		LinkedList<JassDefinitionBlock> list = ((LinkedList<JassDefinitionBlock>)(yystack.valueAt (2)));
+		list.addLast(((JassDefinitionBlock)(yystack.valueAt (0))));
+		yyval = list;
 	};
   break;
 
 
   case 107: /* statements: statement  */
   if (yyn == 107)
-    /* "SmashJassParser.y":690  */
+    /* "SmashJassParser.y":697  */
         {
 		LinkedList<JassStatement> list = new LinkedList<JassStatement>();
 		JassStatement statement;
@@ -1674,7 +1699,7 @@ public class SmashJassParser
 
   case 108: /* statements: statements newlines statement  */
   if (yyn == 108)
-    /* "SmashJassParser.y":703  */
+    /* "SmashJassParser.y":710  */
         {
 		LinkedList<JassStatement> list = ((LinkedList<JassStatement>)(yystack.valueAt (2)));
 		JassStatement statement;
@@ -1691,7 +1716,7 @@ public class SmashJassParser
 
   case 109: /* statements_opt: newlines statements newlines  */
   if (yyn == 109)
-    /* "SmashJassParser.y":718  */
+    /* "SmashJassParser.y":725  */
         {
 		yyval = ((LinkedList<JassStatement>)(yystack.valueAt (1)));
 	};
@@ -1700,7 +1725,7 @@ public class SmashJassParser
 
   case 110: /* statements_opt: newlines  */
   if (yyn == 110)
-    /* "SmashJassParser.y":723  */
+    /* "SmashJassParser.y":730  */
         {
 		yyval = new LinkedList<JassStatement>();
 	};
@@ -1709,24 +1734,24 @@ public class SmashJassParser
 
   case 111: /* structStatement: member  */
   if (yyn == 111)
-    /* "SmashJassParser.y":730  */
+    /* "SmashJassParser.y":737  */
         {
-		currentStruct.add(((JassStructMemberType)(yystack.valueAt (0))));
+		currentStruct.add(((JassStructMemberTypeDefinition)(yystack.valueAt (0))));
 	};
   break;
 
 
   case 112: /* structStatement: methodBlock  */
   if (yyn == 112)
-    /* "SmashJassParser.y":735  */
+    /* "SmashJassParser.y":742  */
         {
-		currentStruct.add(((JassCodeDefinitionBlock)(yystack.valueAt (0))));
+		currentStruct.add(((JassMethodDefinitionBlock)(yystack.valueAt (0))));
 	};
   break;
 
 
 
-/* "SmashJassParser.java":1730  */
+/* "SmashJassParser.java":1755  */
 
         default: break;
       }
@@ -2399,8 +2424,7 @@ private static final short[] yycheck_ = yycheck_init();
 	private GlobalScope globalScope;
 	private JassNativeManager jassNativeManager;
 	private JassProgram jassProgram;
-	private InstructionWriter instructionWriter;
-	private StructJassType currentStruct;
+	private JassStructDefinitionBlock currentStruct;
 	
 	public void scanAndParse(String currentParsingFilePath, JassProgram jassProgram) throws IOException {
 		this.currentParsingFilePath = currentParsingFilePath;
@@ -2416,7 +2440,7 @@ private static final short[] yycheck_ = yycheck_init();
 	}
 	
 
-/* "SmashJassParser.java":2420  */
+/* "SmashJassParser.java":2444  */
 
 }
-/* "SmashJassParser.y":763  */
+/* "SmashJassParser.y":770  */

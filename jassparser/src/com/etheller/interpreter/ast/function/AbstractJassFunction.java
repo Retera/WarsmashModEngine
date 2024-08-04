@@ -6,7 +6,7 @@ import com.etheller.interpreter.ast.debug.JassException;
 import com.etheller.interpreter.ast.scope.GlobalScope;
 import com.etheller.interpreter.ast.scope.LocalScope;
 import com.etheller.interpreter.ast.scope.TriggerExecutionScope;
-import com.etheller.interpreter.ast.value.JassType;
+import com.etheller.interpreter.ast.type.JassTypeToken;
 import com.etheller.interpreter.ast.value.JassValue;
 import com.etheller.interpreter.ast.value.visitor.JassTypeGettingValueVisitor;
 
@@ -18,9 +18,9 @@ import com.etheller.interpreter.ast.value.visitor.JassTypeGettingValueVisitor;
  */
 public abstract class AbstractJassFunction implements JassFunction {
 	protected final List<JassParameter> parameters;
-	protected final JassType returnType;
+	protected final JassTypeToken returnType;
 
-	public AbstractJassFunction(final List<JassParameter> parameters, final JassType returnType) {
+	public AbstractJassFunction(final List<JassParameter> parameters, final JassTypeToken returnType) {
 		this.parameters = parameters;
 		this.returnType = returnType;
 	}
@@ -62,7 +62,7 @@ public abstract class AbstractJassFunction implements JassFunction {
 		return this.parameters;
 	}
 
-	public JassType getReturnType() {
+	public JassTypeToken getReturnType() {
 		return this.returnType;
 	}
 }

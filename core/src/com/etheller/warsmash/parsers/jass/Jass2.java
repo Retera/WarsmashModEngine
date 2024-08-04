@@ -47,7 +47,6 @@ import com.etheller.interpreter.ast.value.StringJassValue;
 import com.etheller.interpreter.ast.value.visitor.BooleanJassValueVisitor;
 import com.etheller.interpreter.ast.value.visitor.CodeJassValueVisitor;
 import com.etheller.interpreter.ast.value.visitor.IntegerJassValueVisitor;
-import com.etheller.interpreter.ast.value.visitor.JassFunctionJassValueVisitor;
 import com.etheller.interpreter.ast.value.visitor.JassTypeGettingValueVisitor;
 import com.etheller.interpreter.ast.value.visitor.ObjectJassValueVisitor;
 import com.etheller.interpreter.ast.value.visitor.RealJassValueVisitor;
@@ -119,7 +118,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.jas
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.jass.CAbilityTypeJassDefinition;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.jass.CAbilityTypeJassDefinition.JassOrder;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.jass.CAbilityTypeJassDefinition.JassOrderButtonType;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.jass.JassFunctionBehaviorExpr;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.jass.CodeJassValueBehaviorExpr;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.ability.AbilityBuilderAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.ability.AbilityBuilderActiveAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.ability.GetABAbilityByRawcodeVisitor;
@@ -899,44 +898,42 @@ public class Jass2 {
 						}
 						return BooleanJassValue.of(abilityHandleId != 0);
 					});
-			jassProgramVisitor.getJassNativeManager().createNative("IssuePointOrderById",
-					(arguments, globalScope, triggerScope) -> {
-						final CUnit whichUnit = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());
-						if (whichUnit == null) {
-							return BooleanJassValue.FALSE;
+			final JassFunction issuePointOrderById = (arguments, globalScope, triggerScope) -> {
+				final CUnit whichUnit = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());
+				if (whichUnit == null) {
+					return BooleanJassValue.FALSE;
+				}
+				final int orderId = arguments.get(1).visit(IntegerJassValueVisitor.getInstance());
+				final double whichLocationX = arguments.get(2).visit(RealJassValueVisitor.getInstance());
+				final double whichLocationY = arguments.get(3).visit(RealJassValueVisitor.getInstance());
+				final CPlayerUnitOrderExecutor defaultPlayerUnitOrderExecutor = CommonEnvironment.this.simulation
+						.getDefaultPlayerUnitOrderExecutor(whichUnit.getPlayerIndex());
+				final BooleanAbilityActivationReceiver activationReceiver = BooleanAbilityActivationReceiver.INSTANCE;
+				int abilityHandleId = 0;
+				AbilityPointTarget targetAsPoint = new AbilityPointTarget((float) whichLocationX,
+						(float) whichLocationY);
+				for (final CAbility ability : whichUnit.getAbilities()) {
+					ability.checkCanUse(CommonEnvironment.this.simulation, whichUnit, orderId, activationReceiver);
+					if (activationReceiver.isOk()) {
+						final PointAbilityTargetCheckReceiver targetReceiver = PointAbilityTargetCheckReceiver.INSTANCE;
+						ability.checkCanTarget(CommonEnvironment.this.simulation, whichUnit, orderId, targetAsPoint,
+								targetReceiver.reset());
+						if (targetReceiver.getTarget() != null) {
+							targetAsPoint = targetReceiver.getTarget();
+							abilityHandleId = ability.getHandleId();
 						}
-						final int orderId = arguments.get(1).visit(IntegerJassValueVisitor.getInstance());
-						final double whichLocationX = arguments.get(2).visit(RealJassValueVisitor.getInstance());
-						final double whichLocationY = arguments.get(3).visit(RealJassValueVisitor.getInstance());
-						final CPlayerUnitOrderExecutor defaultPlayerUnitOrderExecutor = CommonEnvironment.this.simulation
-								.getDefaultPlayerUnitOrderExecutor(whichUnit.getPlayerIndex());
-						final BooleanAbilityActivationReceiver activationReceiver = BooleanAbilityActivationReceiver.INSTANCE;
-						int abilityHandleId = 0;
-						AbilityPointTarget targetAsPoint = new AbilityPointTarget((float) whichLocationX,
-								(float) whichLocationY);
-						for (final CAbility ability : whichUnit.getAbilities()) {
-							ability.checkCanUse(CommonEnvironment.this.simulation, whichUnit, orderId,
-									activationReceiver);
-							if (activationReceiver.isOk()) {
-								final PointAbilityTargetCheckReceiver targetReceiver = PointAbilityTargetCheckReceiver.INSTANCE;
-								ability.checkCanTarget(CommonEnvironment.this.simulation, whichUnit, orderId,
-										targetAsPoint, targetReceiver.reset());
-								if (targetReceiver.getTarget() != null) {
-									targetAsPoint = targetReceiver.getTarget();
-									abilityHandleId = ability.getHandleId();
-								}
-							}
-						}
-						if (abilityHandleId != 0) {
-							defaultPlayerUnitOrderExecutor.issuePointOrder(whichUnit.getHandleId(), abilityHandleId,
-									orderId, targetAsPoint.x, targetAsPoint.y, false);
-						}
-						return BooleanJassValue.of(abilityHandleId != 0);
-					});
+					}
+				}
+				if (abilityHandleId != 0) {
+					defaultPlayerUnitOrderExecutor.issuePointOrder(whichUnit.getHandleId(), abilityHandleId, orderId,
+							targetAsPoint.x, targetAsPoint.y, false);
+				}
+				return BooleanJassValue.of(abilityHandleId != 0);
+			};
+			jassProgramVisitor.getJassNativeManager().createNative("IssuePointOrderById", issuePointOrderById);
 			// TODO if BuildOrderById is actually different from PointOrderById then this
 			// needs to be fixed:
-			jassProgramVisitor.getJassNativeManager().createNative("IssueBuildOrderById",
-					jassProgramVisitor.getGlobals().getFunctionByName("IssuePointOrderById"));
+			jassProgramVisitor.getJassNativeManager().createNative("IssueBuildOrderById", issuePointOrderById);
 			jassProgramVisitor.getJassNativeManager().createNative("IssueTargetOrder",
 					(arguments, globalScope, triggerScope) -> {
 						final CUnit whichUnit = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());
@@ -5129,14 +5126,14 @@ public class Jass2 {
 			jassProgramVisitor.getJassNativeManager().createNative("CreateAbilityBehavior",
 					(arguments, globalScope, triggerScope) -> {
 						final int highlightOrderId = arguments.get(0).visit(IntegerJassValueVisitor.getInstance());
-						final JassFunction func = arguments.get(1).visit(JassFunctionJassValueVisitor.getInstance());
+						final CodeJassValue func = arguments.get(1).visit(CodeJassValueVisitor.getInstance());
 						return new HandleJassValue(abilitybehaviorType,
 								new CBehaviorJass(highlightOrderId, func, globalScope));
 					});
 			jassProgramVisitor.getJassNativeManager().createNative("CreateBehaviorExpr",
 					(arguments, globalScope, triggerScope) -> {
-						final JassFunction func = arguments.get(0).visit(JassFunctionJassValueVisitor.getInstance());
-						return new HandleJassValue(behaviorexprType, new JassFunctionBehaviorExpr(func));
+						final CodeJassValue func = arguments.get(0).visit(CodeJassValueVisitor.getInstance());
+						return new HandleJassValue(behaviorexprType, new CodeJassValueBehaviorExpr(func));
 					});
 			jassProgramVisitor.getJassNativeManager().createNative("GetSpellAbilityOrderId",
 					(arguments, globalScope, triggerScope) -> {
@@ -5161,7 +5158,7 @@ public class Jass2 {
 					(arguments, globalScope, triggerScope) -> {
 						final CAbilityTypeJassDefinition whichAbilityType = arguments.get(0)
 								.visit(ObjectJassValueVisitor.getInstance());
-						final JassFunction func = arguments.get(1).visit(JassFunctionJassValueVisitor.getInstance());
+						final CodeJassValue func = arguments.get(1).visit(CodeJassValueVisitor.getInstance());
 						whichAbilityType.setOnAddJass(func);
 						return null;
 					});
@@ -5169,7 +5166,7 @@ public class Jass2 {
 					(arguments, globalScope, triggerScope) -> {
 						final CAbilityTypeJassDefinition whichAbilityType = arguments.get(0)
 								.visit(ObjectJassValueVisitor.getInstance());
-						final JassFunction func = arguments.get(1).visit(JassFunctionJassValueVisitor.getInstance());
+						final CodeJassValue func = arguments.get(1).visit(CodeJassValueVisitor.getInstance());
 						whichAbilityType.setOnRemoveJass(func);
 						return null;
 					});
@@ -5177,7 +5174,7 @@ public class Jass2 {
 					(arguments, globalScope, triggerScope) -> {
 						final CAbilityTypeJassDefinition whichAbilityType = arguments.get(0)
 								.visit(ObjectJassValueVisitor.getInstance());
-						final JassFunction func = arguments.get(1).visit(JassFunctionJassValueVisitor.getInstance());
+						final CodeJassValue func = arguments.get(1).visit(CodeJassValueVisitor.getInstance());
 						whichAbilityType.setOnTickJass(func);
 						return null;
 					});
@@ -5185,7 +5182,7 @@ public class Jass2 {
 					(arguments, globalScope, triggerScope) -> {
 						final CAbilityTypeJassDefinition whichAbilityType = arguments.get(0)
 								.visit(ObjectJassValueVisitor.getInstance());
-						final JassFunction func = arguments.get(1).visit(JassFunctionJassValueVisitor.getInstance());
+						final CodeJassValue func = arguments.get(1).visit(CodeJassValueVisitor.getInstance());
 						whichAbilityType.setOnDeathJass(func);
 						return null;
 					});
@@ -5193,7 +5190,7 @@ public class Jass2 {
 					(arguments, globalScope, triggerScope) -> {
 						final CAbilityTypeJassDefinition whichAbilityType = arguments.get(0)
 								.visit(ObjectJassValueVisitor.getInstance());
-						final JassFunction func = arguments.get(1).visit(JassFunctionJassValueVisitor.getInstance());
+						final CodeJassValue func = arguments.get(1).visit(CodeJassValueVisitor.getInstance());
 						whichAbilityType.setOnCancelFromQueueJass(func);
 						return null;
 					});
@@ -7893,11 +7890,11 @@ public class Jass2 {
 		jassProgramVisitor.getJassNativeManager().createNative("ExecuteFunc",
 				(arguments, globalScope, triggerScope) -> {
 					final String funcName = arguments.get(0).visit(StringJassValueVisitor.getInstance());
-					final JassFunction functionByName = globalScope.getFunctionByName(funcName);
+					final Integer functionByName = globalScope.getUserFunctionInstructionPtr(funcName);
 					System.out.println("ExecuteFunc (\"" + funcName + "\")");
 					if (functionByName != null) {
 						// TODO below TriggerExecutionScope.EMPTY is probably not correct
-						functionByName.call(Collections.emptyList(), globalScope, TriggerExecutionScope.EMPTY);
+						globalScope.queueThread(globalScope.createThread(functionByName, TriggerExecutionScope.EMPTY));
 					}
 					return null;
 				});

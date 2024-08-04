@@ -1539,6 +1539,13 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 			if ((this.mouseOverUnit != null) && isUnitSelectable(this.mouseOverUnit)) {
 				final SimpleStatusBarFrame simpleStatusBarFrame = getHpBar();
 				positionHealthBar(simpleStatusBarFrame, this.mouseOverUnit, 1.0f);
+				if (this.mouseOverUnit instanceof RenderUnit) {
+					final RenderUnit renderUnit = (RenderUnit) this.mouseOverUnit;
+					if (renderUnit.getSimulationUnit().getMaximumMana() > 0) {
+						final SimpleStatusBarFrame simpleStatusManaBarFrame = getHpBar();
+						positionManaBar(simpleStatusManaBarFrame, renderUnit, 1.0f);
+					}
+				}
 				final String hoverTipTextValue = getWorldFrameHoverTipText(this.war3MapViewer.simulation,
 						this.mouseOverUnit);
 				this.hovertipFrame.setVisible(hoverTipTextValue != null);
@@ -1868,6 +1875,34 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 		simpleStatusBarFrame.setHeight(16);
 		simpleStatusBarFrame.addSetPoint(
 				new SetPoint(FramePoint.CENTER, this.rootFrame, FramePoint.BOTTOMLEFT, unprojected.x, unprojected.y));
+		simpleStatusBarFrame.setValue(lifeRatioRemaining);
+		simpleStatusBarFrame.positionBounds(this.rootFrame, this.uiViewport);
+	}
+
+	private void positionManaBar(final SimpleStatusBarFrame simpleStatusBarFrame, final RenderUnit unit,
+			final float alpha) {
+		simpleStatusBarFrame.setVisible(true);
+		clickLocationTemp.x = unit.getX();
+		clickLocationTemp.y = unit.getY();
+		clickLocationTemp.z = unit.getZ();
+		final Bounds unitBounds = unit.getInstance().getBounds();
+		if (unitBounds != null) {
+			final BoundingBox unitBoundsBox = unitBounds.getBoundingBox();
+			if (unitBoundsBox != null) {
+				clickLocationTemp.z += unitBoundsBox.max.z;
+			}
+		}
+		this.war3MapViewer.worldScene.camera.worldToScreen(screenCoordsVector, clickLocationTemp);
+		simpleStatusBarFrame.getBarFrame().setTexture("SimpleHpBarConsole", this.rootFrame);
+		simpleStatusBarFrame.getBorderFrame().setTexture("Textures\\Black32.blp", this.rootFrame);
+		simpleStatusBarFrame.getBorderFrame().setColor(0f, 0f, 0f, alpha);
+		final float lifeRatioRemaining = unit.getSimulationUnit().getMana() / unit.getSimulationUnit().getMaximumMana();
+		simpleStatusBarFrame.getBarFrame().setColor(0, 0, 1, alpha);
+		final Vector2 unprojected = this.uiViewport.unproject(screenCoordsVector);
+		simpleStatusBarFrame.setWidth((unit.getSelectionScale() * 1.5f * Gdx.graphics.getWidth()) / 2560);
+		simpleStatusBarFrame.setHeight(16);
+		simpleStatusBarFrame.addSetPoint(new SetPoint(FramePoint.CENTER, this.rootFrame, FramePoint.BOTTOMLEFT,
+				unprojected.x, unprojected.y - 16f));
 		simpleStatusBarFrame.setValue(lifeRatioRemaining);
 		simpleStatusBarFrame.positionBounds(this.rootFrame, this.uiViewport);
 	}

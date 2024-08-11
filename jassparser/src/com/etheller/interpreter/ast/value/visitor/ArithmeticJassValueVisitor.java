@@ -29,7 +29,14 @@ public class ArithmeticJassValueVisitor implements JassValueVisitor<JassValue> {
 
 	@Override
 	public JassValue accept(final BooleanJassValue value) {
-		return this.rightHand.visit(ArithmeticLeftHandBooleanJassValueVisitor.INSTANCE.reset(value, this.sign));
+		JassValue rightHandValue;
+		if (this.rightHand != null) {
+			rightHandValue = this.rightHand;
+		}
+		else {
+			rightHandValue = BooleanJassValue.FALSE;
+		}
+		return rightHandValue.visit(ArithmeticLeftHandBooleanJassValueVisitor.INSTANCE.reset(value, this.sign));
 	}
 
 	@Override

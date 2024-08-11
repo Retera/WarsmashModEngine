@@ -2,6 +2,7 @@ package com.etheller.interpreter.ast.definition;
 
 import java.util.List;
 
+import com.etheller.interpreter.ast.scope.Scope;
 import com.etheller.interpreter.ast.statement.JassStatement;
 import com.etheller.interpreter.ast.util.JassProgram;
 
@@ -17,8 +18,8 @@ public class JassGlobalsDefinitionBlock implements JassDefinitionBlock {
 	}
 
 	@Override
-	public void define(final String mangledNameScope, final JassProgram jassProgram) {
-		jassProgram.globalScope.defineGlobals(this.lineNo, this.file, this.globalStatements, mangledNameScope);
+	public void define(final Scope scope, final JassProgram jassProgram) {
+		scope.defineGlobals(this.lineNo, this.file, this.globalStatements);
 	}
 
 }

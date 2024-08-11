@@ -6,6 +6,7 @@ public class HandleJassType implements JassType {
 	private HandleJassType superType;
 	private final String name;
 	private HandleJassTypeConstructor constructorNative;
+	private HandleJassTypeConstructor destructorNative;
 
 	public HandleJassType(final HandleJassType superType, final String name) {
 		this.superType = superType;
@@ -55,8 +56,16 @@ public class HandleJassType implements JassType {
 		this.constructorNative = constructorNative;
 	}
 
+	public void setDestructorNative(final HandleJassTypeConstructor constructorNative) {
+		this.destructorNative = constructorNative;
+	}
+
 	public HandleJassTypeConstructor getConstructorNative() {
 		return this.constructorNative;
+	}
+
+	public HandleJassTypeConstructor getDestructorNative() {
+		return this.destructorNative;
 	}
 
 }

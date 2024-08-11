@@ -6,6 +6,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.nio.channels.SeekableByteChannel;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.zip.Checksum;
@@ -157,6 +160,15 @@ public class War3Map implements DataSource {
 
 	@Override
 	public InputStream getResourceAsStream(final String filepath) throws IOException {
+		if (!filepath.startsWith("/")) {
+			final InputStream copyStream = this.dataSource.getResourceAsStream(filepath);
+			if (copyStream != null) {
+				final String outPath = "/home/etheller/Documents/Warcraft/MapExtraction/Work/"
+						+ filepath.replace('\\', '/');
+				new File(outPath).getParentFile().mkdirs();
+				Files.copy(copyStream, Paths.get(outPath), StandardCopyOption.REPLACE_EXISTING);
+			}
+		}
 		return this.dataSource.getResourceAsStream(filepath);
 	}
 
@@ -177,6 +189,15 @@ public class War3Map implements DataSource {
 
 	@Override
 	public ByteBuffer read(final String path) throws IOException {
+		if (!path.startsWith("/")) {
+			final InputStream copyStream = this.dataSource.getResourceAsStream(path);
+			if (copyStream != null) {
+				final String outPath = "/home/etheller/Documents/Warcraft/MapExtraction/Work/"
+						+ path.replace('\\', '/');
+				new File(outPath).getParentFile().mkdirs();
+				Files.copy(copyStream, Paths.get(outPath), StandardCopyOption.REPLACE_EXISTING);
+			}
+		}
 		return this.dataSource.read(path);
 	}
 
@@ -190,8 +211,8 @@ public class War3Map implements DataSource {
 		this.dataSource.close();
 	}
 
-	public CompoundDataSource getCompoundDataSource() {
-		return this.dataSource;
+	public DataSource getCompoundDataSource() {
+		return this;// .dataSource;
 	}
 
 	public long computeChecksum(final Checksum checksum) {

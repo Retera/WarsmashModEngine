@@ -4,6 +4,7 @@ import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Deque;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -23,6 +24,7 @@ import com.etheller.interpreter.ast.execution.instruction.ReturnInstruction;
 import com.etheller.interpreter.ast.function.JassParameter;
 import com.etheller.interpreter.ast.function.NativeJassFunction;
 import com.etheller.interpreter.ast.function.UserJassFunction;
+import com.etheller.interpreter.ast.qualifier.JassQualifier;
 import com.etheller.interpreter.ast.scope.trigger.RemovableTriggerEvent;
 import com.etheller.interpreter.ast.scope.trigger.Trigger;
 import com.etheller.interpreter.ast.scope.trigger.TriggerBooleanExpression;
@@ -51,6 +53,8 @@ import com.etheller.interpreter.ast.value.visitor.JassTypeGettingValueVisitor;
 public final class GlobalScope {
 	public static final String INIT_GLOBALS_AUTOGEN_FXN_NAME = "{init-globals}";
 	public static final String KEYWORD_THIS = "this";
+	public static final String KEYWORD_SCOPE_PREFIX = "SCOPE_PREFIX";
+	public static final String KEYWORD_SCOPE_PRIVATE = "SCOPE_PRIVATE";
 	public static final String KEYNAME_THIS = "{this}";
 	private final List<GlobalScopeAssignable> indexedGlobals = new ArrayList<GlobalScopeAssignable>();
 	private final List<JassInstruction> instructions = new ArrayList<JassInstruction>();
@@ -225,13 +229,13 @@ public final class GlobalScope {
 	}
 
 	public int defineMethod(final int lineNo, final String sourceFile, final String name,
-			final UserJassFunction function, final StructJassType type, final String mangledNameScope) {
+			final UserJassFunction function, final StructJassType type, final Scope scope) {
 		final int instructionPtr = this.instructions.size();
 
 		final List<JassStatement> statements = function.getStatements();
 		this.instructions.add(new BeginFunctionInstruction(lineNo, sourceFile, name));
 		final InstructionAppendingJassStatementVisitor visitor = new InstructionAppendingJassStatementVisitor(
-				this.instructions, this, mangledNameScope, function.getParameters());
+				this.instructions, scope, function.getParameters());
 		visitor.setEnclosingStructType(type);
 		for (final JassStatement statement : statements) {
 			statement.accept(visitor);
@@ -242,22 +246,19 @@ public final class GlobalScope {
 		return instructionPtr;
 	}
 
-	public void defineFunction(final int lineNo, final String sourceFile, String name, final UserJassFunction function,
-			final String mangledNameScope) {
-		if (!mangledNameScope.isEmpty()) {
-			name = mangledNameScope + name;
-		}
+	public void defineFunction(final int lineNo, final String sourceFile, final String name,
+			final UserJassFunction function, final Scope scope) {
 		this.functionNameToDefinition.put(name, function);
 		this.functionNameToInstructionPtr.put(name, this.instructions.size());
-		writeFunctionInstructions(lineNo, sourceFile, name, function, mangledNameScope);
+		writeFunctionInstructions(lineNo, sourceFile, name, function, scope);
 	}
 
 	private void writeFunctionInstructions(final int lineNo, final String sourceFile, final String name,
-			final UserJassFunction function, final String mangledScopeName) {
+			final UserJassFunction function, final Scope scope) {
 		final List<JassStatement> statements = function.getStatements();
 		this.instructions.add(new BeginFunctionInstruction(lineNo, sourceFile, name));
 		final InstructionAppendingJassStatementVisitor visitor = new InstructionAppendingJassStatementVisitor(
-				this.instructions, this, mangledScopeName, function.getParameters());
+				this.instructions, scope, function.getParameters());
 		for (final JassStatement statement : statements) {
 			statement.accept(visitor);
 		}
@@ -266,10 +267,10 @@ public final class GlobalScope {
 	}
 
 	public void defineGlobals(final int lineNo, final String sourceFile, final List<JassStatement> globalStatements,
-			final String mangledNameScope) {
+			final Scope scope) {
 		innerBeginDefiningGlobals(lineNo, sourceFile);
 		final InstructionAppendingJassStatementVisitor visitor = new InstructionAppendingJassStatementVisitor(
-				this.instructions, this, mangledNameScope, Collections.emptyList());
+				this.instructions, scope, Collections.emptyList());
 		for (final JassStatement statement : globalStatements) {
 			statement.accept(visitor);
 		}
@@ -278,20 +279,22 @@ public final class GlobalScope {
 		this.instructions.add(new ReturnInstruction());
 	}
 
-	public void defineStruct(final String structName, final JassTypeToken structSuperTypeToken,
-			final List<JassStructMemberTypeDefinition> memberTypeDefinitions,
-			final List<JassMethodDefinitionBlock> methodDefinitions, final String mangledNameScope) {
-		final StructJassType structJassType = new StructJassType(structSuperTypeToken.resolve(this), structName);
+	public void defineStruct(final EnumSet<JassQualifier> qualifiers, final String structName,
+			final JassTypeToken structSuperTypeToken, final List<JassStructMemberTypeDefinition> memberTypeDefinitions,
+			final List<JassMethodDefinitionBlock> methodDefinitions, final Scope scope) {
+
+		final StructJassType structJassType = new StructJassType(structSuperTypeToken.resolve(scope), structName);
 		this.types.put(structName, structJassType);
 		final StaticStructTypeJassValue staticTypeInfo = new StaticStructTypeJassValue(structJassType);
 		createGlobal(structName, staticTypeInfo);
 
+		final List<JassStructMemberType> memberTypes = new ArrayList<>();
 		for (final JassStructMemberTypeDefinition memberTypeDefinition : memberTypeDefinitions) {
-			final JassType resolvedType = memberTypeDefinition.getType().resolve(this);
-			structJassType.add(new JassStructMemberType(resolvedType, memberTypeDefinition.getId(),
-					memberTypeDefinition.getDefaultValueExpression()));
+			final JassType resolvedType = memberTypeDefinition.getType().resolve(scope);
+			memberTypes.add(new JassStructMemberType(memberTypeDefinition.getQualifiers(), resolvedType,
+					memberTypeDefinition.getId(), memberTypeDefinition.getDefaultValueExpression()));
 		}
-		structJassType.buildMethodTable(this, methodDefinitions, mangledNameScope);
+		structJassType.buildMethodTable(scope, methodDefinitions, memberTypes);
 	}
 
 	public void endDefiningGlobals() {
@@ -339,11 +342,41 @@ public final class GlobalScope {
 		}
 	}
 
+	public JassType parseType(final String text, final LibraryScopeTree libraryScopeTree) {
+		final JassType typeFound = libraryScopeTree.forEachPossibleResolvedIdentifier(text, (possibleId) -> {
+			return this.types.get(possibleId);
+		});
+		if (typeFound == null) {
+			throw new RuntimeException("Unknown type: " + text);
+		}
+		return typeFound;
+	}
+
 	public JassType parseArrayType(final String primitiveTypeName) {
 		final String arrayTypeName = primitiveTypeName + " array";
 		JassType arrayType = this.types.get(arrayTypeName);
 		if (arrayType == null) {
 			arrayType = new ArrayJassType(parseType(primitiveTypeName));
+			this.types.put(arrayTypeName, arrayType);
+		}
+		return arrayType;
+	}
+
+	public JassType parseArrayType(final String primitiveTypeName, final LibraryScopeTree libraryScopeTree) {
+		final String qualifiedPrimitiveType = libraryScopeTree.forEachPossibleResolvedIdentifier(primitiveTypeName,
+				(possibleId) -> {
+					if (this.types.containsKey(possibleId)) {
+						return possibleId;
+					}
+					return null;
+				});
+		if (qualifiedPrimitiveType == null) {
+			throw new RuntimeException("Unknown type for array: " + primitiveTypeName);
+		}
+		final String arrayTypeName = qualifiedPrimitiveType + " array";
+		JassType arrayType = this.types.get(arrayTypeName);
+		if (arrayType == null) {
+			arrayType = new ArrayJassType(parseType(qualifiedPrimitiveType));
 			this.types.put(arrayTypeName, arrayType);
 		}
 		return arrayType;
@@ -602,4 +635,5 @@ public final class GlobalScope {
 			}
 		}
 	}
+
 }

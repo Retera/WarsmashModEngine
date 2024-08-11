@@ -22,6 +22,7 @@ import com.etheller.interpreter.ast.expression.ReferenceJassExpression;
 import com.etheller.interpreter.ast.function.UserJassFunction;
 import com.etheller.interpreter.ast.scope.GlobalScope;
 import com.etheller.interpreter.ast.scope.GlobalScopeAssignable;
+import com.etheller.interpreter.ast.scope.Scope;
 import com.etheller.interpreter.ast.value.JassType;
 import com.etheller.interpreter.ast.value.StaticStructTypeJassValue;
 import com.etheller.interpreter.ast.value.StructJassType;
@@ -37,11 +38,11 @@ public class JassTypeExpressionVisitor implements JassExpressionVisitor<JassType
 		return INSTANCE;
 	}
 
-	private GlobalScope globalScope;
+	private Scope globalScope;
 	private Map<String, JassType> nameToLocalType;
 	private StructJassType enclosingType;
 
-	public JassTypeExpressionVisitor reset(final GlobalScope globalScope, final Map<String, JassType> nameToLocalType,
+	public JassTypeExpressionVisitor reset(final Scope globalScope, final Map<String, JassType> nameToLocalType,
 			final StructJassType enclosingType) {
 		this.globalScope = globalScope;
 		this.nameToLocalType = nameToLocalType;
@@ -101,7 +102,7 @@ public class JassTypeExpressionVisitor implements JassExpressionVisitor<JassType
 					.visit(StaticStructTypeJassTypeVisitor.getInstance());
 			structType = staticStruct.getStaticType();
 		}
-		final JassCodeDefinitionBlock methodBlock = structType.getMethodInefficientlyByName(functionName);
+		final JassCodeDefinitionBlock methodBlock = structType.getMethodByName(functionName);
 		return methodBlock.getReturnType().resolve(this.globalScope);
 	}
 
@@ -156,7 +157,7 @@ public class JassTypeExpressionVisitor implements JassExpressionVisitor<JassType
 					.visit(StaticStructTypeJassTypeVisitor.getInstance());
 			structType = staticStruct.getStaticType();
 		}
-		return structType.getMemberInefficientlyByName(expression.getIdentifier()).getType();
+		return structType.getMemberByName(expression.getIdentifier()).getType();
 	}
 
 	@Override

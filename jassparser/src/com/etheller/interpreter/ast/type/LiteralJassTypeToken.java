@@ -5,7 +5,7 @@ import java.util.List;
 
 import com.etheller.interpreter.ast.definition.JassParameterDefinition;
 import com.etheller.interpreter.ast.function.JassParameter;
-import com.etheller.interpreter.ast.scope.GlobalScope;
+import com.etheller.interpreter.ast.scope.Scope;
 import com.etheller.interpreter.ast.value.JassType;
 
 public class LiteralJassTypeToken implements JassTypeToken {
@@ -16,7 +16,7 @@ public class LiteralJassTypeToken implements JassTypeToken {
 	}
 
 	@Override
-	public JassType resolve(final GlobalScope globalScope) {
+	public JassType resolve(final Scope globalScope) {
 		return this.jassType;
 	}
 

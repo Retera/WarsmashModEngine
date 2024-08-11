@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.etheller.interpreter.ast.debug.DebuggingJassStatement;
-import com.etheller.interpreter.ast.debug.JassException;
+import com.etheller.interpreter.ast.definition.JassCodeDefinitionBlock;
 import com.etheller.interpreter.ast.expression.AllocateAsNewTypeExpression;
 import com.etheller.interpreter.ast.expression.ArithmeticJassExpression;
 import com.etheller.interpreter.ast.expression.ArrayRefJassExpression;
@@ -27,7 +27,9 @@ import com.etheller.interpreter.ast.expression.ParentlessMethodCallJassExpressio
 import com.etheller.interpreter.ast.expression.ReferenceJassExpression;
 import com.etheller.interpreter.ast.expression.visitor.JassTypeExpressionVisitor;
 import com.etheller.interpreter.ast.function.JassParameter;
+import com.etheller.interpreter.ast.qualifier.JassQualifier;
 import com.etheller.interpreter.ast.scope.GlobalScope;
+import com.etheller.interpreter.ast.scope.Scope;
 import com.etheller.interpreter.ast.statement.JassArrayedAssignmentStatement;
 import com.etheller.interpreter.ast.statement.JassCallExpressionStatement;
 import com.etheller.interpreter.ast.statement.JassCallStatement;
@@ -47,9 +49,11 @@ import com.etheller.interpreter.ast.statement.JassSetMemberStatement;
 import com.etheller.interpreter.ast.statement.JassSetStatement;
 import com.etheller.interpreter.ast.statement.JassStatement;
 import com.etheller.interpreter.ast.statement.JassStatementVisitor;
+import com.etheller.interpreter.ast.struct.JassStructMemberType;
 import com.etheller.interpreter.ast.value.ArrayJassType;
 import com.etheller.interpreter.ast.value.CodeJassValue;
 import com.etheller.interpreter.ast.value.JassType;
+import com.etheller.interpreter.ast.value.JassValue;
 import com.etheller.interpreter.ast.value.StaticStructTypeJassValue;
 import com.etheller.interpreter.ast.value.StructJassType;
 import com.etheller.interpreter.ast.value.visitor.ArrayPrimitiveTypeVisitor;
@@ -63,19 +67,17 @@ public class InstructionAppendingJassStatementVisitor
 	private static final PushLiteralInstruction PUSH_NOTHING = new PushLiteralInstruction(
 			JassReturnNothingStatement.RETURN_NOTHING_NOTICE);
 	private final List<JassInstruction> instructions;
-	private final GlobalScope globalScope;
-	private final String mangledNameScope;
+	private final Scope globalScope;
 	private final Map<String, Integer> nameToLocalId = new HashMap<>();
 	private final Map<String, JassType> nameToLocalType = new HashMap<>();
 	private int nextLocalId;
 	private final ArrayDeque<LoopImpl> loopStartInstructionPtrs = new ArrayDeque<>();
 	private StructJassType enclosingStructType;
 
-	public InstructionAppendingJassStatementVisitor(final List<JassInstruction> instructions,
-			final GlobalScope globalScope, final String mangledNameScope, final List<JassParameter> parameters) {
+	public InstructionAppendingJassStatementVisitor(final List<JassInstruction> instructions, final Scope globalScope,
+			final List<JassParameter> parameters) {
 		this.instructions = instructions;
 		this.globalScope = globalScope;
-		this.mangledNameScope = mangledNameScope;
 		this.nextLocalId = 0;
 		for (final JassParameter parameter : parameters) {
 			this.nameToLocalId.put(parameter.getIdentifier(), this.nextLocalId++);
@@ -222,13 +224,14 @@ public class InstructionAppendingJassStatementVisitor
 
 	@Override
 	public Void visit(final JassGlobalStatement statement) {
+		final String identifier = statement.getIdentifier();
 		final JassType type = statement.getType().resolve(this.globalScope);
 		final JassType arrayPrimType = type.visit(ArrayPrimitiveTypeVisitor.getInstance());
 		if (arrayPrimType != null) {
-			this.globalScope.createGlobalArray(statement.getIdentifier(), type);
+			this.globalScope.createGlobalArray(statement.getQualifiers(), identifier, type);
 		}
 		else {
-			this.globalScope.createGlobal(statement.getIdentifier(), type);
+			this.globalScope.createGlobal(statement.getQualifiers(), identifier, type);
 		}
 		return null;
 	}
@@ -239,10 +242,10 @@ public class InstructionAppendingJassStatementVisitor
 		final JassType type = statement.getType().resolve(this.globalScope);
 		final JassType arrayPrimType = type.visit(ArrayPrimitiveTypeVisitor.getInstance());
 		if (arrayPrimType != null) {
-			this.globalScope.createGlobalArray(identifier, type);
+			this.globalScope.createGlobalArray(statement.getQualifiers(), identifier, type);
 		}
 		else {
-			this.globalScope.createGlobal(identifier, type);
+			this.globalScope.createGlobal(statement.getQualifiers(), identifier, type);
 		}
 		insertExpressionInstructions(statement.getExpression());
 		final int globalId = this.globalScope.getGlobalId(identifier);
@@ -318,6 +321,10 @@ public class InstructionAppendingJassStatementVisitor
 		final JassType expressionLookupType = structExpression.accept(JassTypeExpressionVisitor.getInstance()
 				.reset(this.globalScope, this.nameToLocalType, this.enclosingStructType));
 		final StructJassType structJassType = expressionLookupType.visit(StructJassTypeVisitor.getInstance());
+
+		final JassStructMemberType memberType = structJassType.getMemberByName(identifier);
+		checkMemberAccess(identifier, structJassType, memberType);
+
 		final int memberIndex = structJassType.getMemberIndexInefficientlyByName(identifier);
 		this.instructions.add(new SetStructMemberInstruction(memberIndex));
 		return null;
@@ -356,6 +363,9 @@ public class InstructionAppendingJassStatementVisitor
 			boolean found = false;
 			if ((thisStruct != null)
 					&& ((structJassType = thisStructType.visit(StructJassTypeVisitor.getInstance())) != null)) {
+				final JassStructMemberType memberType = structJassType.getMemberByName(identifier);
+				checkMemberAccess(identifier, structJassType, memberType);
+
 				final int memberIndex = structJassType.tryGetMemberIndexInefficientlyByName(identifier);
 				if (memberIndex != -1) {
 					this.instructions.add(new LocalReferenceInstruction(thisStruct));
@@ -369,8 +379,27 @@ public class InstructionAppendingJassStatementVisitor
 					this.instructions.add(new GlobalReferenceInstruction(globalId));
 				}
 				else {
-					throw new IllegalArgumentException("No such identifier: " + identifier);
+					final JassValue constantValue = this.globalScope.getPreprocessorConstant(identifier);
+					if (constantValue != null) {
+						this.instructions.add(new PushLiteralInstruction(constantValue));
+					}
+					else {
+						throw new IllegalArgumentException("No such identifier: " + identifier);
+					}
 				}
+			}
+		}
+	}
+
+	private void checkMemberAccess(final String identifier, final StructJassType structJassType,
+			final JassStructMemberType memberType) {
+		if (memberType.getQualifiers().contains(JassQualifier.PRIVATE)) {
+			// ensure that caller is the same as enclosing type
+			if ((this.enclosingStructType == null)
+					|| !this.enclosingStructType.canAccessPrivateMethodsOf(structJassType)) {
+				throw this.globalScope.createException(
+						"Attempted to access private member when it is not allowed: " + identifier,
+						new IllegalArgumentException());
 			}
 		}
 	}
@@ -395,14 +424,30 @@ public class InstructionAppendingJassStatementVisitor
 	public Void visit(final ParentlessMethodCallJassExpression expression) {
 		final String functionName = expression.getFunctionName();
 		final List<JassExpression> arguments = expression.getArguments();
+		performParentlessMethodCall(functionName, arguments);
+		return null;
+	}
+
+	public void performParentlessMethodCall(final String functionName, final List<JassExpression> arguments) {
 		final int argumentCount = arguments.size();
 		final Integer thisStruct = this.nameToLocalId.get(GlobalScope.KEYNAME_THIS);
 		final JassType thisStructType = this.nameToLocalType.get(GlobalScope.KEYNAME_THIS);
 		StructJassType structJassType;
 		if ((thisStruct != null)
 				&& ((structJassType = thisStructType.visit(StructJassTypeVisitor.getInstance())) != null)) {
-			this.instructions.add(new LocalReferenceInstruction(thisStruct));
-			addVirtualMethodCallInstructions(functionName, arguments, argumentCount, structJassType);
+			final JassCodeDefinitionBlock methodDefinition = this.enclosingStructType.getMethodByName(functionName);
+			if (methodDefinition.getQualifiers().contains(JassQualifier.STATIC)) {
+				// In some struct code, if they call `.doThing()` and `doThing()` is a static
+				// method,
+				// then we call it statically even if we were ourselves a non-static method
+				insertCompileTimeStaticMethodCallInstructions(functionName, arguments, argumentCount,
+						this.enclosingStructType);
+			}
+			else {
+				this.instructions.add(new LocalReferenceInstruction(thisStruct));
+				addVirtualMethodCallInstructions(functionName, arguments, argumentCount, structJassType,
+						methodDefinition);
+			}
 		}
 		else {
 			if (this.enclosingStructType != null) {
@@ -410,10 +455,10 @@ public class InstructionAppendingJassStatementVisitor
 						this.enclosingStructType);
 			}
 			else {
-				throw new IllegalArgumentException("No such function: " + functionName);
+				throw this.globalScope.createException("Undefined function: " + functionName,
+						new IllegalArgumentException());
 			}
 		}
-		return null;
 	}
 
 	@Override
@@ -432,21 +477,43 @@ public class InstructionAppendingJassStatementVisitor
 			insertCompileTimeStaticMethodCallInstructions(functionName, arguments, argumentCount, staticType);
 		}
 		else {
-			insertExpressionInstructions(structExpression);
-			addVirtualMethodCallInstructions(functionName, arguments, argumentCount, structJassType);
+			final JassCodeDefinitionBlock methodDefinition = structJassType.getMethodByName(functionName);
+			if (methodDefinition.getQualifiers().contains(JassQualifier.STATIC)) {
+				insertCompileTimeStaticMethodCallInstructions(functionName, arguments, argumentCount, structJassType);
+			}
+			else {
+				insertExpressionInstructions(structExpression);
+				addVirtualMethodCallInstructions(functionName, arguments, argumentCount, structJassType,
+						methodDefinition);
+			}
 		}
 		return null;
 	}
 
 	private void insertCompileTimeStaticMethodCallInstructions(final String functionName,
 			final List<JassExpression> arguments, final int argumentCount, final StructJassType staticType) {
+		final JassCodeDefinitionBlock methodDefinition = staticType.getMethodByName(functionName);
+		if (methodDefinition.getQualifiers().contains(JassQualifier.PRIVATE)) {
+			// ensure that caller is the same as enclosing type
+			if ((this.enclosingStructType == null) || !this.enclosingStructType.canAccessPrivateMethodsOf(staticType)) {
+				throw this.globalScope.createException(
+						"Attempted to call private method when it is not allowed: " + functionName,
+						new IllegalArgumentException());
+			}
+		}
 		final Integer tableIndex = staticType.getMethodTableIndex(functionName);
 		if (tableIndex == null) {
-			throw new IllegalArgumentException("No such method found: " + functionName);
+			throw this.globalScope.createException("Undefined function: " + functionName,
+					new IllegalArgumentException());
 		}
 		// TODO looking in method table here means that a static struct method call
 		// cannot be called recursively, nor from above its declaration
 		final Integer nonvirtualBranchInstructionPtr = staticType.getMethodTable().get(tableIndex);
+		if (nonvirtualBranchInstructionPtr == -1) {
+			throw this.globalScope.createException(
+					"Call to a static method that was defined after us: " + functionName + " (move it before us!)",
+					new IllegalArgumentException());
+		}
 		for (int i = 0; i < argumentCount; i++) {
 			insertExpressionInstructions(arguments.get(i));
 		}
@@ -458,11 +525,25 @@ public class InstructionAppendingJassStatementVisitor
 	}
 
 	private void addVirtualMethodCallInstructions(final String functionName, final List<JassExpression> arguments,
-			final int argumentCount, final StructJassType structJassType) {
+			final int argumentCount, final StructJassType structJassType,
+			final JassCodeDefinitionBlock methodDefinition) {
+		if (methodDefinition.getQualifiers().contains(JassQualifier.PRIVATE)) {
+			// ensure that caller is the same as enclosing type
+			if ((this.enclosingStructType == null)
+					|| !this.enclosingStructType.canAccessPrivateMethodsOf(structJassType)) {
+				throw this.globalScope.createException(
+						"Attempted to call private method when it is not allowed: " + functionName,
+						new IllegalArgumentException());
+			}
+		}
 		for (int i = 0; i < argumentCount; i++) {
 			insertExpressionInstructions(arguments.get(i));
 		}
 		final Integer methodTableIndex = structJassType.getMethodTableIndex(functionName);
+		if (methodTableIndex == null) {
+			throw this.globalScope.createException("Undefined function: " + functionName,
+					new IllegalArgumentException());
+		}
 
 		final int newStackFrameInstructionPtr = this.instructions.size();
 		this.instructions.add(null);
@@ -480,25 +561,28 @@ public class InstructionAppendingJassStatementVisitor
 	}
 
 	public void insertFunctionCallInstructions(final String functionName, final List<JassExpression> arguments) {
+		final Integer userFunctionInstructionPtr = this.globalScope.getUserFunctionInstructionPtr(functionName);
+		if (userFunctionInstructionPtr != null) {
+			insertFuncInstructions(arguments, new BranchInstruction(userFunctionInstructionPtr.intValue()));
+		}
+		else {
+			final Integer nativeId = this.globalScope.getNativeId(functionName);
+			if (nativeId != null) {
+				insertFuncInstructions(arguments, new NativeInstruction(nativeId, arguments.size()));
+			}
+			else {
+				performParentlessMethodCall(functionName, arguments);
+			}
+		}
+	}
+
+	private void insertFuncInstructions(final List<JassExpression> arguments, final JassInstruction branchInstruction) {
 		for (int i = 0; i < arguments.size(); i++) {
 			insertExpressionInstructions(arguments.get(i));
 		}
 		final int newStackFrameInstructionPtr = this.instructions.size();
 		this.instructions.add(null);
-		final Integer userFunctionInstructionPtr = this.globalScope.getUserFunctionInstructionPtr(functionName);
-		if (userFunctionInstructionPtr != null) {
-			this.instructions.add(new BranchInstruction(userFunctionInstructionPtr.intValue()));
-		}
-		else {
-			final Integer nativeId = this.globalScope.getNativeId(functionName);
-			if (nativeId != null) {
-				this.instructions.add(new NativeInstruction(nativeId, arguments.size()));
-			}
-			else {
-				throw new JassException(this.globalScope, "Undefined function: " + functionName,
-						new RuntimeException());
-			}
-		}
+		this.instructions.add(branchInstruction);
 		this.instructions.set(newStackFrameInstructionPtr,
 				new NewStackFrameInstruction(this.instructions.size(), arguments.size()));
 	}
@@ -572,7 +656,10 @@ public class InstructionAppendingJassStatementVisitor
 		final JassType expressionLookupType = expression.getStructExpression().accept(JassTypeExpressionVisitor
 				.getInstance().reset(this.globalScope, this.nameToLocalType, this.enclosingStructType));
 		final StructJassType structJassType = expressionLookupType.visit(StructJassTypeVisitor.getInstance());
-		final int memberIndex = structJassType.getMemberIndexInefficientlyByName(expression.getIdentifier());
+		final String identifier = expression.getIdentifier();
+		final JassStructMemberType memberType = structJassType.getMemberByName(identifier);
+		checkMemberAccess(identifier, structJassType, memberType);
+		final int memberIndex = structJassType.getMemberIndexInefficientlyByName(identifier);
 		this.instructions.add(new StructMemberReferenceInstruction(memberIndex));
 		return null;
 	}

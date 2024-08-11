@@ -368,7 +368,8 @@ public class ReplaceNewExpressionVisitor
 		final JassExpression expression = statement.getExpression();
 		final JassExpression newExpression = expression.accept(this);
 		if (expression != newExpression) {
-			return new JassGlobalDefinitionStatement(statement.getIdentifier(), statement.getType(), newExpression);
+			return new JassGlobalDefinitionStatement(statement.getQualifiers(), statement.getIdentifier(),
+					statement.getType(), newExpression);
 		}
 		return statement;
 	}

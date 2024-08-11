@@ -7,7 +7,7 @@ import java.util.Map;
 import java.util.Set;
 
 import com.etheller.interpreter.ast.definition.JassParameterDefinition;
-import com.etheller.interpreter.ast.scope.GlobalScope;
+import com.etheller.interpreter.ast.scope.Scope;
 import com.etheller.interpreter.ast.type.JassTypeToken;
 import com.etheller.interpreter.ast.value.JassType;
 
@@ -25,7 +25,7 @@ public class JassNativeManager {
 
 	public void registerNativeCode(final int lineNo, final String sourceFile, final String name,
 			final List<JassParameterDefinition> parameterDefinitions, final JassTypeToken returnTypeToken,
-			final GlobalScope globals) {
+			final Scope globals) {
 		if (this.registeredNativeNames.contains(name)) {
 			throw new RuntimeException("Native already registered: " + name);
 		}

@@ -1,6 +1,6 @@
 package com.etheller.interpreter.ast.type;
 
-import com.etheller.interpreter.ast.scope.GlobalScope;
+import com.etheller.interpreter.ast.scope.Scope;
 import com.etheller.interpreter.ast.value.JassType;
 
 public class ArrayJassTypeToken implements JassTypeToken {
@@ -11,7 +11,7 @@ public class ArrayJassTypeToken implements JassTypeToken {
 	}
 
 	@Override
-	public JassType resolve(final GlobalScope globalScope) {
+	public JassType resolve(final Scope globalScope) {
 		return globalScope.parseArrayType(this.id);
 	}
 }

@@ -1,5 +1,6 @@
 package com.etheller.interpreter.ast.definition;
 
+import com.etheller.interpreter.ast.scope.Scope;
 import com.etheller.interpreter.ast.util.JassProgram;
 
 public class JassTypeDefinitionBlock implements JassDefinitionBlock {
@@ -12,8 +13,8 @@ public class JassTypeDefinitionBlock implements JassDefinitionBlock {
 	}
 
 	@Override
-	public void define(final String mangledNameScope, final JassProgram jassProgram) {
-		jassProgram.globalScope.loadTypeDefinition(this.id, this.supertype);
+	public void define(final Scope scope, final JassProgram jassProgram) {
+		scope.loadTypeDefinition(this.id, this.supertype);
 	}
 
 }

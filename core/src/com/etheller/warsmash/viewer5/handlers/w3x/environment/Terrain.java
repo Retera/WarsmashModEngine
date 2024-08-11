@@ -458,8 +458,7 @@ public class Terrain {
 
 				float rampHeight = 0f;
 				// Check if in one of the configurations the bottom_left is a ramp
-				XLoop:
-				for (int xOffset = -1; xOffset <= 0; xOffset++) {
+				XLoop: for (int xOffset = -1; xOffset <= 0; xOffset++) {
 					for (int yOffset = -1; yOffset <= 0; yOffset++) {
 						if (((i + xOffset) >= 0) && ((i + xOffset) < (this.columns - 1)) && ((j + yOffset) >= 0)
 								&& ((j + yOffset) < (this.rows - 1))) {
@@ -701,7 +700,7 @@ public class Terrain {
 									topRight.setCliffTexture(bottomLeftCliffTex);
 									this.corners[i + ((facingLeft ? -1 : 1) * (horizontalRamp ? 1 : 0))][j
 											+ ((facingDown ? -1 : 1) * (verticalRamp ? 1 : 0))]
-													.setCliffTexture(bottomLeftCliffTex);
+											.setCliffTexture(bottomLeftCliffTex);
 
 									this.corners[i + ((facingLeft ? -1 : 1) * (horizontalRamp ? 1 : 0))][j
 											+ ((facingDown ? -1 : 1) * (verticalRamp ? 1 : 0))].romp = true;
@@ -855,8 +854,7 @@ public class Terrain {
 	}
 
 	private int realTileTexture(final int x, final int y) {
-		ILoop:
-		for (int i = -1; i < 1; i++) {
+		ILoop: for (int i = -1; i < 1; i++) {
 			for (int j = -1; j < 1; j++) {
 				if (((x + i) >= 0) && ((x + i) < this.columns) && ((y + j) >= 0) && ((y + j) < this.rows)) {
 					if (this.corners[x + i][y + j].cliff) {

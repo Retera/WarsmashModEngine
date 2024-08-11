@@ -23,6 +23,22 @@ public class NativeJassFunction {
 		this.implementation = impl;
 	}
 
+	public List<JassParameter> getParameters() {
+		return this.parameters;
+	}
+
+	public JassType getReturnType() {
+		return this.returnType;
+	}
+
+	public String getName() {
+		return this.name;
+	}
+
+	public JassFunction getImplementation() {
+		return this.implementation;
+	}
+
 	public final JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
 			final TriggerExecutionScope triggerScope) {
 		if (arguments.size() != this.parameters.size()) {

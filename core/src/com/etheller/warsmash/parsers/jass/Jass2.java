@@ -51,7 +51,6 @@ import com.etheller.interpreter.ast.value.visitor.JassTypeGettingValueVisitor;
 import com.etheller.interpreter.ast.value.visitor.ObjectJassValueVisitor;
 import com.etheller.interpreter.ast.value.visitor.RealJassValueVisitor;
 import com.etheller.interpreter.ast.value.visitor.StringJassValueVisitor;
-import com.etheller.interpreter.ast.visitors.JassProgramVisitor;
 import com.etheller.warsmash.datasources.DataSource;
 import com.etheller.warsmash.parsers.fdf.GameSkin;
 import com.etheller.warsmash.parsers.fdf.GameUI;
@@ -252,7 +251,13 @@ public class Jass2 {
 				JassLog.report(e);
 			}
 		}
-		jassProgramVisitor.initialize();
+		try {
+			jassProgramVisitor.initialize();
+		}
+		catch (final Exception e) {
+			JassLog.report(e);
+			new RuntimeException(e);
+		}
 		jassProgramVisitor.getJassNativeManager().checkUnregisteredNatives();
 		return environment;
 	}
@@ -280,7 +285,13 @@ public class Jass2 {
 				JassLog.report(e);
 			}
 		}
-		jassProgramVisitor.initialize();
+		try {
+			jassProgramVisitor.initialize();
+		}
+		catch (final Exception e) {
+			JassLog.report(e);
+			new RuntimeException(e);
+		}
 		jassProgramVisitor.getJassNativeManager().checkUnregisteredNatives();
 		return environment;
 	}
@@ -302,7 +313,13 @@ public class Jass2 {
 				e.printStackTrace();
 			}
 		}
-		jassProgramVisitor.initialize();
+		try {
+			jassProgramVisitor.initialize();
+		}
+		catch (final Exception e) {
+			JassLog.report(e);
+			new RuntimeException(e);
+		}
 		jassProgramVisitor.getJassNativeManager().checkUnregisteredNatives();
 		return environment;
 	}
@@ -695,13 +712,14 @@ public class Jass2 {
 						new CTimerJass(CommonEnvironment.this.simulation.getHandleIdAllocator().createId()));
 			};
 			jassProgramVisitor.getJassNativeManager().createNative("CreateTimer", createTimerFxn);
-			timerType.setConstructorNative(new HandleJassTypeConstructor("CreateTimer", createTimerFxn));
+			timerType.setConstructorNative(new HandleJassTypeConstructor("CreateTimer"));
 			jassProgramVisitor.getJassNativeManager().createNative("DestroyTimer",
 					(arguments, globalScope, triggerScope) -> {
 						final CTimer timer = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());
 						CommonEnvironment.this.simulation.unregisterTimer(timer);
 						return null;
 					});
+			timerType.setConstructorNative(new HandleJassTypeConstructor("DestroyTimer"));
 			jassProgramVisitor.getJassNativeManager().createNative("TimerStart",
 					(arguments, globalScope, triggerScope) -> {
 						final CTimerJassBase timer = nullable(arguments, 0, ObjectJassValueVisitor.getInstance());
@@ -718,17 +736,26 @@ public class Jass2 {
 					});
 			jassProgramVisitor.getJassNativeManager().createNative("TimerGetElapsed",
 					(arguments, globalScope, triggerScope) -> {
-						final CTimer timer = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());
+						final CTimer timer = nullable(arguments, 0, ObjectJassValueVisitor.getInstance());
+						if (timer == null) {
+							return RealJassValue.ZERO;
+						}
 						return RealJassValue.of(timer.getElapsed(CommonEnvironment.this.simulation));
 					});
 			jassProgramVisitor.getJassNativeManager().createNative("TimerGetRemaining",
 					(arguments, globalScope, triggerScope) -> {
-						final CTimer timer = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());
+						final CTimer timer = nullable(arguments, 0, ObjectJassValueVisitor.getInstance());
+						if (timer == null) {
+							return RealJassValue.ZERO;
+						}
 						return RealJassValue.of(timer.getRemaining(CommonEnvironment.this.simulation));
 					});
 			jassProgramVisitor.getJassNativeManager().createNative("TimerGetTimeout",
 					(arguments, globalScope, triggerScope) -> {
-						final CTimer timer = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());
+						final CTimer timer = nullable(arguments, 0, ObjectJassValueVisitor.getInstance());
+						if (timer == null) {
+							return RealJassValue.ZERO;
+						}
 						return RealJassValue.of(timer.getTimeoutTime());
 					});
 			jassProgramVisitor.getJassNativeManager().createNative("PauseTimer",
@@ -1110,17 +1137,19 @@ public class Jass2 {
 					(arguments, globalScope, triggerScope) -> {
 						final List<CUnit> group = arguments.get(0)
 								.visit(ObjectJassValueVisitor.<List<CUnit>>getInstance());
-						final Rectangle rect = arguments.get(1).visit(ObjectJassValueVisitor.<Rectangle>getInstance());
-						final TriggerBooleanExpression filter = nullable(arguments, 2,
-								ObjectJassValueVisitor.<TriggerBooleanExpression>getInstance());
-						CommonEnvironment.this.simulation.getWorldCollision().enumUnitsInRect(rect, (unit) -> {
-							if ((filter == null) || filter.evaluate(globalScope,
-									CommonTriggerExecutionScope.filterScope(triggerScope, unit))) {
-								// TODO the trigger scope for evaluation here might need to be a clean one?
-								group.add(unit);
-							}
-							return false;
-						});
+						final Rectangle rect = nullable(arguments, 1, ObjectJassValueVisitor.<Rectangle>getInstance());
+						if (rect != null) {
+							final TriggerBooleanExpression filter = nullable(arguments, 2,
+									ObjectJassValueVisitor.<TriggerBooleanExpression>getInstance());
+							CommonEnvironment.this.simulation.getWorldCollision().enumUnitsInRect(rect, (unit) -> {
+								if ((filter == null) || filter.evaluate(globalScope,
+										CommonTriggerExecutionScope.filterScope(triggerScope, unit))) {
+									// TODO the trigger scope for evaluation here might need to be a clean one?
+									group.add(unit);
+								}
+								return false;
+							});
+						}
 						return null;
 					});
 			jassProgramVisitor.getJassNativeManager().createNative("GroupEnumUnitsInRectCounted",
@@ -1735,14 +1764,20 @@ public class Jass2 {
 					});
 			jassProgramVisitor.getJassNativeManager().createNative("GetLocationX",
 					(arguments, globalScope, triggerScope) -> {
-						final Point2D.Double whichLocation = arguments.get(0)
-								.visit(ObjectJassValueVisitor.<Point2D.Double>getInstance());
+						final Point2D.Double whichLocation = nullable(arguments, 0,
+								ObjectJassValueVisitor.getInstance());
+						if (whichLocation == null) {
+							return RealJassValue.ZERO;
+						}
 						return RealJassValue.of(whichLocation.x);
 					});
 			jassProgramVisitor.getJassNativeManager().createNative("GetLocationY",
 					(arguments, globalScope, triggerScope) -> {
-						final Point2D.Double whichLocation = arguments.get(0)
-								.visit(ObjectJassValueVisitor.<Point2D.Double>getInstance());
+						final Point2D.Double whichLocation = nullable(arguments, 0,
+								ObjectJassValueVisitor.getInstance());
+						if (whichLocation == null) {
+							return RealJassValue.ZERO;
+						}
 						return RealJassValue.of(whichLocation.y);
 					});
 			jassProgramVisitor.getJassNativeManager().createNative("GetLocationZ",
@@ -2726,7 +2761,7 @@ public class Jass2 {
 				return new HandleJassValue(unitType, newUnit);
 			};
 			jassProgramVisitor.getJassNativeManager().createNative("CreateUnit", createUnitFxn);
-			unitType.setConstructorNative(new HandleJassTypeConstructor("CreateUnit", createUnitFxn));
+			unitType.setConstructorNative(new HandleJassTypeConstructor("CreateUnit"));
 			jassProgramVisitor.getJassNativeManager().createNative("CreateUnitByName",
 					(arguments, globalScope, triggerScope) -> {
 						final CPlayer player = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());
@@ -3175,7 +3210,7 @@ public class Jass2 {
 					});
 			jassProgramVisitor.getJassNativeManager().createNative("GetUnitState",
 					(arguments, globalScope, triggerScope) -> {
-						final CUnit whichUnit = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());
+						final CUnit whichUnit = nullable(arguments, 0, ObjectJassValueVisitor.getInstance());
 						final CUnitState whichUnitState = arguments.get(1).visit(ObjectJassValueVisitor.getInstance());
 						if (whichUnit == null) {
 							return RealJassValue.ZERO;
@@ -6317,7 +6352,7 @@ public class Jass2 {
 				return new HandleJassValue(abilityType, ability);
 			};
 			jassProgramVisitor.getJassNativeManager().createNative("CreateAbility", createAbilityFxn);
-			abilityType.setConstructorNative(new HandleJassTypeConstructor("CreateAbility", createAbilityFxn));
+			abilityType.setConstructorNative(new HandleJassTypeConstructor("CreateAbility"));
 
 			final JassFunction getUnitAbilityByIndex = (arguments, globalScope, triggerScope) -> {
 				final CUnit whichUnit = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());
@@ -7653,7 +7688,7 @@ public class Jass2 {
 			this.simulation.setGlobalScope(this.jassProgramVisitor.getGlobals());
 			try {
 				final JassThread abilitiesThread = this.jassProgramVisitor.getGlobals().createThread("abilities_main",
-						Collections.emptyList(), JassProgramVisitor.EMPTY_TRIGGER_SCOPE);
+						Collections.emptyList(), TriggerExecutionScope.EMPTY);
 				this.jassProgramVisitor.getGlobals().queueThread(abilitiesThread);
 			}
 			catch (final Exception exc) {
@@ -7663,7 +7698,7 @@ public class Jass2 {
 			}
 			try {
 				final JassThread mainThread = this.jassProgramVisitor.getGlobals().createThread("main",
-						Collections.emptyList(), JassProgramVisitor.EMPTY_TRIGGER_SCOPE);
+						Collections.emptyList(), TriggerExecutionScope.EMPTY);
 				this.jassProgramVisitor.getGlobals().queueThread(mainThread);
 			}
 			catch (final Exception exc) {
@@ -7805,7 +7840,7 @@ public class Jass2 {
 		public void config() {
 			try {
 				final JassThread configThread = this.jassProgramVisitor.getGlobals().createThread("config",
-						Collections.emptyList(), JassProgramVisitor.EMPTY_TRIGGER_SCOPE);
+						Collections.emptyList(), TriggerExecutionScope.EMPTY);
 				this.jassProgramVisitor.getGlobals().runThreadUntilCompletion(configThread);
 			}
 			catch (final Exception exc) {

@@ -2138,7 +2138,7 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 	}
 
 	public RenderSpellEffect spawnSpellEffectOnUnitEx(final CWidget unit, final War3ID alias,
-			final CEffectType effectType, final int index, String attachPointName) {
+			final CEffectType effectType, final int index, final String attachPointName) {
 		final EffectAttachmentUI effectAttachmentUI = getEffectAttachmentUI(alias, effectType, index);
 		if (effectAttachmentUI == null) {
 			return null;
@@ -2506,7 +2506,7 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 					// 2.) Setup a Data Source that will read assets
 					// from either the map or the game, giving the map priority.
 					SeekableByteChannel sbc;
-					final CompoundDataSource compoundDataSource = war3Map.getCompoundDataSource();
+					final DataSource compoundDataSource = war3Map.getCompoundDataSource();
 					if (WarsmashConstants.FIX_FLAT_FILES_TILESET_LOADING) {
 						this.tilesetSource = new CompoundDataSource(Arrays.asList(compoundDataSource,
 								new SubdirDataSource(compoundDataSource, this.tileset + ".mpq/")));

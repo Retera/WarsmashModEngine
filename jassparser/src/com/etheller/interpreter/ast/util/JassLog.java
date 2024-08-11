@@ -10,6 +10,7 @@ public class JassLog {
 
 	public static PrintStream getWriter() {
 		if (jassLogWriter == null) {
+			new File("Logs").mkdir();
 			try {
 				jassLogWriter = new PrintStream(
 						new FileOutputStream(new File("Logs/" + System.currentTimeMillis() + ".jass.log")));

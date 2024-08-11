@@ -2,6 +2,7 @@ package com.etheller.interpreter.ast.definition;
 
 import java.util.List;
 
+import com.etheller.interpreter.ast.scope.Scope;
 import com.etheller.interpreter.ast.type.JassTypeToken;
 import com.etheller.interpreter.ast.util.JassProgram;
 import com.etheller.interpreter.ast.util.JassSettings;
@@ -23,12 +24,12 @@ public class JassNativeDefinitionBlock implements JassDefinitionBlock {
 	}
 
 	@Override
-	public void define(final String mangledNameScope, final JassProgram jassProgram) {
+	public void define(final Scope scope, final JassProgram jassProgram) {
 		if (JassSettings.LOG_FUNCTION_DEFINITIONS) {
 			System.out.println("Registering native: " + this.name);
 		}
 		jassProgram.jassNativeManager.registerNativeCode(this.lineNo, this.currentParsingFilePath, this.name,
-				this.parameters, this.returnType, jassProgram.globalScope);
+				this.parameters, this.returnType, scope);
 	}
 
 }

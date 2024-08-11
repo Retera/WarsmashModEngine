@@ -12,10 +12,13 @@ import com.etheller.interpreter.ast.scope.GlobalScope;
 import com.etheller.interpreter.ast.scope.TriggerExecutionScope;
 import com.etheller.interpreter.ast.util.JassProgram;
 import com.etheller.interpreter.ast.value.CodeJassValue;
+import com.etheller.interpreter.ast.value.HandleJassType;
+import com.etheller.interpreter.ast.value.HandleJassValue;
 import com.etheller.interpreter.ast.value.JassValue;
 import com.etheller.interpreter.ast.value.StringJassValue;
 import com.etheller.interpreter.ast.value.visitor.CodeJassValueVisitor;
 import com.etheller.interpreter.ast.value.visitor.IntegerJassValueVisitor;
+import com.etheller.interpreter.ast.value.visitor.ObjectJassValueVisitor;
 import com.etheller.interpreter.ast.value.visitor.RealJassValueVisitor;
 import com.etheller.interpreter.ast.value.visitor.StringJassValueVisitor;
 
@@ -43,6 +46,22 @@ public class SmashJassRunner {
 		final JassProgram jassProgram = new JassProgram();
 		final GlobalScope globals = jassProgram.globalScope;
 		final JassNativeManager jassNativeManager = jassProgram.jassNativeManager;
+		final HandleJassType unit = globals.registerHandleType("unit");
+		jassNativeManager.createNative("GetTriggerUnit", new JassFunction() {
+			@Override
+			public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+					final TriggerExecutionScope triggerScope) {
+				return new HandleJassValue(unit, "Some Test Unit");
+			}
+		});
+		jassNativeManager.createNative("GetUnitName", new JassFunction() {
+			@Override
+			public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+					final TriggerExecutionScope triggerScope) {
+				final String unitValue = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());
+				return new StringJassValue(unitValue);
+			}
+		});
 		jassNativeManager.createNative("BJDebugMsg", new JassFunction() {
 			@Override
 			public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
@@ -114,7 +133,6 @@ public class SmashJassRunner {
 		}
 		jassProgram.initialize();
 		final Integer userFunctionInstructionPtr = globals.getUserFunctionInstructionPtr("main");
-		System.out.println(userFunctionInstructionPtr);
 		final JassThread myJassThread = globals.createThread(userFunctionInstructionPtr);
 		globals.queueThread(myJassThread);
 		boolean done = false;

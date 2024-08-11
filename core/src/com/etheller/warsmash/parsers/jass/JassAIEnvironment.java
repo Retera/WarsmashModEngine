@@ -7,12 +7,12 @@ import com.badlogic.gdx.utils.viewport.Viewport;
 import com.etheller.interpreter.ast.debug.JassException;
 import com.etheller.interpreter.ast.execution.JassThread;
 import com.etheller.interpreter.ast.scope.GlobalScope;
+import com.etheller.interpreter.ast.scope.TriggerExecutionScope;
 import com.etheller.interpreter.ast.util.JassProgram;
 import com.etheller.interpreter.ast.value.CodeJassValue;
 import com.etheller.interpreter.ast.value.HandleJassType;
 import com.etheller.interpreter.ast.value.visitor.CodeJassValueVisitor;
 import com.etheller.interpreter.ast.value.visitor.RealJassValueVisitor;
-import com.etheller.interpreter.ast.visitors.JassProgramVisitor;
 import com.etheller.warsmash.datasources.DataSource;
 import com.etheller.warsmash.parsers.fdf.GameUI;
 import com.etheller.warsmash.units.Element;
@@ -162,7 +162,7 @@ public class JassAIEnvironment {
 	public void main() {
 		try {
 			final JassThread mainThread = this.jassProgramVisitor.getGlobals().createThread("main",
-					Collections.emptyList(), JassProgramVisitor.EMPTY_TRIGGER_SCOPE);
+					Collections.emptyList(), TriggerExecutionScope.EMPTY);
 			this.jassProgramVisitor.getGlobals().queueThread(mainThread);
 		}
 		catch (final Exception exc) {

@@ -716,6 +716,11 @@ defaultsTail:
 		$$ = $2;
 	}
 	|
+	DEFAULTS NOTHING
+	{
+		$$ = new LiteralJassExpression(null);
+	}
+	|
 	{
 		$$ = null;
 	}

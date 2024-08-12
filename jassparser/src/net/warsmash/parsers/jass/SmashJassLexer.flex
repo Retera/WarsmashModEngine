@@ -152,7 +152,7 @@ COMMA=","
 
 DOT="."
 
-MULTILINE_COMMENT = "/*" [^]*? "*/"
+MULTILINE_COMMENT = "/*" [^"*/"]*? "*/"
 
 %%
 

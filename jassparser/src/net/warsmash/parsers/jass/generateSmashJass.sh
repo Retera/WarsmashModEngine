@@ -13,4 +13,4 @@
 
 rm SmashJassLexer.java SmashJassParser.java
 jflex SmashJassLexer.flex
-bison --language=JAVA SmashJassParser.y --verbose
+bison --language=JAVA SmashJassParser.y --verbose -Wcounterexamples

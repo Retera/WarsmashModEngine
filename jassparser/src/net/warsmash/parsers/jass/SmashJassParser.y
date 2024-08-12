@@ -66,6 +66,7 @@ import com.etheller.interpreter.ast.expression.ArithmeticSigns;
 import com.etheller.interpreter.ast.expression.*;
 import com.etheller.interpreter.ast.statement.*;
 import com.etheller.interpreter.ast.debug.*;
+import com.etheller.interpreter.ast.qualifier.*;
 import com.etheller.interpreter.ast.struct.*;
 import com.etheller.interpreter.ast.type.*;
 import com.etheller.interpreter.ast.util.JassProgram;
@@ -74,6 +75,7 @@ import java.io.Reader;
 import java.util.List;
 import java.util.LinkedList;
 import java.util.ArrayList;
+import java.util.EnumSet;
 import com.etheller.interpreter.ast.util.JassSettings;
 }
 
@@ -83,35 +85,34 @@ import com.etheller.interpreter.ast.util.JassSettings;
 %define api.package {net.warsmash.parsers.jass}
 %define api.parser.public
 
-%token EQUALS PLUSEQUALS MINUSEQUALS PLUSPLUS MINUSMINUS GLOBALS ENDGLOBALS NATIVE FUNCTION TAKES RETURNS ENDFUNCTION NOTHING CALL SET RETURN ARRAY TYPE EXTENDS IF THEN ELSE ENDIF ELSEIF CONSTANT LOCAL LOOP ENDLOOP EXITWHEN DEBUG NULL TRUE FALSE NOT OR AND NEWLINE TIMES DIVIDE PLUS MINUS LESS GREATER LESS_EQUALS GREATER_EQUALS DOUBLE_EQUALS NOT_EQUALS OPEN_BRACKET CLOSE_BRACKET OPEN_PAREN CLOSE_PAREN COMMA STRUCT ENDSTRUCT METHOD ENDMETHOD DOT STATIC  LIBRARY LIBRARY_ONCE ENDLIBRARY SCOPE ENDSCOPE INTERFACE ENDINTERFACE REQUIRES OPTIONAL PRIVATE PUBLIC READONLY OPERATOR IMPLEMENT MODULE ENDMODULE
+%token EQUALS PLUSEQUALS MINUSEQUALS PLUSPLUS MINUSMINUS GLOBALS ENDGLOBALS NATIVE FUNCTION TAKES RETURNS ENDFUNCTION NOTHING CALL SET RETURN ARRAY TYPE EXTENDS IF THEN ELSE ENDIF ELSEIF CONSTANT LOCAL LOOP ENDLOOP EXITWHEN DEBUG NULL TRUE FALSE NOT OR AND NEWLINE TIMES DIVIDE PLUS MINUS LESS GREATER LESS_EQUALS GREATER_EQUALS DOUBLE_EQUALS NOT_EQUALS OPEN_BRACKET CLOSE_BRACKET OPEN_PAREN CLOSE_PAREN COMMA STRUCT ENDSTRUCT METHOD ENDMETHOD DOT STATIC  LIBRARY LIBRARY_ONCE ENDLIBRARY SCOPE ENDSCOPE INTERFACE ENDINTERFACE REQUIRES OPTIONAL PRIVATE PUBLIC READONLY OPERATOR IMPLEMENT MODULE ENDMODULE INITIALIZER DEFAULTS
 %token <String> ID STRING_LITERAL
 %token <int> INTEGER HEX_CONSTANT DOLLAR_HEX_CONSTANT RAWCODE
 %token <double> REAL
 
 %type <JassTypeToken> type extends_opt
 %type <LinkedList<JassParameterDefinition>> paramList
-%type <LinkedList<String>> idList
+%type <LinkedList<JassLibraryRequirementDefinition>> requirementList requirementList_opt
+%type <JassLibraryRequirementDefinition> requirement
 %type <JassParameterDefinition> param
 %type <LinkedList<JassExpression>> argsList
-%type <JassExpression> multDivExpression assignTail simpleArithmeticExpression boolComparisonExpression boolEqualityExpression boolAndsExpression boolExpression baseExpression negatableExpression expression functionExpression methodExpression
+%type <JassExpression> multDivExpression assignTail simpleArithmeticExpression boolComparisonExpression boolEqualityExpression boolAndsExpression boolExpression baseExpression negatableExpression expression functionExpression methodExpression defaultsTail
 %type <JassStatement> statement setPart callPart local ifStatementPartial global
 %type <JassStructMemberTypeDefinition> member
 %type <LinkedList<JassStatement>> statements_opt statements globals globals_opt
-%type <JassMethodDefinitionBlock> methodBlock
+%type <JassMethodDefinitionBlock> methodBlock interfaceMethodBlock
 %type <JassFunctionDefinitionBlock> functionBlock
-%type <JassDefinitionBlock> nativeBlock typeDeclarationBlock structDeclarationBlock globalsBlock libraryBlock scopeBlock block
-%type <LinkedList<JassDefinitionBlock>> blocks blocks_opt
+%type <JassDefinitionBlock> nativeBlock typeDeclarationBlock structDeclarationBlock interfaceDeclarationBlock globalsBlock libraryBlock scopeBlock block nonLibraryBlock
+%type <LinkedList<JassDefinitionBlock>> blocks blocks_opt nonLibraryBlocks nonLibraryBlocks_opt
+%type <JassQualifier> qualifier
+%type <EnumSet<JassQualifier>> qualifiers qualifiers_opt
 
 %%
 
 program :
-	newlines
-	|
-	newlines_opt
-	blocks
-	newlines_opt
+	blocks_opt
 	{
-		jassProgram.definitionBlocks.addAll($2);
+		jassProgram.addAll($1);
 	}
 	;
 
@@ -138,21 +139,68 @@ type :
 		$$ = NothingJassTypeToken.INSTANCE;
 	}
 	;
-
-constant_opt:
-	CONSTANT
+	
+qualifier:
+	PUBLIC
+	{
+		$$ = JassQualifier.PUBLIC;
+	}
 	|
+	PRIVATE
+	{
+		$$ = JassQualifier.PRIVATE;
+	}
+	|
+	STATIC
+	{
+		$$ = JassQualifier.STATIC;
+	}
+	|
+	CONSTANT
+	{
+		$$ = JassQualifier.CONSTANT;
+	}
+	|
+	READONLY
+	{
+		$$ = JassQualifier.READONLY;
+	}
+	;
+
+qualifiers:
+	qualifier
+	{
+		$$ = EnumSet.of($1);
+	}
+	|
+	qualifier qualifiers
+	{
+		EnumSet<JassQualifier> set = $2;
+		set.add($1);
+		$$ = set;
+	}
+	;
+	
+qualifiers_opt:
+	qualifiers
+	{
+		$$ = $1;
+	}
+	|
+	{
+		$$ = EnumSet.noneOf(JassQualifier.class);
+	}
 	;
 
 global : 
-	constant_opt type ID
+	qualifiers_opt type ID
 	{
-		$$ = new JassGlobalStatement($3, $2);
+		$$ = new JassGlobalStatement($1, $3, $2);
 	}
 	|
-	constant_opt type ID assignTail
+	qualifiers_opt type ID assignTail
 	{
-		$$ = new JassGlobalDefinitionStatement($3, $2, $4);
+		$$ = new JassGlobalDefinitionStatement($1, $3, $2, $4);
 	}
 	;
 local : 
@@ -178,14 +226,14 @@ local :
 	;
 
 member:
-	type ID
+	qualifiers_opt type ID
 	{
-		$$ = new JassStructMemberTypeDefinition($1, $2, null);
+		$$ = new JassStructMemberTypeDefinition($1, $2, $3, null);
 	}
 	|
-	type ID assignTail
+	qualifiers_opt type ID assignTail
 	{
-		$$ = new JassStructMemberTypeDefinition($1, $2, $3);
+		$$ = new JassStructMemberTypeDefinition($1, $2, $3, $4);
 	}
 	;
 	
@@ -567,21 +615,44 @@ paramList:
 	}
 	;
 	
-idList:
+requirement:
 	ID
 	{
-		LinkedList<String> list = new LinkedList<>();
+		$$ = new JassLibraryRequirementDefinition($1, false);
+	}
+	|
+	OPTIONAL ID
+	{
+		$$ = new JassLibraryRequirementDefinition($2, true);
+	}
+	;
+	
+requirementList:
+	requirement
+	{
+		LinkedList<JassLibraryRequirementDefinition> list = new LinkedList<>();
 		list.addFirst($1);
 		$$ = list;
 	}
 	|
-	idList COMMA ID
+	requirementList COMMA requirement
 	{
-		LinkedList<String> list = $1;
+		LinkedList<JassLibraryRequirementDefinition> list = $1;
 		list.addLast($3);
 		$$ = list;
 	}
-	;	
+	;
+	
+requirementList_opt:
+	REQUIRES requirementList
+	{
+		$$ = $2;
+	}
+	|
+	{
+		$$ = new LinkedList<JassLibraryRequirementDefinition>(); // maybe use Collections.emptyList later
+	}
+	;
 
 globals:
 	global
@@ -618,7 +689,7 @@ globalsBlock:
 	};
 	
 nativeBlock:
-	constant_opt NATIVE ID TAKES paramList RETURNS type
+	qualifiers_opt NATIVE ID TAKES paramList RETURNS type
 	{
 		final String text = $3;
 		$$ = new JassNativeDefinitionBlock(getLine(), currentParsingFilePath, text, $5, $7);
@@ -626,29 +697,70 @@ nativeBlock:
 	;
 	
 functionBlock:
-	constant_opt FUNCTION ID TAKES paramList RETURNS type statements_opt ENDFUNCTION
+	qualifiers_opt FUNCTION ID TAKES paramList RETURNS type statements_opt ENDFUNCTION
 	{
-		$$ = new JassFunctionDefinitionBlock(getLine(), currentParsingFilePath, $3, $8, $5, $7);
+		$$ = new JassFunctionDefinitionBlock(getLine(), currentParsingFilePath, $1, $3, $8, $5, $7);
 	}
 	;
 	
 methodBlock:
-	constant_opt METHOD ID TAKES paramList RETURNS type statements_opt ENDMETHOD
+	qualifiers_opt METHOD ID TAKES paramList RETURNS type statements_opt ENDMETHOD
 	{
-		$$ = new JassMethodDefinitionBlock(getLine(), currentParsingFilePath, $3, $8, $5, $7, false);
+		$$ = new JassMethodDefinitionBlock(getLine(), currentParsingFilePath, $1, $3, $8, $5, $7);
+	}
+	;
+	
+defaultsTail:
+	DEFAULTS expression
+	{
+		$$ = $2;
 	}
 	|
-	constant_opt STATIC METHOD ID TAKES paramList RETURNS type statements_opt ENDMETHOD
 	{
-		$$ = new JassMethodDefinitionBlock(getLine(), currentParsingFilePath, $4, $9, $6, $8, true);
+		$$ = null;
+	}
+	;
+	
+interfaceMethodBlock:
+	qualifiers_opt METHOD ID TAKES paramList RETURNS type defaultsTail
+	{
+		$$ = JassMethodDefinitionBlock.createInterfaceMethod(getLine(), currentParsingFilePath, $1, $3, $5, $7, $8);
 	}
 	;
 	
 libraryBlock:
-	LIBRARY ID blocks_opt ENDLIBRARY
+	LIBRARY ID requirementList_opt nonLibraryBlocks_opt ENDLIBRARY
 	{
-		
+		$$ = new JassLibraryDefinitionBlock(getLine(), currentParsingFilePath, $2, $3, $4, null, true);
 	}
+	|
+	LIBRARY ID INITIALIZER ID requirementList_opt nonLibraryBlocks_opt ENDLIBRARY
+	{
+		$$ = new JassLibraryDefinitionBlock(getLine(), currentParsingFilePath, $2, $5, $6, $4, true);
+	}
+	|
+	LIBRARY_ONCE ID requirementList_opt nonLibraryBlocks_opt ENDLIBRARY
+	{
+		$$ = new JassLibraryDefinitionBlock(getLine(), currentParsingFilePath, $2, $3, $4, null, true);
+	}
+	|
+	LIBRARY_ONCE ID INITIALIZER ID requirementList_opt nonLibraryBlocks_opt ENDLIBRARY
+	{
+		$$ = new JassLibraryDefinitionBlock(getLine(), currentParsingFilePath, $2, $5, $6, $4, true);
+	}
+	;
+	
+scopeBlock:
+	SCOPE ID nonLibraryBlocks_opt ENDSCOPE
+	{
+		$$ = new JassScopeDefinitionBlock(getLine(), currentParsingFilePath, $2, $3, null);
+	}
+	|
+	SCOPE ID INITIALIZER ID nonLibraryBlocks_opt ENDSCOPE
+	{
+		$$ = new JassScopeDefinitionBlock(getLine(), currentParsingFilePath, $2, $5, $4);
+	}
+	;
 	
 extends_opt:
 	EXTENDS type
@@ -662,9 +774,9 @@ extends_opt:
 	;
 	
 structDeclarationBlock:
-	STRUCT ID extends_opt
+	qualifiers_opt STRUCT ID extends_opt
 	{
-		currentStruct = new JassStructDefinitionBlock($2, $3);
+		currentStruct = new JassStructDefinitionBlock($1, $3, $4);
 	}
 	structStatements_opt ENDSTRUCT
 	{
@@ -672,7 +784,18 @@ structDeclarationBlock:
 	}
 	;
 	
-block:
+interfaceDeclarationBlock:
+	qualifiers_opt INTERFACE ID extends_opt
+	{
+		currentStruct = new JassStructDefinitionBlock($1, $3, $4);
+	}
+	interfaceStatements_opt ENDINTERFACE
+	{
+		$$ = currentStruct;
+	}
+	;
+	
+nonLibraryBlock:
 	globalsBlock
 	{
 		$$ = $1;
@@ -697,6 +820,28 @@ block:
 	{
 		$$ = $1;
 	}
+	|
+	interfaceDeclarationBlock
+	{
+		$$ = $1;
+	}
+	|
+	scopeBlock
+	{
+		$$ = $1;
+	}
+	;
+	
+block:
+	nonLibraryBlock
+	{
+		$$ = $1;
+	}
+	|
+	libraryBlock
+	{
+		$$ = $1;
+	}
 	;
 	
 blocks:
@@ -708,6 +853,22 @@ blocks:
 	}
 	|
 	blocks newlines block
+	{
+		LinkedList<JassDefinitionBlock> list = $1;
+		list.addLast($3);
+		$$ = list;
+	}
+	;
+	
+nonLibraryBlocks:
+	nonLibraryBlock
+	{
+		LinkedList<JassDefinitionBlock> list = new LinkedList<>();
+		list.addFirst($1);
+		$$ = list;
+	}
+	|
+	nonLibraryBlocks newlines nonLibraryBlock
 	{
 		LinkedList<JassDefinitionBlock> list = $1;
 		list.addLast($3);
@@ -756,7 +917,19 @@ statements_opt:
 	;
 	
 blocks_opt:
-	newlines blocks newlines
+	newlines_opt blocks newlines_opt
+	{
+		$$ = $2;
+	}
+	|
+	newlines_opt
+	{
+		$$ = new LinkedList<JassDefinitionBlock>();
+	}
+	;
+	
+nonLibraryBlocks_opt:
+	newlines nonLibraryBlocks newlines
 	{
 		$$ = $2;
 	}
@@ -779,14 +952,38 @@ structStatement:
 	}
 	;
 	
+interfaceStatement:
+	member
+	{
+		currentStruct.add($1);
+	}
+	|
+	interfaceMethodBlock
+	{
+		currentStruct.add($1);
+	}
+	;
+	
 structStatements:
 	structStatement
 	|
 	structStatements newlines structStatement
 	;
 	
+interfaceStatements:
+	interfaceStatement
+	|
+	interfaceStatements newlines interfaceStatement
+	;
+	
 structStatements_opt:
 	newlines structStatements newlines
+	|
+	newlines
+	;
+	
+interfaceStatements_opt:
+	newlines interfaceStatements newlines
 	|
 	newlines
 	;
@@ -801,5 +998,6 @@ newlines_opt:
 	newlines
 	|
 	;
+
 
 %%

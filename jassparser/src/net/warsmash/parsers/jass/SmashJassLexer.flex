@@ -67,6 +67,8 @@ INTERFACE = "interface"
 ENDINTERFACE = "endinterface"
 REQUIRES = "requires"
 OPTIONAL = "optional"
+INITIALIZER = "initializer"
+DEFAULTS = "defaults"
 
 PRIVATE = "private"
 PUBLIC = "public"
@@ -115,7 +117,7 @@ DOLLAR_HEX_CONSTANT = "$"(([0-9]|[A-F])*)
 
 RAWCODE = ("\'"[^"\'"]*?"\'")
 
-REAL = (([0]|([1-9][0-9]*))"."[0-9]*)|("."([0-9]*)) ;
+REAL = (([0]|([1-9][0-9]*))"."[0-9]*)|("."([0-9]+))
 
 NULL = "null"
 TRUE = "true"
@@ -150,6 +152,8 @@ COMMA=","
 
 DOT="."
 
+MULTILINE_COMMENT = "/*" [^]*? "*/"
+
 %%
 
 {EQUALS} { return SmashJassParser.Lexer.EQUALS; }
@@ -167,22 +171,24 @@ DOT="."
 {NOTHING} { return SmashJassParser.Lexer.NOTHING; }
 {STRUCT} { return SmashJassParser.Lexer.STRUCT; }
 {ENDSTRUCT} { return SmashJassParser.Lexer.ENDSTRUCT; }
-{LIBRARY} { return SmashJassLexer.Lexer.LIBRARY; }
-{LIBRARY_ONCE} { return SmashJassLexer.Lexer.LIBRARY_ONCE; }
-{ENDLIBRARY} { return SmashJassLexer.Lexer.ENDLIBRARY; }
-{SCOPE} { return SmashJassLexer.Lexer.SCOPE; }
-{ENDSCOPE} { return SmashJassLexer.Lexer.ENDSCOPE; }
-{INTERFACE} { return SmashJassLexer.Lexer.INTERFACE; }
-{ENDINTERFACE} { return SmashJassLexer.Lexer.ENDINTERFACE; }
-{REQUIRES} { return SmashJassLexer.Lexer.REQUIRES; }
-{OPTIONAL} { return SmashJassLexer.Lexer.OPTIONAL; }
-{PRIVATE} { return SmashJassLexer.Lexer.PRIVATE; }
-{PUBLIC} { return SmashJassLexer.Lexer.PUBLIC; }
-{READONLY} { return SmashJassLexer.Lexer.READONLY; }
-{OPERATOR} { return SmashJassLexer.Lexer.OPERATOR; }
-{IMPLEMENT} { return SmashJassLexer.Lexer.IMPLEMENT; }
-{MODULE} { return SmashJassLexer.Lexer.MODULE; }
-{ENDMODULE} { return SmashJassLexer.Lexer.ENDMODULE; }
+{LIBRARY} { return SmashJassParser.Lexer.LIBRARY; }
+{LIBRARY_ONCE} { return SmashJassParser.Lexer.LIBRARY_ONCE; }
+{ENDLIBRARY} { return SmashJassParser.Lexer.ENDLIBRARY; }
+{SCOPE} { return SmashJassParser.Lexer.SCOPE; }
+{ENDSCOPE} { return SmashJassParser.Lexer.ENDSCOPE; }
+{INTERFACE} { return SmashJassParser.Lexer.INTERFACE; }
+{ENDINTERFACE} { return SmashJassParser.Lexer.ENDINTERFACE; }
+{REQUIRES} { return SmashJassParser.Lexer.REQUIRES; }
+{OPTIONAL} { return SmashJassParser.Lexer.OPTIONAL; }
+{INITIALIZER} { return SmashJassParser.Lexer.INITIALIZER; }
+{DEFAULTS} { return SmashJassParser.Lexer.DEFAULTS; }
+{PRIVATE} { return SmashJassParser.Lexer.PRIVATE; }
+{PUBLIC} { return SmashJassParser.Lexer.PUBLIC; }
+{READONLY} { return SmashJassParser.Lexer.READONLY; }
+{OPERATOR} { return SmashJassParser.Lexer.OPERATOR; }
+{IMPLEMENT} { return SmashJassParser.Lexer.IMPLEMENT; }
+{MODULE} { return SmashJassParser.Lexer.MODULE; }
+{ENDMODULE} { return SmashJassParser.Lexer.ENDMODULE; }
 {METHOD} { return SmashJassParser.Lexer.METHOD; }
 {ENDMETHOD} { return SmashJassParser.Lexer.ENDMETHOD; }
 {STATIC} { return SmashJassParser.Lexer.STATIC; }
@@ -239,6 +245,7 @@ DOT="."
 	return SmashJassParser.Lexer.ID; }
 {WS} { /* skip this */ }
 {NEWLINE} { return SmashJassParser.Lexer.NEWLINE; }
+{MULTILINE_COMMENT} { /* skip this */ }
 {TIMES} { return SmashJassParser.Lexer.TIMES; }
 {DIVIDE} { return SmashJassParser.Lexer.DIVIDE; }
 {PLUS} { return SmashJassParser.Lexer.PLUS; }

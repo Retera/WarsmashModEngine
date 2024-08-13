@@ -37,7 +37,7 @@ public class CDestructable extends CWidget {
 		this.destType = destTypeInstance;
 		this.pathingInstance = pathingInstance;
 		this.pathingInstanceDeath = pathingInstanceDeath;
-		if (this.destType.getOcclusionHeight() > 0) {
+		if ((this.destType.getOcclusionHeight() > 0) && (pathingInstance != null)) {
 			this.pathingInstance.setBlocksVision();
 		}
 	}
@@ -121,33 +121,39 @@ public class CDestructable extends CWidget {
 
 	@Override
 	public boolean canBeTargetedBy(final CSimulation simulation, final CUnit source,
-			final EnumSet<CTargetType> targetsAllowed, AbilityTargetCheckReceiver<CWidget> receiver) {
+			final EnumSet<CTargetType> targetsAllowed, final AbilityTargetCheckReceiver<CWidget> receiver) {
 		if (targetsAllowed.containsAll(this.destType.getTargetedAs())) {
 			if (isDead()) {
 				if (targetsAllowed.contains(CTargetType.DEAD)) {
 					return true;
 				}
 				receiver.targetCheckFailed(CommandStringErrorKeys.TARGET_MUST_BE_LIVING);
-			} else {
+			}
+			else {
 				if (!targetsAllowed.contains(CTargetType.DEAD) || targetsAllowed.contains(CTargetType.ALIVE)) {
 					return true;
 				}
 				receiver.targetCheckFailed(CommandStringErrorKeys.SOMETHING_IS_BLOCKING_THAT_TREE_STUMP);
 			}
-		} else {
+		}
+		else {
 			if (this.destType.getTargetedAs().contains(CTargetType.TREE)
 					&& !targetsAllowed.contains(CTargetType.TREE)) {
 				receiver.targetCheckFailed(CommandStringErrorKeys.UNABLE_TO_TARGET_TREES);
-			} else if (this.destType.getTargetedAs().contains(CTargetType.DEBRIS)
+			}
+			else if (this.destType.getTargetedAs().contains(CTargetType.DEBRIS)
 					&& !targetsAllowed.contains(CTargetType.DEBRIS)) {
 				receiver.targetCheckFailed(CommandStringErrorKeys.UNABLE_TO_TARGET_DEBRIS);
-			} else if (this.destType.getTargetedAs().contains(CTargetType.WALL)
+			}
+			else if (this.destType.getTargetedAs().contains(CTargetType.WALL)
 					&& !targetsAllowed.contains(CTargetType.WALL)) {
 				receiver.targetCheckFailed(CommandStringErrorKeys.UNABLE_TO_TARGET_WALLS);
-			} else if (this.destType.getTargetedAs().contains(CTargetType.BRIDGE)
+			}
+			else if (this.destType.getTargetedAs().contains(CTargetType.BRIDGE)
 					&& !targetsAllowed.contains(CTargetType.BRIDGE)) {
 				receiver.targetCheckFailed(CommandStringErrorKeys.UNABLE_TO_TARGET_BRIDGES);
-			} else {
+			}
+			else {
 				receiver.targetCheckFailed(CommandStringErrorKeys.UNABLE_TO_TARGET_THIS_UNIT);
 			}
 		}

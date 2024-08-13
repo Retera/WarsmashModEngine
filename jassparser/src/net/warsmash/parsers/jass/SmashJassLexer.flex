@@ -107,7 +107,7 @@ ENDLOOP = "endloop"
 EXITWHEN = "exitwhen"
 DEBUG = "debug"
 
-STRING_LITERAL =   "\"" ( "\\\\" | "\\\"" | [^"\""] )*? "\""
+STRING_LITERAL = "\""(("\\"[^])|[^"\"""\\"])*?"\""
 
  
 INTEGER = [0]|([1-9][0-9]*)
@@ -265,4 +265,4 @@ MULTILINE_COMMENT = ("/*"(("*"[^"/"])|[^"*"])*?"*/")
 {DOT} { return SmashJassParser.Lexer.DOT; }
 
 /* detect errors, print unknown chars */
-[^] { throw new IllegalStateException("Unexpected character '" + yytext() + "'"); }
+[^] { throw new IllegalStateException((getLine()+1) + ":" + getColumn() +": Unexpected character '" + yytext() + "'"); }

@@ -2,12 +2,10 @@ package com.etheller.interpreter.ast.value;
 
 import java.util.Objects;
 
-import com.etheller.interpreter.ast.debug.JassException;
 import com.etheller.interpreter.ast.execution.JassStackFrame;
 import com.etheller.interpreter.ast.execution.JassThread;
 import com.etheller.interpreter.ast.scope.GlobalScope;
 import com.etheller.interpreter.ast.scope.TriggerExecutionScope;
-import com.etheller.interpreter.ast.util.JassSettings;
 
 public class CodeJassValue implements JassValue {
 	private final Integer userFunctionInstructionPtr;
@@ -32,26 +30,8 @@ public class CodeJassValue implements JassValue {
 	public final JassValue callAndExecuteCapturingReturnValue(final GlobalScope globalScope,
 			final TriggerExecutionScope triggerScope, final String contextNameForError, final JassValue defaultValue) {
 		final JassThread thread = globalScope.createThreadCapturingReturnValue(this, triggerScope);
-		final JassValue jassReturnValue;
-		try {
-			globalScope.runThreadUntilCompletion(thread);
-			if (thread.instructionPtr == -1) {
-				jassReturnValue = thread.stackFrame.getLast(0);
-			}
-			else {
-				if (!JassSettings.CONTINUE_EXECUTING_ON_ERROR) {
-					throw new IllegalStateException("The " + contextNameForError
-							+ " created a thread that did not immediately return; did you call TriggerSleepAction where it is unsupported??");
-				}
-				else {
-					return defaultValue;
-				}
-			}
-		}
-		catch (final Exception e) {
-			throw new JassException(globalScope, "Exception during " + contextNameForError + ".evaluate()", e);
-		}
-		return jassReturnValue;
+		return globalScope.runThreadUntilCompletionAndReadReturnValue(thread,
+				contextNameForError, defaultValue);
 	}
 
 	@Override

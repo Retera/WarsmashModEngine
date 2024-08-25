@@ -132,7 +132,7 @@ public class StructJassType implements JassType {
 					final List<JassStatement> newStatements = generateDefaultAllocateStatements(creationExpression);
 					add(new JassMethodDefinitionBlock(0, "<init>",
 							EnumSet.of(JassQualifier.STATIC, JassQualifier.PRIVATE), ALLOCATE, newStatements,
-							Collections.emptyList() /* TODO args */, new LiteralJassTypeToken(this)));
+							JassParameterDefinition.unresolve(parameters), new LiteralJassTypeToken(this)));
 				}
 				else {
 					addDefaultAllocateMethod(globalScope);

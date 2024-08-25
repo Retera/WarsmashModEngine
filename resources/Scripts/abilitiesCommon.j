@@ -1,194 +1,1882 @@
-// ability customization API types
-type abilitytype extends handle
-type orderbutton extends handle
-type orderbuttontype extends handle
-type abilitybehavior extends handle
-type behaviorexpr extends handle
-type iconui extends handle
 
-constant native ConvertOrderButtonType takes integer x returns orderbuttontype
+//=================================================================================================
+//=================================================================================================
+// AbilitiesCommonLegacy (contains APIs that have not been moved to their own libraries yet)
+//=================================================================================================
+//=================================================================================================
+library AbilitiesCommonLegacy
 
-globals
-	constant orderbuttontype ORDERBUTTON_INSTANT_NO_TARGET                 = ConvertOrderButtonType(0)
-	constant orderbuttontype ORDERBUTTON_UNIT_TARGET                       = ConvertOrderButtonType(1)
-	constant orderbuttontype ORDERBUTTON_POINT_TARGET                      = ConvertOrderButtonType(2)
-	constant orderbuttontype ORDERBUTTON_UNIT_OR_POINT_TARGET              = ConvertOrderButtonType(3)
-	constant orderbuttontype ORDERBUTTON_INSTANT_NO_TARGET_NO_INTERRUPT    = ConvertOrderButtonType(4)
-	constant orderbuttontype ORDERBUTTON_PASSIVE                           = ConvertOrderButtonType(5)
-	constant orderbuttontype ORDERBUTTON_MENU                              = ConvertOrderButtonType(6)
-endglobals
+	// ability customization API types
+	type abilitytypeleveldata extends handle // GetHandleId(myAbilityTypeLevelData) is a crash case, dont' do it
+	type targettype extends handle
+	type texttagconfigtype extends handle
+	//type activeability extends ability (this comment is a reminder to either scap or implement this type for real)
+	type localstore extends handle // GetHandleId(myLocalStore) is a crash case, dont' do it
+	type destructablebuff extends handle // a buff that is applied to a destructable
+	type projectile extends handle
+	type gameobject extends handle
+	type worldeditordatatype extends handle
+	type nonstackingstatbuff extends handle
+	type nonstackingstatbufftype extends handle
+	type abilitybuilderconfiguration extends handle
+	type autocasttype extends handle
+	type abconftype extends handle
 
+	type datafieldletter extends handle
+
+	type abtimeofdayevent extends handle // Ability Builder time of day event (doesnt have handleid for now)  
+	type abilitydisabletype extends handle
+	type resourcetype extends handle
+
+	// In general don't use abtimer unless you have to; was made to match json. 
+	type abtimer extends timer // "call StartTimer(...)" on an abtimer will crash, must use "StartABTimer"
+
+	// the IntExpr is like BoolExpr but it's for integers
+	type intexpr extends handle
+
+	constant native ConvertTargetType takes integer x returns targettype
+	constant native ConvertTextTagConfigType takes integer x returns texttagconfigtype
+	constant native ConvertWorldEditorDataType takes integer x returns worldeditordatatype
+	constant native ConvertNonStackingStatBuffType takes integer x returns nonstackingstatbufftype
+	constant native ConvertDataFieldLetter takes integer x returns datafieldletter
+	constant native ConvertAutocastType takes integer x returns autocasttype
+	constant native ConvertABConfType takes integer x returns abconftype
+	constant native ConvertAbilityDisableType takes integer x returns abilitydisabletype
+	constant native ConvertResourceType takes integer x returns resourcetype
+
+	globals
+		constant autocasttype AUTOCAST_TYPE_NONE                              = ConvertAutocastType(0)
+		constant autocasttype AUTOCAST_TYPE_LOWESTHP                          = ConvertAutocastType(1)
+		constant autocasttype AUTOCAST_TYPE_HIGESTHP                          = ConvertAutocastType(2)
+		constant autocasttype AUTOCAST_TYPE_ATTACKTARGETING                   = ConvertAutocastType(3)
+		constant autocasttype AUTOCAST_TYPE_ATTACKINGALLY                     = ConvertAutocastType(4)
+		constant autocasttype AUTOCAST_TYPE_ATTACKINGENEMY                    = ConvertAutocastType(5)
+		constant autocasttype AUTOCAST_TYPE_NEARESTVALID                      = ConvertAutocastType(6)
+		constant autocasttype AUTOCAST_TYPE_NEARESTENEMY                      = ConvertAutocastType(7)
+		constant autocasttype AUTOCAST_TYPE_NOTARGET                          = ConvertAutocastType(8)
+		constant autocasttype AUTOCAST_TYPE_ATTACKREPLACEMENT                 = ConvertAutocastType(9)
+		
+		constant abilitydisabletype ABILITY_DISABLE_TYPE_REQUIREMENTS                      = ConvertAbilityDisableType(0)
+		constant abilitydisabletype ABILITY_DISABLE_TYPE_CONSTRUCTION                      = ConvertAbilityDisableType(1)
+		constant abilitydisabletype ABILITY_DISABLE_TYPE_TRANSFORMATION                    = ConvertAbilityDisableType(2)
+		constant abilitydisabletype ABILITY_DISABLE_TYPE_TRIGGER                           = ConvertAbilityDisableType(3)
+		constant abilitydisabletype ABILITY_DISABLE_TYPE_ATTACKDISABLED                    = ConvertAbilityDisableType(4)
+		constant abilitydisabletype ABILITY_DISABLE_TYPE_PLAYER                            = ConvertAbilityDisableType(5)
+		
+		constant abconftype AB_CONF_TYPE_NORMAL_AUTOTARGET                 = ConvertABConfType(0)
+		constant abconftype AB_CONF_TYPE_NORMAL_PAIRING                    = ConvertABConfType(1)
+		constant abconftype AB_CONF_TYPE_NORMAL_FLEXTARGET_SIMPLE          = ConvertABConfType(2)
+		constant abconftype AB_CONF_TYPE_NORMAL_UNITTARGET_SIMPLE          = ConvertABConfType(3)
+		constant abconftype AB_CONF_TYPE_NORMAL_POINTTARGET_SIMPLE         = ConvertABConfType(4)
+		constant abconftype AB_CONF_TYPE_NORMAL_NOTARGET_SIMPLE            = ConvertABConfType(5)
+		constant abconftype AB_CONF_TYPE_NORMAL_FLEXTARGET                 = ConvertABConfType(6)
+		constant abconftype AB_CONF_TYPE_NORMAL_UNITTARGET                 = ConvertABConfType(7)
+		constant abconftype AB_CONF_TYPE_NORMAL_POINTTARGET                = ConvertABConfType(8)
+		constant abconftype AB_CONF_TYPE_NORMAL_NOTARGET                   = ConvertABConfType(9)
+		constant abconftype AB_CONF_TYPE_TOGGLE                            = ConvertABConfType(10)
+		constant abconftype AB_CONF_TYPE_SMART                             = ConvertABConfType(11)
+		constant abconftype AB_CONF_TYPE_PASSIVE                           = ConvertABConfType(12)
+		constant abconftype AB_CONF_TYPE_TEMPLATE                          = ConvertABConfType(13)
+		constant abconftype AB_CONF_TYPE_HIDDEN                            = ConvertABConfType(14)
+		
+		constant texttagconfigtype TEXT_TAG_CONFIG_TYPE_GOLD                              = ConvertTextTagConfigType(0)
+		constant texttagconfigtype TEXT_TAG_CONFIG_TYPE_LUMBER                            = ConvertTextTagConfigType(1)
+		constant texttagconfigtype TEXT_TAG_CONFIG_TYPE_GOLD_BOUNTY                       = ConvertTextTagConfigType(2)
+		constant texttagconfigtype TEXT_TAG_CONFIG_TYPE_LUMBER_BOUNTY                     = ConvertTextTagConfigType(3)
+		constant texttagconfigtype TEXT_TAG_CONFIG_TYPE_XP                                = ConvertTextTagConfigType(4) // 1.32+ otherwise wont load
+		constant texttagconfigtype TEXT_TAG_CONFIG_TYPE_MISS_TEXT                         = ConvertTextTagConfigType(5)
+		constant texttagconfigtype TEXT_TAG_CONFIG_TYPE_CRITICAL_STRIKE                   = ConvertTextTagConfigType(6)
+		constant texttagconfigtype TEXT_TAG_CONFIG_TYPE_SHADOW_STRIKE                     = ConvertTextTagConfigType(7)
+		constant texttagconfigtype TEXT_TAG_CONFIG_TYPE_MANA_BURN                         = ConvertTextTagConfigType(8)
+		constant texttagconfigtype TEXT_TAG_CONFIG_TYPE_BASH                              = ConvertTextTagConfigType(9)
+		
+		constant targettype TARGET_TYPE_AIR                               = ConvertTargetType(0)
+		constant targettype TARGET_TYPE_ALIVE                             = ConvertTargetType(1)
+		constant targettype TARGET_TYPE_ALLIES                            = ConvertTargetType(2)
+		constant targettype TARGET_TYPE_DEAD                              = ConvertTargetType(3)
+		constant targettype TARGET_TYPE_DEBRIS                            = ConvertTargetType(4)
+		constant targettype TARGET_TYPE_ENEMIES                           = ConvertTargetType(5)
+		constant targettype TARGET_TYPE_GROUND                            = ConvertTargetType(6)
+		constant targettype TARGET_TYPE_HERO                              = ConvertTargetType(7)
+		constant targettype TARGET_TYPE_INVULNERABLE                      = ConvertTargetType(8)
+		constant targettype TARGET_TYPE_ITEM                              = ConvertTargetType(9)
+		constant targettype TARGET_TYPE_MECHANICAL                        = ConvertTargetType(10)
+		constant targettype TARGET_TYPE_NEUTRAL                           = ConvertTargetType(11)
+		constant targettype TARGET_TYPE_NONE                              = ConvertTargetType(12)
+		constant targettype TARGET_TYPE_NONHERO                           = ConvertTargetType(13)
+		constant targettype TARGET_TYPE_NONSAPPER                         = ConvertTargetType(14)
+		constant targettype TARGET_TYPE_NOTSELF                           = ConvertTargetType(15)
+		constant targettype TARGET_TYPE_ORGANIC                           = ConvertTargetType(16)
+		constant targettype TARGET_TYPE_PLAYERUNITS                       = ConvertTargetType(17)
+		constant targettype TARGET_TYPE_SAPPER                            = ConvertTargetType(18)
+		constant targettype TARGET_TYPE_SELF                              = ConvertTargetType(19)
+		constant targettype TARGET_TYPE_STRUCTURE                         = ConvertTargetType(20)
+		constant targettype TARGET_TYPE_TERRAIN                           = ConvertTargetType(21)
+		constant targettype TARGET_TYPE_TREE                              = ConvertTargetType(22)
+		constant targettype TARGET_TYPE_VULNERABLE                        = ConvertTargetType(23)
+		constant targettype TARGET_TYPE_WALL                              = ConvertTargetType(24)
+		constant targettype TARGET_TYPE_WARD                              = ConvertTargetType(25)
+		constant targettype TARGET_TYPE_ANCIENT                           = ConvertTargetType(26)
+		constant targettype TARGET_TYPE_NONANCIENT                        = ConvertTargetType(27)
+		constant targettype TARGET_TYPE_FRIEND                            = ConvertTargetType(28)
+		constant targettype TARGET_TYPE_BRIDGE                            = ConvertTargetType(29)
+		constant targettype TARGET_TYPE_DECORATION                        = ConvertTargetType(30)
+		constant targettype TARGET_TYPE_NON_MAGIC_IMMUNE                  = ConvertTargetType(31)
+		constant targettype TARGET_TYPE_NON_ETHEREAL                      = ConvertTargetType(32)
+		
+		constant worldeditordatatype WORLD_EDITOR_DATA_TYPE_UNITS                    = ConvertWorldEditorDataType(0)
+		constant worldeditordatatype WORLD_EDITOR_DATA_TYPE_ITEMS                    = ConvertWorldEditorDataType(1)
+		constant worldeditordatatype WORLD_EDITOR_DATA_TYPE_DESTRUCTABLES            = ConvertWorldEditorDataType(2)
+		constant worldeditordatatype WORLD_EDITOR_DATA_TYPE_DOODADS                  = ConvertWorldEditorDataType(3)
+		constant worldeditordatatype WORLD_EDITOR_DATA_TYPE_ABILITIES                = ConvertWorldEditorDataType(4)
+		constant worldeditordatatype WORLD_EDITOR_DATA_TYPE_BUFFS_EFFECTS            = ConvertWorldEditorDataType(5)
+		constant worldeditordatatype WORLD_EDITOR_DATA_TYPE_UPGRADES                 = ConvertWorldEditorDataType(6)
+		
+		constant nonstackingstatbufftype NON_STACKING_STAT_BUFF_TYPE_MELEEATK                          = ConvertNonStackingStatBuffType(0)
+		constant nonstackingstatbufftype NON_STACKING_STAT_BUFF_TYPE_MELEEATKPCT                       = ConvertNonStackingStatBuffType(1)
+		constant nonstackingstatbufftype NON_STACKING_STAT_BUFF_TYPE_RNGDATK                           = ConvertNonStackingStatBuffType(2)
+		constant nonstackingstatbufftype NON_STACKING_STAT_BUFF_TYPE_RNGDATKPCT                        = ConvertNonStackingStatBuffType(3)
+		constant nonstackingstatbufftype NON_STACKING_STAT_BUFF_TYPE_ATKSPD                            = ConvertNonStackingStatBuffType(4)
+		constant nonstackingstatbufftype NON_STACKING_STAT_BUFF_TYPE_DEF                               = ConvertNonStackingStatBuffType(5)
+		constant nonstackingstatbufftype NON_STACKING_STAT_BUFF_TYPE_DEFPCT                            = ConvertNonStackingStatBuffType(6)
+		constant nonstackingstatbufftype NON_STACKING_STAT_BUFF_TYPE_HPGEN                             = ConvertNonStackingStatBuffType(7)
+		constant nonstackingstatbufftype NON_STACKING_STAT_BUFF_TYPE_HPGENPCT                          = ConvertNonStackingStatBuffType(8)
+		constant nonstackingstatbufftype NON_STACKING_STAT_BUFF_TYPE_MAXHPGENPCT                       = ConvertNonStackingStatBuffType(9)
+		constant nonstackingstatbufftype NON_STACKING_STAT_BUFF_TYPE_MPGEN                             = ConvertNonStackingStatBuffType(10)
+		constant nonstackingstatbufftype NON_STACKING_STAT_BUFF_TYPE_MPGENPCT                          = ConvertNonStackingStatBuffType(11)
+		constant nonstackingstatbufftype NON_STACKING_STAT_BUFF_TYPE_MAXMPGENPCT                       = ConvertNonStackingStatBuffType(12)
+		constant nonstackingstatbufftype NON_STACKING_STAT_BUFF_TYPE_MVSPD                             = ConvertNonStackingStatBuffType(13)
+		constant nonstackingstatbufftype NON_STACKING_STAT_BUFF_TYPE_MVSPDPCT                          = ConvertNonStackingStatBuffType(14)
+		constant nonstackingstatbufftype NON_STACKING_STAT_BUFF_TYPE_HPSTEAL                           = ConvertNonStackingStatBuffType(15)
+		constant nonstackingstatbufftype NON_STACKING_STAT_BUFF_TYPE_THORNS                            = ConvertNonStackingStatBuffType(16)
+		constant nonstackingstatbufftype NON_STACKING_STAT_BUFF_TYPE_THORNSPCT                         = ConvertNonStackingStatBuffType(17)
+		constant nonstackingstatbufftype NON_STACKING_STAT_BUFF_TYPE_MAXHP                             = ConvertNonStackingStatBuffType(18)
+		constant nonstackingstatbufftype NON_STACKING_STAT_BUFF_TYPE_MAXHPPCT                          = ConvertNonStackingStatBuffType(19)
+		constant nonstackingstatbufftype NON_STACKING_STAT_BUFF_TYPE_MAXMP                             = ConvertNonStackingStatBuffType(20)
+		constant nonstackingstatbufftype NON_STACKING_STAT_BUFF_TYPE_MAXMPPCT                          = ConvertNonStackingStatBuffType(21)
+		// These are for parsing
+		constant nonstackingstatbufftype NON_STACKING_STAT_BUFF_TYPE_ALLATK                            = ConvertNonStackingStatBuffType(22)
+		constant nonstackingstatbufftype NON_STACKING_STAT_BUFF_TYPE_ALLATKPCT                         = ConvertNonStackingStatBuffType(23)
+		
+		// These are exposing resource types from within the code system, not offering a mechanism for adding more. At the moment, if you
+		// want to add more, you should edit the Java code and fork the engine, copy the ResourceType enum values in the Java, and then
+		// add a corresponding entry below.
+		constant resourcetype RESOURCE_TYPE_GOLD                              = ConvertResourceType(0)
+		constant resourcetype RESOURCE_TYPE_LUMBER                            = ConvertResourceType(1)
+		constant resourcetype RESOURCE_TYPE_FOOD                              = ConvertResourceType(2)
+		constant resourcetype RESOURCE_TYPE_MANA                              = ConvertResourceType(3)
+		
+		constant datafieldletter DATA_FIELD_LETTER_A                                 = ConvertDataFieldLetter(0)
+		constant datafieldletter DATA_FIELD_LETTER_B                                 = ConvertDataFieldLetter(1)
+		constant datafieldletter DATA_FIELD_LETTER_C                                 = ConvertDataFieldLetter(2)
+		constant datafieldletter DATA_FIELD_LETTER_D                                 = ConvertDataFieldLetter(3)
+		constant datafieldletter DATA_FIELD_LETTER_E                                 = ConvertDataFieldLetter(4)
+		constant datafieldletter DATA_FIELD_LETTER_F                                 = ConvertDataFieldLetter(5)
+		constant datafieldletter DATA_FIELD_LETTER_G                                 = ConvertDataFieldLetter(6)
+		constant datafieldletter DATA_FIELD_LETTER_H                                 = ConvertDataFieldLetter(7)
+		constant datafieldletter DATA_FIELD_LETTER_I                                 = ConvertDataFieldLetter(8)
+		constant datafieldletter DATA_FIELD_LETTER_J                                 = ConvertDataFieldLetter(9)
+	endglobals                                                                                         
+
+	//=================================================================================================
+	// IntExpr API
+	//=================================================================================================
+	// These are like boolexpr, but they are for integers
+	native IntExpr takes code func returns intexpr
+	native DestroyIntExpr takes intexpr x returns nothing
+
+
+	//=================================================================================================
+	// Ability "user data" API (DEPRECATED)
+	//=================================================================================================
+	// used for just storing to a hashtable built into the ability, basically
+	// (maybe later we replace it with direct use of jass hashtables)
+	// TOTALLY SUPERCEDED BY LOCAL STORE API, THEY READ AND WRITE TO THE SAME STUFF
+	// AND THESE MIGHT BE REMOVED IN FAVOR OF GetAbilityLocalStore
+	native GetAbilityUserDataString takes ability whichAbility, string childKey returns string
+	native GetAbilityUserDataInteger takes ability whichAbility, string childKey returns integer
+	native GetAbilityUserDataBoolean takes ability whichAbility, string childKey returns boolean
+	native GetAbilityUserDataAbilityTypeLevelDataHandle takes ability whichAbility, string childKey returns abilitytypeleveldata
+	native GetAbilityUserDataAbilityHandle takes ability whichAbility, string childKey returns ability
+	native GetAbilityUserDataUnitHandle takes ability whichAbility, string childKey returns unit
+	native GetAbilityUserDataDestructableHandle takes ability whichAbility, string childKey returns destructable
+	native GetAbilityUserDataDestructableBuffHandle takes ability whichAbility, string childKey returns destructablebuff
+
+	// setters: return true if there was some previous value stored at the child key
+	native SetAbilityUserDataString takes ability whichAbility, string childKey, string value returns boolean
+	native SetAbilityUserDataInteger takes ability whichAbility, string childKey, integer value returns boolean
+	native SetAbilityUserDataBoolean takes ability whichAbility, string childKey, boolean value returns boolean
+	native SetAbilityUserDataAbilityTypeLevelDataHandle takes ability whichAbility, string childKey, abilitytypeleveldata value returns boolean
+	native SetAbilityUserDataAbilityHandle takes ability whichAbility, string childKey, ability value returns boolean
+	native SetAbilityUserDataUnitHandle takes ability whichAbility, string childKey, unit value returns boolean
+	native SetAbilityUserDataDestructableHandle takes ability whichAbility, string childKey, destructable value returns boolean
+	native SetAbilityUserDataDestructableBuffHandle takes ability whichAbility, string childKey, destructablebuff value returns boolean
+
+	native HasAbilityUserData takes ability whichAbility, string childKey returns boolean
+
+	native FlushParentAbilityUserData takes ability whichAbility returns nothing
+	native FlushChildAbilityUserData takes ability whichAbility, string childKey returns boolean
+
+	//=================================================================================================
+	// Local Store API
+	//=================================================================================================
+	// one dimensional (smaller) hashtables
+	// ... Also, the local stores are slightly different from Jass "hashtable" on Warsmash, because
+	// of a performance thing. At the moment our emulator "hashtable" type is storing the data in its
+	// wrapped Jass representation, whereas Local Store is storing it as the original Java thing
+	// being represented. In principle, this means that "Get" functions on Local Store are less
+	// performant in Jass than the equivalent "Load" functions from Jass hashtables on Warsmash,
+	// because the handle wrappers are recreated when calling "get" for whatever,
+	// but the computer memory storage used by live "localstore" objects will be a smaller amount
+	// of memory, and when the non-jass system accesses them it might be faster.
+	// Most likely the difference will be pointless, though.
+	// - Above does not apply to "GetLocalStoreCode" and "SetLocalStoreCode" which are not
+	// compatible with corresponding JSON. i.e. if you manage to define an ability in JSON but then
+	// access it in JASS, the JSON "create subroutine" native that stores JSON instructions into
+	// a local store are storing something that JASS can't load and would simply cause errors.
+	// (I do not anticipate a need for that manner of cross compatibility, wherein we would run
+	// both JASS and JSON simultaneously, however.)
+
+	// The current ability implementations don't use "CreateLocalStore" because there already
+	// is one by default in Ability Builder-based abilities. Instead they use "GetAbilityLocalStore(...)"
+	// As such, "CreateLocalStore" is entirely a forward-thinking convenience with no current
+	// purpose.
+	// NOTE: then after writing the above, I started using "CreateLocalStore" for some hacks
+	// in abilitiesUtils.j to try to match behaviors from json with stupid short term solution(s)
+	native CreateLocalStore takes nothing returns localstore
+
+	// Below are called "get" but they're the same idea as "load" natives on hashtables.
+	native GetLocalStoreString takes localstore whichLocalStore, string childKey returns string
+	// NOTE: there's some wonk in the json; it does a Warsmash thing and stores 'A000' and 97
+	// as two different "kinds" of things. One is called War3ID and the other is called Integer.
+	// At the moment "native GetLocalStoreInteger" has special handling, so if you try to look
+	// up something of type War3ID on the jass side it will normalize this against integer,
+	// and all will be the integer type, for consistency with jass. SetLocalStoreInteger
+	// does not have the special handling at the time of writing, so this may impede your
+	// ability to overwrite system values if they are required to be of type War3ID
+	native GetLocalStoreInteger takes localstore whichLocalStore, string childKey returns integer
+	native GetLocalStoreBoolean takes localstore whichLocalStore, string childKey returns boolean
+	native GetLocalStoreReal takes localstore whichLocalStore, string childKey returns real             
+	native GetLocalStoreCode takes localstore whichLocalStore, string childKey returns code
+	native GetLocalStoreAbilityTypeLevelDataHandle takes localstore whichLocalStore, string childKey returns abilitytypeleveldata
+	native GetLocalStoreAbilityHandle takes localstore whichLocalStore, string childKey returns ability
+	native GetLocalStoreBuffHandle takes localstore whichLocalStore, string childKey returns buff
+	native GetLocalStoreUnitHandle takes localstore whichLocalStore, string childKey returns unit
+	native GetLocalStoreDestructableHandle takes localstore whichLocalStore, string childKey returns destructable
+	native GetLocalStoreDestructableBuffHandle takes localstore whichLocalStore, string childKey returns destructablebuff
+	native GetLocalStoreABTimeOfDayEventHandle takes localstore whichLocalStore, string childKey returns abtimeofdayevent
+	native GetLocalStoreGameObjectHandle takes localstore whichLocalStore, string childKey returns gameobject
+	native GetLocalStoreNonStackingStatBuffHandle takes localstore whichLocalStore, string childKey returns nonstackingstatbuff
+	native GetLocalStoreProjectileHandle takes localstore whichLocalStore, string childKey returns projectile
+	native GetLocalStoreLocationHandle takes localstore whichLocalStore, string childKey returns location
+	native GetLocalStoreTimerHandle takes localstore whichLocalStore, string childKey returns timer
+	native GetLocalStoreABTimerHandle takes localstore whichLocalStore, string childKey returns abtimer
+
+	// below function used by some dumb stuff in abilitiesUtils.j; it was not originally part of JSON AbilityBuilder
+	native GetLocalStoreLocalStoreHandle takes localstore whichLocalStore, string childKey returns localstore
+
+	// setters: return true if there was some previous value stored at the child key
+	native SetLocalStoreString takes localstore whichLocalStore, string childKey, string value returns boolean
+	native SetLocalStoreInteger takes localstore whichLocalStore, string childKey, integer value returns boolean
+	native SetLocalStoreBoolean takes localstore whichLocalStore, string childKey, boolean value returns boolean
+	native SetLocalStoreReal takes localstore whichLocalStore, string childKey, real value returns boolean      
+	native SetLocalStoreCode takes localstore whichLocalStore, string childKey, code func returns boolean
+	native SetLocalStoreAbilityTypeLevelDataHandle takes localstore whichLocalStore, string childKey, abilitytypeleveldata value returns boolean
+	native SetLocalStoreAbilityHandle takes localstore whichLocalStore, string childKey, ability value returns boolean
+	native SetLocalStoreBuffHandle takes localstore whichLocalStore, string childKey, buff value returns boolean
+	native SetLocalStoreUnitHandle takes localstore whichLocalStore, string childKey, unit value returns boolean
+	native SetLocalStoreDestructableHandle takes localstore whichLocalStore, string childKey, destructable value returns boolean
+	native SetLocalStoreDestructableBuffHandle takes localstore whichLocalStore, string childKey, destructablebuff value returns boolean
+	native SetLocalStoreABTimeOfDayEventHandle takes localstore whichLocalStore, string childKey, abtimeofdayevent value returns boolean
+	native SetLocalStoreGameObjectHandle takes localstore whichLocalStore, string childKey, gameobject value returns boolean
+	native SetLocalStoreNonStackingStatBuffHandle takes localstore whichLocalStore, string childKey, nonstackingstatbuff value returns boolean
+	native SetLocalStoreProjectileHandle takes localstore whichLocalStore, string childKey, projectile value returns boolean
+	native SetLocalStoreTimerHandle takes localstore whichLocalStore, string childKey, timer value returns boolean
+	native SetLocalStoreHandle takes localstore whichLocalStore, string childKey, handle value returns boolean
+
+	native LocalStoreContainsKey takes localstore whichLocalStore, string childKey returns boolean
+
+	native FlushParentLocalStore takes localstore whichLocalStore returns nothing
+	native FlushChildLocalStore takes localstore whichLocalStore, string childKey returns boolean
+
+	// this native is the same as calling FlushChildLocalStore on every key in the store whose
+	// key name ends with `"#" + I2S(castId)`
+	native LocalStoreCleanUpCastInstance takes localstore whichLocalStore, integer castId returns nothing
+
+	// NOTE: only works on abilities defined by Ability Builder. At the moment, hard-coded engine abilities
+	// dont have this
+	native GetAbilityLocalStore takes ability whichAbility returns localstore
+
+	// Returns the local store for the casted ability thing (or other active Ability Builder callback)
+	native GetTriggerLocalStore takes nothing returns localstore
+
+	// NOTE: java does not use destroy functions, this was kept for consistency with war3 stuff
+	// but at the moment it is identical to FlushParentLocalStore to help you with performance
+	native DestroyLocalStore takes localstore whichStore returns nothing
+
+	//=================================================================================================
+	// GameObject API
+	//=================================================================================================
+
+		// These are the state store that contains information loaded from SLK or INI "profile"
+
+		// For general use I added a native "GetGameObjectById" that takes worldeditordatatype
+		// and id, so we could for example say
+		//   local gameobject paladinData = GetGameObjectById(WORLD_EDITOR_DATA_TYPE_UNITS, 'Hpal')
+		//   local string name = GetGameObjectFieldAsString(paladinData, "Name", 0) // returns "Paladin"
+		//   local string properName1 = GetGameObjectFieldAsString(paladinData, "Propernames", 0) // returns "Granis Darkhammer"
+		//   local string properName2 = GetGameObjectFieldAsString(paladinData, "Propernames", 1) // returns "Jorn the Redeemer"
+		//
+		// ... however at the time of writing, GetGameObjectById is not getting used in existing code.
+		// Intead of it, the AbilityBuilder uses GetLocalStoreGameObjectHandle in combination
+		// with the hardcoded key "_abilityEditorData" to get the game object for the active ability,
+		// which is populated inside the engine automatically rather than being set from JASS/json.
+
+		native GetGameObjectFieldAsString takes gameobject editorData, string key, integer index returns string
+		native GetGameObjectFieldAsInteger takes gameobject editorData, string key, integer index returns integer
+		native GetGameObjectFieldAsReal takes gameobject editorData, string key, integer index returns real
+		native GetGameObjectFieldAsBoolean takes gameobject editorData, string key, integer index returns boolean   
+		native GetGameObjectFieldAsID takes gameobject editorData, string key, integer index returns integer
+
+		native GetGameObjectById takes worldeditordatatype whichDataType, integer aliasId returns gameobject
+
+
+	//=================================================================================================
+	// AbilityBuilderConfiguration API
+	//=================================================================================================
+	// Defines stuff for the "kind" of ability, such as in object editor
+
+	// Create a configuration that can be assigned to an ability to describe what it
+	// does if given to a unit.
+	native CreateAbilityBuilderConfiguration takes nothing returns abilitybuilderconfiguration
+
+	// Sets the Base Order ID
+	native SetABConfCastId takes abilitybuilderconfiguration abc, string castId returns nothing
+
+	// Sets the Base Order ID (turn off)
+	native SetABConfUncastId takes abilitybuilderconfiguration abc, string castId returns nothing
+
+	// Sets the Base Order ID for Auto Cast On
+	native SetABConfAutoCastOnId takes abilitybuilderconfiguration abc, string castId returns nothing
+
+	// Sets the Base Order ID for Auto Cast Off
+	native SetABConfAutoCastOffId takes abilitybuilderconfiguration abc, string castId returns nothing
+
+	// Sets the type of autocast available to the ability
+	native SetABConfAutoCastType takes abilitybuilderconfiguration abc, autocasttype whichType returns nothing
+
+	// Sets the type of ability to configure/create... See AB_CONF_TYPE_XYZ constants.
+	native SetABConfType takes abilitybuilderconfiguration abc, abconftype whichType returns nothing
+
+	// AbilityBuilderSpecialDisplayFields
+	native SetABConfShowOnAndOffIcons takes abilitybuilderconfiguration abc, boolexpr condition returns nothing
+	native SetABConfFoodCost takes abilitybuilderconfiguration abc, intexpr valueFunc returns nothing    
+	native SetABConfGoldCost takes abilitybuilderconfiguration abc, intexpr valueFunc returns nothing
+	native SetABConfLumberCost takes abilitybuilderconfiguration abc, intexpr valueFunc returns nothing 
+	native SetABConfHideAreaCursor takes abilitybuilderconfiguration abc, boolexpr condition returns nothing
+	native SetABConfInstantCast takes abilitybuilderconfiguration abc, boolexpr condition returns nothing
+	native SetABConfCastlessNoTarget takes abilitybuilderconfiguration abc, boolexpr condition returns nothing
+	native SetABConfToggleable takes abilitybuilderconfiguration abc, boolexpr condition returns nothing
+	native SetABConfCastToggleOff takes abilitybuilderconfiguration abc, boolexpr condition returns nothing
+	native SetABConfSeparateOnAndOff takes abilitybuilderconfiguration abc, boolexpr condition returns nothing
+	native SetABConfAlternateUnitID takes abilitybuilderconfiguration abc, intexpr unitTypeIdFunc returns nothing
+
+	// AbilityBuilderSpecialConfigFields
+	native SetABConfBufferManaRequired takes abilitybuilderconfiguration abc, intexpr valueFunc returns nothing
+	native SetABConfManaDrainedPerSecond takes abilitybuilderconfiguration abc, intexpr valueFunc returns nothing
+	native SetABConfPointTargeted takes abilitybuilderconfiguration abc, boolexpr condition returns nothing
+	native SetABConfTargetedSpell takes abilitybuilderconfiguration abc, boolexpr condition returns nothing
+	native SetABConfAutoAcquireTarget takes abilitybuilderconfiguration abc, code actionFunc returns nothing
+	native SetABConfPairAbilityId takes abilitybuilderconfiguration abc, intexpr abilityIdFunc returns nothing
+	native SetABConfPairUnitId takes abilitybuilderconfiguration abc, intexpr unitIdFunc returns nothing
+
+	// TODO for the "commandStringsErrorKey" generally I want this to be open-ended and disagree with current
+	// AbilityBuilder design to have it locked down to an enum. So at the time of writing, if you pass a string
+	// that isn't explicitly a constant value COMMAND_STRINGS_ERROR_KEY_<XYZ> then these natives would most
+	// likely crash. Longterm, I'm happy to have them userspace strings that lookup other userspace values
+	// from the file "Units\CommandStrings.txt" at which point they shouldn't be enums and shouldn't be
+	// hardcoded in the engine as far as I can figure.
+	native SetABConfPairUnitTypeError takes abilitybuilderconfiguration abc, string commandStringsErrorKey returns nothing
+	native SetABConfCantTargetError takes abilitybuilderconfiguration abc, string commandStringsErrorKey returns nothing
+	native SetABConfCantPairError takes abilitybuilderconfiguration abc, string commandStringsErrorKey returns nothing
+	native SetABConfCantPairOffError takes abilitybuilderconfiguration abc, string commandStringsErrorKey returns nothing
+
+	native AddABConfAddAbilityAction takes abilitybuilderconfiguration abc, code func returns nothing
+	native AddABConfAddDisabledAbilityAction takes abilitybuilderconfiguration abc, code func returns nothing
+	native AddABConfRemoveAbilityAction takes abilitybuilderconfiguration abc, code func returns nothing
+	native AddABConfRemoveDisabledAbilityAction takes abilitybuilderconfiguration abc, code func returns nothing
+	native AddABConfDeathPreCastAction takes abilitybuilderconfiguration abc, code func returns nothing
+	native AddABConfCancelPreCastAction takes abilitybuilderconfiguration abc, code func returns nothing
+	native AddABConfOrderIssuedAction takes abilitybuilderconfiguration abc, code func returns nothing
+	native AddABConfActivateAction takes abilitybuilderconfiguration abc, code func returns nothing
+	native AddABConfDeactivateAction takes abilitybuilderconfiguration abc, code func returns nothing
+	native AddABConfLevelChangeAction takes abilitybuilderconfiguration abc, code func returns nothing
+	native AddABConfBeginCastingAction takes abilitybuilderconfiguration abc, code func returns nothing
+	native AddABConfEndCastingAction takes abilitybuilderconfiguration abc, code func returns nothing
+	native AddABConfChannelTickAction takes abilitybuilderconfiguration abc, code func returns nothing
+	native AddABConfEndChannelAction takes abilitybuilderconfiguration abc, code func returns nothing
+
+	// Register this Ability Builder Configuration with the ability subsystem!! Now any unit
+	// with an ability who inherits from this rawcode will have the configured code used for
+	// that ability!
+	native RegisterABConf takes integer codeId, abilitybuilderconfiguration abc returns nothing
+
+	//=================================================================================================
+	// AbilityBuilderAbility API
+	//=================================================================================================
+	// Stuff to deal with abilities. Takes an ability handle, but that handle needs to be
+	// an ability defined with Ability Builder tools. If it's some other type of ability, 
+	// these natives won't work.
+
+	// Does the same thing as BlzEndUnitAbilityCooldown if user simulation includes newer patch
+	native EndUnitAbilityCooldown takes unit whichUnit, integer whichAbilityId returns nothing
+
+	// This is meant to be the same as EndUnitAbilityCooldown but you can use it on an ability handle
+	// --- there's some kind of special handling so that it uses the Cooldown Group of items
+	// --- (which seems busted and should be automatic either way? maybe? shouldn't Inventory ability handle that?)
+	native EndAbilityCooldown takes unit caster, ability whichAbility returns nothing
+
+	// Does the same thing as BlzStartUnitAbilityCooldown if user simulation includes newer patch
+	native StartUnitAbilityCooldown takes unit whichUnit, integer whichAbilityId, real cooldown returns nothing
+
+	// Below: uses the cooldown setting of the ability (should include level, etc)
+	native StartUnitAbilityDefaultCooldown takes unit whichUnit, integer whichAbilityId returns nothing
+
+	// This is meant to be the same as StartUnitAbilityCooldown but you can use it on an ability handle
+	// --- there's some kind of special handling so that it uses the Cooldown Group of items
+	// --- (which seems busted and should be automatic either way? maybe? shouldn't Inventory ability handle that?)
+	//native StartAbilityCooldown takes unit caster, ability whichAbility, real cooldown returns nothing
+
+	// Below: uses the cooldown setting of the ability (should include level, etc)
+	native StartAbilityDefaultCooldown takes unit caster, ability whichAbility returns nothing
+
+	// NOTE: above notes are not quite correct... seems "End" cooldown functions are handling the item case
+	// but only "start default" are handling item case... start (non-default) is passing thru rawcode
+	// and would skip past item cooldown group, item ignore cooldown setting, etc
+
+	// ===== Event Response =====
+
+	// Returns a magic number for the spell cast... Basically if I cast store bolt on a peasant,
+	// then cast storm bolt on a peon, the peasant's cast gets CastId 1 and the peon gets CastId 2
+	// or something. It is stored on buffs in some cases.
+	native GetTriggerCastId takes nothing returns integer
+
+	// Gets the item that created the ability for the unit.
+	// NOTE from Retera: is this a hack? shouldn't that probably be handled automatically?
+	native GetAbilityItem takes ability whichAbility returns item
+
+	//=================================================================================================
+	// AbilityBuilderActiveAbility API
+	//=================================================================================================
+	// Similar to natives in AbilityBuilderAbility API section, these only work on abilities
+	// defined with the Ability Builder tools. But as an additional requirement,
+	// the ability is required to be an Active ability. Otherwise will cause crash or not work.
+
+	// below: use on toggleable abilities; they return true if it wasn't already in that state and toggle was
+	// a success.
+	// (You have to provide the Caster because of dumb engine design,
+	// which can't look it up for you. Thanks, Retera!)
+	native AbilityActivate takes unit caster, ability whichAbility returns boolean
+	native AbilityDeactivate takes unit caster, ability whichAbility returns boolean
+	native IsToggleAbilityActive takes ability whichAbility returns boolean
+
+	// NOTE: maybe eventually this could be replaced by BlzSetAbilityRealLevelField(whichAbility, ABILITY_RLF_CAST_RANGE, 0, value)
+	// but at the moment it is not the same, because it sets the cast range independent of level
+	// (the one that is actually used rather than an editor stat, which would change on skill level up)
+	native SetAbilityCastRange takes ability whichAbility, real range returns nothing
+
+	//=================================================================================================
+	// Projectile API
+	//=================================================================================================
+	// Shoot projectiles using the built in engine to do so
+
+	// the first 3 args are used as Event Response when triggering the "code" func handlers
+	native CreateLocationTargetedCollisionProjectile takes unit casterUnit, localstore sourceAbility, integer castId, unit sourceUnit, location sourceLocation, location target, integer projectileId, real speed, boolean homing, code onLaunch, code onPreHits, boolexpr canHitTarget, code onHit, integer maxHits, integer hitsPerTarget, real startingRadius, real endingRadius, real collisionInterval, boolean provideCounts returns projectile
+
+	native CreateLocationTargetedProjectile takes unit casterUnit, localstore sourceAbility, integer castId, unit sourceUnit, location sourceLocation, location target, integer projectileId, real speed, boolean homing, code onLaunch, code onHit returns projectile
+
+	// I think this native creates the Impale effect, via a repeating delayed line of special effects spawned.
+	// So I assume the repeating effects spawned have collision against units they hit.
+	native CreateLocationTargetedPseudoProjectile takes unit casterUnit, localstore sourceAbility, integer castId, unit sourceUnit, location sourceLocation, location target, integer projectileId, effecttype whichEffectType, integer effectArtIndex, real speed, boolean homing, code onLaunch, code onPreHits, boolexpr canHitTarget, code onHit, integer maxHits, integer hitsPerTarget, real startingRadius, real endingRadius, real projectileStepInterval, integer projectileArtSkip, boolean provideCounts returns projectile
+
+	native CreateUnitTargetedCollisionProjectile takes unit casterUnit, localstore sourceAbility, integer castId, unit sourceUnit, location sourceLocation, unit target, integer projectileId, real speed, boolean homing, code onLaunch, code onPreHits, boolexpr canHitTarget, code onHit, integer maxHits, integer hitsPerTarget, real startingRadius, real endingRadius, real collisionInterval, boolean provideCounts returns projectile
+
+	native CreateUnitTargetedProjectile takes unit casterUnit, localstore sourceAbility, integer castId, unit sourceUnit, location sourceLocation, unit targetUnit, integer projectileId, real speed, boolean homing, code onLaunch, code onHit returns projectile
+
+	// See "CreateLocationTargetedPseudoProjectile" but this one chases a unit (?)
+	native CreateUnitTargetedPseudoProjectile takes unit casterUnit, localstore sourceAbility, integer castId, unit sourceUnit, location sourceLocation, unit target, integer projectileId, effecttype whichEffectType, integer effectArtIndex, real speed, boolean homing, code onLaunch, code onPreHits, boolexpr canHitTarget, code onHit, integer maxHits, integer hitsPerTarget, real startingRadius, real endingRadius, real projectileStepInterval, integer projectileArtSkip, boolean provideCounts returns projectile
+
+	native SetAttackProjectileDamage takes projectile whichAttackProjectile, real damage returns nothing
+	native SetProjectileDone takes projectile whichProjectile, boolean done returns nothing
+	native SetProjectileReflected takes projectile whichProjectile, boolean reflected returns nothing
+	native SetProjectileTargetUnit takes projectile whichProjectile, unit target returns nothing
+	native SetProjectileTargetLoc takes projectile whichProjectile, location target returns nothing
+	native IsProjectileReflected takes projectile whichProjectile returns boolean
+
+	//=================================================================================================
+	// Buff API
+	//=================================================================================================
+	// Like War3, buffs are abilities. GetUnitAbilityLevel(...) with some Buff ID should still work.
+	// But this API is to provide the other needed functions.'
+	// --- This also means stuff like GetAbilityCodeId and GetAbilityAliasId might work on Buffs (?)
+
+	// TODO what does this native do?
+	native AddUnitNonStackingDisplayBuff takes unit target, string stackingKey, buff whichBuff returns nothing
+
+	// TODO what happens if you remove a buff with RemoveAbility natives?? seems broken...
+	// For now, I guess if you add it with "add non stacking display buff" then you have to
+	// remove it with this function, or else memory leaks stacking key stuff and you break the system
+	native RemoveUnitNonStackingDisplayBuff takes unit target, string stackingKey, buff whichBuff returns nothing
+
+	// NOTE: full function of the json native moved to CreatePassiveBuffAU
+	// NOTE: sourceAbilLocalStore will be used as GetTriggerLocalStore() in the on add/remove actions
+	// NOTE: castId will be used as GetTriggerCastId() in the on add/remove actions
+	native CreatePassiveBuff takes integer buffId, boolean showIcon, code onAddAction, code onRemoveAction, effecttype artType, boolean showFx, boolean playSfx, localstore sourceAbilLocalStore, integer castId returns buff
+
+	// see CreateTargetingBuffAU
+	native CreateTargetingBuff takes integer buffId returns buff
+
+	// see CreateTimedArtBuffAU
+	native CreateTimedArtBuff takes integer buffId, real duration, boolean showIcon, effecttype artType returns buff
+
+	// see CreateTimedBuffAU
+	native CreateTimedBuff takes integer buffId, real duration, boolean showTimedLifeBar, code onAddAction, code onRemoveAction, code onExpireAction, boolean showIcon, effecttype artType, localstore sourceAbilLocalStore, integer castId returns buff
+
+	// see CreateTimedLifeBuffAU
+	native CreateTimedLifeBuff takes integer buffId, real duration, boolean explode returns buff
+
+	// see CreateTimedTargetingBuffAU
+	native CreateTimedTargetingBuff takes integer buffId, real duration returns buff
+
+	// see CreateTimedTickingBuffAU
+	native CreateTimedTickingBuff takes integer buffId, real duration, boolean showTimedLifeBar, code onAddAction, code onRemoveAction, code onExpireAction, code onTickAction, boolean showIcon, effecttype artType, localstore sourceAbilLocalStore, integer castId returns buff
+
+	// see CreateTimedTickingPausedBuffAU
+	// - from what I could tell, a "paused" buff is one who is capable of being affected by unit pausing, not one who operates while paused
+	// - the concept of "paused" for a unit on Warsmash was edited with Ability Builder changes. Rather than a shut down of unit tick,
+	//   including the ticking of the unit's abilities, it only shuts down some stuff if its registered as pausable stuff
+	//   (attempt to mimic nonsense behaviors on Warcraft; perhaps a cleaned version of this code would be a way to register
+	//    unit specific timers that shut down if unit paused, and game timers that dont shut down if unit paused, but this
+	//    would require a sensible programming language where the game-registered timers knew what unit to operate on via
+	//    some local scoping mechanics)
+	native CreateTimedTickingPausedBuff takes integer buffId, real duration, boolean showTimedLifeBar, code onAddAction, code onRemoveAction, code onExpireAction, code onTickAction, boolean showIcon, effecttype artType, localstore sourceAbilLocalStore, integer castId returns buff
+
+	// see CreateTimedTickingPostDeathBuffAU
+	native CreateTimedTickingPostDeathBuff takes integer buffId, real duration, boolean showTimedLifeBar, code onAddAction, code onRemoveAction, code onExpireAction, code onTickAction, boolean showIcon, effecttype artType, localstore sourceAbilLocalStore, integer castId returns buff
+
+	// see CreateStunBuffAU
+	native CreateStunBuff takes integer buffId, real duration returns buff
+
+	//=================================================================================================
+	// DestructableBuff API
+	//=================================================================================================
+	// NOTE from Retera: idk the details on this. Just trying to expose the system
+	// to match Glasir json AbilityBuilder so its available in the Jass for now.
+
+	native AddDestructableBuff takes destructable target, destructablebuff whichBuff returns nothing
+
+	native RemoveDestructableBuff takes destructable target, destructablebuff whichBuff returns nothing
+
+	native CreateDestructableBuff takes unit casterUnit, integer buffId, integer level, localstore sourceAbilLocalStore, code onAddAction, code onRemoveAction, code onDeathAction, integer castId returns destructablebuff
+
+
+	//=================================================================================================
+	// Event API
+	//=================================================================================================
+	// Trigger events implemented for ability builder... Where possible, it's probably better to just
+	// literally use events from common.j instead. These are here for the purpose of 1:1 port from
+	// json, which used its own natives that include additional scoping, such as the passing of
+	// the localStore into the event actions by default.
+
+	native CreateABTimeOfDayEvent takes code actions, real startTime, real endTime, string equalityId, unit caster, localstore localStore, integer castId returns abtimeofdayevent
+
+	// links the event to game engine to fire... by default it is not hooked up
+	native RegisterABTimeOfDayEvent takes abtimeofdayevent whichEvt returns nothing
+
+	// links the event to the game engine to fire... but only if you didn't already link it up
+	native RegisterUniqueABTimeOfDayEvent takes abtimeofdayevent whichEvt returns nothing
+
+	// makes event stop firing (opposite of register)
+	native UnregisterABTimeOfDayEvent takes abtimeofdayevent whichEvt returns nothing
+
+	//=================================================================================================
+	// Floating Text API
+	//=================================================================================================
+
+	// Warsmash was originally centering these. tried to turn it off when I was attempting
+	// to match common.j stuff, but here you could turn it back on if you want
+	native SetTextTagCentered takes texttag t, boolean flag returns nothing
+
+	// Unlike CreateTextTag, this CreateTextTagFromConfig function will default all the stats of the text
+	// tag based on a texttagconfigtype. Also in the future it might handle fog of war on text tag
+	// for the source unit (pretty sure common.j text tags don't allow that feature)
+	// At the moment these are expected to become desync prone if used in net code, so GetHandleId(t)
+	// on a text tag "t" created with this native will always return -1, these do not add to the count,
+	// and are intended to possibly exist in local client code. But "SetTextTag<Thing>" from common.j should
+	// work on them.
+	native CreateTextTagFromConfig takes unit sourceUnit, texttagconfigtype whichConfigType, string whatString returns texttag
+
+	// below: this is probably dumb and we could probably use "CreateTextTagFromConfig" instead.
+	// Retera's fault. Forget why this is here. It literally adds + or - prefix to number in text
+	native CreateIntTextTagFromConfig takes unit sourceUnit, texttagconfigtype whichConfigType, integer whatNumber returns texttag
+
+	//=================================================================================================
+	// Game State
+	//=================================================================================================
+
+	// this is the Moonstone ability effect. It makes the clock purple or yellow
+	native SetFalseTimeOfDay takes integer hour, integer minute, real duration returns nothing
+
+	// Returns an ever-increasing number to indicate the "turn" that the game is on.
+	// There are roughly 20 turns per second, unless someone changes the emulator constants.
+	native GetGameTurnTick takes nothing returns integer
+
+	// Returns the number of seconds between each game turn tick (probably 0.05)
+	constant native GetSimulationStepTime takes nothing returns real
+
+	//=================================================================================================
+	// Item API
+	//=================================================================================================
+
+	// returns the Rune of Rebirth unit ID, which there is a common.j native to set but not to get!
+	native GetItemDropID takes item whichItem returns integer
+
+	// returns true if the item type is perishable. NOTE: why do we need this(?)
+	native IsItemIdPerishable takes integer itemId returns boolean
+
+	//=================================================================================================
+	// Unit API
+	//=================================================================================================
+
+	// might fire some code, might return false if you're blocked by spell shield, etc
+	native CheckUnitForAbilityEffectReaction takes unit target, unit caster, ability whichAbility returns boolean
+
+	// similar to the above, but allows for Defend to actually reflect the projectile or something
+	native CheckUnitForAbilityProjReaction takes unit target, unit caster, projectile whichProjectile returns boolean
+
+	// A targeted effect can't hit an invisible unit who would otherwise be a valid target, but an AoE can
+	native IsUnitValidTarget takes unit target, unit caster, abilitytypeleveldata abilData, integer level, boolean targetedEffect returns boolean
+	// the idea that all non-unit widgets are visible is trivially disproven by the counter example of fog of war,
+	// so I'm guessing we will end up wanting to replace both of these with one "is valid target" native that takes into account
+	// whether it's a targeted effect for both units and nonunits
+	native IsValidTarget takes widget target, unit caster, abilitytypeleveldata abilData, integer level returns boolean
+
+	// NOTE: Percents dont work in the ability builder json "AddDefenseBonus"
+	// according to a comment, so they might not be working
+	// in the jass binding either. Maybe just use "BlzGetUnitArmor" for the base?
+	// (NOTE: in addition to the above comment, "BlzGetUnitArmor" has been provided in Warsmash so it should function)
+	// NOTE: This adds or subtracts from the GREEN number (+1.5) not the base.
+	//native UnitAddDefenseBonus takes unit targetUnit, real defenseValue, boolean percentage returns nothing
+	native UnitAddDefenseBonus takes unit targetUnit, real defenseValue returns nothing
+
+	// green numbers
+	native UnitSetTemporaryDefenseBonus takes unit targetUnit, real defenseValue returns nothing
+	native UnitGetTemporaryDefenseBonus takes unit targetUnit returns real
+
+	// As with any Blz native, using them would cause Warsmash to stop working on patches < 1.32, so here is a
+	// non-blz binding to get the defense of a unit. "BlzGetUnitArmor" reroutes to this.
+	native GetUnitDefense takes unit whichUnit returns real
+
+	// At the moment, "HealUnit" is identical to setting UNIT_STATE_LIFE to a higher value.
+	// However, in the foreseeable future, if we create "Heal Events" or whatever, then this
+	// would fire them. Or, if we add the Orb of Fire effect from Reforged, which reduces
+	// healing by 50% or whatever, this function would be affected, hypothetically. 
+	native HealUnit takes unit whichUnit, real amount returns nothing
+
+	// NOTE: below, YOU WOULD THINK this would be the same as `IssueImmediateOrder(whichUnit, "stop")`
+	// however the function getting called by the JSON isn't, and was updating what the unit was doing
+	// without firing the issued order system so it probably wouldn't fire order triggers, etc, and
+	// so I added this native to make JASS match the JSON hypothetically. We should delete this and
+	// use `IssueImmediateOrder(whichUnit, "stop")` in the future.
+	native DoStopOrder takes unit whichUnit returns nothing
+
+	// Causes a worker who is currently carrying gold or lumber to have their
+	// carried resources instantly be gained to the player.
+	native UnitInstantReturnResources takes unit whichWorker returns nothing
+
+	// When we call RemoveUnit on something that the player had selected, sometimes we want to automatically
+	// select something else. Instead of manipulating their selection directly with a bunch of busywork,
+	// this tags a unit to replace a different one for selection... if the first was selected. If it's not,
+	// nothing happens.
+	native SetPreferredSelectionReplacement takes unit whichUnitIsGoingToBeRemoved, unit whichUnitWeWantToSelect returns nothing
+
+	// The function of the resurrect ability
+	native ResurrectUnit takes unit whichUnit returns nothing
+
+	// If possible, this function checks if a unit is a worker and if so sends it back to work.
+	// Currently this is called in the natively hacked in Stand Down ability, maybe we can move it to jass later
+	// Also used in the JSON for Call to Arms.
+	// It's OK to pass null as the input resource type. The function returns the type that
+	// was actually selected -- so if you declare the "default" type to be lumber, but the worker was
+	// carrying gold at the moment, the function might return RESOURCE_TYPE_GOLD to indicate that we
+	// sent them back to a gold mine
+	native SendUnitBackToWork takes unit whichUnit, resourcetype defaultResourceType returns resourcetype
+
+	// SetUnitPathing lets units walk through stuff if I recall.. totally turns it off.
+	// This natively, unlike that, enables the special movement type of windwalk and harvesting workers,
+	// wherein the unit is a land unit but it can pass through other units. Use with "active = false"
+	// to go back to default unit movement type.
+	native SetUnitMovementTypeNoCollision takes unit whichUnit, boolean active returns nothing
+
+	// This field only functions if we cancel construction or if we SetUnitExploded(...)
+	// What it does is to make the unit use this buff as the one whose art to show when the
+	// unit explodes, instead of the unit's special art blood splat.
+	native SetUnitExplodeOnDeathBuffId takes unit whichUnit, integer buffId returns nothing
+	// similar to above, this function unsets the buff ID -- not whether the unit explodes
+	native UnsetUnitExplodeOnDeathBuffId takes unit whichUnit returns nothing
+
+	native StartSacrificingUnit takes unit factory, unit toSacrifice, integer resultUnitId returns nothing
+
+	// This is the low level function that for the moment is totally separate from whether that unit
+	// is even allowed to be trained by that building... It also doesn't generate "issued order" events,
+	// because it is not. It is here for feature parity with whatever Ability Builder was doing.
+	// Where possible, do something like "IssueTrainOrderByIdBJ" instead.
+	native StartTrainingUnit takes unit factory, integer trainedUnitId returns nothing
+
+	// This could have been written as a function instead of a native, but then that way it would
+	// have to be maintained. This one is just reading the java variables, so if somebody
+	// adds a damage type then this native updates likewise basically. Not sure why it
+	// needs to exist, though; where possible, replace with references to DAMAGE_TYPE_FORCE
+	// and friends (native ConvertDamageType)
+	native String2DamageType takes string x returns damagetype
+
+	// UnitGroup API extensions:
+
+	// - enum units in range of unit... considers collision sizes of both units, so it's not quite the same
+	//   as if we enumerated units in range of the location of the center unit
+	native GroupEnumUnitsInRangeOfUnit takes group whichGroup, unit whichUnit, real radius, boolexpr filter returns nothing
+
+	// same function as "blz" versions, but the ones declared here are available regardless
+	// of which game version being emulated:
+	native GroupAddGroupFast takes group whichGroup, group addGroup returns integer
+	native GroupRemoveGroupFast takes group whichGroup, group removeGroup returns integer
+	native GroupGetSize takes group whichGroup returns integer
+	native GroupUnitAt takes group whichGroup, integer index returns unit
+
+	//=================================================================================================
+	// Non Stacking Stat Buff API
+	//=================================================================================================
+	// These are not buffs. They appear to be stat modifiers, but scoped on a name.
+	// So I assume that if you `CreateNonStackingStatBuff(NON_STACKING_STAT_BUFF_TYPE_DEF, "My Devotion Aura Thing", 10)`
+	// and also `CreateNonStackingStatBuff(NON_STACKING_STAT_BUFF_TYPE_DEF, "My Devotion Aura Thing", 12)` and
+	// add them together on a unit, since they are non stacking I'm guessing this means the unit would gain a total of 12
+	// and not 22 defense, because they were both applied by "My Devotion Aura Thing"??
+	native CreateNonStackingStatBuff takes nonstackingstatbufftype whichType, string stackingKey, real value returns nonstackingstatbuff
+
+	native AddUnitNonStackingStatBuff takes unit targetUnit, nonstackingstatbuff whichBuff returns nothing
+
+	native RemoveUnitNonStackingStatBuff takes unit targetUnit, nonstackingstatbuff whichBuff returns nothing
+
+	native RecomputeStatBuffsOnUnit takes unit targetUnit, nonstackingstatbufftype whichBuffType returns nothing
+
+	// NOTE: seems like, if you call `UpdateNonStackingStatBuff`, you probably also have to call `RecomputeStatBuffsOnUnit`,
+	// otherwise you update some invisible thing without applying it to the unit.
+	native UpdateNonStackingStatBuff takes nonstackingstatbuff whichBuff, real value returns nothing
+
+	// See "String2DamageType" for notes on how "String2Thing" native is probably not good, and you
+	// should probably use NON_STACKING_STAT_BUFF_TYPE_MVSPDPCT values
+	native String2NonStackingStatBuffType takes string x returns nonstackingstatbufftype
+
+	//=================================================================================================
+	// Code API
+	//=================================================================================================
+
+	// redeclaration of native from common.ai, so that we can run a code func such as for ability
+	native StartThread takes code func returns nothing
+
+	// runs the code func, but where:
+	// -  GetTriggerUnit()/GetSpellAbilityUnit() return the passed in unit
+	// -  GetTriggerLocalStore() returns the passed in local store
+	// -  GetTriggerCastId() returns the passed in cast id
+	native StartAbilityBuilderThread takes code func, unit spellAbilityUnit, localstore triggerLocalStore, integer triggerCastId returns nothing
+
+
+	//=================================================================================================
+	// AbilityTypeLevelData API
+	//=================================================================================================
+	// This is exposed to the AbilityBuilder for some reason. At a glance, it looks like whatever
+	// ability might be using these is probably broken, not MUI, and in need of fix. Worth testing.
+	// For now the API is provided in order to achieve 1:1 parity with JSON AbilityBuilder code.
+	native AbilityTypeLevelDataAddTargetAllowed takes abilitytypeleveldata whichData, integer level, targettype whichType returns nothing
+	native AbilityTypeLevelDataRemoveTargetAllowed takes abilitytypeleveldata whichData, integer level, targettype whichType returns nothing
+
+	// okay, maybe these function(s) below make a little more sense and are less broken than non MUI editing
+	// of targets allowed (still probably better to use GameObject API though):
+	native GetAbilityTypeLevelDataReal takes abilitytypeleveldata whichData, integer level, datafieldletter whichLetter returns real
+	// still these functions are terrible, reinvent the parsing of SLK, exposing bad designs, shouldn't have been like this
+	// ( Retera SLK stores everything as string, but all access to the data is meant to be through an API that converts to
+	//   number or boolean with one methodology of conversion, not multiply copies, thus avoiding bugs. But this code copies
+	//   out the string then re-parses to numbers on its own. The JSON version of this had signs of bugs, including
+	//   a check where any "-" in a floating point number makes it 0, so "-2.00" will parse as 0.00 with these functions
+	//   where as the one-for-all copy of the code in the parser used by the GameObject classes "GetAsReal" / "GetAsFloat"
+	//   functions would not match this behavior... I patched the presumed bug in the jass copy, but now there are three copies
+	//   !! and it should not be so, and the culprit is Ability Builder Type Level Data )
+	native GetAbilityTypeLevelDataInteger takes abilitytypeleveldata whichData, integer level, datafieldletter whichLetter returns integer
+	native GetAbilityTypeLevelDataID takes abilitytypeleveldata whichData, integer level, datafieldletter whichLetter returns integer
+	native GetAbilityTypeLevelDataBoolean takes abilitytypeleveldata whichData, integer level, datafieldletter whichLetter returns boolean
+	native GetAbilityTypeLevelDataString takes abilitytypeleveldata whichData, integer level, datafieldletter whichLetter returns string
+	native GetAbilityTypeLevelUnitID takes abilitytypeleveldata whichData, integer level returns integer
+
+	// NOTE: Regarding Warsmash development history, originally "type level data" here was created
+	// as a high performance cache of data parsed by the GameObject api, so my note about how it is
+	// "better to use GameObject API" would have been false because it would have been worse
+	// performance. However, those types of micro optimizations become pointless when everything
+	// is defined in user space. Even in the json ability builder, the equivalent to
+	// "native GetAbilityTypeLevelDataReal" is doing float parsing of a string every time
+	// that we query the value off of it. The idea that program variables are holding
+	// the ability parameters for each level in a symbol table ("class") instead of
+	// as strings in a property map is already lost. So, just do whatever you want.
+	// It doesn't matter anymore, and "type level data" was too confusing to teach to
+	// anyone anyway, and too time consuming to implement abilities for. It's a similar
+	// reason to why the outside sees "ABILITY_RLF_CASTING_TIME = ConvertAbilityRealLevelField('acas')"
+	// as this overcomplex nonsense on Reforged, whereas a World Editor user might advocate he should
+	// have a native "SetAbilityDataReal" so that he can just call it on "Cast1" or "Cast2", the
+	// casting time fields from world editor. He is completely estranged from how performance
+	// is achieved in professional software, and has no access to the necessary information
+	// nor any way to apply the information on Warcraft 3 if he had it, so it is most
+	// likely the case that to even try is a fool's errand and we may as well simply
+	// do our best writing whatever code is fun to write with what limited time
+	// is given to us in life -- thus the "AbilitySpellBase" classes in Java, and my
+	// video making Cluster Rockets in only an hour on YouTube, when I realized that
+	// no one cares, it's all a waste of time to have done that, and it's fun to just
+	// query GameObject once when the ability is created or levels up, even though
+	// calling to a giant property map like that is worse performance. It just
+	// doesn't matter. And likewise does ability builder call to something that
+	// re-parses strings to floats just to get a floating point data field at runtime
+
+	// returns 'B000' or whatever from `Stats - Buffs` in object editor; if multiple comma separated values,
+	// it returns the first one.
+	native GetAbilityTypeLevelDataFirstBuffId takes abilitytypeleveldata whichData, integer level returns integer
+
+	native GetAbilityTypeLevelDataDurationNormal takes abilitytypeleveldata whichData, integer level returns real
+	native GetAbilityTypeLevelDataDurationHero takes abilitytypeleveldata whichData, integer level returns real
+	native GetAbilityTypeLevelDataCastTime takes abilitytypeleveldata whichData, integer level returns real
+																						 
+	//=================================================================================================
+	// ABTimer API
+	//=================================================================================================
+
+	// Unlike CreateTimer, when this thing fires GetTriggerUnit, GetTriggerLocalStore, and GetTriggerCastId
+	// will populate with these values... atm GetExpiredTimer not populated, it's not a jass timer,
+	// but you can get the timer via the local store. The FIRINGTIMER key in utils is populated by the
+	// engine itself (Yes, that's super redundant and pointless now that Ability Builder is ported to jass)
+	native CreateABTimer takes unit caster, localstore localStore, integer castId, code actionsFunc returns abtimer
+
+	native ABTimerSetRepeats takes abtimer whichTimer, boolean flag returns nothing
+	native ABTimerSetTimeoutTime takes abtimer whichTimer, real timeout returns nothing
+	native ABTimerStart takes abtimer whichTimer returns nothing
+	native ABTimerStartRepeatingTimerWithDelay takes abtimer whichTimer, real delay returns nothing
+
+	//=================================================================================================
+	// Extra
+	//=================================================================================================
+	// these were already in the underlying system, exposed now because why not
+
+	// returns the name of the Warsmash Java code class in use by the given ability... probably only 
+	// useful for some hackery
+	native WarsmashGetAbilityClassName takes ability whichAbility returns string
+
+	// WarsmashGetRawcode2String('AHtb') == "AHtb"
+	native WarsmashGetRawcode2String takes integer rawcode returns string
+
+	// below have better performance than WarsmashGetRawcode2String and doesn't check if its length==4,
+	// so don't use it with unchecked input. But it runs faster. Otherwise it's the same
+	native Rawcode2String takes integer rawcode returns string
+	// The opposite of the above. FourCC("AHtb") == 'AHtb'
+	native FourCC takes string x returns integer
+
+endlibrary
 
 //=====================================================
 // Behavior API                                        
 //=====================================================
-native GetUnitMoveFollowBehavior takes unit whichUnit, integer highlightOrderId, widget whichFollowTarget returns abilitybehavior
-native GetUnitMovePointBehavior takes unit whichUnit, integer highlightOrderId, real targetX, real targetY returns abilitybehavior
-native GetUnitMovePointBehaviorLoc takes unit whichUnit, integer highlightOrderId, location whichLocation returns abilitybehavior
-native GetUnitAttackMovePointBehavior takes unit whichUnit, real targetX, real targetY returns abilitybehavior
-native GetUnitAttackMovePointBehaviorLoc takes unit whichUnit, location whichLocation returns abilitybehavior
-native GetUnitAttackWidgetBehavior takes unit whichUnit, integer highlightOrderId, integer whichUnitAttackIndex, widget whichAttackTarget returns abilitybehavior
-native GetUnitAttackGroundBehavior takes unit whichUnit, integer highlightOrderId, integer whichUnitAttackIndex, real attackGroundX, real attackGroundY returns abilitybehavior
-native GetUnitAttackGroundBehaviorLoc takes unit whichUnit, integer highlightOrderId, integer whichUnitAttackIndex, location attackGroundLoc returns abilitybehavior
-// The code func passed below must be "takes nothing returns abilitybehavior", and
-// the behavior it returns is what the unit will do next after each frame of the behavior we are defining
-// so it should return itself until it is finished. "How does it return itself??" you ask? Just use the
-// GetBehavingBehavior() native within its callback.
-native CreateAbilityBehavior takes integer highlightOrderId, code func returns abilitybehavior
-// GetBehavingUnit returns the unit who owns the behavior if you use it within the handler "code func"
-// of a behavior that you define
-native GetBehavingUnit takes nothing returns unit
-native GetBehavingBehavior takes nothing returns abilitybehavior
-// this function will read from the unit's list of shift click orders they are given,
-// poll the next item from that queue (modifying it) and return the top next
-// item to perform. So, in your handler function to "CreateAbilityBehavior" you should
-// return this when you are certain the unit has completed the ability.
-native UnitPollNextOrderBehavior takes unit whichUnit returns abilitybehavior
-                            
-//=====================================================
-// BehaviorExpr API                                        
-//=====================================================
-// BehaviorExpr API, this is meant to feel similar to BoolExpr.
+/* Each unit is always performing 1 behavior at a time; about 20 times per
+ * second, every time that the game logic updates, the engine will call
+ * "update" on the unit's behavior, and that should implement the action
+ * of whatever the unit is currently doing. The return value of the behavior's
+ * update method decides what behavior to change to on the next step of game
+ * logic after this one.
+ * So i.e. if the behavior wishes to terminate, it should return
+ * "unit.pollNextOrderBehavior()". If the behavior wishes to continue, it should
+ * return itself. If it wishes to jump the unit to performing a different action
+ * then it should return that other behavior.
+ */
+library BehaviorAPI
+	type abilitybehavior extends handle
+	type behaviorcategory extends handle
+	
+	constant native ConvertBehaviorCategory takes integer x returns behaviorcategory
+	
+	globals
+		constant behaviorcategory BEHAVIOR_CATEGORY_IDLE                              = ConvertBehaviorCategory(0)
+		constant behaviorcategory BEHAVIOR_CATEGORY_MOVEMENT                          = ConvertBehaviorCategory(1)
+		constant behaviorcategory BEHAVIOR_CATEGORY_ATTACK                            = ConvertBehaviorCategory(2)
+		constant behaviorcategory BEHAVIOR_CATEGORY_SPELL                             = ConvertBehaviorCategory(3)
+	endglobals
+	
+	native GetUnitMoveFollowBehavior takes unit whichUnit, integer highlightOrderId, widget whichFollowTarget returns abilitybehavior
+	native GetUnitMovePointBehavior takes unit whichUnit, integer highlightOrderId, real targetX, real targetY returns abilitybehavior
+	native GetUnitMovePointBehaviorLoc takes unit whichUnit, integer highlightOrderId, location whichLocation returns abilitybehavior
+	native GetUnitAttackMovePointBehavior takes unit whichUnit, real targetX, real targetY returns abilitybehavior
+	native GetUnitAttackMovePointBehaviorLoc takes unit whichUnit, location whichLocation returns abilitybehavior
+	native GetUnitAttackWidgetBehavior takes unit whichUnit, integer highlightOrderId, integer whichUnitAttackIndex, widget whichAttackTarget returns abilitybehavior
+	native GetUnitAttackGroundBehavior takes unit whichUnit, integer highlightOrderId, integer whichUnitAttackIndex, real attackGroundX, real attackGroundY returns abilitybehavior
+	native GetUnitAttackGroundBehaviorLoc takes unit whichUnit, integer highlightOrderId, integer whichUnitAttackIndex, location attackGroundLoc returns abilitybehavior
+	// The code func passed below must be "takes nothing returns abilitybehavior", and
+	// the behavior it returns is what the unit will do next after each frame of the behavior we are defining
+	// so it should return itself until it is finished. "How does it return itself??" you ask? Just use the
+	// GetBehavingBehavior() native within its callback.
+	// --- DEPRECATED (do not use "CreateAbilityBehavior" in favor of "extends abilitybehavior")
+	native CreateAbilityBehavior takes nothing returns abilitybehavior
+	native DestroyAbilityBehavior takes abilitybehavior x returns nothing
+	// GetBehavingUnit returns the unit who owns the behavior if you use it within the handler "code func"
+	// of a behavior that you define
+	// --- DEPRECATED (do not use "GetBehavingUnit"; prefer a unit member in the behavior struct you create)
+	//native GetBehavingUnit takes nothing returns unit
+	// --- DEPRECATED (do not use "GetBehavingBehavior"; prefer keyword "this" in the behavior struct you create)
+	//native GetBehavingBehavior takes nothing returns abilitybehavior
+	
+	// this function will read from the unit's list of shift click orders they are given,
+	// poll the next item from that queue (modifying it) and return the top next
+	// item to perform. So, in your custom behavior you should
+	// return this when you are certain the unit has completed the ability.
+	native UnitPollNextOrderBehavior takes unit whichUnit returns abilitybehavior
+	
+	interface Behavior extends abilitybehavior
+		static method create takes nothing returns Behavior defaults .allocate()
+	
+		method update takes nothing returns Behavior
+		
+		/* extra utility added later to detect when a unit starts a behavior.
+		 * For a while the Glasir/AbilityBuilder stuff tried to use this to detect
+		 * when a unit starts doing something, like attacking to break invisibility,
+		 * but that's broken and will likely not work. begin() is called when the unit
+		 * starts walking over to another unit to attack, or when the unit
+		 * starts walking over to cast a spell, and not when the cast begins. It
+		 * is simply a notification of the low level machinery moving forward,
+		 * and not a Warcraft III trigger event.
+		 */
+		method begin takes nothing returns nothing defaults nothing
+		
+		/* see comment on begin. (interruptable ness was added by Glasir)
+		 */
+		method end takes boolean interrupted returns nothing defaults nothing
+		
+		/*
+		 * Tells the command card which ability icon to highlight green.
+		 * NOTE: This method has to be desync-safe, meaning that it should
+		 * be safe to call from within "getLocalPlayer()" blocks. It is
+		 * tagged with the "constant method" syntax, which currently does
+		 * nothing, to remind you of this. For best results, it should
+		 * probably be a small method that returns a single value.
+		 * ( The UI is going to call this on you on one computer but not the other!! )
+		 * NOTE: Actually, to make it impossible for the jass programmer to do this
+		 * wrong, for now the underlying mapping between behavior in the engine
+		 * and behavior jass interface differs slightly... After calling "begin()",
+		 * the engine will call "getHighlightOrderId()" once to check it, and then subsequent 
+		 * accessor methods (such as from the UI) will look at the engine's snapshot
+		 * of the value, so that it's impossible for a UI system to launch jass
+		 * code and trigger a desync
+		 */
+		constant method getHighlightOrderId takes nothing returns integer
+		
+		/*
+		 * Returns true if we are allow to interrupt this behavior.
+		 * NOTE: This method has to be desync-safe, meaning that it should
+		 * be safe to call from within "getLocalPlayer()" blocks. It is
+		 * tagged with the "constant method" syntax, which currently does
+		 * nothing, to remind you of this. For best results, it should
+		 * probably be a small method that returns a single value.
+		 * ( It's less likely to be called from UI than getHighlightOrderId(), but might as
+		 *   well be treated similarly )
+		 */
+		constant method interruptable takes nothing returns boolean
+		
+		/* added by Glasir. used in some json abilities to try to look at what
+		 * a unit was doing. the categories added were IDLE, MOVEMENT, ATTACK, and
+		 * SPELL but I have not reviewed this further in depth.
+		 *
+		 * NOTE: This method has to be desync-safe, meaning that it should
+		 * be safe to call from within "getLocalPlayer()" blocks. It is
+		 * tagged with the "constant method" syntax, which currently does
+		 * nothing, to remind you of this. For best results, it should
+		 * probably be a small method that returns a single value.
+		 * ( It's less likely to be called from UI than getHighlightOrderId(), but might as
+		 *   well be treated similarly )
+		 */
+		constant method getBehaviorCategory takes nothing returns behaviorcategory
+	endinterface
+endlibrary
 
-// The code func for "CreateBehaviorExpr" should be:
-//   takes nothing returns abilitybehavior
-native CreateBehaviorExpr takes code func returns behaviorexpr
-// Within the BehaviorExpr's callback function, you can use:
-// GetSpellAbilityUnit() to retrieve the unit ("caster")
-// GetSpellAbility() to retrieve the ability
-native GetSpellAbilityOrderId takes nothing returns integer
-// GetSpellAbilityOrderId() to retrieve the order ID causing the behavior
-// GetSpellAbilityId() to retrieve the alias (rawcode) of the ability
-// GetSpellTarget<thing> to retrieve the target
-native GetSpellTargetType takes nothing returns orderbuttontype
-// GetSpellTargetType() to retrieve the target type of the command card button
-
-native GetSpellAbilityOrderButton takes nothing returns orderbutton
-
-                           
-//=====================================================
-// AbilityType API                                        
-//=====================================================
-// These allow us to define a new kind of ability. The other way we could have done this
-// would be if each of these were a trigger event we could register on the ability type.
-// Seemed like maybe that would reduce performance and add more unnecessary plumbing, so
-// for now I did not do that, though. 
-native CreateAbilityType takes nothing returns abilitytype
-// NOTE: Within these callbacks, use GetSpellAbilityUnit() to refer to the unit who has the ability,
-// and use GetSpellAbility() to refer to the 'ability' handle if you need it.
-native SetAbilityTypeOnAddAction takes abilitytype whichAbilityType, code func returns nothing
-native SetAbilityTypeOnRemoveAction takes abilitytype whichAbilityType, code func returns nothing
-native SetAbilityTypeOnTickAction takes abilitytype whichAbilityType, code func returns nothing
-native SetAbilityTypeOnDeathAction takes abilitytype whichAbilityType, code func returns nothing
-native SetAbilityTypeOnCancelFromQueueAction takes abilitytype whichAbilityType, code func returns nothing
-// This condition allows us to return false and block the ability from ever interrupting unit's
-// orders when clicked, such as for Berserk or Wind Walk or whatever.
-// --- use GetSpellAbilityOrderId() to check the order ID of this (in case the ability type has multiple command card icons)
-native SetAbilityTypeOnCheckBeforeQueueQueueCondition takes abilitytype whichAbilityType, boolexpr handler returns nothing
-// The target condition allows us to return false to prevent use of the ability on certain targets.
-// Use the same "GetSpellAbility<thing>" natives that you would on a behavior for this.
-// If you are going to return false, you should also call DisplayAbilityTargetingError("Unable to target sappers") or whatever.
-native SetAbilityTypeCheckTargetCondition takes abilitytype whichAbilityType, boolexpr handler returns nothing
-native SetAbilityTypeCheckUseCondition takes abilitytype whichAbilityType, boolexpr handler returns nothing
-
-native SetAbilityTypeEnabledWhileUnderConstruction takes abilitytype whichAbilityType, boolean enabled returns nothing
-native SetAbilityTypeEnabledWhileUpgrading takes abilitytype whichAbilityType, boolean enabled returns nothing
-
-// SetCurrentAbilityTargetingError:
-// Ok so as a note, this magic native probably won't always display the error.
-// The game engine asks an ability if you can target something, and other times the UI asks.
-// This message is only going to show onscreen if the UI asked, but not if the internal stuff asked...
-//    and it would show probably only for local player whose UI asked...
-// If you want a general purpose "call this on local player machine to set the golden error message text box contents"
-// function, please make that separately. This one is meant to only be used within abilitytype "code func" callbacks.
-// SECOND NOTE: if you pass me a localization key (for supporting different language installations) I can probably
-// give you back the correct message automatically
-native SetCurrentAbilityTargetingError takes string errorMessage returns nothing
-
-native SetAbilityTypeBehavior takes abilitytype whichAbilityType, behaviorexpr handler returns nothing
-
-native RegisterAbilityType takes integer rawcode, abilitytype whichAbilityType returns nothing
 
 //=====================================================
 // IconUI API                                        
 //=====================================================
-native GetUnitIconUI takes integer unitId returns iconui
-// As a note, there may be an issue with Ability IconUI objects
-// because they only have level 1 tooltip on them or whatever.
-// Maybe we need to manipulate that with OrderButton, or
-// maybe we need to upgrade this API in the future.
-native GetAbilityOnIconUI takes integer abilityId returns iconui
-native GetAbilityOffIconUI takes integer abilityId returns iconui
-native GetAbilityLearnIconUI takes integer abilityId returns iconui
-native GetItemIconUI takes integer itemId returns iconui
+// This might be useful or something but probably does
+// not work yet
+library IconUI
+	type iconui extends handle
+	native GetUnitIconUI takes integer unitId returns iconui
+	native GetAbilityOnIconUI takes integer abilityId, integer level returns iconui
+	native GetAbilityOffIconUI takes integer abilityId, integer level returns iconui
+	native GetAbilityLearnIconUI takes integer abilityId returns iconui
+	native GetItemIconUI takes integer itemId returns iconui
+endlibrary
+
+//=====================================================
+// HandleList API                                      
+//=====================================================
+// This is a "dumb" API, based on unit group but for handles
+// in general. That's not super useful for the jass
+// programmers yet but it gives us a way to communicate
+// a list back to the engine, such as for natives that
+// might take handlelist
+library HandleListAPI
+	type handlelist extends handle
+	
+	native CreateHandleList takes nothing returns handlelist
+	native HandleListAdd takes handlelist whichList, handle toAdd returns nothing
+	native HandleListRemove takes handlelist whichList, handle toRemove returns boolean
+endlibrary
 
 //=====================================================
 // OrderButton API                                        
 //=====================================================
-native CreateOrderButton takes orderbuttontype targetType, integer orderId, integer buttonPositionX, integer buttonPositionY returns orderbutton
-native AbilityTypeAddOrderButton takes abilitytype whichAbilityType, orderbutton whichOrder returns nothing
-native AbilityTypeRemoveOrderButton takes abilitytype whichAbilityType, orderbutton whichOrder returns nothing
-native DestroyOrderButton takes orderbutton whichOrder returns nothing
-native SetOrderButtonAutoCastOrderId takes orderbutton whichOrder, integer autoCastOrderId returns nothing
-native SetOrderButtonUnAutoCastOrderId takes orderbutton whichOrder, integer autoCastOrderId returns nothing
-// if you set container id, it would only show if you also added a menu-type icon
-native SetOrderButtonContainerMenuOrderId takes orderbutton whichOrder, integer containerMenuOrderId returns nothing
-native SetOrderButtonDisabled takes orderbutton whichOrder, boolean disabled returns nothing
-native SetOrderButtonManaCost takes orderbutton whichOrder, integer costAmount returns nothing
-native SetOrderButtonGoldCost takes orderbutton whichOrder, integer costAmount returns nothing
-native SetOrderButtonLumberCost takes orderbutton whichOrder, integer costAmount returns nothing
-native SetOrderButtonFoodCostDisplayOnly takes orderbutton whichOrder, integer costAmount returns nothing
-native SetOrderButtonCharges takes orderbutton whichOrder, integer charges returns nothing
-native SetOrderButtonAutoCastActive takes orderbutton whichOrder, boolean active returns nothing
-native SetOrderButtonHidden takes orderbutton whichOrder, boolean hidden returns nothing
-native SetOrderButtonIconPath takes orderbutton whichOrder, string iconPath returns nothing
-native SetOrderButtonButtonPositionX takes orderbutton whichOrder, integer buttonPositionX returns nothing
-native SetOrderButtonButtonPositionY takes orderbutton whichOrder, integer buttonPositionY returns nothing
-native SetOrderButtonToolTip takes orderbutton whichOrder, string tip returns nothing
-native SetOrderButtonUberTip takes orderbutton whichOrder, string uberTip returns nothing
-// NOTE: On 1.31+, we should probably change SetHotKey to take one of the OSKEY constants
-native SetOrderButtonHotKey takes orderbutton whichOrder, string hotkey returns nothing
-// NOTE: below is intended for buildings, root, build tiny, etc and will show a freeze frame of the stand animation of the
-// model at the given modelPath
+library OrderButtonAPI requires BehaviorAPI
+	type orderbutton extends handle
+	type orderbuttontype extends handle
 
-// TODO choosing pathing map and target mouse model both were discontinued because it couldnt support
-// "Is Can Build On" world editor nonsense. Do we want to bring them back later? Maybe only the model path?
-//native SetOrderButtonTargetingMouseModel takes orderbutton whichOrder, string modelPath returns nothing
-//native SetOrderButtonTargetPathingMap takes orderbutton whichOrder, string pathingMapFilePath returns nothing
-native SetOrderButtonPreviewBuildUnitId takes orderbutton whichOrder, integer unitId returns nothing
-native SetOrderButtonAOE takes orderbutton whichOrder, real radius returns nothing
+	constant native ConvertOrderButtonType takes integer x returns orderbuttontype
+	
+	globals
+		constant orderbuttontype ORDERBUTTON_INSTANT_NO_TARGET                 = ConvertOrderButtonType(0)
+		constant orderbuttontype ORDERBUTTON_UNIT_TARGET                       = ConvertOrderButtonType(1)
+		constant orderbuttontype ORDERBUTTON_POINT_TARGET                      = ConvertOrderButtonType(2)
+		constant orderbuttontype ORDERBUTTON_UNIT_OR_POINT_TARGET              = ConvertOrderButtonType(3)
+		constant orderbuttontype ORDERBUTTON_INSTANT_NO_TARGET_NO_INTERRUPT    = ConvertOrderButtonType(4)
+		constant orderbuttontype ORDERBUTTON_PASSIVE                           = ConvertOrderButtonType(5)
+		constant orderbuttontype ORDERBUTTON_MENU                              = ConvertOrderButtonType(6)
+		
+		constant string COMMAND_STRING_ERROR_KEY_NOT_ENOUGH_FOOD                                                                      = "Nofood"
+		constant string COMMAND_STRING_ERROR_KEY_UNABLE_TO_CREATE_UNIT_DUE_TO_MAXIMUM_FOOD_LIMIT                                      = "Maxsupply"
+		constant string COMMAND_STRING_ERROR_KEY_NOT_ENOUGH_GOLD                                                                      = "Nogold"
+		constant string COMMAND_STRING_ERROR_KEY_NOT_ENOUGH_LUMBER                                                                    = "Nolumber"
+		constant string COMMAND_STRING_ERROR_KEY_NOT_ENOUGH_MANA                                                                      = "Nomana"
+		constant string COMMAND_STRING_ERROR_KEY_SPELL_IS_NOT_READY_YET                                                               = "Cooldown"
+		constant string COMMAND_STRING_ERROR_KEY_CARGO_CAPACITY_UNAVAILABLE                                                           = "Noroom"
+		constant string COMMAND_STRING_ERROR_KEY_UNABLE_TO_LOAD_TARGET                                                                = "Canttransport"
+		constant string COMMAND_STRING_ERROR_KEY_UNABLE_TO_DEVOUR_TARGET                                                              = "Cantdevour"
+		constant string COMMAND_STRING_ERROR_KEY_UNABLE_TO_CAST_CYCLONE_ON_THIS_TARGET                                                = "Cantcyclone"
+		constant string COMMAND_STRING_ERROR_KEY_UNABLE_TO_CAST_FERAL_SPIRIT_ON_THIS_TARGET                                           = "Cantspiritwolf"
+		constant string COMMAND_STRING_ERROR_KEY_UNABLE_TO_CAST_POSSESSION_ON_THIS_TARGET                                             = "Cantpossess"
+		constant string COMMAND_STRING_ERROR_KEY_UNABLE_TO_CAST_MANA_BURN_ON_THIS_TARGET                                              = "Cantmanaburn"
+		constant string COMMAND_STRING_ERROR_KEY_MUST_TARGET_A_UNIT_CAPABLE_OF_ATTACKING                                              = "Onlyattackers"
+		constant string COMMAND_STRING_ERROR_KEY_UNABLE_TO_USE_AN_ENTANGLED_GOLD_MINE                                                 = "Notentangledmine"
+		constant string COMMAND_STRING_ERROR_KEY_UNABLE_TO_USE_A_HAUNTED_GOLD_MINE                                                    = "Notblightedmine"
+		constant string COMMAND_STRING_ERROR_KEY_THAT_GOLD_MINE_IS_ALREADY_ENTANGLED                                                  = "Alreadyentangled"
+		constant string COMMAND_STRING_ERROR_KEY_THAT_GOLD_MINE_IS_ALREADY_HAUNTED                                                    = "Alreadyblightedmine"
+		constant string COMMAND_STRING_ERROR_KEY_MUST_TARGET_A_TREE_OR_AN_ENTANGLED_GOLD_MINE                                         = "Targetwispresources"
+		constant string COMMAND_STRING_ERROR_KEY_MUST_TARGET_A_HAUNTED_GOLD_MINE                                                      = "Targetblightedmine"
+		constant string COMMAND_STRING_ERROR_KEY_MUST_ENTANGLE_GOLD_MINE_FIRST                                                        = "Entangleminefirst"
+		constant string COMMAND_STRING_ERROR_KEY_MUST_HAUNT_GOLD_MINE_FIRST                                                           = "Blightminefirst"
+		constant string COMMAND_STRING_ERROR_KEY_THAT_GOLD_MINE_CANT_SUPPORT_ANY_MORE_WISPS                                           = "Entangledminefull"
+		constant string COMMAND_STRING_ERROR_KEY_THAT_GOLD_MINE_CANT_SUPPORT_ANY_MORE_ACOLYTES                                        = "Blightringfull"
+		constant string COMMAND_STRING_ERROR_KEY_THE_SELECTED_ACOLYTE_IS_ALREADY_MINING                                               = "Acolytealreadymining"
+		constant string COMMAND_STRING_ERROR_KEY_UNABLE_TO_USE_A_MINE_CONTROLLED_BY_ANOTHER_PLAYER                                    = "Nototherplayersmine"
+		constant string COMMAND_STRING_ERROR_KEY_MUST_TARGET_A_GOLD_MINE                                                              = "Targgetmine"
+		constant string COMMAND_STRING_ERROR_KEY_MUST_TARGET_RESOURCES                                                                = "Targgetresources"
+		constant string COMMAND_STRING_ERROR_KEY_MUST_TARGET_A_HUMAN_BUILDING                                                         = "Humanbuilding"
+		constant string COMMAND_STRING_ERROR_KEY_MUST_TARGET_AN_UNDEAD_BUILDING                                                       = "Undeadbuilding"
+		constant string COMMAND_STRING_ERROR_KEY_THAT_BUILDING_IS_CURRENTLY_UNDER_CONSTRUCTION                                        = "Underconstruction"
+		constant string COMMAND_STRING_ERROR_KEY_THE_BUILDING_IS_ALREADY_UNDER_CONSTRUCTION                                           = "Alreadyrebuilding"
+		constant string COMMAND_STRING_ERROR_KEY_THAT_CREATURE_IS_TOO_POWERFUL                                                        = "Creeptoopowerful"
+		constant string COMMAND_STRING_ERROR_KEY_THAT_UNIT_IS_ALREADY_HIBERNATING                                                     = "Hibernating"
+		constant string COMMAND_STRING_ERROR_KEY_THAT_UNIT_IS_ALREADY_LEASHED                                                         = "Magicleashed"
+		constant string COMMAND_STRING_ERROR_KEY_THAT_UNIT_IS_IMMUNE_TO_MAGIC                                                         = "Immunetomagic"
+		constant string COMMAND_STRING_ERROR_KEY_MUST_TARGET_FRIENDLY_LIVING_UNITS_OR_ENEMY_UNDEAD_UNITS                              = "Holybolttarget"
+		constant string COMMAND_STRING_ERROR_KEY_MUST_TARGET_ENEMY_LIVING_UNITS_OR_FRIENDLY_UNDEAD_UNITS                              = "Deathcoiltarget"
+		constant string COMMAND_STRING_ERROR_KEY_MUST_TARGET_A_UNIT_OR_BLIGHTED_GROUND                                                = "Dispelmagictarget"
+		constant string COMMAND_STRING_ERROR_KEY_THAT_TREE_IS_OCCUPIED_TARGET_A_VACANT_TREE                                           = "Treeoccupied"
+		constant string COMMAND_STRING_ERROR_KEY_UNABLE_TO_MERGE_WITH_THAT_UNIT                                                       = "Coupletarget"
+		constant string COMMAND_STRING_ERROR_KEY_MUST_TARGET_A_HIPPOGRYPH                                                             = "Mounthippogryphtarget"
+		constant string COMMAND_STRING_ERROR_KEY_MUST_TARGET_AN_ARCHER                                                                = "Archerridertarget"
+		constant string COMMAND_STRING_ERROR_KEY_MUST_EXPLORE_THERE_FIRST                                                             = "Cantsee"
+		constant string COMMAND_STRING_ERROR_KEY_UNABLE_TO_BUILD_THERE                                                                = "Cantplace"
+		constant string COMMAND_STRING_ERROR_KEY_TARGETED_LOCATION_IS_OUTSIDE_OF_THE_MAP_BOUNDARY                                     = "Outofbounds"
+		constant string COMMAND_STRING_ERROR_KEY_MUST_SUMMON_STRUCTURES_UPON_BLIGHT                                                   = "Offblight"
+		constant string COMMAND_STRING_ERROR_KEY_UNABLE_TO_BUILD_SO_CLOSE_TO_THE_GOLD_MINE                                            = "Tooclosetomine"
+		constant string COMMAND_STRING_ERROR_KEY_UNABLE_TO_CREATE_A_GOLD_MINE_SO_CLOSE_TO_THE_TOWN                                    = "Tooclosetohall"
+		constant string COMMAND_STRING_ERROR_KEY_UNABLE_TO_BUILD_AWAY_FROM_A_SHORELINE                                                = "Notonshoreline"
+		constant string COMMAND_STRING_ERROR_KEY_A_NEWLY_CONSTRUCTED_UNIT_HAS_NO_ROOM_TO_BE_PLACED                                    = "Buildingblocked"
+		constant string COMMAND_STRING_ERROR_KEY_A_UNIT_COULD_NOT_BE_TELEPORTED                                                       = "Teleportfail"
+		constant string COMMAND_STRING_ERROR_KEY_SOMETHING_IS_BLOCKING_THAT_TREE_STUMP                                                = "Stumpblocked"
+		constant string COMMAND_STRING_ERROR_KEY_UNABLE_TO_LAND_THERE                                                                 = "Cantland"
+		constant string COMMAND_STRING_ERROR_KEY_UNABLE_TO_ROOT_THERE                                                                 = "Cantroot"
+		constant string COMMAND_STRING_ERROR_KEY_TARGET_IS_NO_LONGER_ROOTABLE                                                         = "Cantrootunit"
+		constant string COMMAND_STRING_ERROR_KEY_MUST_ROOT_ADJACENT_TO_A_GOLD_MINE_TO_ENTANGLE_IT                                     = "Mustroottoentangle"
+		constant string COMMAND_STRING_ERROR_KEY_MUST_ROOT_CLOSER_TO_THE_GOLD_MINE                                                    = "Mustbeclosertomine"
+		constant string COMMAND_STRING_ERROR_KEY_GOLD_MINE_COULDNT_BE_ENTANGLED                                                       = "Minenotentangleable"
+		constant string COMMAND_STRING_ERROR_KEY_TARGET_IS_OUTSIDE_RANGE                                                              = "Notinrange"
+		constant string COMMAND_STRING_ERROR_KEY_TARGET_IS_INSIDE_MINIMUM_RANGE                                                       = "UnderRange"
+		constant string COMMAND_STRING_ERROR_KEY_UNABLE_TO_TARGET_THIS_UNIT                                                           = "Notthisunit"
+		constant string COMMAND_STRING_ERROR_KEY_MUST_TARGET_A_UNIT_WITH_THIS_ACTION                                                  = "Targetunit"
+		constant string COMMAND_STRING_ERROR_KEY_MUST_TARGET_A_BUILDING_OR_TREE                                                       = "Targetstructuretree"
+		constant string COMMAND_STRING_ERROR_KEY_MUST_TARGET_A_GROUND_UNIT                                                            = "Targetground"
+		constant string COMMAND_STRING_ERROR_KEY_MUST_TARGET_AN_AIR_UNIT                                                              = "Targetair"
+		constant string COMMAND_STRING_ERROR_KEY_MUST_TARGET_A_BUILDING                                                               = "Targetstructure"
+		constant string COMMAND_STRING_ERROR_KEY_MUST_TARGET_A_WARD                                                                   = "Targetward"
+		constant string COMMAND_STRING_ERROR_KEY_MUST_TARGET_AN_ITEM                                                                  = "Targetitem"
+		constant string COMMAND_STRING_ERROR_KEY_MUST_TARGET_A_TREE                                                                   = "Targettree"
+		constant string COMMAND_STRING_ERROR_KEY_MUST_TARGET_A_BUILDING_OR_A_MECHANICAL_UNIT                                          = "Targetrepair"
+		constant string COMMAND_STRING_ERROR_KEY_MUST_TARGET_A_BRIDGE                                                                 = "Targetbridge"
+		constant string COMMAND_STRING_ERROR_KEY_MUST_TARGET_A_NAVAL_UNIT                                                             = "Targetnaval"
+		constant string COMMAND_STRING_ERROR_KEY_MUST_TARGET_ONE_OF_YOUR_OWN_UNITS                                                    = "Targetowned"
+		constant string COMMAND_STRING_ERROR_KEY_MUST_TARGET_A_FRIENDLY_UNIT                                                          = "Targetally"
+		constant string COMMAND_STRING_ERROR_KEY_MUST_TARGET_A_NEUTRAL_UNIT                                                           = "Targetneutral"
+		constant string COMMAND_STRING_ERROR_KEY_MUST_TARGET_AN_ENEMY_UNIT                                                            = "Targetenemy"
+		constant string COMMAND_STRING_ERROR_KEY_MUST_TARGET_A_UNIT_YOU_CAN_CONTROL                                                   = "Targetcontrol"
+		constant string COMMAND_STRING_ERROR_KEY_MUST_TARGET_A_HERO                                                                   = "Targethero"
+		constant string COMMAND_STRING_ERROR_KEY_MUST_TARGET_AN_ENEMY_HERO                                                            = "Targetenemyhero"
+		constant string COMMAND_STRING_ERROR_KEY_MUST_TARGET_A_CORPSE                                                                 = "Targetcorpse"
+		constant string COMMAND_STRING_ERROR_KEY_MUST_TARGET_A_FLESHY_CORPSE                                                          = "Targetfleshycorpse"
+		constant string COMMAND_STRING_ERROR_KEY_MUST_TARGET_A_SKELETAL_CORPSE                                                        = "Targetbonecorpse"
+		constant string COMMAND_STRING_ERROR_KEY_MUST_TARGET_AN_UNDEAD_UNIT                                                           = "Targetundead"
+		constant string COMMAND_STRING_ERROR_KEY_MUST_TARGET_A_MECHANICAL_UNIT                                                        = "Targetmechanical"
+		constant string COMMAND_STRING_ERROR_KEY_MUST_TARGET_MOVEABLE_UNITS                                                           = "Targetmoveable"
+		constant string COMMAND_STRING_ERROR_KEY_MUST_TARGET_AN_ORGANIC_GROUND_UNIT                                                   = "Targetorganicground"
+		constant string COMMAND_STRING_ERROR_KEY_MUST_TARGET_AN_ANCIENT                                                               = "Targetancient"
+		constant string COMMAND_STRING_ERROR_KEY_MUST_TARGET_AN_ARMORED_TRANSPORT                                                     = "Targetarmoredtransport"
+		constant string COMMAND_STRING_ERROR_KEY_MUST_TARGET_A_UNIT_WITH_MANA                                                         = "Targetmanauser"
+		constant string COMMAND_STRING_ERROR_KEY_MUST_TARGET_A_PEON                                                                   = "Targetbunkerunit"
+		constant string COMMAND_STRING_ERROR_KEY_MUST_TARGET_A_WISP                                                                   = "Targetwisp"
+		constant string COMMAND_STRING_ERROR_KEY_MUST_TARGET_AN_ACOLYTE                                                               = "Targetacolyte"
+		constant string COMMAND_STRING_ERROR_KEY_MUST_TARGET_A_SACRIFICIAL_PIT                                                        = "Targetpit"
+		constant string COMMAND_STRING_ERROR_KEY_THAT_TREE_IS_OCCUPIED_BY_AN_OWL                                                      = "Needemptytree"
+		constant string COMMAND_STRING_ERROR_KEY_THAT_TREE_IS_NOT_OCCUPIED_BY_AN_OWL                                                  = "Needowltree"
+		constant string COMMAND_STRING_ERROR_KEY_THERE_ARE_NO_USABLE_CORPSES_NEARBY                                                   = "Cantfindcorpse"
+		constant string COMMAND_STRING_ERROR_KEY_THERE_ARE_NO_CORPSES_OF_FRIENDLY_UNITS_NEARBY                                        = "Cantfindfriendlycorpse"
+		constant string COMMAND_STRING_ERROR_KEY_UNABLE_TO_TARGET_UNITS                                                               = "Nounits"
+		constant string COMMAND_STRING_ERROR_KEY_UNABLE_TO_TARGET_GROUND_UNITS                                                        = "Noground"
+		constant string COMMAND_STRING_ERROR_KEY_UNABLE_TO_TARGET_AIR_UNITS                                                           = "Noair"
+		constant string COMMAND_STRING_ERROR_KEY_UNABLE_TO_TARGET_BUILDINGS                                                           = "Nostructure"
+		constant string COMMAND_STRING_ERROR_KEY_UNABLE_TO_TARGET_WARDS                                                               = "Noward"
+		constant string COMMAND_STRING_ERROR_KEY_UNABLE_TO_TARGET_ITEMS                                                               = "Noitem"
+		constant string COMMAND_STRING_ERROR_KEY_UNABLE_TO_TARGET_DEBRIS                                                              = "Nodebris"
+		constant string COMMAND_STRING_ERROR_KEY_UNABLE_TO_TARGET_TREES                                                               = "Notree"
+		constant string COMMAND_STRING_ERROR_KEY_UNABLE_TO_TARGET_WALLS                                                               = "Nowall"
+		constant string COMMAND_STRING_ERROR_KEY_UNABLE_TO_TARGET_BRIDGES                                                             = "Nobridge"
+		constant string COMMAND_STRING_ERROR_KEY_TARGET_BUILDING_HAS_BEEN_FROZEN                                                      = "Notfrozenbldg"
+		constant string COMMAND_STRING_ERROR_KEY_UNABLE_TO_TARGET_NAVAL_UNITS                                                         = "Nonaval"
+		constant string COMMAND_STRING_ERROR_KEY_MUST_TARGET_FRIENDLY_TOWN_HALL                                                       = "Nottownhall"
+		constant string COMMAND_STRING_ERROR_KEY_THERE_ARE_NO_FRIENDLY_TOWN_HALLS_TO_TOWN_PORTAL_TO                                   = "Notownportalhalls"
+		constant string COMMAND_STRING_ERROR_KEY_UNABLE_TO_TARGET_SELF                                                                = "Notself"
+		constant string COMMAND_STRING_ERROR_KEY_UNABLE_TO_TARGET_YOUR_OWN_UNITS                                                      = "Notowned"
+		constant string COMMAND_STRING_ERROR_KEY_UNABLE_TO_TARGET_FRIENDLY_UNITS                                                      = "Notfriendly"
+		constant string COMMAND_STRING_ERROR_KEY_UNABLE_TO_TARGET_NEUTRAL_UNITS                                                       = "Notneutral"
+		constant string COMMAND_STRING_ERROR_KEY_UNABLE_TO_TARGET_ENEMY_UNITS                                                         = "Notenemy"
+		constant string COMMAND_STRING_ERROR_KEY_UNABLE_TO_TARGET_UNITS_INSIDE_A_BUILDING_OR_TRANSPORT                                = "Notcargo"
+		constant string COMMAND_STRING_ERROR_KEY_THAT_TARGET_IS_NOT_VISIBLE_ON_THE_MAP                                                = "Nothidden"
+		constant string COMMAND_STRING_ERROR_KEY_UNABLE_TO_TARGET_CARRIED_ITEMS                                                       = "Nothiddenitem"
+		constant string COMMAND_STRING_ERROR_KEY_THAT_TARGET_IS_INVULNERABLE                                                          = "Notinvulnerable"
+		constant string COMMAND_STRING_ERROR_KEY_UNABLE_TO_TARGET_HEROES                                                              = "Nohero"
+		constant string COMMAND_STRING_ERROR_KEY_TARGET_MUST_BE_LIVING                                                                = "Notcorpse"
+		constant string COMMAND_STRING_ERROR_KEY_UNABLE_TO_TARGET_FLESHY_CORPSES                                                      = "Notfleshycorpse"
+		constant string COMMAND_STRING_ERROR_KEY_UNABLE_TO_TARGET_SKELETAL_CORPSES                                                    = "Notbonecorpse"
+		constant string COMMAND_STRING_ERROR_KEY_MUST_TARGET_ORGANIC_UNITS                                                            = "Notmechanical"
+		constant string COMMAND_STRING_ERROR_KEY_UNABLE_TO_TARGET_ORGANIC_UNITS                                                       = "Notorganic"
+		constant string COMMAND_STRING_ERROR_KEY_CASTER_MOVEMENT_HAS_BEEN_DISABLED                                                    = "Notdisabled"
+		constant string COMMAND_STRING_ERROR_KEY_UNABLE_TO_ATTACK_THERE                                                               = "Cantattackloc"
+		constant string COMMAND_STRING_ERROR_KEY_UNABLE_TO_TARGET_THERE                                                               = "Canttargetloc"
+		constant string COMMAND_STRING_ERROR_KEY_INVENTORY_IS_FULL                                                                    = "Inventoryfull"
+		constant string COMMAND_STRING_ERROR_KEY_SELECT_A_UNIT_WITH_AN_INVENTORY                                                      = "Inventoryinteract"
+		constant string COMMAND_STRING_ERROR_KEY_ONLY_UNITS_WITH_AN_INVENTORY_CAN_PICK_UP_ITEMS                                       = "NeedInventory"
+		constant string COMMAND_STRING_ERROR_KEY_ONLY_HEROES_THAT_HAVE_LEARNED_SPELLS_NOT_IN_COOLDOWN_CAN_USE_THIS_ITEM               = "Needretrainablehero"
+		constant string COMMAND_STRING_ERROR_KEY_A_HERO_MUST_BE_NEARBY                                                                = "Neednearbyhero"
+		constant string COMMAND_STRING_ERROR_KEY_A_VALID_PATRON_MUST_BE_NEARBY                                                        = "Neednearbypatron"
+		constant string COMMAND_STRING_ERROR_KEY_UNABLE_TO_TARGET_SAPPERS                                                             = "Notsapper"
+		constant string COMMAND_STRING_ERROR_KEY_UNABLE_TO_TARGET_ANCIENTS                                                            = "Notancient"
+		constant string COMMAND_STRING_ERROR_KEY_UNABLE_TO_TARGET_SUMMONED_UNITS                                                      = "Notsummoned"
+		constant string COMMAND_STRING_ERROR_KEY_UNABLE_TO_TARGET_TRANSPORTS_OR_BUNKERS                                               = "Nottransport"
+		constant string COMMAND_STRING_ERROR_KEY_TARGET_IS_BEING_UNSUMMONED                                                           = "Notunsummoned"
+		constant string COMMAND_STRING_ERROR_KEY_UNABLE_TO_TARGET_ILLUSIONS                                                           = "Notillusion"
+		constant string COMMAND_STRING_ERROR_KEY_UNABLE_TO_TARGET_MORPHING_UNITS                                                      = "Notmorphing"
+		constant string COMMAND_STRING_ERROR_KEY_UNABLE_TO_TARGET_A_DRUID_OF_THE_TALON                                                = "Notdot"
+		constant string COMMAND_STRING_ERROR_KEY_ILLUSIONS_ARE_UNABLE_TO_HARVEST                                                      = "Illusionscantharvest"
+		constant string COMMAND_STRING_ERROR_KEY_ILLUSIONS_CANNOT_PICK_UP_ITEMS                                                       = "Illusionscantpickup"
+		constant string COMMAND_STRING_ERROR_KEY_THIS_UNIT_IS_IMMUNE_TO_POLYMORPH                                                     = "Cantpolymorphunit"
+		constant string COMMAND_STRING_ERROR_KEY_UNABLE_TO_TARGET_AN_UNDEAD_UNIT                                                      = "Notundead"
+		constant string COMMAND_STRING_ERROR_KEY_HERO_IS_AT_MAX_LEVEL                                                                 = "Heromaxed"
+		constant string COMMAND_STRING_ERROR_KEY_HERO_HAS_FULL_HEALTH                                                                 = "HPmaxed"
+		constant string COMMAND_STRING_ERROR_KEY_HERO_HAS_FULL_MANA                                                                   = "Manamaxed"
+		constant string COMMAND_STRING_ERROR_KEY_ALREADY_AT_FULL_MANA_AND_HEALTH                                                      = "HPmanamaxed"
+		constant string COMMAND_STRING_ERROR_KEY_ALREADY_AT_FULL_HEALTH                                                               = "UnitHPmaxed"
+		constant string COMMAND_STRING_ERROR_KEY_ALREADY_AT_FULL_MANA                                                                 = "UnitManaMaxed"
+		constant string COMMAND_STRING_ERROR_KEY_TARGET_IS_NOT_DAMAGED                                                                = "RepairHPmaxed"
+		constant string COMMAND_STRING_ERROR_KEY_TARGET_IS_ALREADY_BEING_HEALED                                                       = "Alreadybeinghealed"
+		constant string COMMAND_STRING_ERROR_KEY_TARGET_IS_ALREADY_BEING_REPAIRED                                                     = "Alreadybeingrepaired"
+		constant string COMMAND_STRING_ERROR_KEY_SACRIFICIAL_PIT_IS_ALREADY_SACRIFICING_AN_ACOLYTE                                    = "Pitalreadysacrificing"
+		constant string COMMAND_STRING_ERROR_KEY_OUT_OF_STOCK                                                                         = "Outofstock"
+		constant string COMMAND_STRING_ERROR_KEY_COOLDOWN_OUT_OF_STOCK                                                                = "Cooldownstock"
+		constant string COMMAND_STRING_ERROR_KEY_ITEM_MUST_REMAIN_IN_YOUR_INVENTORY                                                   = "Cantdrop"
+		constant string COMMAND_STRING_ERROR_KEY_ITEM_CANNOT_BE_PAWNED                                                                = "Cantpawn"
+		constant string COMMAND_STRING_ERROR_KEY_NO_PEASANTS_COULD_BE_FOUND                                                           = "Calltoarms"
+		constant string COMMAND_STRING_ERROR_KEY_NO_TOWN_HALLS_COULD_BE_FOUND_THAT_CAN_CONVERT_PEASANTS_INTO_MILITIA                  = "Calltoarmspeasant"
+		constant string COMMAND_STRING_ERROR_KEY_NO_MILITIA_COULD_BE_FOUND                                                            = "Backtowork"
+		constant string COMMAND_STRING_ERROR_KEY_NO_TOWN_HALLS_COULD_BE_FOUND_THAT_CAN_CONVERT_MILITIA_INTO_PEASANTS                  = "Backtoworkmilitia"
+		constant string COMMAND_STRING_ERROR_KEY_NO_PEONS_COULD_BE_FOUND                                                              = "BattleStations"
+		constant string COMMAND_STRING_ERROR_KEY_REPLACE_THIS_ERROR_MESSAGE_WITH_SOMETHING_MEANINGFUL                                 = "Replaceme"
+		constant string COMMAND_STRING_ERROR_KEY_TARGET_BUILDING_HAS_LIQUID_FIRE                                                      = "Notliquidfirebldg"
+		constant string COMMAND_STRING_ERROR_KEY_ETHEREAL_UNITS_CAN_ONLY_BE_HIT_BY_SPELLS_AND_MAGIC_DAMAGE                            = "Notethereal"
+		constant string COMMAND_STRING_ERROR_KEY_TARGET_HAS_NO_STEALABLE_BUFFS                                                        = "Needstealbuff"
+		constant string COMMAND_STRING_ERROR_KEY_MUST_TARGET_A_MELEE_ATTACKER                                                         = "Needmeleeattacker"
+		constant string COMMAND_STRING_ERROR_KEY_MUST_TARGET_A_RANGED_ATTACKER                                                        = "Needrangedattacker"
+		constant string COMMAND_STRING_ERROR_KEY_MUST_TARGET_A_SPECIAL_ATTACKER                                                       = "Needspecialattacker"
+		constant string COMMAND_STRING_ERROR_KEY_MUST_TARGET_AN_ATTACK_UNIT                                                           = "Needattacker"
+		constant string COMMAND_STRING_ERROR_KEY_MUST_TARGET_A_CASTER                                                                 = "Needcaster"
+		constant string COMMAND_STRING_ERROR_KEY_MUST_TARGET_AN_ATTACK_UNIT_OR_A_CASTER                                               = "Needattackerorcaster"
+		constant string COMMAND_STRING_ERROR_KEY_NO_STRUCTURES_ARE_AVAILABLE_TO_TELEPORT_THE_TARGET_TO                                = "Nopreservationtarget"
+		constant string COMMAND_STRING_ERROR_KEY_UNABLE_TO_TRANSFORM_THIS_ITEM                                                        = "Canttransformitem"
+		constant string COMMAND_STRING_ERROR_KEY_THIS_UNIT_HAS_ALREADY_BEEN_MARKED_BY_FIRE                                            = "Notmocunit"
+		constant string COMMAND_STRING_ERROR_KEY_CANT_IMPALE_THIS_UNIT                                                                = "Cantimpale"
+		constant string COMMAND_STRING_ERROR_KEY_MUST_TARGET_AN_ENEMY_UNIT_WITH_POSITIVE_BUFFS                                        = "Needpositivebuff"
+		constant string COMMAND_STRING_ERROR_KEY_MUST_TARGET_AN_ENEMY_UNIT_WITH_POSITIVE_BUFFS_OR_A_SUMMONED_UNIT                     = "Needposbufforsummoned"
+		constant string COMMAND_STRING_ERROR_KEY_MUST_TARGET_A_FRIENDLY_UNIT_WITH_NEGATIVE_BUFFS                                      = "Neednegativebuff"
+		constant string COMMAND_STRING_ERROR_KEY_NOT_ENOUGH_MANA_TO_ABSORB                                                            = "Absorbmana"
+		constant string COMMAND_STRING_ERROR_KEY_UNABLE_TO_PICK_UP_THIS_ITEM                                                          = "Canttakeitem"
+		constant string COMMAND_STRING_ERROR_KEY_UNABLE_TO_DROP_THIS_ITEM                                                             = "Cantdropitem"
+		constant string COMMAND_STRING_ERROR_KEY_UNABLE_TO_USE_THIS_ITEM                                                              = "Cantuseitem"
+		constant string COMMAND_STRING_ERROR_KEY_UNABLE_TO_USE_POWERUPS                                                               = "Notpowerup"
+		constant string COMMAND_STRING_ERROR_KEY_THIS_ITEM_IS_COOLING_DOWN                                                            = "Itemcooldown"
+		constant string COMMAND_STRING_ERROR_KEY_UNABLE_TO_FIND_COUPLE_TARGET                                                         = "Cantfindcoupletarget"
+		constant string COMMAND_STRING_ERROR_KEY_THIS_UNIT_HAS_A_DISABLED_INVENTORY                                                   = "Notdisabledinventory"
+		constant string COMMAND_STRING_ERROR_KEY_THIS_UNIT_HAS_RESISTANT_SKIN                                                         = "Resistantskin"
+		constant string COMMAND_STRING_ERROR_KEY_UNABLE_TO_USE_INVULNERABILITY_GRANTING_SPELLS_OR_ITEMS                               = "Notinvulnerablespell"
+		constant string COMMAND_STRING_ERROR_KEY_MUST_TARGET_SUMMONED_UNITS                                                           = "Needsummoned"
+		constant string COMMAND_STRING_ERROR_KEY_UNABLE_TO_SUBMERGE_THERE                                                             = "Cantsubmergethere"
+		constant string COMMAND_STRING_ERROR_KEY_THIS_UNIT_HAS_ALREADY_BEEN_STRICKEN_WITH_DOOM                                        = "Alreadydoomed"
+	endglobals
 
-native GetOrderButtonAutoCastOrderId takes orderbutton whichOrder returns integer
-native GetOrderButtonUnAutoCastOrderId takes orderbutton whichOrder returns integer
-native GetOrderButtonContainerMenuOrderId takes orderbutton whichOrder returns integer
-native IsOrderButtonDisabled takes orderbutton whichOrder returns boolean
-native GetOrderButtonManaCost takes orderbutton whichOrder returns integer
-native GetOrderButtonGoldCost takes orderbutton whichOrder returns integer
-native GetOrderButtonLumberCost takes orderbutton whichOrder returns integer
-native GetOrderButtonFoodCostDisplayOnly takes orderbutton whichOrder returns integer
-native GetOrderButtonCharges takes orderbutton whichOrder returns integer
-native IsOrderButtonAutoCastActive takes orderbutton whichOrder returns boolean
-native IsOrderButtonHidden takes orderbutton whichOrder returns boolean
-native GetOrderButtonIconPath takes orderbutton whichOrder returns string
-native GetOrderButtonButtonPositionX takes orderbutton whichOrder returns integer
-native GetOrderButtonButtonPositionY takes orderbutton whichOrder returns integer
-native GetOrderButtonToolTip takes orderbutton whichOrder returns string
-native GetOrderButtonUberTip takes orderbutton whichOrder returns string
-// NOTE: On 1.31+, we should probably change GetHotKey to return one of the OSKEY constants
-native GetOrderButtonHotKey takes orderbutton whichOrder returns string
+	native CreateOrderButton takes orderbuttontype targetType, integer orderId returns orderbutton
+	native DestroyOrderButton takes orderbutton whichOrder returns nothing
+	native SetOrderButtonAutoCastOrderId takes orderbutton whichOrder, integer autoCastOrderId returns nothing
+	native SetOrderButtonUnAutoCastOrderId takes orderbutton whichOrder, integer autoCastOrderId returns nothing
+	// if you set container id, it would only show if you also added a menu-type icon
+	native SetOrderButtonContainerMenuOrderId takes orderbutton whichOrder, integer containerMenuOrderId returns nothing
+	native SetOrderButtonDisabled takes orderbutton whichOrder, boolean disabled returns nothing
+	native SetOrderButtonManaCost takes orderbutton whichOrder, integer costAmount returns nothing
+	native SetOrderButtonGoldCost takes orderbutton whichOrder, integer costAmount returns nothing
+	native SetOrderButtonLumberCost takes orderbutton whichOrder, integer costAmount returns nothing
+	native SetOrderButtonFoodCost takes orderbutton whichOrder, integer costAmount returns nothing
+	native SetOrderButtonCharges takes orderbutton whichOrder, integer charges returns nothing
+	native SetOrderButtonAutoCastActive takes orderbutton whichOrder, boolean active returns nothing
+	native SetOrderButtonIconPath takes orderbutton whichOrder, string iconPath returns nothing
+	native SetOrderButtonButtonPositionX takes orderbutton whichOrder, integer buttonPositionX returns nothing
+	native SetOrderButtonButtonPositionY takes orderbutton whichOrder, integer buttonPositionY returns nothing
+	native SetOrderButtonToolTip takes orderbutton whichOrder, string tip returns nothing
+	native SetOrderButtonUberTip takes orderbutton whichOrder, string uberTip returns nothing
+	// NOTE: On 1.31+, we should probably change SetHotKey to take one of the OSKEY constants
+	native SetOrderButtonHotKey takes orderbutton whichOrder, string hotkey returns nothing
+	
+	// NOTE: maybe this is useful, but it does not look up AOE/"PreviewBuildUnitId", so
+	// you will have to do those on your own with Set functions.
+	native SetOrderButtonByIconUI takes orderbutton whichOrder, iconui whichUI returns nothing
+	
+	// NOTE: below is intended for buildings, root, build tiny, etc and will show a freeze frame of the stand animation of the
+	// model at the given modelPath
 
-//native GetOrderButtonTargetingMouseModel takes orderbutton whichOrder returns string
-//native GetOrderButtonTargetPathingMap takes orderbutton whichOrder returns string
-native GetOrderButtonPreviewBuildUnitId takes orderbutton whichOrder returns integer
-native GetOrderButtonAOE takes orderbutton whichOrder returns real
+	// TODO choosing pathing map and target mouse model both were discontinued because it couldnt support
+	// "Is Can Build On" world editor nonsense. Do we want to bring them back later? Maybe only the model path?
+	//native SetOrderButtonTargetingMouseModel takes orderbutton whichOrder, string modelPath returns nothing
+	//native SetOrderButtonTargetPathingMap takes orderbutton whichOrder, string pathingMapFilePath returns nothing
+	native SetOrderButtonPreviewBuildUnitId takes orderbutton whichOrder, integer unitId returns nothing
+	native SetOrderButtonAOE takes orderbutton whichOrder, real radius returns nothing
 
+	native GetOrderButtonAutoCastOrderId takes orderbutton whichOrder returns integer
+	native GetOrderButtonUnAutoCastOrderId takes orderbutton whichOrder returns integer
+	native GetOrderButtonContainerMenuOrderId takes orderbutton whichOrder returns integer
+	native IsOrderButtonDisabled takes orderbutton whichOrder returns boolean
+	native GetOrderButtonManaCost takes orderbutton whichOrder returns integer
+	native GetOrderButtonGoldCost takes orderbutton whichOrder returns integer
+	native GetOrderButtonLumberCost takes orderbutton whichOrder returns integer
+	native GetOrderButtonFoodCost takes orderbutton whichOrder returns integer
+	native GetOrderButtonCharges takes orderbutton whichOrder returns integer
+	native IsOrderButtonAutoCastActive takes orderbutton whichOrder returns boolean
+	// --DEPRECATED-- native GetOrderButtonIconPath takes orderbutton whichOrder returns string
+	native GetOrderButtonButtonPositionX takes orderbutton whichOrder returns integer
+	native GetOrderButtonButtonPositionY takes orderbutton whichOrder returns integer
+	native GetOrderButtonToolTip takes orderbutton whichOrder returns string
+	native GetOrderButtonUberTip takes orderbutton whichOrder returns string
+	// NOTE: On 1.31+, we should probably change GetHotKey to return one of the OSKEY constants
+	native GetOrderButtonHotKey takes orderbutton whichOrder returns string
 
-native GetSpellAbilityType takes nothing returns abilitytype
+	//native GetOrderButtonTargetingMouseModel takes orderbutton whichOrder returns string
+	//native GetOrderButtonTargetPathingMap takes orderbutton whichOrder returns string
+	native GetOrderButtonPreviewBuildUnitId takes orderbutton whichOrder returns integer
+	native GetOrderButtonAOE takes orderbutton whichOrder returns real
+	
+	native FailUsableCheckOnRequirement takes orderbutton callbackOwner, integer requiredTechTypeId, integer requiredLevel returns nothing
+	native FailUsableCheckOnHeroLevelRequirement takes orderbutton callbackOwner, integer requiredLevel returns nothing
+	native FailUsableCheckOnCooldown takes orderbutton callbackOwner, real cooldownRemaining, real cooldown returns nothing
+	native FailUsableCheckTechMaxReached takes orderbutton callbackOwner returns nothing
+	// NOTE: dont call FailCheckWithMessage with an english input, prefer instead to
+	// use one of the keys from UI\CommandStrings.txt in the [ErrorKeys] and this
+	// will ensure that if the user plays in Spanish or Chinese, that the error
+	// will show in Spanish or Chinese. Note that the special string
+	// "Nomana" in this callback will turn the icon blue before it is even clicked.
+	native FailUsableCheckWithMessage takes orderbutton callbackOwner, string messageKey returns nothing
+	native FailTargetCheckWithMessage takes orderbutton callbackOwner, string messageKey returns nothing
+	// NOTE: "finalizedTarget" is pretty useless. In theory it lets you pass the check but
+	// based on a newer/better target that you provided. In practice, probably just
+	// always pass the same target. Maybe we can delete it in a later version.
+	native PassTargetCheck takes orderbutton callbackOwner, handle finalizedTarget returns nothing
+	native PassUsableCheck takes orderbutton callbackOwner returns nothing
+	
+	interface OrderButtonNoTarget extends orderbutton
+		static method create takes integer orderId returns OrderButtonNoTarget defaults .allocate(ORDERBUTTON_INSTANT_NO_TARGET, orderId)
+		
+		method checkUsable takes unit caster, ability source returns nothing
+		
+		method checkTarget takes unit caster, ability source returns nothing
+		
+		method begin takes unit caster, ability source returns Behavior
+		
+		method onCancelFromQueue takes unit caster, ability source returns nothing defaults nothing
+	endinterface
+	
+	interface OrderButtonTargetWidget extends orderbutton
+		static method create takes integer orderId returns OrderButtonTargetWidget defaults .allocate(ORDERBUTTON_UNIT_TARGET, orderId)
+		
+		method checkUsable takes unit caster, ability source returns nothing
+		
+		method checkTargetUnit takes unit caster, ability source, unit target returns nothing
+		
+		method beginUnit takes unit caster, ability source, unit target returns Behavior
+		
+		method checkTargetItem takes unit caster, ability source, item target returns nothing
+		
+		method beginItem takes unit caster, ability source, item target returns Behavior
+		
+		method checkTargetDestructable takes unit caster, ability source, destructable target returns nothing
+		
+		method beginDestructable takes unit caster, ability source, destructable target returns Behavior
+		
+		method onCancelFromQueue takes unit caster, ability source returns nothing defaults nothing
+	endinterface
+	
+	interface OrderButtonTargetLocation extends orderbutton
+		static method create takes integer orderId returns OrderButtonTargetLocation defaults .allocate(ORDERBUTTON_POINT_TARGET, orderId)
+		
+		method checkUsable takes unit caster, ability source returns nothing
+		
+		method checkTargetLoc takes unit caster, ability source, location target returns nothing
+		
+		method beginLoc takes unit caster, ability source, location target returns Behavior
+		
+		method onCancelFromQueue takes unit caster, ability source returns nothing defaults nothing
+	endinterface
+	
+	interface OrderButtonTarget extends orderbutton
+		static method create takes integer orderId returns OrderButtonTarget defaults .allocate(ORDERBUTTON_UNIT_OR_POINT_TARGET, orderId)
+		
+		method checkUsable takes unit caster, ability source returns nothing
+		
+		method checkTargetUnit takes unit caster, ability source, unit target returns nothing
+		
+		method beginUnit takes unit caster, ability source, unit target returns Behavior
+		
+		method checkTargetItem takes unit caster, ability source, item target returns nothing
+		
+		method beginItem takes unit caster, ability source, item target returns Behavior
+		
+		method checkTargetDestructable takes unit caster, ability source, destructable target returns nothing
+		
+		method beginDestructable takes unit caster, ability source, destructable target returns Behavior
+		
+		method checkTargetLoc takes unit caster, ability source, location target returns nothing
+		
+		method beginLoc takes unit caster, ability source, location target returns Behavior
+		
+		method onCancelFromQueue takes unit caster, ability source returns nothing defaults nothing
+	endinterface
+	
+	interface OrderButtonInstant extends orderbutton
+		static method create takes integer orderId returns OrderButtonInstant defaults .allocate(ORDERBUTTON_INSTANT_NO_TARGET_NO_INTERRUPT, orderId)
+		
+		method checkUsable takes unit caster, ability source returns nothing
+		
+		// this is not a "begin" method, as it returns no behavior
+		method use takes unit caster, ability source returns nothing
+	endinterface
+	
+	interface OrderButtonPassive extends orderbutton
+		static method create takes integer orderId returns OrderButtonPassive defaults .allocate(ORDERBUTTON_PASSIVE, orderId)
+	endinterface
+	
+	interface OrderButtonMenu extends orderbutton
+		static method create takes integer orderId returns OrderButtonMenu defaults .allocate(ORDERBUTTON_MENU, orderId)
+	endinterface
+endlibrary
 
-    
 //=====================================================
-// Ability API    
+// AbilityAPI API                                        
 //=====================================================
-// NOTE: GetAbilityType will return null for engine-level abilities, unless if those are some day
-// all replaced with userspace implementations
-native GetAbilityType takes ability whichAbility returns abilitytype
+// Use this to create an ability that can 
+// be given to a unit. It is the lower level,
+// and if you want the "easy" version, prefer
+// to use the default generic base classes
+// defined later on.
+library AbilityAPI requires OrderButtonAPI
+	type abilitycategory extends handle
+	
+	constant native ConvertAbilityCategory takes integer x returns abilitycategory
+	
+	globals
+		constant abilitycategory ABILITY_CATEGORY_ATTACK                            = ConvertAbilityCategory(0)
+		constant abilitycategory ABILITY_CATEGORY_MOVEMENT                          = ConvertAbilityCategory(1)
+		constant abilitycategory ABILITY_CATEGORY_CORE                              = ConvertAbilityCategory(2)
+		constant abilitycategory ABILITY_CATEGORY_PASSIVE                           = ConvertAbilityCategory(3)
+		constant abilitycategory ABILITY_CATEGORY_SPELL                             = ConvertAbilityCategory(4)
+		constant abilitycategory ABILITY_CATEGORY_ITEM                              = ConvertAbilityCategory(5)
+		constant abilitycategory ABILITY_CATEGORY_BUFF                              = ConvertAbilityCategory(6)
+	endglobals
+
+	// NOTE: do not call the native below, it exists only for interoperating with "extends" keyword
+	private native CreateJassAbility takes integer aliasId returns ability
+	
+	interface Ability extends ability
+		static method create takes integer aliasId returns Ability defaults .allocate(aliasId)
+		
+		method populate takes gameobject editorData, integer level returns nothing
+		
+		/* should fire when ability added to unit */
+		method onAdd takes unit whichUnit returns nothing
+		
+		/* should fire when ability removed from unit */
+		method onRemove takes unit whichUnit returns nothing
+		
+		/* should fire for "permanent" abilities that are kept across unit type change */
+		method onSetUnitType takes unit whichUnit returns nothing
+		
+		/* Glasir added the Ability Disable Type for the ability builder JSON
+		 * universe of functions, so that it is aware of different disables and
+		 * handles them differently. I'm not sure if I like that because I
+		 * don't think the guy doing the disable would want to have to specify,
+		 * but that's how it is right now. The current disable types are
+		 * REQUIREMENTS, CONSTRUCTION, TRANSFORMATION, TRIGGER, ATTACKDISABLED,
+		 * and PLAYER. Note that common.j natives to disable abilities always use
+		 * TRIGGER, which would be wrong if we implement abilities themselves in
+		 * jass, since for example Silence would want to use ATTACKDISABLED */
+		method onSetDisabled takes boolean disabled, abilitydisabletype whichType returns nothing defaults nothing
+		
+		method onSetIconShowing takes boolean iconShowing returns nothing defaults nothing
+		
+		method onSetPermanent takes boolean permanent returns nothing defaults nothing
+		
+		constant method getAbilityCategory takes nothing returns abilitycategory
+	endinterface
+	
+	native AbilityAddOrderButton takes Ability whichAbility, orderbutton whichOrder returns nothing
+	native AbilityRemoveOrderButton takes Ability whichAbility, orderbutton whichOrder returns nothing
+	native RegisterAbilityStructType takes integer codeId, structtype whichStructType returns nothing
+
+	// ==========================================================================================
+	// ========== Some general stuff ==============================
+	// ==========================================================================================
+	// On Warcraft 3, folks always made abilities using "UnitAddAbility(myUnit, 'AUan')" for example
+	// if we wanted to provide the unit with Animate Dead. That native enforced a rule that a unit
+	// could only have 1 of an ability. But elsewhere the game violated its own rule, such as
+	// when an item would add an ability to a unit; two "Claws of Attack +3" stack by adding
+	// 'AIat' to the unit twice, not by modifying the statistical values on the unit's one
+	// and only instance of 'AIat'.
+	// In premise, the following example:
+	//```
+	//    if BlzGetUnitAbility(myUnit, 'AIat') == null then
+	//        call AddUnitAbility(myUnit, CreateAbility('AIat'))
+	//    endif
+	//```
+	// ... would be nearly
+	// identical to "call UnitAddAbility(myUnit, 'AUan')" but different because decomposing into
+	// these lower level natives gives us more control, and allows us to violate the rule,
+	// similar to items. In the case of Ability Builder, it also allows us to save a reference
+	// to the exact ability created.
+	native CreateAbility takes integer whichAbilityId returns ability
+
+	// These do the same thing as similar Blz functions if user simulation includes newer patch,
+	// but are distinct because our simulation will include them regardless of patch version
+	native GetUnitAbility takes unit whichUnit, integer whichAbilityId returns ability
+	native GetUnitAbilityByIndex takes unit whichUnit, integer index returns ability
+
+	// Unlike "UnitAddAbility" for the rawcode based ones, this uses reversed name "AddUnitAbility"
+	// which staples an existing ability handle onto a unit. Maybe we could rename it
+	// to "UnitAddAbilityHandle" if this ends up too confusing in the future
+	native AddUnitAbility takes unit whichUnit, ability whichAbility returns nothing
+
+	// same idea here, see comment on AddUnitAbility. Returns true if something was removed.
+	native RemoveUnitAbility takes unit whichUnit, ability whichAbiilty returns nothing
+
+	native GetAbilityAliasId takes ability whichAbility returns integer
+	native GetAbilityCodeId takes ability whichAbility returns integer
+
+	// might be the same as BlzUnitHideAbility, but this one is for ability handles
+	native SetAbilityIconShowing takes ability whichAbility, boolean showing returns nothing
+
+	// below is some low level thing, ability builder changes added concept of disable type so it
+	// was exposed here, but maybe you want to always use type ABILITY_DISABLE_TYPE_TRIGGER so we don't bork the low level
+	// system
+	native SetAbilityDisabled takes unit abilityUnit, ability whichAbility, boolean disabled, abilitydisabletype reason returns nothing
+
+	native SetAbilityPermanent takes ability whichAbility, boolean flag returns nothing
+	
+	// below will crash unless used on jass-defined abilities so we require the interface type not the common.j type
+	native SetAbilityPhysical takes Ability whichAbility, boolean flag returns nothing
+	native SetAbilityUniversal takes Ability whichAbility, boolean flag returns nothing
+	native SetAbilityEnabledWhileUpgrading takes Ability whichAbility, boolean flag returns nothing
+	native SetAbilityEnabledWhileUnderConstruction takes Ability whichAbility, boolean flag returns nothing
+	
+	// below are for helping make abilities probably. In the AbilityBuilder changes, it was noted
+	// that some abilities will tick while the unit is paused and some will not. Originally Retera
+	// had created a system where all abilities have "onTick()" and it is called if their unit
+	// is unpaused. To try to facilitate this function still being called for abilites on a paused
+	// unit, the Java-side implementation of things turned into a clustertruck of checks. There was
+	// such a thing called a "Paused" buff and if you look through it all, the "Paused" buff is the
+	// one that isn't paused. It's a buff that still ticks when the unit is paused, by hacking.
+	// That's pretty gross. If we can port everything to jass and ditch the hardcoded stuff, we
+	// might as well ditch Paused buffs as a concept in favor of this:
+	// YOUR ABILITY EITHER REGISTERS TO TICK WITH THE UNIT, OR WITH THE GAME, OR IT DOES NOT.
+	// YOU DECIDE. (Remember to destroy your event and trigger .)
+	native TriggerRegisterOnTick takes trigger t returns event
+	native TriggerRegisterOnUnitTick takes trigger t, unit tickSource returns event
+endlibrary
+
+//=====================================================
+// GenericAbilityBaseTypes                                        
+//=====================================================
+// These are utilities that you can extend when
+// making an ability or behavior that are intended
+// to reduce the effort required to making common
+// types of abilities
+library GenericAbilityBaseTypes requires AbilityAPI, BehaviorAPI
+	// Provide common access to the ability button
+	// (in case we are wrapped in a SpellBook who needs to
+	//  set our button's menu ID, etc)
+	struct GenericSingleIconAbilityBase extends Ability
+		orderbutton abilityButton
+		
+		method innerPopulate takes gameobject editorData, integer level returns nothing
+		endmethod
+		
+		method populate takes gameobject editorData, integer level returns nothing
+			local iconui iconAtLevel = GetAbilityOnIconUI(this.alias, level - 1)
+			call SetOrderButtonByIconUI(this.abilityButton, iconAtLevel)
+			call innerPopulate(editorData, level)
+		endmethod
+	
+		method onAdd takes unit whichUnit returns nothing
+		endmethod
+		
+		method onRemove takes unit whichUnit returns nothing
+		endmethod
+		
+		method onSetUnitType takes unit whichUnit returns nothing
+		endmethod
+	
+		method onSetDisabled takes boolean disabled, abilitydisabletype whichType returns nothing
+		endmethod
+		
+		method onSetIconShowing takes boolean iconShowing returns nothing
+		endmethod
+		
+		method onSetPermanent takes boolean permanent returns nothing
+		endmethod
+	endinterface
+
+	scope TargetWidget
+		private interface ActiveAbilityInterface extends GenericSingleIconAbilityBase
+			method checkUsable takes unit caster, ability source returns nothing
+			
+			method checkTargetUnit takes unit caster, ability source, unit target returns nothing
+			
+			method beginUnit takes unit caster, ability source, unit target returns Behavior
+			
+			method checkTargetItem takes unit caster, ability source, item target returns nothing
+			
+			method beginItem takes unit caster, ability source, item target returns Behavior
+			
+			method checkTargetDestructable takes unit caster, ability source, destructable target returns nothing
+			
+			method beginDestructable takes unit caster, ability source, destructable target returns Behavior
+		endinterface
+	
+		private struct OrderButtonImpl extends OrderButtonTargetWidget
+			ActiveAbilityInterface parent
+		
+			public static method create takes integer orderId, ActiveAbilityInterface parent returns OrderButtonImpl
+				local OrderButtonImpl this = .allocate(orderId)
+				set this.parent = parent
+				return this
+			endmethod
+		
+			method checkUsable takes unit caster, ability source returns nothing
+				call this.parent.checkUsable(caster, source)
+			endmethod
+			
+			method checkTargetUnit takes unit caster, ability source, unit target returns nothing
+				call this.parent.checkTargetUnit(caster, source, target)
+			endmethod
+			
+			method beginUnit takes unit caster, ability source, unit target returns Behavior
+				return this.parent.beginUnit(caster, source, target)
+			endmethod
+			
+			method checkTargetItem takes unit caster, ability source, item target returns nothing
+				call this.parent.checkTargetItem(caster, source, target)
+			endmethod
+			
+			method beginItem takes unit caster, ability source, item target returns Behavior
+				return this.parent.beginItem(caster, source, target)
+			endmethod
+			
+			method checkTargetDestructable takes unit caster, ability source, destructable target returns nothing
+				call this.parent.checkTargetDestructable(caster, source, target)
+			endmethod
+			
+			method beginDestructable takes unit caster, ability source, destructable target returns Behavior
+				return this.parent.beginDestructable(caster, source, target)
+			endmethod
+		endstruct
+
+		/* abstract */ struct AbstractGenericActiveAbilityTargetWidget extends ActiveAbilityInterface
+		
+			public static method create takes integer aliasId, integer orderId returns AbstractGenericActiveAbilityTargetWidget
+				local AbstractGenericActiveAbilityTargetWidget this = .allocate(aliasId)
+				set this.alias = aliasId
+				set this.abilityButton = OrderButtonImpl.create(orderId, this)
+				call AbilityAddOrderButton(this, this.abilityButton)
+				return this
+			endmethod
+			
+			// NOTE that ActiveAbilityInterface methods are missing here,
+			// so you need to implement those 
+		endstruct
+	endscope
+	
+	scope TargetLocation
+		private interface ActiveAbilityInterface extends GenericSingleIconAbilityBase
+			method checkUsable takes unit caster, ability source returns nothing
+			
+			method checkTargetLoc takes unit caster, ability source, location target returns nothing
+			
+			method beginLoc takes unit caster, ability source, location target returns Behavior
+		endinterface
+	
+		private struct OrderButtonImpl extends OrderButtonTargetLocation
+			ActiveAbilityInterface parent
+		
+			public static method create takes integer orderId, ActiveAbilityInterface parent returns OrderButtonImpl
+				local OrderButtonImpl this = .allocate(orderId)
+				set this.parent = parent
+				return this
+			endmethod
+		
+			method checkUsable takes unit caster, ability source returns nothing
+				call this.parent.checkUsable(caster, source)
+			endmethod
+			
+			method checkTargetLoc takes unit caster, ability source, location target returns nothing
+				call this.parent.checkTargetLoc(caster, source, target)
+			endmethod
+			
+			method beginLoc takes unit caster, ability source, location target returns Behavior
+				return this.parent.beginLoc(caster, source, target)
+			endmethod
+		endstruct
+
+		/* abstract */ struct AbstractGenericActiveAbilityTargetLocation extends ActiveAbilityInterface
+		
+			public static method create takes integer aliasId, integer orderId returns AbstractGenericActiveAbilityTargetLocation
+				local AbstractGenericActiveAbilityTargetLocation this = .allocate(aliasId)
+				set this.alias = aliasId
+				set this.abilityButton = OrderButtonImpl.create(orderId, this)
+				call AbilityAddOrderButton(this, this.abilityButton)
+				return this
+			endmethod
+			
+			// NOTE that ActiveAbilityInterface methods are missing here,
+			// so you need to implement those 
+		endstruct
+	endscope
+	
+	scope TargetWidgetOrLocation
+		private interface ActiveAbilityInterface extends GenericSingleIconAbilityBase
+			method checkUsable takes unit caster, ability source returns nothing
+			
+			method checkTargetUnit takes unit caster, ability source, unit target returns nothing
+			
+			method beginUnit takes unit caster, ability source, unit target returns Behavior
+			
+			method checkTargetItem takes unit caster, ability source, item target returns nothing
+			
+			method beginItem takes unit caster, ability source, item target returns Behavior
+			
+			method checkTargetDestructable takes unit caster, ability source, destructable target returns nothing
+			
+			method beginDestructable takes unit caster, ability source, destructable target returns Behavior
+			
+			method checkTargetLoc takes unit caster, ability source, location target returns nothing
+			
+			method beginLoc takes unit caster, ability source, location target returns Behavior
+		endinterface
+	
+		private struct OrderButtonImpl extends OrderButtonTarget
+			ActiveAbilityInterface parent
+		
+			public static method create takes integer orderId, ActiveAbilityInterface parent returns OrderButtonImpl
+				local OrderButtonImpl this = .allocate(orderId)
+				set this.parent = parent
+				return this
+			endmethod
+		
+			method checkUsable takes unit caster, ability source returns nothing
+				call this.parent.checkUsable(caster, source)
+			endmethod
+			
+			method checkTargetUnit takes unit caster, ability source, unit target returns nothing
+				call this.parent.checkTargetUnit(caster, source, target)
+			endmethod
+			
+			method beginUnit takes unit caster, ability source, unit target returns Behavior
+				return this.parent.beginUnit(caster, source, target)
+			endmethod
+			
+			method checkTargetItem takes unit caster, ability source, item target returns nothing
+				call this.parent.checkTargetItem(caster, source, target)
+			endmethod
+			
+			method beginItem takes unit caster, ability source, item target returns Behavior
+				return this.parent.beginItem(caster, source, target)
+			endmethod
+			
+			method checkTargetDestructable takes unit caster, ability source, destructable target returns nothing
+				call this.parent.checkTargetDestructable(caster, source, target)
+			endmethod
+			
+			method beginDestructable takes unit caster, ability source, destructable target returns Behavior
+				return this.parent.beginDestructable(caster, source, target)
+			endmethod
+			
+			method checkTargetLoc takes unit caster, ability source, location target returns nothing
+				call this.parent.checkTargetLoc(caster, source, target)
+			endmethod
+			
+			method beginLoc takes unit caster, ability source, location target returns Behavior
+				return this.parent.beginLoc(caster, source, target)
+			endmethod
+		endstruct
+
+		/* abstract */ struct AbstractGenericActiveAbilityTargetWidgetOrLocation extends ActiveAbilityInterface
+		
+			public static method create takes integer aliasId, integer orderId returns AbstractGenericActiveAbilityTargetWidgetOrLocation
+				local AbstractGenericActiveAbilityTargetWidgetOrLocation this = .allocate(aliasId)
+				set this.alias = aliasId
+				set this.abilityButton = OrderButtonImpl.create(orderId, this)
+				call AbilityAddOrderButton(this, this.abilityButton)
+				return this
+			endmethod
+			
+			// NOTE that ActiveAbilityInterface methods are missing here,
+			// so you need to implement those 
+		endstruct
+	endscope
+	
+	scope NoTarget
+		private interface ActiveAbilityInterface extends GenericSingleIconAbilityBase
+			method checkUsable takes unit caster, ability source returns nothing
+		
+			method checkTarget takes unit caster, ability source returns nothing
+			
+			method begin takes unit caster, ability source returns Behavior
+		endinterface
+	
+		private struct OrderButtonImpl extends OrderButtonTarget
+			ActiveAbilityInterface parent
+		
+			public static method create takes integer orderId, ActiveAbilityInterface parent returns OrderButtonImpl
+				local OrderButtonImpl this = .allocate(orderId)
+				set this.parent = parent
+				return this
+			endmethod
+		
+			method checkUsable takes unit caster, ability source returns nothing
+				call this.parent.checkUsable(caster, source)
+			endmethod
+			
+			method checkTarget takes unit caster, ability source returns nothing
+				call this.parent.checkTargetUnit(caster, source)
+			endmethod
+			
+			method begin takes unit caster, ability source returns Behavior
+				return this.parent.begin(caster, source)
+			endmethod
+		endstruct
+
+		/* abstract */ struct AbstractGenericActiveAbilityNoTarget extends ActiveAbilityInterface
+		
+			public static method create takes integer aliasId, integer orderId returns AbstractGenericActiveAbilityNoTarget
+				local AbstractGenericActiveAbilityNoTarget this = .allocate(aliasId)
+				set this.alias = aliasId
+				set this.abilityButton = OrderButtonImpl.create(orderId, this)
+				call AbilityAddOrderButton(this, this.abilityButton)
+				return this
+			endmethod
+			
+			// NOTE that ActiveAbilityInterface methods are missing here,
+			// so you need to implement those 
+		endstruct
+	endscope
+	
+	scope InstantNoInterrupt
+		private interface ActiveAbilityInterface extends GenericSingleIconAbilityBase
+			method checkUsable takes unit caster, ability source returns nothing
+		
+			method checkTarget takes unit caster, ability source returns nothing
+			
+			method begin takes unit caster, ability source returns Behavior
+		endinterface
+	
+		private struct OrderButtonImpl extends OrderButtonTarget
+			ActiveAbilityInterface parent
+		
+			public static method create takes integer orderId, ActiveAbilityInterface parent returns OrderButtonImpl
+				local OrderButtonImpl this = .allocate(orderId)
+				set this.parent = parent
+				return this
+			endmethod
+		
+			method checkUsable takes unit caster, ability source returns nothing
+				call this.parent.checkUsable(caster, source)
+			endmethod
+			
+			method checkTarget takes unit caster, ability source returns nothing
+				call this.parent.checkTargetUnit(caster, source)
+			endmethod
+			
+			method begin takes unit caster, ability source returns Behavior
+				return this.parent.begin(caster, source)
+			endmethod
+		endstruct
+
+		/* abstract */ struct AbstractGenericActiveAbilityNoTarget extends ActiveAbilityInterface
+		
+			public static method create takes integer aliasId, integer orderId returns AbstractGenericActiveAbilityNoTarget
+				local AbstractGenericActiveAbilityNoTarget this = .allocate(aliasId)
+				set this.alias = aliasId
+				set this.abilityButton = OrderButtonImpl.create(orderId, this)
+				call AbilityAddOrderButton(this, this.abilityButton)
+				return this
+			endmethod
+			
+			// NOTE that ActiveAbilityInterface methods are missing here,
+			// so you need to implement those 
+		endstruct
+	endscope
+endlibrary

@@ -28,7 +28,7 @@ public class StaticStructTypeJassValue implements JassValue, JassType {
 
 	@Override
 	public boolean isAssignableFrom(final JassType value) {
-		return value == this;
+		return (value == this) || (value == JassType.ANY_STRUCT_TYPE);
 	}
 
 	@Override

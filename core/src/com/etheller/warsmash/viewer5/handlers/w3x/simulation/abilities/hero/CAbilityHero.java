@@ -43,6 +43,7 @@ public class CAbilityHero extends AbstractCAbility {
 	public CAbilityHero(final int handleId, final List<War3ID> skillsAvailable) {
 		super(handleId, War3ID.fromString("AHer"));
 		this.skillsAvailable = new LinkedHashSet<>(skillsAvailable);
+		setPermanent(true);
 	}
 
 	@Override
@@ -257,7 +258,7 @@ public class CAbilityHero extends AbstractCAbility {
 	private void levelUpHero(final CSimulation simulation, final CUnit unit) {
 		final CGameplayConstants gameplayConstants = simulation.getGameplayConstants();
 		while ((this.heroLevel < gameplayConstants.getMaxHeroLevel())
-			&& (this.xp >= gameplayConstants.getNeedHeroXPSum(this.heroLevel))) {
+				&& (this.xp >= gameplayConstants.getNeedHeroXPSum(this.heroLevel))) {
 			this.heroLevel++;
 			this.skillPoints++;
 			calculateDerivatedFields(simulation, unit);
@@ -271,7 +272,8 @@ public class CAbilityHero extends AbstractCAbility {
 		unit.internalPublishHeroStatsChanged();
 	}
 
-	// In the original engine setXp is only called if the passed xp value > the hero's current xp.
+	// In the original engine setXp is only called if the passed xp value > the
+	// hero's current xp.
 	// setXp cannot be used to decrease the hero's xp or level.
 	public void setXp(final CSimulation simulation, final CUnit unit, final int xp) {
 		final int newXpVal = xp * Math.round(simulation.getPlayer(unit.getPlayerIndex()).getHandicapXP());
@@ -514,11 +516,6 @@ public class CAbilityHero extends AbstractCAbility {
 
 	@Override
 	public void onDeath(final CSimulation game, final CUnit cUnit) {
-	}
-
-	@Override
-	public boolean isPermanent() {
-		return true;
 	}
 
 	@Override

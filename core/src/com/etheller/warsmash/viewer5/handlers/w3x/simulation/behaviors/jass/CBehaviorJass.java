@@ -1,52 +1,67 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.jass;
 
+import java.util.Arrays;
+import java.util.LinkedList;
+
 import com.etheller.interpreter.ast.scope.GlobalScope;
-import com.etheller.interpreter.ast.scope.TriggerExecutionScope;
-import com.etheller.interpreter.ast.value.CodeJassValue;
+import com.etheller.interpreter.ast.util.CExtensibleHandleAbstract;
+import com.etheller.interpreter.ast.value.BooleanJassValue;
 import com.etheller.interpreter.ast.value.JassValue;
+import com.etheller.interpreter.ast.value.StructJassType;
+import com.etheller.interpreter.ast.value.StructJassValue;
+import com.etheller.interpreter.ast.value.visitor.BooleanJassValueVisitor;
+import com.etheller.interpreter.ast.value.visitor.IntegerJassValueVisitor;
 import com.etheller.interpreter.ast.value.visitor.ObjectJassValueVisitor;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.jass.CAbilityJass;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehavior;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehaviorCategory;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehaviorVisitor;
 
-public class CBehaviorJass implements CBehavior {
-	private final int highlightOrderId;
-	private final CodeJassValue updateFunction;
+public class CBehaviorJass extends CExtensibleHandleAbstract implements CBehavior {
 	private final GlobalScope globalScope;
-	private CAbilityJass jassAbility;
+	private Integer updateIdxVtable;
+	private Integer beginIdxVtable;
+	private Integer endIdxVtable;
+	private Integer getHighlightOrderIdIdxVtable;
+	private Integer interruptableIdxVtable;
+	private Integer getBehaviorCategoryIdxVtable;
 
-	public CBehaviorJass(final int highlightOrderId, final CodeJassValue updateFunction,
-			final GlobalScope globalScope) {
-		this.highlightOrderId = highlightOrderId;
-		this.updateFunction = updateFunction;
+	private int highlightOrderId;
+
+	public CBehaviorJass(final GlobalScope globalScope) {
 		this.globalScope = globalScope;
 	}
 
-	public void setAbility(final CAbilityJass jassAbility) {
-		this.jassAbility = jassAbility;
+	@Override
+	public void setStructValue(final StructJassValue structJassValue) {
+		super.setStructValue(structJassValue);
+		final StructJassType type = structJassValue.getType();
+		this.updateIdxVtable = type.getMethodTableIndex("update");
+		this.beginIdxVtable = type.getMethodTableIndex("begin");
+		this.endIdxVtable = type.getMethodTableIndex("end");
+		this.getHighlightOrderIdIdxVtable = type.getMethodTableIndex("getHighlightOrderId");
+		this.interruptableIdxVtable = type.getMethodTableIndex("interruptable");
+		this.getBehaviorCategoryIdxVtable = type.getMethodTableIndex("getBehaviorCategory");
 	}
 
 	@Override
 	public CBehavior update(final CSimulation game) {
-		final JassValue jassReturnValue = this.updateFunction.callAndExecuteCapturingReturnValue(this.globalScope,
-				TriggerExecutionScope.EMPTY /* TODO this.jassAbility.getJassAbilityBasicScope() */, "CBehaviorJass",
-				null);
-		if (jassReturnValue == null) {
-			return null;
-		}
-		return jassReturnValue.visit(ObjectJassValueVisitor.getInstance());
+		final CBehavior returnValue = runMethod(game.getGlobalScope(), this.updateIdxVtable, "CBehaviorJass.update",
+				new LinkedList<>());
+		return returnValue;
 	}
 
 	@Override
 	public void begin(final CSimulation game) {
-
+		runMethodReturnNothing(game.getGlobalScope(), this.beginIdxVtable, new LinkedList<>());
+		this.highlightOrderId = runMethod(game.getGlobalScope(), this.getHighlightOrderIdIdxVtable,
+				"CBehaviorJass.getHighlightOrderId", new LinkedList<>(), IntegerJassValueVisitor.getInstance());
 	}
 
 	@Override
 	public void end(final CSimulation game, final boolean interrupted) {
-
+		runMethodReturnNothing(game.getGlobalScope(), this.endIdxVtable,
+				Arrays.<JassValue>asList(BooleanJassValue.of(interrupted)));
 	}
 
 	@Override
@@ -56,7 +71,8 @@ public class CBehaviorJass implements CBehavior {
 
 	@Override
 	public boolean interruptable() {
-		return true;
+		return runMethod(this.globalScope, this.interruptableIdxVtable, "CBehaviorJass.interruptable",
+				new LinkedList<>(), BooleanJassValueVisitor.getInstance());
 	}
 
 	@Override
@@ -66,7 +82,8 @@ public class CBehaviorJass implements CBehavior {
 
 	@Override
 	public CBehaviorCategory getBehaviorCategory() {
-		return CBehaviorCategory.SPELL;
+		return runMethod(this.globalScope, this.getBehaviorCategoryIdxVtable, "CBehaviorJass.getBehaviorCategory",
+				new LinkedList<>(), ObjectJassValueVisitor.getInstance());
 	}
 
 }

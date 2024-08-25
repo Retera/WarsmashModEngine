@@ -21,4 +21,5 @@ public interface JassType {
 	public static final PrimitiveJassType NOTHING = new PrimitiveJassType("nothing",
 			JassReturnNothingStatement.RETURN_NOTHING_NOTICE);
 	public static final PrimitiveJassType DUMMY = new PrimitiveJassType("dummy", DummyJassValue.PAUSE_FOR_SLEEP);
+	public static final PrimitiveJassType ANY_STRUCT_TYPE = new AnyStructTypeJassType("structtype");
 }

@@ -2,12 +2,14 @@ package com.etheller.warsmash.desktop.editor.abilitybuilder;
 
 import java.lang.reflect.Field;
 
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityCategory;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityDisableType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.autocast.AutocastType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.definitions.impl.AbilityFields;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABLocalStoreKeys;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.parser.AbilityBuilderType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.parser.template.DataFieldLetter;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehaviorCategory;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CTargetType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.unit.NonStackingStatBuffType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.CommandStringErrorKeysEnum;
@@ -51,6 +53,16 @@ public class JassGeneratorForType {
 		for (final ResourceType type : ResourceType.values()) {
 			System.out.println(String.format("    constant resourcetype RESOURCE_TYPE_%-34s= ConvertResourceType(%d)",
 					type.name(), type.ordinal()));
+		}
+		for (final CBehaviorCategory type : CBehaviorCategory.values()) {
+			System.out.println(
+					String.format("    constant behaviorcategory BEHAVIOR_CATEGORY_%-34s= ConvertBehaviorCategory(%d)",
+							type.name(), type.ordinal()));
+		}
+		for (final CAbilityCategory type : CAbilityCategory.values()) {
+			System.out.println(
+					String.format("    constant abilitycategory Ability_CATEGORY_%-34s= ConvertAbilityCategory(%d)",
+							type.name(), type.ordinal()));
 		}
 		for (final CommandStringErrorKeysEnum type : CommandStringErrorKeysEnum.values()) {
 			System.out.println(String.format("    constant string COMMAND_STRING_ERROR_KEY_%-85s= \"%s\"", type.name(),

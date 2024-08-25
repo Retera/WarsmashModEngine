@@ -104,6 +104,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.RenderWidget;
 import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.ability.AbilityDataUI;
 import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.ability.IconUI;
 import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.ability.ItemUI;
+import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.ability.OrderButtonUI;
 import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.ability.UnitIconUI;
 import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.commandbuttons.CommandButtonListener;
 import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.commandbuttons.CommandCardActivationReceiverPreviewCallback;
@@ -129,6 +130,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityG
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityMove;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityView;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityVisitor;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.COrderButton;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.build.AbstractCAbilityBuild;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.build.CAbilityBuildInProgress;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.build.CAbilityHumanBuild;
@@ -159,8 +161,6 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.queue.CAb
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityPointTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTargetVisitor;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.jass.CAbilityTypeJassDefinition;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.jass.CAbilityTypeJassDefinition.JassOrder;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.upgrade.CAbilityUpgrade;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.ability.AbilityBuilderActiveAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CAttackType;
@@ -1999,10 +1999,12 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 	public void render(final SpriteBatch batch, final GlyphLayout glyphLayout) {
 		final BitmapFont font = this.rootFrame.getFont();
 		font.setColor(Color.YELLOW);
-		final String fpsString = "FPS: " + Gdx.graphics.getFramesPerSecond();
-		glyphLayout.setText(font, fpsString);
-		font.draw(batch, fpsString, (this.uiViewport.getMinWorldWidth() - glyphLayout.width) / 2,
-				1100 * this.heightRatioCorrection);
+		if (WarsmashConstants.SHOW_FPS) {
+			final String fpsString = "FPS: " + Gdx.graphics.getFramesPerSecond();
+			glyphLayout.setText(font, fpsString);
+			font.draw(batch, fpsString, (this.uiViewport.getMinWorldWidth() - glyphLayout.width) / 2,
+					1100 * this.heightRatioCorrection);
+		}
 		this.rootFrame.render(batch, this.rootFrame.getFont20(), glyphLayout);
 		if (this.selectedUnit != null) {
 			this.rootFrame.getFont20().setColor(Color.WHITE);
@@ -2285,15 +2287,17 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 
 		@Override
 		public Void accept(final CAbilityJass ability) {
-			final CAbilityTypeJassDefinition type = ability.getType();
 			// TODO getting icon from type is currently inefficient
-			final JassOrder orderCommandCardIcon = type.getOrderCommandCardIcon(MeleeUI.this.war3MapViewer.simulation,
-					MeleeUI.this.selectedUnit.getSimulationUnit(), MeleeUI.this.activeCommandOrderId);
-			if (orderCommandCardIcon.getMouseTargetRadius() > 0) {
-				handlePlacementCursor(ability, orderCommandCardIcon.getMouseTargetRadius());
+			final COrderButton orderCommandCardIcon = ability.getOrderCommandCardIcon(
+					MeleeUI.this.war3MapViewer.simulation, MeleeUI.this.selectedUnit.getSimulationUnit(),
+					MeleeUI.this.activeCommandOrderId);
+			final OrderButtonUI renderPeer = MeleeUI.this.war3MapViewer.getAbilityDataUI()
+					.getRenderPeer(orderCommandCardIcon);
+			if (renderPeer.getMouseTargetRadius() > 0) {
+				handlePlacementCursor(ability, renderPeer.getMouseTargetRadius());
 			}
-			else if (orderCommandCardIcon.getPreviewBuildUnitId() != null) {
-				handleBuildCursor(null, orderCommandCardIcon.getPreviewBuildUnitId().getValue());
+			else if (renderPeer.getPreviewBuildUnitId() != null) {
+				handleBuildCursor(null, renderPeer.getPreviewBuildUnitId().getValue());
 			}
 			else {
 				handleTargetCursor(ability);

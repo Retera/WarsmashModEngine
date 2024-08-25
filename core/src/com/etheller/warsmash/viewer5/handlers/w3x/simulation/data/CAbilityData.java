@@ -31,7 +31,6 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.skills.hu
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.skills.human.mountainking.CAbilityThunderClap;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.skills.human.paladin.CAbilityDevotion;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.skills.human.paladin.CAbilityDivineShield;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.skills.human.paladin.CAbilityHolyLight;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.skills.human.paladin.CAbilityResurrect;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.skills.neutral.beastmaster.CAbilitySummonGrizzly;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.skills.neutral.beastmaster.CAbilitySummonHawk;
@@ -113,8 +112,8 @@ public class CAbilityData {
 	private void registerCodes() {
 		// ----Human----
 		// Paladin:
-		this.codeToAbilityTypeDefinition.put(War3ID.fromString("AHhb"),
-				new CAbilityTypeDefinitionSpellBase((handleId, alias) -> new CAbilityHolyLight(handleId, alias)));
+//		this.codeToAbilityTypeDefinition.put(War3ID.fromString("AHhb"),
+//				new CAbilityTypeDefinitionSpellBase((handleId, alias) -> new CAbilityHolyLight(handleId, alias)));
 		this.codeToAbilityTypeDefinition.put(War3ID.fromString("AHds"),
 				new CAbilityTypeDefinitionSpellBase((handleId, alias) -> new CAbilityDivineShield(handleId, alias)));
 		this.codeToAbilityTypeDefinition.put(War3ID.fromString("AHad"),

@@ -590,8 +590,13 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 				if (this.fontParam.size == 0) {
 					this.fontParam.size = 24;
 				}
-				frameFont = this.dynamicFontGeneratorHolder.getFontGenerator(font.getFontName())
-						.generateFont(this.fontParam);
+				if (font == null) {
+					frameFont = this.font;
+				}
+				else {
+					frameFont = this.dynamicFontGeneratorHolder.getFontGenerator(font.getFontName())
+							.generateFont(this.fontParam);
+				}
 				String textString = frameDefinition.getName();
 				String text = frameDefinition.getString("Text");
 				if (text != null) {
@@ -1547,18 +1552,20 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 	}
 
 	public Texture loadTexture(String path) {
-		final int lastDotIndex = path.lastIndexOf('.');
-		if (lastDotIndex == -1) {
-			path = path + ".blp";
-		}
-		else {
-			path = path.substring(0, lastDotIndex) + ".blp";
-		}
 		Texture texture = this.pathToTexture.get(path);
 		if (texture == null) {
+			final String originalPath = path;
+			final int lastDotIndex = path.lastIndexOf('.');
+			if (lastDotIndex == -1) {
+				path = path + ".blp";
+			}
+			else {
+				path = path.substring(0, lastDotIndex) + ".blp";
+			}
 			try {
 				texture = ImageUtils.getAnyExtensionTexture(this.dataSource, path);
 				this.pathToTexture.put(path, texture);
+				this.pathToTexture.put(originalPath, texture);
 			}
 			catch (final Exception exc) {
 			}

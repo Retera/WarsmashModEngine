@@ -11,9 +11,9 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidgetVisitor;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbility;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.COrderButton;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.COrderButton.JassOrderButtonType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityPointTarget;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.jass.CAbilityTypeJassDefinition.JassOrder;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.jass.CAbilityTypeJassDefinition.JassOrderButtonType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABLocalStoreKeys;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayerJass;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.region.CRegion;
@@ -88,7 +88,7 @@ public class CommonTriggerExecutionScope extends TriggerExecutionScope {
 	private War3ID spellAbilityId;
 	private int spellAbilityOrderId; // Warsmash only
 	private JassOrderButtonType spellAbilityTargetType; // Warsmash only
-	private JassOrder spellAbilityOrderCommandCard; // Warsmash only
+	private COrderButton spellAbilityOrderCommandCard; // Warsmash only
 	private String enumFilePath; // Warsmash only
 	private Map<String, Object> triggerLocalStore; // warsmash only
 	private int triggerCastId; // Warsmash only
@@ -438,7 +438,7 @@ public class CommonTriggerExecutionScope extends TriggerExecutionScope {
 		return this.spellAbilityTargetType;
 	}
 
-	public JassOrder getSpellAbilityOrderCommandCard() {
+	public COrderButton getSpellAbilityOrderCommandCard() {
 		return this.spellAbilityOrderCommandCard;
 	}
 
@@ -764,7 +764,7 @@ public class CommonTriggerExecutionScope extends TriggerExecutionScope {
 	public static CommonTriggerExecutionScope jassAbilityTargetScope(final CAbility spellAbility,
 			final CUnit spellAbilityUnit, final CUnit targetUnit, final War3ID spellAbilityId,
 			final int spellAbilityOrderId, final JassOrderButtonType spellAbilityTargetType,
-			final JassOrder spellAbilityOrderCommandCard) {
+			final COrderButton spellAbilityOrderCommandCard) {
 		final CommonTriggerExecutionScope scope = new CommonTriggerExecutionScope(null, TriggerExecutionScope.EMPTY);
 		scope.spellAbility = spellAbility;
 		scope.spellAbilityUnit = spellAbilityUnit;
@@ -779,7 +779,7 @@ public class CommonTriggerExecutionScope extends TriggerExecutionScope {
 	public static CommonTriggerExecutionScope jassAbilityTargetScope(final CAbility spellAbility,
 			final CUnit spellAbilityUnit, final CItem targetItem, final War3ID spellAbilityId,
 			final int spellAbilityOrderId, final JassOrderButtonType spellAbilityTargetType,
-			final JassOrder spellAbilityOrderCommandCard) {
+			final COrderButton spellAbilityOrderCommandCard) {
 		final CommonTriggerExecutionScope scope = new CommonTriggerExecutionScope(null, TriggerExecutionScope.EMPTY);
 		scope.spellAbility = spellAbility;
 		scope.spellAbilityUnit = spellAbilityUnit;
@@ -794,7 +794,7 @@ public class CommonTriggerExecutionScope extends TriggerExecutionScope {
 	public static CommonTriggerExecutionScope jassAbilityTargetScope(final CAbility spellAbility,
 			final CUnit spellAbilityUnit, final CDestructable targetDestructable, final War3ID spellAbilityId,
 			final int spellAbilityOrderId, final JassOrderButtonType spellAbilityTargetType,
-			final JassOrder spellAbilityOrderCommandCard) {
+			final COrderButton spellAbilityOrderCommandCard) {
 		final CommonTriggerExecutionScope scope = new CommonTriggerExecutionScope(null, TriggerExecutionScope.EMPTY);
 		scope.spellAbility = spellAbility;
 		scope.spellAbilityUnit = spellAbilityUnit;
@@ -809,7 +809,7 @@ public class CommonTriggerExecutionScope extends TriggerExecutionScope {
 	public static CommonTriggerExecutionScope jassAbilityPointScope(final CAbility spellAbility,
 			final CUnit spellAbilityUnit, final AbilityPointTarget targetPoint, final War3ID spellAbilityId,
 			final int spellAbilityOrderId, final JassOrderButtonType spellAbilityTargetType,
-			final JassOrder spellAbilityOrderCommandCard) {
+			final COrderButton spellAbilityOrderCommandCard) {
 		final CommonTriggerExecutionScope scope = new CommonTriggerExecutionScope(null, TriggerExecutionScope.EMPTY);
 		scope.spellAbility = spellAbility;
 		scope.spellAbilityUnit = spellAbilityUnit;
@@ -823,7 +823,7 @@ public class CommonTriggerExecutionScope extends TriggerExecutionScope {
 
 	public static CommonTriggerExecutionScope jassAbilityNoTargetScope(final CAbility spellAbility,
 			final CUnit spellAbilityUnit, final War3ID spellAbilityId, final int spellAbilityOrderId,
-			final JassOrderButtonType spellAbilityTargetType, final JassOrder spellAbilityOrderCommandCard) {
+			final JassOrderButtonType spellAbilityTargetType, final COrderButton spellAbilityOrderCommandCard) {
 		final CommonTriggerExecutionScope scope = new CommonTriggerExecutionScope(null, TriggerExecutionScope.EMPTY);
 		scope.spellAbility = spellAbility;
 		scope.spellAbilityUnit = spellAbilityUnit;
@@ -858,7 +858,7 @@ public class CommonTriggerExecutionScope extends TriggerExecutionScope {
 
 	public static CommonTriggerExecutionScope jassAbilityBasicScope(final CAbility spellAbility,
 			final CUnit spellAbilityUnit, final War3ID spellAbilityId, final int spellAbilityOrderId,
-			final JassOrderButtonType spellAbilityTargetType, final JassOrder spellAbilityOrderCommandCard) {
+			final JassOrderButtonType spellAbilityTargetType, final COrderButton spellAbilityOrderCommandCard) {
 		final CommonTriggerExecutionScope scope = new CommonTriggerExecutionScope(null, TriggerExecutionScope.EMPTY);
 		scope.spellAbility = spellAbility;
 		scope.spellAbilityUnit = spellAbilityUnit;

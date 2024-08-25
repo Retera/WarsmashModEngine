@@ -60,6 +60,8 @@ public class WarsmashConstants {
 	public static String[] JASS_FILE_LIST = { "Scripts\\common.j", "Scripts\\Blizzard.j", "Scripts\\war3map.j" };
 	public static final float GAME_SPEED_TIME_FACTOR = 0.5f;
 
+	public static final boolean SHOW_FPS = true;
+
 	public static void loadConstants(final GameObject emulatorConstants, final DataTable warsmashIni) {
 		MAX_PLAYERS = emulatorConstants.getFieldValue("MaxPlayers");
 		GAME_VERSION = emulatorConstants.getFieldValue("GameVersion");

@@ -101,7 +101,11 @@ public class ScopedScope implements Scope {
 
 	@Override
 	public NativeJassFunction getNative(final String functionName) {
-		return this.globalScope.getNativeById(this.globalScope.getNativeId(functionName));
+		final Integer nativeId = this.globalScope.getNativeId(functionName);
+		if (nativeId == null) {
+			throw new IllegalArgumentException("No such native: " + functionName);
+		}
+		return this.globalScope.getNativeById(nativeId);
 	}
 
 	@Override

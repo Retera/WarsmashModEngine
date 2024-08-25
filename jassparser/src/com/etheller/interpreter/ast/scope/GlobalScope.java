@@ -87,6 +87,7 @@ public final class GlobalScope {
 		registerPrimitiveType(JassType.NOTHING);
 		registerPrimitiveType(JassType.REAL);
 		registerPrimitiveType(JassType.STRING);
+		registerPrimitiveType(JassType.ANY_STRUCT_TYPE);
 	}
 
 	public Deque<JassStackElement> getJassStack() {
@@ -439,12 +440,28 @@ public final class GlobalScope {
 
 	public JassThread createThreadCapturingReturnValue(final CodeJassValue codeValue,
 			final TriggerExecutionScope triggerScope) {
-		final JassStackFrame jassStackFrame = new JassStackFrame();
+		final JassThread jassThread = createThreadCapturingReturnValue(codeValue.getUserFunctionInstructionPtr(),
+				Collections.emptyList(), triggerScope);
+		codeValue.initStack(jassThread.stackFrame);
+		return jassThread;
+	}
+
+	public JassThread createThreadCapturingReturnValue(final int instructionPtr, final List<JassValue> arguments,
+			final TriggerExecutionScope triggerScope) {
+		final JassThread jassThread = createThread(instructionPtr, arguments, triggerScope);
+		jassThread.stackFrame.stackBase = new JassStackFrame();
+		return jassThread;
+	}
+
+	public JassThread createThread(final int instructionPtr, final List<JassValue> arguments,
+			final TriggerExecutionScope triggerExecutionScope) {
+		final JassStackFrame jassStackFrame = new JassStackFrame(arguments.size());
 		jassStackFrame.returnAddressInstructionPtr = -1;
-		jassStackFrame.stackBase = new JassStackFrame();
-		final JassThread jassThread = new JassThread(jassStackFrame, this, triggerScope,
-				codeValue.getUserFunctionInstructionPtr());
-		codeValue.initStack(jassStackFrame);
+		for (int i = 0; i < arguments.size(); i++) {
+			final JassValue argument = arguments.get(i);
+			jassStackFrame.push(argument);
+		}
+		final JassThread jassThread = new JassThread(jassStackFrame, this, triggerExecutionScope, instructionPtr);
 		return jassThread;
 	}
 
@@ -519,6 +536,30 @@ public final class GlobalScope {
 			throw jassException;
 		}
 		this.currentThread = parentThread;
+	}
+
+	public JassValue runThreadUntilCompletionAndReadReturnValue(final JassThread thread,
+			final String contextNameForError, final JassValue defaultValue) {
+		JassValue jassReturnValue;
+		try {
+			runThreadUntilCompletion(thread);
+			if (thread.instructionPtr == -1) {
+				jassReturnValue = thread.stackFrame.getLast(0);
+			}
+			else {
+				if (!JassSettings.CONTINUE_EXECUTING_ON_ERROR) {
+					throw new IllegalStateException("The " + contextNameForError
+							+ " created a thread that did not immediately return; did you call TriggerSleepAction where it is unsupported??");
+				}
+				else {
+					return defaultValue;
+				}
+			}
+		}
+		catch (final Exception e) {
+			throw new JassException(this, "Exception during " + contextNameForError, e);
+		}
+		return jassReturnValue;
 	}
 
 	private void runOneThreadLooop() {

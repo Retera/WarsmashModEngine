@@ -15,6 +15,9 @@ import java.util.Set;
 
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.utils.IntIntMap;
+import com.etheller.interpreter.ast.scope.GlobalScope;
+import com.etheller.interpreter.ast.scope.TriggerExecutionScope;
+import com.etheller.interpreter.ast.scope.trigger.Trigger;
 import com.etheller.warsmash.parsers.jass.scope.CommonTriggerExecutionScope;
 import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.util.WarsmashConstants;
@@ -180,6 +183,7 @@ public class CUnit extends CWidget {
 
 	private final List<CAbility> abilities = new ArrayList<>();
 	private final List<CAbility> disabledAbilities = new ArrayList<>();
+	private final List<Trigger> onTickTriggers = new ArrayList<>();
 
 	private CBehavior currentBehavior;
 	private final Queue<COrder> orderQueue = new LinkedList<>();
@@ -1616,6 +1620,16 @@ public class CUnit extends CWidget {
 		return this.unitAnimationListener;
 	}
 
+	public void registerOnTickEvent(final Trigger trigger) {
+		this.onTickTriggers.add(trigger);
+		this.stateNotifier.abilitiesChanged();
+	}
+
+	public void unregisterOnTickEvent(final Trigger trigger) {
+		this.onTickTriggers.remove(trigger);
+		this.stateNotifier.abilitiesChanged();
+	}
+
 	public void add(final CSimulation simulation, final CAbility ability) {
 		this.abilities.add(ability);
 		ability.onAddDisabled(simulation, this);
@@ -2249,6 +2263,14 @@ public class CUnit extends CWidget {
 						// iteration order
 						this.abilities.get(i).onTick(game, this);
 					}
+					final GlobalScope globalScope = game.getGlobalScope();
+					for (int i = this.onTickTriggers.size() - 1; i >= 0; i--) {
+						final Trigger trigger = this.onTickTriggers.get(i);
+						final TriggerExecutionScope triggerExecutionScope = trigger.getTriggerExecutionScope();
+						if (trigger.evaluate(globalScope, triggerExecutionScope)) {
+							trigger.execute(globalScope, triggerExecutionScope);
+						}
+					}
 				}
 			}
 			else if (!this.constructing) {
@@ -2296,6 +2318,10 @@ public class CUnit extends CWidget {
 					this.stateNotifier.manaChanged();
 				}
 
+				// try to remove the below line of code, once all the abilities are on tick
+				// triggers and none of them just magically assume tick to be called on all
+				// abilities regardless of what they are (just add this stuff as global,
+				// non-unit tick triggers)
 				for (int i = this.abilities.size() - 1; i >= 0; i--) {
 					// okay if it removes self from this during onTick() because of reverse
 					// iteration order
@@ -2603,7 +2629,7 @@ public class CUnit extends CWidget {
 		return this.turnRate;
 	}
 
-	public void setTurnRate(float turnRate) {
+	public void setTurnRate(final float turnRate) {
 		this.turnRate = turnRate;
 	}
 
@@ -2611,7 +2637,7 @@ public class CUnit extends CWidget {
 		return this.propWindow;
 	}
 
-	public void setPropWindow(float propWindow) {
+	public void setPropWindow(final float propWindow) {
 		this.propWindow = propWindow;
 	}
 
@@ -4079,7 +4105,10 @@ public class CUnit extends CWidget {
 	}
 
 	public static enum QueueItemType {
-		UNIT, RESEARCH, HERO_REVIVE, SACRIFICE;
+		UNIT,
+		RESEARCH,
+		HERO_REVIVE,
+		SACRIFICE;
 	}
 
 	public void setRallyPoint(final AbilityTarget target) {
@@ -4414,7 +4443,8 @@ public class CUnit extends CWidget {
 	}
 
 	private static enum StateListenerUpdateType {
-		ADD, REMOVE;
+		ADD,
+		REMOVE;
 	}
 
 	private static final class StateListenerUpdate {

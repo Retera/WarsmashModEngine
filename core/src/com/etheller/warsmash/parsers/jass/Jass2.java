@@ -43,6 +43,7 @@ import com.etheller.interpreter.ast.value.JassType;
 import com.etheller.interpreter.ast.value.JassValue;
 import com.etheller.interpreter.ast.value.JassValueVisitor;
 import com.etheller.interpreter.ast.value.RealJassValue;
+import com.etheller.interpreter.ast.value.StaticStructTypeJassValue;
 import com.etheller.interpreter.ast.value.StringJassValue;
 import com.etheller.interpreter.ast.value.visitor.BooleanJassValueVisitor;
 import com.etheller.interpreter.ast.value.visitor.CodeJassValueVisitor;
@@ -50,6 +51,7 @@ import com.etheller.interpreter.ast.value.visitor.IntegerJassValueVisitor;
 import com.etheller.interpreter.ast.value.visitor.JassTypeGettingValueVisitor;
 import com.etheller.interpreter.ast.value.visitor.ObjectJassValueVisitor;
 import com.etheller.interpreter.ast.value.visitor.RealJassValueVisitor;
+import com.etheller.interpreter.ast.value.visitor.StaticStructTypeJassValueVisitor;
 import com.etheller.interpreter.ast.value.visitor.StringJassValueVisitor;
 import com.etheller.warsmash.datasources.DataSource;
 import com.etheller.warsmash.parsers.fdf.GameSkin;
@@ -65,6 +67,7 @@ import com.etheller.warsmash.parsers.jass.triggers.BoolExprCondition;
 import com.etheller.warsmash.parsers.jass.triggers.BoolExprFilter;
 import com.etheller.warsmash.parsers.jass.triggers.BoolExprNot;
 import com.etheller.warsmash.parsers.jass.triggers.BoolExprOr;
+import com.etheller.warsmash.parsers.jass.triggers.HandleList;
 import com.etheller.warsmash.parsers.jass.triggers.IntExpr;
 import com.etheller.warsmash.parsers.jass.triggers.TriggerAction;
 import com.etheller.warsmash.parsers.jass.triggers.TriggerCondition;
@@ -72,6 +75,7 @@ import com.etheller.warsmash.parsers.jass.triggers.UnitGroup;
 import com.etheller.warsmash.units.Element;
 import com.etheller.warsmash.units.GameObject;
 import com.etheller.warsmash.units.manager.MutableObjectData.WorldEditorDataType;
+import com.etheller.warsmash.util.RawcodeUtils;
 import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.util.WarsmashConstants;
 import com.etheller.warsmash.viewer5.Bounds;
@@ -84,7 +88,10 @@ import com.etheller.warsmash.viewer5.handlers.w3x.environment.PathingGrid;
 import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.RenderDestructable;
 import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.RenderSpellEffect;
 import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.RenderUnit;
+import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.ability.AbilityDataUI;
+import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.ability.IconUI;
 import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.ability.ItemUI;
+import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.ability.OrderButtonUI;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CDestructable;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CDestructableType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CItem;
@@ -96,7 +103,10 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnitType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUpgradeType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbility;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityCategory;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityDisableType;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.COrderButton;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.COrderButton.JassOrderButtonType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.GetAbilityByRawcodeVisitor;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.autocast.AutocastType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.CBuff;
@@ -106,6 +116,9 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.G
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.harvest.CAbilityHarvest;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.hero.CAbilityHero;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.inventory.CAbilityInventory;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.jass.CAbilityJass;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.jass.CAbilityOrderButtonJass;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.jass.CBuffJass;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.mine.CAbilityBlightedGoldMine;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.skills.util.CBuffStun;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.skills.util.CBuffTimedLife;
@@ -113,10 +126,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTargetVisitor;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.CAbilityType;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.jass.BehaviorExpr;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.jass.CAbilityTypeJassDefinition;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.jass.CAbilityTypeJassDefinition.JassOrder;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.jass.CAbilityTypeJassDefinition.JassOrderButtonType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.jass.CodeJassValueBehaviorExpr;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.ability.AbilityBuilderAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.ability.AbilityBuilderActiveAbility;
@@ -145,6 +155,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.time
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.types.impl.CAbilityTypeAbilityBuilderLevelData;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.ai.AIDifficulty;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehaviorAttackListener;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehaviorCategory;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.jass.CBehaviorJass;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CAttackType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CTargetType;
@@ -627,6 +638,11 @@ public class Jass2 {
 			final HandleJassType resourcetypeType = globals.registerHandleType("resourcetype");
 			final HandleJassType intexprType = globals.registerHandleType("intexpr");
 
+			// Warsmash Ability API 3
+			final HandleJassType handlelistType = globals.registerHandleType("handlelist");
+			final HandleJassType behaviorcategoryType = globals.registerHandleType("behaviorcategory");
+			final HandleJassType abilitycategoryType = globals.registerHandleType("abilitycategory");
+
 			registerTypingNatives(jassProgramVisitor, raceType, alliancetypeType, racepreferenceType, igamestateType,
 					fgamestateType, playerstateType, playerscoreType, playergameresultType, unitstateType,
 					aidifficultyType, gameeventType, playereventType, playeruniteventType, uniteventType, limitopType,
@@ -639,7 +655,7 @@ public class Jass2 {
 			jassProgramVisitor.getJassNativeManager().createNative("ConvertOrderButtonType",
 					(arguments, globalScope, triggerScope) -> {
 						final int i = arguments.get(0).visit(IntegerJassValueVisitor.getInstance());
-						return new HandleJassValue(orderbuttontypeType, JassOrderButtonType.VALUES[i]);
+						return new HandleJassValue(orderbuttontypeType, COrderButton.JassOrderButtonType.VALUES[i]);
 					});
 
 			jassProgramVisitor.getJassNativeManager().createNative("UnitId", (arguments, globalScope, triggerScope) -> {
@@ -2231,8 +2247,10 @@ public class Jass2 {
 					});
 			jassProgramVisitor.getJassNativeManager().createNative("StartSound",
 					(arguments, globalScope, triggerScope) -> {
-						final CSound soundHandle = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());
-						soundHandle.start();
+						final CSound soundHandle = nullable(arguments, 0, ObjectJassValueVisitor.getInstance());
+						if (soundHandle != null) {
+							soundHandle.start();
+						}
 						return null;
 					});
 			jassProgramVisitor.getJassNativeManager().createNative("SetMapMusic",
@@ -5160,11 +5178,14 @@ public class Jass2 {
 					});
 			jassProgramVisitor.getJassNativeManager().createNative("CreateAbilityBehavior",
 					(arguments, globalScope, triggerScope) -> {
-						final int highlightOrderId = arguments.get(0).visit(IntegerJassValueVisitor.getInstance());
-						final CodeJassValue func = arguments.get(1).visit(CodeJassValueVisitor.getInstance());
-						return new HandleJassValue(abilitybehaviorType,
-								new CBehaviorJass(highlightOrderId, func, globalScope));
+						return new HandleJassValue(abilitybehaviorType, new CBehaviorJass(globalScope));
 					});
+			jassProgramVisitor.getJassNativeManager().createNative("DestroyAbilityBehavior",
+					(arguments, globalScope, triggerScope) -> {
+						return null;
+					});
+			abilitybehaviorType.setConstructorNative(new HandleJassTypeConstructor("CreateAbilityBehavior"));
+			abilitybehaviorType.setDestructorNative(new HandleJassTypeConstructor("DestroyAbilityBehavior"));
 			jassProgramVisitor.getJassNativeManager().createNative("CreateBehaviorExpr",
 					(arguments, globalScope, triggerScope) -> {
 						final CodeJassValue func = arguments.get(0).visit(CodeJassValueVisitor.getInstance());
@@ -5185,101 +5206,6 @@ public class Jass2 {
 						return new HandleJassValue(orderbuttontypeType,
 								((CommonTriggerExecutionScope) triggerScope).getSpellAbilityTargetType());
 					});
-			jassProgramVisitor.getJassNativeManager().createNative("CreateAbilityType",
-					(arguments, globalScope, triggerScope) -> {
-						return new HandleJassValue(abilitytypeType, new CAbilityTypeJassDefinition(globalScope));
-					});
-			jassProgramVisitor.getJassNativeManager().createNative("SetAbilityTypeOnAddAction",
-					(arguments, globalScope, triggerScope) -> {
-						final CAbilityTypeJassDefinition whichAbilityType = arguments.get(0)
-								.visit(ObjectJassValueVisitor.getInstance());
-						final CodeJassValue func = arguments.get(1).visit(CodeJassValueVisitor.getInstance());
-						whichAbilityType.setOnAddJass(func);
-						return null;
-					});
-			jassProgramVisitor.getJassNativeManager().createNative("SetAbilityTypeOnRemoveAction",
-					(arguments, globalScope, triggerScope) -> {
-						final CAbilityTypeJassDefinition whichAbilityType = arguments.get(0)
-								.visit(ObjectJassValueVisitor.getInstance());
-						final CodeJassValue func = arguments.get(1).visit(CodeJassValueVisitor.getInstance());
-						whichAbilityType.setOnRemoveJass(func);
-						return null;
-					});
-			jassProgramVisitor.getJassNativeManager().createNative("SetAbilityTypeOnTickAction",
-					(arguments, globalScope, triggerScope) -> {
-						final CAbilityTypeJassDefinition whichAbilityType = arguments.get(0)
-								.visit(ObjectJassValueVisitor.getInstance());
-						final CodeJassValue func = arguments.get(1).visit(CodeJassValueVisitor.getInstance());
-						whichAbilityType.setOnTickJass(func);
-						return null;
-					});
-			jassProgramVisitor.getJassNativeManager().createNative("SetAbilityTypeOnDeathAction",
-					(arguments, globalScope, triggerScope) -> {
-						final CAbilityTypeJassDefinition whichAbilityType = arguments.get(0)
-								.visit(ObjectJassValueVisitor.getInstance());
-						final CodeJassValue func = arguments.get(1).visit(CodeJassValueVisitor.getInstance());
-						whichAbilityType.setOnDeathJass(func);
-						return null;
-					});
-			jassProgramVisitor.getJassNativeManager().createNative("SetAbilityTypeOnCancelFromQueueAction",
-					(arguments, globalScope, triggerScope) -> {
-						final CAbilityTypeJassDefinition whichAbilityType = arguments.get(0)
-								.visit(ObjectJassValueVisitor.getInstance());
-						final CodeJassValue func = arguments.get(1).visit(CodeJassValueVisitor.getInstance());
-						whichAbilityType.setOnCancelFromQueueJass(func);
-						return null;
-					});
-			jassProgramVisitor.getJassNativeManager().createNative("SetAbilityTypeOnCheckBeforeQueueQueueCondition",
-					(arguments, globalScope, triggerScope) -> {
-						final CAbilityTypeJassDefinition whichAbilityType = arguments.get(0)
-								.visit(ObjectJassValueVisitor.getInstance());
-						final TriggerBooleanExpression boolExpr = arguments.get(1)
-								.visit(ObjectJassValueVisitor.getInstance());
-						whichAbilityType.setCheckBeforeQueueJass(boolExpr);
-						return null;
-					});
-			jassProgramVisitor.getJassNativeManager().createNative("SetAbilityTypeCheckTargetCondition",
-					(arguments, globalScope, triggerScope) -> {
-						final CAbilityTypeJassDefinition whichAbilityType = arguments.get(0)
-								.visit(ObjectJassValueVisitor.getInstance());
-						final TriggerBooleanExpression boolExpr = arguments.get(1)
-								.visit(ObjectJassValueVisitor.getInstance());
-						whichAbilityType.setCheckTargetCondition(boolExpr);
-						return null;
-					});
-			jassProgramVisitor.getJassNativeManager().createNative("SetAbilityTypeCheckUseCondition",
-					(arguments, globalScope, triggerScope) -> {
-						final CAbilityTypeJassDefinition whichAbilityType = arguments.get(0)
-								.visit(ObjectJassValueVisitor.getInstance());
-						final TriggerBooleanExpression boolExpr = arguments.get(1)
-								.visit(ObjectJassValueVisitor.getInstance());
-						whichAbilityType.setCheckUseCondition(boolExpr);
-						return null;
-					});
-			jassProgramVisitor.getJassNativeManager().createNative("SetAbilityTypeEnabledWhileUnderConstruction",
-					(arguments, globalScope, triggerScope) -> {
-						final CAbilityTypeJassDefinition whichAbilityType = arguments.get(0)
-								.visit(ObjectJassValueVisitor.getInstance());
-						final boolean enabled = arguments.get(1).visit(BooleanJassValueVisitor.getInstance());
-						whichAbilityType.setEnabledWhileUnderConstruction(enabled);
-						return null;
-					});
-			jassProgramVisitor.getJassNativeManager().createNative("SetAbilityTypeEnabledWhileUpgrading",
-					(arguments, globalScope, triggerScope) -> {
-						final CAbilityTypeJassDefinition whichAbilityType = arguments.get(0)
-								.visit(ObjectJassValueVisitor.getInstance());
-						final boolean enabled = arguments.get(1).visit(BooleanJassValueVisitor.getInstance());
-						whichAbilityType.setEnabledWhileUpgrading(enabled);
-						return null;
-					});
-			jassProgramVisitor.getJassNativeManager().createNative("SetAbilityTypeBehavior",
-					(arguments, globalScope, triggerScope) -> {
-						final CAbilityTypeJassDefinition whichAbilityType = arguments.get(0)
-								.visit(ObjectJassValueVisitor.getInstance());
-						final BehaviorExpr expr = arguments.get(1).visit(ObjectJassValueVisitor.getInstance());
-						whichAbilityType.setBeginJass(expr);
-						return null;
-					});
 			jassProgramVisitor.getJassNativeManager().createNative("RegisterAbilityType",
 					(arguments, globalScope, triggerScope) -> {
 						final int rawcode = arguments.get(0).visit(IntegerJassValueVisitor.getInstance());
@@ -5287,6 +5213,16 @@ public class Jass2 {
 								ObjectJassValueVisitor.getInstance());
 						CommonEnvironment.this.simulation.getAbilityData().registerJassType(new War3ID(rawcode),
 								whichAbilityType);
+						return null;
+					});
+			jassProgramVisitor.getJassNativeManager().createNative("RegisterAbilityStructType",
+					(arguments, globalScope, triggerScope) -> {
+						final int rawcode = arguments.get(0).visit(IntegerJassValueVisitor.getInstance());
+						final StaticStructTypeJassValue whichAbilityType = nullable(arguments, 1,
+								StaticStructTypeJassValueVisitor.getInstance());
+						final War3ID codeId = new War3ID(rawcode);
+						CommonEnvironment.this.simulation.getAbilityData().registerJassType(codeId,
+								new CAbilityTypeJassDefinition(globalScope, whichAbilityType));
 						return null;
 					});
 			jassProgramVisitor.getJassNativeManager().createNative("GetUnitIconUI",
@@ -5298,14 +5234,16 @@ public class Jass2 {
 			jassProgramVisitor.getJassNativeManager().createNative("GetAbilityOnIconUI",
 					(arguments, globalScope, triggerScope) -> {
 						final int rawcode = arguments.get(0).visit(IntegerJassValueVisitor.getInstance());
+						final int level = arguments.get(1).visit(IntegerJassValueVisitor.getInstance());
 						return new HandleJassValue(iconuiType,
-								war3MapViewer.getAbilityDataUI().getUI(new War3ID(rawcode)).getOnIconUI(0));
+								war3MapViewer.getAbilityDataUI().getUI(new War3ID(rawcode)).getOnIconUI(level));
 					});
 			jassProgramVisitor.getJassNativeManager().createNative("GetAbilityOffIconUI",
 					(arguments, globalScope, triggerScope) -> {
 						final int rawcode = arguments.get(0).visit(IntegerJassValueVisitor.getInstance());
+						final int level = arguments.get(1).visit(IntegerJassValueVisitor.getInstance());
 						return new HandleJassValue(iconuiType,
-								war3MapViewer.getAbilityDataUI().getUI(new War3ID(rawcode)).getOffIconUI(0));
+								war3MapViewer.getAbilityDataUI().getUI(new War3ID(rawcode)).getOffIconUI(level));
 					});
 			jassProgramVisitor.getJassNativeManager().createNative("GetAbilityLearnIconUI",
 					(arguments, globalScope, triggerScope) -> {
@@ -5323,160 +5261,409 @@ public class Jass2 {
 					(arguments, globalScope, triggerScope) -> {
 						final JassOrderButtonType type = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());
 						final int orderId = arguments.get(1).visit(IntegerJassValueVisitor.getInstance());
-						final int buttonPositionX = arguments.get(2).visit(IntegerJassValueVisitor.getInstance());
-						final int buttonPositionY = arguments.get(3).visit(IntegerJassValueVisitor.getInstance());
-						final JassOrder javaValue = new JassOrder(orderId, buttonPositionX, buttonPositionY);
+						final CAbilityOrderButtonJass javaValue = new CAbilityOrderButtonJass(
+								this.simulation.getHandleIdAllocator().createId(), orderId);
 						javaValue.setType(type);
+						war3MapViewer.getAbilityDataUI().createRenderPeer(javaValue);
 						return new HandleJassValue(orderbuttonType, javaValue);
 					});
-			jassProgramVisitor.getJassNativeManager().createNative("AbilityTypeAddOrderButton",
+			jassProgramVisitor.getJassNativeManager().createNative("DestroyOrderButton",
 					(arguments, globalScope, triggerScope) -> {
-						final CAbilityTypeJassDefinition abilityTypeTmp = arguments.get(0)
+						final COrderButton orderCommandCard = arguments.get(0)
 								.visit(ObjectJassValueVisitor.getInstance());
-						final JassOrder commandCard = arguments.get(1).visit(ObjectJassValueVisitor.getInstance());
+						war3MapViewer.getAbilityDataUI().removeRenderPeer(orderCommandCard);
+						return null;
+					});
+			orderbuttonType.setConstructorNative(new HandleJassTypeConstructor("CreateOrderButton"));
+			orderbuttonType.setDestructorNative(new HandleJassTypeConstructor("DestroyOrderButton"));
+			jassProgramVisitor.getJassNativeManager().createNative("AbilityAddOrderButton",
+					(arguments, globalScope, triggerScope) -> {
+						final CAbilityJass abilityTypeTmp = arguments.get(0)
+								.visit(ObjectJassValueVisitor.getInstance());
+						final CAbilityOrderButtonJass commandCard = arguments.get(1)
+								.visit(ObjectJassValueVisitor.getInstance());
 						abilityTypeTmp.addJassOrder(commandCard);
 						return null;
 					});
-			jassProgramVisitor.getJassNativeManager().createNative("AbilityTypeRemoveOrderButton",
+			jassProgramVisitor.getJassNativeManager().createNative("AbilityRemoveOrderButton",
 					(arguments, globalScope, triggerScope) -> {
-						final CAbilityTypeJassDefinition abilityTypeTmp = arguments.get(0)
+						final CAbilityJass abilityTypeTmp = arguments.get(0)
 								.visit(ObjectJassValueVisitor.getInstance());
-						final JassOrder commandCard = arguments.get(1).visit(ObjectJassValueVisitor.getInstance());
+						final CAbilityOrderButtonJass commandCard = arguments.get(1)
+								.visit(ObjectJassValueVisitor.getInstance());
 						abilityTypeTmp.removeJassOrder(commandCard);
 						return null;
 					});
 			jassProgramVisitor.getJassNativeManager().createNative("SetOrderButtonAutoCastOrderId",
 					(arguments, globalScope, triggerScope) -> {
-						final JassOrder orderCommandCard = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());
+						final COrderButton orderCommandCard = arguments.get(0)
+								.visit(ObjectJassValueVisitor.getInstance());
 						final int autoCastOrderId = arguments.get(1).visit(IntegerJassValueVisitor.getInstance());
 						orderCommandCard.setAutoCastOrderId(autoCastOrderId);
 						return null;
 					});
 			jassProgramVisitor.getJassNativeManager().createNative("SetOrderButtonUnAutoCastOrderId",
 					(arguments, globalScope, triggerScope) -> {
-						final JassOrder orderCommandCard = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());
+						final COrderButton orderCommandCard = arguments.get(0)
+								.visit(ObjectJassValueVisitor.getInstance());
 						final int autoCastUnOrderId = arguments.get(1).visit(IntegerJassValueVisitor.getInstance());
 						orderCommandCard.setAutoCastUnOrderId(autoCastUnOrderId);
 						return null;
 					});
 			jassProgramVisitor.getJassNativeManager().createNative("SetOrderButtonContainerMenuOrderId",
 					(arguments, globalScope, triggerScope) -> {
-						final JassOrder orderCommandCard = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());
+						final COrderButton orderCommandCard = arguments.get(0)
+								.visit(ObjectJassValueVisitor.getInstance());
 						final int orderId = arguments.get(1).visit(IntegerJassValueVisitor.getInstance());
 						orderCommandCard.setContainerMenuOrderId(orderId);
 						return null;
 					});
 			jassProgramVisitor.getJassNativeManager().createNative("SetOrderButtonDisabled",
 					(arguments, globalScope, triggerScope) -> {
-						final JassOrder orderCommandCard = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());
+						final COrderButton orderCommandCard = arguments.get(0)
+								.visit(ObjectJassValueVisitor.getInstance());
 						final boolean disabled = arguments.get(1).visit(BooleanJassValueVisitor.getInstance());
 						orderCommandCard.setDisabled(disabled);
 						return null;
 					});
 			jassProgramVisitor.getJassNativeManager().createNative("SetOrderButtonManaCost",
 					(arguments, globalScope, triggerScope) -> {
-						final JassOrder orderCommandCard = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());
+						final COrderButton orderCommandCard = arguments.get(0)
+								.visit(ObjectJassValueVisitor.getInstance());
 						final int manaCost = arguments.get(1).visit(IntegerJassValueVisitor.getInstance());
 						orderCommandCard.setManaCost(manaCost);
 						return null;
 					});
 			jassProgramVisitor.getJassNativeManager().createNative("SetOrderButtonGoldCost",
 					(arguments, globalScope, triggerScope) -> {
-						final JassOrder orderCommandCard = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());
+						final COrderButton orderCommandCard = arguments.get(0)
+								.visit(ObjectJassValueVisitor.getInstance());
 						final int goldCost = arguments.get(1).visit(IntegerJassValueVisitor.getInstance());
 						orderCommandCard.setGoldCost(goldCost);
 						return null;
 					});
 			jassProgramVisitor.getJassNativeManager().createNative("SetOrderButtonLumberCost",
 					(arguments, globalScope, triggerScope) -> {
-						final JassOrder orderCommandCard = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());
+						final COrderButton orderCommandCard = arguments.get(0)
+								.visit(ObjectJassValueVisitor.getInstance());
 						final int lumberCost = arguments.get(1).visit(IntegerJassValueVisitor.getInstance());
 						orderCommandCard.setLumberCost(lumberCost);
 						return null;
 					});
-			jassProgramVisitor.getJassNativeManager().createNative("SetOrderButtonFoodCostDisplayOnly",
+			jassProgramVisitor.getJassNativeManager().createNative("SetOrderButtonFoodCost",
 					(arguments, globalScope, triggerScope) -> {
-						final JassOrder orderCommandCard = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());
+						final COrderButton orderCommandCard = arguments.get(0)
+								.visit(ObjectJassValueVisitor.getInstance());
 						final int foodCost = arguments.get(1).visit(IntegerJassValueVisitor.getInstance());
-						orderCommandCard.setFoodCostDisplayOnly(foodCost);
+						orderCommandCard.setFoodCost(foodCost);
 						return null;
 					});
 			jassProgramVisitor.getJassNativeManager().createNative("SetOrderButtonCharges",
 					(arguments, globalScope, triggerScope) -> {
-						final JassOrder orderCommandCard = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());
+						final COrderButton orderCommandCard = arguments.get(0)
+								.visit(ObjectJassValueVisitor.getInstance());
 						final int charges = arguments.get(1).visit(IntegerJassValueVisitor.getInstance());
 						orderCommandCard.setCharges(charges);
 						return null;
 					});
 			jassProgramVisitor.getJassNativeManager().createNative("SetOrderButtonAutoCastActive",
 					(arguments, globalScope, triggerScope) -> {
-						final JassOrder orderCommandCard = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());
+						final COrderButton orderCommandCard = arguments.get(0)
+								.visit(ObjectJassValueVisitor.getInstance());
 						final boolean active = arguments.get(1).visit(BooleanJassValueVisitor.getInstance());
 						orderCommandCard.setAutoCastActive(active);
 						return null;
 					});
 			jassProgramVisitor.getJassNativeManager().createNative("SetOrderButtonHidden",
 					(arguments, globalScope, triggerScope) -> {
-						final JassOrder orderCommandCard = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());
+						final COrderButton orderCommandCard = arguments.get(0)
+								.visit(ObjectJassValueVisitor.getInstance());
 						final boolean hidden = arguments.get(1).visit(BooleanJassValueVisitor.getInstance());
-						orderCommandCard.setHidden(hidden);
-						return null;
+//						orderCommandCard.setHidden(hidden);
+						throw new UnsupportedOperationException();
 					});
 			jassProgramVisitor.getJassNativeManager().createNative("SetOrderButtonIconPath",
 					(arguments, globalScope, triggerScope) -> {
-						final JassOrder orderCommandCard = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());
+						final COrderButton orderCommandCard = arguments.get(0)
+								.visit(ObjectJassValueVisitor.getInstance());
 						final String iconPath = arguments.get(1).visit(StringJassValueVisitor.getInstance());
-						orderCommandCard.setIconPath(iconPath);
+						final AbilityDataUI abilityDataUI = war3MapViewer.getAbilityDataUI();
+						final OrderButtonUI peer = abilityDataUI.getRenderPeer(orderCommandCard);
+						peer.setIcon(this.gameUI.loadTexture(iconPath));
+						peer.setIconDisabled(this.gameUI
+								.loadTexture(AbilityDataUI.disable(iconPath, abilityDataUI.getDisabledPrefix())));
 						return null;
 					});
 			jassProgramVisitor.getJassNativeManager().createNative("SetOrderButtonButtonPositionX",
 					(arguments, globalScope, triggerScope) -> {
-						final JassOrder orderCommandCard = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());
+						final COrderButton orderCommandCard = arguments.get(0)
+								.visit(ObjectJassValueVisitor.getInstance());
 						final int buttonPosX = arguments.get(1).visit(IntegerJassValueVisitor.getInstance());
-						orderCommandCard.setButtonPositionX(buttonPosX);
+						war3MapViewer.getAbilityDataUI().getRenderPeer(orderCommandCard).setButtonPositionX(buttonPosX);
 						return null;
 					});
 			jassProgramVisitor.getJassNativeManager().createNative("SetOrderButtonButtonPositionY",
 					(arguments, globalScope, triggerScope) -> {
-						final JassOrder orderCommandCard = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());
+						final COrderButton orderCommandCard = arguments.get(0)
+								.visit(ObjectJassValueVisitor.getInstance());
 						final int buttonPosY = arguments.get(1).visit(IntegerJassValueVisitor.getInstance());
-						orderCommandCard.setButtonPositionY(buttonPosY);
+						war3MapViewer.getAbilityDataUI().getRenderPeer(orderCommandCard).setButtonPositionY(buttonPosY);
 						return null;
 					});
 			jassProgramVisitor.getJassNativeManager().createNative("SetOrderButtonToolTip",
 					(arguments, globalScope, triggerScope) -> {
-						final JassOrder orderCommandCard = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());
+						final COrderButton orderCommandCard = arguments.get(0)
+								.visit(ObjectJassValueVisitor.getInstance());
 						final String tip = arguments.get(1).visit(StringJassValueVisitor.getInstance());
-						orderCommandCard.setTip(tip);
+						war3MapViewer.getAbilityDataUI().getRenderPeer(orderCommandCard).setTip(tip);
 						return null;
 					});
 			jassProgramVisitor.getJassNativeManager().createNative("SetOrderButtonUberTip",
 					(arguments, globalScope, triggerScope) -> {
-						final JassOrder orderCommandCard = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());
+						final COrderButton orderCommandCard = arguments.get(0)
+								.visit(ObjectJassValueVisitor.getInstance());
 						final String uberTip = arguments.get(1).visit(StringJassValueVisitor.getInstance());
-						orderCommandCard.setUberTip(uberTip);
+						war3MapViewer.getAbilityDataUI().getRenderPeer(orderCommandCard).setUberTip(uberTip);
 						return null;
 					});
 			jassProgramVisitor.getJassNativeManager().createNative("SetOrderButtonHotKey",
 					(arguments, globalScope, triggerScope) -> {
-						final JassOrder orderCommandCard = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());
+						final COrderButton orderCommandCard = arguments.get(0)
+								.visit(ObjectJassValueVisitor.getInstance());
 						final String hotkeyString = arguments.get(1).visit(StringJassValueVisitor.getInstance());
-						orderCommandCard.setHotkey(hotkeyString.charAt(0));
+						war3MapViewer.getAbilityDataUI().getRenderPeer(orderCommandCard)
+								.setHotkey(hotkeyString.charAt(0));
+						return null;
+					});
+			jassProgramVisitor.getJassNativeManager().createNative("SetOrderButtonByIconUI",
+					(arguments, globalScope, triggerScope) -> {
+						final COrderButton orderCommandCard = arguments.get(0)
+								.visit(ObjectJassValueVisitor.getInstance());
+						final IconUI theIconUi = arguments.get(1).visit(ObjectJassValueVisitor.getInstance());
+						war3MapViewer.getAbilityDataUI().getRenderPeer(orderCommandCard).setFromIconUI(theIconUi);
 						return null;
 					});
 			jassProgramVisitor.getJassNativeManager().createNative("SetOrderButtonPreviewBuildUnitId",
 					(arguments, globalScope, triggerScope) -> {
-						final JassOrder orderCommandCard = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());
+						final COrderButton orderCommandCard = arguments.get(0)
+								.visit(ObjectJassValueVisitor.getInstance());
 						final int unitId = arguments.get(1).visit(IntegerJassValueVisitor.getInstance());
-						orderCommandCard.setPreviewBuildUnitId(new War3ID(unitId));
+						war3MapViewer.getAbilityDataUI().getRenderPeer(orderCommandCard)
+								.setPreviewBuildUnitId(new War3ID(unitId));
 						return null;
 					});
 			jassProgramVisitor.getJassNativeManager().createNative("SetOrderButtonAOE",
 					(arguments, globalScope, triggerScope) -> {
-						final JassOrder orderCommandCard = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());
+						final COrderButton orderCommandCard = arguments.get(0)
+								.visit(ObjectJassValueVisitor.getInstance());
 						final double radius = arguments.get(1).visit(RealJassValueVisitor.getInstance());
-						orderCommandCard.setMouseTargetRadius((float) radius);
+						war3MapViewer.getAbilityDataUI().getRenderPeer(orderCommandCard)
+								.setMouseTargetRadius((float) radius);
 						return null;
+					});
+
+			jassProgramVisitor.getJassNativeManager().createNative("GetOrderButtonAutoCastOrderId",
+					(arguments, globalScope, triggerScope) -> {
+						final COrderButton orderCommandCard = arguments.get(0)
+								.visit(ObjectJassValueVisitor.getInstance());
+						return IntegerJassValue.of(orderCommandCard.getAutoCastOrderId());
+					});
+			jassProgramVisitor.getJassNativeManager().createNative("GetOrderButtonUnAutoCastOrderId",
+					(arguments, globalScope, triggerScope) -> {
+						final COrderButton orderCommandCard = arguments.get(0)
+								.visit(ObjectJassValueVisitor.getInstance());
+						return IntegerJassValue.of(orderCommandCard.getAutoCastUnOrderId());
+					});
+			jassProgramVisitor.getJassNativeManager().createNative("GetOrderButtonContainerMenuOrderId",
+					(arguments, globalScope, triggerScope) -> {
+						final COrderButton orderCommandCard = arguments.get(0)
+								.visit(ObjectJassValueVisitor.getInstance());
+						return IntegerJassValue.of(orderCommandCard.getContainerMenuOrderId());
+					});
+			jassProgramVisitor.getJassNativeManager().createNative("IsOrderButtonDisabled",
+					(arguments, globalScope, triggerScope) -> {
+						final COrderButton orderCommandCard = arguments.get(0)
+								.visit(ObjectJassValueVisitor.getInstance());
+						return BooleanJassValue.of(orderCommandCard.isDisabled());
+					});
+			jassProgramVisitor.getJassNativeManager().createNative("GetOrderButtonManaCost",
+					(arguments, globalScope, triggerScope) -> {
+						final COrderButton orderCommandCard = arguments.get(0)
+								.visit(ObjectJassValueVisitor.getInstance());
+						return IntegerJassValue.of(orderCommandCard.getManaCost());
+					});
+			jassProgramVisitor.getJassNativeManager().createNative("GetOrderButtonGoldCost",
+					(arguments, globalScope, triggerScope) -> {
+						final COrderButton orderCommandCard = arguments.get(0)
+								.visit(ObjectJassValueVisitor.getInstance());
+						return IntegerJassValue.of(orderCommandCard.getGoldCost());
+					});
+			jassProgramVisitor.getJassNativeManager().createNative("GetOrderButtonLumberCost",
+					(arguments, globalScope, triggerScope) -> {
+						final COrderButton orderCommandCard = arguments.get(0)
+								.visit(ObjectJassValueVisitor.getInstance());
+						return IntegerJassValue.of(orderCommandCard.getLumberCost());
+					});
+			jassProgramVisitor.getJassNativeManager().createNative("GetOrderButtonFoodCost",
+					(arguments, globalScope, triggerScope) -> {
+						final COrderButton orderCommandCard = arguments.get(0)
+								.visit(ObjectJassValueVisitor.getInstance());
+						return IntegerJassValue.of(orderCommandCard.getFoodCost());
+					});
+			jassProgramVisitor.getJassNativeManager().createNative("GetOrderButtonCharges",
+					(arguments, globalScope, triggerScope) -> {
+						final COrderButton orderCommandCard = arguments.get(0)
+								.visit(ObjectJassValueVisitor.getInstance());
+						return IntegerJassValue.of(orderCommandCard.getCharges());
+					});
+			jassProgramVisitor.getJassNativeManager().createNative("IsOrderButtonAutoCastActive",
+					(arguments, globalScope, triggerScope) -> {
+						final COrderButton orderCommandCard = arguments.get(0)
+								.visit(ObjectJassValueVisitor.getInstance());
+						return BooleanJassValue.of(orderCommandCard.isAutoCastActive());
+					});
+			jassProgramVisitor.getJassNativeManager().createNative("GetOrderButtonButtonPositionX",
+					(arguments, globalScope, triggerScope) -> {
+						final COrderButton orderCommandCard = arguments.get(0)
+								.visit(ObjectJassValueVisitor.getInstance());
+						return IntegerJassValue.of(
+								war3MapViewer.getAbilityDataUI().getRenderPeer(orderCommandCard).getButtonPositionX());
+					});
+			jassProgramVisitor.getJassNativeManager().createNative("GetOrderButtonButtonPositionY",
+					(arguments, globalScope, triggerScope) -> {
+						final COrderButton orderCommandCard = arguments.get(0)
+								.visit(ObjectJassValueVisitor.getInstance());
+						return IntegerJassValue.of(
+								war3MapViewer.getAbilityDataUI().getRenderPeer(orderCommandCard).getButtonPositionY());
+					});
+			jassProgramVisitor.getJassNativeManager().createNative("GetOrderButtonToolTip",
+					(arguments, globalScope, triggerScope) -> {
+						final COrderButton orderCommandCard = arguments.get(0)
+								.visit(ObjectJassValueVisitor.getInstance());
+						return StringJassValue
+								.of(war3MapViewer.getAbilityDataUI().getRenderPeer(orderCommandCard).getTip());
+					});
+			jassProgramVisitor.getJassNativeManager().createNative("GetOrderButtonUberTip",
+					(arguments, globalScope, triggerScope) -> {
+						final COrderButton orderCommandCard = arguments.get(0)
+								.visit(ObjectJassValueVisitor.getInstance());
+						return StringJassValue
+								.of(war3MapViewer.getAbilityDataUI().getRenderPeer(orderCommandCard).getUberTip());
+					});
+			jassProgramVisitor.getJassNativeManager().createNative("GetOrderButtonHotKey",
+					(arguments, globalScope, triggerScope) -> {
+						final COrderButton orderCommandCard = arguments.get(0)
+								.visit(ObjectJassValueVisitor.getInstance());
+						return StringJassValue.of(String
+								.valueOf(war3MapViewer.getAbilityDataUI().getRenderPeer(orderCommandCard).getHotkey()));
+					});
+			jassProgramVisitor.getJassNativeManager().createNative("GetOrderButtonPreviewBuildUnitId",
+					(arguments, globalScope, triggerScope) -> {
+						final COrderButton orderCommandCard = arguments.get(0)
+								.visit(ObjectJassValueVisitor.getInstance());
+						return IntegerJassValue.of(war3MapViewer.getAbilityDataUI().getRenderPeer(orderCommandCard)
+								.getPreviewBuildUnitId().getValue());
+					});
+			jassProgramVisitor.getJassNativeManager().createNative("GetOrderButtonAOE",
+					(arguments, globalScope, triggerScope) -> {
+						final COrderButton orderCommandCard = arguments.get(0)
+								.visit(ObjectJassValueVisitor.getInstance());
+						return RealJassValue.of(war3MapViewer.getAbilityDataUI().getRenderPeer(orderCommandCard)
+								.getMouseTargetRadius());
+					});
+			jassProgramVisitor.getJassNativeManager().createNative("FailUsableCheckOnRequirement",
+					(arguments, globalScope, triggerScope) -> {
+						final CAbilityOrderButtonJass orderCommandCard = arguments.get(0)
+								.visit(ObjectJassValueVisitor.getInstance());
+						final int techId = arguments.get(1).visit(IntegerJassValueVisitor.getInstance());
+						final int techLevel = arguments.get(2).visit(IntegerJassValueVisitor.getInstance());
+						orderCommandCard.getUsableReceiver().missingRequirement(new War3ID(techId), techLevel);
+						return null;
+					});
+			jassProgramVisitor.getJassNativeManager().createNative("FailUsableCheckOnHeroLevelRequirement",
+					(arguments, globalScope, triggerScope) -> {
+						final CAbilityOrderButtonJass orderCommandCard = arguments.get(0)
+								.visit(ObjectJassValueVisitor.getInstance());
+						final int heroLevel = arguments.get(1).visit(IntegerJassValueVisitor.getInstance());
+						orderCommandCard.getUsableReceiver().missingHeroLevelRequirement(heroLevel);
+						return null;
+					});
+			jassProgramVisitor.getJassNativeManager().createNative("FailUsableCheckOnCooldown",
+					(arguments, globalScope, triggerScope) -> {
+						final CAbilityOrderButtonJass orderCommandCard = arguments.get(0)
+								.visit(ObjectJassValueVisitor.getInstance());
+						final float cooldownRemaining = arguments.get(1).visit(RealJassValueVisitor.getInstance())
+								.floatValue();
+						final float cooldown = arguments.get(2).visit(RealJassValueVisitor.getInstance()).floatValue();
+						orderCommandCard.getUsableReceiver().cooldownNotYetReady(cooldownRemaining, cooldown);
+						return null;
+					});
+			jassProgramVisitor.getJassNativeManager().createNative("FailUsableCheckWithMessage",
+					(arguments, globalScope, triggerScope) -> {
+						final CAbilityOrderButtonJass orderCommandCard = arguments.get(0)
+								.visit(ObjectJassValueVisitor.getInstance());
+						final String message = arguments.get(1).visit(StringJassValueVisitor.getInstance());
+						orderCommandCard.getUsableReceiver().activationCheckFailed(message);
+						return null;
+					});
+			jassProgramVisitor.getJassNativeManager().createNative("FailTargetCheckWithMessage",
+					(arguments, globalScope, triggerScope) -> {
+						final CAbilityOrderButtonJass orderCommandCard = arguments.get(0)
+								.visit(ObjectJassValueVisitor.getInstance());
+						final String message = arguments.get(1).visit(StringJassValueVisitor.getInstance());
+						orderCommandCard.getTargetReceiver().targetCheckFailed(message);
+						return null;
+					});
+			jassProgramVisitor.getJassNativeManager().createNative("PassTargetCheck",
+					(arguments, globalScope, triggerScope) -> {
+						final CAbilityOrderButtonJass orderCommandCard = arguments.get(0)
+								.visit(ObjectJassValueVisitor.getInstance());
+						final CHandle finalizedTarget = arguments.get(1).visit(ObjectJassValueVisitor.getInstance());
+						orderCommandCard.getTargetReceiver().targetOk(finalizedTarget);
+						return null;
+					});
+			jassProgramVisitor.getJassNativeManager().createNative("PassUsableCheck",
+					(arguments, globalScope, triggerScope) -> {
+						final CAbilityOrderButtonJass orderCommandCard = arguments.get(0)
+								.visit(ObjectJassValueVisitor.getInstance());
+						orderCommandCard.getUsableReceiver().useOk();
+						return null;
+					});
+
+			jassProgramVisitor.getJassNativeManager().createNative("ConvertAbilityCategory",
+					(arguments, globalScope, triggerScope) -> {
+						final int i = arguments.get(0).visit(IntegerJassValueVisitor.getInstance());
+						return new HandleJassValue(abilitycategoryType, CAbilityCategory.VALUES[i]);
+					});
+
+			jassProgramVisitor.getJassNativeManager().createNative("ConvertBehaviorCategory",
+					(arguments, globalScope, triggerScope) -> {
+						final int i = arguments.get(0).visit(IntegerJassValueVisitor.getInstance());
+						return new HandleJassValue(behaviorcategoryType, CBehaviorCategory.VALUES[i]);
+					});
+
+			jassProgramVisitor.getJassNativeManager().createNative("CreateHandleList",
+					(arguments, globalScope, triggerScope) -> {
+						return new HandleJassValue(handlelistType,
+								new HandleList(this.simulation.getHandleIdAllocator().createId()));
+					});
+			jassProgramVisitor.getJassNativeManager().createNative("HandleListAdd",
+					(arguments, globalScope, triggerScope) -> {
+						final HandleList whichList = nullable(arguments, 0, ObjectJassValueVisitor.getInstance());
+						final CHandle x = nullable(arguments, 1, ObjectJassValueVisitor.getInstance());
+						if (whichList != null) {
+							whichList.add(x);
+						}
+						return null;
+					});
+			jassProgramVisitor.getJassNativeManager().createNative("HandleListRemove",
+					(arguments, globalScope, triggerScope) -> {
+						final HandleList whichList = nullable(arguments, 0, ObjectJassValueVisitor.getInstance());
+						final CHandle x = nullable(arguments, 1, ObjectJassValueVisitor.getInstance());
+						if (whichList != null) {
+							return BooleanJassValue.of(whichList.remove(x));
+						}
+						return BooleanJassValue.FALSE;
 					});
 
 			// Script file natives
@@ -6352,7 +6539,25 @@ public class Jass2 {
 				return new HandleJassValue(abilityType, ability);
 			};
 			jassProgramVisitor.getJassNativeManager().createNative("CreateAbility", createAbilityFxn);
-			abilityType.setConstructorNative(new HandleJassTypeConstructor("CreateAbility"));
+
+			final JassFunction createJassAbilityFxn = (arguments, globalScope, triggerScope) -> {
+				final int rawcode = arguments.get(0).visit(IntegerJassValueVisitor.getInstance());
+				final CAbility ability = new CAbilityJass(this.simulation.getHandleIdAllocator().createId(),
+						new War3ID(rawcode), globalScope);
+				return new HandleJassValue(abilityType, ability);
+			};
+			jassProgramVisitor.getJassNativeManager().createNative("CreateJassAbility", createJassAbilityFxn);
+			abilityType.setConstructorNative(new HandleJassTypeConstructor("CreateJassAbility"));
+
+			final JassFunction createJassBuffFxn = (arguments, globalScope, triggerScope) -> {
+				final int codeId = arguments.get(0).visit(IntegerJassValueVisitor.getInstance());
+				final int aliasId = arguments.get(1).visit(IntegerJassValueVisitor.getInstance());
+				final CBuffJass ability = new CBuffJass(this.simulation.getHandleIdAllocator().createId(),
+						new War3ID(codeId), new War3ID(aliasId), globalScope);
+				return new HandleJassValue(buffType, ability);
+			};
+			jassProgramVisitor.getJassNativeManager().createNative("CreateJassBuff", createJassBuffFxn);
+			buffType.setConstructorNative(new HandleJassTypeConstructor("CreateJassBuff"));
 
 			final JassFunction getUnitAbilityByIndex = (arguments, globalScope, triggerScope) -> {
 				final CUnit whichUnit = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());
@@ -6417,6 +6622,60 @@ public class Jass2 {
 						ability.setIconShowing(flag);
 						return null;
 					});
+
+			jassProgramVisitor.getJassNativeManager().createNative("SetAbilityPermanent",
+					(arguments, globalScope, triggerScope) -> {
+						final CAbility ability = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());
+						final boolean flag = arguments.get(1).visit(BooleanJassValueVisitor.getInstance());
+						ability.setPermanent(flag);
+						return null;
+					});
+			jassProgramVisitor.getJassNativeManager().createNative("SetAbilityPhysical",
+					(arguments, globalScope, triggerScope) -> {
+						final CAbilityJass ability = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());
+						final boolean flag = arguments.get(1).visit(BooleanJassValueVisitor.getInstance());
+						ability.setPhysical(flag);
+						return null;
+					});
+			jassProgramVisitor.getJassNativeManager().createNative("SetAbilityUniversal",
+					(arguments, globalScope, triggerScope) -> {
+						final CAbilityJass ability = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());
+						final boolean flag = arguments.get(1).visit(BooleanJassValueVisitor.getInstance());
+						ability.setUniversal(flag);
+						return null;
+					});
+			jassProgramVisitor.getJassNativeManager().createNative("SetAbilityEnabledWhileUpgrading",
+					(arguments, globalScope, triggerScope) -> {
+						final CAbilityJass ability = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());
+						final boolean flag = arguments.get(1).visit(BooleanJassValueVisitor.getInstance());
+						ability.setEnabledWhileUpgrading(flag);
+						return null;
+					});
+			jassProgramVisitor.getJassNativeManager().createNative("SetAbilityEnabledWhileUnderConstruction",
+					(arguments, globalScope, triggerScope) -> {
+						final CAbilityJass ability = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());
+						final boolean flag = arguments.get(1).visit(BooleanJassValueVisitor.getInstance());
+						ability.setEnabledWhileUnderConstruction(flag);
+						return null;
+					});
+			jassProgramVisitor.getJassNativeManager().createNative("TriggerRegisterOnTick",
+					(arguments, globalScope, triggerScope) -> {
+						final Trigger trigger = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());
+						this.simulation.registerOnTickEvent(trigger);
+						return new HandleJassValue(eventType, (RemovableTriggerEvent) () -> {
+							CommonEnvironment.this.simulation.unregisterOnTickEvent(trigger);
+						});
+					});
+			jassProgramVisitor.getJassNativeManager().createNative("TriggerRegisterOnUnitTick",
+					(arguments, globalScope, triggerScope) -> {
+						final Trigger trigger = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());
+						final CUnit unit = arguments.get(1).visit(ObjectJassValueVisitor.getInstance());
+						unit.registerOnTickEvent(trigger);
+						return new HandleJassValue(eventType, (RemovableTriggerEvent) () -> {
+							unit.unregisterOnTickEvent(trigger);
+						});
+					});
+
 			jassProgramVisitor.getJassNativeManager().createNative("ConvertAbilityDisableType",
 					(arguments, globalScope, triggerScope) -> {
 						final int i = arguments.get(0).visit(IntegerJassValueVisitor.getInstance());
@@ -7626,6 +7885,17 @@ public class Jass2 {
 						final int rawcode = arguments.get(0).visit(IntegerJassValueVisitor.getInstance());
 						return new StringJassValue(new War3ID(rawcode).toString());
 					});
+			jassProgramVisitor.getJassNativeManager().createNative("Rawcode2String",
+					(arguments, globalScope, triggerScope) -> {
+						final int rawcode = arguments.get(0).visit(IntegerJassValueVisitor.getInstance());
+						return StringJassValue.of(RawcodeUtils.toString(rawcode));
+					});
+			final JassFunction string2Rawcode = (arguments, globalScope, triggerScope) -> {
+				final String rawcodeStr = arguments.get(0).visit(StringJassValueVisitor.getInstance());
+				return IntegerJassValue.of(RawcodeUtils.toInt(rawcodeStr));
+			};
+			jassProgramVisitor.getJassNativeManager().createNative("String2Rawcode", string2Rawcode);
+			jassProgramVisitor.getJassNativeManager().createNative("FourCC", string2Rawcode);
 
 			registerRandomNatives(jassProgramVisitor, this.simulation);
 		}
@@ -7694,7 +7964,7 @@ public class Jass2 {
 			catch (final Exception exc) {
 				new JassException(this.jassProgramVisitor.getGlobals(),
 						"Exception on Line " + this.jassProgramVisitor.getGlobals().getLineNumber(), exc)
-						.printStackTrace();
+								.printStackTrace();
 			}
 			try {
 				final JassThread mainThread = this.jassProgramVisitor.getGlobals().createThread("main",

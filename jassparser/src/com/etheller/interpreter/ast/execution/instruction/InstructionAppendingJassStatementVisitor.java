@@ -363,14 +363,16 @@ public class InstructionAppendingJassStatementVisitor
 			boolean found = false;
 			if ((thisStruct != null)
 					&& ((structJassType = thisStructType.visit(StructJassTypeVisitor.getInstance())) != null)) {
-				final JassStructMemberType memberType = structJassType.getMemberByName(identifier);
-				checkMemberAccess(identifier, structJassType, memberType);
+				final JassStructMemberType memberType = structJassType.tryGetMemberByName(identifier);
+				if (memberType != null) {
+					checkMemberAccess(identifier, structJassType, memberType);
 
-				final int memberIndex = structJassType.tryGetMemberIndexInefficientlyByName(identifier);
-				if (memberIndex != -1) {
-					this.instructions.add(new LocalReferenceInstruction(thisStruct));
-					this.instructions.add(new StructMemberReferenceInstruction(memberIndex));
-					found = true;
+					final int memberIndex = structJassType.tryGetMemberIndexInefficientlyByName(identifier);
+					if (memberIndex != -1) {
+						this.instructions.add(new LocalReferenceInstruction(thisStruct));
+						this.instructions.add(new StructMemberReferenceInstruction(memberIndex));
+						found = true;
+					}
 				}
 			}
 			if (!found) {

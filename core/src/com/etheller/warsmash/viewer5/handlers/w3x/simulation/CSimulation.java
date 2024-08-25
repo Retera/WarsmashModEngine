@@ -17,6 +17,7 @@ import java.util.Set;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.math.Rectangle;
 import com.etheller.interpreter.ast.scope.GlobalScope;
+import com.etheller.interpreter.ast.scope.TriggerExecutionScope;
 import com.etheller.interpreter.ast.scope.trigger.RemovableTriggerEvent;
 import com.etheller.interpreter.ast.scope.trigger.Trigger;
 import com.etheller.interpreter.ast.scope.trigger.TriggerBooleanExpression;
@@ -111,6 +112,9 @@ public class CSimulation implements CPlayerAPI {
 	private final LinkedList<CTimer> activeTimers = new LinkedList<>();
 	private final List<CTimer> addedTimers = new ArrayList<>();
 	private final List<CTimer> removedTimers = new ArrayList<>();
+	private final List<Trigger> addedOnTickTriggers = new ArrayList<>();
+	private final List<Trigger> removedOnTickTriggers = new ArrayList<>();
+	private final LinkedList<Trigger> onTickTriggers = new LinkedList<>();
 	private transient CommandErrorListener commandErrorListener;
 	private final CRegionManager regionManager;
 	private final List<TimeOfDayEvent> timeOfDayVariableEvents = new ArrayList<>();
@@ -547,6 +551,16 @@ public class CSimulation implements CPlayerAPI {
 			this.activeTimers.pop().fire(this);
 		}
 		checkTimeOfDayEvents(timeOfDayBefore, timeOfDayAfter);
+		this.onTickTriggers.addAll(this.addedOnTickTriggers);
+		this.addedOnTickTriggers.clear();
+		for (final Trigger trigger : this.onTickTriggers) {
+			final TriggerExecutionScope triggerScope = trigger.getTriggerExecutionScope();
+			if (trigger.evaluate(this.globalScope, triggerScope)) {
+				trigger.execute(this.globalScope, triggerScope);
+			}
+		}
+		this.onTickTriggers.removeAll(this.removedOnTickTriggers);
+		this.removedOnTickTriggers.clear();
 
 		this.globalScope.runThreads();
 	}
@@ -819,6 +833,14 @@ public class CSimulation implements CPlayerAPI {
 
 	public void unregisterTimeOfDayEvent(final TimeOfDayEvent timeOfDayEvent) {
 		this.timeOfDayVariableEvents.remove(timeOfDayEvent);
+	}
+
+	public void registerOnTickEvent(final Trigger trigger) {
+		this.addedOnTickTriggers.add(trigger);
+	}
+
+	public void unregisterOnTickEvent(final Trigger trigger) {
+		this.removedOnTickTriggers.add(trigger);
 	}
 
 	public RemovableTriggerEvent registerTimeOfDayEvent(final GlobalScope globalScope, final Trigger trigger,
@@ -1102,7 +1124,7 @@ public class CSimulation implements CPlayerAPI {
 		return this.mapVersion <= 24;
 	}
 
-	public void setFogMaskEnabled(boolean enable) {
+	public void setFogMaskEnabled(final boolean enable) {
 		this.fogMaskEnabled = enable;
 	}
 
@@ -1110,7 +1132,7 @@ public class CSimulation implements CPlayerAPI {
 		return this.fogMaskEnabled;
 	}
 
-	public void setFogEnabled(boolean fogEnabled) {
+	public void setFogEnabled(final boolean fogEnabled) {
 		this.fogEnabled = fogEnabled;
 	}
 

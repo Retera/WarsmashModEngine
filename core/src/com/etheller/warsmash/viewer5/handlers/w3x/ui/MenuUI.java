@@ -814,8 +814,8 @@ public class MenuUI {
 
 		this.warcraftIIILogo = (SpriteFrame) this.rootFrame.getFrameByName("WarCraftIIILogo", 0);
 		this.rootFrame.setSpriteFrameModel(this.warcraftIIILogo, this.rootFrame.getSkinField("MainMenuLogo"));
-		this.warcraftIIILogo.addSetPoint(new SetPoint(FramePoint.TOPLEFT, this.mainMenuFrame, FramePoint.TOPLEFT,
-				GameUI.convertX(this.uiViewport, 0.13f), GameUI.convertY(this.uiViewport, -0.08f)));
+//		this.warcraftIIILogo.addSetPoint(new SetPoint(FramePoint.TOPLEFT, this.mainMenuFrame, FramePoint.TOPLEFT,
+//				GameUI.convertX(this.uiViewport, 0.13f), GameUI.convertY(this.uiViewport, -0.08f)));
 		setMainMenuVisible(false);
 		this.rootFrame.getFrameByName("RealmSelect", 0).setVisible(false);
 
@@ -886,7 +886,7 @@ public class MenuUI {
 			});
 		}
 
-		this.localAreaNetworkButton.setEnabled(false);
+		this.localAreaNetworkButton.setEnabled(true);
 		this.optionsButton.setEnabled(false);
 		this.creditsButton.setEnabled(false);
 
@@ -1813,10 +1813,12 @@ public class MenuUI {
 			final BitmapFont font = this.rootFrame.getFont();
 			final BitmapFont font20 = this.rootFrame.getFont20();
 			font.setColor(Color.YELLOW);
-			final String fpsString = "FPS: " + Gdx.graphics.getFramesPerSecond();
-			glyphLayout.setText(font, fpsString);
-			font.draw(batch, fpsString, (getMinWorldWidth() - glyphLayout.width) / 2,
-					1100 * this.heightRatioCorrection);
+			if (WarsmashConstants.SHOW_FPS) {
+				final String fpsString = "FPS: " + Gdx.graphics.getFramesPerSecond();
+				glyphLayout.setText(font, fpsString);
+				font.draw(batch, fpsString, (getMinWorldWidth() - glyphLayout.width) / 2,
+						1100 * this.heightRatioCorrection);
+			}
 			this.rootFrame.render(batch, font20, glyphLayout);
 		}
 	}
@@ -2393,15 +2395,42 @@ public class MenuUI {
 	}
 
 	private static enum MenuState {
-		GOING_TO_MAIN_MENU, MAIN_MENU, GOING_TO_BATTLE_NET_LOGIN, GOING_TO_BATTLE_NET_LOGIN_PART2, BATTLE_NET_LOGIN,
-		LEAVING_BATTLE_NET, LEAVING_BATTLE_NET_FROM_LOGGED_IN, GOING_TO_BATTLE_NET_CUSTOM_GAME_MENU,
-		BATTLE_NET_CUSTOM_GAME_MENU, GOING_TO_BATTLE_NET_CREATE_CUSTOM_GAME_MENU, BATTLE_NET_CREATE_CUSTOM_GAME_MENU,
-		GOING_TO_BATTLE_NET_CHANNEL_MENU, BATTLE_NET_CHANNEL_MENU, GOING_TO_BATTLE_NET_WELCOME, BATTLE_NET_WELCOME,
-		GOING_TO_SINGLE_PLAYER, LEAVING_CAMPAIGN, SINGLE_PLAYER, GOING_TO_SINGLE_PLAYER_SKIRMISH,
-		SINGLE_PLAYER_SKIRMISH, GOING_TO_MAP, GOING_TO_CAMPAIGN, GOING_TO_CAMPAIGN_PART2, GOING_TO_MISSION_SELECT,
-		MISSION_SELECT, CAMPAIGN, GOING_TO_SINGLE_PLAYER_PROFILE, SINGLE_PLAYER_PROFILE, GOING_TO_LOADING_SCREEN,
-		QUITTING, RESTARTING, GOING_TO_BATTLE_NET_CHAT_CHANNEL, GOING_TO_BATTLE_NET_CHAT_CHANNEL_FROM_OUTSIDE,
-		BATTLE_NET_CHAT_CHANNEL, GOING_TO_BATTLE_NET_CUSTOM_GAME_LOBBY, BATTLE_NET_CUSTOM_GAME_LOBBY;
+		GOING_TO_MAIN_MENU,
+		MAIN_MENU,
+		GOING_TO_BATTLE_NET_LOGIN,
+		GOING_TO_BATTLE_NET_LOGIN_PART2,
+		BATTLE_NET_LOGIN,
+		LEAVING_BATTLE_NET,
+		LEAVING_BATTLE_NET_FROM_LOGGED_IN,
+		GOING_TO_BATTLE_NET_CUSTOM_GAME_MENU,
+		BATTLE_NET_CUSTOM_GAME_MENU,
+		GOING_TO_BATTLE_NET_CREATE_CUSTOM_GAME_MENU,
+		BATTLE_NET_CREATE_CUSTOM_GAME_MENU,
+		GOING_TO_BATTLE_NET_CHANNEL_MENU,
+		BATTLE_NET_CHANNEL_MENU,
+		GOING_TO_BATTLE_NET_WELCOME,
+		BATTLE_NET_WELCOME,
+		GOING_TO_SINGLE_PLAYER,
+		LEAVING_CAMPAIGN,
+		SINGLE_PLAYER,
+		GOING_TO_SINGLE_PLAYER_SKIRMISH,
+		SINGLE_PLAYER_SKIRMISH,
+		GOING_TO_MAP,
+		GOING_TO_CAMPAIGN,
+		GOING_TO_CAMPAIGN_PART2,
+		GOING_TO_MISSION_SELECT,
+		MISSION_SELECT,
+		CAMPAIGN,
+		GOING_TO_SINGLE_PLAYER_PROFILE,
+		SINGLE_PLAYER_PROFILE,
+		GOING_TO_LOADING_SCREEN,
+		QUITTING,
+		RESTARTING,
+		GOING_TO_BATTLE_NET_CHAT_CHANNEL,
+		GOING_TO_BATTLE_NET_CHAT_CHANNEL_FROM_OUTSIDE,
+		BATTLE_NET_CHAT_CHANNEL,
+		GOING_TO_BATTLE_NET_CUSTOM_GAME_LOBBY,
+		BATTLE_NET_CUSTOM_GAME_LOBBY;
 	}
 
 	public void hide() {

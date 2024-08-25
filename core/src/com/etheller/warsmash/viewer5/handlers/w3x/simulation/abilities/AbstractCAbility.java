@@ -32,12 +32,16 @@ public abstract class AbstractCAbility extends CExtensibleHandleAbstract impleme
 
 	@Override
 	public War3ID getAlias() {
-		return this.getCode();
+		return getCode();
 	}
 
 	@Override
 	public final boolean isDisabled() {
 		return this.disabled != 0;
+	}
+
+	protected void onSetDisabled(final boolean disabled, final CAbilityDisableType type) {
+
 	}
 
 	@Override
@@ -48,6 +52,7 @@ public abstract class AbstractCAbility extends CExtensibleHandleAbstract impleme
 		else {
 			this.disabled &= ~type.getMask();
 		}
+		onSetDisabled(disabled, type);
 	}
 
 	@Override
@@ -55,19 +60,29 @@ public abstract class AbstractCAbility extends CExtensibleHandleAbstract impleme
 		return this.iconShowing;
 	}
 
+	protected void onSetIconShowing(final boolean iconShowing) {
+
+	}
+
 	@Override
 	public final void setIconShowing(final boolean iconShowing) {
 		this.iconShowing = iconShowing;
+		onSetIconShowing(iconShowing);
 	}
 
 	@Override
-	public boolean isPermanent() {
+	public final boolean isPermanent() {
 		return this.permanent;
 	}
 
+	protected void onSetPermanent(final boolean permanent) {
+
+	}
+
 	@Override
-	public void setPermanent(final boolean permanent) {
+	public final void setPermanent(final boolean permanent) {
 		this.permanent = permanent;
+		onSetPermanent(permanent);
 	}
 
 	@Override
@@ -84,9 +99,9 @@ public abstract class AbstractCAbility extends CExtensibleHandleAbstract impleme
 	@Override
 	public final void checkCanUse(final CSimulation game, final CUnit unit, final int orderId,
 			final AbilityActivationReceiver receiver) {
-		if (this.isDisabled()) {
+		if (isDisabled()) {
 			receiver.disabled();
-			this.checkRequirementsMet(game, unit, receiver);
+			checkRequirementsMet(game, unit, receiver);
 		}
 		else {
 			innerCheckCanUse(game, unit, orderId, receiver);

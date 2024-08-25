@@ -136,4 +136,8 @@ public class Trigger implements CHandle {
 		}
 
 	}
+
+	public TriggerExecutionScope getTriggerExecutionScope() {
+		return this.triggerExecutionScope;
+	}
 }

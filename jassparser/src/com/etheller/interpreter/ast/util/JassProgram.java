@@ -16,16 +16,21 @@ public class JassProgram {
 	public final List<JassDefinitionBlock> definitionBlocks = new ArrayList<>();
 
 	public void initialize() {
-		final DefaultScope defaultScope = new DefaultScope(this.globalScope);
-		for (final JassDefinitionBlock definitionBlock : this.definitionBlocks) {
-			definitionBlock.define(defaultScope, this);
+		try {
+			final DefaultScope defaultScope = new DefaultScope(this.globalScope);
+			for (final JassDefinitionBlock definitionBlock : this.definitionBlocks) {
+				definitionBlock.define(defaultScope, this);
+			}
+			final Integer globalsInitializerFunctionPtr = this.globalScope
+					.getUserFunctionInstructionPtr(GlobalScope.INIT_GLOBALS_AUTOGEN_FXN_NAME);
+			if (globalsInitializerFunctionPtr != null) {
+				this.globalScope.runThreadUntilCompletion(this.globalScope.createThread(globalsInitializerFunctionPtr));
+			}
+			this.globalScope.resetGlobalInitialization();
 		}
-		final Integer globalsInitializerFunctionPtr = this.globalScope
-				.getUserFunctionInstructionPtr(GlobalScope.INIT_GLOBALS_AUTOGEN_FXN_NAME);
-		if (globalsInitializerFunctionPtr != null) {
-			this.globalScope.runThreadUntilCompletion(this.globalScope.createThread(globalsInitializerFunctionPtr));
+		finally {
+			this.definitionBlocks.clear();
 		}
-		this.globalScope.resetGlobalInitialization();
 	}
 
 	public void addAll(final List<JassDefinitionBlock> blocks) {

@@ -41,11 +41,23 @@ public class ScopedScope implements Scope {
 
 	@Override
 	public JassType parseArrayType(final String id) {
+		if (GlobalScope.KEYWORD_THISTYPE.equals(id)) {
+			final String namespace = this.libraryScopeTree.getNamespace();
+			if (namespace != null) {
+				return this.globalScope.parseArrayType(namespace, this.libraryScopeTree);
+			}
+		}
 		return this.globalScope.parseArrayType(id, this.libraryScopeTree);
 	}
 
 	@Override
 	public JassType parseType(final String id) {
+		if (GlobalScope.KEYWORD_THISTYPE.equals(id)) {
+			final String namespace = this.libraryScopeTree.getNamespace();
+			if (namespace != null) {
+				return this.globalScope.parseType(namespace, this.libraryScopeTree);
+			}
+		}
 		return this.globalScope.parseType(id, this.libraryScopeTree);
 	}
 

@@ -4041,7 +4041,7 @@ public class Jass2 {
 						final CUnit whichWidget = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());
 						final int rawcode = arguments.get(1).visit(IntegerJassValueVisitor.getInstance());
 						final War3ID war3id = new War3ID(rawcode);
-						final CAbility ability = whichWidget
+						final CLevelingAbility ability = whichWidget
 								.getAbility(GetAbilityByRawcodeVisitor.getInstance().reset(war3id));
 						if (ability == null) {
 							whichWidget.add(CommonEnvironment.this.simulation,
@@ -4051,9 +4051,42 @@ public class Jass2 {
 							return IntegerJassValue.of(1);
 						}
 						else {
-							// TODO below code is very stupid!!
-							return IntegerJassValue.of(1);
+							final int newLevel = ability.getLevel() + 1;
+							ability.setLevel(CommonEnvironment.this.simulation, whichWidget, newLevel);
+							return IntegerJassValue.of(newLevel);
 						}
+					});
+			jassProgramVisitor.getJassNativeManager().createNative("SetUnitAbilityLevel",
+					(arguments, globalScope, triggerScope) -> {
+						final CUnit whichUnit = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());
+						final int rawcode = arguments.get(1).visit(IntegerJassValueVisitor.getInstance());
+						final int newLevel = arguments.get(2).visit(IntegerJassValueVisitor.getInstance());
+						final War3ID war3id = new War3ID(rawcode);
+						final CLevelingAbility ability = whichUnit
+								.getAbility(GetAbilityByRawcodeVisitor.getInstance().reset(war3id));
+						if (ability != null) {
+							ability.setLevel(CommonEnvironment.this.simulation, whichUnit, newLevel);
+							return IntegerJassValue.of(newLevel);
+						}
+						return IntegerJassValue.of(newLevel);
+					});
+			jassProgramVisitor.getJassNativeManager().createNative("SetAbilityLevel",
+					(arguments, globalScope, triggerScope) -> {
+						final CUnit whichUnit = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());
+						final CLevelingAbility whichAbility = arguments.get(1)
+								.visit(ObjectJassValueVisitor.getInstance());
+						final int newLevel = arguments.get(2).visit(IntegerJassValueVisitor.getInstance());
+						if (whichAbility != null) {
+							whichAbility.setLevel(CommonEnvironment.this.simulation, whichUnit, newLevel);
+							return IntegerJassValue.of(newLevel);
+						}
+						return IntegerJassValue.of(newLevel);
+					});
+			jassProgramVisitor.getJassNativeManager().createNative("GetAbilityLevel",
+					(arguments, globalScope, triggerScope) -> {
+						final CLevelingAbility whichAbility = arguments.get(0)
+								.visit(ObjectJassValueVisitor.getInstance());
+						return IntegerJassValue.of(whichAbility.getLevel());
 					});
 			jassProgramVisitor.getJassNativeManager().createNative("GetPlayerHandicap",
 					(arguments, globalScope, triggerScope) -> {
@@ -6614,6 +6647,11 @@ public class Jass2 {
 						final CAbility ability = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());
 						return IntegerJassValue.of(ability.getCode().getValue());
 					});
+			jassProgramVisitor.getJassNativeManager().createNative("GetAbilityLevel",
+					(arguments, globalScope, triggerScope) -> {
+						final CLevelingAbility ability = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());
+						return IntegerJassValue.of(ability.getLevel());
+					});
 
 			jassProgramVisitor.getJassNativeManager().createNative("SetAbilityIconShowing",
 					(arguments, globalScope, triggerScope) -> {
@@ -7964,7 +8002,7 @@ public class Jass2 {
 			catch (final Exception exc) {
 				new JassException(this.jassProgramVisitor.getGlobals(),
 						"Exception on Line " + this.jassProgramVisitor.getGlobals().getLineNumber(), exc)
-								.printStackTrace();
+						.printStackTrace();
 			}
 			try {
 				final JassThread mainThread = this.jassProgramVisitor.getGlobals().createThread("main",

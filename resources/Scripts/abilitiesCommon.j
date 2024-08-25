@@ -1440,6 +1440,12 @@ library AbilityAPI requires OrderButtonAPI
 		constant abilitycategory ABILITY_CATEGORY_BUFF                              = ConvertAbilityCategory(6)
 	endglobals
 
+	// setting or getting ability level will probably crash for some built-in abilities that fundamentally lack "level"
+	// ( we can change it to return 0 later )
+	native SetAbilityLevel takes unit abilityUnit, ability whichAbility, integer level returns nothing
+
+	native GetAbilityLevel takes ability whichAbility returns integer level
+
 	// NOTE: do not call the native below, it exists only for interoperating with "extends" keyword
 	private native CreateJassAbility takes integer aliasId returns ability
 	
@@ -1473,6 +1479,11 @@ library AbilityAPI requires OrderButtonAPI
 		method onSetPermanent takes boolean permanent returns nothing defaults nothing
 		
 		constant method getAbilityCategory takes nothing returns abilitycategory
+
+		/* maybe later we can replace getLevel and setLevel with "operator level" if that feature is added */
+		method getLevel takes nothing returns integer defaults GetAbilityLevel(this)
+
+		method setLevel takes unit abilityUnit, integer level returns integer defaults SetAbilityLevel(abilityUnit, this, level)
 	endinterface
 	
 	native AbilityAddOrderButton takes Ability whichAbility, orderbutton whichOrder returns nothing
@@ -1647,8 +1658,8 @@ library GenericAbilityBaseTypes requires AbilityAPI, BehaviorAPI
 
 		/* abstract */ struct AbstractGenericActiveAbilityTargetWidget extends ActiveAbilityInterface
 		
-			public static method create takes integer aliasId, integer orderId returns AbstractGenericActiveAbilityTargetWidget
-				local AbstractGenericActiveAbilityTargetWidget this = .allocate(aliasId)
+			public static method create takes integer aliasId, integer orderId returns thistype
+				local thistype this = .allocate(aliasId)
 				set this.alias = aliasId
 				set this.abilityButton = OrderButtonImpl.create(orderId, this)
 				call AbilityAddOrderButton(this, this.abilityButton)
@@ -1693,8 +1704,8 @@ library GenericAbilityBaseTypes requires AbilityAPI, BehaviorAPI
 
 		/* abstract */ struct AbstractGenericActiveAbilityTargetLocation extends ActiveAbilityInterface
 		
-			public static method create takes integer aliasId, integer orderId returns AbstractGenericActiveAbilityTargetLocation
-				local AbstractGenericActiveAbilityTargetLocation this = .allocate(aliasId)
+			public static method create takes integer aliasId, integer orderId returns thistype
+				local thistype this = .allocate(aliasId)
 				set this.alias = aliasId
 				set this.abilityButton = OrderButtonImpl.create(orderId, this)
 				call AbilityAddOrderButton(this, this.abilityButton)
@@ -1775,8 +1786,8 @@ library GenericAbilityBaseTypes requires AbilityAPI, BehaviorAPI
 
 		/* abstract */ struct AbstractGenericActiveAbilityTargetWidgetOrLocation extends ActiveAbilityInterface
 		
-			public static method create takes integer aliasId, integer orderId returns AbstractGenericActiveAbilityTargetWidgetOrLocation
-				local AbstractGenericActiveAbilityTargetWidgetOrLocation this = .allocate(aliasId)
+			public static method create takes integer aliasId, integer orderId returns thistype
+				local thistype this = .allocate(aliasId)
 				set this.alias = aliasId
 				set this.abilityButton = OrderButtonImpl.create(orderId, this)
 				call AbilityAddOrderButton(this, this.abilityButton)
@@ -1797,7 +1808,7 @@ library GenericAbilityBaseTypes requires AbilityAPI, BehaviorAPI
 			method begin takes unit caster, ability source returns Behavior
 		endinterface
 	
-		private struct OrderButtonImpl extends OrderButtonTarget
+		private struct OrderButtonImpl extends OrderButtonNoTarget
 			ActiveAbilityInterface parent
 		
 			public static method create takes integer orderId, ActiveAbilityInterface parent returns OrderButtonImpl
@@ -1821,8 +1832,8 @@ library GenericAbilityBaseTypes requires AbilityAPI, BehaviorAPI
 
 		/* abstract */ struct AbstractGenericActiveAbilityNoTarget extends ActiveAbilityInterface
 		
-			public static method create takes integer aliasId, integer orderId returns AbstractGenericActiveAbilityNoTarget
-				local AbstractGenericActiveAbilityNoTarget this = .allocate(aliasId)
+			public static method create takes integer aliasId, integer orderId returns thistype
+				local thistype this = .allocate(aliasId)
 				set this.alias = aliasId
 				set this.abilityButton = OrderButtonImpl.create(orderId, this)
 				call AbilityAddOrderButton(this, this.abilityButton)
@@ -1840,10 +1851,10 @@ library GenericAbilityBaseTypes requires AbilityAPI, BehaviorAPI
 		
 			method checkTarget takes unit caster, ability source returns nothing
 			
-			method begin takes unit caster, ability source returns Behavior
+			method use takes unit caster, ability source returns nothing
 		endinterface
 	
-		private struct OrderButtonImpl extends OrderButtonTarget
+		private struct OrderButtonImpl extends OrderButtonInstant
 			ActiveAbilityInterface parent
 		
 			public static method create takes integer orderId, ActiveAbilityInterface parent returns OrderButtonImpl
@@ -1856,19 +1867,15 @@ library GenericAbilityBaseTypes requires AbilityAPI, BehaviorAPI
 				call this.parent.checkUsable(caster, source)
 			endmethod
 			
-			method checkTarget takes unit caster, ability source returns nothing
-				call this.parent.checkTargetUnit(caster, source)
-			endmethod
-			
-			method begin takes unit caster, ability source returns Behavior
-				return this.parent.begin(caster, source)
+			method use takes unit caster, ability source returns nothing
+				return this.parent.use(caster, source)
 			endmethod
 		endstruct
 
-		/* abstract */ struct AbstractGenericActiveAbilityNoTarget extends ActiveAbilityInterface
+		/* abstract */ struct AbstractGenericActiveAbilityInstant extends ActiveAbilityInterface
 		
-			public static method create takes integer aliasId, integer orderId returns AbstractGenericActiveAbilityNoTarget
-				local AbstractGenericActiveAbilityNoTarget this = .allocate(aliasId)
+			public static method create takes integer aliasId, integer orderId returns thistype
+				local thistype this = .allocate(aliasId)
 				set this.alias = aliasId
 				set this.abilityButton = OrderButtonImpl.create(orderId, this)
 				call AbilityAddOrderButton(this, this.abilityButton)
@@ -1879,4 +1886,10 @@ library GenericAbilityBaseTypes requires AbilityAPI, BehaviorAPI
 			// so you need to implement those 
 		endstruct
 	endscope
+endlibrary
+
+library AbilitySpellBaseTypes requires GenericAbilityBaseTypes
+	struct AbilitySpellBase
+		
+	endstruct
 endlibrary

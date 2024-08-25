@@ -34,8 +34,13 @@ public class JassStructDefinitionBlock implements JassDefinitionBlock {
 
 	@Override
 	public void define(final Scope scope, final JassProgram jassProgram) {
-		scope.defineStruct(this.qualifiers, this.structName, this.structSuperTypeToken, this.memberTypeDefinitions,
+		final Scope childScope = scope.createNestedScope(this.structName, false);
+		childScope.defineStruct(this.qualifiers, this.structName, this.structSuperTypeToken, this.memberTypeDefinitions,
 				this.methodDefinitions);
+	}
+
+	public String getStructName() {
+		return this.structName;
 	}
 
 }

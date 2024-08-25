@@ -75,6 +75,14 @@ public class LibraryScopeTree {
 		return this.scopes.isEmpty();
 	}
 
+	public String getNamespace() {
+		if (isEmpty()) {
+			return null;
+		}
+		final Node last = this.scopes.getLast();
+		return last.namespace;
+	}
+
 	private static final class Node {
 		private final String namespace;
 		private final String fullyQualifiedPublicName;

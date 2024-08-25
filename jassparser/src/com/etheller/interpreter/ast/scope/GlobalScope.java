@@ -53,6 +53,7 @@ import com.etheller.interpreter.ast.value.visitor.JassTypeGettingValueVisitor;
 public final class GlobalScope {
 	public static final String INIT_GLOBALS_AUTOGEN_FXN_NAME = "{init-globals}";
 	public static final String KEYWORD_THIS = "this";
+	public static final String KEYWORD_THISTYPE = "thistype";
 	public static final String KEYWORD_SCOPE_PREFIX = "SCOPE_PREFIX";
 	public static final String KEYWORD_SCOPE_PRIVATE = "SCOPE_PRIVATE";
 	public static final String KEYNAME_THIS = "{this}";

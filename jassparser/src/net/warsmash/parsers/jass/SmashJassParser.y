@@ -39,7 +39,7 @@
 	private GlobalScope globalScope;
 	private JassNativeManager jassNativeManager;
 	private JassProgram jassProgram;
-	private JassStructDefinitionBlock currentStruct;
+	private JassStructLikeDefinitionBlock currentStruct;
 	
 	public void scanAndParse(String currentParsingFilePath, JassProgram jassProgram) throws IOException {
 		this.currentParsingFilePath = currentParsingFilePath;
@@ -101,8 +101,9 @@ import com.etheller.interpreter.ast.util.JassSettings;
 %type <JassStructMemberTypeDefinition> member
 %type <LinkedList<JassStatement>> statements_opt statements globals globals_opt
 %type <JassMethodDefinitionBlock> methodBlock interfaceMethodBlock
+%type <JassImplementModuleDefinition> implementModuleStatement
 %type <JassFunctionDefinitionBlock> functionBlock
-%type <JassDefinitionBlock> nativeBlock typeDeclarationBlock structDeclarationBlock interfaceDeclarationBlock globalsBlock libraryBlock scopeBlock block nonLibraryBlock
+%type <JassDefinitionBlock> nativeBlock typeDeclarationBlock structDeclarationBlock interfaceDeclarationBlock moduleDeclarationBlock globalsBlock libraryBlock scopeBlock block nonLibraryBlock
 %type <LinkedList<JassDefinitionBlock>> blocks blocks_opt nonLibraryBlocks nonLibraryBlocks_opt
 %type <JassQualifier> qualifier
 %type <EnumSet<JassQualifier>> qualifiers qualifiers_opt
@@ -710,6 +711,18 @@ methodBlock:
 	}
 	;
 	
+implementModuleStatement:
+	IMPLEMENT ID
+	{
+		$$ = new JassImplementModuleDefinition($2, false);
+	}
+	|
+	IMPLEMENT OPTIONAL ID
+	{
+		$$ = new JassImplementModuleDefinition($3, true);
+	}
+	;
+	
 defaultsTail:
 	DEFAULTS expression
 	{
@@ -800,6 +813,17 @@ interfaceDeclarationBlock:
 	}
 	;
 	
+moduleDeclarationBlock:
+	qualifiers_opt MODULE ID
+	{
+		currentStruct = new JassModuleDefinitionBlock($1, $3);
+	}
+	structStatements_opt ENDMODULE
+	{
+		$$ = currentStruct;
+	}
+	;
+	
 nonLibraryBlock:
 	globalsBlock
 	{
@@ -827,6 +851,11 @@ nonLibraryBlock:
 	}
 	|
 	interfaceDeclarationBlock
+	{
+		$$ = $1;
+	}
+	|
+	moduleDeclarationBlock
 	{
 		$$ = $1;
 	}
@@ -952,6 +981,11 @@ structStatement:
 	}
 	|
 	methodBlock
+	{
+		currentStruct.add($1);
+	}
+	|
+	implementModuleStatement
 	{
 		currentStruct.add($1);
 	}

@@ -7,22 +7,18 @@ import java.util.List;
 import com.etheller.interpreter.ast.qualifier.JassQualifier;
 import com.etheller.interpreter.ast.scope.Scope;
 import com.etheller.interpreter.ast.struct.JassStructMemberTypeDefinition;
-import com.etheller.interpreter.ast.type.JassTypeToken;
 import com.etheller.interpreter.ast.util.JassProgram;
 
-public class JassStructDefinitionBlock implements JassDefinitionBlock, JassStructLikeDefinitionBlock {
+public class JassModuleDefinitionBlock implements JassDefinitionBlock, JassStructLikeDefinitionBlock {
 	private final EnumSet<JassQualifier> qualifiers;
-	private final String structName;
-	private final JassTypeToken structSuperTypeToken;
+	private final String name;
 	private final List<JassStructMemberTypeDefinition> memberTypeDefinitions = new ArrayList<>();
 	private final List<JassImplementModuleDefinition> implementModuleDefinitions = new ArrayList<>();
 	private final List<JassMethodDefinitionBlock> methodDefinitions = new ArrayList<>();
 
-	public JassStructDefinitionBlock(final EnumSet<JassQualifier> qualifiers, final String structName,
-			final JassTypeToken structSuperTypeToken) {
+	public JassModuleDefinitionBlock(final EnumSet<JassQualifier> qualifiers, final String structName) {
 		this.qualifiers = qualifiers;
-		this.structName = structName;
-		this.structSuperTypeToken = structSuperTypeToken;
+		this.name = structName;
 	}
 
 	@Override
@@ -42,13 +38,27 @@ public class JassStructDefinitionBlock implements JassDefinitionBlock, JassStruc
 
 	@Override
 	public void define(final Scope scope, final JassProgram jassProgram) {
-		final Scope childScope = scope.createNestedScope(this.structName, false);
-		childScope.defineStruct(this.qualifiers, this.structName, this.structSuperTypeToken, this.memberTypeDefinitions,
-				this.implementModuleDefinitions, this.methodDefinitions);
+		scope.defineModule(this);
 	}
 
-	public String getStructName() {
-		return this.structName;
+	public EnumSet<JassQualifier> getQualifiers() {
+		return this.qualifiers;
+	}
+
+	public String getName() {
+		return this.name;
+	}
+
+	public List<JassStructMemberTypeDefinition> getMemberTypeDefinitions() {
+		return this.memberTypeDefinitions;
+	}
+
+	public List<JassMethodDefinitionBlock> getMethodDefinitions() {
+		return this.methodDefinitions;
+	}
+
+	public List<JassImplementModuleDefinition> getImplementModuleDefinitions() {
+		return this.implementModuleDefinitions;
 	}
 
 }

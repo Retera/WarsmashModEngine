@@ -6,13 +6,17 @@ import java.util.Collections;
 import java.util.Deque;
 import java.util.EnumSet;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import com.etheller.interpreter.ast.Assignable;
 import com.etheller.interpreter.ast.debug.JassException;
 import com.etheller.interpreter.ast.debug.JassStackElement;
+import com.etheller.interpreter.ast.definition.JassImplementModuleDefinition;
 import com.etheller.interpreter.ast.definition.JassMethodDefinitionBlock;
+import com.etheller.interpreter.ast.definition.JassModuleDefinitionBlock;
 import com.etheller.interpreter.ast.execution.JassStackFrame;
 import com.etheller.interpreter.ast.execution.JassThread;
 import com.etheller.interpreter.ast.execution.instruction.BeginFunctionInstruction;
@@ -66,6 +70,7 @@ public final class GlobalScope {
 	private final Map<String, Integer> functionNameToNativeId = new HashMap<>();
 	private final List<NativeJassFunction> indexedNativeFunctions = new ArrayList<>();
 	private final Map<String, JassType> types = new HashMap<>();
+	private final Map<String, JassModuleDefinitionBlock> modules = new HashMap<>();
 	private final HandleTypeSuperTypeLoadingVisitor handleTypeSuperTypeLoadingVisitor = new HandleTypeSuperTypeLoadingVisitor();
 	private final ArrayDeque<QueuedCallback> triggerQueue = new ArrayDeque<>();
 	private final ArrayDeque<QueuedCallback> runningTriggerQueue = new ArrayDeque<>();
@@ -283,6 +288,7 @@ public final class GlobalScope {
 
 	public void defineStruct(final EnumSet<JassQualifier> qualifiers, final String structName,
 			final JassTypeToken structSuperTypeToken, final List<JassStructMemberTypeDefinition> memberTypeDefinitions,
+			final List<JassImplementModuleDefinition> implementModuleDefinitions,
 			final List<JassMethodDefinitionBlock> methodDefinitions, final Scope scope) {
 
 		final StructJassType structJassType = new StructJassType(structSuperTypeToken.resolve(scope), structName);
@@ -296,7 +302,48 @@ public final class GlobalScope {
 			memberTypes.add(new JassStructMemberType(memberTypeDefinition.getQualifiers(), resolvedType,
 					memberTypeDefinition.getId(), memberTypeDefinition.getDefaultValueExpression()));
 		}
-		structJassType.buildMethodTable(scope, methodDefinitions, memberTypes);
+		final Set<String> modulesImplementedByStruct = new HashSet<>();
+		final List<JassMethodDefinitionBlock> implementedMethodDefinitions = new ArrayList<>(methodDefinitions);
+		implementModules(modulesImplementedByStruct, implementModuleDefinitions, memberTypes,
+				implementedMethodDefinitions, scope, structName);
+		structJassType.buildMethodTable(scope, implementedMethodDefinitions, memberTypes);
+	}
+
+	private void implementModules(final Set<String> modulesImplementedByStruct,
+			final List<JassImplementModuleDefinition> implementModuleDefinitions,
+			final List<JassStructMemberType> memberTypes,
+			final List<JassMethodDefinitionBlock> implementedMethodDefinitions, final Scope scope,
+			final String structName) {
+		for (final JassImplementModuleDefinition implementModuleDefinition : implementModuleDefinitions) {
+			final String moduleName = implementModuleDefinition.getModuleName();
+			if (modulesImplementedByStruct.add(moduleName)) {
+				final JassModuleDefinitionBlock module = scope.forEachPossibleResolvedIdentifier(moduleName,
+						(identifier) -> {
+							return this.modules.get(identifier);
+						});
+				if (module != null) {
+					implementModules(modulesImplementedByStruct, module.getImplementModuleDefinitions(), memberTypes,
+							implementedMethodDefinitions, scope, structName);
+					for (final JassStructMemberTypeDefinition memberTypeDefinition : module
+							.getMemberTypeDefinitions()) {
+						final JassType resolvedType = memberTypeDefinition.getType().resolve(scope);
+						memberTypes.add(new JassStructMemberType(memberTypeDefinition.getQualifiers(), resolvedType,
+								memberTypeDefinition.getId(), memberTypeDefinition.getDefaultValueExpression()));
+					}
+					implementedMethodDefinitions.addAll(module.getMethodDefinitions());
+				}
+				else {
+					if (!implementModuleDefinition.isOptional()) {
+						throw new IllegalStateException(
+								"missing module: \"" + moduleName + "\" for struct \"" + structName + "\"");
+					}
+				}
+			}
+		}
+	}
+
+	public void defineModule(final String name, final JassModuleDefinitionBlock moduleDefinitionBlock) {
+		this.modules.put(name, moduleDefinitionBlock);
 	}
 
 	public void endDefiningGlobals() {

@@ -6,7 +6,9 @@ import java.util.List;
 import java.util.Map;
 
 import com.etheller.interpreter.ast.debug.JassException;
+import com.etheller.interpreter.ast.definition.JassImplementModuleDefinition;
 import com.etheller.interpreter.ast.definition.JassMethodDefinitionBlock;
+import com.etheller.interpreter.ast.definition.JassModuleDefinitionBlock;
 import com.etheller.interpreter.ast.function.NativeJassFunction;
 import com.etheller.interpreter.ast.function.UserJassFunction;
 import com.etheller.interpreter.ast.qualifier.JassQualifier;
@@ -163,10 +165,20 @@ public class ScopedScope implements Scope {
 	@Override
 	public void defineStruct(final EnumSet<JassQualifier> qualifiers, String structName,
 			final JassTypeToken structSuperTypeToken, final List<JassStructMemberTypeDefinition> memberTypeDefinitions,
+			final List<JassImplementModuleDefinition> implementModuleDefinitions,
 			final List<JassMethodDefinitionBlock> methodDefinitions) {
 		structName = this.libraryScopeTree.getQualifiedIdentifier(structName, qualifiers);
 		this.globalScope.defineStruct(qualifiers, structName, structSuperTypeToken, memberTypeDefinitions,
-				methodDefinitions, this);
+				implementModuleDefinitions, methodDefinitions, this);
+	}
+
+	@Override
+	public void defineModule(final JassModuleDefinitionBlock jassModuleDefinitionBlock) {
+		String moduleName = jassModuleDefinitionBlock.getName();
+		moduleName = this.libraryScopeTree.getQualifiedIdentifier(moduleName,
+				jassModuleDefinitionBlock.getQualifiers());
+		this.globalScope.defineModule(moduleName, jassModuleDefinitionBlock);
+
 	}
 
 	@Override
@@ -178,6 +190,11 @@ public class ScopedScope implements Scope {
 	@Override
 	public JassValue getPreprocessorConstant(final String identifier) {
 		return this.keyToPreprocessorConstant.get(identifier);
+	}
+
+	@Override
+	public <T> T forEachPossibleResolvedIdentifier(final String identifier, final ScopeTreeHandler<T> handler) {
+		return this.libraryScopeTree.forEachPossibleResolvedIdentifier(identifier, handler);
 	}
 
 	private final class GlobalIdGetter implements ScopeTreeHandler<Boolean> {

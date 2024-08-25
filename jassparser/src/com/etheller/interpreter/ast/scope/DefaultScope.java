@@ -4,10 +4,13 @@ import java.util.EnumSet;
 import java.util.List;
 
 import com.etheller.interpreter.ast.debug.JassException;
+import com.etheller.interpreter.ast.definition.JassImplementModuleDefinition;
 import com.etheller.interpreter.ast.definition.JassMethodDefinitionBlock;
+import com.etheller.interpreter.ast.definition.JassModuleDefinitionBlock;
 import com.etheller.interpreter.ast.function.NativeJassFunction;
 import com.etheller.interpreter.ast.function.UserJassFunction;
 import com.etheller.interpreter.ast.qualifier.JassQualifier;
+import com.etheller.interpreter.ast.scope.LibraryScopeTree.ScopeTreeHandler;
 import com.etheller.interpreter.ast.statement.JassStatement;
 import com.etheller.interpreter.ast.struct.JassStructMemberTypeDefinition;
 import com.etheller.interpreter.ast.type.JassTypeToken;
@@ -63,9 +66,15 @@ public class DefaultScope implements Scope {
 	@Override
 	public void defineStruct(final EnumSet<JassQualifier> qualifiers, final String structName,
 			final JassTypeToken structSuperTypeToken, final List<JassStructMemberTypeDefinition> memberTypeDefinitions,
+			final List<JassImplementModuleDefinition> implementModuleDefinitions,
 			final List<JassMethodDefinitionBlock> methodDefinitions) {
 		this.globalScope.defineStruct(qualifiers, structName, structSuperTypeToken, memberTypeDefinitions,
-				methodDefinitions, this);
+				implementModuleDefinitions, methodDefinitions, this);
+	}
+
+	@Override
+	public void defineModule(final JassModuleDefinitionBlock jassModuleDefinitionBlock) {
+		this.globalScope.defineModule(jassModuleDefinitionBlock.getName(), jassModuleDefinitionBlock);
 	}
 
 	@Override
@@ -142,6 +151,11 @@ public class DefaultScope implements Scope {
 	@Override
 	public Scope createNestedScope(final String namespace, final boolean library) {
 		return new ScopedScope(new LibraryScopeTree().descend(namespace, library), this.globalScope);
+	}
+
+	@Override
+	public <T> T forEachPossibleResolvedIdentifier(final String identifier, final ScopeTreeHandler<T> handler) {
+		return handler.identifier(identifier);
 	}
 
 }

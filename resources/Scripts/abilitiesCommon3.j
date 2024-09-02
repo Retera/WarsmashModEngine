@@ -30,5 +30,17 @@ struct BuffTimed extends Buff
     real duration
     integer expireTick
         
-    method 
+    method endmethod 
+endstruct
+
+struct BuffStun extends BuffTimed
+	// maybe a create method
+
+	method onAdd takes unit target returns nothing
+		call SetUnitStunned(target, true)
+	endmethod
+
+	method onRemove takes unit target returns nothing
+		call SetUnitStunned(target, false)
+	endmethod
 endstruct

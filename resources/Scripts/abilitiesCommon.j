@@ -1,14 +1,113 @@
+//=====================================================
+// StringList API                                      
+//=====================================================
+library StringListAPI
+	type stringlist extends handle
+	
+	native CreateStringList takes nothing returns stringlist
+	native StringListAdd takes stringlist whichList, string toAdd returns nothing
+	native StringListRemove takes stringlist whichList, string toRemove returns boolean
+	native StringListSize takes stringlist whichList returns integer 
+	native StringListGet takes stringlist whichList, integer index returns string
+endlibrary
+
+//=====================================================
+// TargetTypes API                                      
+//=====================================================
+// This is meant to map fairly directly to the target
+// types in world editor.
+library TargetTypesAPI requires StringListAPI
+	type targettype extends handle
+	type targettypes extends handle
+
+	constant native ConvertTargetType takes integer x returns targettype
+
+	globals
+		constant targettype TARGET_TYPE_AIR                               = ConvertTargetType(0)
+		constant targettype TARGET_TYPE_ALIVE                             = ConvertTargetType(1)
+		constant targettype TARGET_TYPE_ALLIES                            = ConvertTargetType(2)
+		constant targettype TARGET_TYPE_DEAD                              = ConvertTargetType(3)
+		constant targettype TARGET_TYPE_DEBRIS                            = ConvertTargetType(4)
+		constant targettype TARGET_TYPE_ENEMIES                           = ConvertTargetType(5)
+		constant targettype TARGET_TYPE_GROUND                            = ConvertTargetType(6)
+		constant targettype TARGET_TYPE_HERO                              = ConvertTargetType(7)
+		constant targettype TARGET_TYPE_INVULNERABLE                      = ConvertTargetType(8)
+		constant targettype TARGET_TYPE_ITEM                              = ConvertTargetType(9)
+		constant targettype TARGET_TYPE_MECHANICAL                        = ConvertTargetType(10)
+		constant targettype TARGET_TYPE_NEUTRAL                           = ConvertTargetType(11)
+		constant targettype TARGET_TYPE_NONE                              = ConvertTargetType(12)
+		constant targettype TARGET_TYPE_NONHERO                           = ConvertTargetType(13)
+		constant targettype TARGET_TYPE_NONSAPPER                         = ConvertTargetType(14)
+		constant targettype TARGET_TYPE_NOTSELF                           = ConvertTargetType(15)
+		constant targettype TARGET_TYPE_ORGANIC                           = ConvertTargetType(16)
+		constant targettype TARGET_TYPE_PLAYERUNITS                       = ConvertTargetType(17)
+		constant targettype TARGET_TYPE_SAPPER                            = ConvertTargetType(18)
+		constant targettype TARGET_TYPE_SELF                              = ConvertTargetType(19)
+		constant targettype TARGET_TYPE_STRUCTURE                         = ConvertTargetType(20)
+		constant targettype TARGET_TYPE_TERRAIN                           = ConvertTargetType(21)
+		constant targettype TARGET_TYPE_TREE                              = ConvertTargetType(22)
+		constant targettype TARGET_TYPE_VULNERABLE                        = ConvertTargetType(23)
+		constant targettype TARGET_TYPE_WALL                              = ConvertTargetType(24)
+		constant targettype TARGET_TYPE_WARD                              = ConvertTargetType(25)
+		constant targettype TARGET_TYPE_ANCIENT                           = ConvertTargetType(26)
+		constant targettype TARGET_TYPE_NONANCIENT                        = ConvertTargetType(27)
+		constant targettype TARGET_TYPE_FRIEND                            = ConvertTargetType(28)
+		constant targettype TARGET_TYPE_BRIDGE                            = ConvertTargetType(29)
+		constant targettype TARGET_TYPE_DECORATION                        = ConvertTargetType(30)
+		constant targettype TARGET_TYPE_NON_MAGIC_IMMUNE                  = ConvertTargetType(31)
+		constant targettype TARGET_TYPE_NON_ETHEREAL                      = ConvertTargetType(32)
+	endglobals
+
+	native CreateTargetTypes takes nothing returns targettypes
+	native TargetTypesAdd takes targettypes whichSet, targettype whichType returns boolean
+	native TargetTypesRemove takes targettypes whichSet, targettype whichType returns boolean
+	native TargetTypesContains takes targettypes whichSet, targettype whichType returns boolean
+	// NOTE: always use one of the following two functions to parse a string to a target type
+	// when reading from SLK. Some of the old data has stupid values such as "alli" or "ally"
+	// or "allies" or "allied" interchangeably for `TARGET_TYPE_ALLIES`. The following
+	// two functions parse all currently known values.
+	native ParseTargetTypes takes stringlist whichTypeStringList returns targettypes
+	// NOTE: the ParseTargetType function may return null or something null-ish if
+	// the string could not be parsed
+	native ParseTargetType takes string whichTypeString returns targettype
+
+	struct TargetTypes
+		// NOTE: this function might be faster than ParseTargetTypes but maybe not.
+		// the Java one is stupid and does 3 memory allocations, but this one maybe
+		// only allocates for the handles. is it better? Anyway, for posterity, this
+		// can be considered identical to the implementation of ParseTargetTypes.
+		// but you can invoke it with TargetTypes.parse so maybe that
+		// will help users remember it is not a native, since generally
+		// we don't support native struct members currently
+		static method parse takes stringlist whichTypeStringList returns targettypes
+			local targettypes result = CreateTargetTypes()
+			local targettype parsedType
+			local integer i = 0
+			local integer l = StringListSize(whichTypeStringList)
+			loop
+				exitwhen i >= l
+
+				set parsedType = ParseTargetType(StringListGet(whichTypeStringList, i))
+				if parsedType != null then
+					call TargetTypesAdd(result, parsedType)
+				endif
+				set i = i + 1
+			endloop
+
+			return result
+		endmethod
+	endstruct
+endlibrary
 
 //=================================================================================================
 //=================================================================================================
 // AbilitiesCommonLegacy (contains APIs that have not been moved to their own libraries yet)
 //=================================================================================================
 //=================================================================================================
-library AbilitiesCommonLegacy
+library AbilitiesCommonLegacy requires TargetTypesAPI
 
 	// ability customization API types
 	type abilitytypeleveldata extends handle // GetHandleId(myAbilityTypeLevelData) is a crash case, dont' do it
-	type targettype extends handle
 	type texttagconfigtype extends handle
 	//type activeability extends ability (this comment is a reminder to either scap or implement this type for real)
 	type localstore extends handle // GetHandleId(myLocalStore) is a crash case, dont' do it
@@ -34,7 +133,6 @@ library AbilitiesCommonLegacy
 	// the IntExpr is like BoolExpr but it's for integers
 	type intexpr extends handle
 
-	constant native ConvertTargetType takes integer x returns targettype
 	constant native ConvertTextTagConfigType takes integer x returns texttagconfigtype
 	constant native ConvertWorldEditorDataType takes integer x returns worldeditordatatype
 	constant native ConvertNonStackingStatBuffType takes integer x returns nonstackingstatbufftype
@@ -89,40 +187,6 @@ library AbilitiesCommonLegacy
 		constant texttagconfigtype TEXT_TAG_CONFIG_TYPE_SHADOW_STRIKE                     = ConvertTextTagConfigType(7)
 		constant texttagconfigtype TEXT_TAG_CONFIG_TYPE_MANA_BURN                         = ConvertTextTagConfigType(8)
 		constant texttagconfigtype TEXT_TAG_CONFIG_TYPE_BASH                              = ConvertTextTagConfigType(9)
-		
-		constant targettype TARGET_TYPE_AIR                               = ConvertTargetType(0)
-		constant targettype TARGET_TYPE_ALIVE                             = ConvertTargetType(1)
-		constant targettype TARGET_TYPE_ALLIES                            = ConvertTargetType(2)
-		constant targettype TARGET_TYPE_DEAD                              = ConvertTargetType(3)
-		constant targettype TARGET_TYPE_DEBRIS                            = ConvertTargetType(4)
-		constant targettype TARGET_TYPE_ENEMIES                           = ConvertTargetType(5)
-		constant targettype TARGET_TYPE_GROUND                            = ConvertTargetType(6)
-		constant targettype TARGET_TYPE_HERO                              = ConvertTargetType(7)
-		constant targettype TARGET_TYPE_INVULNERABLE                      = ConvertTargetType(8)
-		constant targettype TARGET_TYPE_ITEM                              = ConvertTargetType(9)
-		constant targettype TARGET_TYPE_MECHANICAL                        = ConvertTargetType(10)
-		constant targettype TARGET_TYPE_NEUTRAL                           = ConvertTargetType(11)
-		constant targettype TARGET_TYPE_NONE                              = ConvertTargetType(12)
-		constant targettype TARGET_TYPE_NONHERO                           = ConvertTargetType(13)
-		constant targettype TARGET_TYPE_NONSAPPER                         = ConvertTargetType(14)
-		constant targettype TARGET_TYPE_NOTSELF                           = ConvertTargetType(15)
-		constant targettype TARGET_TYPE_ORGANIC                           = ConvertTargetType(16)
-		constant targettype TARGET_TYPE_PLAYERUNITS                       = ConvertTargetType(17)
-		constant targettype TARGET_TYPE_SAPPER                            = ConvertTargetType(18)
-		constant targettype TARGET_TYPE_SELF                              = ConvertTargetType(19)
-		constant targettype TARGET_TYPE_STRUCTURE                         = ConvertTargetType(20)
-		constant targettype TARGET_TYPE_TERRAIN                           = ConvertTargetType(21)
-		constant targettype TARGET_TYPE_TREE                              = ConvertTargetType(22)
-		constant targettype TARGET_TYPE_VULNERABLE                        = ConvertTargetType(23)
-		constant targettype TARGET_TYPE_WALL                              = ConvertTargetType(24)
-		constant targettype TARGET_TYPE_WARD                              = ConvertTargetType(25)
-		constant targettype TARGET_TYPE_ANCIENT                           = ConvertTargetType(26)
-		constant targettype TARGET_TYPE_NONANCIENT                        = ConvertTargetType(27)
-		constant targettype TARGET_TYPE_FRIEND                            = ConvertTargetType(28)
-		constant targettype TARGET_TYPE_BRIDGE                            = ConvertTargetType(29)
-		constant targettype TARGET_TYPE_DECORATION                        = ConvertTargetType(30)
-		constant targettype TARGET_TYPE_NON_MAGIC_IMMUNE                  = ConvertTargetType(31)
-		constant targettype TARGET_TYPE_NON_ETHEREAL                      = ConvertTargetType(32)
 		
 		constant worldeditordatatype WORLD_EDITOR_DATA_TYPE_UNITS                    = ConvertWorldEditorDataType(0)
 		constant worldeditordatatype WORLD_EDITOR_DATA_TYPE_ITEMS                    = ConvertWorldEditorDataType(1)
@@ -337,6 +401,7 @@ library AbilitiesCommonLegacy
 		native GetGameObjectFieldAsReal takes gameobject editorData, string key, integer index returns real
 		native GetGameObjectFieldAsBoolean takes gameobject editorData, string key, integer index returns boolean   
 		native GetGameObjectFieldAsID takes gameobject editorData, string key, integer index returns integer
+		native GetGameObjectFieldAsStringList takes gameobject editorData, string key returns stringlist
 
 		native GetGameObjectById takes worldeditordatatype whichDataType, integer aliasId returns gameobject
 
@@ -1042,7 +1107,7 @@ endlibrary
 //=====================================================
 // OrderButton API                                        
 //=====================================================
-library OrderButtonAPI requires BehaviorAPI
+library OrderButtonAPI requires BehaviorAPI, IconUI
 	type orderbutton extends handle
 	type orderbuttontype extends handle
 
@@ -1888,8 +1953,64 @@ library GenericAbilityBaseTypes requires AbilityAPI, BehaviorAPI
 	endscope
 endlibrary
 
-library AbilitySpellBaseTypes requires GenericAbilityBaseTypes
-	struct AbilitySpellBase
+library AbilityFieldDefaults
+	globals
+		constant string ABILITY_FIELD_CODE                              = "code"
+		constant string ABILITY_FIELD_DATA_A                            = "DataA"
+		constant string ABILITY_FIELD_DATA_B                            = "DataB"
+		constant string ABILITY_FIELD_DATA_C                            = "DataC"
+		constant string ABILITY_FIELD_DATA_D                            = "DataD"
+		constant string ABILITY_FIELD_DATA_E                            = "DataE"
+		constant string ABILITY_FIELD_DATA_F                            = "DataF"
+		constant string ABILITY_FIELD_DATA_G                            = "DataG"
+		constant string ABILITY_FIELD_DATA_H                            = "DataH"
+		constant string ABILITY_FIELD_UNIT_ID                           = "UnitID"
+		constant string ABILITY_FIELD_TARGETS_ALLOWED                   = "targs"
+		constant string ABILITY_FIELD_LEVELS                            = "levels"
+		constant string ABILITY_FIELD_CAST_RANGE                        = "Rng"
+		constant string ABILITY_FIELD_DURATION                          = "Dur"
+		constant string ABILITY_FIELD_HERO_DURATION                     = "HeroDur"
+		constant string ABILITY_FIELD_AREA                              = "Area"
+		constant string ABILITY_FIELD_MANA_COST                         = "Cost"
+		constant string ABILITY_FIELD_COOLDOWN                          = "Cool"
+		constant string ABILITY_FIELD_CASTING_TIME                      = "Cast"
+		constant string ABILITY_FIELD_AREA_OF_EFFECT                    = "Area"
+		constant string ABILITY_FIELD_BUFF                              = "BuffID"
+		constant string ABILITY_FIELD_EFFECT                            = "EfctID"
+		constant string ABILITY_FIELD_ANIM_NAMES                        = "Animnames"
+		constant string ABILITY_FIELD_PROJECTILE_SPEED                  = "Missilespeed"
+		constant string ABILITY_FIELD_PROJECTILE_HOMING_ENABLED         = "MissileHoming"
+		constant string ABILITY_FIELD_LIGHTNING                         = "LightningEffect"
+		constant string ABILITY_FIELD_REQUIRED_LEVEL                    = "reqLevel"
+		constant string ABILITY_FIELD_REQUIRED_LEVEL_SKIP               = "levelSkip"
+		constant string ABILITY_FIELD_CHECK_DEPENDENCIES                = "checkDep"
+		constant string ABILITY_FIELD_REQUIREMENTS                      = "Requires"
+		constant string ABILITY_FIELD_REQUIREMENT_LEVELS                = "Requiresamount"
+	endglobals
+endlibrary
+
+library AbilitySpellBaseTypes requires GenericAbilityBaseTypes, AbilityFieldDefaults
+	module AbilitySpellBase
+		integer manaCost
+		real castRange
+		real cooldown
+		real castingTime
+		real duration
+		real heroDuration
+		targettypes targetsAllowed
 		
-	endstruct
+		
+		method innerPopulate takes gameobject editorData, integer level returns nothing
+			this.manaCost = GetGameObjectFieldAsInteger(editorData, ABILITY_FIELD_MANA_COST + I2S(level), 0)
+			this.targetsAllowed = ParseTargetTypes(GetGameObjectFieldAsStringList(editorData, ABILITY_FIELD_TARGETS_ALLOWED + I2S(level)))
+		endmethod
+
+		method checkTarget takes unit caster, ability sourceAbility, unit target returns nothing
+			if ( target.canBeTargetedBy(caster, this.targetsAllowed) ) then
+				call PassTargetCheck()
+			else
+				call FailTargetCheck("Nofood")
+			endif	
+		endmethod
+	endmodule
 endlibrary

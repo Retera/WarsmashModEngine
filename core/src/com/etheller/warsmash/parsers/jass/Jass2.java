@@ -42,6 +42,7 @@ import com.etheller.interpreter.ast.value.IntegerJassValue;
 import com.etheller.interpreter.ast.value.JassType;
 import com.etheller.interpreter.ast.value.JassValue;
 import com.etheller.interpreter.ast.value.JassValueVisitor;
+import com.etheller.interpreter.ast.value.PrimitiveJassType;
 import com.etheller.interpreter.ast.value.RealJassValue;
 import com.etheller.interpreter.ast.value.StaticStructTypeJassValue;
 import com.etheller.interpreter.ast.value.StringJassValue;
@@ -53,6 +54,7 @@ import com.etheller.interpreter.ast.value.visitor.ObjectJassValueVisitor;
 import com.etheller.interpreter.ast.value.visitor.RealJassValueVisitor;
 import com.etheller.interpreter.ast.value.visitor.StaticStructTypeJassValueVisitor;
 import com.etheller.interpreter.ast.value.visitor.StringJassValueVisitor;
+import com.etheller.interpreter.ast.value.visitor.WrappedStringJassValueVisitor;
 import com.etheller.warsmash.datasources.DataSource;
 import com.etheller.warsmash.parsers.fdf.GameSkin;
 import com.etheller.warsmash.parsers.fdf.GameUI;
@@ -69,6 +71,7 @@ import com.etheller.warsmash.parsers.jass.triggers.BoolExprNot;
 import com.etheller.warsmash.parsers.jass.triggers.BoolExprOr;
 import com.etheller.warsmash.parsers.jass.triggers.HandleList;
 import com.etheller.warsmash.parsers.jass.triggers.IntExpr;
+import com.etheller.warsmash.parsers.jass.triggers.StringList;
 import com.etheller.warsmash.parsers.jass.triggers.TriggerAction;
 import com.etheller.warsmash.parsers.jass.triggers.TriggerCondition;
 import com.etheller.warsmash.parsers.jass.triggers.UnitGroup;
@@ -618,6 +621,7 @@ public class Jass2 {
 			// Warsmash Ability API 2 "Ability Builder ported to Jass"
 			final HandleJassType abilitytypeleveldataType = globals.registerHandleType("abilitytypeleveldata");
 			final HandleJassType targettypeType = globals.registerHandleType("targettype");
+			final HandleJassType targettypesType = globals.registerHandleType("targettypes");
 			final HandleJassType texttagconfigtypeType = globals.registerHandleType("texttagconfigtype");
 			final HandleJassType activeabilityType = globals.registerHandleType("activeability");
 			final HandleJassType localstoreType = globals.registerHandleType("localstore");
@@ -642,6 +646,7 @@ public class Jass2 {
 			final HandleJassType handlelistType = globals.registerHandleType("handlelist");
 			final HandleJassType behaviorcategoryType = globals.registerHandleType("behaviorcategory");
 			final HandleJassType abilitycategoryType = globals.registerHandleType("abilitycategory");
+			final HandleJassType stringlistType = globals.registerHandleType("stringlist");
 
 			registerTypingNatives(jassProgramVisitor, raceType, alliancetypeType, racepreferenceType, igamestateType,
 					fgamestateType, playerstateType, playerscoreType, playergameresultType, unitstateType,
@@ -5699,6 +5704,46 @@ public class Jass2 {
 						return BooleanJassValue.FALSE;
 					});
 
+			jassProgramVisitor.getJassNativeManager().createNative("CreateStringList",
+					(arguments, globalScope, triggerScope) -> {
+						return new HandleJassValue(stringlistType,
+								new StringList(this.simulation.getHandleIdAllocator().createId()));
+					});
+			jassProgramVisitor.getJassNativeManager().createNative("StringListAdd",
+					(arguments, globalScope, triggerScope) -> {
+						final StringList whichList = nullable(arguments, 0, ObjectJassValueVisitor.getInstance());
+						final StringJassValue x = nullable(arguments, 1, WrappedStringJassValueVisitor.getInstance());
+						if (whichList != null) {
+							whichList.add(x);
+						}
+						return null;
+					});
+			jassProgramVisitor.getJassNativeManager().createNative("StringListRemove",
+					(arguments, globalScope, triggerScope) -> {
+						final StringList whichList = nullable(arguments, 0, ObjectJassValueVisitor.getInstance());
+						final StringJassValue x = nullable(arguments, 1, WrappedStringJassValueVisitor.getInstance());
+						if (whichList != null) {
+							return BooleanJassValue.of(whichList.remove(x));
+						}
+						return BooleanJassValue.FALSE;
+					});
+			jassProgramVisitor.getJassNativeManager().createNative("StringListSize",
+					(arguments, globalScope, triggerScope) -> {
+						final StringList whichList = nullable(arguments, 0, ObjectJassValueVisitor.getInstance());
+						if (whichList != null) {
+							return IntegerJassValue.of(whichList.size());
+						}
+						return IntegerJassValue.ZERO;
+					});
+			jassProgramVisitor.getJassNativeManager().createNative("StringListGet",
+					(arguments, globalScope, triggerScope) -> {
+						final StringList whichList = nullable(arguments, 0, ObjectJassValueVisitor.getInstance());
+						final int x = nullable(arguments, 1, IntegerJassValueVisitor.getInstance());
+						if (whichList != null) {
+							return whichList.get(x);
+						}
+						return PrimitiveJassType.STRING.getNullValue();
+					});
 			// Script file natives
 			jassProgramVisitor.getJassNativeManager().createNative("LoadScriptFile",
 					(arguments, globalScope, triggerScope) -> {
@@ -7537,6 +7582,37 @@ public class Jass2 {
 						}
 						return JassType.INTEGER.getNullValue();
 					});
+			jassProgramVisitor.getJassNativeManager().createNative("GetGameObjectFieldAsStringList",
+					(arguments, globalScope, triggerScope) -> {
+						final GameObject gameObject = nullable(arguments, 0, ObjectJassValueVisitor.getInstance());
+						final String key = nullable(arguments, 1, StringJassValueVisitor.getInstance());
+						if (gameObject != null) {
+							final List<String> javaValueList = gameObject.getFieldAsList(key);
+							if (javaValueList != null) {
+								final StringList stringList = new StringList(
+										this.simulation.getHandleIdAllocator().createId(), javaValueList);
+								return new HandleJassValue(stringlistType, stringList);
+							}
+						}
+						return stringlistType.getNullValue();
+					});
+			jassProgramVisitor.getJassNativeManager().createNative("ParseTargetTypes",
+					(arguments, globalScope, triggerScope) -> {
+						final StringList stringList = nullable(arguments, 0, ObjectJassValueVisitor.getInstance());
+						if (stringList != null) {
+							return new HandleJassValue(targettypesType,
+									CTargetType.parseTargetTypeSet(stringList.asJavaValue()));
+						}
+						return targettypesType.getNullValue();
+					});
+			jassProgramVisitor.getJassNativeManager().createNative("ParseTargetType",
+					(arguments, globalScope, triggerScope) -> {
+						final String key = nullable(arguments, 0, StringJassValueVisitor.getInstance());
+						if (key != null) {
+							return new HandleJassValue(targettypeType, CTargetType.parseTargetType(key));
+						}
+						return targettypeType.getNullValue();
+					});
 
 			// unit api
 			jassProgramVisitor.getJassNativeManager().createNative("CheckUnitForAbilityEffectReaction",
@@ -7911,6 +7987,33 @@ public class Jass2 {
 						final ABTimer timer = nullable(arguments, 0, ObjectJassValueVisitor.getInstance());
 						timer.start(this.simulation);
 						return null;
+					});
+
+			// TargetTypes
+			jassProgramVisitor.getJassNativeManager().createNative("CreateTargetTypes",
+					(arguments, globalScope, triggerScope) -> {
+						return new HandleJassValue(targettypesType, EnumSet.noneOf(CTargetType.class));
+					});
+			jassProgramVisitor.getJassNativeManager().createNative("TargetTypesAdd",
+					(arguments, globalScope, triggerScope) -> {
+						final EnumSet<CTargetType> whichSet = arguments.get(0)
+								.visit(ObjectJassValueVisitor.getInstance());
+						final CTargetType whichType = arguments.get(1).visit(ObjectJassValueVisitor.getInstance());
+						return BooleanJassValue.of(whichSet.add(whichType));
+					});
+			jassProgramVisitor.getJassNativeManager().createNative("TargetTypesRemove",
+					(arguments, globalScope, triggerScope) -> {
+						final EnumSet<CTargetType> whichSet = arguments.get(0)
+								.visit(ObjectJassValueVisitor.getInstance());
+						final CTargetType whichType = arguments.get(1).visit(ObjectJassValueVisitor.getInstance());
+						return BooleanJassValue.of(whichSet.remove(whichType));
+					});
+			jassProgramVisitor.getJassNativeManager().createNative("TargetTypesContains",
+					(arguments, globalScope, triggerScope) -> {
+						final EnumSet<CTargetType> whichSet = arguments.get(0)
+								.visit(ObjectJassValueVisitor.getInstance());
+						final CTargetType whichType = arguments.get(1).visit(ObjectJassValueVisitor.getInstance());
+						return BooleanJassValue.of(whichSet.contains(whichType));
 					});
 
 			jassProgramVisitor.getJassNativeManager().createNative("WarsmashGetAbilityClassName",

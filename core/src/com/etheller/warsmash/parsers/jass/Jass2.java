@@ -228,6 +228,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.BooleanAbility
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.BooleanAbilityTargetCheckReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.CHashtable;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.CWidgetAbilityTargetCheckReceiver;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.ExternStringMsgTargetCheckReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.PointAbilityTargetCheckReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.ResourceType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.SimulationRenderComponentLightning;
@@ -7658,6 +7659,25 @@ public class Jass2 {
 						}
 						return JassType.BOOLEAN.getNullValue();
 					});
+			jassProgramVisitor.getJassNativeManager().createNative("GetUnitTargetError",
+					(arguments, globalScope, triggerScope) -> {
+						final CUnit targetUnit = nullable(arguments, 0, ObjectJassValueVisitor.getInstance());
+						final CUnit casterUnit = nullable(arguments, 1, ObjectJassValueVisitor.getInstance());
+						final EnumSet<CTargetType> targetsAllowed = nullable(arguments, 2,
+								ObjectJassValueVisitor.getInstance());
+						final boolean targetedEffect = arguments.get(3).visit(BooleanJassValueVisitor.getInstance());
+						if (targetUnit != null) {
+							if (targetsAllowed == null) {
+								return JassType.STRING.getNullValue();
+							}
+							final ExternStringMsgTargetCheckReceiver<CWidget> externStringMsgReceiver = ExternStringMsgTargetCheckReceiver
+									.<CWidget>getInstance().reset();
+							targetUnit.canBeTargetedBy(this.simulation, casterUnit, targetedEffect, targetsAllowed,
+									externStringMsgReceiver);
+							return StringJassValue.of(externStringMsgReceiver.getExternStringKey());
+						}
+						return JassType.STRING.getNullValue();
+					});
 			jassProgramVisitor.getJassNativeManager().createNative("IsValidTarget",
 					(arguments, globalScope, triggerScope) -> {
 						final CWidget targetUnit = nullable(arguments, 0, ObjectJassValueVisitor.getInstance());
@@ -7676,6 +7696,25 @@ public class Jass2 {
 									targetsAllowed, BooleanAbilityTargetCheckReceiver.<CWidget>getInstance().reset()));
 						}
 						return JassType.BOOLEAN.getNullValue();
+					});
+			jassProgramVisitor.getJassNativeManager().createNative("GetTargetError",
+					(arguments, globalScope, triggerScope) -> {
+						final CWidget targetUnit = nullable(arguments, 0, ObjectJassValueVisitor.getInstance());
+						final CUnit casterUnit = nullable(arguments, 1, ObjectJassValueVisitor.getInstance());
+						final EnumSet<CTargetType> targetsAllowed = nullable(arguments, 2,
+								ObjectJassValueVisitor.getInstance());
+						if (targetUnit != null) {
+							if (targetsAllowed == null) {
+								return JassType.STRING.getNullValue();
+							}
+
+							final ExternStringMsgTargetCheckReceiver<CWidget> externStringMsgReceiver = ExternStringMsgTargetCheckReceiver
+									.<CWidget>getInstance().reset();
+							targetUnit.canBeTargetedBy(this.simulation, casterUnit, targetsAllowed,
+									externStringMsgReceiver);
+							return StringJassValue.of(externStringMsgReceiver.getExternStringKey());
+						}
+						return JassType.STRING.getNullValue();
 					});
 			jassProgramVisitor.getJassNativeManager().createNative("UnitAddDefenseBonus",
 					(arguments, globalScope, triggerScope) -> {

@@ -721,10 +721,17 @@ library AbilitiesCommonLegacy requires TargetTypesAPI
 
 	// A targeted effect can't hit an invisible unit who would otherwise be a valid target, but an AoE can
 	native IsUnitValidTarget takes unit target, unit caster, abilitytypeleveldata abilData, integer level, boolean targetedEffect returns boolean
+	// Below, "GetUnitTargetError" returns a COMMAND_STRING_ERROR_KEY, or null if the target is targetable
+	// by the caster when using the given target types. Also better than "IsUnitValidTarget"
+	// because it takes arbitrary targettypes filter object -- so it does not require
+	// ability type level data.
+	native GetUnitTargetError takes unit target, unit caster, targettypes whichTargetTypes, boolean targetedEffect returns string
 	// the idea that all non-unit widgets are visible is trivially disproven by the counter example of fog of war,
 	// so I'm guessing we will end up wanting to replace both of these with one "is valid target" native that takes into account
 	// whether it's a targeted effect for both units and nonunits
 	native IsValidTarget takes widget target, unit caster, abilitytypeleveldata abilData, integer level returns boolean
+	// Below, "GetTargetError" is the widget version of "GetUnitTargetError"
+	native GetTargetError takes widget target, unit caster, targettypes whichTargetTypes returns string
 
 	// NOTE: Percents dont work in the ability builder json "AddDefenseBonus"
 	// according to a comment, so they might not be working

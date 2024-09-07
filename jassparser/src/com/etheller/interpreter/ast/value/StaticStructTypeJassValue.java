@@ -1,10 +1,50 @@
 package com.etheller.interpreter.ast.value;
 
-public class StaticStructTypeJassValue implements JassValue, JassType {
-	private final StructJassType staticType;
+import java.util.List;
 
-	public StaticStructTypeJassValue(final StructJassType staticType) {
+import com.etheller.interpreter.ast.struct.JassStructMemberType;
+
+public class StaticStructTypeJassValue extends BaseStructJassValue
+		implements JassValue, JassType, StructJassTypeInterface {
+	private final StructJassType staticType;
+	private final List<JassStructMemberType> staticMemberTypes;
+
+	public StaticStructTypeJassValue(final StructJassType staticType,
+			final List<JassStructMemberType> staticMemberTypes) {
+		super(staticMemberTypes);
 		this.staticType = staticType;
+		this.staticMemberTypes = staticMemberTypes;
+	}
+
+	@Override
+	public JassStructMemberType getMemberByName(final String name) {
+		for (final JassStructMemberType staticMemberType : this.staticMemberTypes) {
+			if (staticMemberType.getId().equals(name)) {
+				return staticMemberType;
+			}
+		}
+		return null;
+	}
+
+	@Override
+	public int getMemberIndexInefficientlyByName(final String name) {
+		for (int index = 0; index < this.staticMemberTypes.size(); index++) {
+			if (this.staticMemberTypes.get(index).getId().equals(name)) {
+				return index;
+			}
+		}
+		throw new IllegalArgumentException(
+				"Type '" + this.staticType.getName() + "' has no static member '" + name + "'");
+	}
+
+	@Override
+	public int tryGetMemberIndexInefficientlyByName(final String name) {
+		for (int index = 0; index < this.staticMemberTypes.size(); index++) {
+			if (this.staticMemberTypes.get(index).getId().equals(name)) {
+				return index;
+			}
+		}
+		return -1;
 	}
 
 	@Override

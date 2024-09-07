@@ -56,6 +56,7 @@ import com.etheller.interpreter.ast.value.JassType;
 import com.etheller.interpreter.ast.value.JassValue;
 import com.etheller.interpreter.ast.value.StaticStructTypeJassValue;
 import com.etheller.interpreter.ast.value.StructJassType;
+import com.etheller.interpreter.ast.value.StructJassTypeInterface;
 import com.etheller.interpreter.ast.value.visitor.ArrayPrimitiveTypeVisitor;
 import com.etheller.interpreter.ast.value.visitor.ArrayTypeVisitor;
 import com.etheller.interpreter.ast.value.visitor.StaticStructTypeJassTypeVisitor;
@@ -321,12 +322,19 @@ public class InstructionAppendingJassStatementVisitor
 		final JassType expressionLookupType = structExpression.accept(JassTypeExpressionVisitor.getInstance()
 				.reset(this.globalScope, this.nameToLocalType, this.enclosingStructType));
 		final StructJassType structJassType = expressionLookupType.visit(StructJassTypeVisitor.getInstance());
+		StructJassTypeInterface typeInterface;
+		if (structJassType == null) {
+			typeInterface = expressionLookupType.visit(StaticStructTypeJassTypeVisitor.getInstance());
+		}
+		else {
+			typeInterface = structJassType;
+		}
+		final JassStructMemberType memberType = typeInterface.getMemberByName(identifier);
+		checkMemberAccess(identifier, typeInterface, memberType);
 
-		final JassStructMemberType memberType = structJassType.getMemberByName(identifier);
-		checkMemberAccess(identifier, structJassType, memberType);
-
-		final int memberIndex = structJassType.getMemberIndexInefficientlyByName(identifier);
+		final int memberIndex = typeInterface.getMemberIndexInefficientlyByName(identifier);
 		this.instructions.add(new SetStructMemberInstruction(memberIndex));
+
 		return null;
 	}
 
@@ -393,7 +401,7 @@ public class InstructionAppendingJassStatementVisitor
 		}
 	}
 
-	private void checkMemberAccess(final String identifier, final StructJassType structJassType,
+	private void checkMemberAccess(final String identifier, final StructJassTypeInterface structJassType,
 			final JassStructMemberType memberType) {
 		if (memberType.getQualifiers().contains(JassQualifier.PRIVATE)) {
 			// ensure that caller is the same as enclosing type
@@ -658,10 +666,17 @@ public class InstructionAppendingJassStatementVisitor
 		final JassType expressionLookupType = expression.getStructExpression().accept(JassTypeExpressionVisitor
 				.getInstance().reset(this.globalScope, this.nameToLocalType, this.enclosingStructType));
 		final StructJassType structJassType = expressionLookupType.visit(StructJassTypeVisitor.getInstance());
+		StructJassTypeInterface typeInterface;
+		if (structJassType == null) {
+			typeInterface = expressionLookupType.visit(StaticStructTypeJassTypeVisitor.getInstance());
+		}
+		else {
+			typeInterface = structJassType;
+		}
 		final String identifier = expression.getIdentifier();
-		final JassStructMemberType memberType = structJassType.getMemberByName(identifier);
-		checkMemberAccess(identifier, structJassType, memberType);
-		final int memberIndex = structJassType.getMemberIndexInefficientlyByName(identifier);
+		final JassStructMemberType memberType = typeInterface.getMemberByName(identifier);
+		checkMemberAccess(identifier, typeInterface, memberType);
+		final int memberIndex = typeInterface.getMemberIndexInefficientlyByName(identifier);
 		this.instructions.add(new StructMemberReferenceInstruction(memberIndex));
 		return null;
 	}

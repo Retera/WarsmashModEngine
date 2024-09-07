@@ -293,15 +293,23 @@ public final class GlobalScope {
 
 		final StructJassType structJassType = new StructJassType(structSuperTypeToken.resolve(scope), structName);
 		this.types.put(structName, structJassType);
-		final StaticStructTypeJassValue staticTypeInfo = new StaticStructTypeJassValue(structJassType);
-		createGlobal(structName, staticTypeInfo);
 
 		final List<JassStructMemberType> memberTypes = new ArrayList<>();
+		final List<JassStructMemberType> staticMemberTypes = new ArrayList<>();
 		for (final JassStructMemberTypeDefinition memberTypeDefinition : memberTypeDefinitions) {
 			final JassType resolvedType = memberTypeDefinition.getType().resolve(scope);
-			memberTypes.add(new JassStructMemberType(memberTypeDefinition.getQualifiers(), resolvedType,
-					memberTypeDefinition.getId(), memberTypeDefinition.getDefaultValueExpression()));
+			if (memberTypeDefinition.getQualifiers().contains(JassQualifier.STATIC)) {
+				staticMemberTypes.add(new JassStructMemberType(memberTypeDefinition.getQualifiers(), resolvedType,
+						memberTypeDefinition.getId(), memberTypeDefinition.getDefaultValueExpression()));
+			}
+			else {
+				memberTypes.add(new JassStructMemberType(memberTypeDefinition.getQualifiers(), resolvedType,
+						memberTypeDefinition.getId(), memberTypeDefinition.getDefaultValueExpression()));
+			}
 		}
+		final StaticStructTypeJassValue staticTypeInfo = new StaticStructTypeJassValue(structJassType,
+				staticMemberTypes);
+		createGlobal(structName, staticTypeInfo);
 		final Set<String> modulesImplementedByStruct = new HashSet<>();
 		final List<JassMethodDefinitionBlock> implementedMethodDefinitions = new ArrayList<>(methodDefinitions);
 		implementModules(modulesImplementedByStruct, implementModuleDefinitions, memberTypes,

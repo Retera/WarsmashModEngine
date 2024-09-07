@@ -69,6 +69,7 @@ import com.etheller.warsmash.parsers.jass.triggers.BoolExprCondition;
 import com.etheller.warsmash.parsers.jass.triggers.BoolExprFilter;
 import com.etheller.warsmash.parsers.jass.triggers.BoolExprNot;
 import com.etheller.warsmash.parsers.jass.triggers.BoolExprOr;
+import com.etheller.warsmash.parsers.jass.triggers.EnumSetHandle;
 import com.etheller.warsmash.parsers.jass.triggers.HandleList;
 import com.etheller.warsmash.parsers.jass.triggers.IntExpr;
 import com.etheller.warsmash.parsers.jass.triggers.StringList;
@@ -83,6 +84,9 @@ import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.util.WarsmashConstants;
 import com.etheller.warsmash.viewer5.Bounds;
 import com.etheller.warsmash.viewer5.Scene;
+import com.etheller.warsmash.viewer5.handlers.mdx.Sequence;
+import com.etheller.warsmash.viewer5.handlers.w3x.AnimationTokens.PrimaryTag;
+import com.etheller.warsmash.viewer5.handlers.w3x.AnimationTokens.SecondaryTag;
 import com.etheller.warsmash.viewer5.handlers.w3x.TextTag;
 import com.etheller.warsmash.viewer5.handlers.w3x.UnitSound;
 import com.etheller.warsmash.viewer5.handlers.w3x.War3MapViewer;
@@ -648,6 +652,11 @@ public class Jass2 {
 			final HandleJassType behaviorcategoryType = globals.registerHandleType("behaviorcategory");
 			final HandleJassType abilitycategoryType = globals.registerHandleType("abilitycategory");
 			final HandleJassType stringlistType = globals.registerHandleType("stringlist");
+
+			final HandleJassType primarytagType = globals.registerHandleType("primarytag");
+			final HandleJassType primarytagsType = globals.registerHandleType("primarytags");
+			final HandleJassType secondarytagType = globals.registerHandleType("secondarytag");
+			final HandleJassType secondarytagsType = globals.registerHandleType("secondarytags");
 
 			registerTypingNatives(jassProgramVisitor, raceType, alliancetypeType, racepreferenceType, igamestateType,
 					fgamestateType, playerstateType, playerscoreType, playergameresultType, unitstateType,
@@ -6728,6 +6737,23 @@ public class Jass2 {
 						ability.setUniversal(flag);
 						return null;
 					});
+
+			jassProgramVisitor.getJassNativeManager().createNative("IsAbilityPermanent",
+					(arguments, globalScope, triggerScope) -> {
+						final CAbility ability = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());
+						return BooleanJassValue.of(ability.isPermanent());
+					});
+			jassProgramVisitor.getJassNativeManager().createNative("IsAbilityPhysical",
+					(arguments, globalScope, triggerScope) -> {
+						final CAbilityJass ability = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());
+						return BooleanJassValue.of(ability.isPhysical());
+					});
+			jassProgramVisitor.getJassNativeManager().createNative("IsAbilityUniversal",
+					(arguments, globalScope, triggerScope) -> {
+						final CAbilityJass ability = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());
+						return BooleanJassValue.of(ability.isUniversal());
+					});
+
 			jassProgramVisitor.getJassNativeManager().createNative("SetAbilityEnabledWhileUpgrading",
 					(arguments, globalScope, triggerScope) -> {
 						final CAbilityJass ability = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());
@@ -6836,6 +6862,27 @@ public class Jass2 {
 							abilityBuilderAbility.startCooldown(this.simulation, unit);
 						}
 						return null;
+					});
+
+			final JassFunction getUnitAbilityCooldownRemaining = (arguments, globalScope, triggerScope) -> {
+				final CUnit theUnit = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());
+				final int aliasIdRawcode = arguments.get(1).visit(IntegerJassValueVisitor.getInstance());
+				final War3ID aliasId = new War3ID(aliasIdRawcode);
+				return RealJassValue.of(theUnit.getCooldownRemainingTicks(this.simulation, aliasId)
+						* WarsmashConstants.SIMULATION_STEP_TIME);
+			};
+			jassProgramVisitor.getJassNativeManager().createNative("GetUnitAbilityCooldownRemaining",
+					getUnitAbilityCooldownRemaining);
+			jassProgramVisitor.getJassNativeManager().createNative("BlzGetUnitAbilityCooldownRemaining",
+					getUnitAbilityCooldownRemaining);
+
+			jassProgramVisitor.getJassNativeManager().createNative("GetUnitAbilityCooldownLengthDisplay",
+					(arguments, globalScope, triggerScope) -> {
+						final CUnit theUnit = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());
+						final int aliasIdRawcode = arguments.get(1).visit(IntegerJassValueVisitor.getInstance());
+						final War3ID aliasId = new War3ID(aliasIdRawcode);
+						return RealJassValue.of(theUnit.getCooldownLengthDisplayTicks(this.simulation, aliasId)
+								* WarsmashConstants.SIMULATION_STEP_TIME);
 					});
 
 			jassProgramVisitor.getJassNativeManager().createNative("GetTriggerCastId",
@@ -7597,6 +7644,15 @@ public class Jass2 {
 						}
 						return stringlistType.getNullValue();
 					});
+			jassProgramVisitor.getJassNativeManager().createNative("GetGameObjectField",
+					(arguments, globalScope, triggerScope) -> {
+						final GameObject gameObject = nullable(arguments, 0, ObjectJassValueVisitor.getInstance());
+						final String key = nullable(arguments, 1, StringJassValueVisitor.getInstance());
+						if (gameObject != null) {
+							return new StringJassValue(gameObject.getField(key));
+						}
+						return JassType.STRING.getNullValue();
+					});
 			jassProgramVisitor.getJassNativeManager().createNative("ParseTargetTypes",
 					(arguments, globalScope, triggerScope) -> {
 						final StringList stringList = nullable(arguments, 0, ObjectJassValueVisitor.getInstance());
@@ -8055,6 +8111,122 @@ public class Jass2 {
 						return BooleanJassValue.of(whichSet.contains(whichType));
 					});
 
+			// PrimaryTags
+			jassProgramVisitor.getJassNativeManager().createNative("ConvertPrimaryTag",
+					(arguments, globalScope, triggerScope) -> {
+						final int i = arguments.get(0).visit(IntegerJassValueVisitor.getInstance());
+						return new HandleJassValue(primarytagType, PrimaryTag.VALUES[i]);
+					});
+			jassProgramVisitor.getJassNativeManager().createNative("CreatePrimaryTags",
+					(arguments, globalScope, triggerScope) -> {
+						return new HandleJassValue(primarytagsType, new EnumSetHandle<>(
+								this.simulation.getHandleIdAllocator().createId(), EnumSet.noneOf(PrimaryTag.class)));
+					});
+			jassProgramVisitor.getJassNativeManager().createNative("PrimaryTagsAdd",
+					(arguments, globalScope, triggerScope) -> {
+						final EnumSetHandle<PrimaryTag> whichSet = arguments.get(0)
+								.visit(ObjectJassValueVisitor.getInstance());
+						final PrimaryTag whichType = arguments.get(1).visit(ObjectJassValueVisitor.getInstance());
+						return BooleanJassValue.of(whichSet.getEnumSet().add(whichType));
+					});
+			jassProgramVisitor.getJassNativeManager().createNative("PrimaryTagsRemove",
+					(arguments, globalScope, triggerScope) -> {
+						final EnumSetHandle<PrimaryTag> whichSet = arguments.get(0)
+								.visit(ObjectJassValueVisitor.getInstance());
+						final PrimaryTag whichType = arguments.get(1).visit(ObjectJassValueVisitor.getInstance());
+						return BooleanJassValue.of(whichSet.getEnumSet().remove(whichType));
+					});
+			jassProgramVisitor.getJassNativeManager().createNative("PrimaryTagsContains",
+					(arguments, globalScope, triggerScope) -> {
+						final EnumSetHandle<PrimaryTag> whichSet = arguments.get(0)
+								.visit(ObjectJassValueVisitor.getInstance());
+						final PrimaryTag whichType = arguments.get(1).visit(ObjectJassValueVisitor.getInstance());
+						return BooleanJassValue.of(whichSet.getEnumSet().contains(whichType));
+					});
+			jassProgramVisitor.getJassNativeManager().createNative("PrimaryTagsSize",
+					(arguments, globalScope, triggerScope) -> {
+						final EnumSetHandle<PrimaryTag> whichSet = arguments.get(0)
+								.visit(ObjectJassValueVisitor.getInstance());
+						return IntegerJassValue.of(whichSet.getEnumSet().size());
+					});
+			jassProgramVisitor.getJassNativeManager().createNative("PrimaryTagsAny",
+					(arguments, globalScope, triggerScope) -> {
+						final EnumSetHandle<PrimaryTag> whichSet = arguments.get(0)
+								.visit(ObjectJassValueVisitor.getInstance());
+						return new HandleJassValue(primarytagType, Sequence.any(whichSet.getEnumSet()));
+					});
+			jassProgramVisitor.getJassNativeManager().createNative("DestroyPrimaryTags",
+					(arguments, globalScope, triggerScope) -> {
+						return null;
+					});
+			primarytagsType.setConstructorNative(new HandleJassTypeConstructor("CreatePrimaryTags"));
+			primarytagsType.setDestructorNative(new HandleJassTypeConstructor("DestroyPrimaryTags"));
+
+			// SecondaryTags
+			jassProgramVisitor.getJassNativeManager().createNative("ConvertSecondaryTag",
+					(arguments, globalScope, triggerScope) -> {
+						final int i = arguments.get(0).visit(IntegerJassValueVisitor.getInstance());
+						return new HandleJassValue(secondarytagType, SecondaryTag.VALUES[i]);
+					});
+			jassProgramVisitor.getJassNativeManager().createNative("CreateSecondaryTags",
+					(arguments, globalScope, triggerScope) -> {
+						return new HandleJassValue(secondarytagsType, new EnumSetHandle<>(
+								this.simulation.getHandleIdAllocator().createId(), EnumSet.noneOf(SecondaryTag.class)));
+					});
+			jassProgramVisitor.getJassNativeManager().createNative("SecondaryTagsAdd",
+					(arguments, globalScope, triggerScope) -> {
+						final EnumSetHandle<SecondaryTag> whichSet = arguments.get(0)
+								.visit(ObjectJassValueVisitor.getInstance());
+						final SecondaryTag whichType = arguments.get(1).visit(ObjectJassValueVisitor.getInstance());
+						return BooleanJassValue.of(whichSet.getEnumSet().add(whichType));
+					});
+			jassProgramVisitor.getJassNativeManager().createNative("SecondaryTagsRemove",
+					(arguments, globalScope, triggerScope) -> {
+						final EnumSetHandle<SecondaryTag> whichSet = arguments.get(0)
+								.visit(ObjectJassValueVisitor.getInstance());
+						final SecondaryTag whichType = arguments.get(1).visit(ObjectJassValueVisitor.getInstance());
+						return BooleanJassValue.of(whichSet.getEnumSet().remove(whichType));
+					});
+			jassProgramVisitor.getJassNativeManager().createNative("SecondaryTagsContains",
+					(arguments, globalScope, triggerScope) -> {
+						final EnumSetHandle<SecondaryTag> whichSet = arguments.get(0)
+								.visit(ObjectJassValueVisitor.getInstance());
+						final SecondaryTag whichType = arguments.get(1).visit(ObjectJassValueVisitor.getInstance());
+						return BooleanJassValue.of(whichSet.getEnumSet().contains(whichType));
+					});
+			jassProgramVisitor.getJassNativeManager().createNative("SecondaryTagsSize",
+					(arguments, globalScope, triggerScope) -> {
+						final EnumSetHandle<SecondaryTag> whichSet = arguments.get(0)
+								.visit(ObjectJassValueVisitor.getInstance());
+						return IntegerJassValue.of(whichSet.getEnumSet().size());
+					});
+			jassProgramVisitor.getJassNativeManager().createNative("SecondaryTagsAny",
+					(arguments, globalScope, triggerScope) -> {
+						final EnumSetHandle<SecondaryTag> whichSet = arguments.get(0)
+								.visit(ObjectJassValueVisitor.getInstance());
+						return new HandleJassValue(secondarytagType, Sequence.anySecondary(whichSet.getEnumSet()));
+					});
+			jassProgramVisitor.getJassNativeManager().createNative("DestroySecondaryTags",
+					(arguments, globalScope, triggerScope) -> {
+						return null;
+					});
+			secondarytagsType.setConstructorNative(new HandleJassTypeConstructor("CreateSecondaryTags"));
+			secondarytagsType.setDestructorNative(new HandleJassTypeConstructor("DestroySecondaryTags"));
+
+			jassProgramVisitor.getJassNativeManager().createNative("PopulateTags",
+					(arguments, globalScope, triggerScope) -> {
+						final EnumSetHandle<PrimaryTag> whichPrimarySet = arguments.get(0)
+								.visit(ObjectJassValueVisitor.getInstance());
+						final EnumSetHandle<SecondaryTag> whichSecondarySet = arguments.get(1)
+								.visit(ObjectJassValueVisitor.getInstance());
+						final String animationSelector = nullable(arguments, 2, StringJassValueVisitor.getInstance());
+
+						Sequence.populateTags(whichPrimarySet.getEnumSet(), whichSecondarySet.getEnumSet(),
+								animationSelector);
+
+						return null;
+					});
+
 			jassProgramVisitor.getJassNativeManager().createNative("WarsmashGetAbilityClassName",
 					(arguments, globalScope, triggerScope) -> {
 						final CAbility ability = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());
@@ -8144,7 +8316,7 @@ public class Jass2 {
 			catch (final Exception exc) {
 				new JassException(this.jassProgramVisitor.getGlobals(),
 						"Exception on Line " + this.jassProgramVisitor.getGlobals().getLineNumber(), exc)
-						.printStackTrace();
+								.printStackTrace();
 			}
 			try {
 				final JassThread mainThread = this.jassProgramVisitor.getGlobals().createThread("main",

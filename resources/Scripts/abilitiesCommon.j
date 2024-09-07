@@ -70,6 +70,10 @@ library TargetTypesAPI requires StringListAPI
 	// NOTE: the ParseTargetType function may return null or something null-ish if
 	// the string could not be parsed
 	native ParseTargetType takes string whichTypeString returns targettype
+	
+	// this is an unbound native, which for now has no function, but if we move from Java to C++ then
+	// it would be needed for cleanup
+	native DestroyTargetTypes takes targettypes returns nothing
 
 	struct TargetTypes
 		// NOTE: this function might be faster than ParseTargetTypes but maybe not.
@@ -402,6 +406,29 @@ library AbilitiesCommonLegacy requires TargetTypesAPI
 		native GetGameObjectFieldAsBoolean takes gameobject editorData, string key, integer index returns boolean   
 		native GetGameObjectFieldAsID takes gameobject editorData, string key, integer index returns integer
 		native GetGameObjectFieldAsStringList takes gameobject editorData, string key returns stringlist
+		// Below: a weird function that exists in warsmash, where if the thing was a list "a,b,c" we just
+		// return it including commas even though the "AsString" version has that chopped up and indexed.
+		// It should be functionally identical to the below brainstorm, although it is potentially
+		// much more efficient because it is running an existing Warsmash utility in Java
+		/*
+		 * function GetGameObjectField takes gameobject editorData, string key returns string
+		 *     local stringlist data = GetGameObjectFieldAsStringList(editorData, key)
+		 *     local integer i = 0
+		 *     local integer l = StringListSize(data)
+		 * 	   local string result = ""
+		 *     loop
+		 *         exitwhen i >= l
+		 *         if i > 0 then
+		 *		       result = result + ","
+		 *         endif
+		 *	       result = result + StringListGet(data, i)
+		 *		   set i = i + 1
+		 *	   endloop
+		 *
+		 *     return result
+		 * endfunction
+		 */
+		native GetGameObjectField takes gameobject editorData, string key returns string
 
 		native GetGameObjectById takes worldeditordatatype whichDataType, integer aliasId returns gameobject
 
@@ -514,6 +541,10 @@ library AbilitiesCommonLegacy requires TargetTypesAPI
 
 	// Below: uses the cooldown setting of the ability (should include level, etc)
 	native StartAbilityDefaultCooldown takes unit caster, ability whichAbility returns nothing
+	
+	// Does the same thing as BlzGetUnitAbilityCooldownRemaining if the user simulation includes newer patch
+	native GetUnitAbilityCooldownRemaining takes unit whichUnit, integer whichAbilityId returns real
+	native GetUnitAbilityCooldownLengthDisplay takes unit whichUnit, integer whichAbilityId returns real
 
 	// NOTE: above notes are not quite correct... seems "End" cooldown functions are handling the item case
 	// but only "start default" are handling item case... start (non-default) is passing thru rawcode
@@ -1609,10 +1640,13 @@ library AbilityAPI requires OrderButtonAPI
 	native SetAbilityDisabled takes unit abilityUnit, ability whichAbility, boolean disabled, abilitydisabletype reason returns nothing
 
 	native SetAbilityPermanent takes ability whichAbility, boolean flag returns nothing
+	native IsAbilityPermanent takes ability whichAbiilty returns boolean
 	
-	// below will crash unless used on jass-defined abilities so we require the interface type not the common.j type
+	// below will crash unless used on jass-defined abilities
 	native SetAbilityPhysical takes Ability whichAbility, boolean flag returns nothing
 	native SetAbilityUniversal takes Ability whichAbility, boolean flag returns nothing
+	native IsAbilityPhysical takes Ability whichAbility returns boolean
+	native IsAbilityUniversal takes Ability whichAbility returns boolean
 	native SetAbilityEnabledWhileUpgrading takes Ability whichAbility, boolean flag returns nothing
 	native SetAbilityEnabledWhileUnderConstruction takes Ability whichAbility, boolean flag returns nothing
 	
@@ -1670,6 +1704,31 @@ library GenericAbilityBaseTypes requires AbilityAPI, BehaviorAPI
 		endmethod
 		
 		method onSetPermanent takes boolean permanent returns nothing
+		endmethod
+		
+		// Utility methods, maybe later these could be added on Ability itself somehow
+		method setPhysical takes boolean value returns nothing
+			call SetAbilityPhysical(this, value)
+		endmethod
+		
+		method setUniversal takes boolean value returns nothing
+			call SetAbilityUniversal(this, value)
+		endmethod
+		
+		method isPhysical takes nothing returns boolean
+			return IsAbilityPhysical(this)
+		endmethod
+		
+		method isUniversal takes nothing returns boolean
+			return IsAbilityUniversal(this)
+		endmethod
+		
+		method getCodeId takes nothing returns integer
+			return GetAbilityCodeId(this)
+		endmethod
+		
+		method getAliasId takes nothing returns integer
+			return GetAbilityAliasId(this)
 		endmethod
 	endinterface
 
@@ -1960,6 +2019,13 @@ library GenericAbilityBaseTypes requires AbilityAPI, BehaviorAPI
 	endscope
 endlibrary
 
+//=====================================================
+// AbilityFieldDefaults                                        
+//=====================================================
+// These are some expected/default names for ability
+// fields. Note that these are strings; these do not
+// at all prohibit you from looking up other ability
+// fields with other names beyond these.
 library AbilityFieldDefaults
 	globals
 		constant string ABILITY_FIELD_CODE                              = "code"
@@ -1996,28 +2062,265 @@ library AbilityFieldDefaults
 	endglobals
 endlibrary
 
-library AbilitySpellBaseTypes requires GenericAbilityBaseTypes, AbilityFieldDefaults
-	module AbilitySpellBase
+//=====================================================
+// AnimationSequencingAPI                              
+//=====================================================
+// This API defines some utilities for selecting the
+// animations on a unit. Some of the enum values
+// are the same or extremely similar to the ones
+// on Reforged and its prepatches, but these values
+// are not exactly the same.
+//
+// By being different, and differently declared,
+// we can be sure that these values are available even
+// if our Warsmash user provides us with an older
+// Warcraft III patch from before the Reforged
+// prepatches that does not declare the list of
+// "animtype" and "subanimtype" as those guys call them,
+// or in the Warsmash naming convention what we call
+// "primarytag" and "secondarytag". 
+library AnimationTokensAPI
+	type primarytag extends handle
+	type secondarytag extends handle
+	// NOTE: the primarytags and secondarytags are really just
+	// the Java type of EnumSet<PrimaryTag> and EnumSet<SecondaryTag>
+	// so their natives are duplicates of the "targettypes" enums,
+	// which are again just EnumSet<TargetType>. If we could
+	// perhaps create a generic EnumSet type in the future,
+	// maybe we could express the same thing here in user script
+	type primarytags extends handle
+	type secondarytags extends handle
+	
+	private native ConvertPrimaryTag takes integer x returns primarytag
+	private native ConvertSecondaryTag takes integer x returns 
+	
+	native CreatePrimaryTags takes nothing returns primarytags
+	native PrimaryTagsAdd takes primarytags whichSet, primarytag whichType returns boolean
+	native PrimaryTagsRemove takes primarytags whichSet, primarytag whichType returns boolean
+	native PrimaryTagsContains takes primarytags whichSet, primarytag whichType returns boolean
+	native PrimaryTagsSize takes primarytags whichSet returns integer
+	native PrimaryTagsAny takes primarytags whichSet returns primarytag /* returns null if empty, else returns one of the values */
+	native DestroyPrimaryTags takes primarytags returns nothing
+	
+	native CreateSecondaryTags takes nothing returns secondarytags
+	native SecondaryTagsAdd takes secondarytags whichSet, secondarytag whichType returns boolean
+	native SecondaryTagsRemove takes secondarytags whichSet, secondarytag whichType returns boolean
+	native SecondaryTagsContains takes secondarytags whichSet, secondarytag whichType returns boolean
+	native SecondaryTagsSize takes secondarytags whichSet returns integer
+	native SecondaryTagsAny takes secondarytags whichSet returns secondarytag /* returns null if empty, else returns one of the values */
+	native DestroySecondaryTags takes secondarytags returns nothing
+	
+	// This function splits up a string of the form "Attack Spell Channel Alternate - 2" into bits,
+	// and then adds ATTACK and SPELL enum tags to the primary set, and CHANNEL and ALTERNATE tags to the
+	// secondary set, for example. This allows us to later accurately instruct a unit to play
+	// the animation(s) designated by the string, but in a way that is fast and does not
+	// require us to process text, so we can spam it a lot during gameplay.
+	// (If the "primaryTags" and "secondaryTags" arguments were non-empty prior to calling
+	//  this function, all of their contents are removed and reset before the parsing/populating)
+	native PopulateTags takes primarytags primaryTags, secondarytags secondaryTags, string animationSelector returns nothing
+	
+	struct PrimaryTags extends primarytags
+		public static constant primarytag ATTACK 		= ConvertPrimaryTag(0)
+		public static constant primarytag BIRTH 		= ConvertPrimaryTag(1)
+		// public static constant primarytag CINEMATIC 	= ConvertPrimaryTag(?)
+		public static constant primarytag DEATH 		= ConvertPrimaryTag(2)
+		public static constant primarytag DECAY 		= ConvertPrimaryTag(3)
+		public static constant primarytag DISSIPATE 	= ConvertPrimaryTag(4)
+		public static constant primarytag MORPH 		= ConvertPrimaryTag(5)
+		public static constant primarytag PORTRAIT 		= ConvertPrimaryTag(6)
+		public static constant primarytag SLEEP 		= ConvertPrimaryTag(7)
+		//public static constant primarytag SPELL 		= ConvertPrimaryTag(?)
+		public static constant primarytag STAND 		= ConvertPrimaryTag(8)
+		public static constant primarytag WALK 			= ConvertPrimaryTag(9)
+		
+		method add takes primarytag x returns boolean
+			return PrimaryTagsAdd(this, x)
+		endmethod
+		
+		method remove takes primarytag x returns boolean
+			return PrimaryTagsRemove(this, x) 
+		endmethod
+		
+		method contains takes primarytag x returns boolean
+			return PrimaryTagsContains(this, x)
+		endmethod
+		
+		method size takes nothing returns integer
+			return PrimaryTagsSize(this)
+		endmethod
+		
+		method isEmpty takes nothing returns boolean
+			return size() == 0
+		endmethod
+		
+		method any takes nothing returns primarytag
+			return PrimaryTagsAny(this)
+		endmethod
+	endstruct
+	
+	
+	struct SecondaryTags extends primarytags
+		public static constant secondarytag ALTERNATE   = ConvertSecondaryTag(0)
+		public static constant secondarytag ALTERNATEEX = ConvertSecondaryTag(1)
+		public static constant secondarytag BONE        = ConvertSecondaryTag(2)
+		public static constant secondarytag CHAIN       = ConvertSecondaryTag(3)
+		public static constant secondarytag CHANNEL     = ConvertSecondaryTag(4)
+		public static constant secondarytag COMPLETE    = ConvertSecondaryTag(5)
+		public static constant secondarytag CRITICAL    = ConvertSecondaryTag(6)
+		public static constant secondarytag DEFEND      = ConvertSecondaryTag(7)
+		public static constant secondarytag DRAIN       = ConvertSecondaryTag(8)
+		public static constant secondarytag EATTREE     = ConvertSecondaryTag(9)
+		public static constant secondarytag FAST        = ConvertSecondaryTag(10)
+		public static constant secondarytag FILL        = ConvertSecondaryTag(11)
+		public static constant secondarytag FLAIL       = ConvertSecondaryTag(12)
+		public static constant secondarytag FLESH       = ConvertSecondaryTag(13)
+		public static constant secondarytag FIFTH       = ConvertSecondaryTag(14)
+		public static constant secondarytag FIRE        = ConvertSecondaryTag(15)
+		public static constant secondarytag FIRST       = ConvertSecondaryTag(16)
+		public static constant secondarytag FIVE        = ConvertSecondaryTag(17)
+		public static constant secondarytag FOUR        = ConvertSecondaryTag(18)
+		public static constant secondarytag FOURTH      = ConvertSecondaryTag(19)
+		public static constant secondarytag GOLD        = ConvertSecondaryTag(20)
+		public static constant secondarytag HIT         = ConvertSecondaryTag(21)
+		public static constant secondarytag LARGE       = ConvertSecondaryTag(22)
+		public static constant secondarytag LEFT        = ConvertSecondaryTag(23)
+		public static constant secondarytag LIGHT       = ConvertSecondaryTag(24)
+		public static constant secondarytag LOOPING     = ConvertSecondaryTag(25)
+		public static constant secondarytag LUMBER      = ConvertSecondaryTag(26)
+		public static constant secondarytag MEDIUM      = ConvertSecondaryTag(27)
+		public static constant secondarytag MODERATE    = ConvertSecondaryTag(28)
+		public static constant secondarytag OFF         = ConvertSecondaryTag(29)
+		public static constant secondarytag ONE         = ConvertSecondaryTag(30)
+		public static constant secondarytag PUKE        = ConvertSecondaryTag(31)
+		public static constant secondarytag READY       = ConvertSecondaryTag(32)
+		public static constant secondarytag RIGHT       = ConvertSecondaryTag(33)
+		public static constant secondarytag SECOND      = ConvertSecondaryTag(34)
+		public static constant secondarytag SEVERE      = ConvertSecondaryTag(35)
+		public static constant secondarytag SLAM        = ConvertSecondaryTag(36)
+		public static constant secondarytag SMALL       = ConvertSecondaryTag(37)
+		public static constant secondarytag SPIKED      = ConvertSecondaryTag(38)
+		public static constant secondarytag SPIN        = ConvertSecondaryTag(39)
+		public static constant secondarytag SPELL       = ConvertSecondaryTag(40)
+		public static constant secondarytag CINEMATIC   = ConvertSecondaryTag(41)
+		public static constant secondarytag SWIM        = ConvertSecondaryTag(42)
+		public static constant secondarytag TALK        = ConvertSecondaryTag(43)
+		public static constant secondarytag THIRD       = ConvertSecondaryTag(44)
+		public static constant secondarytag THREE       = ConvertSecondaryTag(45)
+		public static constant secondarytag THROW       = ConvertSecondaryTag(46)
+		public static constant secondarytag TWO         = ConvertSecondaryTag(47)
+		public static constant secondarytag TURN        = ConvertSecondaryTag(48)
+		public static constant secondarytag VICTORY     = ConvertSecondaryTag(49)
+		public static constant secondarytag WORK        = ConvertSecondaryTag(50)
+		public static constant secondarytag WOUNDED     = ConvertSecondaryTag(51)
+		public static constant secondarytag UPGRADE     = ConvertSecondaryTag(52)
+		
+		method add takes secondarytag x returns boolean
+			return SecondaryTagsAdd(this, x)
+		endmethod
+		
+		method remove takes secondarytag x returns boolean
+			return SecondaryTagsRemove(this, x) 
+		endmethod
+		
+		method contains takes secondarytag x returns boolean
+			return SecondaryTagsContains(this, x)
+		endmethod
+		
+		method size takes nothing returns integer
+			return SecondaryTagsSize(this)
+		endmethod
+		
+		method isEmpty takes nothing returns boolean
+			return size() == 0
+		endmethod
+		
+		method any takes nothing returns secondarytag
+			return SecondaryTagsAny(this)
+		endmethod
+	endstruct
+	
+	
+endlibrary
+
+library AbilitySpellBaseTypes requires GenericAbilityBaseTypes, AbilityFieldDefaults, AnimationTokensAPI
+	module AbilitySpell
 		integer manaCost
 		real castRange
 		real cooldown
 		real castingTime
+		targettypes targetsAllowed
+		primarytag castingPrimaryTag
+		SecondaryTags castingSecondaryTags
 		real duration
 		real heroDuration
-		targettypes targetsAllowed
-		
 		
 		method innerPopulate takes gameobject editorData, integer level returns nothing
 			this.manaCost = GetGameObjectFieldAsInteger(editorData, ABILITY_FIELD_MANA_COST + I2S(level), 0)
+			this.castRange = GetGameObjectFieldAsReal(editorData, ABILITY_FIELD_CAST_RANGE + I2S(level), 0)
+			this.cooldown = GetGameObjectFieldAsReal(editorData, ABILITY_FIELD_COOLDOWN + I2S(level), 0)
+			this.castingTime = GetGameObjectFieldAsReal(editorData, ABILITY_FIELD_CASTING_TIME + I2S(level), 0)
+			
+			integer requiredLevel = GetGameObjectFieldAsInteger(editorData, ABILITY_FIELD_REQUIRED_LEVEL + I2S(level), 0)
+			if this.targetsAllowed != null then
+				// if we are leveling up the skill, cleanup the previous targeting list
+				call DestroyTargetTypes(this.targetsAllowed)
+			endif
 			this.targetsAllowed = ParseTargetTypes(GetGameObjectFieldAsStringList(editorData, ABILITY_FIELD_TARGETS_ALLOWED + I2S(level)))
+			if ((requiredLevel < 6) and not this.isPhysical() and not this.isUniversal()) then
+				call TargetTypesAdd(this.targetsAllowed, TARGET_TYPE_NON_MAGIC_IMMUNE)
+			endif
+			if this.isPhysical() and not this.isUniversal() then
+				call TargetTypesAdd(this.targetsAllowed, TARGET_TYPE_NON_ETHEREAL)
+			endif
+			
+			string animNames = GetGameObjectField(editorData, ABILITY_FIELD_ANIM_NAMES)
+			PrimaryTags primaryTags = PrimaryTags.create()
+			this.castingSecondaryTags = SecondaryTags.create()
+			call PopulateTags(primaryTags, this.castingSecondaryTags, animNames)
+			this.castingPrimaryTag = primaryTags.any()
+			primaryTags.destroy()
+			if (this.castingSecondaryTags.isEmpty()) then
+				this.castingSecondaryTags.add(SecondaryTags.SPELL)
+			endif
+			this.duration = GetGameObjectFieldAsReal(ABILITY_FIELD_DURATION + I2S(level), 0)
+			this.heroDuration = GetGameObjectFieldAsReal(ABILITY_FIELD_HERO_DURATION + I2S(level), 0)
+			
+			populateData(editorData, level)
 		endmethod
-
-		method checkTarget takes unit caster, ability sourceAbility, unit target returns nothing
-			if ( target.canBeTargetedBy(caster, this.targetsAllowed) ) then
-				call PassTargetCheck()
+		
+		method checkUsable takes unit caster, ability source returns nothing
+			integer cooldownCode = this.getCodeId() // I guess if you wanted stacking, change this to alias ID?
+			real cooldownRemaining = GetUnitAbilityCooldownRemaining(caster, cooldownCode)
+			if cooldownRemaining > 0 then
+				real cooldownLengthDisplay = GetUnitAbilityCooldownLengthDisplay(caster, cooldownCode)
+				call FailUsableCheckOnCooldown(this.abilityButton, cooldownRemaining, cooldownLengthDisplay)
+			elseif GetUnitState(caster, UNIT_STATE_MANA) < this.manaCost then
+				// the special "not enough mana" string turns the icon blue
+				call FailUsableCheckWithMessage(this.abilityButton, COMMAND_STRING_ERROR_KEY_NOT_ENOUGH_MANA)
 			else
-				call FailTargetCheck("Nofood")
-			endif	
+				call checkUsableSpell(unit, source)
+			endif
+		endmethod
+		
+		method checkUsableSpell takes unit caster, ability source returns nothing
+			call PassUsableCheck(this.abilityButton)
+		endmethod
+		
+		method getDurationForTarget takes unit targetUnit returns real
+			if ((targetUnit != null) and IsUnitType(targetUnit, UNIT_TYPE_HERO)) then
+				return this.heroDuration
+			endif
+			return this.duration
+		endmethod
+		
+		constant method getAbilityCategory takes nothing returns abilitycategory
+			return ABILITY_CATEGORY_SPELL
 		endmethod
 	endmodule
+	
+	scope TargetWidget
+		struct AbilitySpellTargetWidget
+		
+		endstruct
+	endscope
 endlibrary

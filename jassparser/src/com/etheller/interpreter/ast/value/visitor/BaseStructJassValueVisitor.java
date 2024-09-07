@@ -2,6 +2,7 @@ package com.etheller.interpreter.ast.value.visitor;
 
 import com.etheller.interpreter.ast.util.CExtensibleHandle;
 import com.etheller.interpreter.ast.value.ArrayJassValue;
+import com.etheller.interpreter.ast.value.BaseStructJassValue;
 import com.etheller.interpreter.ast.value.BooleanJassValue;
 import com.etheller.interpreter.ast.value.CodeJassValue;
 import com.etheller.interpreter.ast.value.DummyJassValue;
@@ -13,40 +14,40 @@ import com.etheller.interpreter.ast.value.StaticStructTypeJassValue;
 import com.etheller.interpreter.ast.value.StringJassValue;
 import com.etheller.interpreter.ast.value.StructJassValue;
 
-public class StructJassValueVisitor implements JassValueVisitor<StructJassValue> {
-	private static final StructJassValueVisitor INSTANCE = new StructJassValueVisitor();
+public class BaseStructJassValueVisitor implements JassValueVisitor<BaseStructJassValue> {
+	private static final BaseStructJassValueVisitor INSTANCE = new BaseStructJassValueVisitor();
 
-	public static StructJassValueVisitor getInstance() {
+	public static BaseStructJassValueVisitor getInstance() {
 		return INSTANCE;
 	}
 
 	@Override
-	public StructJassValue accept(final IntegerJassValue value) {
+	public BaseStructJassValue accept(final IntegerJassValue value) {
 		return null;
 	}
 
 	@Override
-	public StructJassValue accept(final RealJassValue value) {
+	public BaseStructJassValue accept(final RealJassValue value) {
 		return null;
 	}
 
 	@Override
-	public StructJassValue accept(final BooleanJassValue value) {
+	public BaseStructJassValue accept(final BooleanJassValue value) {
 		return null;
 	}
 
 	@Override
-	public StructJassValue accept(final StringJassValue value) {
+	public BaseStructJassValue accept(final StringJassValue value) {
 		return null;
 	}
 
 	@Override
-	public StructJassValue accept(final CodeJassValue value) {
+	public BaseStructJassValue accept(final CodeJassValue value) {
 		return null;
 	}
 
 	@Override
-	public StructJassValue accept(final ArrayJassValue value) {
+	public BaseStructJassValue accept(final ArrayJassValue value) {
 		return null;
 	}
 
@@ -70,7 +71,7 @@ public class StructJassValueVisitor implements JassValueVisitor<StructJassValue>
 	}
 
 	@Override
-	public StructJassValue accept(final StaticStructTypeJassValue value) {
-		return null;
+	public BaseStructJassValue accept(final StaticStructTypeJassValue value) {
+		return value;
 	}
 }

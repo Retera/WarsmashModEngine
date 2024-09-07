@@ -2,6 +2,7 @@ package com.etheller.warsmash.desktop.editor.abilitybuilder;
 
 import java.lang.reflect.Field;
 
+import com.etheller.warsmash.viewer5.handlers.w3x.AnimationTokens.SecondaryTag;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityCategory;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityDisableType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.autocast.AutocastType;
@@ -67,6 +68,10 @@ public class JassGeneratorForType {
 		for (final CommandStringErrorKeysEnum type : CommandStringErrorKeysEnum.values()) {
 			System.out.println(String.format("    constant string COMMAND_STRING_ERROR_KEY_%-85s= \"%s\"", type.name(),
 					type.getKey()));
+		}
+		for (final SecondaryTag type : SecondaryTag.values()) {
+			System.out.println(String.format("    public static constant secondarytag %-12s= ConvertSecondaryTag(%d)",
+					type.name(), type.ordinal()));
 		}
 
 		{

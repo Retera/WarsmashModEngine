@@ -33,7 +33,7 @@ import com.etheller.interpreter.ast.type.NothingJassTypeToken;
 import com.etheller.interpreter.ast.value.visitor.HandleJassTypeVisitor;
 import com.etheller.interpreter.ast.value.visitor.StructJassTypeVisitor;
 
-public class StructJassType implements JassType {
+public class StructJassType implements JassType, StructJassTypeInterface {
 	private static final String ALLOCATE = "allocate";
 	private static final String CREATE = "create";
 	private static final String DESTROY = "destroy";
@@ -331,6 +331,7 @@ public class StructJassType implements JassType {
 		return this.nameToMember.get(name);
 	}
 
+	@Override
 	public JassStructMemberType getMemberByName(final String name) {
 		final JassStructMemberType member = tryGetMemberByName(name);
 		if (member == null) {
@@ -353,6 +354,7 @@ public class StructJassType implements JassType {
 		return null;
 	}
 
+	@Override
 	public int getMemberIndexInefficientlyByName(final String name) {
 		for (int index = 0; index < this.memberTypes.size(); index++) {
 			if (this.memberTypes.get(index).getId().equals(name)) {
@@ -362,6 +364,7 @@ public class StructJassType implements JassType {
 		throw new IllegalArgumentException("Type '" + this.name + "' has no member '" + name + "'");
 	}
 
+	@Override
 	public int tryGetMemberIndexInefficientlyByName(final String name) {
 		for (int index = 0; index < this.memberTypes.size(); index++) {
 			if (this.memberTypes.get(index).getId().equals(name)) {
@@ -401,7 +404,7 @@ public class StructJassType implements JassType {
 		return this.nameToMethod.get(name);
 	}
 
-	public boolean canAccessPrivateMethodsOf(final StructJassType structJassType) {
+	public boolean canAccessPrivateMethodsOf(final StructJassTypeInterface structJassType) {
 		return this == structJassType;
 	}
 }

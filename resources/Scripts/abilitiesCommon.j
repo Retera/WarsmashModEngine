@@ -991,6 +991,103 @@ library AbilitiesCommonLegacy requires TargetTypesAPI
 endlibrary
 
 //=====================================================
+// Ability Target API                             
+//=====================================================
+// So we don't yet have a language syntax to cast
+// widget back to unit or item. Because we do not, and
+// if we continue not to have this, you could imagine
+// one solution to the problem might be to have
+// a "unit targetUnit" and "item targetItem" and
+// such of each type, and then to do some stupid
+// "if targetUnit != null" then later
+// "if targetItem != null" and so on.
+// But that is wasteful, stores 4 variables, and
+// takes 4 steps every time. Instead, here we
+// make an API that lets us store 1 struct,
+// and do 1 double dispatch to callback
+// on its kind
+library AbilityTargetAPI
+	// NOTE: Redeclare "agent" in case we are on patch 1.22 (should have no effect on 1.24+)
+	type agent extends handle
+	type abilitytarget extends agent
+	type abilitytargetvisitor extends handle
+	// NOTE: Redeclare "widget" and "location" -- requires Warsmash to allow us to redeclare
+	type location extends abilitytarget
+	type widget extends abilitytarget
+
+	interface AbilityTargetVisitor extends abilitytargetvisitor
+		method visitUnit takes unit target returns nothing
+		method visitItem takes item target returns nothing
+		method visitDest takes destructable target returns nothing
+		method visitLoc takes location target returns nothing
+	endinterface
+
+// BELOW - a re-make of AbilityTarget entirely in userspace. Maybe we could keep it,
+// but for now we are using a NATIVE equivalent to interoperate with what
+// already exists on Warsmash
+/**
+	interface AbilityTargetVisitor
+		method visitUnit takes unit target returns nothing
+		method visitItem takes item target returns nothing
+		method visitDest takes destructable target returns nothing
+		method visitLoc takes location target returns nothing
+	endinterface
+
+	interface AbilityTarget
+		method accept takes AbilityTargetVisitor visitor returns nothing
+	endinterface
+
+	struct AbilityTargetUnit extends AbilityTarget
+		unit value
+		public static method create takes unit value return thistype
+			local thistype this = .allocate()
+			set this.value = value
+			return this
+		endmethod
+		method accept takes AbilityTargetVisitor visitor returns nothing
+			call visitor.visitUnit(value)
+		endmethod
+	endstruct
+
+	struct AbilityTargetItem extends AbilityTarget
+		item value
+		public static method create takes item value return thistype
+			local thistype this = .allocate()
+			set this.value = value
+			return this
+		endmethod
+		method accept takes AbilityTargetVisitor visitor returns nothing
+			call visitor.visitItem(value)
+		endmethod
+	endstruct
+
+	struct AbilityTargetDest extends AbilityTarget
+		destructable value
+		public static method create takes destructable value return thistype
+			local thistype this = .allocate()
+			set this.value = value
+			return this
+		endmethod
+		method accept takes AbilityTargetVisitor visitor returns nothing
+			call visitor.visitDest(value)
+		endmethod
+	endstruct
+
+	struct AbilityTargetLoc extends AbilityTarget
+		location value
+		public static method create takes location value return thistype
+			local thistype this = .allocate()
+			set this.value = value
+			return this
+		endmethod
+		method accept takes AbilityTargetVisitor visitor returns nothing
+			call visitor.visitLoc(value)
+		endmethod
+	endstruct
+*/
+endlibrary
+
+//=====================================================
 // Behavior API                                        
 //=====================================================
 /* Each unit is always performing 1 behavior at a time; about 20 times per
@@ -1004,7 +1101,7 @@ endlibrary
  * return itself. If it wishes to jump the unit to performing a different action
  * then it should return that other behavior.
  */
-library BehaviorAPI
+library BehaviorAPI requires AbilityTargetAPI
 	type abilitybehavior extends handle
 	type behaviorcategory extends handle
 	
@@ -1108,6 +1205,14 @@ library BehaviorAPI
 		 *   well be treated similarly )
 		 */
 		constant method getBehaviorCategory takes nothing returns behaviorcategory
+	endinterface
+
+	// ranged behavior is an interface for inter-operating with
+	// the move ability to make a behavior that moves into range
+	interface RangedBehavior
+		method isWithinRange takes nothing returns boolean
+		method endMove takes boolean interrupted returns nothing
+		
 	endinterface
 endlibrary
 
@@ -1394,6 +1499,7 @@ library OrderButtonAPI requires BehaviorAPI, IconUI
 	native SetOrderButtonPreviewBuildUnitId takes orderbutton whichOrder, integer unitId returns nothing
 	native SetOrderButtonAOE takes orderbutton whichOrder, real radius returns nothing
 
+	native GetOrderButtonOrderId takes orderbutton whichOrder returns integer
 	native GetOrderButtonAutoCastOrderId takes orderbutton whichOrder returns integer
 	native GetOrderButtonUnAutoCastOrderId takes orderbutton whichOrder returns integer
 	native GetOrderButtonContainerMenuOrderId takes orderbutton whichOrder returns integer
@@ -2063,7 +2169,7 @@ library AbilityFieldDefaults
 endlibrary
 
 //=====================================================
-// AnimationSequencingAPI                              
+// AnimationTokenAPI                              
 //=====================================================
 // This API defines some utilities for selecting the
 // animations on a unit. Some of the enum values
@@ -2242,7 +2348,7 @@ library AnimationTokensAPI
 	
 endlibrary
 
-library AbilitySpellBaseTypes requires GenericAbilityBaseTypes, AbilityFieldDefaults, AnimationTokensAPI
+library AbilitySpellBaseTypes requires GenericAbilityBaseTypes, AbilityFieldDefaults, AnimationTokensAPI, AbilityTargetAPI
 	module AbilitySpell
 		integer manaCost
 		real castRange
@@ -2298,7 +2404,7 @@ library AbilitySpellBaseTypes requires GenericAbilityBaseTypes, AbilityFieldDefa
 				// the special "not enough mana" string turns the icon blue
 				call FailUsableCheckWithMessage(this.abilityButton, COMMAND_STRING_ERROR_KEY_NOT_ENOUGH_MANA)
 			else
-				call checkUsableSpell(unit, source)
+				call checkUsableSpell(caster, source)
 			endif
 		endmethod
 		
@@ -2317,10 +2423,78 @@ library AbilitySpellBaseTypes requires GenericAbilityBaseTypes, AbilityFieldDefa
 			return ABILITY_CATEGORY_SPELL
 		endmethod
 	endmodule
-	
+
 	scope TargetWidget
-		struct AbilitySpellTargetWidget
-		
+		private interface AbilitySpellInterface extends AbstractGenericActiveAbilityTargetWidget
+			method populateData takes gameobject editorData, integer level returns nothing
+		endinterface
+
+		struct BehaviorSpellTargetWidget extends Behavior
+			unit behavingUnit
+			AbilitySpellInterface sourceAbility
+			AbilityTarget target
+
+			public static method create takes unit whichUnit, AbilitySpellInterface abil returns thistype
+				local thistype this = .allocate()
+				set this.behavingUnit = whichUnit
+				set this.sourceAbility = abil
+				return this
+			endmethod
+
+			method reset takes AbilityTarget target returns thistype
+				set this.target = target
+				return this
+			endmethod
+
+			method update takes nothing returns Behavior
+				
+			endmethod
+
+			constant method getHighlightOrderId takes nothing returns integer
+\				return GetOrderButtonOrderId(this.sourceAbility.abilityButton)
+			endmethod
+
+			constant method interruptable takes nothing returns boolean
+				return true
+			endmethod
+
+			constant method getBehaviorCategory takes nothing returns behaviorcategory
+				return BEHAVIOR_CATEGORY_SPELL
+			endmethod
+		endstruct
+	
+		struct AbilitySpellTargetWidget extends AbilitySpellInterface
+			BehaviorSpellTargetWidget behavior
+
+			method onAdd takes unit whichUnit returns nothing
+				this.behavior = BehaviorSpellTargetWidget.create(whichUnit, this)
+			endmethod
+
+			method checkTargetUnit takes unit caster, ability source, unit target returns nothing
+
+			endmethod
+			
+			method beginUnit takes unit caster, ability source, unit target returns Behavior
+				return behavior.reset(AbilityTargetUnit.create(target)
+			endmethod
+			
+			method checkTargetItem takes unit caster, ability source, item target returns nothing
+
+			endmethod
+			
+			method beginItem takes unit caster, ability source, item target returns Behavior
+				return behavior.reset(AbilityTargetItem.create(target)
+			endmethod
+			
+			method checkTargetDestructable takes unit caster, ability source, destructable target returns nothing
+
+			endmethod
+			
+			method beginDestructable takes unit caster, ability source, destructable target returns Behavior
+
+			endmethod
+			
+			implement AbilitySpell
 		endstruct
 	endscope
 endlibrary

@@ -18,6 +18,7 @@ import com.etheller.warsmash.parsers.fdf.GameUI;
 import com.etheller.warsmash.units.Element;
 import com.etheller.warsmash.viewer5.Scene;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.HandleIdAllocator;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.config.War3MapConfig;
 
 public class JassAIEnvironment {
@@ -144,7 +145,7 @@ public class JassAIEnvironment {
 		Jass2.registerConversionAndStringNatives(jassProgramVisitor, gameUI);
 		Jass2.registerConfigNatives(jassProgramVisitor, mapConfig, startlocprioType, gametypeType, placementType,
 				gamespeedType, gamedifficultyType, mapdensityType, locationType, playerType, playercolorType,
-				mapcontrolType, playerslotstateType, mapConfig);
+				mapcontrolType, playerslotstateType, mapConfig, new HandleIdAllocator());
 		Jass2.registerRandomNatives(jassProgramVisitor, simulation);
 
 		jassProgramVisitor.getJassNativeManager().createNative("StartThread",

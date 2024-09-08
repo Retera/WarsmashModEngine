@@ -1,6 +1,5 @@
 package com.etheller.warsmash.parsers.jass;
 
-import java.awt.geom.Point2D;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
@@ -72,6 +71,7 @@ import com.etheller.warsmash.parsers.jass.triggers.BoolExprOr;
 import com.etheller.warsmash.parsers.jass.triggers.EnumSetHandle;
 import com.etheller.warsmash.parsers.jass.triggers.HandleList;
 import com.etheller.warsmash.parsers.jass.triggers.IntExpr;
+import com.etheller.warsmash.parsers.jass.triggers.LocationJass;
 import com.etheller.warsmash.parsers.jass.triggers.StringList;
 import com.etheller.warsmash.parsers.jass.triggers.TriggerAction;
 import com.etheller.warsmash.parsers.jass.triggers.TriggerCondition;
@@ -109,6 +109,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnitEnumFunction;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnitType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUpgradeType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.HandleIdAllocator;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityCategory;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityDisableType;
@@ -652,6 +653,7 @@ public class Jass2 {
 			final HandleJassType behaviorcategoryType = globals.registerHandleType("behaviorcategory");
 			final HandleJassType abilitycategoryType = globals.registerHandleType("abilitycategory");
 			final HandleJassType stringlistType = globals.registerHandleType("stringlist");
+			final HandleJassType abilitytargetType = globals.registerHandleType("abilitytarget");
 
 			final HandleJassType primarytagType = globals.registerHandleType("primarytag");
 			final HandleJassType primarytagsType = globals.registerHandleType("primarytags");
@@ -733,7 +735,7 @@ public class Jass2 {
 			final War3MapConfig mapConfig = war3MapViewer.getMapConfig();
 			registerConfigNatives(jassProgramVisitor, mapConfig, startlocprioType, gametypeType, placementType,
 					gamespeedType, gamedifficultyType, mapdensityType, locationType, playerType, playercolorType,
-					mapcontrolType, playerslotstateType, this.simulation);
+					mapcontrolType, playerslotstateType, this.simulation, this.simulation.getHandleIdAllocator());
 
 			// ============================================================================
 			// Timer API
@@ -928,15 +930,13 @@ public class Jass2 {
 							return BooleanJassValue.FALSE;
 						}
 						final String orderString = arguments.get(1).visit(StringJassValueVisitor.getInstance());
-						final Point2D.Double whichLocation = arguments.get(2)
-								.visit(ObjectJassValueVisitor.<Point2D.Double>getInstance());
+						final LocationJass whichLocation = arguments.get(2).visit(ObjectJassValueVisitor.getInstance());
 						final CPlayerUnitOrderExecutor defaultPlayerUnitOrderExecutor = CommonEnvironment.this.simulation
 								.getDefaultPlayerUnitOrderExecutor(whichUnit.getPlayerIndex());
 						final BooleanAbilityActivationReceiver activationReceiver = BooleanAbilityActivationReceiver.INSTANCE;
 						final int orderId = OrderIdUtils.getOrderId(orderString);
 						int abilityHandleId = 0;
-						AbilityPointTarget targetAsPoint = new AbilityPointTarget((float) whichLocation.x,
-								(float) whichLocation.y);
+						AbilityPointTarget targetAsPoint = new AbilityPointTarget(whichLocation.x, whichLocation.y);
 						for (final CAbility ability : whichUnit.getAbilities()) {
 							ability.checkCanUse(CommonEnvironment.this.simulation, whichUnit, orderId,
 									activationReceiver);
@@ -1237,10 +1237,10 @@ public class Jass2 {
 					(arguments, globalScope, triggerScope) -> {
 						final List<CUnit> group = arguments.get(0)
 								.visit(ObjectJassValueVisitor.<List<CUnit>>getInstance());
-						final Point2D.Double whichLocation = arguments.get(1)
-								.visit(ObjectJassValueVisitor.<Point2D.Double>getInstance());
-						final float x = (float) whichLocation.x;
-						final float y = (float) whichLocation.y;
+						final LocationJass whichLocation = arguments.get(1)
+								.visit(ObjectJassValueVisitor.<LocationJass>getInstance());
+						final float x = whichLocation.x;
+						final float y = whichLocation.y;
 						final float radius = arguments.get(2).visit(RealJassValueVisitor.getInstance()).floatValue();
 						final TriggerBooleanExpression filter = nullable(arguments, 3,
 								ObjectJassValueVisitor.<TriggerBooleanExpression>getInstance());
@@ -1295,10 +1295,10 @@ public class Jass2 {
 					(arguments, globalScope, triggerScope) -> {
 						final List<CUnit> group = arguments.get(0)
 								.visit(ObjectJassValueVisitor.<List<CUnit>>getInstance());
-						final Point2D.Double whichLocation = arguments.get(1)
-								.visit(ObjectJassValueVisitor.<Point2D.Double>getInstance());
-						final float x = (float) whichLocation.x;
-						final float y = (float) whichLocation.y;
+						final LocationJass whichLocation = arguments.get(1)
+								.visit(ObjectJassValueVisitor.<LocationJass>getInstance());
+						final float x = whichLocation.x;
+						final float y = whichLocation.y;
 						final float radius = arguments.get(2).visit(RealJassValueVisitor.getInstance()).floatValue();
 						final TriggerBooleanExpression filter = nullable(arguments, 3,
 								ObjectJassValueVisitor.<TriggerBooleanExpression>getInstance());
@@ -1379,10 +1379,9 @@ public class Jass2 {
 						final List<CUnit> group = arguments.get(0)
 								.visit(ObjectJassValueVisitor.<List<CUnit>>getInstance());
 						final String order = arguments.get(1).visit(StringJassValueVisitor.getInstance());
-						final Point2D.Double whichLocation = arguments.get(2)
-								.visit(ObjectJassValueVisitor.<Point2D.Double>getInstance());
-						final AbilityPointTarget target = new AbilityPointTarget((float) whichLocation.x,
-								(float) whichLocation.y);
+						final LocationJass whichLocation = arguments.get(2)
+								.visit(ObjectJassValueVisitor.<LocationJass>getInstance());
+						final AbilityPointTarget target = new AbilityPointTarget(whichLocation.x, whichLocation.y);
 						final int orderId = OrderIdUtils.getOrderId(order);
 						boolean success = true;
 						for (final CUnit unit : group) {
@@ -1409,10 +1408,9 @@ public class Jass2 {
 						final List<CUnit> group = arguments.get(0)
 								.visit(ObjectJassValueVisitor.<List<CUnit>>getInstance());
 						final int orderId = arguments.get(1).visit(IntegerJassValueVisitor.getInstance());
-						final Point2D.Double whichLocation = arguments.get(2)
-								.visit(ObjectJassValueVisitor.<Point2D.Double>getInstance());
-						final AbilityPointTarget target = new AbilityPointTarget((float) whichLocation.x,
-								(float) whichLocation.y);
+						final LocationJass whichLocation = arguments.get(2)
+								.visit(ObjectJassValueVisitor.<LocationJass>getInstance());
+						final AbilityPointTarget target = new AbilityPointTarget(whichLocation.x, whichLocation.y);
 						boolean success = true;
 						for (final CUnit unit : group) {
 							success &= unit.order(CommonEnvironment.this.simulation, orderId, target);
@@ -1612,14 +1610,14 @@ public class Jass2 {
 			});
 			jassProgramVisitor.getJassNativeManager().createNative("RectFromLoc",
 					(arguments, globalScope, triggerScope) -> {
-						final Point2D.Double min = arguments.get(0)
-								.visit(ObjectJassValueVisitor.<Point2D.Double>getInstance());
-						final Point2D.Double max = arguments.get(1)
-								.visit(ObjectJassValueVisitor.<Point2D.Double>getInstance());
-						final float minx = (float) min.x;
-						final float miny = (float) min.y;
-						final float maxx = (float) max.x;
-						final float maxy = (float) max.y;
+						final LocationJass min = arguments.get(0)
+								.visit(ObjectJassValueVisitor.<LocationJass>getInstance());
+						final LocationJass max = arguments.get(1)
+								.visit(ObjectJassValueVisitor.<LocationJass>getInstance());
+						final float minx = min.x;
+						final float miny = min.y;
+						final float maxx = max.x;
+						final float maxy = max.y;
 						return new HandleJassValue(rectType, new Rectangle(minx, miny, maxx - minx, maxy - miny));
 					});
 			jassProgramVisitor.getJassNativeManager().createNative("RemoveRect",
@@ -1642,14 +1640,14 @@ public class Jass2 {
 			jassProgramVisitor.getJassNativeManager().createNative("SetRectFromLoc",
 					(arguments, globalScope, triggerScope) -> {
 						final Rectangle rect = arguments.get(0).visit(ObjectJassValueVisitor.<Rectangle>getInstance());
-						final Point2D.Double min = arguments.get(1)
-								.visit(ObjectJassValueVisitor.<Point2D.Double>getInstance());
-						final Point2D.Double max = arguments.get(2)
-								.visit(ObjectJassValueVisitor.<Point2D.Double>getInstance());
-						final float minx = (float) min.x;
-						final float miny = (float) min.y;
-						final float maxx = (float) max.x;
-						final float maxy = (float) max.y;
+						final LocationJass min = arguments.get(1)
+								.visit(ObjectJassValueVisitor.<LocationJass>getInstance());
+						final LocationJass max = arguments.get(2)
+								.visit(ObjectJassValueVisitor.<LocationJass>getInstance());
+						final float minx = min.x;
+						final float miny = min.y;
+						final float maxx = max.x;
+						final float maxy = max.y;
 						rect.set(minx, miny, maxx - minx, maxy - miny);
 						return null;
 					});
@@ -1666,9 +1664,9 @@ public class Jass2 {
 			jassProgramVisitor.getJassNativeManager().createNative("MoveRectToLoc",
 					(arguments, globalScope, triggerScope) -> {
 						final Rectangle rect = arguments.get(0).visit(ObjectJassValueVisitor.<Rectangle>getInstance());
-						final Point2D.Double newCenterLoc = arguments.get(1)
-								.visit(ObjectJassValueVisitor.<Point2D.Double>getInstance());
-						rect.setCenter((float) newCenterLoc.x, (float) newCenterLoc.y);
+						final LocationJass newCenterLoc = arguments.get(1)
+								.visit(ObjectJassValueVisitor.<LocationJass>getInstance());
+						rect.setCenter(newCenterLoc.x, newCenterLoc.y);
 						return null;
 					});
 			jassProgramVisitor.getJassNativeManager().createNative("GetRectCenterX", new JassFunction() {
@@ -1746,9 +1744,9 @@ public class Jass2 {
 			jassProgramVisitor.getJassNativeManager().createNative("RegionAddCellAtLoc",
 					(arguments, globalScope, triggerScope) -> {
 						final CRegion region = arguments.get(0).visit(ObjectJassValueVisitor.<CRegion>getInstance());
-						final Point2D.Double whichLocation = arguments.get(1)
-								.visit(ObjectJassValueVisitor.<Point2D.Double>getInstance());
-						region.addCell((float) whichLocation.x, (float) whichLocation.y,
+						final LocationJass whichLocation = arguments.get(1)
+								.visit(ObjectJassValueVisitor.<LocationJass>getInstance());
+						region.addCell(whichLocation.x, whichLocation.y,
 								CommonEnvironment.this.simulation.getRegionManager());
 						return null;
 					});
@@ -1763,9 +1761,9 @@ public class Jass2 {
 			jassProgramVisitor.getJassNativeManager().createNative("RegionClearCellAtLoc",
 					(arguments, globalScope, triggerScope) -> {
 						final CRegion region = arguments.get(0).visit(ObjectJassValueVisitor.<CRegion>getInstance());
-						final Point2D.Double whichLocation = arguments.get(1)
-								.visit(ObjectJassValueVisitor.<Point2D.Double>getInstance());
-						region.clearCell((float) whichLocation.x, (float) whichLocation.y,
+						final LocationJass whichLocation = arguments.get(1)
+								.visit(ObjectJassValueVisitor.<LocationJass>getInstance());
+						region.clearCell(whichLocation.x, whichLocation.y,
 								CommonEnvironment.this.simulation.getRegionManager());
 						return null;
 					});
@@ -1773,20 +1771,21 @@ public class Jass2 {
 					(arguments, globalScope, triggerScope) -> {
 						final float x = arguments.get(0).visit(RealJassValueVisitor.getInstance()).floatValue();
 						final float y = arguments.get(1).visit(RealJassValueVisitor.getInstance()).floatValue();
-						return new HandleJassValue(locationType, new Point2D.Double(x, y));
+						return new HandleJassValue(locationType,
+								new LocationJass(x, y, this.simulation.getHandleIdAllocator().createId()));
 					});
 			jassProgramVisitor.getJassNativeManager().createNative("RemoveLocation",
 					(arguments, globalScope, triggerScope) -> {
-						final Point2D.Double whichLocation = arguments.get(0)
-								.visit(ObjectJassValueVisitor.<Point2D.Double>getInstance());
+						final LocationJass whichLocation = arguments.get(0)
+								.visit(ObjectJassValueVisitor.<LocationJass>getInstance());
 						System.err.println(
 								"RemoveRect called but in Java we don't have a destructor, so we need to unregister later when that is implemented");
 						return null;
 					});
 			jassProgramVisitor.getJassNativeManager().createNative("MoveLocation",
 					(arguments, globalScope, triggerScope) -> {
-						final Point2D.Double whichLocation = arguments.get(0)
-								.visit(ObjectJassValueVisitor.<Point2D.Double>getInstance());
+						final LocationJass whichLocation = arguments.get(0)
+								.visit(ObjectJassValueVisitor.<LocationJass>getInstance());
 						final float x = arguments.get(1).visit(RealJassValueVisitor.getInstance()).floatValue();
 						final float y = arguments.get(2).visit(RealJassValueVisitor.getInstance()).floatValue();
 						whichLocation.x = x;
@@ -1795,8 +1794,7 @@ public class Jass2 {
 					});
 			jassProgramVisitor.getJassNativeManager().createNative("GetLocationX",
 					(arguments, globalScope, triggerScope) -> {
-						final Point2D.Double whichLocation = nullable(arguments, 0,
-								ObjectJassValueVisitor.getInstance());
+						final LocationJass whichLocation = nullable(arguments, 0, ObjectJassValueVisitor.getInstance());
 						if (whichLocation == null) {
 							return RealJassValue.ZERO;
 						}
@@ -1804,8 +1802,7 @@ public class Jass2 {
 					});
 			jassProgramVisitor.getJassNativeManager().createNative("GetLocationY",
 					(arguments, globalScope, triggerScope) -> {
-						final Point2D.Double whichLocation = nullable(arguments, 0,
-								ObjectJassValueVisitor.getInstance());
+						final LocationJass whichLocation = nullable(arguments, 0, ObjectJassValueVisitor.getInstance());
 						if (whichLocation == null) {
 							return RealJassValue.ZERO;
 						}
@@ -1813,10 +1810,10 @@ public class Jass2 {
 					});
 			jassProgramVisitor.getJassNativeManager().createNative("GetLocationZ",
 					(arguments, globalScope, triggerScope) -> {
-						final Point2D.Double whichLocation = arguments.get(0)
-								.visit(ObjectJassValueVisitor.<Point2D.Double>getInstance());
-						return RealJassValue.of(war3MapViewer.terrain.getGroundHeight((float) whichLocation.x,
-								(float) whichLocation.y));
+						final LocationJass whichLocation = arguments.get(0)
+								.visit(ObjectJassValueVisitor.<LocationJass>getInstance());
+						return RealJassValue
+								.of(war3MapViewer.terrain.getGroundHeight(whichLocation.x, whichLocation.y));
 					});
 			jassProgramVisitor.getJassNativeManager().createNative("IsUnitInRegion",
 					(arguments, globalScope, triggerScope) -> {
@@ -1838,10 +1835,10 @@ public class Jass2 {
 					(arguments, globalScope, triggerScope) -> {
 						final CRegion whichRegion = arguments.get(0)
 								.visit(ObjectJassValueVisitor.<CRegion>getInstance());
-						final Point2D.Double whichLocation = arguments.get(1)
-								.visit(ObjectJassValueVisitor.<Point2D.Double>getInstance());
-						return BooleanJassValue.of(whichRegion.contains((float) whichLocation.x,
-								(float) whichLocation.y, CommonEnvironment.this.simulation.getRegionManager()));
+						final LocationJass whichLocation = arguments.get(1)
+								.visit(ObjectJassValueVisitor.<LocationJass>getInstance());
+						return BooleanJassValue.of(whichRegion.contains(whichLocation.x, whichLocation.y,
+								CommonEnvironment.this.simulation.getRegionManager()));
 					});
 			jassProgramVisitor.getJassNativeManager().createNative("GetWorldBounds",
 					(arguments, globalScope, triggerScope) -> {
@@ -2813,8 +2810,7 @@ public class Jass2 {
 					(arguments, globalScope, triggerScope) -> {
 						final CPlayer player = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());
 						final int rawcode = arguments.get(1).visit(IntegerJassValueVisitor.getInstance());
-						final Point2D.Double whichLocation = nullable(arguments, 2,
-								ObjectJassValueVisitor.getInstance());
+						final LocationJass whichLocation = nullable(arguments, 2, ObjectJassValueVisitor.getInstance());
 						final float facing = arguments.get(3).visit(RealJassValueVisitor.getInstance()).floatValue();
 						final War3ID rawcodeId = new War3ID(rawcode);
 						final float x = whichLocation == null ? 0 : (float) whichLocation.x;
@@ -2827,8 +2823,7 @@ public class Jass2 {
 					(arguments, globalScope, triggerScope) -> {
 						final CPlayer player = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());
 						final String legacyName = arguments.get(1).visit(StringJassValueVisitor.getInstance());
-						final Point2D.Double whichLocation = nullable(arguments, 2,
-								ObjectJassValueVisitor.getInstance());
+						final LocationJass whichLocation = nullable(arguments, 2, ObjectJassValueVisitor.getInstance());
 						final float facing = arguments.get(3).visit(RealJassValueVisitor.getInstance()).floatValue();
 						final CUnitType unitTypeByJassLegacyName = this.simulation.getUnitData()
 								.getUnitTypeByJassLegacyName(legacyName);
@@ -2942,9 +2937,9 @@ public class Jass2 {
 			jassProgramVisitor.getJassNativeManager().createNative("SetUnitPositionLoc",
 					(arguments, globalScope, triggerScope) -> {
 						final CUnit whichUnit = nullable(arguments, 0, ObjectJassValueVisitor.getInstance());
-						final Point2D.Double positionLoc = arguments.get(1).visit(ObjectJassValueVisitor.getInstance());
+						final LocationJass positionLoc = arguments.get(1).visit(ObjectJassValueVisitor.getInstance());
 						if (whichUnit != null) {
-							whichUnit.setPointAndCheckUnstuck((float) positionLoc.x, (float) positionLoc.y,
+							whichUnit.setPointAndCheckUnstuck(positionLoc.x, positionLoc.y,
 									CommonEnvironment.this.simulation);
 						}
 						return null;
@@ -3450,8 +3445,7 @@ public class Jass2 {
 			jassProgramVisitor.getJassNativeManager().createNative("IsUnitInRangeLoc",
 					(arguments, globalScope, triggerScope) -> {
 						final CUnit whichUnit = nullable(arguments, 0, ObjectJassValueVisitor.getInstance());
-						final Point2D.Double whichLocation = nullable(arguments, 1,
-								ObjectJassValueVisitor.getInstance());
+						final LocationJass whichLocation = nullable(arguments, 1, ObjectJassValueVisitor.getInstance());
 						final Double distance = arguments.get(2).visit(RealJassValueVisitor.getInstance());
 
 						if ((whichUnit != null) && (whichLocation != null) && (distance != null)
@@ -3602,12 +3596,12 @@ public class Jass2 {
 					(arguments, globalScope, triggerScope) -> {
 						final CPlayer player = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());
 						final CFogState whichState = arguments.get(1).visit(ObjectJassValueVisitor.getInstance());
-						final Point2D.Double center = arguments.get(2).visit(ObjectJassValueVisitor.getInstance());
+						final LocationJass center = arguments.get(2).visit(ObjectJassValueVisitor.getInstance());
 						final float radius = arguments.get(3).visit(RealJassValueVisitor.getInstance()).floatValue();
 						final boolean sharedVision = arguments.get(4).visit(BooleanJassValueVisitor.getInstance());
 
-						final float centerX = (float) center.x;
-						final float centerY = (float) center.y;
+						final float centerX = center.x;
+						final float centerY = center.y;
 
 						final PathingGrid pathingGrid = this.simulation.getPathingGrid();
 						if (sharedVision) {
@@ -3711,13 +3705,13 @@ public class Jass2 {
 					(arguments, globalScope, triggerScope) -> {
 						final CPlayer player = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());
 						final CFogState whichState = arguments.get(1).visit(ObjectJassValueVisitor.getInstance());
-						final Point2D.Double center = arguments.get(2).visit(ObjectJassValueVisitor.getInstance());
+						final LocationJass center = arguments.get(2).visit(ObjectJassValueVisitor.getInstance());
 						final float radius = arguments.get(3).visit(RealJassValueVisitor.getInstance()).floatValue();
 						// TODO share vision thing will be busted after change of player alliance
 						final boolean sharedVision = arguments.get(4).visit(BooleanJassValueVisitor.getInstance());
 						final boolean afterUnits = arguments.get(5).visit(BooleanJassValueVisitor.getInstance());
-						final float centerX = (float) center.x;
-						final float centerY = (float) center.y;
+						final float centerX = center.x;
+						final float centerY = center.y;
 
 						final CCircleFogModifier fogModifier = new CCircleFogModifier(whichState, radius, centerX,
 								centerY);
@@ -4034,10 +4028,11 @@ public class Jass2 {
 					(arguments, globalScope, triggerScope) -> {
 						final CUnit whichWidget = nullable(arguments, 0, ObjectJassValueVisitor.getInstance());
 						if (whichWidget == null) {
-							return new HandleJassValue(locationType, new Point2D.Double(0, 0));
+							return new HandleJassValue(locationType,
+									new LocationJass(0, 0, this.simulation.getHandleIdAllocator().createId()));
 						}
-						return new HandleJassValue(locationType,
-								new Point2D.Double(whichWidget.getX(), whichWidget.getY()));
+						return new HandleJassValue(locationType, new LocationJass(whichWidget.getX(),
+								whichWidget.getY(), this.simulation.getHandleIdAllocator().createId()));
 					});
 			jassProgramVisitor.getJassNativeManager().createNative("GetUnitAbilityLevel",
 					(arguments, globalScope, triggerScope) -> {
@@ -4147,9 +4142,9 @@ public class Jass2 {
 			jassProgramVisitor.getJassNativeManager().createNative("AddSpecialEffectLoc",
 					(arguments, globalScope, triggerScope) -> {
 						final String modelName = arguments.get(0).visit(StringJassValueVisitor.getInstance());
-						final Point2D.Double positionLoc = arguments.get(1).visit(ObjectJassValueVisitor.getInstance());
-						return new HandleJassValue(effectType, war3MapViewer.addSpecialEffect(modelName,
-								(float) positionLoc.x, (float) positionLoc.y, 0 /* facing */));
+						final LocationJass positionLoc = arguments.get(1).visit(ObjectJassValueVisitor.getInstance());
+						return new HandleJassValue(effectType, war3MapViewer.addSpecialEffect(modelName, positionLoc.x,
+								positionLoc.y, 0 /* facing */));
 					});
 			jassProgramVisitor.getJassNativeManager().createNative("AddSpecialEffect",
 					(arguments, globalScope, triggerScope) -> {
@@ -4190,9 +4185,9 @@ public class Jass2 {
 						final int rawcode = arguments.get(0).visit(IntegerJassValueVisitor.getInstance());
 						final CEffectType whichEffectType = arguments.get(1)
 								.visit(ObjectJassValueVisitor.getInstance());
-						final Point2D.Double loc = arguments.get(2).visit(ObjectJassValueVisitor.getInstance());
-						final float x = (float) loc.x;
-						final float y = (float) loc.y;
+						final LocationJass loc = arguments.get(2).visit(ObjectJassValueVisitor.getInstance());
+						final float x = loc.x;
+						final float y = loc.y;
 						return new HandleJassValue(effectType, war3MapViewer.spawnSpellEffectEx(x, y, 0 /* facing */,
 								new War3ID(rawcode), whichEffectType, 0));
 					});
@@ -4473,8 +4468,8 @@ public class Jass2 {
 						final CustomCameraSetup cameraSetup = nullable(arguments, 0,
 								ObjectJassValueVisitor.getInstance());
 						if (cameraSetup != null) {
-							return new HandleJassValue(locationType,
-									new Point2D.Double(cameraSetup.getDestPositionX(), cameraSetup.getDestPositionY()));
+							return new HandleJassValue(locationType, new LocationJass(cameraSetup.getDestPositionX(),
+									cameraSetup.getDestPositionY(), this.simulation.getHandleIdAllocator().createId()));
 						}
 						return locationType.getNullValue();
 					});
@@ -4718,9 +4713,9 @@ public class Jass2 {
 			jassProgramVisitor.getJassNativeManager().createNative("GetOrderPointLoc",
 					(arguments, globalScope, triggerScope) -> {
 						final CommonTriggerExecutionScope commonTriggerExecutionScope = (CommonTriggerExecutionScope) triggerScope;
-						final Point2D.Double jassLocation = new Point2D.Double(
-								commonTriggerExecutionScope.getOrderPointX(),
-								commonTriggerExecutionScope.getOrderPointY());
+						final LocationJass jassLocation = new LocationJass(commonTriggerExecutionScope.getOrderPointX(),
+								commonTriggerExecutionScope.getOrderPointY(),
+								this.simulation.getHandleIdAllocator().createId());
 						return new HandleJassValue(locationType, jassLocation);
 					});
 			jassProgramVisitor.getJassNativeManager().createNative("GetOrderTarget",
@@ -4760,7 +4755,8 @@ public class Jass2 {
 					(arguments, globalScope, triggerScope) -> {
 						final AbilityPointTarget spellTargetPoint = ((CommonTriggerExecutionScope) triggerScope)
 								.getSpellTargetPoint();
-						final Point2D.Double jassLocation = new Point2D.Double(spellTargetPoint.x, spellTargetPoint.y);
+						final LocationJass jassLocation = new LocationJass(spellTargetPoint.x, spellTargetPoint.y,
+								this.simulation.getHandleIdAllocator().createId());
 						return new HandleJassValue(locationType, jassLocation);
 					});
 			jassProgramVisitor.getJassNativeManager().createNative("GetSpellTargetX",
@@ -4779,8 +4775,8 @@ public class Jass2 {
 					(arguments, globalScope, triggerScope) -> {
 						final AbilityPointTarget spellTargetPoint = ((CommonTriggerExecutionScope) triggerScope)
 								.getSpellTargetPoint();
-						return new HandleJassValue(locationType,
-								new Point2D.Double(spellTargetPoint.x, spellTargetPoint.y));
+						return new HandleJassValue(locationType, new LocationJass(spellTargetPoint.x,
+								spellTargetPoint.y, this.simulation.getHandleIdAllocator().createId()));
 					});
 			jassProgramVisitor.getJassNativeManager().createNative("GetSpellAbilityId",
 					(arguments, globalScope, triggerScope) -> {
@@ -4832,7 +4828,8 @@ public class Jass2 {
 						else {
 							x = y = 0;
 						}
-						return new HandleJassValue(locationType, new Point2D.Double(x, y));
+						return new HandleJassValue(locationType,
+								new LocationJass(x, y, this.simulation.getHandleIdAllocator().createId()));
 					});
 			jassProgramVisitor.getJassNativeManager().createNative("GetUnitRallyUnit",
 					(arguments, globalScope, triggerScope) -> {
@@ -4925,12 +4922,11 @@ public class Jass2 {
 			jassProgramVisitor.getJassNativeManager().createNative("SetBlightLoc",
 					(arguments, globalScope, triggerScope) -> {
 						final CPlayer whichPlayer = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());
-						final Point2D.Double whichLocation = arguments.get(1)
-								.visit(ObjectJassValueVisitor.getInstance());
+						final LocationJass whichLocation = arguments.get(1).visit(ObjectJassValueVisitor.getInstance());
 						final float radius = arguments.get(2).visit(RealJassValueVisitor.getInstance()).floatValue();
 						final boolean addBlight = arguments.get(3).visit(BooleanJassValueVisitor.getInstance());
-						final float whichLocationX = (float) whichLocation.x;
-						final float whichLocationY = (float) whichLocation.y;
+						final float whichLocationX = whichLocation.x;
+						final float whichLocationY = whichLocation.y;
 						war3MapViewer.setBlight(whichLocationX, whichLocationY, radius, addBlight);
 						return null;
 					});
@@ -5144,13 +5140,13 @@ public class Jass2 {
 					(arguments, globalScope, triggerScope) -> {
 						final CUnit unit = nullable(arguments, 0, ObjectJassValueVisitor.getInstance());
 						final int highlightOrderId = arguments.get(1).visit(IntegerJassValueVisitor.getInstance());
-						final Point2D.Double target = arguments.get(2).visit(ObjectJassValueVisitor.getInstance());
+						final LocationJass target = arguments.get(2).visit(ObjectJassValueVisitor.getInstance());
 						if (unit == null) {
 							return null;
 						}
 
 						return new HandleJassValue(abilitybehaviorType, unit.getMoveBehavior().reset(highlightOrderId,
-								new AbilityPointTarget((float) target.x, (float) target.y)));
+								new AbilityPointTarget(target.x, target.y)));
 					});
 			jassProgramVisitor.getJassNativeManager().createNative("GetUnitAttackMovePointBehavior",
 					(arguments, globalScope, triggerScope) -> {
@@ -5166,12 +5162,12 @@ public class Jass2 {
 			jassProgramVisitor.getJassNativeManager().createNative("GetUnitAttackMovePointBehaviorLoc",
 					(arguments, globalScope, triggerScope) -> {
 						final CUnit unit = nullable(arguments, 0, ObjectJassValueVisitor.getInstance());
-						final Point2D.Double target = arguments.get(1).visit(ObjectJassValueVisitor.getInstance());
+						final LocationJass target = arguments.get(1).visit(ObjectJassValueVisitor.getInstance());
 						if (unit == null) {
 							return null;
 						}
-						return new HandleJassValue(abilitybehaviorType, unit.getAttackMoveBehavior()
-								.reset(new AbilityPointTarget((float) target.x, (float) target.y)));
+						return new HandleJassValue(abilitybehaviorType,
+								unit.getAttackMoveBehavior().reset(new AbilityPointTarget(target.x, target.y)));
 					});
 			jassProgramVisitor.getJassNativeManager().createNative("GetUnitAttackWidgetBehavior",
 					(arguments, globalScope, triggerScope) -> {
@@ -5208,15 +5204,13 @@ public class Jass2 {
 						final CUnit unit = nullable(arguments, 0, ObjectJassValueVisitor.getInstance());
 						final int highlightOrderId = arguments.get(1).visit(IntegerJassValueVisitor.getInstance());
 						final int whichUnitAttackIndex = arguments.get(2).visit(IntegerJassValueVisitor.getInstance());
-						final Point2D.Double target = arguments.get(3).visit(ObjectJassValueVisitor.getInstance());
+						final LocationJass target = arguments.get(3).visit(ObjectJassValueVisitor.getInstance());
 						if (unit == null) {
 							return null;
 						}
-						return new HandleJassValue(abilitybehaviorType,
-								unit.getAttackBehavior().reset(this.simulation, highlightOrderId,
-										unit.getCurrentAttacks().get(whichUnitAttackIndex),
-										new AbilityPointTarget((float) target.x, (float) target.y), false,
-										CBehaviorAttackListener.DO_NOTHING));
+						return new HandleJassValue(abilitybehaviorType, unit.getAttackBehavior().reset(this.simulation,
+								highlightOrderId, unit.getCurrentAttacks().get(whichUnitAttackIndex),
+								new AbilityPointTarget(target.x, target.y), false, CBehaviorAttackListener.DO_NOTHING));
 					});
 			jassProgramVisitor.getJassNativeManager().createNative("UnitPollNextOrderBehavior",
 					(arguments, globalScope, triggerScope) -> {
@@ -5510,6 +5504,12 @@ public class Jass2 {
 						return null;
 					});
 
+			jassProgramVisitor.getJassNativeManager().createNative("GetOrderButtonOrderId",
+					(arguments, globalScope, triggerScope) -> {
+						final COrderButton orderCommandCard = arguments.get(0)
+								.visit(ObjectJassValueVisitor.getInstance());
+						return IntegerJassValue.of(orderCommandCard.getOrderId());
+					});
 			jassProgramVisitor.getJassNativeManager().createNative("GetOrderButtonAutoCastOrderId",
 					(arguments, globalScope, triggerScope) -> {
 						final COrderButton orderCommandCard = arguments.get(0)
@@ -6058,7 +6058,8 @@ public class Jass2 {
 						if (object != null) {
 							if (object instanceof AbilityPointTarget) {
 								final AbilityPointTarget apt = (AbilityPointTarget) object;
-								object = new Point2D.Double(apt.x, apt.y);
+								object = new LocationJass(apt.x, apt.y,
+										this.simulation.getHandleIdAllocator().createId());
 							}
 							return new HandleJassValue(locationType, object);
 						}
@@ -6939,9 +6940,9 @@ public class Jass2 {
 						final int castId = arguments.get(argIndex++).visit(IntegerJassValueVisitor.getInstance());
 
 						final CUnit sourceUnit = nullable(arguments, argIndex++, ObjectJassValueVisitor.getInstance());
-						final Point2D.Double sourceLocation = nullable(arguments, argIndex++,
+						final LocationJass sourceLocation = nullable(arguments, argIndex++,
 								ObjectJassValueVisitor.getInstance());
-						final Point2D.Double targetLocation = nullable(arguments, argIndex++,
+						final LocationJass targetLocation = nullable(arguments, argIndex++,
 								ObjectJassValueVisitor.getInstance());
 						final int projectileRawcode = arguments.get(argIndex++)
 								.visit(IntegerJassValueVisitor.getInstance());
@@ -6970,8 +6971,7 @@ public class Jass2 {
 
 						final War3ID projectileId = new War3ID(projectileRawcode);
 
-						final AbilityPointTarget target = new AbilityPointTarget((float) targetLocation.x,
-								(float) targetLocation.y);
+						final AbilityPointTarget target = new AbilityPointTarget(targetLocation.x, targetLocation.y);
 
 						final ABCollisionProjectileListener listener = new ABCollisionProjectileListener(
 								ABActionJass.wrap(onLaunchAction), ABActionJass.wrap(onPreHitsAction),
@@ -6979,9 +6979,9 @@ public class Jass2 {
 								localStore, castId);
 
 						final CProjectile proj = this.simulation.createCollisionProjectile(sourceUnit, projectileId,
-								(float) sourceLocation.getX(), (float) sourceLocation.getY(),
-								(float) sourceUnit.angleTo(target), speed, homing, target, maxHits, hitsPerTarget,
-								startingRadius, endingRadius, collisionInterval, listener, provideCounts);
+								sourceLocation.getX(), sourceLocation.getY(), (float) sourceUnit.angleTo(target), speed,
+								homing, target, maxHits, hitsPerTarget, startingRadius, endingRadius, collisionInterval,
+								listener, provideCounts);
 						return new HandleJassValue(projectileType, proj);
 					});
 			jassProgramVisitor.getJassNativeManager().createNative("CreateLocationTargetedProjectile",
@@ -6993,9 +6993,9 @@ public class Jass2 {
 						final int castId = arguments.get(argIndex++).visit(IntegerJassValueVisitor.getInstance());
 
 						final CUnit sourceUnit = nullable(arguments, argIndex++, ObjectJassValueVisitor.getInstance());
-						final Point2D.Double sourceLocation = nullable(arguments, argIndex++,
+						final LocationJass sourceLocation = nullable(arguments, argIndex++,
 								ObjectJassValueVisitor.getInstance());
-						final Point2D.Double targetLocation = nullable(arguments, argIndex++,
+						final LocationJass targetLocation = nullable(arguments, argIndex++,
 								ObjectJassValueVisitor.getInstance());
 						final int projectileRawcode = arguments.get(argIndex++)
 								.visit(IntegerJassValueVisitor.getInstance());
@@ -7009,16 +7009,15 @@ public class Jass2 {
 
 						final War3ID projectileId = new War3ID(projectileRawcode);
 
-						final AbilityPointTarget target = new AbilityPointTarget((float) targetLocation.x,
-								(float) targetLocation.y);
+						final AbilityPointTarget target = new AbilityPointTarget(targetLocation.x, targetLocation.y);
 
 						final CAbilityProjectileListener listener = new ABProjectileListener(
 								ABActionJass.wrap(onLaunchAction), ABActionJass.wrap(onHitAction), casterUnit,
 								localStore, castId);
 
 						final CProjectile proj = this.simulation.createProjectile(sourceUnit, projectileId,
-								(float) sourceLocation.getX(), (float) sourceLocation.getY(),
-								(float) sourceUnit.angleTo(target), speed, homing, target, listener);
+								sourceLocation.getX(), sourceLocation.getY(), (float) sourceUnit.angleTo(target), speed,
+								homing, target, listener);
 
 						return new HandleJassValue(projectileType, proj);
 					});
@@ -7031,9 +7030,9 @@ public class Jass2 {
 						final int castId = arguments.get(argIndex++).visit(IntegerJassValueVisitor.getInstance());
 
 						final CUnit sourceUnit = nullable(arguments, argIndex++, ObjectJassValueVisitor.getInstance());
-						final Point2D.Double sourceLocation = nullable(arguments, argIndex++,
+						final LocationJass sourceLocation = nullable(arguments, argIndex++,
 								ObjectJassValueVisitor.getInstance());
-						final Point2D.Double targetLocation = nullable(arguments, argIndex++,
+						final LocationJass targetLocation = nullable(arguments, argIndex++,
 								ObjectJassValueVisitor.getInstance());
 						final int projectileRawcode = arguments.get(argIndex++)
 								.visit(IntegerJassValueVisitor.getInstance());
@@ -7068,8 +7067,7 @@ public class Jass2 {
 
 						final War3ID projectileId = new War3ID(projectileRawcode);
 
-						final AbilityPointTarget target = new AbilityPointTarget((float) targetLocation.x,
-								(float) targetLocation.y);
+						final AbilityPointTarget target = new AbilityPointTarget(targetLocation.x, targetLocation.y);
 
 						final ABCollisionProjectileListener listener = new ABCollisionProjectileListener(
 								ABActionJass.wrap(onLaunchAction), ABActionJass.wrap(onPreHitsAction),
@@ -7077,10 +7075,10 @@ public class Jass2 {
 								localStore, castId);
 
 						final CProjectile proj = this.simulation.createPseudoProjectile(sourceUnit, projectileId,
-								whichEffectType, whichEffectTypeIndex, (float) sourceLocation.getX(),
-								(float) sourceLocation.getY(), (float) sourceUnit.angleTo(target), speed,
-								projectileStepInterval, projectileArtSkip, homing, target, maxHits, hitsPerTarget,
-								startingRadius, endingRadius, listener, provideCounts);
+								whichEffectType, whichEffectTypeIndex, sourceLocation.getX(), sourceLocation.getY(),
+								(float) sourceUnit.angleTo(target), speed, projectileStepInterval, projectileArtSkip,
+								homing, target, maxHits, hitsPerTarget, startingRadius, endingRadius, listener,
+								provideCounts);
 
 						return new HandleJassValue(projectileType, proj);
 					});
@@ -7093,7 +7091,7 @@ public class Jass2 {
 						final int castId = arguments.get(argIndex++).visit(IntegerJassValueVisitor.getInstance());
 
 						final CUnit sourceUnit = nullable(arguments, argIndex++, ObjectJassValueVisitor.getInstance());
-						final Point2D.Double sourceLocation = nullable(arguments, argIndex++,
+						final LocationJass sourceLocation = nullable(arguments, argIndex++,
 								ObjectJassValueVisitor.getInstance());
 						final CUnit target = nullable(arguments, argIndex++, ObjectJassValueVisitor.getInstance());
 						final int projectileRawcode = arguments.get(argIndex++)
@@ -7129,9 +7127,9 @@ public class Jass2 {
 								localStore, castId);
 
 						final CProjectile proj = this.simulation.createCollisionProjectile(sourceUnit, projectileId,
-								(float) sourceLocation.getX(), (float) sourceLocation.getY(),
-								(float) sourceUnit.angleTo(target), speed, homing, target, maxHits, hitsPerTarget,
-								startingRadius, endingRadius, collisionInterval, listener, provideCounts);
+								sourceLocation.getX(), sourceLocation.getY(), (float) sourceUnit.angleTo(target), speed,
+								homing, target, maxHits, hitsPerTarget, startingRadius, endingRadius, collisionInterval,
+								listener, provideCounts);
 						return new HandleJassValue(projectileType, proj);
 					});
 			jassProgramVisitor.getJassNativeManager().createNative("CreateUnitTargetedProjectile",
@@ -7143,7 +7141,7 @@ public class Jass2 {
 						final int castId = arguments.get(argIndex++).visit(IntegerJassValueVisitor.getInstance());
 
 						final CUnit sourceUnit = nullable(arguments, argIndex++, ObjectJassValueVisitor.getInstance());
-						final Point2D.Double sourceLocation = nullable(arguments, argIndex++,
+						final LocationJass sourceLocation = nullable(arguments, argIndex++,
 								ObjectJassValueVisitor.getInstance());
 						final CUnit targetUnit = nullable(arguments, argIndex++, ObjectJassValueVisitor.getInstance());
 						final int projectileRawcode = arguments.get(argIndex++)
@@ -7163,8 +7161,8 @@ public class Jass2 {
 								localStore, castId);
 
 						final CProjectile proj = this.simulation.createProjectile(sourceUnit, projectileId,
-								(float) sourceLocation.getX(), (float) sourceLocation.getY(),
-								(float) sourceUnit.angleTo(targetUnit), speed, homing, targetUnit, listener);
+								sourceLocation.getX(), sourceLocation.getY(), (float) sourceUnit.angleTo(targetUnit),
+								speed, homing, targetUnit, listener);
 						return new HandleJassValue(projectileType, proj);
 					});
 			jassProgramVisitor.getJassNativeManager().createNative("SetAttackProjectileDamage",
@@ -7205,9 +7203,9 @@ public class Jass2 {
 			jassProgramVisitor.getJassNativeManager().createNative("SetProjectileTargetLoc",
 					(arguments, globalScope, triggerScope) -> {
 						final CProjectile projectile = nullable(arguments, 0, ObjectJassValueVisitor.getInstance());
-						final Point2D.Double target = nullable(arguments, 1, ObjectJassValueVisitor.getInstance());
+						final LocationJass target = nullable(arguments, 1, ObjectJassValueVisitor.getInstance());
 
-						projectile.setTarget(new AbilityPointTarget((float) target.x, (float) target.y));
+						projectile.setTarget(new AbilityPointTarget(target.x, target.y));
 						return null;
 					});
 			jassProgramVisitor.getJassNativeManager().createNative("IsProjectileReflected",
@@ -8316,7 +8314,7 @@ public class Jass2 {
 			catch (final Exception exc) {
 				new JassException(this.jassProgramVisitor.getGlobals(),
 						"Exception on Line " + this.jassProgramVisitor.getGlobals().getLineNumber(), exc)
-								.printStackTrace();
+						.printStackTrace();
 			}
 			try {
 				final JassThread mainThread = this.jassProgramVisitor.getGlobals().createThread("main",
@@ -8455,7 +8453,7 @@ public class Jass2 {
 			registerConversionAndStringNatives(jassProgramVisitor, gameUI);
 			registerConfigNatives(jassProgramVisitor, mapConfig, startlocprioType, gametypeType, placementType,
 					gamespeedType, gamedifficultyType, mapdensityType, locationType, playerType, playercolorType,
-					mapcontrolType, playerslotstateType, mapConfig);
+					mapcontrolType, playerslotstateType, mapConfig, new HandleIdAllocator());
 
 		}
 
@@ -8777,7 +8775,8 @@ public class Jass2 {
 			final HandleJassType placementType, final HandleJassType gamespeedType,
 			final HandleJassType gamedifficultyType, final HandleJassType mapdensityType,
 			final HandleJassType locationType, final HandleJassType playerType, final HandleJassType playercolorType,
-			final HandleJassType mapcontrolType, final HandleJassType playerslotstateType, final CPlayerAPI playerAPI) {
+			final HandleJassType mapcontrolType, final HandleJassType playerslotstateType, final CPlayerAPI playerAPI,
+			final HandleIdAllocator handleIdAllocator) {
 		jassProgramVisitor.getJassNativeManager().createNative("SetMapName", (arguments, globalScope, triggerScope) -> {
 			final String name = arguments.get(0).visit(StringJassValueVisitor.getInstance());
 			mapConfig.setMapName(name);
@@ -8811,10 +8810,10 @@ public class Jass2 {
 		jassProgramVisitor.getJassNativeManager().createNative("DefineStartLocationLoc",
 				(arguments, globalScope, triggerScope) -> {
 					final Integer whichStartLoc = arguments.get(0).visit(IntegerJassValueVisitor.getInstance());
-					final Point2D.Double whichLocation = arguments.get(1)
-							.visit(ObjectJassValueVisitor.<Point2D.Double>getInstance());
-					mapConfig.getStartLoc(whichStartLoc).setX((float) whichLocation.x);
-					mapConfig.getStartLoc(whichStartLoc).setY((float) whichLocation.y);
+					final LocationJass whichLocation = arguments.get(1)
+							.visit(ObjectJassValueVisitor.<LocationJass>getInstance());
+					mapConfig.getStartLoc(whichStartLoc).setX(whichLocation.x);
+					mapConfig.getStartLoc(whichStartLoc).setY(whichLocation.y);
 					return null;
 				});
 		jassProgramVisitor.getJassNativeManager().createNative("SetStartLocPrioCount",
@@ -8949,8 +8948,9 @@ public class Jass2 {
 		jassProgramVisitor.getJassNativeManager().createNative("GetStartLocationLoc",
 				(arguments, globalScope, triggerScope) -> {
 					final Integer whichStartLoc = arguments.get(0).visit(IntegerJassValueVisitor.getInstance());
-					return new HandleJassValue(locationType, new Point2D.Double(
-							mapConfig.getStartLoc(whichStartLoc).getX(), mapConfig.getStartLoc(whichStartLoc).getY()));
+					return new HandleJassValue(locationType,
+							new LocationJass(mapConfig.getStartLoc(whichStartLoc).getX(),
+									mapConfig.getStartLoc(whichStartLoc).getY(), handleIdAllocator.createId()));
 				});
 		// PlayerAPI
 

@@ -40,7 +40,9 @@ public class CBehaviorUproot implements CBehavior {
 			this.abilityRoot.setRooted(false, this.unit, game);
 			this.unit.getUnitAnimationListener().playAnimation(false, PrimaryTag.STAND, SequenceUtils.EMPTY, 1.0f,
 					true);
-			this.unit.getUnitAnimationListener().removeSecondaryTag(SecondaryTag.ALTERNATE);
+			if (this.unit.getUnitAnimationListener().removeSecondaryTag(SecondaryTag.ALTERNATE)) {
+				this.unit.getUnitAnimationListener().forceResetCurrentAnimation();
+			}
 			this.unit.setAcceptingOrders(true);
 			return this.unit.pollNextOrderBehavior(game);
 		}

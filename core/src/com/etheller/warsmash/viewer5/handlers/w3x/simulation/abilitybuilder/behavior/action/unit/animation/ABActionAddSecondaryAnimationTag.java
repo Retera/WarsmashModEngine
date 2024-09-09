@@ -16,14 +16,17 @@ public class ABActionAddSecondaryAnimationTag implements ABSingleAction {
 	private ABStringCallback tag;
 
 	@Override
-	public void runAction(CSimulation game, CUnit caster, Map<String, Object> localStore, final int castId) {
+	public void runAction(final CSimulation game, final CUnit caster, final Map<String, Object> localStore,
+			final int castId) {
 		final CUnit targetUnit = this.unit.callback(game, caster, localStore, castId);
-		targetUnit.getUnitAnimationListener()
-				.addSecondaryTag(SecondaryTag.valueOf(this.tag.callback(game, caster, localStore, castId)));
+		if (targetUnit.getUnitAnimationListener()
+				.addSecondaryTag(SecondaryTag.valueOf(this.tag.callback(game, caster, localStore, castId)))) {
+			targetUnit.getUnitAnimationListener().forceResetCurrentAnimation();
+		}
 	}
 
 	@Override
-	public String generateJassEquivalent(JassTextGenerator jassTextGenerator) {
+	public String generateJassEquivalent(final JassTextGenerator jassTextGenerator) {
 		return "AddUnitAnimationProperties(" + this.unit.generateJassEquivalent(jassTextGenerator) + ", "
 				+ this.tag.generateJassEquivalent(jassTextGenerator) + ", true)";
 	}

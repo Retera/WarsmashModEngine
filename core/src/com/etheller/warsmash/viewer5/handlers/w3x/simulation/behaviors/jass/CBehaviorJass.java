@@ -1,6 +1,5 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.jass;
 
-import java.util.Arrays;
 import java.util.LinkedList;
 
 import com.etheller.interpreter.ast.scope.GlobalScope;
@@ -60,8 +59,9 @@ public class CBehaviorJass extends CExtensibleHandleAbstract implements CBehavio
 
 	@Override
 	public void end(final CSimulation game, final boolean interrupted) {
-		runMethodReturnNothing(game.getGlobalScope(), this.endIdxVtable,
-				Arrays.<JassValue>asList(BooleanJassValue.of(interrupted)));
+		final LinkedList<JassValue> arguments = new LinkedList<>();
+		arguments.add(BooleanJassValue.of(interrupted));
+		runMethodReturnNothing(game.getGlobalScope(), this.endIdxVtable, arguments);
 	}
 
 	@Override
@@ -84,6 +84,10 @@ public class CBehaviorJass extends CExtensibleHandleAbstract implements CBehavio
 	public CBehaviorCategory getBehaviorCategory() {
 		return runMethod(this.globalScope, this.getBehaviorCategoryIdxVtable, "CBehaviorJass.getBehaviorCategory",
 				new LinkedList<>(), ObjectJassValueVisitor.getInstance());
+	}
+
+	public GlobalScope getGlobalScope() {
+		return this.globalScope;
 	}
 
 }

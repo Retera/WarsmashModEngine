@@ -2913,12 +2913,15 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 								// RenderUnit class:
 								final String originalRequiredAnimationNames = War3MapViewer.this.allObjectData
 										.getUnits().get(unit.getTypeId()).getFieldAsString(RenderUnit.ANIM_PROPS, 0);
+								boolean changedAnimationProperties = false;
 								TokenLoop: for (final String animationName : originalRequiredAnimationNames
 										.split(",")) {
 									final String upperCaseToken = animationName.toUpperCase();
 									for (final SecondaryTag secondaryTag : SecondaryTag.values()) {
 										if (upperCaseToken.equals(secondaryTag.name())) {
-											unit.getUnitAnimationListener().removeSecondaryTag(secondaryTag);
+											if (unit.getUnitAnimationListener().removeSecondaryTag(secondaryTag)) {
+												changedAnimationProperties = true;
+											}
 											continue TokenLoop;
 										}
 									}
@@ -2931,10 +2934,16 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 									final String upperCaseToken = animationName.toUpperCase();
 									for (final SecondaryTag secondaryTag : SecondaryTag.values()) {
 										if (upperCaseToken.equals(secondaryTag.name())) {
-											unit.getUnitAnimationListener().addSecondaryTag(secondaryTag);
+											if (unit.getUnitAnimationListener().addSecondaryTag(secondaryTag)) {
+												changedAnimationProperties = true;
+											}
 											continue TokenLoop;
 										}
 									}
+								}
+
+								if (changedAnimationProperties) {
+									unit.getUnitAnimationListener().forceResetCurrentAnimation();
 								}
 							}
 
@@ -2947,11 +2956,14 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 								// RenderUnit class:
 								final String requiredAnimationNames = upgrade.getFieldAsString(RenderUnit.ANIM_PROPS,
 										0);
+								boolean changedAnimationProperties = false;
 								TokenLoop: for (final String animationName : requiredAnimationNames.split(",")) {
 									final String upperCaseToken = animationName.toUpperCase();
 									for (final SecondaryTag secondaryTag : SecondaryTag.values()) {
 										if (upperCaseToken.equals(secondaryTag.name())) {
-											unit.getUnitAnimationListener().removeSecondaryTag(secondaryTag);
+											if (unit.getUnitAnimationListener().removeSecondaryTag(secondaryTag)) {
+												changedAnimationProperties = true;
+											}
 											continue TokenLoop;
 										}
 									}
@@ -2964,10 +2976,16 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 									final String upperCaseToken = animationName.toUpperCase();
 									for (final SecondaryTag secondaryTag : SecondaryTag.values()) {
 										if (upperCaseToken.equals(secondaryTag.name())) {
-											unit.getUnitAnimationListener().addSecondaryTag(secondaryTag);
+											if (unit.getUnitAnimationListener().addSecondaryTag(secondaryTag)) {
+												changedAnimationProperties = true;
+											}
 											continue TokenLoop;
 										}
 									}
+								}
+
+								if (changedAnimationProperties) {
+									unit.getUnitAnimationListener().forceResetCurrentAnimation();
 								}
 							}
 

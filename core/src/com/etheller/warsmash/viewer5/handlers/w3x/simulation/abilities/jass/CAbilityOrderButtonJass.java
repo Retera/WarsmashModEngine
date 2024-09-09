@@ -270,7 +270,7 @@ public class CAbilityOrderButtonJass extends COrderButton implements CHandle {
 		arguments.add(new HandleJassValue((HandleJassType) globalScope.parseType("unit"), caster));
 		arguments.add(new HandleJassValue((HandleJassType) globalScope.parseType("ability"),
 				jassAbilityBasicScope.getSpellAbility()));
-		arguments.add(new HandleJassValue((HandleJassType) globalScope.parseType("widget"), point));
+		arguments.add(new HandleJassValue((HandleJassType) globalScope.parseType("location"), point));
 		final Integer instructionPtr = structValue.getType().getMethodTable().get(this.beginLocIdxVtable);
 		final JassThread thread = globalScope.createThreadCapturingReturnValue(instructionPtr, arguments,
 				jassAbilityBasicScope);

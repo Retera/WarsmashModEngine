@@ -3,7 +3,6 @@ package com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.harvest;
 import com.etheller.warsmash.util.WarsmashConstants;
 import com.etheller.warsmash.viewer5.handlers.w3x.AnimationTokens.PrimaryTag;
 import com.etheller.warsmash.viewer5.handlers.w3x.AnimationTokens.SecondaryTag;
-import com.etheller.warsmash.viewer5.handlers.w3x.environment.PathingGrid.MovementType;
 import com.etheller.warsmash.viewer5.handlers.w3x.SequenceUtils;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CDestructable;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CItem;
@@ -37,7 +36,7 @@ public class CBehaviorHarvest extends CAbstractRangedBehavior
 		this.abilityHarvest = abilityHarvest;
 	}
 
-	public CBehavior reset(CSimulation game, final CWidget target) {
+	public CBehavior reset(final CSimulation game, final CWidget target) {
 		this.abilityHarvest.setLastHarvestTarget(target);
 		if (this.popoutFromMineTurnTick != 0) {
 			// TODO this check is probably only for debug and should be removed after
@@ -116,7 +115,9 @@ public class CBehaviorHarvest extends CAbstractRangedBehavior
 		this.unit.setAcceptingOrders(true);
 		dropResources();
 		this.abilityHarvest.setCarriedResources(ResourceType.GOLD, goldMined);
-		this.unit.getUnitAnimationListener().addSecondaryTag(SecondaryTag.GOLD);
+		if (this.unit.getUnitAnimationListener().addSecondaryTag(SecondaryTag.GOLD)) {
+			this.unit.getUnitAnimationListener().forceResetCurrentAnimation();
+		}
 		this.simulation.unitRepositioned(this.unit);
 	}
 
@@ -124,7 +125,7 @@ public class CBehaviorHarvest extends CAbstractRangedBehavior
 	public CBehavior accept(final CDestructable target) {
 		if ((this.abilityHarvest.getCarriedResourceType() != ResourceType.LUMBER)
 				|| (this.abilityHarvest.getCarriedResourceAmount() < this.abilityHarvest.getLumberCapacity())) {
-			return this.abilityHarvest.getBehaviorTreeAttack().reset(simulation, getHighlightOrderId(),
+			return this.abilityHarvest.getBehaviorTreeAttack().reset(this.simulation, getHighlightOrderId(),
 					this.abilityHarvest.getTreeAttack(), target, false, this);
 		}
 		else {
@@ -141,7 +142,9 @@ public class CBehaviorHarvest extends CAbstractRangedBehavior
 		this.abilityHarvest.setCarriedResources(ResourceType.LUMBER,
 				Math.min(this.abilityHarvest.getCarriedResourceAmount() + this.abilityHarvest.getDamageToTree(),
 						this.abilityHarvest.getLumberCapacity()));
-		this.unit.getUnitAnimationListener().addSecondaryTag(SecondaryTag.LUMBER);
+		if (this.unit.getUnitAnimationListener().addSecondaryTag(SecondaryTag.LUMBER)) {
+			this.unit.getUnitAnimationListener().forceResetCurrentAnimation();
+		}
 		if (target instanceof CDestructable) {
 			if (this.unit.getUnitType().getClassifications().contains(CUnitClassification.UNDEAD)) {
 				((CDestructable) target).setBlighted(true);
@@ -215,16 +218,25 @@ public class CBehaviorHarvest extends CAbstractRangedBehavior
 	}
 
 	private void dropResources() {
-		if (this.abilityHarvest.getCarriedResourceType() != null && this.abilityHarvest.getCarriedResourceAmount() > 0) {
-			switch (this.abilityHarvest.getCarriedResourceType()) {
-			case FOOD:
-				throw new IllegalStateException("Unit used Harvest skill to carry FOOD resource!");
+		final ResourceType carriedResourceType = this.abilityHarvest.getCarriedResourceType();
+		if ((carriedResourceType != null) && (this.abilityHarvest.getCarriedResourceAmount() > 0)) {
+			SecondaryTag removedTag = null;
+			switch (carriedResourceType) {
 			case GOLD:
-				this.unit.getUnitAnimationListener().removeSecondaryTag(SecondaryTag.GOLD);
+				removedTag = SecondaryTag.GOLD;
 				break;
 			case LUMBER:
-				this.unit.getUnitAnimationListener().removeSecondaryTag(SecondaryTag.LUMBER);
+				removedTag = SecondaryTag.LUMBER;
 				break;
+			default:
+				break;
+			}
+			if (removedTag == null) {
+				throw new IllegalStateException(
+						"Unit used Harvest skill to carry " + carriedResourceType + " resource!");
+			}
+			if (this.unit.getUnitAnimationListener().removeSecondaryTag(removedTag)) {
+				this.unit.getUnitAnimationListener().forceResetCurrentAnimation();
 			}
 		}
 		this.abilityHarvest.setCarriedResources(null, 0);

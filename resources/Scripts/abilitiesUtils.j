@@ -115,7 +115,6 @@ globals
     constant string AB_LOCAL_STORE_KEY_BEHAVIORONGOING                   = "_behaviorOngoing#"
 	
 
-    constant real au_SIMULTION_STEP_TIME                            = GetSimulationStepTime()
     
     group au_tempGroup = CreateGroup()
     group au_swapGroup
@@ -594,7 +593,7 @@ function PeriodicExecuteAU takes localstore whichLocalStore, real delaySeconds, 
     local integer delayTicks
     local boolean runActions = false
     if currentTick >= nextActiveTick then
-        set delayTicks = R2I(delaySeconds / au_SIMULTION_STEP_TIME)
+        set delayTicks = R2I(delaySeconds / au_SIMULATION_STEP_TIME)
         
         if nextActiveTick != 0 or initialTick then
             set runActions = true

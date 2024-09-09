@@ -133,6 +133,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.skills.ut
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityPointTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTargetVisitor;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTargetVisitorJass;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.CAbilityType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.jass.CAbilityTypeJassDefinition;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.jass.CodeJassValueBehaviorExpr;
@@ -162,9 +163,13 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.proj
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.timer.ABTimer;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.types.impl.CAbilityTypeAbilityBuilderLevelData;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.ai.AIDifficulty;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.BehaviorTargetVisitor;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehavior;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehaviorAttackListener;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehaviorCategory;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.jass.CAbstractRangedBehaviorJass;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.jass.CBehaviorJass;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.jass.CRangedBehaviorJass;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CAttackType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CTargetType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.projectile.CAbilityProjectileListener;
@@ -620,7 +625,7 @@ public class Jass2 {
 			final HandleJassType abilitytypeType = globals.registerHandleType("abilitytype");
 			final HandleJassType orderbuttonType = globals.registerHandleType("orderbutton");
 			final HandleJassType orderbuttontypeType = globals.registerHandleType("orderbuttontype");
-			final HandleJassType abilitybehaviorType = globals.registerHandleType("abilitybehavior");
+			final HandleJassType abilitybehaviorType = globals.registerHandleType("behavior");
 			final HandleJassType behaviorexprType = globals.registerHandleType("behaviorexpr");
 			final HandleJassType iconuiType = globals.registerHandleType("iconui");
 
@@ -654,11 +659,15 @@ public class Jass2 {
 			final HandleJassType abilitycategoryType = globals.registerHandleType("abilitycategory");
 			final HandleJassType stringlistType = globals.registerHandleType("stringlist");
 			final HandleJassType abilitytargetType = globals.registerHandleType("abilitytarget");
+			final HandleJassType abilitytargetvisitorType = globals.registerHandleType("abilitytargetvisitor");
 
 			final HandleJassType primarytagType = globals.registerHandleType("primarytag");
 			final HandleJassType primarytagsType = globals.registerHandleType("primarytags");
 			final HandleJassType secondarytagType = globals.registerHandleType("secondarytag");
 			final HandleJassType secondarytagsType = globals.registerHandleType("secondarytags");
+
+			final HandleJassType rangedbehaviorType = globals.registerHandleType("rangedbehavior");
+			final HandleJassType abstractrangedbehaviorType = globals.registerHandleType("abstractrangedbehavior");
 
 			registerTypingNatives(jassProgramVisitor, raceType, alliancetypeType, racepreferenceType, igamestateType,
 					fgamestateType, playerstateType, playerscoreType, playergameresultType, unitstateType,
@@ -930,7 +939,8 @@ public class Jass2 {
 							return BooleanJassValue.FALSE;
 						}
 						final String orderString = arguments.get(1).visit(StringJassValueVisitor.getInstance());
-						final LocationJass whichLocation = arguments.get(2).visit(ObjectJassValueVisitor.getInstance());
+						final AbilityPointTarget whichLocation = arguments.get(2)
+								.visit(ObjectJassValueVisitor.getInstance());
 						final CPlayerUnitOrderExecutor defaultPlayerUnitOrderExecutor = CommonEnvironment.this.simulation
 								.getDefaultPlayerUnitOrderExecutor(whichUnit.getPlayerIndex());
 						final BooleanAbilityActivationReceiver activationReceiver = BooleanAbilityActivationReceiver.INSTANCE;
@@ -1237,8 +1247,8 @@ public class Jass2 {
 					(arguments, globalScope, triggerScope) -> {
 						final List<CUnit> group = arguments.get(0)
 								.visit(ObjectJassValueVisitor.<List<CUnit>>getInstance());
-						final LocationJass whichLocation = arguments.get(1)
-								.visit(ObjectJassValueVisitor.<LocationJass>getInstance());
+						final AbilityPointTarget whichLocation = arguments.get(1)
+								.visit(ObjectJassValueVisitor.<AbilityPointTarget>getInstance());
 						final float x = whichLocation.x;
 						final float y = whichLocation.y;
 						final float radius = arguments.get(2).visit(RealJassValueVisitor.getInstance()).floatValue();
@@ -1295,8 +1305,8 @@ public class Jass2 {
 					(arguments, globalScope, triggerScope) -> {
 						final List<CUnit> group = arguments.get(0)
 								.visit(ObjectJassValueVisitor.<List<CUnit>>getInstance());
-						final LocationJass whichLocation = arguments.get(1)
-								.visit(ObjectJassValueVisitor.<LocationJass>getInstance());
+						final AbilityPointTarget whichLocation = arguments.get(1)
+								.visit(ObjectJassValueVisitor.<AbilityPointTarget>getInstance());
 						final float x = whichLocation.x;
 						final float y = whichLocation.y;
 						final float radius = arguments.get(2).visit(RealJassValueVisitor.getInstance()).floatValue();
@@ -1379,8 +1389,8 @@ public class Jass2 {
 						final List<CUnit> group = arguments.get(0)
 								.visit(ObjectJassValueVisitor.<List<CUnit>>getInstance());
 						final String order = arguments.get(1).visit(StringJassValueVisitor.getInstance());
-						final LocationJass whichLocation = arguments.get(2)
-								.visit(ObjectJassValueVisitor.<LocationJass>getInstance());
+						final AbilityPointTarget whichLocation = arguments.get(2)
+								.visit(ObjectJassValueVisitor.<AbilityPointTarget>getInstance());
 						final AbilityPointTarget target = new AbilityPointTarget(whichLocation.x, whichLocation.y);
 						final int orderId = OrderIdUtils.getOrderId(order);
 						boolean success = true;
@@ -1408,8 +1418,8 @@ public class Jass2 {
 						final List<CUnit> group = arguments.get(0)
 								.visit(ObjectJassValueVisitor.<List<CUnit>>getInstance());
 						final int orderId = arguments.get(1).visit(IntegerJassValueVisitor.getInstance());
-						final LocationJass whichLocation = arguments.get(2)
-								.visit(ObjectJassValueVisitor.<LocationJass>getInstance());
+						final AbilityPointTarget whichLocation = arguments.get(2)
+								.visit(ObjectJassValueVisitor.<AbilityPointTarget>getInstance());
 						final AbilityPointTarget target = new AbilityPointTarget(whichLocation.x, whichLocation.y);
 						boolean success = true;
 						for (final CUnit unit : group) {
@@ -1610,10 +1620,10 @@ public class Jass2 {
 			});
 			jassProgramVisitor.getJassNativeManager().createNative("RectFromLoc",
 					(arguments, globalScope, triggerScope) -> {
-						final LocationJass min = arguments.get(0)
-								.visit(ObjectJassValueVisitor.<LocationJass>getInstance());
-						final LocationJass max = arguments.get(1)
-								.visit(ObjectJassValueVisitor.<LocationJass>getInstance());
+						final AbilityPointTarget min = arguments.get(0)
+								.visit(ObjectJassValueVisitor.<AbilityPointTarget>getInstance());
+						final AbilityPointTarget max = arguments.get(1)
+								.visit(ObjectJassValueVisitor.<AbilityPointTarget>getInstance());
 						final float minx = min.x;
 						final float miny = min.y;
 						final float maxx = max.x;
@@ -1640,10 +1650,10 @@ public class Jass2 {
 			jassProgramVisitor.getJassNativeManager().createNative("SetRectFromLoc",
 					(arguments, globalScope, triggerScope) -> {
 						final Rectangle rect = arguments.get(0).visit(ObjectJassValueVisitor.<Rectangle>getInstance());
-						final LocationJass min = arguments.get(1)
-								.visit(ObjectJassValueVisitor.<LocationJass>getInstance());
-						final LocationJass max = arguments.get(2)
-								.visit(ObjectJassValueVisitor.<LocationJass>getInstance());
+						final AbilityPointTarget min = arguments.get(1)
+								.visit(ObjectJassValueVisitor.<AbilityPointTarget>getInstance());
+						final AbilityPointTarget max = arguments.get(2)
+								.visit(ObjectJassValueVisitor.<AbilityPointTarget>getInstance());
 						final float minx = min.x;
 						final float miny = min.y;
 						final float maxx = max.x;
@@ -1664,8 +1674,8 @@ public class Jass2 {
 			jassProgramVisitor.getJassNativeManager().createNative("MoveRectToLoc",
 					(arguments, globalScope, triggerScope) -> {
 						final Rectangle rect = arguments.get(0).visit(ObjectJassValueVisitor.<Rectangle>getInstance());
-						final LocationJass newCenterLoc = arguments.get(1)
-								.visit(ObjectJassValueVisitor.<LocationJass>getInstance());
+						final AbilityPointTarget newCenterLoc = arguments.get(1)
+								.visit(ObjectJassValueVisitor.<AbilityPointTarget>getInstance());
 						rect.setCenter(newCenterLoc.x, newCenterLoc.y);
 						return null;
 					});
@@ -1744,8 +1754,8 @@ public class Jass2 {
 			jassProgramVisitor.getJassNativeManager().createNative("RegionAddCellAtLoc",
 					(arguments, globalScope, triggerScope) -> {
 						final CRegion region = arguments.get(0).visit(ObjectJassValueVisitor.<CRegion>getInstance());
-						final LocationJass whichLocation = arguments.get(1)
-								.visit(ObjectJassValueVisitor.<LocationJass>getInstance());
+						final AbilityPointTarget whichLocation = arguments.get(1)
+								.visit(ObjectJassValueVisitor.<AbilityPointTarget>getInstance());
 						region.addCell(whichLocation.x, whichLocation.y,
 								CommonEnvironment.this.simulation.getRegionManager());
 						return null;
@@ -1761,8 +1771,8 @@ public class Jass2 {
 			jassProgramVisitor.getJassNativeManager().createNative("RegionClearCellAtLoc",
 					(arguments, globalScope, triggerScope) -> {
 						final CRegion region = arguments.get(0).visit(ObjectJassValueVisitor.<CRegion>getInstance());
-						final LocationJass whichLocation = arguments.get(1)
-								.visit(ObjectJassValueVisitor.<LocationJass>getInstance());
+						final AbilityPointTarget whichLocation = arguments.get(1)
+								.visit(ObjectJassValueVisitor.<AbilityPointTarget>getInstance());
 						region.clearCell(whichLocation.x, whichLocation.y,
 								CommonEnvironment.this.simulation.getRegionManager());
 						return null;
@@ -1776,16 +1786,16 @@ public class Jass2 {
 					});
 			jassProgramVisitor.getJassNativeManager().createNative("RemoveLocation",
 					(arguments, globalScope, triggerScope) -> {
-						final LocationJass whichLocation = arguments.get(0)
-								.visit(ObjectJassValueVisitor.<LocationJass>getInstance());
+						final AbilityPointTarget whichLocation = arguments.get(0)
+								.visit(ObjectJassValueVisitor.<AbilityPointTarget>getInstance());
 						System.err.println(
 								"RemoveRect called but in Java we don't have a destructor, so we need to unregister later when that is implemented");
 						return null;
 					});
 			jassProgramVisitor.getJassNativeManager().createNative("MoveLocation",
 					(arguments, globalScope, triggerScope) -> {
-						final LocationJass whichLocation = arguments.get(0)
-								.visit(ObjectJassValueVisitor.<LocationJass>getInstance());
+						final AbilityPointTarget whichLocation = arguments.get(0)
+								.visit(ObjectJassValueVisitor.<AbilityPointTarget>getInstance());
 						final float x = arguments.get(1).visit(RealJassValueVisitor.getInstance()).floatValue();
 						final float y = arguments.get(2).visit(RealJassValueVisitor.getInstance()).floatValue();
 						whichLocation.x = x;
@@ -1794,7 +1804,8 @@ public class Jass2 {
 					});
 			jassProgramVisitor.getJassNativeManager().createNative("GetLocationX",
 					(arguments, globalScope, triggerScope) -> {
-						final LocationJass whichLocation = nullable(arguments, 0, ObjectJassValueVisitor.getInstance());
+						final AbilityPointTarget whichLocation = nullable(arguments, 0,
+								ObjectJassValueVisitor.getInstance());
 						if (whichLocation == null) {
 							return RealJassValue.ZERO;
 						}
@@ -1802,7 +1813,8 @@ public class Jass2 {
 					});
 			jassProgramVisitor.getJassNativeManager().createNative("GetLocationY",
 					(arguments, globalScope, triggerScope) -> {
-						final LocationJass whichLocation = nullable(arguments, 0, ObjectJassValueVisitor.getInstance());
+						final AbilityPointTarget whichLocation = nullable(arguments, 0,
+								ObjectJassValueVisitor.getInstance());
 						if (whichLocation == null) {
 							return RealJassValue.ZERO;
 						}
@@ -1810,8 +1822,8 @@ public class Jass2 {
 					});
 			jassProgramVisitor.getJassNativeManager().createNative("GetLocationZ",
 					(arguments, globalScope, triggerScope) -> {
-						final LocationJass whichLocation = arguments.get(0)
-								.visit(ObjectJassValueVisitor.<LocationJass>getInstance());
+						final AbilityPointTarget whichLocation = arguments.get(0)
+								.visit(ObjectJassValueVisitor.<AbilityPointTarget>getInstance());
 						return RealJassValue
 								.of(war3MapViewer.terrain.getGroundHeight(whichLocation.x, whichLocation.y));
 					});
@@ -1835,8 +1847,8 @@ public class Jass2 {
 					(arguments, globalScope, triggerScope) -> {
 						final CRegion whichRegion = arguments.get(0)
 								.visit(ObjectJassValueVisitor.<CRegion>getInstance());
-						final LocationJass whichLocation = arguments.get(1)
-								.visit(ObjectJassValueVisitor.<LocationJass>getInstance());
+						final AbilityPointTarget whichLocation = arguments.get(1)
+								.visit(ObjectJassValueVisitor.<AbilityPointTarget>getInstance());
 						return BooleanJassValue.of(whichRegion.contains(whichLocation.x, whichLocation.y,
 								CommonEnvironment.this.simulation.getRegionManager()));
 					});
@@ -2810,7 +2822,8 @@ public class Jass2 {
 					(arguments, globalScope, triggerScope) -> {
 						final CPlayer player = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());
 						final int rawcode = arguments.get(1).visit(IntegerJassValueVisitor.getInstance());
-						final LocationJass whichLocation = nullable(arguments, 2, ObjectJassValueVisitor.getInstance());
+						final AbilityPointTarget whichLocation = nullable(arguments, 2,
+								ObjectJassValueVisitor.getInstance());
 						final float facing = arguments.get(3).visit(RealJassValueVisitor.getInstance()).floatValue();
 						final War3ID rawcodeId = new War3ID(rawcode);
 						final float x = whichLocation == null ? 0 : (float) whichLocation.x;
@@ -2823,7 +2836,8 @@ public class Jass2 {
 					(arguments, globalScope, triggerScope) -> {
 						final CPlayer player = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());
 						final String legacyName = arguments.get(1).visit(StringJassValueVisitor.getInstance());
-						final LocationJass whichLocation = nullable(arguments, 2, ObjectJassValueVisitor.getInstance());
+						final AbilityPointTarget whichLocation = nullable(arguments, 2,
+								ObjectJassValueVisitor.getInstance());
 						final float facing = arguments.get(3).visit(RealJassValueVisitor.getInstance()).floatValue();
 						final CUnitType unitTypeByJassLegacyName = this.simulation.getUnitData()
 								.getUnitTypeByJassLegacyName(legacyName);
@@ -2937,7 +2951,8 @@ public class Jass2 {
 			jassProgramVisitor.getJassNativeManager().createNative("SetUnitPositionLoc",
 					(arguments, globalScope, triggerScope) -> {
 						final CUnit whichUnit = nullable(arguments, 0, ObjectJassValueVisitor.getInstance());
-						final LocationJass positionLoc = arguments.get(1).visit(ObjectJassValueVisitor.getInstance());
+						final AbilityPointTarget positionLoc = arguments.get(1)
+								.visit(ObjectJassValueVisitor.getInstance());
 						if (whichUnit != null) {
 							whichUnit.setPointAndCheckUnstuck(positionLoc.x, positionLoc.y,
 									CommonEnvironment.this.simulation);
@@ -3445,7 +3460,8 @@ public class Jass2 {
 			jassProgramVisitor.getJassNativeManager().createNative("IsUnitInRangeLoc",
 					(arguments, globalScope, triggerScope) -> {
 						final CUnit whichUnit = nullable(arguments, 0, ObjectJassValueVisitor.getInstance());
-						final LocationJass whichLocation = nullable(arguments, 1, ObjectJassValueVisitor.getInstance());
+						final AbilityPointTarget whichLocation = nullable(arguments, 1,
+								ObjectJassValueVisitor.getInstance());
 						final Double distance = arguments.get(2).visit(RealJassValueVisitor.getInstance());
 
 						if ((whichUnit != null) && (whichLocation != null) && (distance != null)
@@ -3596,7 +3612,7 @@ public class Jass2 {
 					(arguments, globalScope, triggerScope) -> {
 						final CPlayer player = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());
 						final CFogState whichState = arguments.get(1).visit(ObjectJassValueVisitor.getInstance());
-						final LocationJass center = arguments.get(2).visit(ObjectJassValueVisitor.getInstance());
+						final AbilityPointTarget center = arguments.get(2).visit(ObjectJassValueVisitor.getInstance());
 						final float radius = arguments.get(3).visit(RealJassValueVisitor.getInstance()).floatValue();
 						final boolean sharedVision = arguments.get(4).visit(BooleanJassValueVisitor.getInstance());
 
@@ -3705,7 +3721,7 @@ public class Jass2 {
 					(arguments, globalScope, triggerScope) -> {
 						final CPlayer player = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());
 						final CFogState whichState = arguments.get(1).visit(ObjectJassValueVisitor.getInstance());
-						final LocationJass center = arguments.get(2).visit(ObjectJassValueVisitor.getInstance());
+						final AbilityPointTarget center = arguments.get(2).visit(ObjectJassValueVisitor.getInstance());
 						final float radius = arguments.get(3).visit(RealJassValueVisitor.getInstance()).floatValue();
 						// TODO share vision thing will be busted after change of player alliance
 						final boolean sharedVision = arguments.get(4).visit(BooleanJassValueVisitor.getInstance());
@@ -4142,7 +4158,8 @@ public class Jass2 {
 			jassProgramVisitor.getJassNativeManager().createNative("AddSpecialEffectLoc",
 					(arguments, globalScope, triggerScope) -> {
 						final String modelName = arguments.get(0).visit(StringJassValueVisitor.getInstance());
-						final LocationJass positionLoc = arguments.get(1).visit(ObjectJassValueVisitor.getInstance());
+						final AbilityPointTarget positionLoc = arguments.get(1)
+								.visit(ObjectJassValueVisitor.getInstance());
 						return new HandleJassValue(effectType, war3MapViewer.addSpecialEffect(modelName, positionLoc.x,
 								positionLoc.y, 0 /* facing */));
 					});
@@ -4185,7 +4202,7 @@ public class Jass2 {
 						final int rawcode = arguments.get(0).visit(IntegerJassValueVisitor.getInstance());
 						final CEffectType whichEffectType = arguments.get(1)
 								.visit(ObjectJassValueVisitor.getInstance());
-						final LocationJass loc = arguments.get(2).visit(ObjectJassValueVisitor.getInstance());
+						final AbilityPointTarget loc = arguments.get(2).visit(ObjectJassValueVisitor.getInstance());
 						final float x = loc.x;
 						final float y = loc.y;
 						return new HandleJassValue(effectType, war3MapViewer.spawnSpellEffectEx(x, y, 0 /* facing */,
@@ -4922,7 +4939,8 @@ public class Jass2 {
 			jassProgramVisitor.getJassNativeManager().createNative("SetBlightLoc",
 					(arguments, globalScope, triggerScope) -> {
 						final CPlayer whichPlayer = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());
-						final LocationJass whichLocation = arguments.get(1).visit(ObjectJassValueVisitor.getInstance());
+						final AbilityPointTarget whichLocation = arguments.get(1)
+								.visit(ObjectJassValueVisitor.getInstance());
 						final float radius = arguments.get(2).visit(RealJassValueVisitor.getInstance()).floatValue();
 						final boolean addBlight = arguments.get(3).visit(BooleanJassValueVisitor.getInstance());
 						final float whichLocationX = whichLocation.x;
@@ -5140,7 +5158,7 @@ public class Jass2 {
 					(arguments, globalScope, triggerScope) -> {
 						final CUnit unit = nullable(arguments, 0, ObjectJassValueVisitor.getInstance());
 						final int highlightOrderId = arguments.get(1).visit(IntegerJassValueVisitor.getInstance());
-						final LocationJass target = arguments.get(2).visit(ObjectJassValueVisitor.getInstance());
+						final AbilityPointTarget target = arguments.get(2).visit(ObjectJassValueVisitor.getInstance());
 						if (unit == null) {
 							return null;
 						}
@@ -5162,7 +5180,7 @@ public class Jass2 {
 			jassProgramVisitor.getJassNativeManager().createNative("GetUnitAttackMovePointBehaviorLoc",
 					(arguments, globalScope, triggerScope) -> {
 						final CUnit unit = nullable(arguments, 0, ObjectJassValueVisitor.getInstance());
-						final LocationJass target = arguments.get(1).visit(ObjectJassValueVisitor.getInstance());
+						final AbilityPointTarget target = arguments.get(1).visit(ObjectJassValueVisitor.getInstance());
 						if (unit == null) {
 							return null;
 						}
@@ -5204,7 +5222,7 @@ public class Jass2 {
 						final CUnit unit = nullable(arguments, 0, ObjectJassValueVisitor.getInstance());
 						final int highlightOrderId = arguments.get(1).visit(IntegerJassValueVisitor.getInstance());
 						final int whichUnitAttackIndex = arguments.get(2).visit(IntegerJassValueVisitor.getInstance());
-						final LocationJass target = arguments.get(3).visit(ObjectJassValueVisitor.getInstance());
+						final AbilityPointTarget target = arguments.get(3).visit(ObjectJassValueVisitor.getInstance());
 						if (unit == null) {
 							return null;
 						}
@@ -5228,6 +5246,71 @@ public class Jass2 {
 					});
 			abilitybehaviorType.setConstructorNative(new HandleJassTypeConstructor("CreateAbilityBehavior"));
 			abilitybehaviorType.setDestructorNative(new HandleJassTypeConstructor("DestroyAbilityBehavior"));
+			jassProgramVisitor.getJassNativeManager().createNative("CreateRangedBehavior",
+					(arguments, globalScope, triggerScope) -> {
+						return new HandleJassValue(rangedbehaviorType, new CRangedBehaviorJass(globalScope));
+					});
+			jassProgramVisitor.getJassNativeManager().createNative("DestroyRangedBehavior",
+					(arguments, globalScope, triggerScope) -> {
+						return null;
+					});
+			rangedbehaviorType.setConstructorNative(new HandleJassTypeConstructor("CreateRangedBehavior"));
+			rangedbehaviorType.setDestructorNative(new HandleJassTypeConstructor("DestroyRangedBehavior"));
+
+			jassProgramVisitor.getJassNativeManager().createNative("CreateAbstractRangedBehavior",
+					(arguments, globalScope, triggerScope) -> {
+						final CUnit unit = nullable(arguments, 0, ObjectJassValueVisitor.getInstance());
+						return new HandleJassValue(abstractrangedbehaviorType,
+								new CAbstractRangedBehaviorJass(unit, globalScope));
+					});
+			jassProgramVisitor.getJassNativeManager().createNative("DestroyAbstractRangedBehavior",
+					(arguments, globalScope, triggerScope) -> {
+						return null;
+					});
+			abstractrangedbehaviorType
+					.setConstructorNative(new HandleJassTypeConstructor("CreateAbstractRangedBehavior"));
+			abstractrangedbehaviorType
+					.setDestructorNative(new HandleJassTypeConstructor("DestroyAbstractRangedBehavior"));
+			jassProgramVisitor.getJassNativeManager().createNative("AbstractRangedBehaviorResetI",
+					(arguments, globalScope, triggerScope) -> {
+						final CAbstractRangedBehaviorJass whichBehavior = nullable(arguments, 0,
+								ObjectJassValueVisitor.getInstance());
+						final AbilityTarget target = nullable(arguments, 1, ObjectJassValueVisitor.getInstance());
+						whichBehavior.resetNative(this.simulation, target);
+						return null;
+					});
+			jassProgramVisitor.getJassNativeManager().createNative("AbstractRangedBehaviorResetII",
+					(arguments, globalScope, triggerScope) -> {
+						final CAbstractRangedBehaviorJass whichBehavior = nullable(arguments, 0,
+								ObjectJassValueVisitor.getInstance());
+						final AbilityTarget target = nullable(arguments, 1, ObjectJassValueVisitor.getInstance());
+						final boolean disableCollision = arguments.get(1).visit(BooleanJassValueVisitor.getInstance());
+						whichBehavior.resetNative(this.simulation, target, disableCollision);
+						return null;
+					});
+			jassProgramVisitor.getJassNativeManager().createNative("GetRangedBehaviorTarget",
+					(arguments, globalScope, triggerScope) -> {
+						final CBehavior whichBehavior = nullable(arguments, 0, ObjectJassValueVisitor.getInstance());
+						return new HandleJassValue(abilitytargetType,
+								whichBehavior.visit(BehaviorTargetVisitor.INSTANCE));
+					});
+			jassProgramVisitor.getJassNativeManager().createNative("GetAbstractRangedBehaviorSourceUnit",
+					(arguments, globalScope, triggerScope) -> {
+						final CAbstractRangedBehaviorJass whichBehavior = nullable(arguments, 0,
+								ObjectJassValueVisitor.getInstance());
+						return new HandleJassValue(unitType, whichBehavior.getUnit());
+					});
+			jassProgramVisitor.getJassNativeManager().createNative("UnitCanReach",
+					(arguments, globalScope, triggerScope) -> {
+						final CUnit source = nullable(arguments, 0, ObjectJassValueVisitor.getInstance());
+						final AbilityTarget target = nullable(arguments, 1, ObjectJassValueVisitor.getInstance());
+						final float radius = arguments.get(2).visit(RealJassValueVisitor.getInstance()).floatValue();
+						if (target == null) {
+							return BooleanJassValue.FALSE;
+						}
+						return BooleanJassValue.of(source.canReach(target, radius));
+					});
+
 			jassProgramVisitor.getJassNativeManager().createNative("CreateBehaviorExpr",
 					(arguments, globalScope, triggerScope) -> {
 						final CodeJassValue func = arguments.get(0).visit(CodeJassValueVisitor.getInstance());
@@ -6940,9 +7023,9 @@ public class Jass2 {
 						final int castId = arguments.get(argIndex++).visit(IntegerJassValueVisitor.getInstance());
 
 						final CUnit sourceUnit = nullable(arguments, argIndex++, ObjectJassValueVisitor.getInstance());
-						final LocationJass sourceLocation = nullable(arguments, argIndex++,
+						final AbilityPointTarget sourceLocation = nullable(arguments, argIndex++,
 								ObjectJassValueVisitor.getInstance());
-						final LocationJass targetLocation = nullable(arguments, argIndex++,
+						final AbilityPointTarget targetLocation = nullable(arguments, argIndex++,
 								ObjectJassValueVisitor.getInstance());
 						final int projectileRawcode = arguments.get(argIndex++)
 								.visit(IntegerJassValueVisitor.getInstance());
@@ -6993,9 +7076,9 @@ public class Jass2 {
 						final int castId = arguments.get(argIndex++).visit(IntegerJassValueVisitor.getInstance());
 
 						final CUnit sourceUnit = nullable(arguments, argIndex++, ObjectJassValueVisitor.getInstance());
-						final LocationJass sourceLocation = nullable(arguments, argIndex++,
+						final AbilityPointTarget sourceLocation = nullable(arguments, argIndex++,
 								ObjectJassValueVisitor.getInstance());
-						final LocationJass targetLocation = nullable(arguments, argIndex++,
+						final AbilityPointTarget targetLocation = nullable(arguments, argIndex++,
 								ObjectJassValueVisitor.getInstance());
 						final int projectileRawcode = arguments.get(argIndex++)
 								.visit(IntegerJassValueVisitor.getInstance());
@@ -7030,9 +7113,9 @@ public class Jass2 {
 						final int castId = arguments.get(argIndex++).visit(IntegerJassValueVisitor.getInstance());
 
 						final CUnit sourceUnit = nullable(arguments, argIndex++, ObjectJassValueVisitor.getInstance());
-						final LocationJass sourceLocation = nullable(arguments, argIndex++,
+						final AbilityPointTarget sourceLocation = nullable(arguments, argIndex++,
 								ObjectJassValueVisitor.getInstance());
-						final LocationJass targetLocation = nullable(arguments, argIndex++,
+						final AbilityPointTarget targetLocation = nullable(arguments, argIndex++,
 								ObjectJassValueVisitor.getInstance());
 						final int projectileRawcode = arguments.get(argIndex++)
 								.visit(IntegerJassValueVisitor.getInstance());
@@ -7091,7 +7174,7 @@ public class Jass2 {
 						final int castId = arguments.get(argIndex++).visit(IntegerJassValueVisitor.getInstance());
 
 						final CUnit sourceUnit = nullable(arguments, argIndex++, ObjectJassValueVisitor.getInstance());
-						final LocationJass sourceLocation = nullable(arguments, argIndex++,
+						final AbilityPointTarget sourceLocation = nullable(arguments, argIndex++,
 								ObjectJassValueVisitor.getInstance());
 						final CUnit target = nullable(arguments, argIndex++, ObjectJassValueVisitor.getInstance());
 						final int projectileRawcode = arguments.get(argIndex++)
@@ -7141,7 +7224,7 @@ public class Jass2 {
 						final int castId = arguments.get(argIndex++).visit(IntegerJassValueVisitor.getInstance());
 
 						final CUnit sourceUnit = nullable(arguments, argIndex++, ObjectJassValueVisitor.getInstance());
-						final LocationJass sourceLocation = nullable(arguments, argIndex++,
+						final AbilityPointTarget sourceLocation = nullable(arguments, argIndex++,
 								ObjectJassValueVisitor.getInstance());
 						final CUnit targetUnit = nullable(arguments, argIndex++, ObjectJassValueVisitor.getInstance());
 						final int projectileRawcode = arguments.get(argIndex++)
@@ -7203,7 +7286,7 @@ public class Jass2 {
 			jassProgramVisitor.getJassNativeManager().createNative("SetProjectileTargetLoc",
 					(arguments, globalScope, triggerScope) -> {
 						final CProjectile projectile = nullable(arguments, 0, ObjectJassValueVisitor.getInstance());
-						final LocationJass target = nullable(arguments, 1, ObjectJassValueVisitor.getInstance());
+						final AbilityPointTarget target = nullable(arguments, 1, ObjectJassValueVisitor.getInstance());
 
 						projectile.setTarget(new AbilityPointTarget(target.x, target.y));
 						return null;
@@ -7940,6 +8023,87 @@ public class Jass2 {
 						factory.notifyOrdersChanged();
 						return null;
 					});
+			jassProgramVisitor.getJassNativeManager().createNative("SetUnitAnimationByTag",
+					(arguments, globalScope, triggerScope) -> {
+						final CUnit whichUnit = nullable(arguments, 0, ObjectJassValueVisitor.getInstance());
+						final boolean force = arguments.get(1).visit(BooleanJassValueVisitor.getInstance());
+						final PrimaryTag animationName = nullable(arguments, 2, ObjectJassValueVisitor.getInstance());
+						final EnumSetHandle<SecondaryTag> secondaryAnimationTags = nullable(arguments, 3,
+								ObjectJassValueVisitor.getInstance());
+						final float speedRatio = arguments.get(4).visit(RealJassValueVisitor.getInstance())
+								.floatValue();
+						final boolean allowRarityVariations = arguments.get(5)
+								.visit(BooleanJassValueVisitor.getInstance());
+						whichUnit.getUnitAnimationListener().playAnimation(force, animationName,
+								secondaryAnimationTags.getEnumSet(), speedRatio, allowRarityVariations);
+						return null;
+					});
+			jassProgramVisitor.getJassNativeManager().createNative("SetUnitAnimationByTagWithDuration",
+					(arguments, globalScope, triggerScope) -> {
+						final CUnit whichUnit = nullable(arguments, 0, ObjectJassValueVisitor.getInstance());
+						final boolean force = arguments.get(1).visit(BooleanJassValueVisitor.getInstance());
+						final PrimaryTag animationName = nullable(arguments, 2, ObjectJassValueVisitor.getInstance());
+						final EnumSetHandle<SecondaryTag> secondaryAnimationTags = nullable(arguments, 3,
+								ObjectJassValueVisitor.getInstance());
+						final float duration = arguments.get(4).visit(RealJassValueVisitor.getInstance()).floatValue();
+						final boolean allowRarityVariations = arguments.get(5)
+								.visit(BooleanJassValueVisitor.getInstance());
+						whichUnit.getUnitAnimationListener().playAnimationWithDuration(force, animationName,
+								secondaryAnimationTags.getEnumSet(), duration, allowRarityVariations);
+						return null;
+					});
+			jassProgramVisitor.getJassNativeManager().createNative("SetUnitAnimationToWalk",
+					(arguments, globalScope, triggerScope) -> {
+						final CUnit whichUnit = nullable(arguments, 0, ObjectJassValueVisitor.getInstance());
+						final boolean force = arguments.get(1).visit(BooleanJassValueVisitor.getInstance());
+						final float currentMovementSpeed = arguments.get(2).visit(RealJassValueVisitor.getInstance())
+								.floatValue();
+						final boolean allowRarityVariations = arguments.get(3)
+								.visit(BooleanJassValueVisitor.getInstance());
+						whichUnit.getUnitAnimationListener().playWalkAnimation(force, currentMovementSpeed,
+								allowRarityVariations);
+						return null;
+					});
+			jassProgramVisitor.getJassNativeManager().createNative("QueueUnitAnimationByTag",
+					(arguments, globalScope, triggerScope) -> {
+						final CUnit whichUnit = nullable(arguments, 0, ObjectJassValueVisitor.getInstance());
+						final PrimaryTag animationName = nullable(arguments, 1, ObjectJassValueVisitor.getInstance());
+						final EnumSetHandle<SecondaryTag> secondaryAnimationTags = nullable(arguments, 2,
+								ObjectJassValueVisitor.getInstance());
+						final boolean allowRarityVariations = arguments.get(3)
+								.visit(BooleanJassValueVisitor.getInstance());
+						whichUnit.getUnitAnimationListener().queueAnimation(animationName,
+								secondaryAnimationTags.getEnumSet(), allowRarityVariations);
+						return null;
+					});
+			jassProgramVisitor.getJassNativeManager().createNative("AddUnitAnimationSecondaryTag",
+					(arguments, globalScope, triggerScope) -> {
+						final CUnit whichUnit = nullable(arguments, 0, ObjectJassValueVisitor.getInstance());
+						final SecondaryTag whichTag = nullable(arguments, 1, ObjectJassValueVisitor.getInstance());
+						return BooleanJassValue.of(whichUnit.getUnitAnimationListener().addSecondaryTag(whichTag));
+					});
+			jassProgramVisitor.getJassNativeManager().createNative("RemoveUnitAnimationSecondaryTag",
+					(arguments, globalScope, triggerScope) -> {
+						final CUnit whichUnit = nullable(arguments, 0, ObjectJassValueVisitor.getInstance());
+						final SecondaryTag whichTag = nullable(arguments, 1, ObjectJassValueVisitor.getInstance());
+						return BooleanJassValue.of(whichUnit.getUnitAnimationListener().removeSecondaryTag(whichTag));
+					});
+			jassProgramVisitor.getJassNativeManager().createNative("ForceResetUnitCurrentAnimation",
+					(arguments, globalScope, triggerScope) -> {
+						final CUnit whichUnit = nullable(arguments, 0, ObjectJassValueVisitor.getInstance());
+						whichUnit.getUnitAnimationListener().forceResetCurrentAnimation();
+						return null;
+					});
+			jassProgramVisitor.getJassNativeManager().createNative("GetUnitCastPoint",
+					(arguments, globalScope, triggerScope) -> {
+						final CUnit whichUnit = nullable(arguments, 0, ObjectJassValueVisitor.getInstance());
+						return RealJassValue.of(whichUnit.getUnitType().getCastPoint());
+					});
+			jassProgramVisitor.getJassNativeManager().createNative("GetUnitCastBackswingPoint",
+					(arguments, globalScope, triggerScope) -> {
+						final CUnit whichUnit = nullable(arguments, 0, ObjectJassValueVisitor.getInstance());
+						return RealJassValue.of(whichUnit.getUnitType().getCastBackswingPoint());
+					});
 
 			jassProgramVisitor.getJassNativeManager().createNative("String2DamageType",
 					(arguments, globalScope, triggerScope) -> {
@@ -8224,6 +8388,26 @@ public class Jass2 {
 
 						return null;
 					});
+
+			jassProgramVisitor.getJassNativeManager().createNative("CreateAbilityTargetVisitor",
+					(arguments, globalScope, triggerScope) -> {
+						return new HandleJassValue(abilitytargetvisitorType, new AbilityTargetVisitorJass(
+								this.simulation.getHandleIdAllocator().createId(), globalScope));
+					});
+			jassProgramVisitor.getJassNativeManager().createNative("DestroyAbilityTargetVisitor",
+					(arguments, globalScope, triggerScope) -> {
+						return null;
+					});
+			jassProgramVisitor.getJassNativeManager().createNative("AbilityTargetAcceptVisitor",
+					(arguments, globalScope, triggerScope) -> {
+						final AbilityTarget target = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());
+						final AbilityTargetVisitorJass visitor = arguments.get(1)
+								.visit(ObjectJassValueVisitor.getInstance());
+						target.visit(visitor);
+						return null;
+					});
+			abilitytargetvisitorType.setConstructorNative(new HandleJassTypeConstructor("CreateAbilityTargetVisitor"));
+			abilitytargetvisitorType.setDestructorNative(new HandleJassTypeConstructor("DestroyAbilityTargetVisitor"));
 
 			jassProgramVisitor.getJassNativeManager().createNative("WarsmashGetAbilityClassName",
 					(arguments, globalScope, triggerScope) -> {
@@ -8810,8 +8994,8 @@ public class Jass2 {
 		jassProgramVisitor.getJassNativeManager().createNative("DefineStartLocationLoc",
 				(arguments, globalScope, triggerScope) -> {
 					final Integer whichStartLoc = arguments.get(0).visit(IntegerJassValueVisitor.getInstance());
-					final LocationJass whichLocation = arguments.get(1)
-							.visit(ObjectJassValueVisitor.<LocationJass>getInstance());
+					final AbilityPointTarget whichLocation = arguments.get(1)
+							.visit(ObjectJassValueVisitor.<AbilityPointTarget>getInstance());
 					mapConfig.getStartLoc(whichStartLoc).setX(whichLocation.x);
 					mapConfig.getStartLoc(whichStartLoc).setY(whichLocation.y);
 					return null;

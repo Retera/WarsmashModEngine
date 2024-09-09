@@ -127,14 +127,20 @@ public class RenderUnit implements RenderWidget {
 		this.unitAnimationListenerImpl = new UnitAnimationListenerImpl(instance, animationWalkSpeed, animationRunSpeed);
 		simulationUnit.setUnitAnimationListener(this.unitAnimationListenerImpl);
 		final String requiredAnimationNames = row.getFieldAsString(ANIM_PROPS, 0);
+		boolean changedAnimProps = false;
 		TokenLoop: for (final String animationName : requiredAnimationNames.split(",")) {
 			final String upperCaseToken = animationName.toUpperCase();
 			for (final SecondaryTag secondaryTag : SecondaryTag.values()) {
 				if (upperCaseToken.equals(secondaryTag.name())) {
-					this.unitAnimationListenerImpl.addSecondaryTag(secondaryTag);
+					if (this.unitAnimationListenerImpl.addSecondaryTag(secondaryTag)) {
+						changedAnimProps = true;
+					}
 					continue TokenLoop;
 				}
 			}
+		}
+		if (changedAnimProps) {
+			this.unitAnimationListenerImpl.forceResetCurrentAnimation();
 		}
 
 		if (row != null) {
@@ -285,17 +291,29 @@ public class RenderUnit implements RenderWidget {
 				currentWalkableUnder = null;
 			}
 		}
+		boolean changedAnimationProperties = false;
 		if (swimming && !this.swimming) {
-			this.unitAnimationListenerImpl.addSecondaryTag(AnimationTokens.SecondaryTag.SWIM);
+			if (this.unitAnimationListenerImpl.addSecondaryTag(AnimationTokens.SecondaryTag.SWIM)) {
+				changedAnimationProperties = true;
+			}
 		}
 		else if (!swimming && this.swimming) {
-			this.unitAnimationListenerImpl.removeSecondaryTag(AnimationTokens.SecondaryTag.SWIM);
+			if (this.unitAnimationListenerImpl.removeSecondaryTag(AnimationTokens.SecondaryTag.SWIM)) {
+				changedAnimationProperties = true;
+			}
 		}
 		if (working && !this.working) {
-			this.unitAnimationListenerImpl.addSecondaryTag(AnimationTokens.SecondaryTag.WORK);
+			if (this.unitAnimationListenerImpl.addSecondaryTag(AnimationTokens.SecondaryTag.WORK)) {
+				changedAnimationProperties = true;
+			}
 		}
 		else if (!working && this.working) {
-			this.unitAnimationListenerImpl.removeSecondaryTag(AnimationTokens.SecondaryTag.WORK);
+			if (this.unitAnimationListenerImpl.removeSecondaryTag(AnimationTokens.SecondaryTag.WORK)) {
+				changedAnimationProperties = true;
+			}
+		}
+		if (changedAnimationProperties) {
+			this.unitAnimationListenerImpl.forceResetCurrentAnimation();
 		}
 		boolean colorNeedsUpdate = false;
 		if (invisible && !this.invisible) {
@@ -720,7 +738,7 @@ public class RenderUnit implements RenderWidget {
 		return this.currentColor;
 	}
 
-	public void queueAnimation(String whichAnimation) {
+	public void queueAnimation(final String whichAnimation) {
 		final EnumSet<AnimationTokens.PrimaryTag> primaryTags = EnumSet.noneOf(AnimationTokens.PrimaryTag.class);
 		final EnumSet<AnimationTokens.SecondaryTag> secondaryTag = EnumSet.noneOf(AnimationTokens.SecondaryTag.class);
 		Sequence.populateTags(primaryTags, secondaryTag, whichAnimation);
@@ -728,7 +746,7 @@ public class RenderUnit implements RenderWidget {
 		this.unitAnimationListenerImpl.queueAnimation(primaryTag, secondaryTag, true);
 	}
 
-	public void playAnimation(String whichAnimation) {
+	public void playAnimation(final String whichAnimation) {
 		final EnumSet<AnimationTokens.PrimaryTag> primaryTags = EnumSet.noneOf(AnimationTokens.PrimaryTag.class);
 		final EnumSet<AnimationTokens.SecondaryTag> secondaryTag = EnumSet.noneOf(AnimationTokens.SecondaryTag.class);
 		Sequence.populateTags(primaryTags, secondaryTag, whichAnimation);
@@ -736,11 +754,11 @@ public class RenderUnit implements RenderWidget {
 		this.unitAnimationListenerImpl.playAnimation(true, primaryTag, secondaryTag, 1.0f, true);
 	}
 
-	public void playAnimation(int index) {
+	public void playAnimation(final int index) {
 		this.unitAnimationListenerImpl.playAnimation(true, index, 1.0f, true);
 	}
 
-	public void playAnimationWithRarity(String whichAnimation, CRarityControl control) {
+	public void playAnimationWithRarity(final String whichAnimation, final CRarityControl control) {
 		final EnumSet<AnimationTokens.PrimaryTag> primaryTags = EnumSet.noneOf(AnimationTokens.PrimaryTag.class);
 		final EnumSet<AnimationTokens.SecondaryTag> secondaryTag = EnumSet.noneOf(AnimationTokens.SecondaryTag.class);
 		Sequence.populateTags(primaryTags, secondaryTag, whichAnimation);
@@ -752,24 +770,32 @@ public class RenderUnit implements RenderWidget {
 				control == CRarityControl.RARE);
 	}
 
-	public void addAnimationProperties(String properties, boolean add) {
+	public void addAnimationProperties(final String properties, final boolean add) {
 		final EnumSet<AnimationTokens.PrimaryTag> primaryTags = EnumSet.noneOf(AnimationTokens.PrimaryTag.class);
 		final EnumSet<AnimationTokens.SecondaryTag> secondaryTags = EnumSet.noneOf(AnimationTokens.SecondaryTag.class);
 		Sequence.populateTags(primaryTags, secondaryTags, properties);
+		boolean changedAnimProps = false;
 		if (add) {
 			for (final AnimationTokens.SecondaryTag tag : secondaryTags) {
-				this.unitAnimationListenerImpl.addSecondaryTag(tag);
+				if (this.unitAnimationListenerImpl.addSecondaryTag(tag)) {
+					changedAnimProps = true;
+				}
 			}
 		}
 		else {
 			for (final AnimationTokens.SecondaryTag tag : secondaryTags) {
-				this.unitAnimationListenerImpl.removeSecondaryTag(tag);
+				if (this.unitAnimationListenerImpl.removeSecondaryTag(tag)) {
+					changedAnimProps = true;
+				}
 			}
+		}
+		if (changedAnimProps) {
+			this.unitAnimationListenerImpl.forceResetCurrentAnimation();
 		}
 	}
 
-	public void lockTargetFacing(String boneNameString, RenderUnit renderPeerTarget, float offsetX, float offsetY,
-			float offsetZ) {
+	public void lockTargetFacing(final String boneNameString, final RenderUnit renderPeerTarget, final float offsetX,
+			final float offsetY, final float offsetZ) {
 		if (boneNameString != null) {
 			if ("head".equals(boneNameString.toLowerCase())) {
 				this.unitAnimationListenerImpl.lockHeadFacing(renderPeerTarget.instance,

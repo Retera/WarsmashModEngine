@@ -733,4 +733,9 @@ public final class GlobalScope {
 		}
 	}
 
+	public HandleJassType getHandleType(final String typeName) {
+		// TODO avoid cast
+		return (HandleJassType) parseType(typeName);
+	}
+
 }

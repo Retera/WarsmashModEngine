@@ -21,13 +21,11 @@ public interface CUnitAnimationListener {
 	void queueAnimation(final PrimaryTag animationName, final EnumSet<SecondaryTag> secondaryAnimationTags,
 			boolean allowRarityVariations);
 
-	void addSecondaryTag(SecondaryTag secondaryTag);
+	boolean addSecondaryTag(SecondaryTag secondaryTag);
 
-	void removeSecondaryTag(SecondaryTag secondaryTag);
+	boolean removeSecondaryTag(SecondaryTag secondaryTag);
 
-	void addSecondaryTagForFutureAnimations(SecondaryTag secondaryTag);
-
-	void removeSecondaryTagForFutureAnimations(SecondaryTag secondaryTag);
+	void forceResetCurrentAnimation();
 
 	EnumSet<SecondaryTag> getSecondaryTags();
 

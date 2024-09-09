@@ -108,7 +108,7 @@ endlibrary
 // AbilitiesCommonLegacy (contains APIs that have not been moved to their own libraries yet)
 //=================================================================================================
 //=================================================================================================
-library AbilitiesCommonLegacy requires TargetTypesAPI
+library AbilitiesCommonLegacy requires TargetTypesAPI, AnimationTokensAPI
 
 	// ability customization API types
 	type abilitytypeleveldata extends handle // GetHandleId(myAbilityTypeLevelData) is a crash case, dont' do it
@@ -729,6 +729,11 @@ library AbilitiesCommonLegacy requires TargetTypesAPI
 
 	// Returns the number of seconds between each game turn tick (probably 0.05)
 	constant native GetSimulationStepTime takes nothing returns real
+	globals
+		// Moved this in from "abilities utils" file. Maybe it can lose the "au" suffix if
+		// we fix both files later.
+		constant real au_SIMULATION_STEP_TIME                            = GetSimulationStepTime()
+	endglobals
 
 	//=================================================================================================
 	// Item API
@@ -763,6 +768,12 @@ library AbilitiesCommonLegacy requires TargetTypesAPI
 	native IsValidTarget takes widget target, unit caster, abilitytypeleveldata abilData, integer level returns boolean
 	// Below, "GetTargetError" is the widget version of "GetUnitTargetError"
 	native GetTargetError takes widget target, unit caster, targettypes whichTargetTypes returns string
+
+	// UnitCanReach returns true if the unit can reach the target... it does some special
+	//  calculations, including checking "within range" of any point on the pathing
+	//  map of a target building or destructable, or checking collision radius
+	//  of both units when applicable
+	native UnitCanReach takes unit source, abilitytarget target, real radius returns boolean
 
 	// NOTE: Percents dont work in the ability builder json "AddDefenseBonus"
 	// according to a comment, so they might not be working
@@ -835,6 +846,33 @@ library AbilitiesCommonLegacy requires TargetTypesAPI
 	// because it is not. It is here for feature parity with whatever Ability Builder was doing.
 	// Where possible, do something like "IssueTrainOrderByIdBJ" instead.
 	native StartTrainingUnit takes unit factory, integer trainedUnitId returns nothing
+
+	native SetUnitAnimationByTag takes unit whichUnit, boolean force, primarytag animationName, secondarytags secondaryAnimationTags, real speedRatio, boolean allowRarityVariations returns nothing
+	native SetUnitAnimationByTagWithDuration takes unit whichUnit, boolean force, primarytag animationName, secondarytags secondaryAnimationTags, real duration, boolean allowRarityVariations returns nothing
+	// the walk animation does smart logic about whether to use "Walk" or "Walk Fast" or whatever
+	native SetUnitAnimationToWalk takes unit whichUnit, boolean force, real currentMovementSpeed, boolean allowRarityVariations returns nothing
+	native SetUnitAnimationByIndexEx takes unit whichUnit, boolean force, integer sequenceIndex, real speedRatio, boolean allowRarityVariations returns nothing
+	native QueueUnitAnimationByTag takes unit whichUnit, primarytag animationName, secondarytags secondaryAnimationTags, boolean allowRarityVariations returns nothing
+	// NOTE: the below functions are the same as AddUnitAnimationProperties from common.j, but use secondarytag for convenience,
+	// and different because AddUnitAnimationProperties always calls to "ForceResetUnitCurrentAnimation" after adding/removing
+	native AddUnitAnimationSecondaryTag takes unit whichUnit, secondarytag whichTag returns boolean
+	native RemoveUnitAnimationSecondaryTag takes unit whichUnit, secondarytag whichTag returns boolean
+	native ForceResetUnitCurrentAnimation takes unit whichUnit returns nothing
+
+	// return BlzGetUnitRealField(whichUnit, UNIT_RF_CAST_POINT) // would be the same but we dont have that working yet
+	native GetUnitCastPoint takes unit whichUnit returns real
+	// return BlzGetUnitRealField(whichUnit, UNIT_RF_CAST_BACK_SWING) // would be the same but we dont have that working yet
+	native GetUnitCastBackswingPoint takes unit whichUnit returns real
+
+	// NOTE: a native unit.chargeMana exists, so we could bind that also, but it's the same as this fxn:
+	function ChargeMana takes unit caster, integer manaCost returns boolean
+		integer mana = GetUnitState(caster, UNIT_STATE_MANA)
+		if (mana >= manaCost) then
+			SetUnitState(caster, UNIT_STATE_MANA, mana - manaCost)
+			return true
+		endif
+		return false
+	endfunction
 
 	// This could have been written as a function instead of a native, but then that way it would
 	// have to be maintained. This one is just reading the java variables, so if somebody
@@ -1015,6 +1053,12 @@ library AbilityTargetAPI
 	type location extends abilitytarget
 	type widget extends abilitytarget
 
+	native CreateAbilityTargetVisitor takes nothing returns abilitytargetvisitor
+	native DestroyAbilityTargetVisitor takes abilitytargetvisitor x returns nothing
+	// Calling to "AbilityTargetAcceptVisitor" will call back on one of the visit methods of the 
+	// visitor based on the type, allowing you to essentially cast it back
+	native AbilityTargetAcceptVisitor takes abilitytarget whichTarget, abilitytargetvisitor whichVisitor returns nothing
+
 	interface AbilityTargetVisitor extends abilitytargetvisitor
 		method visitUnit takes unit target returns nothing
 		method visitItem takes item target returns nothing
@@ -1102,7 +1146,8 @@ endlibrary
  * then it should return that other behavior.
  */
 library BehaviorAPI requires AbilityTargetAPI
-	type abilitybehavior extends handle
+	type behavior extends handle
+	type rangedbehavior extends behavior
 	type behaviorcategory extends handle
 	
 	constant native ConvertBehaviorCategory takes integer x returns behaviorcategory
@@ -1114,38 +1159,36 @@ library BehaviorAPI requires AbilityTargetAPI
 		constant behaviorcategory BEHAVIOR_CATEGORY_SPELL                             = ConvertBehaviorCategory(3)
 	endglobals
 	
-	native GetUnitMoveFollowBehavior takes unit whichUnit, integer highlightOrderId, widget whichFollowTarget returns abilitybehavior
-	native GetUnitMovePointBehavior takes unit whichUnit, integer highlightOrderId, real targetX, real targetY returns abilitybehavior
-	native GetUnitMovePointBehaviorLoc takes unit whichUnit, integer highlightOrderId, location whichLocation returns abilitybehavior
-	native GetUnitAttackMovePointBehavior takes unit whichUnit, real targetX, real targetY returns abilitybehavior
-	native GetUnitAttackMovePointBehaviorLoc takes unit whichUnit, location whichLocation returns abilitybehavior
-	native GetUnitAttackWidgetBehavior takes unit whichUnit, integer highlightOrderId, integer whichUnitAttackIndex, widget whichAttackTarget returns abilitybehavior
-	native GetUnitAttackGroundBehavior takes unit whichUnit, integer highlightOrderId, integer whichUnitAttackIndex, real attackGroundX, real attackGroundY returns abilitybehavior
-	native GetUnitAttackGroundBehaviorLoc takes unit whichUnit, integer highlightOrderId, integer whichUnitAttackIndex, location attackGroundLoc returns abilitybehavior
-	// The code func passed below must be "takes nothing returns abilitybehavior", and
+	native GetUnitMoveFollowBehavior takes unit whichUnit, integer highlightOrderId, widget whichFollowTarget returns behavior
+	native GetUnitMovePointBehavior takes unit whichUnit, integer highlightOrderId, real targetX, real targetY returns behavior
+	native GetUnitMovePointBehaviorLoc takes unit whichUnit, integer highlightOrderId, location whichLocation returns behavior
+	native GetUnitAttackMovePointBehavior takes unit whichUnit, real targetX, real targetY returns behavior
+	native GetUnitAttackMovePointBehaviorLoc takes unit whichUnit, location whichLocation returns behavior
+	native GetUnitAttackWidgetBehavior takes unit whichUnit, integer highlightOrderId, integer whichUnitAttackIndex, widget whichAttackTarget returns behavior
+	native GetUnitAttackGroundBehavior takes unit whichUnit, integer highlightOrderId, integer whichUnitAttackIndex, real attackGroundX, real attackGroundY returns behavior
+	native GetUnitAttackGroundBehaviorLoc takes unit whichUnit, integer highlightOrderId, integer whichUnitAttackIndex, location attackGroundLoc returns behavior
+	// The code func passed below must be "takes nothing returns behavior", and
 	// the behavior it returns is what the unit will do next after each frame of the behavior we are defining
 	// so it should return itself until it is finished. "How does it return itself??" you ask? Just use the
 	// GetBehavingBehavior() native within its callback.
-	// --- DEPRECATED (do not use "CreateAbilityBehavior" in favor of "extends abilitybehavior")
-	native CreateAbilityBehavior takes nothing returns abilitybehavior
-	native DestroyAbilityBehavior takes abilitybehavior x returns nothing
+	// --- DEPRECATED (do not use "CreateAbilityBehavior" in favor of "extends behavior")
+	native CreateAbilityBehavior takes nothing returns behavior
+	native DestroyAbilityBehavior takes behavior x returns nothing
 	// GetBehavingUnit returns the unit who owns the behavior if you use it within the handler "code func"
 	// of a behavior that you define
 	// --- DEPRECATED (do not use "GetBehavingUnit"; prefer a unit member in the behavior struct you create)
 	//native GetBehavingUnit takes nothing returns unit
 	// --- DEPRECATED (do not use "GetBehavingBehavior"; prefer keyword "this" in the behavior struct you create)
-	//native GetBehavingBehavior takes nothing returns abilitybehavior
+	//native GetBehavingBehavior takes nothing returns behavior
 	
 	// this function will read from the unit's list of shift click orders they are given,
 	// poll the next item from that queue (modifying it) and return the top next
 	// item to perform. So, in your custom behavior you should
 	// return this when you are certain the unit has completed the ability.
-	native UnitPollNextOrderBehavior takes unit whichUnit returns abilitybehavior
+	native UnitPollNextOrderBehavior takes unit whichUnit returns behavior
 	
-	interface Behavior extends abilitybehavior
-		static method create takes nothing returns Behavior defaults .allocate()
-	
-		method update takes nothing returns Behavior
+	interface Behavior extends behavior
+		method update takes nothing returns behavior
 		
 		/* extra utility added later to detect when a unit starts a behavior.
 		 * For a while the Glasir/AbilityBuilder stuff tried to use this to detect
@@ -1207,13 +1250,76 @@ library BehaviorAPI requires AbilityTargetAPI
 		constant method getBehaviorCategory takes nothing returns behaviorcategory
 	endinterface
 
+	// (do not use "CreateRangedBehavior" in favor of "extends behavior")
+	native CreateRangedBehavior takes nothing returns rangedbehavior
+	native DestroyRangedBehavior takes rangedbehavior x returns nothing
 	// ranged behavior is an interface for inter-operating with
 	// the move ability to make a behavior that moves into range
-	interface RangedBehavior
+	interface RangedBehavior extends rangedbehavior
+		// first part: same interface as Behavior, see Behavior
+		// for comment. We could do "extends Behavior" except
+		// that it needed to hook up to the native "rangedbehavior" interface
+		method update takes nothing returns behavior
+		method begin takes nothing returns nothing defaults nothing
+		method end takes boolean interrupted returns nothing defaults nothing
+		constant method getHighlightOrderId takes nothing returns integer
+		constant method interruptable takes nothing returns boolean
+		constant method getBehaviorCategory takes nothing returns behaviorcategory
+		// above is the same interface as Behavior
 		method isWithinRange takes nothing returns boolean
 		method endMove takes boolean interrupted returns nothing
-		
+		method getTarget takes nothing returns abilitytarget
 	endinterface
+
+	// "Abstract Ranged Behavior" uses Java code to natively define a default version of
+	// "Ranged Behavior" so that you can use a bunch of good defaults, and with high performance.
+	// Maybe later, for additional customization, the "Ranged Behavior" interface can have
+	// some "struct AbstractRangedBehavior extends RangedBehavior" that accomplishes
+	// the same stuff as this, but in user space and not natively.
+	type abstractrangedbehavior extends rangedbehavior
+	native CreateAbstractRangedBehavior takes unit x returns abstractrangedbehavior
+	native DestroyRangedBehavior takes abstractrangedbehavior x returns nothing
+
+	native AbstractRangedBehaviorResetI takes abstractrangedbehavior whichBehavior, abilitytarget target returns behavior
+	native AbstractRangedBehaviorResetII takes abstractrangedbehavior whichBehavior, abilitytarget target, boolean disableCollision returns behavior
+	native GetRangedBehaviorTarget takes rangedbehavior whichBehavior returns abilitytarget
+	native GetAbstractRangedBehaviorSourceUnit takes abstractrangedbehavior whichBehavior returns unit
+	
+	interface NativeAbstractRangedBehaviorInterface extends abstractrangedbehavior
+		// update is only called on this when we are within range
+		method update takes boolean withinFacingWindow returns behavior
+		// note that "begin" is called when we start moving over there
+		// into range, not when the guy starts doing the thing.
+		// Don't use it for breaking invisibility or that sort of thing.
+		method begin takes nothing returns nothing defaults nothing
+		method end takes boolean interrupted returns nothing defaults nothing
+		constant method getHighlightOrderId takes nothing returns integer
+		constant method interruptable takes nothing returns boolean
+		constant method getBehaviorCategory takes nothing returns behaviorcategory
+		method isWithinRange takes nothing returns boolean
+		method endMove takes boolean interrupted returns nothing
+
+		method updateOnInvalidTarget takes nothing returns behavior
+		method isTargetStillValid takes nothing returns boolean
+		method resetBeforeMoving takes nothing returns nothing
+	endinterface
+
+	struct NativeAbstractRangedBehavior extends NativeAbstractRangedBehaviorInterface
+		method innerReset takes unit x returns behavior
+			return AbstractRangedBehaviorResetI(this, x)
+		endmethod
+		method innerResetEx takes unit x, boolean disableCollision returns behavior
+			return AbstractRangedBehaviorResetI(this, x, disableCollision)
+		endmethod
+
+		method getTarget takes nothing returns abilitytarget
+			return GetRangedBehaviorTarget(this)
+		endmethod
+
+		method getUnit takes nothing returns unit
+			return GetAbstractRangedBehaviorSourceUnit(this)
+		endmethod
+	endstruct
 endlibrary
 
 
@@ -1547,7 +1653,7 @@ library OrderButtonAPI requires BehaviorAPI, IconUI
 		
 		method checkTarget takes unit caster, ability source returns nothing
 		
-		method begin takes unit caster, ability source returns Behavior
+		method begin takes unit caster, ability source returns behavior
 		
 		method onCancelFromQueue takes unit caster, ability source returns nothing defaults nothing
 	endinterface
@@ -1559,15 +1665,15 @@ library OrderButtonAPI requires BehaviorAPI, IconUI
 		
 		method checkTargetUnit takes unit caster, ability source, unit target returns nothing
 		
-		method beginUnit takes unit caster, ability source, unit target returns Behavior
+		method beginUnit takes unit caster, ability source, unit target returns behavior
 		
 		method checkTargetItem takes unit caster, ability source, item target returns nothing
 		
-		method beginItem takes unit caster, ability source, item target returns Behavior
+		method beginItem takes unit caster, ability source, item target returns behavior
 		
 		method checkTargetDestructable takes unit caster, ability source, destructable target returns nothing
 		
-		method beginDestructable takes unit caster, ability source, destructable target returns Behavior
+		method beginDestructable takes unit caster, ability source, destructable target returns behavior
 		
 		method onCancelFromQueue takes unit caster, ability source returns nothing defaults nothing
 	endinterface
@@ -1579,7 +1685,7 @@ library OrderButtonAPI requires BehaviorAPI, IconUI
 		
 		method checkTargetLoc takes unit caster, ability source, location target returns nothing
 		
-		method beginLoc takes unit caster, ability source, location target returns Behavior
+		method beginLoc takes unit caster, ability source, location target returns behavior
 		
 		method onCancelFromQueue takes unit caster, ability source returns nothing defaults nothing
 	endinterface
@@ -1591,19 +1697,19 @@ library OrderButtonAPI requires BehaviorAPI, IconUI
 		
 		method checkTargetUnit takes unit caster, ability source, unit target returns nothing
 		
-		method beginUnit takes unit caster, ability source, unit target returns Behavior
+		method beginUnit takes unit caster, ability source, unit target returns behavior
 		
 		method checkTargetItem takes unit caster, ability source, item target returns nothing
 		
-		method beginItem takes unit caster, ability source, item target returns Behavior
+		method beginItem takes unit caster, ability source, item target returns behavior
 		
 		method checkTargetDestructable takes unit caster, ability source, destructable target returns nothing
 		
-		method beginDestructable takes unit caster, ability source, destructable target returns Behavior
+		method beginDestructable takes unit caster, ability source, destructable target returns behavior
 		
 		method checkTargetLoc takes unit caster, ability source, location target returns nothing
 		
-		method beginLoc takes unit caster, ability source, location target returns Behavior
+		method beginLoc takes unit caster, ability source, location target returns behavior
 		
 		method onCancelFromQueue takes unit caster, ability source returns nothing defaults nothing
 	endinterface
@@ -1844,15 +1950,15 @@ library GenericAbilityBaseTypes requires AbilityAPI, BehaviorAPI
 			
 			method checkTargetUnit takes unit caster, ability source, unit target returns nothing
 			
-			method beginUnit takes unit caster, ability source, unit target returns Behavior
+			method beginUnit takes unit caster, ability source, unit target returns behavior
 			
 			method checkTargetItem takes unit caster, ability source, item target returns nothing
 			
-			method beginItem takes unit caster, ability source, item target returns Behavior
+			method beginItem takes unit caster, ability source, item target returns behavior
 			
 			method checkTargetDestructable takes unit caster, ability source, destructable target returns nothing
 			
-			method beginDestructable takes unit caster, ability source, destructable target returns Behavior
+			method beginDestructable takes unit caster, ability source, destructable target returns behavior
 		endinterface
 	
 		private struct OrderButtonImpl extends OrderButtonTargetWidget
@@ -1872,7 +1978,7 @@ library GenericAbilityBaseTypes requires AbilityAPI, BehaviorAPI
 				call this.parent.checkTargetUnit(caster, source, target)
 			endmethod
 			
-			method beginUnit takes unit caster, ability source, unit target returns Behavior
+			method beginUnit takes unit caster, ability source, unit target returns behavior
 				return this.parent.beginUnit(caster, source, target)
 			endmethod
 			
@@ -1880,7 +1986,7 @@ library GenericAbilityBaseTypes requires AbilityAPI, BehaviorAPI
 				call this.parent.checkTargetItem(caster, source, target)
 			endmethod
 			
-			method beginItem takes unit caster, ability source, item target returns Behavior
+			method beginItem takes unit caster, ability source, item target returns behavior
 				return this.parent.beginItem(caster, source, target)
 			endmethod
 			
@@ -1888,7 +1994,7 @@ library GenericAbilityBaseTypes requires AbilityAPI, BehaviorAPI
 				call this.parent.checkTargetDestructable(caster, source, target)
 			endmethod
 			
-			method beginDestructable takes unit caster, ability source, destructable target returns Behavior
+			method beginDestructable takes unit caster, ability source, destructable target returns behavior
 				return this.parent.beginDestructable(caster, source, target)
 			endmethod
 		endstruct
@@ -1914,7 +2020,7 @@ library GenericAbilityBaseTypes requires AbilityAPI, BehaviorAPI
 			
 			method checkTargetLoc takes unit caster, ability source, location target returns nothing
 			
-			method beginLoc takes unit caster, ability source, location target returns Behavior
+			method beginLoc takes unit caster, ability source, location target returns behavior
 		endinterface
 	
 		private struct OrderButtonImpl extends OrderButtonTargetLocation
@@ -1934,7 +2040,7 @@ library GenericAbilityBaseTypes requires AbilityAPI, BehaviorAPI
 				call this.parent.checkTargetLoc(caster, source, target)
 			endmethod
 			
-			method beginLoc takes unit caster, ability source, location target returns Behavior
+			method beginLoc takes unit caster, ability source, location target returns behavior
 				return this.parent.beginLoc(caster, source, target)
 			endmethod
 		endstruct
@@ -1960,19 +2066,19 @@ library GenericAbilityBaseTypes requires AbilityAPI, BehaviorAPI
 			
 			method checkTargetUnit takes unit caster, ability source, unit target returns nothing
 			
-			method beginUnit takes unit caster, ability source, unit target returns Behavior
+			method beginUnit takes unit caster, ability source, unit target returns behavior
 			
 			method checkTargetItem takes unit caster, ability source, item target returns nothing
 			
-			method beginItem takes unit caster, ability source, item target returns Behavior
+			method beginItem takes unit caster, ability source, item target returns behavior
 			
 			method checkTargetDestructable takes unit caster, ability source, destructable target returns nothing
 			
-			method beginDestructable takes unit caster, ability source, destructable target returns Behavior
+			method beginDestructable takes unit caster, ability source, destructable target returns behavior
 			
 			method checkTargetLoc takes unit caster, ability source, location target returns nothing
 			
-			method beginLoc takes unit caster, ability source, location target returns Behavior
+			method beginLoc takes unit caster, ability source, location target returns behavior
 		endinterface
 	
 		private struct OrderButtonImpl extends OrderButtonTarget
@@ -1992,7 +2098,7 @@ library GenericAbilityBaseTypes requires AbilityAPI, BehaviorAPI
 				call this.parent.checkTargetUnit(caster, source, target)
 			endmethod
 			
-			method beginUnit takes unit caster, ability source, unit target returns Behavior
+			method beginUnit takes unit caster, ability source, unit target returns behavior
 				return this.parent.beginUnit(caster, source, target)
 			endmethod
 			
@@ -2000,7 +2106,7 @@ library GenericAbilityBaseTypes requires AbilityAPI, BehaviorAPI
 				call this.parent.checkTargetItem(caster, source, target)
 			endmethod
 			
-			method beginItem takes unit caster, ability source, item target returns Behavior
+			method beginItem takes unit caster, ability source, item target returns behavior
 				return this.parent.beginItem(caster, source, target)
 			endmethod
 			
@@ -2008,7 +2114,7 @@ library GenericAbilityBaseTypes requires AbilityAPI, BehaviorAPI
 				call this.parent.checkTargetDestructable(caster, source, target)
 			endmethod
 			
-			method beginDestructable takes unit caster, ability source, destructable target returns Behavior
+			method beginDestructable takes unit caster, ability source, destructable target returns behavior
 				return this.parent.beginDestructable(caster, source, target)
 			endmethod
 			
@@ -2016,7 +2122,7 @@ library GenericAbilityBaseTypes requires AbilityAPI, BehaviorAPI
 				call this.parent.checkTargetLoc(caster, source, target)
 			endmethod
 			
-			method beginLoc takes unit caster, ability source, location target returns Behavior
+			method beginLoc takes unit caster, ability source, location target returns behavior
 				return this.parent.beginLoc(caster, source, target)
 			endmethod
 		endstruct
@@ -2042,7 +2148,7 @@ library GenericAbilityBaseTypes requires AbilityAPI, BehaviorAPI
 		
 			method checkTarget takes unit caster, ability source returns nothing
 			
-			method begin takes unit caster, ability source returns Behavior
+			method begin takes unit caster, ability source returns behavior
 		endinterface
 	
 		private struct OrderButtonImpl extends OrderButtonNoTarget
@@ -2062,7 +2168,7 @@ library GenericAbilityBaseTypes requires AbilityAPI, BehaviorAPI
 				call this.parent.checkTargetUnit(caster, source)
 			endmethod
 			
-			method begin takes unit caster, ability source returns Behavior
+			method begin takes unit caster, ability source returns behavior
 				return this.parent.begin(caster, source)
 			endmethod
 		endstruct
@@ -2349,6 +2455,7 @@ library AnimationTokensAPI
 endlibrary
 
 library AbilitySpellBaseTypes requires GenericAbilityBaseTypes, AbilityFieldDefaults, AnimationTokensAPI, AbilityTargetAPI
+
 	module AbilitySpell
 		integer manaCost
 		real castRange
@@ -2418,50 +2525,82 @@ library AbilitySpellBaseTypes requires GenericAbilityBaseTypes, AbilityFieldDefa
 			endif
 			return this.duration
 		endmethod
+
+		method getCastRange takes nothing returns real
+			return this.castRange
+		endmethod
+
+		method getManaCost takes nothing returns
 		
 		constant method getAbilityCategory takes nothing returns abilitycategory
 			return ABILITY_CATEGORY_SPELL
 		endmethod
 	endmodule
+	
+	struct BehaviorSpellTarget extends NativeAbstractRangedBehavior
+		AbilitySpellInterface sourceAbility
+		integer castStartTick
+		boolean doneEffect
+		boolean channeling
+
+		public static method create takes unit whichUnit, AbilitySpellInterface abil returns thistype
+			local thistype this = .allocate(whichUnit)
+			set this.sourceAbility = abil
+			return this
+		endmethod
+
+		method reset takes abilitytarget target returns thistype
+			this.castStartTick = 0
+			this.doneEffect = false
+			this.channeling = false
+			return this.innerReset(target)
+		endmethod
+
+		method isWithinRange takes nothing returns boolean
+			if (this.channeling) then
+				return true // dont run away after channeling begins
+			endif
+			return UnitCanReach(getUnit(), getTarget(), getCastRange())
+		endmethod
+
+		method update takes boolean withinFacingWindow returns behavior
+			unit behavingUnit = getUnit()
+			call SetUnitAnimationByTag(behavingUnit, false, this.castingPrimaryTag, this.castingSecondaryTags, 1.0, true)
+			integer gameTurnTick = GetGameTurnTick()
+			if (this.castStartTick == 0) then
+				this.castStartTick = gameTurnTick
+			endif
+			integer ticksSinceCast = gameTurnTick - this.castStartTick
+			integer castPointTicks = R2I(GetUnitCastPoint(behavingUnit) / au_SIMULATION_STEP_TIME)
+			integer backswingTicks = R2I(GetUnitCastBackswingPoint(behavingUnit) / au_SIMULATION_STEP_TIME)
+			if ((ticksSinceCast >= castPointTicks) or (ticksSinceCast >= backswingTicks)) then
+				boolean wasEffectDone = this.doneEffect
+				boolean wasChanneling = this.channeling
+				if (not wasEffectDone) then
+					this.doneEffect = true
+					if (not ChargeMana(behavingUnit, 
+				endif
+			endif
+		endmethod
+
+		constant method getHighlightOrderId takes nothing returns integer
+			return GetOrderButtonOrderId(this.sourceAbility.abilityButton)
+		endmethod
+
+		constant method interruptable takes nothing returns boolean
+			return true
+		endmethod
+
+		constant method getBehaviorCategory takes nothing returns behaviorcategory
+			return BEHAVIOR_CATEGORY_SPELL
+		endmethod
+	endstruct
 
 	scope TargetWidget
 		private interface AbilitySpellInterface extends AbstractGenericActiveAbilityTargetWidget
 			method populateData takes gameobject editorData, integer level returns nothing
 		endinterface
 
-		struct BehaviorSpellTargetWidget extends Behavior
-			unit behavingUnit
-			AbilitySpellInterface sourceAbility
-			AbilityTarget target
-
-			public static method create takes unit whichUnit, AbilitySpellInterface abil returns thistype
-				local thistype this = .allocate()
-				set this.behavingUnit = whichUnit
-				set this.sourceAbility = abil
-				return this
-			endmethod
-
-			method reset takes AbilityTarget target returns thistype
-				set this.target = target
-				return this
-			endmethod
-
-			method update takes nothing returns Behavior
-				
-			endmethod
-
-			constant method getHighlightOrderId takes nothing returns integer
-\				return GetOrderButtonOrderId(this.sourceAbility.abilityButton)
-			endmethod
-
-			constant method interruptable takes nothing returns boolean
-				return true
-			endmethod
-
-			constant method getBehaviorCategory takes nothing returns behaviorcategory
-				return BEHAVIOR_CATEGORY_SPELL
-			endmethod
-		endstruct
 	
 		struct AbilitySpellTargetWidget extends AbilitySpellInterface
 			BehaviorSpellTargetWidget behavior
@@ -2474,7 +2613,7 @@ library AbilitySpellBaseTypes requires GenericAbilityBaseTypes, AbilityFieldDefa
 
 			endmethod
 			
-			method beginUnit takes unit caster, ability source, unit target returns Behavior
+			method beginUnit takes unit caster, ability source, unit target returns behavior
 				return behavior.reset(AbilityTargetUnit.create(target)
 			endmethod
 			
@@ -2482,7 +2621,7 @@ library AbilitySpellBaseTypes requires GenericAbilityBaseTypes, AbilityFieldDefa
 
 			endmethod
 			
-			method beginItem takes unit caster, ability source, item target returns Behavior
+			method beginItem takes unit caster, ability source, item target returns behavior
 				return behavior.reset(AbilityTargetItem.create(target)
 			endmethod
 			
@@ -2490,7 +2629,7 @@ library AbilitySpellBaseTypes requires GenericAbilityBaseTypes, AbilityFieldDefa
 
 			endmethod
 			
-			method beginDestructable takes unit caster, ability source, destructable target returns Behavior
+			method beginDestructable takes unit caster, ability source, destructable target returns behavior
 
 			endmethod
 			

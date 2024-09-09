@@ -109,41 +109,25 @@ public interface RenderWidget {
 		}
 
 		@Override
-		public void addSecondaryTag(final AnimationTokens.SecondaryTag tag) {
-			if (!this.secondaryAnimationTags.contains(tag)) {
-				this.secondaryAnimationTags.add(tag);
-				if (!this.animationQueue.isEmpty()) {
-					final QueuedAnimation nextAnimation = this.animationQueue.poll();
-					playAnimation(true, nextAnimation.animationName, nextAnimation.secondaryAnimationTags, 1.0f,
-							nextAnimation.allowRarityVariations);
-				}
-				else {
-					playAnimation(true, this.currentAnimation, this.currentAnimationSecondaryTags,
-							this.currentSpeedRatio, this.currentlyAllowingRarityVariations);
-				}
-			}
+		public boolean addSecondaryTag(final AnimationTokens.SecondaryTag tag) {
+			return this.secondaryAnimationTags.add(tag);
 		}
 
 		@Override
-		public void removeSecondaryTag(final AnimationTokens.SecondaryTag tag) {
-			if (this.secondaryAnimationTags.contains(tag)) {
-				this.secondaryAnimationTags.remove(tag);
+		public boolean removeSecondaryTag(final AnimationTokens.SecondaryTag tag) {
+			return this.secondaryAnimationTags.remove(tag);
+		}
+
+		@Override
+		public void forceResetCurrentAnimation() {
+			if (!this.animationQueue.isEmpty()) {
+				final QueuedAnimation nextAnimation = this.animationQueue.poll();
+				playAnimation(true, nextAnimation.animationName, nextAnimation.secondaryAnimationTags, 1.0f,
+						nextAnimation.allowRarityVariations);
+			}
+			else {
 				playAnimation(true, this.currentAnimation, this.currentAnimationSecondaryTags, this.currentSpeedRatio,
 						this.currentlyAllowingRarityVariations);
-			}
-		}
-
-		@Override
-		public void addSecondaryTagForFutureAnimations(SecondaryTag tag) {
-			if (!this.secondaryAnimationTags.contains(tag)) {
-				this.secondaryAnimationTags.add(tag);
-			}
-		}
-
-		@Override
-		public void removeSecondaryTagForFutureAnimations(SecondaryTag tag) {
-			if (this.secondaryAnimationTags.contains(tag)) {
-				this.secondaryAnimationTags.remove(tag);
 			}
 		}
 
@@ -153,7 +137,8 @@ public interface RenderWidget {
 		}
 
 		@Override
-		public void playAnimation(boolean force, int sequenceIndex, float speedRatio, boolean allowRarityVariations) {
+		public void playAnimation(final boolean force, final int sequenceIndex, final float speedRatio,
+				final boolean allowRarityVariations) {
 			this.animationQueue.clear();
 			if (force || this.instance.sequenceEnded) {
 				this.currentSpeedRatio = speedRatio;
@@ -329,7 +314,7 @@ public interface RenderWidget {
 			this.turretFacingLock = new LockTargetGame(target);
 		}
 
-		public void lockTurretFacing(GenericNode modelComponent, Vector3 offset) {
+		public void lockTurretFacing(final GenericNode modelComponent, final Vector3 offset) {
 			this.turretFacingLock = new LockTargetRenderGeometry(modelComponent, offset);
 		}
 
@@ -339,11 +324,11 @@ public interface RenderWidget {
 		}
 
 		@Override
-		public void lockHeadFacing(AbilityTarget target) {
+		public void lockHeadFacing(final AbilityTarget target) {
 			this.headFacingLock = new LockTargetGame(target);
 		}
 
-		public void lockHeadFacing(GenericNode modelComponent, Vector3 offset) {
+		public void lockHeadFacing(final GenericNode modelComponent, final Vector3 offset) {
 			this.headFacingLock = new LockTargetRenderGeometry(modelComponent, offset);
 		}
 

@@ -667,7 +667,7 @@ public final class GlobalScope {
 					"registerVariableEvent failed to find var with name: \"" + varName + "\"");
 		}
 		assignableGlobal.add(variableEvent);
-		return new RemovableTriggerEvent() {
+		return new RemovableTriggerEvent(trigger) {
 			@Override
 			public void remove() {
 				assignableGlobal.remove(variableEvent);

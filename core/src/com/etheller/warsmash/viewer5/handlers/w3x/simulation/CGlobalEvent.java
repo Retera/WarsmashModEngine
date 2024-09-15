@@ -5,12 +5,15 @@ import com.etheller.interpreter.ast.scope.trigger.RemovableTriggerEvent;
 import com.etheller.interpreter.ast.scope.trigger.Trigger;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.JassGameEventsWar3;
 
-public interface CGlobalEvent extends RemovableTriggerEvent {
+public abstract class CGlobalEvent extends RemovableTriggerEvent {
+	public CGlobalEvent(final Trigger t) {
+		super(t);
+	}
 
-	JassGameEventsWar3 getEventType();
+	public abstract JassGameEventsWar3 getEventType();
 
-	Trigger getTrigger();
+	public abstract Trigger getTrigger();
 
-	void fire(CWidget spellAbilityUnit, TriggerExecutionScope unitSpellNoTargetScope);
+	public abstract void fire(CWidget spellAbilityUnit, TriggerExecutionScope unitSpellNoTargetScope);
 
 }

@@ -1921,8 +1921,11 @@ public class Jass2 {
 						timer.setRepeats(periodic.booleanValue());
 						timer.setTimeoutTime(timeout.floatValue());
 						timer.start(CommonEnvironment.this.simulation);
-						return new HandleJassValue(eventType, (RemovableTriggerEvent) () -> {
-							CommonEnvironment.this.simulation.unregisterTimer(timer);
+						return new HandleJassValue(eventType, new RemovableTriggerEvent(trigger) {
+							@Override
+							public void remove() {
+								CommonEnvironment.this.simulation.unregisterTimer(timer);
+							}
 						});
 					});
 			jassProgramVisitor.getJassNativeManager().createNative("TriggerRegisterTimerExpireEvent",
@@ -1930,8 +1933,11 @@ public class Jass2 {
 						final Trigger trigger = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());
 						final CTimerJassBase timer = arguments.get(1).visit(ObjectJassValueVisitor.getInstance());
 						timer.addEvent(trigger);
-						return new HandleJassValue(eventType, (RemovableTriggerEvent) () -> {
-							timer.removeEvent(trigger);
+						return new HandleJassValue(eventType, new RemovableTriggerEvent(trigger) {
+							@Override
+							public void remove() {
+								timer.removeEvent(trigger);
+							}
 						});
 					});
 			jassProgramVisitor.getJassNativeManager().createNative("TriggerRegisterGameStateEvent",
@@ -1952,7 +1958,7 @@ public class Jass2 {
 			if (JassSettings.CONTINUE_EXECUTING_ON_ERROR) {
 				jassProgramVisitor.getJassNativeManager().createNative("TriggerRegisterUnitStateEvent",
 						(arguments, globalScope, triggerScope) -> {
-							return new HandleJassValue(eventType, RemovableTriggerEvent.DO_NOTHING);
+							return eventType.getNullValue();
 						});
 			}
 			jassProgramVisitor.getJassNativeManager().createNative("DialogCreate",
@@ -2001,7 +2007,7 @@ public class Jass2 {
 						final Trigger trigger = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());
 						final CScriptDialog dialog = arguments.get(1).visit(ObjectJassValueVisitor.getInstance());
 						if (dialog == null) {
-							return new HandleJassValue(eventType, RemovableTriggerEvent.DO_NOTHING);
+							return eventType.getNullValue();
 						}
 						return new HandleJassValue(eventType, dialog.addEvent(trigger));
 					});
@@ -2011,7 +2017,7 @@ public class Jass2 {
 						final CScriptDialogButton dialogButton = arguments.get(1)
 								.visit(ObjectJassValueVisitor.getInstance());
 						if (dialogButton == null) {
-							return new HandleJassValue(eventType, RemovableTriggerEvent.DO_NOTHING);
+							return eventType.getNullValue();
 						}
 						return new HandleJassValue(eventType, dialogButton.addEvent(trigger));
 					});
@@ -6856,8 +6862,11 @@ public class Jass2 {
 					(arguments, globalScope, triggerScope) -> {
 						final Trigger trigger = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());
 						this.simulation.registerOnTickEvent(trigger);
-						return new HandleJassValue(eventType, (RemovableTriggerEvent) () -> {
-							CommonEnvironment.this.simulation.unregisterOnTickEvent(trigger);
+						return new HandleJassValue(eventType, new RemovableTriggerEvent(trigger) {
+							@Override
+							public void remove() {
+								CommonEnvironment.this.simulation.unregisterOnTickEvent(trigger);
+							}
 						});
 					});
 			jassProgramVisitor.getJassNativeManager().createNative("TriggerRegisterOnUnitTick",
@@ -6865,9 +6874,30 @@ public class Jass2 {
 						final Trigger trigger = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());
 						final CUnit unit = arguments.get(1).visit(ObjectJassValueVisitor.getInstance());
 						unit.registerOnTickEvent(trigger);
-						return new HandleJassValue(eventType, (RemovableTriggerEvent) () -> {
-							unit.unregisterOnTickEvent(trigger);
+						return new HandleJassValue(eventType, new RemovableTriggerEvent(trigger) {
+							@Override
+							public void remove() {
+								unit.unregisterOnTickEvent(trigger);
+							}
 						});
+					});
+			jassProgramVisitor.getJassNativeManager().createNative("ShowInterfaceError",
+					(arguments, globalScope, triggerScope) -> {
+						final CPlayerJass whichPlayer = nullable(arguments, 0, ObjectJassValueVisitor.getInstance());
+						final String text = nullable(arguments, 1, StringJassValueVisitor.getInstance());
+						if ((whichPlayer != null) && (text != null)) {
+							this.simulation.getCommandErrorListener().showInterfaceError(whichPlayer.getId(), text);
+						}
+						return null;
+					});
+			jassProgramVisitor.getJassNativeManager().createNative("RemoveTriggerEvent",
+					(arguments, globalScope, triggerScope) -> {
+						final Trigger whichTrigger = nullable(arguments, 0, ObjectJassValueVisitor.getInstance());
+						final RemovableTriggerEvent evt = nullable(arguments, 1, ObjectJassValueVisitor.getInstance());
+						if (whichTrigger != null) {
+							whichTrigger.removeEvent(evt);
+						}
+						return null;
 					});
 
 			jassProgramVisitor.getJassNativeManager().createNative("ConvertAbilityDisableType",
@@ -7963,6 +7993,22 @@ public class Jass2 {
 						}
 						return null;
 					});
+			jassProgramVisitor.getJassNativeManager().createNative("UnitAlive",
+					(arguments, globalScope, triggerScope) -> {
+						final CUnit targetUnit = nullable(arguments, 0, ObjectJassValueVisitor.getInstance());
+						if (targetUnit != null) {
+							return BooleanJassValue.of(!targetUnit.isDead());
+						}
+						return BooleanJassValue.FALSE;
+					});
+			jassProgramVisitor.getJassNativeManager().createNative("WidgetAlive",
+					(arguments, globalScope, triggerScope) -> {
+						final CWidget targetUnit = nullable(arguments, 0, ObjectJassValueVisitor.getInstance());
+						if (targetUnit != null) {
+							return BooleanJassValue.of(!targetUnit.isDead());
+						}
+						return BooleanJassValue.FALSE;
+					});
 
 			jassProgramVisitor.getJassNativeManager().createNative("ConvertResourceType",
 					(arguments, globalScope, triggerScope) -> {
@@ -8022,6 +8068,35 @@ public class Jass2 {
 						factory.queueTrainingUnit(this.simulation, new War3ID(resultUnitId));
 						factory.notifyOrdersChanged();
 						return null;
+					});
+			jassProgramVisitor.getJassNativeManager().createNative("UnitLoopSpellSoundEffect",
+					(arguments, globalScope, triggerScope) -> {
+						final CUnit onUnit = nullable(arguments, 0, ObjectJassValueVisitor.getInstance());
+						final int abilityAliasRawcode = arguments.get(1).visit(IntegerJassValueVisitor.getInstance());
+						this.simulation.unitLoopSoundEffectEvent(onUnit, new War3ID(abilityAliasRawcode));
+						return null;
+					});
+			jassProgramVisitor.getJassNativeManager().createNative("UnitSpellSoundEffect",
+					(arguments, globalScope, triggerScope) -> {
+						final CUnit onUnit = nullable(arguments, 0, ObjectJassValueVisitor.getInstance());
+						final int abilityAliasRawcode = arguments.get(1).visit(IntegerJassValueVisitor.getInstance());
+						this.simulation.unitSoundEffectEvent(onUnit, new War3ID(abilityAliasRawcode));
+						return null;
+					});
+			jassProgramVisitor.getJassNativeManager().createNative("UnitStopSpellSoundEffect",
+					(arguments, globalScope, triggerScope) -> {
+						final CUnit onUnit = nullable(arguments, 0, ObjectJassValueVisitor.getInstance());
+						final int abilityAliasRawcode = arguments.get(1).visit(IntegerJassValueVisitor.getInstance());
+						this.simulation.unitStopSoundEffectEvent(onUnit, new War3ID(abilityAliasRawcode));
+						return null;
+					});
+			jassProgramVisitor.getJassNativeManager().createNative("IsUnitMovementDisabled",
+					(arguments, globalScope, triggerScope) -> {
+						final CUnit targetUnit = nullable(arguments, 0, ObjectJassValueVisitor.getInstance());
+						if (targetUnit != null) {
+							return BooleanJassValue.of(targetUnit.isMovementDisabled());
+						}
+						return BooleanJassValue.FALSE;
 					});
 			jassProgramVisitor.getJassNativeManager().createNative("SetUnitAnimationByTag",
 					(arguments, globalScope, triggerScope) -> {

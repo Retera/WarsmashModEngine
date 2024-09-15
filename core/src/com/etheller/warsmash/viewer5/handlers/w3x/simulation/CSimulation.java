@@ -848,7 +848,7 @@ public class CSimulation implements CPlayerAPI {
 		final TimeOfDayVariableEvent timeOfDayVariableEvent = new TimeOfDayVariableEvent(trigger, opcode, doubleValue,
 				globalScope);
 		this.timeOfDayVariableEvents.add(timeOfDayVariableEvent);
-		return new RemovableTriggerEvent() {
+		return new RemovableTriggerEvent(trigger) {
 			@Override
 			public void remove() {
 				CSimulation.this.timeOfDayVariableEvents.remove(timeOfDayVariableEvent);
@@ -859,7 +859,7 @@ public class CSimulation implements CPlayerAPI {
 	public RemovableTriggerEvent registerGameEvent(final GlobalScope globalScope, final Trigger trigger,
 			final JassGameEventsWar3 gameEvent) {
 		System.err.println("Game event not yet implemented: " + gameEvent);
-		return new RemovableTriggerEvent() {
+		return new RemovableTriggerEvent(trigger) {
 			@Override
 			public void remove() {
 			}
@@ -1018,18 +1018,12 @@ public class CSimulation implements CPlayerAPI {
 
 	public RemovableTriggerEvent registerEventPlayerDefeat(final GlobalScope globalScope, final Trigger whichTrigger,
 			final CPlayerJass whichPlayer) {
-		if (true) {
-			throw new UnsupportedOperationException("registerEventPlayerDefeat is NYI");
-		}
-		return RemovableTriggerEvent.DO_NOTHING;
+		throw new UnsupportedOperationException("registerEventPlayerDefeat is NYI");
 	}
 
 	public RemovableTriggerEvent registerEventPlayerVictory(final GlobalScope globalScope, final Trigger whichTrigger,
 			final CPlayerJass whichPlayer) {
-		if (true) {
-			throw new UnsupportedOperationException("registerEventPlayerVictory is NYI");
-		}
-		return RemovableTriggerEvent.DO_NOTHING;
+		throw new UnsupportedOperationException("registerEventPlayerVictory is NYI");
 	}
 
 	public void setAllItemTypeSlots(final int slots) {

@@ -18,6 +18,15 @@ public class StaticStructTypeJassValue extends BaseStructJassValue
 
 	@Override
 	public JassStructMemberType getMemberByName(final String name) {
+		final JassStructMemberType member = tryGetMemberByName(name);
+		if (member == null) {
+			throw new IllegalArgumentException("Type '" + this.staticType.getName() + "' has no member '" + name + "'");
+		}
+		return member;
+	}
+
+	@Override
+	public JassStructMemberType tryGetMemberByName(final String name) {
 		for (final JassStructMemberType staticMemberType : this.staticMemberTypes) {
 			if (staticMemberType.getId().equals(name)) {
 				return staticMemberType;

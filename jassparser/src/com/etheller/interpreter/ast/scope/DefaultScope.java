@@ -48,28 +48,29 @@ public class DefaultScope implements Scope {
 
 	@Override
 	public int defineMethod(final int lineNo, final String sourceFile, final String name,
-			final UserJassFunction function, final StructJassType type) {
-		return this.globalScope.defineMethod(lineNo, sourceFile, name, function, type, this);
+			final UserJassFunction function, final StructJassType type, final Scope scope) {
+		return this.globalScope.defineMethod(lineNo, sourceFile, name, function, type, scope);
 	}
 
 	@Override
 	public void defineFunction(final int lineNo, final String sourceFile, final String name,
-			final UserJassFunction function) {
-		this.globalScope.defineFunction(lineNo, sourceFile, name, function, this);
+			final UserJassFunction function, final Scope scope) {
+		this.globalScope.defineFunction(lineNo, sourceFile, name, function, scope);
 	}
 
 	@Override
-	public void defineGlobals(final int lineNo, final String sourceFile, final List<JassStatement> globalStatements) {
-		this.globalScope.defineGlobals(lineNo, sourceFile, globalStatements, this);
+	public void defineGlobals(final int lineNo, final String sourceFile, final List<JassStatement> globalStatements,
+			final Scope scope) {
+		this.globalScope.defineGlobals(lineNo, sourceFile, globalStatements, scope);
 	}
 
 	@Override
 	public void defineStruct(final EnumSet<JassQualifier> qualifiers, final String structName,
 			final JassTypeToken structSuperTypeToken, final List<JassStructMemberTypeDefinition> memberTypeDefinitions,
 			final List<JassImplementModuleDefinition> implementModuleDefinitions,
-			final List<JassMethodDefinitionBlock> methodDefinitions) {
+			final List<JassMethodDefinitionBlock> methodDefinitions, final Scope scope) {
 		this.globalScope.defineStruct(qualifiers, structName, structSuperTypeToken, memberTypeDefinitions,
-				implementModuleDefinitions, methodDefinitions, this);
+				implementModuleDefinitions, methodDefinitions, scope);
 	}
 
 	@Override

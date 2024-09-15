@@ -19,7 +19,7 @@ public class JassGlobalsDefinitionBlock implements JassDefinitionBlock {
 
 	@Override
 	public void define(final Scope scope, final JassProgram jassProgram) {
-		scope.defineGlobals(this.lineNo, this.file, this.globalStatements);
+		scope.defineGlobals(this.lineNo, this.file, this.globalStatements, scope);
 	}
 
 }

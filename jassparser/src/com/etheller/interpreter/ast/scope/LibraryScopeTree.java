@@ -107,10 +107,6 @@ public class LibraryScopeTree {
 		}
 	}
 
-	public Scope asScope() {
-		return null;
-	}
-
 	public static interface ScopeTreeHandler<T> {
 		// return non-null to interrupt
 		public T identifier(String identifier);

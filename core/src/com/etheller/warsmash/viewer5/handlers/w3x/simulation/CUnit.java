@@ -135,6 +135,8 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.ResourceType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.SimulationRenderComponent;
 
 public class CUnit extends CWidget {
+	private static final int CHEESY_UNIQUE_NUMBER = 1337;
+
 	private static RegionCheckerImpl regionCheckerImpl = new RegionCheckerImpl();
 
 	private War3ID typeId;
@@ -193,6 +195,7 @@ public class CUnit extends CWidget {
 	private RemovablePathingMapInstance pathingInstance;
 
 	private final EnumSet<CUnitClassification> classifications = EnumSet.noneOf(CUnitClassification.class);
+	private final EnumSet<CTargetType> targetedAs = EnumSet.noneOf(CTargetType.class);
 
 	private int deathTurnTick;
 	private boolean raisable;
@@ -311,6 +314,7 @@ public class CUnit extends CWidget {
 		this.unitType = unitType;
 		this.defenseType = unitType.getDefenseType();
 		this.classifications.addAll(unitType.getClassifications());
+		this.targetedAs.addAll(unitType.getTargetedAs());
 		this.acquisitionRange = unitType.getDefaultAcquisitionRange();
 		this.structure = unitType.isBuilding();
 		this.stopBehavior = new CBehaviorStop(this);
@@ -1769,8 +1773,10 @@ public class CUnit extends CWidget {
 		this.turnRate = this.unitType.getTurnRate();
 		this.propWindow = this.unitType.getPropWindow();
 		this.speed = this.unitType.getSpeed();
-		this.classifications.clear();
+		this.classifications.removeAll(previousUnitType.getClassifications());
 		this.classifications.addAll(this.unitType.getClassifications());
+		this.targetedAs.removeAll(previousUnitType.getTargetedAs());
+		this.targetedAs.addAll(this.unitType.getTargetedAs());
 		this.defenseType = this.unitType.getDefenseType();
 		this.acquisitionRange = this.unitType.getDefaultAcquisitionRange();
 		this.structure = this.unitType.isBuilding();
@@ -2395,7 +2401,7 @@ public class CUnit extends CWidget {
 	}
 
 	public boolean autoAcquireAttackTargets(final CSimulation game, final boolean disableMove) {
-		if (!getCurrentAttacks().isEmpty() && !this.unitType.getClassifications().contains(CUnitClassification.PEON)) {
+		if (!getCurrentAttacks().isEmpty() && !this.classifications.contains(CUnitClassification.PEON)) {
 			if (this.collisionRectangle != null) {
 				tempRect.set(this.collisionRectangle);
 			}
@@ -2746,8 +2752,12 @@ public class CUnit extends CWidget {
 		return this.classifications;
 	}
 
-	public void addClassification(final CUnitClassification unitClassification) {
-		this.classifications.add(unitClassification);
+	public boolean addClassification(final CUnitClassification unitClassification) {
+		return this.classifications.add(unitClassification);
+	}
+
+	public boolean removeClassification(final CUnitClassification unitClassification) {
+		return this.classifications.remove(unitClassification);
 	}
 
 	public float getDefense() {
@@ -2931,7 +2941,7 @@ public class CUnit extends CWidget {
 					|| ((this.currentBehavior == this.defaultBehavior) && this.currentBehavior.interruptable())) {
 				boolean foundMatchingReturnFireAttack = false;
 				if (!simulation.getPlayer(getPlayerIndex()).hasAlliance(source.getPlayerIndex(), CAllianceType.PASSIVE)
-						&& !this.unitType.getClassifications().contains(CUnitClassification.PEON)) {
+						&& !this.classifications.contains(CUnitClassification.PEON)) {
 					for (final CUnitAttack attack : getCurrentAttacks()) {
 						if (source.canBeTargetedBy(simulation, this, attack.getTargetsAllowed())) {
 							beginBehavior(simulation, getAttackBehavior().reset(simulation, OrderIds.attack, attack,
@@ -3276,7 +3286,7 @@ public class CUnit extends CWidget {
 			receiver.targetCheckFailed(CommandStringErrorKeys.MUST_TARGET_A_UNIT_WITH_THIS_ACTION);
 			return false;
 		}
-		if (targetsAllowed.containsAll(this.unitType.getTargetedAs()) || (!targetsAllowed.contains(CTargetType.GROUND)
+		if (targetsAllowed.containsAll(this.targetedAs) || (!targetsAllowed.contains(CTargetType.GROUND)
 				&& !targetsAllowed.contains(CTargetType.STRUCTURE) && !targetsAllowed.contains(CTargetType.AIR))) {
 			final int sourcePlayerIndex = source.getPlayerIndex();
 			final CPlayer sourcePlayer = simulation.getPlayer(sourcePlayerIndex);
@@ -3287,13 +3297,13 @@ public class CUnit extends CWidget {
 						|| sourcePlayer.hasAlliance(this.playerIndex, CAllianceType.PASSIVE)
 						|| targetsAllowed.contains(CTargetType.ENEMIES)) {
 					if (!targetsAllowed.contains(CTargetType.MECHANICAL)
-							|| this.unitType.getClassifications().contains(CUnitClassification.MECHANICAL)) {
+							|| this.classifications.contains(CUnitClassification.MECHANICAL)) {
 						if (!targetsAllowed.contains(CTargetType.ORGANIC)
-								|| !this.unitType.getClassifications().contains(CUnitClassification.MECHANICAL)) {
+								|| !this.classifications.contains(CUnitClassification.MECHANICAL)) {
 							if (!targetsAllowed.contains(CTargetType.ANCIENT)
-									|| this.unitType.getClassifications().contains(CUnitClassification.ANCIENT)) {
+									|| this.classifications.contains(CUnitClassification.ANCIENT)) {
 								if (!targetsAllowed.contains(CTargetType.NONANCIENT)
-										|| !this.unitType.getClassifications().contains(CUnitClassification.ANCIENT)) {
+										|| !this.classifications.contains(CUnitClassification.ANCIENT)) {
 									final boolean invulnerable = isInvulnerable();
 									if ((!invulnerable && (targetsAllowed.contains(CTargetType.VULNERABLE)
 											|| !targetsAllowed.contains(CTargetType.INVULNERABLE)))
@@ -3372,20 +3382,17 @@ public class CUnit extends CWidget {
 			}
 		}
 		else {
-			if (this.unitType.getTargetedAs().contains(CTargetType.GROUND)
-					&& !targetsAllowed.contains(CTargetType.GROUND)) {
+			if (this.targetedAs.contains(CTargetType.GROUND) && !targetsAllowed.contains(CTargetType.GROUND)) {
 				receiver.targetCheckFailed(CommandStringErrorKeys.UNABLE_TO_TARGET_GROUND_UNITS);
 			}
-			else if (this.unitType.getTargetedAs().contains(CTargetType.STRUCTURE)
+			else if (this.targetedAs.contains(CTargetType.STRUCTURE)
 					&& !targetsAllowed.contains(CTargetType.STRUCTURE)) {
 				receiver.targetCheckFailed(CommandStringErrorKeys.UNABLE_TO_TARGET_BUILDINGS);
 			}
-			else if (this.unitType.getTargetedAs().contains(CTargetType.AIR)
-					&& !targetsAllowed.contains(CTargetType.AIR)) {
+			else if (this.targetedAs.contains(CTargetType.AIR) && !targetsAllowed.contains(CTargetType.AIR)) {
 				receiver.targetCheckFailed(CommandStringErrorKeys.UNABLE_TO_TARGET_AIR_UNITS);
 			}
-			else if (this.unitType.getTargetedAs().contains(CTargetType.WARD)
-					&& !targetsAllowed.contains(CTargetType.WARD)) {
+			else if (this.targetedAs.contains(CTargetType.WARD) && !targetsAllowed.contains(CTargetType.WARD)) {
 				receiver.targetCheckFailed(CommandStringErrorKeys.UNABLE_TO_TARGET_WARDS);
 			}
 			else if (targetsAllowed.contains(CTargetType.GROUND)) {
@@ -4570,9 +4577,9 @@ public class CUnit extends CWidget {
 			return isBuilding();
 
 		case FLYING:
-			return getUnitType().getTargetedAs().contains(CTargetType.AIR);
+			return this.targetedAs.contains(CTargetType.AIR);
 		case GROUND:
-			return getUnitType().getTargetedAs().contains(CTargetType.GROUND);
+			return this.targetedAs.contains(CTargetType.GROUND);
 
 		case ATTACKS_FLYING:
 			for (final CUnitAttack attack : getCurrentAttacks()) {
@@ -4608,9 +4615,9 @@ public class CUnit extends CWidget {
 			return false;
 
 		case GIANT:
-			return getUnitType().getClassifications().contains(CUnitClassification.GIANT);
+			return this.classifications.contains(CUnitClassification.GIANT);
 		case SUMMONED:
-			return getUnitType().getClassifications().contains(CUnitClassification.SUMMONED);
+			return this.classifications.contains(CUnitClassification.SUMMONED);
 		case STUNNED:
 			return getCurrentBehavior().getHighlightOrderId() == OrderIds.stunned;
 		case PLAGUED:
@@ -4627,20 +4634,20 @@ public class CUnit extends CWidget {
 			}
 			return isSnared;
 		case UNDEAD:
-			return getUnitType().getClassifications().contains(CUnitClassification.UNDEAD);
+			return this.classifications.contains(CUnitClassification.UNDEAD);
 		case MECHANICAL:
-			return getUnitType().getClassifications().contains(CUnitClassification.MECHANICAL);
+			return this.classifications.contains(CUnitClassification.MECHANICAL);
 		case PEON:
-			return getUnitType().getClassifications().contains(CUnitClassification.PEON);
+			return this.classifications.contains(CUnitClassification.PEON);
 		case SAPPER:
-			return getUnitType().getClassifications().contains(CUnitClassification.SAPPER);
+			return this.classifications.contains(CUnitClassification.SAPPER);
 		case TOWNHALL:
-			return getUnitType().getClassifications().contains(CUnitClassification.TOWNHALL);
+			return this.classifications.contains(CUnitClassification.TOWNHALL);
 		case ANCIENT:
-			return this.unitType.getClassifications().contains(CUnitClassification.ANCIENT);
+			return this.classifications.contains(CUnitClassification.ANCIENT);
 
 		case TAUREN:
-			return getUnitType().getClassifications().contains(CUnitClassification.TAUREN);
+			return this.classifications.contains(CUnitClassification.TAUREN);
 		case POISONED:
 			throw new UnsupportedOperationException(
 					"cannot ask engine if unit is poisoned: poison is not yet implemented");
@@ -4671,6 +4678,193 @@ public class CUnit extends CWidget {
 			return isEthereal;
 		case MAGIC_IMMUNE:
 			return isMagicImmune();
+		}
+		return false;
+	}
+
+	public void addCheesyStateModBuff(final CSimulation game, final StateModBuffType type) {
+		// this might be less efficient than the original state mod buff system,
+		// and cannot access the Detector Levels, etc, with the value
+		addStateModBuff(new StateModBuff(type, CHEESY_UNIQUE_NUMBER));
+		computeUnitState(game, type);
+	}
+
+	public boolean removeCheesyStateModBuff(final CSimulation game, final StateModBuffType type) {
+		// this might be less efficient than the original state mod buff system,
+		// and cannot access the Detector Levels, etc, with the value
+		StateModBuff toRemove = null;
+		for (final StateModBuff stateModBuff : this.stateModBuffs) {
+			if ((stateModBuff.getBuffType() == type) && (stateModBuff.getValue() == CHEESY_UNIQUE_NUMBER)) {
+				toRemove = stateModBuff;
+				break;
+			}
+		}
+		if (toRemove != null) {
+			removeStateModBuff(toRemove);
+			computeUnitState(game, type);
+			return true;
+		}
+		return false;
+	}
+
+	public boolean addUnitType(final CSimulation game, final CUnitTypeJass whichUnitType) {
+		switch (whichUnitType) {
+		case HERO:
+		case ATTACKS_FLYING:
+		case ATTACKS_GROUND:
+		case MELEE_ATTACKER:
+		case RANGED_ATTACKER:
+		case PLAGUED:
+		case POISONED:
+		case POLYMORPHED:
+			// types which we are not allowing them to add and remove
+			// I read online on a Hive thing that maybe users expect the API for these types
+			// to be something that doesn't work, i.e. "IsUnitType(UNIT_TYPE_STUNNED)" would
+			// return false on a stunned unit, but would return true if they use
+			// "UnitAddType(UNIT_TYPE_STUNNED)"
+			// then check for it. Seems extremely bogus but it's possible some custom
+			// content might
+			// depend on the pointless "feature" of adding and remove a setting that doesn't
+			// work.
+			// If you are here reading this because you're playing something that depends on
+			// this
+			// "feature" then this would be the place to add it
+			return false;
+		case SNARED:
+			addCheesyStateModBuff(game, StateModBuffType.SNARED);
+			return true;
+		case STUNNED:
+			addCheesyStateModBuff(game, StateModBuffType.STUN);
+			return true;
+		case SLEEPING:
+			addCheesyStateModBuff(game, StateModBuffType.SLEEPING);
+			return true;
+		case DEAD:
+			if (!isDead()) {
+				kill(game);
+				return true;
+			}
+			return false;
+		case STRUCTURE:
+			if (!isBuilding()) {
+				// below is maybe not what wc3 actually does. the "Factory" ability
+				// for pocket factory sets it to structure kind of like this,
+				// but probably doesn't interact with its world collision (?)
+				game.getWorldCollision().removeUnit(this);
+				setStructure(true);
+				game.getWorldCollision().addUnit(this);
+				return true;
+			}
+			return false;
+		case FLYING:
+			return this.targetedAs.add(CTargetType.AIR);
+		case GROUND:
+			return this.targetedAs.add(CTargetType.GROUND);
+		case GIANT:
+			return this.classifications.add(CUnitClassification.GIANT);
+		case SUMMONED:
+			return this.classifications.add(CUnitClassification.SUMMONED);
+		case UNDEAD:
+			return this.classifications.add(CUnitClassification.UNDEAD);
+		case MECHANICAL:
+			return this.classifications.add(CUnitClassification.MECHANICAL);
+		case PEON:
+			return this.classifications.add(CUnitClassification.PEON);
+		case SAPPER:
+			return this.classifications.add(CUnitClassification.SAPPER);
+		case TOWNHALL:
+			return this.classifications.add(CUnitClassification.TOWNHALL);
+		case ANCIENT:
+			return this.classifications.add(CUnitClassification.ANCIENT);
+		case TAUREN:
+			return this.classifications.add(CUnitClassification.TAUREN);
+		case RESISTANT:
+			addCheesyStateModBuff(game, StateModBuffType.RESISTANT);
+			return true;
+		case ETHEREAL:
+			addCheesyStateModBuff(game, StateModBuffType.ETHEREAL);
+			return true;
+		case MAGIC_IMMUNE:
+			addCheesyStateModBuff(game, StateModBuffType.MAGIC_IMMUNE);
+			return true;
+		}
+		return false;
+	}
+
+	public boolean removeUnitType(final CSimulation game, final CUnitTypeJass whichUnitType) {
+		switch (whichUnitType) {
+		case HERO:
+		case ATTACKS_FLYING:
+		case ATTACKS_GROUND:
+		case MELEE_ATTACKER:
+		case RANGED_ATTACKER:
+		case PLAGUED:
+		case POISONED:
+		case POLYMORPHED:
+			// types which we are not allowing them to add and remove
+			// I read online on a Hive thing that maybe users expect the API for these types
+			// to be something that doesn't work, i.e. "IsUnitType(UNIT_TYPE_STUNNED)" would
+			// return false on a stunned unit, but would return true if they use
+			// "UnitAddType(UNIT_TYPE_STUNNED)"
+			// then check for it. Seems extremely bogus but it's possible some custom
+			// content might
+			// depend on the pointless "feature" of adding and remove a setting that doesn't
+			// work.
+			// If you are here reading this because you're playing something that depends on
+			// this
+			// "feature" then this would be the place to add it
+			return false;
+		case SNARED:
+			return removeCheesyStateModBuff(game, StateModBuffType.SNARED);
+		case STUNNED:
+			return removeCheesyStateModBuff(game, StateModBuffType.STUN);
+		case SLEEPING:
+			return removeCheesyStateModBuff(game, StateModBuffType.SLEEPING);
+		case DEAD:
+			if (isDead()) {
+				resurrect(game);
+				return true;
+			}
+			return false;
+		case STRUCTURE:
+			if (isBuilding()) {
+				// below is maybe not what wc3 actually does. the "Factory" ability
+				// for pocket factory sets it to structure kind of like this,
+				// but probably doesn't interact with its world collision (?)
+				game.getWorldCollision().removeUnit(this);
+				setStructure(false);
+				game.getWorldCollision().addUnit(this);
+				return true;
+			}
+			return false;
+		case FLYING:
+			return this.targetedAs.remove(CTargetType.AIR);
+		case GROUND:
+			return this.targetedAs.remove(CTargetType.GROUND);
+		case GIANT:
+			return this.classifications.remove(CUnitClassification.GIANT);
+		case SUMMONED:
+			return this.classifications.remove(CUnitClassification.SUMMONED);
+		case UNDEAD:
+			return this.classifications.remove(CUnitClassification.UNDEAD);
+		case MECHANICAL:
+			return this.classifications.remove(CUnitClassification.MECHANICAL);
+		case PEON:
+			return this.classifications.remove(CUnitClassification.PEON);
+		case SAPPER:
+			return this.classifications.remove(CUnitClassification.SAPPER);
+		case TOWNHALL:
+			return this.classifications.remove(CUnitClassification.TOWNHALL);
+		case ANCIENT:
+			return this.classifications.remove(CUnitClassification.ANCIENT);
+		case TAUREN:
+			return this.classifications.remove(CUnitClassification.TAUREN);
+		case RESISTANT:
+			return removeCheesyStateModBuff(game, StateModBuffType.RESISTANT);
+		case ETHEREAL:
+			return removeCheesyStateModBuff(game, StateModBuffType.ETHEREAL);
+		case MAGIC_IMMUNE:
+			return removeCheesyStateModBuff(game, StateModBuffType.MAGIC_IMMUNE);
 		}
 		return false;
 	}

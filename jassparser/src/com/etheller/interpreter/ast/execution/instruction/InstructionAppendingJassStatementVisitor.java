@@ -10,6 +10,7 @@ import com.etheller.interpreter.ast.debug.DebuggingJassStatement;
 import com.etheller.interpreter.ast.definition.JassCodeDefinitionBlock;
 import com.etheller.interpreter.ast.expression.AllocateAsNewTypeExpression;
 import com.etheller.interpreter.ast.expression.ArithmeticJassExpression;
+import com.etheller.interpreter.ast.expression.ArithmeticSign;
 import com.etheller.interpreter.ast.expression.ArrayRefJassExpression;
 import com.etheller.interpreter.ast.expression.ExtendHandleExpression;
 import com.etheller.interpreter.ast.expression.FunctionCallJassExpression;
@@ -25,10 +26,12 @@ import com.etheller.interpreter.ast.expression.NegateJassExpression;
 import com.etheller.interpreter.ast.expression.NotJassExpression;
 import com.etheller.interpreter.ast.expression.ParentlessMethodCallJassExpression;
 import com.etheller.interpreter.ast.expression.ReferenceJassExpression;
+import com.etheller.interpreter.ast.expression.TypeCastJassExpression;
 import com.etheller.interpreter.ast.expression.visitor.JassTypeExpressionVisitor;
 import com.etheller.interpreter.ast.function.JassParameter;
 import com.etheller.interpreter.ast.qualifier.JassQualifier;
 import com.etheller.interpreter.ast.scope.GlobalScope;
+import com.etheller.interpreter.ast.scope.GlobalScopeAssignable;
 import com.etheller.interpreter.ast.scope.Scope;
 import com.etheller.interpreter.ast.statement.JassArrayedAssignmentStatement;
 import com.etheller.interpreter.ast.statement.JassCallExpressionStatement;
@@ -51,16 +54,20 @@ import com.etheller.interpreter.ast.statement.JassStatement;
 import com.etheller.interpreter.ast.statement.JassStatementVisitor;
 import com.etheller.interpreter.ast.struct.JassStructMemberType;
 import com.etheller.interpreter.ast.value.ArrayJassType;
+import com.etheller.interpreter.ast.value.BooleanJassValue;
 import com.etheller.interpreter.ast.value.CodeJassValue;
 import com.etheller.interpreter.ast.value.JassType;
 import com.etheller.interpreter.ast.value.JassValue;
+import com.etheller.interpreter.ast.value.JassValueVisitor;
 import com.etheller.interpreter.ast.value.StaticStructTypeJassValue;
 import com.etheller.interpreter.ast.value.StructJassType;
 import com.etheller.interpreter.ast.value.StructJassTypeInterface;
 import com.etheller.interpreter.ast.value.visitor.ArrayPrimitiveTypeVisitor;
 import com.etheller.interpreter.ast.value.visitor.ArrayTypeVisitor;
 import com.etheller.interpreter.ast.value.visitor.StaticStructTypeJassTypeVisitor;
+import com.etheller.interpreter.ast.value.visitor.StaticStructTypeJassValueVisitor;
 import com.etheller.interpreter.ast.value.visitor.StructJassTypeVisitor;
+import com.etheller.interpreter.ast.value.visitor.cast.TypeCastConverterGettingJassTypeVisitor;
 
 public class InstructionAppendingJassStatementVisitor
 		implements JassStatementVisitor<Void>, JassExpressionVisitor<Void> {
@@ -367,10 +374,9 @@ public class InstructionAppendingJassStatementVisitor
 		else {
 			final Integer thisStruct = this.nameToLocalId.get(GlobalScope.KEYNAME_THIS);
 			final JassType thisStructType = this.nameToLocalType.get(GlobalScope.KEYNAME_THIS);
-			StructJassType structJassType;
 			boolean found = false;
-			if ((thisStruct != null)
-					&& ((structJassType = thisStructType.visit(StructJassTypeVisitor.getInstance())) != null)) {
+			if (thisStruct != null) {
+				final StructJassType structJassType = thisStructType.visit(StructJassTypeVisitor.getInstance());
 				final JassStructMemberType memberType = structJassType.tryGetMemberByName(identifier);
 				if (memberType != null) {
 					checkMemberAccess(identifier, structJassType, memberType);
@@ -380,6 +386,28 @@ public class InstructionAppendingJassStatementVisitor
 						this.instructions.add(new LocalReferenceInstruction(thisStruct));
 						this.instructions.add(new StructMemberReferenceInstruction(memberIndex));
 						found = true;
+					}
+				}
+			}
+			if (!found) {
+				if (this.enclosingStructType != null) {
+					final int staticStructValueGlobalId = this.globalScope
+							.getGlobalId(this.enclosingStructType.getName());
+					final GlobalScopeAssignable globalById = this.globalScope
+							.getAssignableGlobalById(staticStructValueGlobalId);
+					final StaticStructTypeJassValue structJassType = globalById.getValue()
+							.visit(StaticStructTypeJassValueVisitor.getInstance());
+
+					final JassStructMemberType memberType = structJassType.tryGetMemberByName(identifier);
+					if (memberType != null) {
+						checkMemberAccess(identifier, structJassType, memberType);
+
+						final int memberIndex = structJassType.tryGetMemberIndexInefficientlyByName(identifier);
+						if (memberIndex != -1) {
+							this.instructions.add(new GlobalReferenceInstruction(staticStructValueGlobalId));
+							this.instructions.add(new StructMemberReferenceInstruction(memberIndex));
+							found = true;
+						}
 					}
 				}
 			}
@@ -416,9 +444,31 @@ public class InstructionAppendingJassStatementVisitor
 
 	@Override
 	public Void visit(final ArithmeticJassExpression expression) {
-		insertExpressionInstructions(expression.getLeftExpression());
-		insertExpressionInstructions(expression.getRightExpression());
-		this.instructions.add(new ArithmeticInstruction(expression.getArithmeticSign()));
+		final JassExpression leftExpression = expression.getLeftExpression();
+		final JassExpression rightExpression = expression.getRightExpression();
+		final ArithmeticSign arithmeticSign = expression.getArithmeticSign();
+		insertExpressionInstructions(leftExpression);
+		final JassValue shortCircuitValue = arithmeticSign.getShortCircuitValue();
+		final boolean shortCircuitAllowed = shortCircuitValue != null;
+		int conditionalBranchInstructionPtr = -1;
+		if (shortCircuitAllowed) {
+			// look for short circuit
+			this.instructions.add(new PeekInstruction());
+			conditionalBranchInstructionPtr = this.instructions.size();
+			this.instructions.add(null);
+		}
+		insertExpressionInstructions(rightExpression);
+		this.instructions.add(new ArithmeticInstruction(arithmeticSign));
+		if (shortCircuitAllowed) {
+			if (shortCircuitValue == BooleanJassValue.FALSE) {
+				this.instructions.set(conditionalBranchInstructionPtr,
+						new InvertedConditionalBranchInstruction(this.instructions.size()));
+			}
+			else {
+				this.instructions.set(conditionalBranchInstructionPtr,
+						new ConditionalBranchInstruction(this.instructions.size()));
+			}
+		}
 		return null;
 	}
 
@@ -465,8 +515,20 @@ public class InstructionAppendingJassStatementVisitor
 						this.enclosingStructType);
 			}
 			else {
-				throw this.globalScope.createException("Undefined function: " + functionName,
-						new IllegalArgumentException());
+				if (argumentCount == 1) {
+					try {
+						final JassType functionNameAsType = this.globalScope.parseType(functionName);
+						final JassExpression jassExpression = arguments.get(0);
+						insertTypeCastInstructions(functionNameAsType, jassExpression);
+					}
+					catch (final Exception exc) {
+						throw this.globalScope.createException("Undefined function: " + functionName, exc);
+					}
+				}
+				else {
+					throw this.globalScope.createException("Undefined function: " + functionName,
+							new IllegalArgumentException());
+				}
 			}
 		}
 	}
@@ -699,6 +761,25 @@ public class InstructionAppendingJassStatementVisitor
 	public Void visit(final JassNewExpression expression) {
 		this.instructions.add(new AllocateInstruction(expression.getType()));
 		return null;
+	}
+
+	@Override
+	public Void visit(final TypeCastJassExpression expression) {
+		final JassType castToType = expression.getCastToType();
+		final JassExpression valueExpression = expression.getValueExpression();
+		insertTypeCastInstructions(castToType, valueExpression);
+		return null;
+	}
+
+	private void insertTypeCastInstructions(final JassType castToType, final JassExpression valueExpression) {
+		final JassValueVisitor<JassValue> typeConverter = castToType
+				.visit(TypeCastConverterGettingJassTypeVisitor.INSTANCE);
+		if (typeConverter == null) {
+			throw new IllegalArgumentException("Unable to build code for casting to type: " + castToType.getName());
+//			this.instructions.add(new PushLiteralInstruction(castToType.getNullValue()));
+		}
+		insertExpressionInstructions(valueExpression);
+		this.instructions.add(new TypeCastInstruction(typeConverter, castToType.getNullValue()));
 	}
 
 	private static final class LoopImpl {

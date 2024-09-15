@@ -31,4 +31,6 @@ public interface JassExpressionVisitor<TYPE> {
 
 	TYPE visit(ExtendHandleExpression expression);
 
+	TYPE visit(TypeCastJassExpression expression);
+
 }

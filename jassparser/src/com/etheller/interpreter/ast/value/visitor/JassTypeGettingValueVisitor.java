@@ -67,7 +67,7 @@ public class JassTypeGettingValueVisitor implements JassValueVisitor<JassType> {
 
 	@Override
 	public JassType accept(final StaticStructTypeJassValue value) {
-		return JassType.ANY_STRUCT_TYPE;
+		return value;
 	}
 
 }

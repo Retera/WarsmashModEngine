@@ -19,16 +19,20 @@ import com.etheller.interpreter.ast.expression.NegateJassExpression;
 import com.etheller.interpreter.ast.expression.NotJassExpression;
 import com.etheller.interpreter.ast.expression.ParentlessMethodCallJassExpression;
 import com.etheller.interpreter.ast.expression.ReferenceJassExpression;
+import com.etheller.interpreter.ast.expression.TypeCastJassExpression;
 import com.etheller.interpreter.ast.function.UserJassFunction;
 import com.etheller.interpreter.ast.scope.GlobalScope;
 import com.etheller.interpreter.ast.scope.GlobalScopeAssignable;
 import com.etheller.interpreter.ast.scope.Scope;
+import com.etheller.interpreter.ast.struct.JassStructMemberType;
 import com.etheller.interpreter.ast.value.JassType;
+import com.etheller.interpreter.ast.value.JassValue;
 import com.etheller.interpreter.ast.value.StaticStructTypeJassValue;
 import com.etheller.interpreter.ast.value.StructJassType;
 import com.etheller.interpreter.ast.value.visitor.ArrayPrimitiveTypeVisitor;
 import com.etheller.interpreter.ast.value.visitor.JassTypeGettingValueVisitor;
 import com.etheller.interpreter.ast.value.visitor.StaticStructTypeJassTypeVisitor;
+import com.etheller.interpreter.ast.value.visitor.StaticStructTypeJassValueVisitor;
 import com.etheller.interpreter.ast.value.visitor.StructJassTypeVisitor;
 
 public class JassTypeExpressionVisitor implements JassExpressionVisitor<JassType> {
@@ -59,9 +63,37 @@ public class JassTypeExpressionVisitor implements JassExpressionVisitor<JassType
 			return localType;
 		}
 		else {
+			final JassType thisStructType = this.nameToLocalType.get(GlobalScope.KEYNAME_THIS);
+			if (thisStructType != null) {
+				final StructJassType structJassType = thisStructType.visit(StructJassTypeVisitor.getInstance());
+				final JassStructMemberType memberType = structJassType.tryGetMemberByName(identifier);
+				if (memberType != null) {
+					return memberType.getType();
+				}
+			}
+
+			if (this.enclosingType != null) {
+				final int staticStructValueGlobalId = this.globalScope.getGlobalId(this.enclosingType.getName());
+				final GlobalScopeAssignable globalById = this.globalScope
+						.getAssignableGlobalById(staticStructValueGlobalId);
+				final StaticStructTypeJassValue structJassType = globalById.getValue()
+						.visit(StaticStructTypeJassValueVisitor.getInstance());
+
+				final JassStructMemberType memberType = structJassType.tryGetMemberByName(identifier);
+				if (memberType != null) {
+					return memberType.getType();
+				}
+			}
+
 			final GlobalScopeAssignable assignableGlobal = this.globalScope.getAssignableGlobal(identifier);
 			if (assignableGlobal != null) {
 				return assignableGlobal.getType();
+			}
+			else {
+				final JassValue constantValue = this.globalScope.getPreprocessorConstant(identifier);
+				if (constantValue != null) {
+					return constantValue.visit(JassTypeGettingValueVisitor.getInstance());
+				}
 			}
 		}
 		return JassType.NOTHING;
@@ -175,4 +207,8 @@ public class JassTypeExpressionVisitor implements JassExpressionVisitor<JassType
 		return expression.getType();
 	}
 
+	@Override
+	public JassType visit(final TypeCastJassExpression expression) {
+		return expression.getCastToType();
+	}
 }

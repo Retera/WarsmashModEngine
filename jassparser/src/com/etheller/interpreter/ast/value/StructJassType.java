@@ -183,8 +183,8 @@ public class StructJassType implements JassType, StructJassTypeInterface {
 					final NativeJassFunction ctorNative = globalScope.getNative(constructorNative.getName());
 					final List<JassParameter> parameters = ctorNative.getParameters();
 					passThroughArguments.add(new ReferenceJassExpression(GlobalScope.KEYWORD_THIS));
-					for (final JassParameter parameter : parameters) {
-						passThroughArguments.add(new ReferenceJassExpression(parameter.getIdentifier()));
+					for (int i = 1, l = parameters.size(); i < l; i++) {
+						passThroughArguments.add(new ReferenceJassExpression(parameters.get(i).getIdentifier()));
 					}
 					final List<JassStatement> newStatements = new ArrayList<>();
 					appendOnDestroyCallIfAvailable(newStatements);
@@ -233,7 +233,8 @@ public class StructJassType implements JassType, StructJassTypeInterface {
 			}
 			else {
 				final int methodInstructionPtr = globalScope.defineMethod(methodBlock.getLineNo(),
-						methodBlock.getSourceFile(), methodName, methodBlock.createCode(globalScope, this), this);
+						methodBlock.getSourceFile(), methodName, methodBlock.createCode(globalScope, this), this,
+						globalScope);
 				this.methodTable.set(tableIndex, methodInstructionPtr);
 				if (!userDefinedCreate && ALLOCATE.equals(methodName)) {
 					this.methodTable.set(this.methodNameToTableIndex.get(CREATE), methodInstructionPtr);
@@ -340,6 +341,7 @@ public class StructJassType implements JassType, StructJassTypeInterface {
 		return member;
 	}
 
+	@Override
 	public JassStructMemberType tryGetMemberByName(final String name) {
 		final JassStructMemberType declaredMember = tryGetDeclaredMemberByName(name);
 		if (declaredMember != null) {

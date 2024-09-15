@@ -73,7 +73,7 @@ library TargetTypesAPI requires StringListAPI
 	
 	// this is an unbound native, which for now has no function, but if we move from Java to C++ then
 	// it would be needed for cleanup
-	native DestroyTargetTypes takes targettypes returns nothing
+	native DestroyTargetTypes takes targettypes x returns nothing
 
 	struct TargetTypes
 		// NOTE: this function might be faster than ParseTargetTypes but maybe not.
@@ -876,7 +876,7 @@ library AbilitiesCommonLegacy requires TargetTypesAPI, AnimationTokensAPI
 
 	// NOTE: a native unit.chargeMana exists, so we could bind that also, but it's the same as this fxn:
 	function ChargeMana takes unit caster, integer manaCost returns boolean
-		integer mana = GetUnitState(caster, UNIT_STATE_MANA)
+		real mana = GetUnitState(caster, UNIT_STATE_MANA)
 		if (mana >= manaCost) then
 			SetUnitState(caster, UNIT_STATE_MANA, mana - manaCost)
 			return true
@@ -1038,6 +1038,11 @@ library AbilitiesCommonLegacy requires TargetTypesAPI, AnimationTokensAPI
 
 	native RemoveTriggerEvent takes trigger whichTrigger, event whichEvent returns nothing
 
+/*
+ *	// below is the syntax of type cast, but it is not yet as simple as a native
+ *
+ *	native TypeCast takes handle x, structtype whichType returns whichType
+ */
 endlibrary
 
 //=====================================================
@@ -1290,7 +1295,7 @@ library BehaviorAPI requires AbilityTargetAPI
 	// the same stuff as this, but in user space and not natively.
 	type abstractrangedbehavior extends rangedbehavior
 	native CreateAbstractRangedBehavior takes unit x returns abstractrangedbehavior
-	native DestroyRangedBehavior takes abstractrangedbehavior x returns nothing
+	native DestroyAbstractRangedBehavior takes abstractrangedbehavior x returns nothing
 
 	native AbstractRangedBehaviorResetI takes abstractrangedbehavior whichBehavior, abilitytarget target returns behavior
 	native AbstractRangedBehaviorResetII takes abstractrangedbehavior whichBehavior, abilitytarget target, boolean disableCollision returns behavior
@@ -1784,7 +1789,7 @@ library AbilityAPI requires OrderButtonAPI
 	// ( we can change it to return 0 later )
 	native SetAbilityLevel takes unit abilityUnit, ability whichAbility, integer level returns nothing
 
-	native GetAbilityLevel takes ability whichAbility returns integer level
+	native GetAbilityLevel takes ability whichAbility returns integer
 
 	// NOTE: do not call the native below, it exists only for interoperating with "extends" keyword
 	private native CreateJassAbility takes integer aliasId returns ability
@@ -1918,6 +1923,7 @@ library GenericAbilityBaseTypes requires AbilityAPI, BehaviorAPI
 	// (in case we are wrapped in a SpellBook who needs to
 	//  set our button's menu ID, etc)
 	struct GenericSingleIconAbilityBase extends Ability
+		integer alias
 		orderbutton abilityButton
 		
 		method innerPopulate takes gameobject editorData, integer level returns nothing
@@ -1971,7 +1977,7 @@ library GenericAbilityBaseTypes requires AbilityAPI, BehaviorAPI
 		method getAliasId takes nothing returns integer
 			return GetAbilityAliasId(this)
 		endmethod
-	endinterface
+	endstruct
 
 	scope TargetWidget
 		private interface ActiveAbilityInterface extends GenericSingleIconAbilityBase
@@ -2194,7 +2200,7 @@ library GenericAbilityBaseTypes requires AbilityAPI, BehaviorAPI
 			endmethod
 			
 			method checkTarget takes unit caster, ability source returns nothing
-				call this.parent.checkTargetUnit(caster)
+				call this.parent.checkTarget(caster)
 			endmethod
 			
 			method begin takes unit caster, ability source returns behavior
@@ -2305,6 +2311,28 @@ library AbilityFieldDefaults
 		constant string ABILITY_FIELD_REQUIREMENTS                      = "Requires"
 		constant string ABILITY_FIELD_REQUIREMENT_LEVELS                = "Requiresamount"
 	endglobals
+
+	function GetGameObjectIDSmart takes gameobject editorData, string metaKey, integer level, integer index returns integer
+		string levelKey
+		if level == -1 then
+			levelKey = ""
+		else
+			levelKey = I2S(level)
+		endif
+		return GetGameObjectFieldAsID(editorData, metaKey + levelKey, index)
+	endfunction
+
+	function GetGameObjectBuffID takes gameobject editorData, integer level, integer index returns integer
+		return GetGameObjectIDSmart(editorData, ABILITY_FIELD_BUFF, level, index)
+	endfunction
+
+	function GetGameObjectEffectID takes gameobject editorData, integer level returns integer
+		return GetGameObjectIDSmart(editorData, ABILITY_FIELD_EFFECT, level, 0)
+	endfunction
+
+	function GetGameObjectLightningID takes gameobject editorData, integer index returns integer
+		return GetGameObjectIDSmart(editorData, ABILITY_FIELD_LIGHTNING, -1, index)
+	endfunction
 endlibrary
 
 //=====================================================
@@ -2337,7 +2365,7 @@ library AnimationTokensAPI
 	type secondarytags extends handle
 	
 	private native ConvertPrimaryTag takes integer x returns primarytag
-	private native ConvertSecondaryTag takes integer x returns 
+	private native ConvertSecondaryTag takes integer x returns secondarytag
 	
 	native CreatePrimaryTags takes nothing returns primarytags
 	native PrimaryTagsAdd takes primarytags whichSet, primarytag whichType returns boolean
@@ -2345,7 +2373,7 @@ library AnimationTokensAPI
 	native PrimaryTagsContains takes primarytags whichSet, primarytag whichType returns boolean
 	native PrimaryTagsSize takes primarytags whichSet returns integer
 	native PrimaryTagsAny takes primarytags whichSet returns primarytag /* returns null if empty, else returns one of the values */
-	native DestroyPrimaryTags takes primarytags returns nothing
+	native DestroyPrimaryTags takes primarytags whichSet returns nothing
 	
 	native CreateSecondaryTags takes nothing returns secondarytags
 	native SecondaryTagsAdd takes secondarytags whichSet, secondarytag whichType returns boolean
@@ -2353,7 +2381,7 @@ library AnimationTokensAPI
 	native SecondaryTagsContains takes secondarytags whichSet, secondarytag whichType returns boolean
 	native SecondaryTagsSize takes secondarytags whichSet returns integer
 	native SecondaryTagsAny takes secondarytags whichSet returns secondarytag /* returns null if empty, else returns one of the values */
-	native DestroySecondaryTags takes secondarytags returns nothing
+	native DestroySecondaryTags takes secondarytags whichSet returns nothing
 	
 	// This function splits up a string of the form "Attack Spell Channel Alternate - 2" into bits,
 	// and then adds ATTACK and SPELL enum tags to the primary set, and CHANNEL and ALTERNATE tags to the
@@ -2404,7 +2432,7 @@ library AnimationTokensAPI
 	endstruct
 	
 	
-	struct SecondaryTags extends primarytags
+	struct SecondaryTags extends secondarytags
 		public static constant secondarytag ALTERNATE   = ConvertSecondaryTag(0)
 		public static constant secondarytag ALTERNATEEX = ConvertSecondaryTag(1)
 		public static constant secondarytag BONE        = ConvertSecondaryTag(2)
@@ -2528,13 +2556,13 @@ library AbilitySpellBaseTypes requires GenericAbilityBaseTypes, AbilityFieldDefa
 			if (this.castingSecondaryTags.isEmpty()) then
 				this.castingSecondaryTags.add(SecondaryTags.SPELL)
 			endif
-			this.duration = GetGameObjectFieldAsReal(ABILITY_FIELD_DURATION + I2S(level), 0)
-			this.heroDuration = GetGameObjectFieldAsReal(ABILITY_FIELD_HERO_DURATION + I2S(level), 0)
+			this.duration = GetGameObjectFieldAsReal(editorData, ABILITY_FIELD_DURATION + I2S(level), 0)
+			this.heroDuration = GetGameObjectFieldAsReal(editorData, ABILITY_FIELD_HERO_DURATION + I2S(level), 0)
 			
 			populateData(editorData, level)
 		endmethod
 		
-		method checkUsable takes unit caster, ability source returns nothing
+		method checkUsable takes unit caster returns nothing
 			integer cooldownCode = this.getCodeId() // I guess if you wanted stacking, change this to alias ID?
 			real cooldownRemaining = GetUnitAbilityCooldownRemaining(caster, cooldownCode)
 			if cooldownRemaining > 0 then
@@ -2544,11 +2572,11 @@ library AbilitySpellBaseTypes requires GenericAbilityBaseTypes, AbilityFieldDefa
 				// the special "not enough mana" string turns the icon blue
 				call FailUsableCheckWithMessage(this.abilityButton, COMMAND_STRING_ERROR_KEY_NOT_ENOUGH_MANA)
 			else
-				call checkUsableSpell(caster, source)
+				call checkUsableSpell(caster)
 			endif
 		endmethod
 		
-		method checkUsableSpell takes unit caster, ability source returns nothing
+		method checkUsableSpell takes unit caster returns nothing
 			call PassUsableCheck(this.abilityButton)
 		endmethod
 		
@@ -2581,16 +2609,6 @@ library AbilitySpellBaseTypes requires GenericAbilityBaseTypes, AbilityFieldDefa
 		endmethod
 	endmodule
 
-	private interface AbilitySpellInterface extends AbstractGenericActiveAbilityTargetWidget
-		method populateData takes gameobject editorData, integer level returns nothing
-	endinterface
-	
-	private interface AbilitySpellTargetInterface extends AbilitySpellInterface
-		method doEffect takes unit caster, abilitytarget target returns boolean
-		method doChannelTick takes unit caster, abilitytarget target returns boolean defaults false
-		method doChannelEnd takes unit caster, abilitytarget target returns nothing defaults nothing
-	endinterface
-
 	private struct AbilityTargetStillAliveAndTargetableVisitor extends AbilityTargetVisitor
 		unit caster
 		targettypes targetsAllowed
@@ -2615,7 +2633,7 @@ library AbilitySpellBaseTypes requires GenericAbilityBaseTypes, AbilityFieldDefa
 			result = true
 		endmethod
 
-		static thistype INSTANCE = thistype.create()
+		static constant thistype INSTANCE = thistype.create()
 
 		static method evaluate takes unit caster, targettypes targetsAllowed, abilitytarget target returns boolean
 			call AbilityTargetAcceptVisitor(target, INSTANCE.reset(caster, targetsAllowed))
@@ -2647,7 +2665,7 @@ library AbilitySpellBaseTypes requires GenericAbilityBaseTypes, AbilityFieldDefa
 			result = true
 		endmethod
 
-		static thistype INSTANCE = thistype.create()
+		static constant thistype INSTANCE = thistype.create()
 
 		static method evaluate takes unit caster, targettypes targetsAllowed, abilitytarget target returns boolean
 			call AbilityTargetAcceptVisitor(target, INSTANCE.reset(caster, targetsAllowed))
@@ -2656,7 +2674,7 @@ library AbilitySpellBaseTypes requires GenericAbilityBaseTypes, AbilityFieldDefa
 
 	endstruct
 	
-	struct BehaviorSpellTarget extends NativeAbstractRangedBehavior
+	module BehaviorSpellTarget
 		AbilitySpellTargetInterface sourceAbility
 		integer castStartTick
 		boolean doneEffect
@@ -2671,7 +2689,7 @@ library AbilitySpellBaseTypes requires GenericAbilityBaseTypes, AbilityFieldDefa
 		method reset takes abilitytarget target returns thistype
 			this.castStartTick = 0
 			this.doneEffect = false
-			this.channeling = false
+			this.channeling = true
 			return this.innerReset(target)
 		endmethod
 
@@ -2690,7 +2708,7 @@ library AbilitySpellBaseTypes requires GenericAbilityBaseTypes, AbilityFieldDefa
 
 		method update takes boolean withinFacingWindow returns behavior
 			unit behavingUnit = getUnit()
-			call SetUnitAnimationByTag(behavingUnit, false, this.castingPrimaryTag, this.castingSecondaryTags, 1.0, true)
+			call SetUnitAnimationByTag(behavingUnit, false, this.sourceAbility.castingPrimaryTag, this.sourceAbility.castingSecondaryTags, 1.0, true)
 			integer gameTurnTick = GetGameTurnTick()
 			if (this.castStartTick == 0) then
 				this.castStartTick = gameTurnTick
@@ -2707,7 +2725,7 @@ library AbilitySpellBaseTypes requires GenericAbilityBaseTypes, AbilityFieldDefa
 					// function, then just literally deduct the mana or something. That would
 					// require "checkUsable" to be less stupid and not call Pass/Fail natives,
 					// and to instead work the same in jass as java
-					if (not ChargeMana(behavingUnit, this.sourceAbility.getManaCost()) then
+					if (not ChargeMana(behavingUnit, this.sourceAbility.getManaCost())) then
 						// if the unit had enough mana to click the icon of this, but was mana-drained while walking
 						// from over there to here before completing the cast, we must pop up the error
 						// independent of "this.checkUsable"
@@ -2754,10 +2772,10 @@ library AbilitySpellBaseTypes requires GenericAbilityBaseTypes, AbilityFieldDefa
 			endif
 		endmethod
 
-		method begin takes nothing returns nothing defaults nothing
+		method begin takes nothing returns nothing
 		endmethod
 
-		method end takes boolean interrupted returns nothing defaults nothing
+		method end takes boolean interrupted returns nothing
 			checkEndChannel(interrupted)
 		endmethod
 
@@ -2781,14 +2799,33 @@ library AbilitySpellBaseTypes requires GenericAbilityBaseTypes, AbilityFieldDefa
 		method resetBeforeMoving takes nothing returns nothing
 			this.castStartTick = 0
 		endmethod
-	endstruct
+	endmodule
 
 	scope TargetWidget
+		private interface AbilitySpellInterface extends AbstractGenericActiveAbilityTargetWidget
+			method populateData takes gameobject editorData, integer level returns nothing
+			method doEffect takes unit caster, abilitytarget target returns boolean
+			method doChannelTick takes unit caster, abilitytarget target returns boolean defaults false
+			method doChannelEnd takes unit caster, abilitytarget target returns nothing defaults nothing
+		endinterface
+		
+		private struct AbilitySpellTargetInterface extends AbilitySpellInterface
+			implement AbilitySpell
+		endstruct
+
+		private struct BehaviorSpellImpl extends NativeAbstractRangedBehavior
+			implement BehaviorSpellTarget
+		endstruct
+
 		struct AbilitySpellTargetWidget extends AbilitySpellTargetInterface
-			BehaviorSpellTargetWidget behavior
+			BehaviorSpellImpl behavior
 
 			method onAdd takes unit whichUnit returns nothing
-				this.behavior = BehaviorSpellTargetWidget.create(whichUnit, this)
+				this.behavior = BehaviorSpellImpl.create(whichUnit, this)
+			endmethod
+
+			method checkSpellTarget takes unit caster, widget target returns nothing
+				call PassTargetCheck(this.abilityButton, target)
 			endmethod
 
 			private method checkTargetWidget takes unit caster, widget target returns nothing
@@ -2797,38 +2834,306 @@ library AbilitySpellBaseTypes requires GenericAbilityBaseTypes, AbilityFieldDefa
 					call FailTargetCheckWithMessage(this.abilityButton, targetError)
 				else
 					if (not IsUnitMovementDisabled(caster) or UnitCanReach(caster, target, getCastRange())) then
-						call this.innerCheckCanTargetSpell(
+						call this.checkSpellTarget(caster, target)
 					else
 						call FailTargetCheckWithMessage(COMMAND_STRING_ERROR_KEY_TARGET_IS_OUTSIDE_RANGE)
 					endif
 				endif
 			endmethod
 
-			method checkTargetUnit takes unit caster, ability source, unit target returns nothing
+			method checkTargetUnit takes unit caster, unit target returns nothing
 				checkTargetWidget(caster, target)
 			endmethod
 			
-			method beginUnit takes unit caster, ability source, unit target returns behavior
+			method beginUnit takes unit caster, unit target returns behavior
 				return behavior.reset(target)
 			endmethod
 			
-			method checkTargetItem takes unit caster, ability source, item target returns nothing
+			method checkTargetItem takes unit caster, item target returns nothing
 				checkTargetWidget(caster, target)
 			endmethod
 			
-			method beginItem takes unit caster, ability source, item target returns behavior
+			method beginItem takes unit caster, item target returns behavior
 				return behavior.reset(target)
 			endmethod
 			
-			method checkTargetDestructable takes unit caster, ability source, destructable target returns nothing
+			method checkTargetDestructable takes unit caster, destructable target returns nothing
 				checkTargetWidget(caster, target)
 			endmethod
 			
-			method beginDestructable takes unit caster, ability source, destructable target returns behavior
+			method beginDestructable takes unit caster, destructable target returns behavior
 				return behavior.reset(target)
 			endmethod
-			
+		endstruct
+	endscope
+
+	scope TargetLocation
+		private interface AbilitySpellInterface extends AbstractGenericActiveAbilityTargetLocation
+			method populateData takes gameobject editorData, integer level returns nothing
+			method doEffect takes unit caster, abilitytarget target returns boolean
+			method doChannelTick takes unit caster, abilitytarget target returns boolean defaults false
+			method doChannelEnd takes unit caster, abilitytarget target returns nothing defaults nothing
+		endinterface
+		
+		private struct AbilitySpellTargetInterface extends AbilitySpellInterface
 			implement AbilitySpell
+		endstruct
+
+		private struct BehaviorSpellImpl extends NativeAbstractRangedBehavior
+			implement BehaviorSpellTarget
+		endstruct
+
+		struct AbilitySpellTargetLocation extends AbilitySpellTargetInterface
+			BehaviorSpellImpl behavior
+
+			method onAdd takes unit whichUnit returns nothing
+				this.behavior = BehaviorSpellImpl.create(whichUnit, this)
+			endmethod
+
+			method checkSpellTarget takes unit caster, location target returns nothing
+				call PassTargetCheck(this.abilityButton, target)
+			endmethod
+
+			method checkTargetLoc takes unit caster, location target returns nothing
+				if (not IsUnitMovementDisabled(caster) or UnitCanReach(caster, target, getCastRange())) then
+					call this.checkSpellTarget(caster, target)
+				else
+					call FailTargetCheckWithMessage(COMMAND_STRING_ERROR_KEY_TARGET_IS_OUTSIDE_RANGE)
+				endif
+			endmethod
+
+			method beginLoc takes unit caster, location target returns behavior
+				return behavior.reset(target)
+			endmethod
+		endstruct
+	endscope
+
+	scope TargetWidgetOrLocation
+		private interface AbilitySpellInterface extends AbstractGenericActiveAbilityTargetWidgetOrLocation
+			method populateData takes gameobject editorData, integer level returns nothing
+			method doEffect takes unit caster, abilitytarget target returns boolean
+			method doChannelTick takes unit caster, abilitytarget target returns boolean defaults false
+			method doChannelEnd takes unit caster, abilitytarget target returns nothing defaults nothing
+		endinterface
+		
+		private struct AbilitySpellTargetInterface extends AbilitySpellInterface
+			implement AbilitySpell
+		endstruct
+
+		private struct BehaviorSpellImpl extends NativeAbstractRangedBehavior
+			implement BehaviorSpellTarget
+		endstruct
+
+		struct AbilitySpellTargetWidget extends AbilitySpellTargetInterface
+			BehaviorSpellImpl behavior
+
+			method onAdd takes unit whichUnit returns nothing
+				this.behavior = BehaviorSpellImpl.create(whichUnit, this)
+			endmethod
+
+			method checkSpellTarget takes unit caster, abilitytarget target returns nothing
+				call PassTargetCheck(this.abilityButton, target)
+			endmethod
+
+			private method checkTargetWidget takes unit caster, widget target returns nothing
+				string targetError = GetTargetError(target, caster, this.targetsAllowed)
+				if (targetError != null) then
+					call FailTargetCheckWithMessage(this.abilityButton, targetError)
+				else
+					if (not IsUnitMovementDisabled(caster) or UnitCanReach(caster, target, getCastRange())) then
+						call this.checkSpellTarget(caster, target)
+					else
+						call FailTargetCheckWithMessage(COMMAND_STRING_ERROR_KEY_TARGET_IS_OUTSIDE_RANGE)
+					endif
+				endif
+			endmethod
+
+			method checkTargetUnit takes unit caster, unit target returns nothing
+				checkTargetWidget(caster, target)
+			endmethod
+			
+			method beginUnit takes unit caster, unit target returns behavior
+				return behavior.reset(target)
+			endmethod
+			
+			method checkTargetItem takes unit caster, item target returns nothing
+				checkTargetWidget(caster, target)
+			endmethod
+			
+			method beginItem takes unit caster, item target returns behavior
+				return behavior.reset(target)
+			endmethod
+			
+			method checkTargetDestructable takes unit caster, destructable target returns nothing
+				checkTargetWidget(caster, target)
+			endmethod
+			
+			method beginDestructable takes unit caster, destructable target returns behavior
+				return behavior.reset(target)
+			endmethod
+
+			method checkTargetLoc takes unit caster, location target returns nothing
+				if (not IsUnitMovementDisabled(caster) or UnitCanReach(caster, target, getCastRange())) then
+					call this.checkSpellTarget(caster, target)
+				else
+					call FailTargetCheckWithMessage(COMMAND_STRING_ERROR_KEY_TARGET_IS_OUTSIDE_RANGE)
+				endif
+			endmethod
+
+			method beginLoc takes unit caster, location target returns behavior
+				return behavior.reset(target)
+			endmethod
+		endstruct
+	endscope
+
+	scope NoTarget
+		private interface AbilitySpellInterface extends AbstractGenericActiveAbilityNoTarget
+			method populateData takes gameobject editorData, integer level returns nothing
+			method doEffect takes unit caster, abilitytarget target returns boolean
+			method doChannelTick takes unit caster, abilitytarget target returns boolean defaults false
+			method doChannelEnd takes unit caster, abilitytarget target returns nothing defaults nothing
+		endinterface
+		
+		private struct AbilitySpellTargetInterface extends AbilitySpellInterface
+			implement AbilitySpell
+		endstruct
+		
+		private struct BehaviorSpellNoTarget extends Behavior
+			unit behavingUnit
+			AbilitySpellTargetInterface sourceAbility
+			integer castStartTick
+			boolean doneEffect
+			boolean channeling
+
+			public static method create takes unit whichUnit, AbilitySpellTargetInterface abil returns thistype
+				local thistype this = .allocate()
+				set this.behavingUnit = whichUnit
+				set this.sourceAbility = abil
+				return this
+			endmethod
+
+			method reset takes nothing returns thistype
+				this.castStartTick = 0
+				this.doneEffect = false
+				this.channeling = true
+				return this
+			endmethod
+
+			method endChannel takes boolean interrupted returns nothing
+				call UnitStopSpellSoundEffect(behavingUnit, this.sourceAbility.getAliasId())
+				call this.sourceAbility.doChannelEnd(behavingUnit, null, interrupted)
+			endmethod
+
+			method update takes nothing returns behavior
+				call SetUnitAnimationByTag(behavingUnit, false, this.sourceAbility.castingPrimaryTag, this.sourceAbility.castingSecondaryTags, 1.0, true)
+				integer gameTurnTick = GetGameTurnTick()
+				if (this.castStartTick == 0) then
+					this.castStartTick = gameTurnTick
+				endif
+				integer ticksSinceCast = gameTurnTick - this.castStartTick
+				integer castPointTicks = R2I(GetUnitCastPoint(behavingUnit) / au_SIMULATION_STEP_TIME)
+				integer backswingTicks = R2I(GetUnitCastBackswingPoint(behavingUnit) / au_SIMULATION_STEP_TIME)
+				if ((ticksSinceCast >= castPointTicks) or (ticksSinceCast >= backswingTicks)) then
+					boolean wasEffectDone = this.doneEffect
+					boolean wasChanneling = this.channeling
+					if (not wasEffectDone) then
+						this.doneEffect = true
+						// NOTE: in the future, maybe call "checkUsable" here instead of a custom "charge mana"
+						// function, then just literally deduct the mana or something. That would
+						// require "checkUsable" to be less stupid and not call Pass/Fail natives,
+						// and to instead work the same in jass as java
+						if (not ChargeMana(behavingUnit, this.sourceAbility.getManaCost())) then
+							// if the unit had enough mana to click the icon of this, but was mana-drained while walking
+							// from over there to here before completing the cast, we must pop up the error
+							// independent of "this.checkUsable"
+							call ShowInterfaceError(GetOwningPlayer(behavingUnit), COMMAND_STRING_ERROR_KEY_NOT_ENOUGH_MANA)
+							return UnitPollNextOrderBehavior(behavingUnit)
+						endif
+						call StartUnitAbilityCooldown(behavingUnit, this.sourceAbility.getCodeId(), this.sourceAbility.getCooldown())
+						this.channeling = this.sourceAbility.doEffect(behavingUnit, null)
+						if (this.channeling) then
+							call UnitLoopSpellSoundEffect(behavingUnit, this.sourceAbility.getAliasId())
+						else
+							call UnitSpellSoundEffect(behavingUnit, this.sourceAbility.getAliasId())
+						endif
+					endif
+					if this.channeling then
+						set this.channeling = this.sourceAbility.doChannelTick(behavingUnit, null)
+					endif
+					if wasEffectDone and wasChanneling and not this.channeling then
+						call this.endChannel(false)
+					endif
+				endif
+				if ((ticksSinceCast >= backswingTicks) and not this.channeling) then
+					return UnitPollNextOrderBehavior(behavingUnit)
+				endif
+				return this
+			endmethod
+
+			constant method getHighlightOrderId takes nothing returns integer
+				return GetOrderButtonOrderId(this.sourceAbility.abilityButton)
+			endmethod
+
+			constant method interruptable takes nothing returns boolean
+				return true
+			endmethod
+
+			constant method getBehaviorCategory takes nothing returns behaviorcategory
+				return BEHAVIOR_CATEGORY_SPELL
+			endmethod
+
+			private method checkEndChannel takes boolean interrupted returns nothing
+				if (this.channeling) then
+					this.channeling = false
+					endChannel(interrupted)
+				endif
+			endmethod
+
+			method begin takes nothing returns nothing
+			endmethod
+
+			method end takes boolean interrupted returns nothing
+				checkEndChannel(interrupted)
+			endmethod
+
+		endstruct
+
+		struct AbilitySpellNoTarget extends AbilitySpellTargetInterface
+			BehaviorSpellNoTarget behavior
+
+			method onAdd takes unit whichUnit returns nothing
+				this.behavior = BehaviorSpellNoTarget.create(whichUnit, this)
+			endmethod
+
+			method checkTarget takes unit caster returns nothing
+				call PassTargetCheck(this.abilityButton, null)
+			endmethod
+
+			method begin takes unit caster returns behavior
+				return behavior.reset()
+			endmethod
+		endstruct
+	endscope
+
+	scope InstantNoInterrupt
+		private interface AbilitySpellInterface extends AbstractGenericActiveAbilityInstant
+			method populateData takes gameobject editorData, integer level returns nothing
+			method doEffect takes unit caster, abilitytarget target returns boolean
+		endinterface
+		
+		private struct AbilitySpellTargetInterface extends AbilitySpellInterface
+			implement AbilitySpell
+		endstruct
+		
+		struct AbilitySpellInstant extends AbilitySpellTargetInterface
+
+			method checkTarget takes unit caster returns nothing
+				call PassTargetCheck(this.abilityButton, null)
+			endmethod
+			
+			method use takes unit caster returns nothing
+				call this.doEffect(caster, null)
+			endmethod
 		endstruct
 	endscope
 endlibrary

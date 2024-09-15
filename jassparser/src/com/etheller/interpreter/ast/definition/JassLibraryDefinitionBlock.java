@@ -77,8 +77,8 @@ public class JassLibraryDefinitionBlock implements JassDefinitionBlock {
 				block.define(childScope, jassProgram);
 			}
 			if (this.initializerName != null) {
-				childScope.defineGlobals(this.lineNo, this.sourceFile, Arrays
-						.<JassStatement>asList(new JassCallStatement(this.initializerName, Collections.emptyList())));
+				childScope.defineGlobals(this.lineNo, this.sourceFile, Arrays.<JassStatement>asList(
+						new JassCallStatement(this.initializerName, Collections.emptyList())), childScope);
 			}
 		}
 	}

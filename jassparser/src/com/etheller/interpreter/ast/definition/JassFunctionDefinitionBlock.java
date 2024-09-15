@@ -21,7 +21,7 @@ public class JassFunctionDefinitionBlock extends JassCodeDefinitionBlock impleme
 
 	@Override
 	public void define(final Scope scope, final JassProgram jassProgram) {
-		scope.defineFunction(getLineNo(), getSourceFile(), getName(), createCode(scope));
+		scope.defineFunction(getLineNo(), getSourceFile(), getName(), createCode(scope), scope);
 		if (JassSettings.LOG_FUNCTION_DEFINITIONS) {
 			System.out.println("Defining jass user function: " + this.getName());
 		}

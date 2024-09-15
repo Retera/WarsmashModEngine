@@ -41,7 +41,8 @@ public class JassScopeDefinitionBlock implements JassDefinitionBlock {
 		}
 		if (this.initializerName != null) {
 			childScope.defineGlobals(this.lineNo, this.sourceFile,
-					Arrays.<JassStatement>asList(new JassCallStatement(this.initializerName, Collections.emptyList())));
+					Arrays.<JassStatement>asList(new JassCallStatement(this.initializerName, Collections.emptyList())),
+					childScope);
 		}
 	}
 

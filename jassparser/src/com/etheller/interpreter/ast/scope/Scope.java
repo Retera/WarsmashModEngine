@@ -42,12 +42,12 @@ public interface Scope {
 
 	JassException createException(String message, Exception cause);
 
-	void defineFunction(int lineNo, String sourceFile, String name, UserJassFunction function);
+	void defineFunction(int lineNo, String sourceFile, String name, UserJassFunction function, Scope scope);
 
-	int defineMethod(int lineNo, String sourceFile, String name, UserJassFunction method,
-			StructJassType structJassType);
+	int defineMethod(int lineNo, String sourceFile, String name, UserJassFunction method, StructJassType structJassType,
+			Scope scope);
 
-	void defineGlobals(int lineNo, String file, List<JassStatement> globalStatements);
+	void defineGlobals(int lineNo, String file, List<JassStatement> globalStatements, Scope scope);
 
 	Scope createNestedScope(String namespace, boolean library);
 
@@ -56,7 +56,7 @@ public interface Scope {
 	void defineStruct(EnumSet<JassQualifier> qualifiers, String structName, JassTypeToken structSuperTypeToken,
 			List<JassStructMemberTypeDefinition> memberTypeDefinitions,
 			List<JassImplementModuleDefinition> implementModuleDefinitions,
-			List<JassMethodDefinitionBlock> methodDefinitions);
+			List<JassMethodDefinitionBlock> methodDefinitions, Scope scope);
 
 	void defineModule(JassModuleDefinitionBlock jassModuleDefinitionBlock);
 

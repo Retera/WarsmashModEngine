@@ -4342,6 +4342,20 @@ public class Jass2 {
 						}
 						return null;
 					});
+			jassProgramVisitor.getJassNativeManager().createNative("UnitAddType",
+					(arguments, globalScope, triggerScope) -> {
+						final CUnit whichUnit = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());
+						final CUnitTypeJass whichClassification = arguments.get(1)
+								.visit(ObjectJassValueVisitor.getInstance());
+						return BooleanJassValue.of(whichUnit.addUnitType(this.simulation, whichClassification));
+					});
+			jassProgramVisitor.getJassNativeManager().createNative("UnitRemoveType",
+					(arguments, globalScope, triggerScope) -> {
+						final CUnit whichUnit = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());
+						final CUnitTypeJass whichClassification = arguments.get(1)
+								.visit(ObjectJassValueVisitor.getInstance());
+						return BooleanJassValue.of(whichUnit.removeUnitType(this.simulation, whichClassification));
+					});
 			jassProgramVisitor.getJassNativeManager().createNative("UnitAddAbility",
 					(arguments, globalScope, triggerScope) -> {
 						final CUnit whichUnit = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());
@@ -5755,7 +5769,7 @@ public class Jass2 {
 					(arguments, globalScope, triggerScope) -> {
 						final CAbilityOrderButtonJass orderCommandCard = arguments.get(0)
 								.visit(ObjectJassValueVisitor.getInstance());
-						final CHandle finalizedTarget = arguments.get(1).visit(ObjectJassValueVisitor.getInstance());
+						final CHandle finalizedTarget = nullable(arguments, 1, ObjectJassValueVisitor.getInstance());
 						orderCommandCard.getTargetReceiver().targetOk(finalizedTarget);
 						return null;
 					});
@@ -8695,11 +8709,51 @@ public class Jass2 {
 
 			// Warsmash Ability API
 			final HandleJassType abilitytypeType = globals.registerHandleType("abilitytype");
-			final HandleJassType ordercommandcardType = globals.registerHandleType("ordercommandcard");
-			final HandleJassType ordercommandcardtypeType = globals.registerHandleType("ordercommandcardtype");
-			final HandleJassType abilitybehaviorType = globals.registerHandleType("abilitybehavior");
+			final HandleJassType orderbuttonType = globals.registerHandleType("orderbutton");
+			final HandleJassType orderbuttontypeType = globals.registerHandleType("orderbuttontype");
+			final HandleJassType abilitybehaviorType = globals.registerHandleType("behavior");
 			final HandleJassType behaviorexprType = globals.registerHandleType("behaviorexpr");
 			final HandleJassType iconuiType = globals.registerHandleType("iconui");
+
+			// Warsmash Ability API 2 "Ability Builder ported to Jass"
+			final HandleJassType abilitytypeleveldataType = globals.registerHandleType("abilitytypeleveldata");
+			final HandleJassType targettypeType = globals.registerHandleType("targettype");
+			final HandleJassType targettypesType = globals.registerHandleType("targettypes");
+			final HandleJassType texttagconfigtypeType = globals.registerHandleType("texttagconfigtype");
+			final HandleJassType activeabilityType = globals.registerHandleType("activeability");
+			final HandleJassType localstoreType = globals.registerHandleType("localstore");
+			final HandleJassType destructablebuffType = globals.registerHandleType("destructablebuff");
+			final HandleJassType abtimeofdayeventType = globals.registerHandleType("abtimeofdayevent");
+			final HandleJassType worldeditordatatypeType = globals.registerHandleType("worldeditordatatype");
+			final HandleJassType gameobjectType = globals.registerHandleType("gameobject");
+			final HandleJassType projectileType = globals.registerHandleType("projectile");
+			final HandleJassType nonstackingstatbuffType = globals.registerHandleType("nonstackingstatbuff");
+			final HandleJassType nonstackingstatbufftypeType = globals.registerHandleType("nonstackingstatbufftype");
+			final HandleJassType datafieldletterType = globals.registerHandleType("datafieldletter");
+			final HandleJassType autocasttypeType = globals.registerHandleType("autocasttype");
+			final HandleJassType abconftypeType = globals.registerHandleType("abconftype");
+			final HandleJassType abilitybuilderconfigurationType = globals
+					.registerHandleType("abilitybuilderconfiguration");
+			final HandleJassType abtimerType = globals.registerHandleType("abtimer");
+			final HandleJassType abilitydisabletypeType = globals.registerHandleType("abilitydisabletype");
+			final HandleJassType resourcetypeType = globals.registerHandleType("resourcetype");
+			final HandleJassType intexprType = globals.registerHandleType("intexpr");
+
+			// Warsmash Ability API 3
+			final HandleJassType handlelistType = globals.registerHandleType("handlelist");
+			final HandleJassType behaviorcategoryType = globals.registerHandleType("behaviorcategory");
+			final HandleJassType abilitycategoryType = globals.registerHandleType("abilitycategory");
+			final HandleJassType stringlistType = globals.registerHandleType("stringlist");
+			final HandleJassType abilitytargetType = globals.registerHandleType("abilitytarget");
+			final HandleJassType abilitytargetvisitorType = globals.registerHandleType("abilitytargetvisitor");
+
+			final HandleJassType primarytagType = globals.registerHandleType("primarytag");
+			final HandleJassType primarytagsType = globals.registerHandleType("primarytags");
+			final HandleJassType secondarytagType = globals.registerHandleType("secondarytag");
+			final HandleJassType secondarytagsType = globals.registerHandleType("secondarytags");
+
+			final HandleJassType rangedbehaviorType = globals.registerHandleType("rangedbehavior");
+			final HandleJassType abstractrangedbehaviorType = globals.registerHandleType("abstractrangedbehavior");
 
 			registerTypingNatives(jassProgramVisitor, raceType, alliancetypeType, racepreferenceType, igamestateType,
 					fgamestateType, playerstateType, playerscoreType, playergameresultType, unitstateType,

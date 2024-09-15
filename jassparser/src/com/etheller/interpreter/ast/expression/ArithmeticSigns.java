@@ -79,6 +79,11 @@ public enum ArithmeticSigns implements ArithmeticSign {
 			}
 			return JassType.REAL;
 		}
+
+		@Override
+		public JassValue getShortCircuitValue() {
+			return null;
+		}
 	},
 	SUBTRACT() {
 		@Override
@@ -142,6 +147,11 @@ public enum ArithmeticSigns implements ArithmeticSign {
 				return JassType.INTEGER;
 			}
 			return JassType.REAL;
+		}
+
+		@Override
+		public JassValue getShortCircuitValue() {
+			return null;
 		}
 	},
 	MULTIPLY() {
@@ -207,6 +217,11 @@ public enum ArithmeticSigns implements ArithmeticSign {
 			}
 			return JassType.REAL;
 		}
+
+		@Override
+		public JassValue getShortCircuitValue() {
+			return null;
+		}
 	},
 	DIVIDE() {
 		@Override
@@ -271,6 +286,11 @@ public enum ArithmeticSigns implements ArithmeticSign {
 			}
 			return JassType.REAL;
 		}
+
+		@Override
+		public JassValue getShortCircuitValue() {
+			return null;
+		}
 	},
 	OR() {
 		@Override
@@ -331,6 +351,11 @@ public enum ArithmeticSigns implements ArithmeticSign {
 		@Override
 		public JassType predictType(final JassType leftType, final JassType rightType) {
 			return JassType.BOOLEAN;
+		}
+
+		@Override
+		public JassValue getShortCircuitValue() {
+			return BooleanJassValue.TRUE;
 		}
 	},
 	AND() {
@@ -393,6 +418,11 @@ public enum ArithmeticSigns implements ArithmeticSign {
 		public JassType predictType(final JassType leftType, final JassType rightType) {
 			return JassType.BOOLEAN;
 		}
+
+		@Override
+		public JassValue getShortCircuitValue() {
+			return BooleanJassValue.FALSE;
+		}
 	},
 	EQUALS() {
 		@Override
@@ -453,6 +483,11 @@ public enum ArithmeticSigns implements ArithmeticSign {
 		@Override
 		public JassType predictType(final JassType leftType, final JassType rightType) {
 			return JassType.BOOLEAN;
+		}
+
+		@Override
+		public JassValue getShortCircuitValue() {
+			return null;
 		}
 	},
 	NOT_EQUALS() {
@@ -515,6 +550,11 @@ public enum ArithmeticSigns implements ArithmeticSign {
 		public JassType predictType(final JassType leftType, final JassType rightType) {
 			return JassType.BOOLEAN;
 		}
+
+		@Override
+		public JassValue getShortCircuitValue() {
+			return null;
+		}
 	},
 	LESS() {
 		@Override
@@ -575,6 +615,11 @@ public enum ArithmeticSigns implements ArithmeticSign {
 		@Override
 		public JassType predictType(final JassType leftType, final JassType rightType) {
 			return JassType.BOOLEAN;
+		}
+
+		@Override
+		public JassValue getShortCircuitValue() {
+			return null;
 		}
 	},
 	LESS_OR_EQUALS() {
@@ -637,6 +682,11 @@ public enum ArithmeticSigns implements ArithmeticSign {
 		public JassType predictType(final JassType leftType, final JassType rightType) {
 			return JassType.BOOLEAN;
 		}
+
+		@Override
+		public JassValue getShortCircuitValue() {
+			return null;
+		}
 	},
 	GREATER() {
 		@Override
@@ -698,6 +748,11 @@ public enum ArithmeticSigns implements ArithmeticSign {
 		public JassType predictType(final JassType leftType, final JassType rightType) {
 			return JassType.BOOLEAN;
 		}
+
+		@Override
+		public JassValue getShortCircuitValue() {
+			return null;
+		}
 	},
 	GREATER_OR_EQUALS() {
 		@Override
@@ -758,6 +813,11 @@ public enum ArithmeticSigns implements ArithmeticSign {
 		@Override
 		public JassType predictType(final JassType leftType, final JassType rightType) {
 			return JassType.BOOLEAN;
+		}
+
+		@Override
+		public JassValue getShortCircuitValue() {
+			return null;
 		}
 	};
 

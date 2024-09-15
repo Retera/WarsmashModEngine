@@ -21,6 +21,7 @@ import com.etheller.interpreter.ast.expression.NegateJassExpression;
 import com.etheller.interpreter.ast.expression.NotJassExpression;
 import com.etheller.interpreter.ast.expression.ParentlessMethodCallJassExpression;
 import com.etheller.interpreter.ast.expression.ReferenceJassExpression;
+import com.etheller.interpreter.ast.expression.TypeCastJassExpression;
 import com.etheller.interpreter.ast.statement.JassArrayedAssignmentStatement;
 import com.etheller.interpreter.ast.statement.JassCallExpressionStatement;
 import com.etheller.interpreter.ast.statement.JassCallStatement;
@@ -377,6 +378,16 @@ public class ReplaceNewExpressionVisitor
 	@Override
 	public JassStatement visit(final JassGlobalStatement statement) {
 		return statement;
+	}
+
+	@Override
+	public JassExpression visit(final TypeCastJassExpression expression) {
+		final JassExpression valueExpression = expression.getValueExpression();
+		final JassExpression newValueExpression = valueExpression.accept(this);
+		if (valueExpression != newValueExpression) {
+			return new TypeCastJassExpression(newValueExpression, expression.getCastToType());
+		}
+		return expression;
 	}
 
 	public List<JassStatement> acceptAll(final List<JassStatement> statements) {

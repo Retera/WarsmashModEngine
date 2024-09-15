@@ -33,4 +33,6 @@ public interface ArithmeticSign {
 	JassValue apply(HandleJassValue left, StructJassValue right);
 
 	JassType predictType(JassType leftType, JassType rightType);
+
+	JassValue getShortCircuitValue();
 }

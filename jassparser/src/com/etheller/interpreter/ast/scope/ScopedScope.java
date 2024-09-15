@@ -43,23 +43,11 @@ public class ScopedScope implements Scope {
 
 	@Override
 	public JassType parseArrayType(final String id) {
-		if (GlobalScope.KEYWORD_THISTYPE.equals(id)) {
-			final String namespace = this.libraryScopeTree.getNamespace();
-			if (namespace != null) {
-				return this.globalScope.parseArrayType(namespace, this.libraryScopeTree);
-			}
-		}
 		return this.globalScope.parseArrayType(id, this.libraryScopeTree);
 	}
 
 	@Override
 	public JassType parseType(final String id) {
-		if (GlobalScope.KEYWORD_THISTYPE.equals(id)) {
-			final String namespace = this.libraryScopeTree.getNamespace();
-			if (namespace != null) {
-				return this.globalScope.parseType(namespace, this.libraryScopeTree);
-			}
-		}
 		return this.globalScope.parseType(id, this.libraryScopeTree);
 	}
 
@@ -135,21 +123,22 @@ public class ScopedScope implements Scope {
 	}
 
 	@Override
-	public void defineFunction(final int lineNo, final String sourceFile, String name,
-			final UserJassFunction function) {
+	public void defineFunction(final int lineNo, final String sourceFile, String name, final UserJassFunction function,
+			final Scope scope) {
 		name = this.libraryScopeTree.getQualifiedIdentifier(name, function.getQualifiers());
-		this.globalScope.defineFunction(lineNo, sourceFile, name, function, this);
+		this.globalScope.defineFunction(lineNo, sourceFile, name, function, scope);
 	}
 
 	@Override
 	public int defineMethod(final int lineNo, final String sourceFile, final String name, final UserJassFunction method,
-			final StructJassType structJassType) {
-		return this.globalScope.defineMethod(lineNo, sourceFile, name, method, structJassType, this);
+			final StructJassType structJassType, final Scope scope) {
+		return this.globalScope.defineMethod(lineNo, sourceFile, name, method, structJassType, scope);
 	}
 
 	@Override
-	public void defineGlobals(final int lineNo, final String file, final List<JassStatement> globalStatements) {
-		this.globalScope.defineGlobals(lineNo, file, globalStatements, this);
+	public void defineGlobals(final int lineNo, final String file, final List<JassStatement> globalStatements,
+			final Scope scope) {
+		this.globalScope.defineGlobals(lineNo, file, globalStatements, scope);
 	}
 
 	@Override
@@ -166,10 +155,10 @@ public class ScopedScope implements Scope {
 	public void defineStruct(final EnumSet<JassQualifier> qualifiers, String structName,
 			final JassTypeToken structSuperTypeToken, final List<JassStructMemberTypeDefinition> memberTypeDefinitions,
 			final List<JassImplementModuleDefinition> implementModuleDefinitions,
-			final List<JassMethodDefinitionBlock> methodDefinitions) {
+			final List<JassMethodDefinitionBlock> methodDefinitions, final Scope scope) {
 		structName = this.libraryScopeTree.getQualifiedIdentifier(structName, qualifiers);
 		this.globalScope.defineStruct(qualifiers, structName, structSuperTypeToken, memberTypeDefinitions,
-				implementModuleDefinitions, methodDefinitions, this);
+				implementModuleDefinitions, methodDefinitions, scope);
 	}
 
 	@Override

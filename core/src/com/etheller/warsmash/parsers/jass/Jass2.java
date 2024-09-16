@@ -5296,8 +5296,8 @@ public class Jass2 {
 						final CAbstractRangedBehaviorJass whichBehavior = nullable(arguments, 0,
 								ObjectJassValueVisitor.getInstance());
 						final AbilityTarget target = nullable(arguments, 1, ObjectJassValueVisitor.getInstance());
-						whichBehavior.resetNative(this.simulation, target);
-						return null;
+						return new HandleJassValue(abilitybehaviorType,
+								whichBehavior.resetNative(this.simulation, target));
 					});
 			jassProgramVisitor.getJassNativeManager().createNative("AbstractRangedBehaviorResetII",
 					(arguments, globalScope, triggerScope) -> {
@@ -5305,8 +5305,8 @@ public class Jass2 {
 								ObjectJassValueVisitor.getInstance());
 						final AbilityTarget target = nullable(arguments, 1, ObjectJassValueVisitor.getInstance());
 						final boolean disableCollision = arguments.get(1).visit(BooleanJassValueVisitor.getInstance());
-						whichBehavior.resetNative(this.simulation, target, disableCollision);
-						return null;
+						return new HandleJassValue(abilitybehaviorType,
+								whichBehavior.resetNative(this.simulation, target, disableCollision));
 					});
 			jassProgramVisitor.getJassNativeManager().createNative("GetRangedBehaviorTarget",
 					(arguments, globalScope, triggerScope) -> {
@@ -5769,7 +5769,7 @@ public class Jass2 {
 					(arguments, globalScope, triggerScope) -> {
 						final CAbilityOrderButtonJass orderCommandCard = arguments.get(0)
 								.visit(ObjectJassValueVisitor.getInstance());
-						final CHandle finalizedTarget = nullable(arguments, 1, ObjectJassValueVisitor.getInstance());
+						final Object finalizedTarget = nullable(arguments, 1, ObjectJassValueVisitor.getInstance());
 						orderCommandCard.getTargetReceiver().targetOk(finalizedTarget);
 						return null;
 					});
@@ -8478,6 +8478,16 @@ public class Jass2 {
 						return null;
 					});
 
+			jassProgramVisitor.getJassNativeManager().createNative("GetAbilityTargetX",
+					(arguments, globalScope, triggerScope) -> {
+						final AbilityTarget target = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());
+						return RealJassValue.of(target.getX());
+					});
+			jassProgramVisitor.getJassNativeManager().createNative("GetAbilityTargetY",
+					(arguments, globalScope, triggerScope) -> {
+						final AbilityTarget target = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());
+						return RealJassValue.of(target.getY());
+					});
 			jassProgramVisitor.getJassNativeManager().createNative("CreateAbilityTargetVisitor",
 					(arguments, globalScope, triggerScope) -> {
 						return new HandleJassValue(abilitytargetvisitorType, new AbilityTargetVisitorJass(

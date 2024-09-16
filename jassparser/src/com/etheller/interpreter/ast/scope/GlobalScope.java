@@ -292,9 +292,6 @@ public final class GlobalScope {
 			final JassTypeToken structSuperTypeToken, final List<JassStructMemberTypeDefinition> memberTypeDefinitions,
 			final List<JassImplementModuleDefinition> implementModuleDefinitions,
 			final List<JassMethodDefinitionBlock> methodDefinitions, final Scope scope) {
-		if (structName.endsWith("ActiveAbilityInterface")) {
-			System.err.println("test");
-		}
 		try {
 			final StructJassType structJassType = new StructJassType(structSuperTypeToken.resolve(scope), structName);
 			this.types.put(structName, structJassType);

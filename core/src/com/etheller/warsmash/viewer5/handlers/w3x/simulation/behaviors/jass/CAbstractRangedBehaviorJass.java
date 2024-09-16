@@ -70,7 +70,7 @@ public class CAbstractRangedBehaviorJass extends CAbstractRangedBehavior impleme
 		this.getBehaviorCategoryIdxVtable = type.getMethodTableIndex("getBehaviorCategory");
 
 		this.updateOnInvalidTargetIdxVtable = type.getMethodTableIndex("updateOnInvalidTarget");
-		this.checkTargetStillValidIdxVtable = type.getMethodTableIndex("checkTargetStillValid");
+		this.checkTargetStillValidIdxVtable = type.getMethodTableIndex("isTargetStillValid");
 		this.resetBeforeMovingIdxVtable = type.getMethodTableIndex("resetBeforeMoving");
 	}
 

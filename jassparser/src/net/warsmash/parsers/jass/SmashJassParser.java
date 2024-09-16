@@ -1570,108 +1570,144 @@ public class SmashJassParser
   break;
 
 
-  case 79: /* statement: RETURN expression  */
+  case 79: /* statement: ID PLUSPLUS  */
   if (yyn == 79)
     /* "SmashJassParser.y":538  */
+        {
+		yyval = new JassSetStatement(((String)(yystack.valueAt (1))), new ArithmeticJassExpression(new ReferenceJassExpression(((String)(yystack.valueAt (1)))), new LiteralJassExpression(IntegerJassValue.of(1)), ArithmeticSigns.ADD));
+	};
+  break;
+
+
+  case 80: /* statement: baseExpression DOT ID PLUSPLUS  */
+  if (yyn == 80)
+    /* "SmashJassParser.y":543  */
+        {
+		yyval = new JassSetMemberStatement(((JassExpression)(yystack.valueAt (3))), ((String)(yystack.valueAt (1))), new ArithmeticJassExpression(new MemberJassExpression(((JassExpression)(yystack.valueAt (3))), ((String)(yystack.valueAt (1)))), new LiteralJassExpression(IntegerJassValue.of(1)), ArithmeticSigns.ADD));
+	};
+  break;
+
+
+  case 81: /* statement: ID MINUSMINUS  */
+  if (yyn == 81)
+    /* "SmashJassParser.y":548  */
+        {
+		yyval = new JassSetStatement(((String)(yystack.valueAt (1))), new ArithmeticJassExpression(new ReferenceJassExpression(((String)(yystack.valueAt (1)))), new LiteralJassExpression(IntegerJassValue.of(1)), ArithmeticSigns.SUBTRACT));
+	};
+  break;
+
+
+  case 82: /* statement: baseExpression DOT ID MINUSMINUS  */
+  if (yyn == 82)
+    /* "SmashJassParser.y":553  */
+        {
+		yyval = new JassSetMemberStatement(((JassExpression)(yystack.valueAt (3))), ((String)(yystack.valueAt (1))), new ArithmeticJassExpression(new MemberJassExpression(((JassExpression)(yystack.valueAt (3))), ((String)(yystack.valueAt (1)))), new LiteralJassExpression(IntegerJassValue.of(1)), ArithmeticSigns.SUBTRACT));
+	};
+  break;
+
+
+  case 83: /* statement: RETURN expression  */
+  if (yyn == 83)
+    /* "SmashJassParser.y":558  */
         {
 		yyval = new JassReturnStatement(((JassExpression)(yystack.valueAt (0))));
 	};
   break;
 
 
-  case 80: /* statement: RETURN  */
-  if (yyn == 80)
-    /* "SmashJassParser.y":543  */
+  case 84: /* statement: RETURN  */
+  if (yyn == 84)
+    /* "SmashJassParser.y":563  */
         {
 		yyval = new JassReturnNothingStatement();
 	};
   break;
 
 
-  case 81: /* statement: EXITWHEN expression  */
-  if (yyn == 81)
-    /* "SmashJassParser.y":548  */
+  case 85: /* statement: EXITWHEN expression  */
+  if (yyn == 85)
+    /* "SmashJassParser.y":568  */
         {
 		yyval = new JassExitWhenStatement(((JassExpression)(yystack.valueAt (0))));
 	};
   break;
 
 
-  case 82: /* statement: local  */
-  if (yyn == 82)
-    /* "SmashJassParser.y":553  */
+  case 86: /* statement: local  */
+  if (yyn == 86)
+    /* "SmashJassParser.y":573  */
         {
 		yyval = ((JassStatement)(yystack.valueAt (0)));
 	};
   break;
 
 
-  case 83: /* statement: LOOP statements_opt ENDLOOP  */
-  if (yyn == 83)
-    /* "SmashJassParser.y":558  */
+  case 87: /* statement: LOOP statements_opt ENDLOOP  */
+  if (yyn == 87)
+    /* "SmashJassParser.y":578  */
         {
 		yyval = new JassLoopStatement(((LinkedList<JassStatement>)(yystack.valueAt (1))));
 	};
   break;
 
 
-  case 84: /* statement: IF ifStatementPartial  */
-  if (yyn == 84)
-    /* "SmashJassParser.y":563  */
+  case 88: /* statement: IF ifStatementPartial  */
+  if (yyn == 88)
+    /* "SmashJassParser.y":583  */
         {
 		yyval = ((JassStatement)(yystack.valueAt (0)));
 	};
   break;
 
 
-  case 85: /* statement: DEBUG statement  */
-  if (yyn == 85)
-    /* "SmashJassParser.y":568  */
+  case 89: /* statement: DEBUG statement  */
+  if (yyn == 89)
+    /* "SmashJassParser.y":588  */
         {
 		yyval = ((JassStatement)(yystack.valueAt (0)));
 	};
   break;
 
 
-  case 86: /* ifStatementPartial: expression THEN statements_opt ENDIF  */
-  if (yyn == 86)
-    /* "SmashJassParser.y":576  */
+  case 90: /* ifStatementPartial: expression THEN statements_opt ENDIF  */
+  if (yyn == 90)
+    /* "SmashJassParser.y":596  */
         {
 		yyval = new JassIfStatement(((JassExpression)(yystack.valueAt (3))), ((LinkedList<JassStatement>)(yystack.valueAt (1))));
 	};
   break;
 
 
-  case 87: /* ifStatementPartial: expression THEN statements_opt ELSE statements_opt ENDIF  */
-  if (yyn == 87)
-    /* "SmashJassParser.y":581  */
+  case 91: /* ifStatementPartial: expression THEN statements_opt ELSE statements_opt ENDIF  */
+  if (yyn == 91)
+    /* "SmashJassParser.y":601  */
         {
 		yyval = new JassIfElseStatement(((JassExpression)(yystack.valueAt (5))), ((LinkedList<JassStatement>)(yystack.valueAt (3))), ((LinkedList<JassStatement>)(yystack.valueAt (1))));
 	};
   break;
 
 
-  case 88: /* ifStatementPartial: expression THEN statements_opt ELSEIF ifStatementPartial  */
-  if (yyn == 88)
-    /* "SmashJassParser.y":586  */
+  case 92: /* ifStatementPartial: expression THEN statements_opt ELSEIF ifStatementPartial  */
+  if (yyn == 92)
+    /* "SmashJassParser.y":606  */
         {
 		yyval = new JassIfElseIfStatement(((JassExpression)(yystack.valueAt (4))), ((LinkedList<JassStatement>)(yystack.valueAt (2))), ((JassStatement)(yystack.valueAt (0))));
 	};
   break;
 
 
-  case 89: /* param: type ID  */
-  if (yyn == 89)
-    /* "SmashJassParser.y":593  */
+  case 93: /* param: type ID  */
+  if (yyn == 93)
+    /* "SmashJassParser.y":613  */
         {
 		yyval = new JassParameterDefinition(((JassTypeToken)(yystack.valueAt (1))), ((String)(yystack.valueAt (0))));
 	};
   break;
 
 
-  case 90: /* paramList: param  */
-  if (yyn == 90)
-    /* "SmashJassParser.y":600  */
+  case 94: /* paramList: param  */
+  if (yyn == 94)
+    /* "SmashJassParser.y":620  */
         {
 		LinkedList<JassParameterDefinition> list = new LinkedList<JassParameterDefinition>();
 		list.addFirst(((JassParameterDefinition)(yystack.valueAt (0))));
@@ -1680,9 +1716,9 @@ public class SmashJassParser
   break;
 
 
-  case 91: /* paramList: param COMMA paramList  */
-  if (yyn == 91)
-    /* "SmashJassParser.y":607  */
+  case 95: /* paramList: param COMMA paramList  */
+  if (yyn == 95)
+    /* "SmashJassParser.y":627  */
         {
 		LinkedList<JassParameterDefinition> list = ((LinkedList<JassParameterDefinition>)(yystack.valueAt (0)));
 		list.addFirst(((JassParameterDefinition)(yystack.valueAt (2))));
@@ -1691,36 +1727,36 @@ public class SmashJassParser
   break;
 
 
-  case 92: /* paramList: NOTHING  */
-  if (yyn == 92)
-    /* "SmashJassParser.y":614  */
+  case 96: /* paramList: NOTHING  */
+  if (yyn == 96)
+    /* "SmashJassParser.y":634  */
         {
 		yyval = new LinkedList<JassParameterDefinition>();
 	};
   break;
 
 
-  case 93: /* requirement: ID  */
-  if (yyn == 93)
-    /* "SmashJassParser.y":621  */
+  case 97: /* requirement: ID  */
+  if (yyn == 97)
+    /* "SmashJassParser.y":641  */
         {
 		yyval = new JassLibraryRequirementDefinition(((String)(yystack.valueAt (0))), false);
 	};
   break;
 
 
-  case 94: /* requirement: OPTIONAL ID  */
-  if (yyn == 94)
-    /* "SmashJassParser.y":626  */
+  case 98: /* requirement: OPTIONAL ID  */
+  if (yyn == 98)
+    /* "SmashJassParser.y":646  */
         {
 		yyval = new JassLibraryRequirementDefinition(((String)(yystack.valueAt (0))), true);
 	};
   break;
 
 
-  case 95: /* requirementList: requirement  */
-  if (yyn == 95)
-    /* "SmashJassParser.y":633  */
+  case 99: /* requirementList: requirement  */
+  if (yyn == 99)
+    /* "SmashJassParser.y":653  */
         {
 		LinkedList<JassLibraryRequirementDefinition> list = new LinkedList<>();
 		list.addFirst(((JassLibraryRequirementDefinition)(yystack.valueAt (0))));
@@ -1729,9 +1765,9 @@ public class SmashJassParser
   break;
 
 
-  case 96: /* requirementList: requirementList COMMA requirement  */
-  if (yyn == 96)
-    /* "SmashJassParser.y":640  */
+  case 100: /* requirementList: requirementList COMMA requirement  */
+  if (yyn == 100)
+    /* "SmashJassParser.y":660  */
         {
 		LinkedList<JassLibraryRequirementDefinition> list = ((LinkedList<JassLibraryRequirementDefinition>)(yystack.valueAt (2)));
 		list.addLast(((JassLibraryRequirementDefinition)(yystack.valueAt (0))));
@@ -1740,27 +1776,27 @@ public class SmashJassParser
   break;
 
 
-  case 97: /* requirementList_opt: REQUIRES requirementList  */
-  if (yyn == 97)
-    /* "SmashJassParser.y":649  */
+  case 101: /* requirementList_opt: REQUIRES requirementList  */
+  if (yyn == 101)
+    /* "SmashJassParser.y":669  */
         {
 		yyval = ((LinkedList<JassLibraryRequirementDefinition>)(yystack.valueAt (0)));
 	};
   break;
 
 
-  case 98: /* requirementList_opt: %empty  */
-  if (yyn == 98)
-    /* "SmashJassParser.y":653  */
+  case 102: /* requirementList_opt: %empty  */
+  if (yyn == 102)
+    /* "SmashJassParser.y":673  */
         {
 		yyval = new LinkedList<JassLibraryRequirementDefinition>(); // maybe use Collections.emptyList later
 	};
   break;
 
 
-  case 99: /* globals: global  */
-  if (yyn == 99)
-    /* "SmashJassParser.y":660  */
+  case 103: /* globals: global  */
+  if (yyn == 103)
+    /* "SmashJassParser.y":680  */
         {
 		LinkedList<JassStatement> list = new LinkedList<JassStatement>();
 		list.addFirst(((JassStatement)(yystack.valueAt (0))));
@@ -1769,9 +1805,9 @@ public class SmashJassParser
   break;
 
 
-  case 100: /* globals: globals newlines global  */
-  if (yyn == 100)
-    /* "SmashJassParser.y":667  */
+  case 104: /* globals: globals newlines global  */
+  if (yyn == 104)
+    /* "SmashJassParser.y":687  */
         {
 		LinkedList<JassStatement> list = ((LinkedList<JassStatement>)(yystack.valueAt (2)));
 		list.addLast(((JassStatement)(yystack.valueAt (0))));
@@ -1780,36 +1816,36 @@ public class SmashJassParser
   break;
 
 
-  case 101: /* globals_opt: newlines globals newlines  */
-  if (yyn == 101)
-    /* "SmashJassParser.y":676  */
+  case 105: /* globals_opt: newlines globals newlines  */
+  if (yyn == 105)
+    /* "SmashJassParser.y":696  */
         {
 		yyval = ((LinkedList<JassStatement>)(yystack.valueAt (1)));
 	};
   break;
 
 
-  case 102: /* globals_opt: newlines  */
-  if (yyn == 102)
-    /* "SmashJassParser.y":681  */
+  case 106: /* globals_opt: newlines  */
+  if (yyn == 106)
+    /* "SmashJassParser.y":701  */
         {
 		yyval = new LinkedList<JassStatement>();
 	};
   break;
 
 
-  case 103: /* globalsBlock: GLOBALS globals_opt ENDGLOBALS  */
-  if (yyn == 103)
-    /* "SmashJassParser.y":688  */
+  case 107: /* globalsBlock: GLOBALS globals_opt ENDGLOBALS  */
+  if (yyn == 107)
+    /* "SmashJassParser.y":708  */
         {
 		yyval = new JassGlobalsDefinitionBlock(getLine(), currentParsingFilePath, ((LinkedList<JassStatement>)(yystack.valueAt (1))));
 	};
   break;
 
 
-  case 104: /* nativeBlock: qualifiers_opt NATIVE ID TAKES paramList RETURNS type  */
-  if (yyn == 104)
-    /* "SmashJassParser.y":694  */
+  case 108: /* nativeBlock: qualifiers_opt NATIVE ID TAKES paramList RETURNS type  */
+  if (yyn == 108)
+    /* "SmashJassParser.y":714  */
         {
 		final String text = ((String)(yystack.valueAt (4)));
 		yyval = new JassNativeDefinitionBlock(getLine(), currentParsingFilePath, text, ((LinkedList<JassParameterDefinition>)(yystack.valueAt (2))), ((JassTypeToken)(yystack.valueAt (0))));
@@ -1817,241 +1853,205 @@ public class SmashJassParser
   break;
 
 
-  case 105: /* functionBlock: qualifiers_opt FUNCTION ID TAKES paramList RETURNS type statements_opt ENDFUNCTION  */
-  if (yyn == 105)
-    /* "SmashJassParser.y":702  */
+  case 109: /* functionBlock: qualifiers_opt FUNCTION ID TAKES paramList RETURNS type statements_opt ENDFUNCTION  */
+  if (yyn == 109)
+    /* "SmashJassParser.y":722  */
         {
 		yyval = new JassFunctionDefinitionBlock(getLine(), currentParsingFilePath, ((EnumSet<JassQualifier>)(yystack.valueAt (8))), ((String)(yystack.valueAt (6))), ((LinkedList<JassStatement>)(yystack.valueAt (1))), ((LinkedList<JassParameterDefinition>)(yystack.valueAt (4))), ((JassTypeToken)(yystack.valueAt (2))));
 	};
   break;
 
 
-  case 106: /* methodBlock: qualifiers_opt METHOD ID TAKES paramList RETURNS type statements_opt ENDMETHOD  */
-  if (yyn == 106)
-    /* "SmashJassParser.y":709  */
+  case 110: /* methodBlock: qualifiers_opt METHOD ID TAKES paramList RETURNS type statements_opt ENDMETHOD  */
+  if (yyn == 110)
+    /* "SmashJassParser.y":729  */
         {
 		yyval = new JassMethodDefinitionBlock(getLine(), currentParsingFilePath, ((EnumSet<JassQualifier>)(yystack.valueAt (8))), ((String)(yystack.valueAt (6))), ((LinkedList<JassStatement>)(yystack.valueAt (1))), ((LinkedList<JassParameterDefinition>)(yystack.valueAt (4))), ((JassTypeToken)(yystack.valueAt (2))));
 	};
   break;
 
 
-  case 107: /* implementModuleStatement: IMPLEMENT ID  */
-  if (yyn == 107)
-    /* "SmashJassParser.y":716  */
+  case 111: /* implementModuleStatement: IMPLEMENT ID  */
+  if (yyn == 111)
+    /* "SmashJassParser.y":736  */
         {
 		yyval = new JassImplementModuleDefinition(((String)(yystack.valueAt (0))), false);
 	};
   break;
 
 
-  case 108: /* implementModuleStatement: IMPLEMENT OPTIONAL ID  */
-  if (yyn == 108)
-    /* "SmashJassParser.y":721  */
+  case 112: /* implementModuleStatement: IMPLEMENT OPTIONAL ID  */
+  if (yyn == 112)
+    /* "SmashJassParser.y":741  */
         {
 		yyval = new JassImplementModuleDefinition(((String)(yystack.valueAt (0))), true);
 	};
   break;
 
 
-  case 109: /* defaultsTail: DEFAULTS expression  */
-  if (yyn == 109)
-    /* "SmashJassParser.y":728  */
+  case 113: /* defaultsTail: DEFAULTS expression  */
+  if (yyn == 113)
+    /* "SmashJassParser.y":748  */
         {
 		yyval = ((JassExpression)(yystack.valueAt (0)));
 	};
   break;
 
 
-  case 110: /* defaultsTail: DEFAULTS NOTHING  */
-  if (yyn == 110)
-    /* "SmashJassParser.y":733  */
+  case 114: /* defaultsTail: DEFAULTS NOTHING  */
+  if (yyn == 114)
+    /* "SmashJassParser.y":753  */
         {
 		yyval = new LiteralJassExpression(null);
 	};
   break;
 
 
-  case 111: /* defaultsTail: %empty  */
-  if (yyn == 111)
-    /* "SmashJassParser.y":737  */
+  case 115: /* defaultsTail: %empty  */
+  if (yyn == 115)
+    /* "SmashJassParser.y":757  */
         {
 		yyval = null;
 	};
   break;
 
 
-  case 112: /* interfaceMethodBlock: qualifiers_opt METHOD ID TAKES paramList RETURNS type defaultsTail  */
-  if (yyn == 112)
-    /* "SmashJassParser.y":744  */
+  case 116: /* interfaceMethodBlock: qualifiers_opt METHOD ID TAKES paramList RETURNS type defaultsTail  */
+  if (yyn == 116)
+    /* "SmashJassParser.y":764  */
         {
 		yyval = JassMethodDefinitionBlock.createInterfaceMethod(getLine(), currentParsingFilePath, ((EnumSet<JassQualifier>)(yystack.valueAt (7))), ((String)(yystack.valueAt (5))), ((LinkedList<JassParameterDefinition>)(yystack.valueAt (3))), ((JassTypeToken)(yystack.valueAt (1))), ((JassExpression)(yystack.valueAt (0))));
 	};
   break;
 
 
-  case 113: /* libraryBlock: LIBRARY ID requirementList_opt nonLibraryBlocks_opt ENDLIBRARY  */
-  if (yyn == 113)
-    /* "SmashJassParser.y":751  */
-        {
-		yyval = new JassLibraryDefinitionBlock(getLine(), currentParsingFilePath, ((String)(yystack.valueAt (3))), ((LinkedList<JassLibraryRequirementDefinition>)(yystack.valueAt (2))), ((LinkedList<JassDefinitionBlock>)(yystack.valueAt (1))), null, true);
-	};
-  break;
-
-
-  case 114: /* libraryBlock: LIBRARY ID INITIALIZER ID requirementList_opt nonLibraryBlocks_opt ENDLIBRARY  */
-  if (yyn == 114)
-    /* "SmashJassParser.y":756  */
-        {
-		yyval = new JassLibraryDefinitionBlock(getLine(), currentParsingFilePath, ((String)(yystack.valueAt (5))), ((LinkedList<JassLibraryRequirementDefinition>)(yystack.valueAt (2))), ((LinkedList<JassDefinitionBlock>)(yystack.valueAt (1))), ((String)(yystack.valueAt (3))), true);
-	};
-  break;
-
-
-  case 115: /* libraryBlock: LIBRARY_ONCE ID requirementList_opt nonLibraryBlocks_opt ENDLIBRARY  */
-  if (yyn == 115)
-    /* "SmashJassParser.y":761  */
-        {
-		yyval = new JassLibraryDefinitionBlock(getLine(), currentParsingFilePath, ((String)(yystack.valueAt (3))), ((LinkedList<JassLibraryRequirementDefinition>)(yystack.valueAt (2))), ((LinkedList<JassDefinitionBlock>)(yystack.valueAt (1))), null, true);
-	};
-  break;
-
-
-  case 116: /* libraryBlock: LIBRARY_ONCE ID INITIALIZER ID requirementList_opt nonLibraryBlocks_opt ENDLIBRARY  */
-  if (yyn == 116)
-    /* "SmashJassParser.y":766  */
-        {
-		yyval = new JassLibraryDefinitionBlock(getLine(), currentParsingFilePath, ((String)(yystack.valueAt (5))), ((LinkedList<JassLibraryRequirementDefinition>)(yystack.valueAt (2))), ((LinkedList<JassDefinitionBlock>)(yystack.valueAt (1))), ((String)(yystack.valueAt (3))), true);
-	};
-  break;
-
-
-  case 117: /* scopeBlock: SCOPE ID nonLibraryBlocks_opt ENDSCOPE  */
+  case 117: /* libraryBlock: LIBRARY ID requirementList_opt nonLibraryBlocks_opt ENDLIBRARY  */
   if (yyn == 117)
-    /* "SmashJassParser.y":773  */
+    /* "SmashJassParser.y":771  */
+        {
+		yyval = new JassLibraryDefinitionBlock(getLine(), currentParsingFilePath, ((String)(yystack.valueAt (3))), ((LinkedList<JassLibraryRequirementDefinition>)(yystack.valueAt (2))), ((LinkedList<JassDefinitionBlock>)(yystack.valueAt (1))), null, true);
+	};
+  break;
+
+
+  case 118: /* libraryBlock: LIBRARY ID INITIALIZER ID requirementList_opt nonLibraryBlocks_opt ENDLIBRARY  */
+  if (yyn == 118)
+    /* "SmashJassParser.y":776  */
+        {
+		yyval = new JassLibraryDefinitionBlock(getLine(), currentParsingFilePath, ((String)(yystack.valueAt (5))), ((LinkedList<JassLibraryRequirementDefinition>)(yystack.valueAt (2))), ((LinkedList<JassDefinitionBlock>)(yystack.valueAt (1))), ((String)(yystack.valueAt (3))), true);
+	};
+  break;
+
+
+  case 119: /* libraryBlock: LIBRARY_ONCE ID requirementList_opt nonLibraryBlocks_opt ENDLIBRARY  */
+  if (yyn == 119)
+    /* "SmashJassParser.y":781  */
+        {
+		yyval = new JassLibraryDefinitionBlock(getLine(), currentParsingFilePath, ((String)(yystack.valueAt (3))), ((LinkedList<JassLibraryRequirementDefinition>)(yystack.valueAt (2))), ((LinkedList<JassDefinitionBlock>)(yystack.valueAt (1))), null, true);
+	};
+  break;
+
+
+  case 120: /* libraryBlock: LIBRARY_ONCE ID INITIALIZER ID requirementList_opt nonLibraryBlocks_opt ENDLIBRARY  */
+  if (yyn == 120)
+    /* "SmashJassParser.y":786  */
+        {
+		yyval = new JassLibraryDefinitionBlock(getLine(), currentParsingFilePath, ((String)(yystack.valueAt (5))), ((LinkedList<JassLibraryRequirementDefinition>)(yystack.valueAt (2))), ((LinkedList<JassDefinitionBlock>)(yystack.valueAt (1))), ((String)(yystack.valueAt (3))), true);
+	};
+  break;
+
+
+  case 121: /* scopeBlock: SCOPE ID nonLibraryBlocks_opt ENDSCOPE  */
+  if (yyn == 121)
+    /* "SmashJassParser.y":793  */
         {
 		yyval = new JassScopeDefinitionBlock(getLine(), currentParsingFilePath, ((String)(yystack.valueAt (2))), ((LinkedList<JassDefinitionBlock>)(yystack.valueAt (1))), null);
 	};
   break;
 
 
-  case 118: /* scopeBlock: SCOPE ID INITIALIZER ID nonLibraryBlocks_opt ENDSCOPE  */
-  if (yyn == 118)
-    /* "SmashJassParser.y":778  */
+  case 122: /* scopeBlock: SCOPE ID INITIALIZER ID nonLibraryBlocks_opt ENDSCOPE  */
+  if (yyn == 122)
+    /* "SmashJassParser.y":798  */
         {
 		yyval = new JassScopeDefinitionBlock(getLine(), currentParsingFilePath, ((String)(yystack.valueAt (4))), ((LinkedList<JassDefinitionBlock>)(yystack.valueAt (1))), ((String)(yystack.valueAt (2))));
 	};
   break;
 
 
-  case 119: /* extends_opt: EXTENDS type  */
-  if (yyn == 119)
-    /* "SmashJassParser.y":785  */
+  case 123: /* extends_opt: EXTENDS type  */
+  if (yyn == 123)
+    /* "SmashJassParser.y":805  */
         {
 		yyval = ((JassTypeToken)(yystack.valueAt (0)));
 	};
   break;
 
 
-  case 120: /* extends_opt: %empty  */
-  if (yyn == 120)
-    /* "SmashJassParser.y":789  */
+  case 124: /* extends_opt: %empty  */
+  if (yyn == 124)
+    /* "SmashJassParser.y":809  */
         {
 		yyval = NothingJassTypeToken.INSTANCE;
 	};
   break;
 
 
-  case 121: /* $@1: %empty  */
-  if (yyn == 121)
-    /* "SmashJassParser.y":796  */
-        {
-		currentStruct = new JassStructDefinitionBlock(((EnumSet<JassQualifier>)(yystack.valueAt (3))), ((String)(yystack.valueAt (1))), ((JassTypeToken)(yystack.valueAt (0))));
-	};
-  break;
-
-
-  case 122: /* structDeclarationBlock: qualifiers_opt STRUCT ID extends_opt $@1 structStatements_opt ENDSTRUCT  */
-  if (yyn == 122)
-    /* "SmashJassParser.y":800  */
-        {
-		yyval = currentStruct;
-	};
-  break;
-
-
-  case 123: /* $@2: %empty  */
-  if (yyn == 123)
-    /* "SmashJassParser.y":807  */
-        {
-		currentStruct = new JassStructDefinitionBlock(((EnumSet<JassQualifier>)(yystack.valueAt (3))), ((String)(yystack.valueAt (1))), ((JassTypeToken)(yystack.valueAt (0))));
-	};
-  break;
-
-
-  case 124: /* interfaceDeclarationBlock: qualifiers_opt INTERFACE ID extends_opt $@2 interfaceStatements_opt ENDINTERFACE  */
-  if (yyn == 124)
-    /* "SmashJassParser.y":811  */
-        {
-		yyval = currentStruct;
-	};
-  break;
-
-
-  case 125: /* $@3: %empty  */
+  case 125: /* $@1: %empty  */
   if (yyn == 125)
-    /* "SmashJassParser.y":818  */
+    /* "SmashJassParser.y":816  */
+        {
+		currentStruct = new JassStructDefinitionBlock(((EnumSet<JassQualifier>)(yystack.valueAt (3))), ((String)(yystack.valueAt (1))), ((JassTypeToken)(yystack.valueAt (0))));
+	};
+  break;
+
+
+  case 126: /* structDeclarationBlock: qualifiers_opt STRUCT ID extends_opt $@1 structStatements_opt ENDSTRUCT  */
+  if (yyn == 126)
+    /* "SmashJassParser.y":820  */
+        {
+		yyval = currentStruct;
+	};
+  break;
+
+
+  case 127: /* $@2: %empty  */
+  if (yyn == 127)
+    /* "SmashJassParser.y":827  */
+        {
+		currentStruct = new JassStructDefinitionBlock(((EnumSet<JassQualifier>)(yystack.valueAt (3))), ((String)(yystack.valueAt (1))), ((JassTypeToken)(yystack.valueAt (0))));
+	};
+  break;
+
+
+  case 128: /* interfaceDeclarationBlock: qualifiers_opt INTERFACE ID extends_opt $@2 interfaceStatements_opt ENDINTERFACE  */
+  if (yyn == 128)
+    /* "SmashJassParser.y":831  */
+        {
+		yyval = currentStruct;
+	};
+  break;
+
+
+  case 129: /* $@3: %empty  */
+  if (yyn == 129)
+    /* "SmashJassParser.y":838  */
         {
 		currentStruct = new JassModuleDefinitionBlock(((EnumSet<JassQualifier>)(yystack.valueAt (2))), ((String)(yystack.valueAt (0))));
 	};
   break;
 
 
-  case 126: /* moduleDeclarationBlock: qualifiers_opt MODULE ID $@3 structStatements_opt ENDMODULE  */
-  if (yyn == 126)
-    /* "SmashJassParser.y":822  */
+  case 130: /* moduleDeclarationBlock: qualifiers_opt MODULE ID $@3 structStatements_opt ENDMODULE  */
+  if (yyn == 130)
+    /* "SmashJassParser.y":842  */
         {
 		yyval = currentStruct;
 	};
   break;
 
 
-  case 127: /* nonLibraryBlock: globalsBlock  */
-  if (yyn == 127)
-    /* "SmashJassParser.y":829  */
-        {
-		yyval = ((JassDefinitionBlock)(yystack.valueAt (0)));
-	};
-  break;
-
-
-  case 128: /* nonLibraryBlock: nativeBlock  */
-  if (yyn == 128)
-    /* "SmashJassParser.y":834  */
-        {
-		yyval = ((JassDefinitionBlock)(yystack.valueAt (0)));
-	};
-  break;
-
-
-  case 129: /* nonLibraryBlock: functionBlock  */
-  if (yyn == 129)
-    /* "SmashJassParser.y":839  */
-        {
-		yyval = ((JassFunctionDefinitionBlock)(yystack.valueAt (0)));
-	};
-  break;
-
-
-  case 130: /* nonLibraryBlock: typeDeclarationBlock  */
-  if (yyn == 130)
-    /* "SmashJassParser.y":844  */
-        {
-		yyval = ((JassDefinitionBlock)(yystack.valueAt (0)));
-	};
-  break;
-
-
-  case 131: /* nonLibraryBlock: structDeclarationBlock  */
+  case 131: /* nonLibraryBlock: globalsBlock  */
   if (yyn == 131)
     /* "SmashJassParser.y":849  */
         {
@@ -2060,7 +2060,7 @@ public class SmashJassParser
   break;
 
 
-  case 132: /* nonLibraryBlock: interfaceDeclarationBlock  */
+  case 132: /* nonLibraryBlock: nativeBlock  */
   if (yyn == 132)
     /* "SmashJassParser.y":854  */
         {
@@ -2069,16 +2069,16 @@ public class SmashJassParser
   break;
 
 
-  case 133: /* nonLibraryBlock: moduleDeclarationBlock  */
+  case 133: /* nonLibraryBlock: functionBlock  */
   if (yyn == 133)
     /* "SmashJassParser.y":859  */
         {
-		yyval = ((JassDefinitionBlock)(yystack.valueAt (0)));
+		yyval = ((JassFunctionDefinitionBlock)(yystack.valueAt (0)));
 	};
   break;
 
 
-  case 134: /* nonLibraryBlock: scopeBlock  */
+  case 134: /* nonLibraryBlock: typeDeclarationBlock  */
   if (yyn == 134)
     /* "SmashJassParser.y":864  */
         {
@@ -2087,49 +2087,63 @@ public class SmashJassParser
   break;
 
 
-  case 135: /* block: nonLibraryBlock  */
+  case 135: /* nonLibraryBlock: structDeclarationBlock  */
   if (yyn == 135)
-    /* "SmashJassParser.y":871  */
+    /* "SmashJassParser.y":869  */
         {
 		yyval = ((JassDefinitionBlock)(yystack.valueAt (0)));
 	};
   break;
 
 
-  case 136: /* block: libraryBlock  */
+  case 136: /* nonLibraryBlock: interfaceDeclarationBlock  */
   if (yyn == 136)
-    /* "SmashJassParser.y":876  */
+    /* "SmashJassParser.y":874  */
         {
 		yyval = ((JassDefinitionBlock)(yystack.valueAt (0)));
 	};
   break;
 
 
-  case 137: /* blocks: block  */
+  case 137: /* nonLibraryBlock: moduleDeclarationBlock  */
   if (yyn == 137)
-    /* "SmashJassParser.y":883  */
+    /* "SmashJassParser.y":879  */
         {
-		LinkedList<JassDefinitionBlock> list = new LinkedList<>();
-		list.addFirst(((JassDefinitionBlock)(yystack.valueAt (0))));
-		yyval = list;
+		yyval = ((JassDefinitionBlock)(yystack.valueAt (0)));
 	};
   break;
 
 
-  case 138: /* blocks: blocks newlines block  */
+  case 138: /* nonLibraryBlock: scopeBlock  */
   if (yyn == 138)
-    /* "SmashJassParser.y":890  */
+    /* "SmashJassParser.y":884  */
         {
-		LinkedList<JassDefinitionBlock> list = ((LinkedList<JassDefinitionBlock>)(yystack.valueAt (2)));
-		list.addLast(((JassDefinitionBlock)(yystack.valueAt (0))));
-		yyval = list;
+		yyval = ((JassDefinitionBlock)(yystack.valueAt (0)));
 	};
   break;
 
 
-  case 139: /* nonLibraryBlocks: nonLibraryBlock  */
+  case 139: /* block: nonLibraryBlock  */
   if (yyn == 139)
-    /* "SmashJassParser.y":899  */
+    /* "SmashJassParser.y":891  */
+        {
+		yyval = ((JassDefinitionBlock)(yystack.valueAt (0)));
+	};
+  break;
+
+
+  case 140: /* block: libraryBlock  */
+  if (yyn == 140)
+    /* "SmashJassParser.y":896  */
+        {
+		yyval = ((JassDefinitionBlock)(yystack.valueAt (0)));
+	};
+  break;
+
+
+  case 141: /* blocks: block  */
+  if (yyn == 141)
+    /* "SmashJassParser.y":903  */
         {
 		LinkedList<JassDefinitionBlock> list = new LinkedList<>();
 		list.addFirst(((JassDefinitionBlock)(yystack.valueAt (0))));
@@ -2138,9 +2152,9 @@ public class SmashJassParser
   break;
 
 
-  case 140: /* nonLibraryBlocks: nonLibraryBlocks newlines nonLibraryBlock  */
-  if (yyn == 140)
-    /* "SmashJassParser.y":906  */
+  case 142: /* blocks: blocks newlines block  */
+  if (yyn == 142)
+    /* "SmashJassParser.y":910  */
         {
 		LinkedList<JassDefinitionBlock> list = ((LinkedList<JassDefinitionBlock>)(yystack.valueAt (2)));
 		list.addLast(((JassDefinitionBlock)(yystack.valueAt (0))));
@@ -2149,9 +2163,31 @@ public class SmashJassParser
   break;
 
 
-  case 141: /* statements: statement  */
-  if (yyn == 141)
-    /* "SmashJassParser.y":915  */
+  case 143: /* nonLibraryBlocks: nonLibraryBlock  */
+  if (yyn == 143)
+    /* "SmashJassParser.y":919  */
+        {
+		LinkedList<JassDefinitionBlock> list = new LinkedList<>();
+		list.addFirst(((JassDefinitionBlock)(yystack.valueAt (0))));
+		yyval = list;
+	};
+  break;
+
+
+  case 144: /* nonLibraryBlocks: nonLibraryBlocks newlines nonLibraryBlock  */
+  if (yyn == 144)
+    /* "SmashJassParser.y":926  */
+        {
+		LinkedList<JassDefinitionBlock> list = ((LinkedList<JassDefinitionBlock>)(yystack.valueAt (2)));
+		list.addLast(((JassDefinitionBlock)(yystack.valueAt (0))));
+		yyval = list;
+	};
+  break;
+
+
+  case 145: /* statements: statement  */
+  if (yyn == 145)
+    /* "SmashJassParser.y":935  */
         {
 		LinkedList<JassStatement> list = new LinkedList<JassStatement>();
 		JassStatement statement;
@@ -2166,9 +2202,9 @@ public class SmashJassParser
   break;
 
 
-  case 142: /* statements: statements newlines statement  */
-  if (yyn == 142)
-    /* "SmashJassParser.y":928  */
+  case 146: /* statements: statements newlines statement  */
+  if (yyn == 146)
+    /* "SmashJassParser.y":948  */
         {
 		LinkedList<JassStatement> list = ((LinkedList<JassStatement>)(yystack.valueAt (2)));
 		JassStatement statement;
@@ -2183,99 +2219,99 @@ public class SmashJassParser
   break;
 
 
-  case 143: /* statements_opt: newlines statements newlines  */
-  if (yyn == 143)
-    /* "SmashJassParser.y":943  */
+  case 147: /* statements_opt: newlines statements newlines  */
+  if (yyn == 147)
+    /* "SmashJassParser.y":963  */
         {
 		yyval = ((LinkedList<JassStatement>)(yystack.valueAt (1)));
 	};
   break;
 
 
-  case 144: /* statements_opt: newlines  */
-  if (yyn == 144)
-    /* "SmashJassParser.y":948  */
+  case 148: /* statements_opt: newlines  */
+  if (yyn == 148)
+    /* "SmashJassParser.y":968  */
         {
 		yyval = new LinkedList<JassStatement>();
 	};
   break;
 
 
-  case 145: /* blocks_opt: newlines_opt blocks newlines_opt  */
-  if (yyn == 145)
-    /* "SmashJassParser.y":955  */
-        {
-		yyval = ((LinkedList<JassDefinitionBlock>)(yystack.valueAt (1)));
-	};
-  break;
-
-
-  case 146: /* blocks_opt: newlines_opt  */
-  if (yyn == 146)
-    /* "SmashJassParser.y":960  */
-        {
-		yyval = new LinkedList<JassDefinitionBlock>();
-	};
-  break;
-
-
-  case 147: /* nonLibraryBlocks_opt: newlines nonLibraryBlocks newlines  */
-  if (yyn == 147)
-    /* "SmashJassParser.y":967  */
-        {
-		yyval = ((LinkedList<JassDefinitionBlock>)(yystack.valueAt (1)));
-	};
-  break;
-
-
-  case 148: /* nonLibraryBlocks_opt: newlines  */
-  if (yyn == 148)
-    /* "SmashJassParser.y":972  */
-        {
-		yyval = new LinkedList<JassDefinitionBlock>();
-	};
-  break;
-
-
-  case 149: /* structStatement: member  */
+  case 149: /* blocks_opt: newlines_opt blocks newlines_opt  */
   if (yyn == 149)
-    /* "SmashJassParser.y":979  */
+    /* "SmashJassParser.y":975  */
+        {
+		yyval = ((LinkedList<JassDefinitionBlock>)(yystack.valueAt (1)));
+	};
+  break;
+
+
+  case 150: /* blocks_opt: newlines_opt  */
+  if (yyn == 150)
+    /* "SmashJassParser.y":980  */
+        {
+		yyval = new LinkedList<JassDefinitionBlock>();
+	};
+  break;
+
+
+  case 151: /* nonLibraryBlocks_opt: newlines nonLibraryBlocks newlines  */
+  if (yyn == 151)
+    /* "SmashJassParser.y":987  */
+        {
+		yyval = ((LinkedList<JassDefinitionBlock>)(yystack.valueAt (1)));
+	};
+  break;
+
+
+  case 152: /* nonLibraryBlocks_opt: newlines  */
+  if (yyn == 152)
+    /* "SmashJassParser.y":992  */
+        {
+		yyval = new LinkedList<JassDefinitionBlock>();
+	};
+  break;
+
+
+  case 153: /* structStatement: member  */
+  if (yyn == 153)
+    /* "SmashJassParser.y":999  */
         {
 		currentStruct.add(((JassStructMemberTypeDefinition)(yystack.valueAt (0))));
 	};
   break;
 
 
-  case 150: /* structStatement: methodBlock  */
-  if (yyn == 150)
-    /* "SmashJassParser.y":984  */
+  case 154: /* structStatement: methodBlock  */
+  if (yyn == 154)
+    /* "SmashJassParser.y":1004  */
         {
 		currentStruct.add(((JassMethodDefinitionBlock)(yystack.valueAt (0))));
 	};
   break;
 
 
-  case 151: /* structStatement: implementModuleStatement  */
-  if (yyn == 151)
-    /* "SmashJassParser.y":989  */
+  case 155: /* structStatement: implementModuleStatement  */
+  if (yyn == 155)
+    /* "SmashJassParser.y":1009  */
         {
 		currentStruct.add(((JassImplementModuleDefinition)(yystack.valueAt (0))));
 	};
   break;
 
 
-  case 152: /* interfaceStatement: member  */
-  if (yyn == 152)
-    /* "SmashJassParser.y":996  */
+  case 156: /* interfaceStatement: member  */
+  if (yyn == 156)
+    /* "SmashJassParser.y":1016  */
         {
 		currentStruct.add(((JassStructMemberTypeDefinition)(yystack.valueAt (0))));
 	};
   break;
 
 
-  case 153: /* interfaceStatement: interfaceMethodBlock  */
-  if (yyn == 153)
-    /* "SmashJassParser.y":1001  */
+  case 157: /* interfaceStatement: interfaceMethodBlock  */
+  if (yyn == 157)
+    /* "SmashJassParser.y":1021  */
         {
 		currentStruct.add(((JassMethodDefinitionBlock)(yystack.valueAt (0))));
 	};
@@ -2283,7 +2319,7 @@ public class SmashJassParser
 
 
 
-/* "SmashJassParser.java":2287  */
+/* "SmashJassParser.java":2323  */
 
         default: break;
       }
@@ -2637,8 +2673,8 @@ public class SmashJassParser
     return yyvalue == yytable_ninf_;
   }
 
-  private static final short yypact_ninf_ = -218;
-  private static final short yytable_ninf_ = -165;
+  private static final short yypact_ninf_ = -203;
+  private static final short yytable_ninf_ = -169;
 
 /* YYPACT[STATE-NUM] -- Index in YYTABLE of the portion describing
    STATE-NUM.  */
@@ -2647,37 +2683,38 @@ public class SmashJassParser
   {
     return new short[]
     {
-     -12,   -12,    40,  -218,  -218,    41,  -218,  -218,   -12,    -4,
-    -218,  -218,     4,    17,    29,  -218,  -218,  -218,  -218,   260,
-    -218,     1,  -218,  -218,  -218,  -218,  -218,  -218,  -218,  -218,
-    -218,  -218,   -12,    70,   108,    97,   -44,   -30,   -23,  -218,
-      49,    51,    55,    61,    67,    77,  -218,  -218,    16,  -218,
-     -12,    75,   -49,    92,   -12,   106,   -12,   124,   111,   102,
-     194,   209,   202,   202,  -218,  -218,  -218,   205,   147,   142,
-    -218,   152,  -218,  -218,   178,   165,   171,   165,   175,   -12,
-    -218,  -218,   -12,    20,    20,    16,  -218,  -218,   -12,  -218,
-     233,  -218,  -218,   -49,   -12,  -218,   -12,  -218,   174,   275,
-     228,   187,   200,   255,   257,  -218,   -12,   -12,   195,   315,
-     242,  -218,  -218,   210,   216,  -218,  -218,  -218,    20,    16,
-      16,   224,   215,   309,  -218,   -43,     7,  -218,  -218,  -218,
-    -218,   -12,   213,  -218,  -218,  -218,   166,   166,   242,   166,
-     217,   -27,  -218,  -218,  -218,  -218,  -218,  -218,     2,    90,
-      98,   133,   246,   252,   238,  -218,  -218,  -218,  -218,  -218,
-    -218,  -218,  -218,   -12,  -218,  -218,    13,  -218,  -218,  -218,
-     -12,   219,  -218,   221,   225,   322,  -218,   238,   238,   250,
-     247,   253,   242,   242,   242,   242,   242,   242,   242,   242,
-     242,   242,   242,   242,   242,   242,   239,   293,   176,   240,
-     330,  -218,   316,   233,  -218,  -218,   254,   242,   278,   283,
-     290,  -218,  -218,     2,     2,    90,    90,    90,    90,    98,
-      98,   133,   246,   292,  -218,   166,   282,   242,   242,    16,
-     -12,   242,   176,    10,   269,  -218,   291,   312,   313,  -218,
-    -218,  -218,   -12,   341,  -218,    20,  -218,    -7,   301,  -218,
-     242,  -218,   242,   238,  -218,    69,  -218,  -218,   332,  -218,
-     277,   328,  -218,  -218,   242,   242,   233,   280,   176,    20,
-     347,  -218,  -218,   317,   -12,   233,  -218,  -218,   321,  -218,
-      11,  -218,   355,    16,  -218,   191,  -218,   370,   242,    16,
-     -12,   -12,  -218,   242,   242,  -218,   296,   319,   358,  -218,
-    -218,   229,  -218,  -218,  -218,  -218,  -218
+     -20,   -20,    77,  -203,  -203,   279,  -203,  -203,   -20,    47,
+    -203,  -203,    56,    58,    70,  -203,  -203,  -203,  -203,   106,
+    -203,    26,  -203,  -203,  -203,  -203,  -203,  -203,  -203,  -203,
+    -203,  -203,   -20,   121,   130,   139,   -57,    51,   -34,  -203,
+      72,    88,    89,    92,   103,   337,  -203,  -203,     6,  -203,
+     -20,   114,   -38,   119,   -20,   124,   -20,   129,   123,   109,
+     208,   214,   211,   211,  -203,  -203,  -203,   210,   157,   135,
+    -203,   164,  -203,  -203,   190,   178,   185,   178,   186,   -20,
+    -203,  -203,   -20,     7,     7,     6,  -203,  -203,   -20,  -203,
+     248,  -203,  -203,   -38,   -20,  -203,   -20,  -203,   189,   340,
+     240,   184,   212,   252,   264,  -203,   -20,   -20,   204,   282,
+     188,  -203,  -203,   201,   218,  -203,  -203,  -203,     7,     6,
+       6,   226,   216,   167,  -203,    39,    10,  -203,  -203,  -203,
+    -203,   -20,   209,  -203,  -203,  -203,   241,   241,   188,   241,
+     213,   -17,  -203,  -203,  -203,  -203,  -203,  -203,    64,    79,
+     169,    98,   253,   257,   230,  -203,  -203,  -203,  -203,  -203,
+    -203,  -203,  -203,   -20,  -203,  -203,    14,  -203,  -203,  -203,
+     -20,   217,  -203,   222,   223,   317,  -203,   230,   230,   237,
+     236,   255,   188,   188,   188,   188,   188,   188,   188,   188,
+     188,   188,   188,   188,   188,   188,   225,   291,    31,   229,
+     353,  -203,   299,   248,  -203,  -203,   234,   188,   263,   265,
+     274,  -203,  -203,    64,    64,    79,    79,    79,    79,   169,
+     169,    98,   253,   266,  -203,   241,   251,   188,   188,     6,
+     -20,   188,    31,   309,   238,  -203,   270,   307,   308,  -203,
+    -203,  -203,   -20,   343,  -203,     7,  -203,    73,   310,  -203,
+     188,  -203,   188,   230,  -203,     4,   303,  -203,  -203,   342,
+    -203,   287,   339,  -203,  -203,   188,  -203,  -203,   188,   248,
+     292,    31,     7,   357,  -203,  -203,   319,   295,   -20,   248,
+    -203,  -203,   324,  -203,    20,  -203,   363,     6,  -203,     9,
+     116,  -203,   375,   188,  -203,  -203,     6,   -20,   -20,  -203,
+     188,   188,  -203,   301,   323,   358,  -203,  -203,   176,  -203,
+    -203,  -203,  -203,  -203
     };
   }
 
@@ -2689,37 +2726,38 @@ public class SmashJassParser
   {
     return new short[]
     {
-     165,   162,     0,     2,   164,    15,   163,     1,     0,     0,
-      10,     9,     0,     0,     0,     8,     7,    11,   130,    12,
-      14,     0,   127,   128,   129,   136,   134,   131,   132,   133,
-     135,   137,   165,     0,    15,     0,    98,    98,     0,    13,
-       0,     0,     0,     0,     0,    15,   145,   103,     0,    99,
+     169,   166,     0,     2,   168,    15,   167,     1,     0,     0,
+      10,     9,     0,     0,     0,     8,     7,    11,   134,    12,
+      14,     0,   131,   132,   133,   140,   138,   135,   136,   137,
+     139,   141,   169,     0,    15,     0,   102,   102,     0,    13,
+       0,     0,     0,     0,     0,    15,   149,   107,     0,   103,
        0,     0,     0,     0,     0,     0,     0,     0,     0,    15,
-       0,     0,   120,   120,   125,   138,     6,     4,     0,    15,
-       3,     0,    93,    95,    97,    98,     0,    98,     0,     0,
-     117,   139,     0,     0,     0,     0,   121,   123,     0,     5,
-      16,   100,    94,     0,     0,   113,     0,   115,     0,    15,
-       6,     0,    90,     0,     0,   119,     0,     0,     0,    15,
-       0,    17,    96,     0,     0,   118,   140,    89,     0,     0,
-       0,     0,     0,    15,   126,     0,     0,   149,   150,   151,
-     154,     0,     0,    52,    53,    54,     0,     0,     0,     0,
+       0,     0,   124,   124,   129,   142,     6,     4,     0,    15,
+       3,     0,    97,    99,   101,   102,     0,   102,     0,     0,
+     121,   143,     0,     0,     0,     0,   125,   127,     0,     5,
+      16,   104,    98,     0,     0,   117,     0,   119,     0,    15,
+       6,     0,    94,     0,     0,   123,     0,     0,     0,    15,
+       0,    17,   100,     0,     0,   122,   144,    93,     0,     0,
+       0,     0,     0,    15,   130,     0,     0,   153,   154,   155,
+     158,     0,     0,    52,    53,    54,     0,     0,     0,     0,
        0,    43,    44,    45,    46,    47,    48,    49,    30,    35,
-      38,    40,    42,    63,    59,    27,    24,    56,    57,   114,
-     116,    91,   104,     0,   122,   124,     0,   152,   153,   156,
-       0,     0,   107,     0,     0,    15,    50,    60,    61,     0,
+      38,    40,    42,    63,    59,    27,    24,    56,    57,   118,
+     120,    95,   108,     0,   126,   128,     0,   156,   157,   160,
+       0,     0,   111,     0,     0,    15,    50,    60,    61,     0,
        0,     0,     0,    69,     0,     0,     0,     0,     0,     0,
-       0,     0,     0,     0,     0,     0,     0,     0,   144,     0,
-      15,   108,     0,    22,   155,    58,     0,    69,     0,    67,
+       0,     0,     0,     0,     0,     0,     0,     0,   148,     0,
+      15,   112,     0,    22,   159,    58,     0,    69,     0,    67,
        0,    25,    26,    28,    29,    31,    32,    33,    34,    36,
-      37,    39,    41,    51,   105,     0,     0,    80,     0,     0,
-       0,     0,     0,     4,     0,    82,     0,    56,    57,    78,
-      76,   141,     0,     0,   157,     0,    23,    62,     0,    55,
-      69,    64,    69,     0,    75,    43,    77,    79,     0,    84,
-       0,     0,    81,    85,     0,     0,    20,     0,   143,     0,
-       0,    66,    68,     0,     0,    18,    83,    70,     0,    21,
-      51,   142,     0,     0,    65,     0,    19,    55,     0,     0,
-       0,     0,    86,     0,     0,    72,   111,     0,     0,    88,
-      71,     0,   112,   106,    87,   110,   109
+      37,    39,    41,    51,   109,     0,     0,    84,     0,     0,
+       0,     0,     0,     4,     0,    86,     0,    56,    57,    78,
+      76,   145,     0,     0,   161,     0,    23,    62,     0,    55,
+      69,    64,    69,     0,    75,    43,     0,    77,    83,     0,
+      88,     0,     0,    85,    89,     0,    79,    81,     0,    20,
+       0,   147,     0,     0,    66,    68,     0,     0,     0,    18,
+      87,    70,     0,    21,    51,   146,     0,     0,    65,    51,
+       0,    19,    55,     0,    80,    82,     0,     0,     0,    90,
+       0,     0,    72,   115,     0,     0,    92,    71,     0,   116,
+     110,    91,   114,   113
     };
   }
 
@@ -2729,13 +2767,13 @@ public class SmashJassParser
   {
     return new short[]
     {
-    -218,  -218,  -218,   -46,  -218,   365,   -25,   326,  -218,  -113,
-    -185,  -128,   -32,     3,   211,   193,  -218,  -132,    35,  -104,
-    -179,  -177,  -136,   177,   179,  -217,   113,  -218,   -81,   306,
-    -218,    78,  -218,  -218,  -218,  -218,  -218,  -218,  -218,  -218,
-    -218,  -218,  -218,   344,  -218,  -218,  -218,  -218,  -218,  -218,
-     -42,   363,  -218,  -218,  -218,  -165,  -218,   173,   234,   212,
-    -218,  -218,   304,  -218,     0,   379
+    -203,  -203,  -203,   -46,  -203,   365,   -25,   313,  -203,  -113,
+    -200,   -28,   -35,    -8,   191,   195,  -203,  -123,    33,  -104,
+    -180,  -174,  -107,   160,   170,  -133,    94,  -203,   -80,   321,
+    -203,    -7,  -203,  -203,  -203,  -203,  -203,  -203,  -203,  -203,
+    -203,  -203,  -203,   329,  -203,  -203,  -203,  -203,  -203,  -203,
+      35,   351,  -203,  -203,  -203,  -202,  -203,   -39,   227,   206,
+    -203,  -203,   311,  -203,     0,   383
     };
   }
 
@@ -2747,8 +2785,8 @@ public class SmashJassParser
     {
        0,     2,    18,   101,    19,    20,    21,    49,   235,   127,
      111,   148,   149,   150,   151,   152,   153,   154,   155,   209,
-     157,   158,   210,   239,   240,   241,   259,   102,   103,    73,
-      74,    54,    50,    33,    22,    23,    24,   128,   129,   302,
+     157,   158,   210,   239,   240,   241,   260,   102,   103,    73,
+      74,    54,    50,    33,    22,    23,    24,   128,   129,   309,
      168,    25,    26,    86,    27,   106,    28,   107,    29,    88,
       30,    31,    32,    82,   242,   197,     3,    58,   130,   169,
      131,   170,   108,   122,    59,     5
@@ -2763,48 +2801,49 @@ public class SmashJassParser
   {
     return new short[]
     {
-       4,     6,    68,   104,   177,   178,   156,   180,    34,    48,
-     167,    40,    41,   264,   288,   263,     1,    81,   246,   237,
-      71,   238,    66,   182,    52,   183,   171,     1,    66,    89,
-      72,    66,    45,    53,   179,   100,   172,   161,    52,   105,
-       7,  -146,   184,   185,    48,   252,   237,    55,   238,     8,
-      69,   281,   -51,   237,    57,   238,    42,   116,   213,   214,
-     265,     9,   183,   252,   173,   261,   236,    43,    10,   -43,
-     199,   248,   264,   162,   163,    35,    44,  -164,   208,    47,
-     174,   279,    99,    36,   126,     8,    67,   167,   109,   237,
-     286,   238,    67,   253,   236,    67,    37,     9,   166,    67,
-     236,    11,    12,    13,    10,    14,   109,   123,    38,   285,
-       8,    15,    16,    17,   272,    56,   273,  -102,    51,   265,
-     174,   183,     9,   257,   258,   297,   298,   262,    60,    10,
-      61,   175,   186,   187,    62,    10,   236,    11,    12,    13,
-      63,    14,   188,   189,   190,   191,    64,    15,    16,    17,
-     126,  -101,   234,    94,    70,    96,   215,   216,   217,   218,
-     277,   278,    11,   198,   270,  -148,    14,  -148,    11,    10,
-     200,    75,    15,    16,    17,   166,    80,   132,    15,    16,
-      17,   192,   193,   260,   295,    77,   234,   132,   282,   258,
-     300,    66,   225,   226,   227,   219,   220,   306,   228,   133,
-     134,   135,    11,    79,   229,   230,    83,   231,   232,   133,
-     134,   135,    15,    16,    17,   291,   292,   293,   138,   211,
-     212,    84,   234,    85,    89,   140,    90,    76,   138,    78,
-     198,    92,    93,    52,    95,   140,   110,   290,    97,   115,
-     132,   -92,   268,   296,   305,   141,   142,   143,   144,   145,
-     146,   147,    98,   132,   118,   233,   142,   143,   144,   145,
-     146,   147,   133,   134,   135,   136,   117,   113,   119,   114,
-     120,   124,   137,   159,   198,   133,   134,   135,   136,   160,
-     164,   138,   165,     8,   194,   137,   139,    10,   140,   195,
-     198,   198,   176,   132,   138,     9,   181,   196,   201,   139,
-     202,   140,    10,   205,   203,   207,   206,   224,   141,   142,
-     143,   144,   145,   146,   147,   133,   134,   135,   223,   243,
-      11,   141,   142,   143,   144,   145,   146,   147,   245,   249,
-      15,    16,    17,   247,   138,    11,    10,   250,  -147,    14,
-    -147,   140,    10,   251,   252,    15,    16,    17,   266,    10,
-     267,   -73,   -74,   269,   271,   274,   275,    10,   276,   280,
-     283,   255,   142,   143,   144,   145,   146,   147,   289,    11,
-     284,  -159,   287,   294,   301,    11,  -161,   303,  -158,    15,
-      16,    17,    11,   304,    39,    15,    16,    17,   222,   125,
-      11,  -159,    15,    16,    17,    91,   125,  -160,  -158,   112,
-      15,    16,    17,   256,   254,   221,   299,    87,    65,   204,
-     121,    46,   244
+       4,     6,    68,   246,   104,     1,   156,   265,    34,    48,
+     167,    52,   293,   177,   178,    76,   180,    78,   237,     1,
+      53,    66,   100,   293,   238,    66,   294,   295,   262,    66,
+      56,    71,    45,   182,   179,   183,    40,    41,   161,   105,
+      98,    72,   132,    57,    48,   237,    66,   225,   226,   227,
+      69,   238,   237,   228,   268,   113,   183,   114,   238,   229,
+     230,   252,   231,   232,   133,   134,   135,   173,    94,   283,
+      96,   199,   252,   162,   163,   236,   290,     7,   208,   291,
+     174,    42,    99,   138,   126,    67,    67,   167,   109,    67,
+     140,   237,    43,    67,    81,   304,   305,   238,   166,   264,
+     248,    44,   253,   256,   184,   185,   109,   123,   171,   236,
+     233,   142,   143,   144,   145,   146,   147,     8,   172,    52,
+     174,   186,   187,   258,   259,   252,    35,   263,    55,     9,
+      47,   175,   -51,    10,   116,    36,    10,    37,   285,  -106,
+     298,   299,   300,   275,  -105,   276,   192,   193,   236,    38,
+     126,    60,   234,   215,   216,   217,   218,    10,   213,   214,
+      51,   281,    10,   198,   282,   273,    11,    61,    62,    11,
+     200,    63,  -152,    14,  -152,   166,    15,    16,    17,    15,
+      16,    17,    64,   261,   219,   220,   234,   132,    80,   302,
+      11,   312,   286,    70,    10,    11,   259,   307,    75,   132,
+      15,    16,    17,    77,   313,    15,    16,    17,    79,   133,
+     134,   135,   136,   188,   189,   190,   191,   211,   212,   137,
+      83,   133,   134,   135,   136,   234,    84,    11,   138,    89,
+     198,   137,    85,   139,  -165,   140,    90,    15,    16,    17,
+     138,   297,   271,    92,    93,   139,    52,   140,    95,    97,
+     303,   110,   132,   -96,   115,   141,   142,   143,   144,   145,
+     146,   147,   132,   117,   159,   119,   118,   141,   142,   143,
+     144,   145,   146,   147,   133,   134,   135,   120,   198,  -150,
+     124,   160,   164,   165,   133,   134,   135,     8,   176,   196,
+     205,   194,   181,   138,   195,   206,   201,   198,   198,     9,
+     140,   202,   203,   138,   223,   224,    10,   207,   243,    10,
+     140,   245,   265,   247,   249,   266,   267,   269,   252,   250,
+     141,   142,   143,   144,   145,   146,   147,   251,    89,   270,
+     255,   142,   143,   144,   145,   146,   147,  -168,  -163,    11,
+      12,    13,    11,    14,    10,     8,   -73,   -74,     8,    15,
+      16,    17,    15,    16,    17,   272,   125,     9,  -163,   268,
+       9,   183,   277,   274,    10,   278,   279,    10,   -43,   280,
+     287,   284,   288,  -162,   289,   292,   296,    11,   301,   308,
+      10,   310,    91,   311,    39,   221,   257,    15,    16,    17,
+     222,   125,    87,  -162,   306,   254,    65,    11,    12,    13,
+      11,    14,   204,  -151,    14,  -151,   244,    15,    16,    17,
+      15,    16,    17,    11,   112,    46,     0,   121,     0,     0,
+    -164,     0,     0,    15,    16,    17
     };
   }
 
@@ -2813,48 +2852,49 @@ private static final short[] yycheck_ = yycheck_init();
   {
     return new short[]
     {
-       0,     1,    48,    84,   136,   137,   110,   139,     8,    34,
-     123,    10,    11,     3,     3,   232,    39,    59,   203,   198,
-      69,   198,    15,    50,    68,    52,    69,    39,    15,    19,
-      79,    15,    32,    77,   138,    15,    79,   118,    68,    85,
-       0,     0,    40,    41,    69,    52,   225,    77,   225,     8,
-      50,   268,    59,   232,    77,   232,    55,    99,   186,   187,
-      50,    20,    52,    52,    57,   230,   198,    66,    27,    59,
-      57,   207,     3,   119,   120,    79,    75,     0,   182,     9,
-     126,   266,    82,    79,   109,     8,    79,   200,    88,   268,
-     275,   268,    79,   225,   226,    79,    79,    20,   123,    79,
-     232,    60,    61,    62,    27,    64,   106,   107,    79,   274,
-       8,    70,    71,    72,   250,    37,   252,     9,    21,    50,
-     166,    52,    20,   227,   228,   290,   291,   231,    79,    27,
-      79,   131,    42,    43,    79,    27,   268,    60,    61,    62,
-      79,    64,    44,    45,    46,    47,    79,    70,    71,    72,
-     175,     9,   198,    75,    79,    77,   188,   189,   190,   191,
-     264,   265,    60,   163,   245,    63,    64,    65,    60,    27,
-     170,    79,    70,    71,    72,   200,    65,    11,    70,    71,
-      72,    48,    49,   229,   288,    79,   232,    11,   269,   293,
-     294,    15,    16,    17,    18,   192,   193,   301,    22,    33,
-      34,    35,    60,    79,    28,    29,    12,    31,    32,    33,
-      34,    35,    70,    71,    72,    24,    25,    26,    52,   184,
-     185,    12,   268,    21,    19,    59,    79,    54,    52,    56,
-     230,    79,    54,    68,    63,    59,     3,   283,    63,    65,
-      11,    13,   242,   289,    15,    79,    80,    81,    82,    83,
-      84,    85,    79,    11,    54,    79,    80,    81,    82,    83,
-      84,    85,    33,    34,    35,    36,    79,    94,    13,    96,
-      13,    76,    43,    63,   274,    33,    34,    35,    36,    63,
-      56,    52,    67,     8,    38,    43,    57,    27,    59,    37,
-     290,   291,    79,    11,    52,    20,    79,    59,    79,    57,
-      79,    59,    27,    53,    79,    52,    59,    14,    79,    80,
-      81,    82,    83,    84,    85,    33,    34,    35,    79,    79,
-      60,    79,    80,    81,    82,    83,    84,    85,    12,    51,
-      70,    71,    72,    79,    52,    60,    27,    54,    63,    64,
-      65,    59,    27,    53,    52,    70,    71,    72,    79,    27,
-      59,    39,    39,    12,    53,    23,    79,    27,    30,    79,
-      13,    79,    80,    81,    82,    83,    84,    85,    13,    60,
-      53,    56,    51,     3,    78,    60,    67,    58,    56,    70,
-      71,    72,    60,    25,    19,    70,    71,    72,   195,    74,
-      60,    76,    70,    71,    72,    69,    74,    67,    76,    93,
-      70,    71,    72,   226,   225,   194,   293,    63,    45,   175,
-     106,    32,   200
+       0,     1,    48,   203,    84,    39,   110,     3,     8,    34,
+     123,    68,     3,   136,   137,    54,   139,    56,   198,    39,
+      77,    15,    15,     3,   198,    15,     6,     7,   230,    15,
+      37,    69,    32,    50,   138,    52,    10,    11,   118,    85,
+      79,    79,    11,    77,    69,   225,    15,    16,    17,    18,
+      50,   225,   232,    22,    50,    94,    52,    96,   232,    28,
+      29,    52,    31,    32,    33,    34,    35,    57,    75,   269,
+      77,    57,    52,   119,   120,   198,   278,     0,   182,   279,
+     126,    55,    82,    52,   109,    79,    79,   200,    88,    79,
+      59,   271,    66,    79,    59,   297,   298,   271,   123,   232,
+     207,    75,   225,   226,    40,    41,   106,   107,    69,   232,
+      79,    80,    81,    82,    83,    84,    85,     8,    79,    68,
+     166,    42,    43,   227,   228,    52,    79,   231,    77,    20,
+       9,   131,    59,    27,    99,    79,    27,    79,   271,     9,
+      24,    25,    26,   250,     9,   252,    48,    49,   271,    79,
+     175,    79,   198,   188,   189,   190,   191,    27,   186,   187,
+      21,   265,    27,   163,   268,   245,    60,    79,    79,    60,
+     170,    79,    63,    64,    65,   200,    70,    71,    72,    70,
+      71,    72,    79,   229,   192,   193,   232,    11,    65,   293,
+      60,    15,   272,    79,    27,    60,   300,   301,    79,    11,
+      70,    71,    72,    79,   308,    70,    71,    72,    79,    33,
+      34,    35,    36,    44,    45,    46,    47,   184,   185,    43,
+      12,    33,    34,    35,    36,   271,    12,    60,    52,    19,
+     230,    43,    21,    57,    67,    59,    79,    70,    71,    72,
+      52,   287,   242,    79,    54,    57,    68,    59,    63,    63,
+     296,     3,    11,    13,    65,    79,    80,    81,    82,    83,
+      84,    85,    11,    79,    63,    13,    54,    79,    80,    81,
+      82,    83,    84,    85,    33,    34,    35,    13,   278,     0,
+      76,    63,    56,    67,    33,    34,    35,     8,    79,    59,
+      53,    38,    79,    52,    37,    59,    79,   297,   298,    20,
+      59,    79,    79,    52,    79,    14,    27,    52,    79,    27,
+      59,    12,     3,    79,    51,     6,     7,    79,    52,    54,
+      79,    80,    81,    82,    83,    84,    85,    53,    19,    59,
+      79,    80,    81,    82,    83,    84,    85,     0,    56,    60,
+      61,    62,    60,    64,    27,     8,    39,    39,     8,    70,
+      71,    72,    70,    71,    72,    12,    74,    20,    76,    50,
+      20,    52,    59,    53,    27,    23,    79,    27,    59,    30,
+      13,    79,    53,    56,    79,    51,    13,    60,     3,    78,
+      27,    58,    69,    25,    19,   194,   226,    70,    71,    72,
+     195,    74,    63,    76,   300,   225,    45,    60,    61,    62,
+      60,    64,   175,    63,    64,    65,   200,    70,    71,    72,
+      70,    71,    72,    60,    93,    32,    -1,   106,    -1,    -1,
+      67,    -1,    -1,    70,    71,    72
     };
   }
 
@@ -2890,12 +2930,13 @@ private static final short[] yycheck_ = yycheck_init();
       99,   100,   101,    79,    14,    16,    17,    18,    22,    28,
       29,    31,    32,    79,    89,    94,   103,   106,   107,   109,
      110,   111,   140,    79,   145,    12,    96,    79,   108,    51,
-      54,    53,    52,   103,   110,    79,   109,   105,   105,   112,
-      89,   141,   105,   111,     3,    50,    79,    59,   150,    12,
-     114,    53,   108,   108,    23,    79,    30,   105,   105,    96,
-      79,   111,   114,    13,    53,   141,    96,    51,     3,    13,
-      89,    24,    25,    26,     3,   105,    89,   141,   141,   112,
-     105,    78,   125,    58,    25,    15,   105
+      54,    53,    52,   103,   110,    79,   103,   109,   105,   105,
+     112,    89,   141,   105,   111,     3,     6,     7,    50,    79,
+      59,   150,    12,   114,    53,   108,   108,    59,    23,    79,
+      30,   105,   105,    96,    79,   111,   114,    13,    53,    79,
+     141,    96,    51,     3,     6,     7,    13,    89,    24,    25,
+      26,     3,   105,    89,   141,   141,   112,   105,    78,   125,
+      58,    25,    15,   105
     };
   }
 
@@ -2913,15 +2954,15 @@ private static final short[] yycheck_ = yycheck_init();
      103,   103,   103,   103,   103,   103,   103,   103,   103,   104,
      104,   104,   104,   105,   106,   107,   107,   108,   108,   108,
      109,   109,   109,   110,   110,   111,   111,   111,   111,   111,
-     111,   111,   111,   111,   111,   111,   112,   112,   112,   113,
-     114,   114,   114,   115,   115,   116,   116,   117,   117,   118,
-     118,   119,   119,   120,   121,   122,   123,   124,   124,   125,
-     125,   125,   126,   127,   127,   127,   127,   128,   128,   129,
-     129,   131,   130,   133,   132,   135,   134,   136,   136,   136,
-     136,   136,   136,   136,   136,   137,   137,   138,   138,   139,
-     139,   140,   140,   141,   141,   142,   142,   143,   143,   144,
-     144,   144,   145,   145,   146,   146,   147,   147,   148,   148,
-     149,   149,   150,   150,   151,   151
+     111,   111,   111,   111,   111,   111,   111,   111,   111,   111,
+     112,   112,   112,   113,   114,   114,   114,   115,   115,   116,
+     116,   117,   117,   118,   118,   119,   119,   120,   121,   122,
+     123,   124,   124,   125,   125,   125,   126,   127,   127,   127,
+     127,   128,   128,   129,   129,   131,   130,   133,   132,   135,
+     134,   136,   136,   136,   136,   136,   136,   136,   136,   137,
+     137,   138,   138,   139,   139,   140,   140,   141,   141,   142,
+     142,   143,   143,   144,   144,   144,   145,   145,   146,   146,
+     147,   147,   148,   148,   149,   149,   150,   150,   151,   151
     };
   }
 
@@ -2939,15 +2980,15 @@ private static final short[] yycheck_ = yycheck_init();
        2,     3,     1,     1,     1,     4,     1,     1,     3,     1,
        2,     2,     4,     1,     4,     6,     5,     1,     3,     0,
        3,     6,     5,     1,     1,     2,     1,     2,     1,     2,
-       1,     2,     1,     3,     2,     2,     4,     6,     5,     2,
-       1,     3,     1,     1,     2,     1,     3,     2,     0,     1,
-       3,     3,     1,     3,     7,     9,     9,     2,     3,     2,
-       2,     0,     8,     5,     7,     5,     7,     4,     6,     2,
-       0,     0,     7,     0,     7,     0,     6,     1,     1,     1,
-       1,     1,     1,     1,     1,     1,     1,     1,     3,     1,
-       3,     1,     3,     3,     1,     3,     1,     3,     1,     1,
-       1,     1,     1,     1,     1,     3,     1,     3,     3,     1,
-       3,     1,     1,     2,     1,     0
+       4,     2,     4,     2,     1,     2,     1,     3,     2,     2,
+       4,     6,     5,     2,     1,     3,     1,     1,     2,     1,
+       3,     2,     0,     1,     3,     3,     1,     3,     7,     9,
+       9,     2,     3,     2,     2,     0,     8,     5,     7,     5,
+       7,     4,     6,     2,     0,     0,     7,     0,     7,     0,
+       6,     1,     1,     1,     1,     1,     1,     1,     1,     1,
+       1,     1,     3,     1,     3,     1,     3,     3,     1,     3,
+       1,     3,     1,     1,     1,     1,     1,     1,     1,     3,
+       1,     3,     3,     1,     3,     1,     1,     2,     1,     0
     };
   }
 
@@ -3011,7 +3052,7 @@ private static final short[] yycheck_ = yycheck_init();
   }
 
 
-  private static final int YYLAST_ = 412;
+  private static final int YYLAST_ = 425;
   private static final int YYEMPTY_ = -2;
   private static final int YYFINAL_ = 7;
   private static final int YYNTOKENS_ = 86;
@@ -3040,8 +3081,8 @@ private static final short[] yycheck_ = yycheck_init();
 	}
 	
 
-/* "SmashJassParser.java":3044  */
+/* "SmashJassParser.java":3085  */
 
 }
-/* "SmashJassParser.y":1042  */
+/* "SmashJassParser.y":1062  */
 

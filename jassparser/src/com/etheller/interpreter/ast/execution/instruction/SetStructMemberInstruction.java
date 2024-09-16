@@ -14,8 +14,8 @@ public class SetStructMemberInstruction implements JassInstruction {
 
 	@Override
 	public void run(final JassThread thread) {
-		final JassValue value = thread.stackFrame.pop();
 		final BaseStructJassValue struct = thread.stackFrame.pop().visit(BaseStructJassValueVisitor.getInstance());
+		final JassValue value = thread.stackFrame.pop();
 		struct.setMember(this.memberIndex, value);
 	}
 

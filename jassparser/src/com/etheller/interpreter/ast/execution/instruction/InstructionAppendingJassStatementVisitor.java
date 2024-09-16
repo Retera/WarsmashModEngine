@@ -76,8 +76,8 @@ public class InstructionAppendingJassStatementVisitor
 			JassReturnNothingStatement.RETURN_NOTHING_NOTICE);
 	private final List<JassInstruction> instructions;
 	private final Scope globalScope;
-	private final Map<String, Integer> nameToLocalId = new HashMap<>();
-	private final Map<String, JassType> nameToLocalType = new HashMap<>();
+	private Map<String, Integer> nameToLocalId = new HashMap<>();
+	private Map<String, JassType> nameToLocalType = new HashMap<>();
 	private int nextLocalId;
 	private final ArrayDeque<LoopImpl> loopStartInstructionPtrs = new ArrayDeque<>();
 	private StructJassType enclosingStructType;
@@ -159,9 +159,11 @@ public class InstructionAppendingJassStatementVisitor
 		insertExpressionInstructions(statement.getCondition());
 		final int branchInstructionPtr = this.instructions.size();
 		this.instructions.add(null);
+		final Locals locals = saveLocals();
 		for (final JassStatement thenStatement : statement.getThenStatements()) {
 			thenStatement.accept(this);
 		}
+		loadLocals(locals);
 		final int branchEndInstructionPtr = this.instructions.size();
 		this.instructions.add(null);
 		final int elseStatementsStart = this.instructions.size();
@@ -176,16 +178,20 @@ public class InstructionAppendingJassStatementVisitor
 		insertExpressionInstructions(statement.getCondition());
 		final int branchInstructionPtr = this.instructions.size();
 		this.instructions.add(null);
+		Locals locals = saveLocals();
 		for (final JassStatement thenStatement : statement.getThenStatements()) {
 			thenStatement.accept(this);
 		}
+		loadLocals(locals);
 		final int branchEndInstructionPtr = this.instructions.size();
 		this.instructions.add(null);
 		final int elseStatementsStart = this.instructions.size();
 		this.instructions.set(branchInstructionPtr, new InvertedConditionalBranchInstruction(elseStatementsStart));
+		locals = saveLocals();
 		for (final JassStatement thenStatement : statement.getElseStatements()) {
 			thenStatement.accept(this);
 		}
+		loadLocals(locals);
 		this.instructions.set(branchEndInstructionPtr, new BranchInstruction(this.instructions.size()));
 		return null;
 	}
@@ -195,9 +201,11 @@ public class InstructionAppendingJassStatementVisitor
 		insertExpressionInstructions(statement.getCondition());
 		final int branchInstructionPtr = this.instructions.size();
 		this.instructions.add(null);
+		final Locals locals = saveLocals();
 		for (final JassStatement thenStatement : statement.getThenStatements()) {
 			thenStatement.accept(this);
 		}
+		loadLocals(locals);
 		this.instructions.set(branchInstructionPtr, new InvertedConditionalBranchInstruction(this.instructions.size()));
 		return null;
 	}
@@ -307,14 +315,56 @@ public class InstructionAppendingJassStatementVisitor
 			this.instructions.add(new LocalAssignmentInstruction(localId));
 		}
 		else {
-			final int globalId = this.globalScope.getGlobalId(identifier);
-			if (globalId != -1) {
-				if (CHECK_TYPES) {
-					final JassType type = this.globalScope.getAssignableGlobalById(globalId).getType();
-					this.instructions.add(new TypeCheckInstruction(type));
+			final Integer thisStruct = this.nameToLocalId.get(GlobalScope.KEYNAME_THIS);
+			final JassType thisStructType = this.nameToLocalType.get(GlobalScope.KEYNAME_THIS);
+			boolean found = false;
+			if (thisStruct != null) {
+				final StructJassType structJassType = thisStructType.visit(StructJassTypeVisitor.getInstance());
+				final JassStructMemberType memberType = structJassType.tryGetMemberByName(identifier);
+				if (memberType != null) {
+					checkMemberAccess(identifier, structJassType, memberType);
+
+					final int memberIndex = structJassType.tryGetMemberIndexInefficientlyByName(identifier);
+					if (memberIndex != -1) {
+						this.instructions.add(new LocalReferenceInstruction(thisStruct));
+						this.instructions.add(new SetStructMemberInstruction(memberIndex));
+						found = true;
+					}
 				}
-				this.instructions.add(new GlobalAssignmentInstruction(globalId));
 			}
+			if (!found) {
+				if (this.enclosingStructType != null) {
+					final int staticStructValueGlobalId = this.globalScope
+							.getGlobalId(this.enclosingStructType.getName());
+					final GlobalScopeAssignable globalById = this.globalScope
+							.getAssignableGlobalById(staticStructValueGlobalId);
+					final StaticStructTypeJassValue structJassType = globalById.getValue()
+							.visit(StaticStructTypeJassValueVisitor.getInstance());
+
+					final JassStructMemberType memberType = structJassType.tryGetMemberByName(identifier);
+					if (memberType != null) {
+						checkMemberAccess(identifier, structJassType, memberType);
+
+						final int memberIndex = structJassType.tryGetMemberIndexInefficientlyByName(identifier);
+						if (memberIndex != -1) {
+							this.instructions.add(new GlobalReferenceInstruction(staticStructValueGlobalId));
+							this.instructions.add(new SetStructMemberInstruction(memberIndex));
+							found = true;
+						}
+					}
+				}
+			}
+			if (!found) {
+				final int globalId = this.globalScope.getGlobalId(identifier);
+				if (globalId != -1) {
+					if (CHECK_TYPES) {
+						final JassType type = this.globalScope.getAssignableGlobalById(globalId).getType();
+						this.instructions.add(new TypeCheckInstruction(type));
+					}
+					this.instructions.add(new GlobalAssignmentInstruction(globalId));
+				}
+			}
+
 		}
 		return null;
 	}
@@ -323,8 +373,8 @@ public class InstructionAppendingJassStatementVisitor
 	public Void visit(final JassSetMemberStatement statement) {
 		final String identifier = statement.getIdentifier();
 		final JassExpression structExpression = statement.getStructExpression();
-		insertExpressionInstructions(structExpression);
 		insertExpressionInstructions(statement.getExpression());
+		insertExpressionInstructions(structExpression);
 
 		final JassType expressionLookupType = structExpression.accept(JassTypeExpressionVisitor.getInstance()
 				.reset(this.globalScope, this.nameToLocalType, this.enclosingStructType));
@@ -771,6 +821,16 @@ public class InstructionAppendingJassStatementVisitor
 		return null;
 	}
 
+	private Locals saveLocals() {
+		return new Locals(this.nameToLocalId, this.nameToLocalType, this.nextLocalId);
+	}
+
+	private void loadLocals(final Locals locals) {
+		this.nameToLocalId = locals.nameToLocalId;
+		this.nameToLocalType = locals.nameToLocalType;
+		this.nextLocalId = locals.nextLocalId;
+	}
+
 	private void insertTypeCastInstructions(final JassType castToType, final JassExpression valueExpression) {
 		final JassValueVisitor<JassValue> typeConverter = castToType
 				.visit(TypeCastConverterGettingJassTypeVisitor.INSTANCE);
@@ -784,5 +844,18 @@ public class InstructionAppendingJassStatementVisitor
 
 	private static final class LoopImpl {
 		private final List<Integer> exitWhenInstPtrs = new ArrayList<>();
+	}
+
+	private static final class Locals {
+		private final Map<String, Integer> nameToLocalId;
+		private final Map<String, JassType> nameToLocalType;
+		private final int nextLocalId;
+
+		public Locals(final Map<String, Integer> nameToLocalId, final Map<String, JassType> nameToLocalType,
+				final int nextLocalId) {
+			this.nameToLocalId = new HashMap<String, Integer>(nameToLocalId);
+			this.nameToLocalType = new HashMap<String, JassType>(nameToLocalType);
+			this.nextLocalId = nextLocalId;
+		}
 	}
 }

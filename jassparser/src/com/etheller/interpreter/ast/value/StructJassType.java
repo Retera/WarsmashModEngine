@@ -209,8 +209,9 @@ public class StructJassType implements JassType, StructJassTypeInterface {
 		if (!userDefinedCreate) {
 			final Integer createIndex = this.methodNameToTableIndex.get(CREATE);
 			if (createIndex == null) {
+				final JassMethodDefinitionBlock existingAllocateMethod = tryGetDeclaredMethodByName(ALLOCATE);
 				add(new JassMethodDefinitionBlock(0, "<init>", EnumSet.of(JassQualifier.STATIC), CREATE,
-						Collections.<JassStatement>emptyList(), Collections.emptyList(),
+						Collections.<JassStatement>emptyList(), existingAllocateMethod.getParameterDefinitions(),
 						new LiteralJassTypeToken(this)));
 			}
 		}

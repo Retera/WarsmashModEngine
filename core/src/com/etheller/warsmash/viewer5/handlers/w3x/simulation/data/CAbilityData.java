@@ -21,7 +21,6 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.mine.CAbi
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.nightelf.eattree.CAbilityEatTree;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.nightelf.moonwell.CAbilityMoonWell;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.nightelf.root.CAbilityEntangleGoldMine;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.skills.human.archmage.CAbilityBlizzard;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.skills.human.archmage.CAbilityBrilliance;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.skills.human.archmage.CAbilityMassTeleport;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.skills.human.bloodmage.phoenix.CAbilitySummonPhoenix;
@@ -122,8 +121,8 @@ public class CAbilityData {
 		// Archmage
 //		this.codeToAbilityTypeDefinition.put(War3ID.fromString("AHwe"), new CAbilityTypeDefinitionSpellBase(
 //				(handleId, alias) -> new CAbilitySummonWaterElemental(handleId, alias)));
-		this.codeToAbilityTypeDefinition.put(War3ID.fromString("AHbz"),
-				new CAbilityTypeDefinitionSpellBase((handleId, alias) -> new CAbilityBlizzard(handleId, alias)));
+//		this.codeToAbilityTypeDefinition.put(War3ID.fromString("AHbz"),
+//				new CAbilityTypeDefinitionSpellBase((handleId, alias) -> new CAbilityBlizzard(handleId, alias)));
 		this.codeToAbilityTypeDefinition.put(War3ID.fromString("AHab"), new CAbilityTypeDefinitionSpellBase(
 				(handleId, alias) -> new CAbilityBrilliance(handleId, alias, alias)));
 		this.codeToAbilityTypeDefinition.put(War3ID.fromString("AHmt"),

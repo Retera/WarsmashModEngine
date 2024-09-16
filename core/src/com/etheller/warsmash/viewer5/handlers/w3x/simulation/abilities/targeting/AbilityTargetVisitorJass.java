@@ -47,8 +47,6 @@ public class AbilityTargetVisitorJass extends CExtensibleHandleAbstract implemen
 	@Override
 	public Void accept(final AbilityPointTarget target) {
 		final List<JassValue> arguments = new ArrayList<>();
-		final StructJassValue structValue = getStructValue();
-		arguments.add(structValue);
 		arguments.add(new HandleJassValue(this.globalScope.getHandleType("location"), target));
 		runMethodReturnNothing(this.globalScope, this.visitLocIdxVtable, arguments);
 		return null;
@@ -57,8 +55,6 @@ public class AbilityTargetVisitorJass extends CExtensibleHandleAbstract implemen
 	@Override
 	public Void accept(final CUnit target) {
 		final List<JassValue> arguments = new ArrayList<>();
-		final StructJassValue structValue = getStructValue();
-		arguments.add(structValue);
 		arguments.add(new HandleJassValue(this.globalScope.getHandleType("unit"), target));
 		runMethodReturnNothing(this.globalScope, this.visitUnitIdxVtable, arguments);
 		return null;
@@ -67,8 +63,6 @@ public class AbilityTargetVisitorJass extends CExtensibleHandleAbstract implemen
 	@Override
 	public Void accept(final CDestructable target) {
 		final List<JassValue> arguments = new ArrayList<>();
-		final StructJassValue structValue = getStructValue();
-		arguments.add(structValue);
 		arguments.add(new HandleJassValue(this.globalScope.getHandleType("destructable"), target));
 		runMethodReturnNothing(this.globalScope, this.visitDestIdxVtable, arguments);
 		return null;
@@ -77,8 +71,6 @@ public class AbilityTargetVisitorJass extends CExtensibleHandleAbstract implemen
 	@Override
 	public Void accept(final CItem target) {
 		final List<JassValue> arguments = new ArrayList<>();
-		final StructJassValue structValue = getStructValue();
-		arguments.add(structValue);
 		arguments.add(new HandleJassValue(this.globalScope.getHandleType("location"), target));
 		runMethodReturnNothing(this.globalScope, this.visitItemIdxVtable, arguments);
 		return null;

@@ -1070,6 +1070,9 @@ library AbilityTargetAPI
 	type location extends abilitytarget
 	type widget extends abilitytarget
 
+	native GetAbilityTargetX takes abilitytarget what returns real
+	native GetAbilityTargetY takes abilitytarget what returns real
+
 	native CreateAbilityTargetVisitor takes nothing returns abilitytargetvisitor
 	native DestroyAbilityTargetVisitor takes abilitytargetvisitor x returns nothing
 	// Calling to "AbilityTargetAcceptVisitor" will call back on one of the visit methods of the 
@@ -2705,6 +2708,19 @@ library AbilitySpellBaseTypes requires GenericAbilityBaseTypes, AbilityFieldDefa
 		method getDuration takes nothing returns real
 			return this.duration
 		endmethod
+
+		method getTargetsAllowed takes nothing returns targettypes
+			return this.targetsAllowed
+		endmethod
+
+		method getCastingTime takes nothing returns real
+			return this.castingTime
+		endmethod
+
+		method setCastingTime takes real castingTime returns nothing
+			this.castingTime = castingTime
+		endmethod
+
 		// required by native API (see "interface Ability")
 		constant method getAbilityCategory takes nothing returns abilitycategory
 			return ABILITY_CATEGORY_SPELL
@@ -2791,7 +2807,7 @@ library AbilitySpellBaseTypes requires GenericAbilityBaseTypes, AbilityFieldDefa
 		method reset takes abilitytarget target returns thistype
 			this.castStartTick = 0
 			this.doneEffect = false
-			this.channeling = true
+			this.channeling = false
 			return this.innerReset(target)
 		endmethod
 
@@ -3238,4 +3254,37 @@ library AbilitySpellBaseTypes requires GenericAbilityBaseTypes, AbilityFieldDefa
 			endmethod
 		endstruct
 	endscope
+endlibrary
+
+//==============================================
+// MathUtils
+//==============================================
+library MathUtils
+	// "struct math" is based on code by Wietlol
+	// from here: https://www.hiveworkshop.com/threads/rounding-function-in-jass.288720/#post-3097507
+	struct Math
+		// Rounding
+		static method floor takes real r returns real
+		    if r < 0 then
+			return -I2R(R2I(-r))
+		    endif
+		    return I2R(R2I(r))
+		endmethod
+	       
+		static method ceil takes real r returns real
+		    if floor(r) == r then
+			return r
+		    elseif r < 0 then
+			return -(I2R(R2I(-r)) + 1.0)
+		    endif
+		    return I2R(R2I(r)) + 1.0
+		endmethod
+	       
+		static method round takes real r returns real
+		    if r > 0 then
+			return I2R(R2I(r + 0.5))
+		    endif
+		    return I2R(R2I(r - 0.5))
+		endmethod
+	endstruct
 endlibrary

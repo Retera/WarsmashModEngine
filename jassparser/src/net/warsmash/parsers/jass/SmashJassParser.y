@@ -534,6 +534,26 @@ statement:
 		$$ = $1;
 	}
 	|
+	ID PLUSPLUS
+	{
+		$$ = new JassSetStatement($1, new ArithmeticJassExpression(new ReferenceJassExpression($1), new LiteralJassExpression(IntegerJassValue.of(1)), ArithmeticSigns.ADD));
+	}
+	|
+	baseExpression DOT ID PLUSPLUS
+	{
+		$$ = new JassSetMemberStatement($1, $3, new ArithmeticJassExpression(new MemberJassExpression($1, $3), new LiteralJassExpression(IntegerJassValue.of(1)), ArithmeticSigns.ADD));
+	}
+	|
+	ID MINUSMINUS
+	{
+		$$ = new JassSetStatement($1, new ArithmeticJassExpression(new ReferenceJassExpression($1), new LiteralJassExpression(IntegerJassValue.of(1)), ArithmeticSigns.SUBTRACT));
+	}
+	|
+	baseExpression DOT ID MINUSMINUS
+	{
+		$$ = new JassSetMemberStatement($1, $3, new ArithmeticJassExpression(new MemberJassExpression($1, $3), new LiteralJassExpression(IntegerJassValue.of(1)), ArithmeticSigns.SUBTRACT));
+	}
+	|
 	RETURN expression // ReturnStatement
 	{
 		$$ = new JassReturnStatement($2);

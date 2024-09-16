@@ -603,11 +603,6 @@ library AbilitiesCommonLegacy requires TargetTypesAPI, AnimationTokensAPI
 	native CreateUnitTargetedPseudoProjectile takes unit casterUnit, localstore sourceAbility, integer castId, unit sourceUnit, location sourceLocation, unit target, integer projectileId, effecttype whichEffectType, integer effectArtIndex, real speed, boolean homing, code onLaunch, code onPreHits, boolexpr canHitTarget, code onHit, integer maxHits, integer hitsPerTarget, real startingRadius, real endingRadius, real projectileStepInterval, integer projectileArtSkip, boolean provideCounts returns projectile
 
 	native SetAttackProjectileDamage takes projectile whichAttackProjectile, real damage returns nothing
-	native SetProjectileDone takes projectile whichProjectile, boolean done returns nothing
-	native SetProjectileReflected takes projectile whichProjectile, boolean reflected returns nothing
-	native SetProjectileTargetUnit takes projectile whichProjectile, unit target returns nothing
-	native SetProjectileTargetLoc takes projectile whichProjectile, location target returns nothing
-	native IsProjectileReflected takes projectile whichProjectile returns boolean
 
 	//=================================================================================================
 	// Buff API
@@ -2282,6 +2277,7 @@ library BuffAPI requires AbilityAPI
 		static method create takes integer aliasId returns thistype defaults .allocate(aliasId, aliasId)
 		method onAdd takes unit target returns nothing
 		method onRemove takes unit target returns nothing
+		method onDeath takes unit target returns nothing
 		method getDurationRemaining takes unit target returns real
 		method getDurationMax takes nothing returns real
 		method isTimedLifeBar takes nothing returns boolean
@@ -2323,6 +2319,10 @@ library BuffAPI requires AbilityAPI
 			call DestroyTrigger(this.tickTrigger)
 		endmethod
 
+		method onDeath takes unit target returns nothing
+			call RemoveUnitAbility(target, this)
+		endmethod
+
 		method onTick takes nothing returns nothing
 			unit target = GetTriggerUnit()
 			integer currentTick = GetGameTurnTick()
@@ -2342,6 +2342,24 @@ library BuffAPI requires AbilityAPI
 				remaining = 0
 			endif
 			return remaining * au_SIMULATION_STEP_TIME
+		endmethod
+	endstruct
+
+	struct BuffStun extends BuffTimed
+		public static method create takes integer aliasId, real duration returns thistype
+			return .allocate(aliasId, duration)
+		endmethod
+
+		method onBuffAdd takes unit target returns nothing
+			call UnitAddType(target, UNIT_TYPE_STUNNED)
+		endmethod
+
+		method onBuffRemove takes unit target returns nothing
+			call UnitRemoveType(target, UNIT_TYPE_STUNNED)
+		endmethod
+
+		method isTimedLifeBar takes nothing returns boolean
+			return false
 		endmethod
 	endstruct
 
@@ -3042,7 +3060,7 @@ library AbilitySpellBaseTypes requires GenericAbilityBaseTypes, AbilityFieldDefa
 			implement BehaviorSpellTarget
 		endstruct
 
-		struct AbilitySpellTargetWidget extends AbilitySpellTargetInterface
+		struct AbilitySpellTargetWidgetOrLocation extends AbilitySpellTargetInterface
 			BehaviorSpellImpl behavior
 
 			method onAdd takes unit whichUnit returns nothing
@@ -3287,4 +3305,28 @@ library MathUtils
 		    return I2R(R2I(r - 0.5))
 		endmethod
 	endstruct
+endlibrary
+
+//=====================================================
+// ProjectileAPI                              
+//=====================================================
+// This can probably interoperate with the stuff from
+// "ability builder" / local stores, but the base
+// type projectile will not require them
+library ProjectileAPI requires AbilityTargetAPI, AbilitiesCommonLegacy
+	native SetProjectileDone takes projectile whichProjectile, boolean done returns nothing
+	native SetProjectileReflected takes projectile whichProjectile, boolean reflected returns nothing
+	native SetProjectileTargetUnit takes projectile whichProjectile, unit target returns nothing
+	native SetProjectileTargetLoc takes projectile whichProjectile, location target returns nothing
+	native IsProjectileReflected takes projectile whichProjectile returns boolean
+	native GetProjectileX takes projectile whichProjectile returns real
+	native GetProjectileY takes projectile whichProjectile returns real
+	native GetProjectileSource takes projectile whichProjectile returns unit
+
+	native CreateJassProjectile takes unit source, integer spellAlias, real launchX, real launchY, real launchFacing, real speed, boolean homing, abilitytarget target returns projectile
+
+	interface Projectile extends projectile
+		method onHit takes abilitytarget whichTarget returns nothing
+		method onLaunch takes abilitytarget whichTarget returns nothing defaults nothing
+	endinterface
 endlibrary

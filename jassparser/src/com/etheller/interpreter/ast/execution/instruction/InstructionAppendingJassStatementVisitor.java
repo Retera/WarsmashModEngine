@@ -545,8 +545,11 @@ public class InstructionAppendingJassStatementVisitor
 		StructJassType structJassType;
 		if ((thisStruct != null)
 				&& ((structJassType = thisStructType.visit(StructJassTypeVisitor.getInstance())) != null)) {
-			final JassCodeDefinitionBlock methodDefinition = this.enclosingStructType.getMethodByName(functionName);
-			if (methodDefinition.getQualifiers().contains(JassQualifier.STATIC)) {
+			final JassCodeDefinitionBlock methodDefinition = this.enclosingStructType.tryGetMethodByName(functionName);
+			if (methodDefinition == null) {
+				insertTypeCastInstructionsOrFail(functionName, arguments, argumentCount);
+			}
+			else if (methodDefinition.getQualifiers().contains(JassQualifier.STATIC)) {
 				// In some struct code, if they call `.doThing()` and `doThing()` is a static
 				// method,
 				// then we call it statically even if we were ourselves a non-static method
@@ -565,21 +568,26 @@ public class InstructionAppendingJassStatementVisitor
 						this.enclosingStructType);
 			}
 			else {
-				if (argumentCount == 1) {
-					try {
-						final JassType functionNameAsType = this.globalScope.parseType(functionName);
-						final JassExpression jassExpression = arguments.get(0);
-						insertTypeCastInstructions(functionNameAsType, jassExpression);
-					}
-					catch (final Exception exc) {
-						throw this.globalScope.createException("Undefined function: " + functionName, exc);
-					}
-				}
-				else {
-					throw this.globalScope.createException("Undefined function: " + functionName,
-							new IllegalArgumentException());
-				}
+				insertTypeCastInstructionsOrFail(functionName, arguments, argumentCount);
 			}
+		}
+	}
+
+	private void insertTypeCastInstructionsOrFail(final String functionName, final List<JassExpression> arguments,
+			final int argumentCount) {
+		if (argumentCount == 1) {
+			try {
+				final JassType functionNameAsType = this.globalScope.parseType(functionName);
+				final JassExpression jassExpression = arguments.get(0);
+				insertTypeCastInstructions(functionNameAsType, jassExpression);
+			}
+			catch (final Exception exc) {
+				throw this.globalScope.createException("Undefined function: " + functionName, exc);
+			}
+		}
+		else {
+			throw this.globalScope.createException("Undefined function: " + functionName,
+					new IllegalArgumentException());
 		}
 	}
 

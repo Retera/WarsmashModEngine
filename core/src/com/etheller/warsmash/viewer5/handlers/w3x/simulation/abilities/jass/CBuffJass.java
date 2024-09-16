@@ -31,6 +31,7 @@ public class CBuffJass extends AbstractCBuff implements CBuff {
 	private CommonTriggerExecutionScope jassAbilityBasicScope;
 	private Integer onAddIdxVtable;
 	private Integer onRemoveIdxVtable;
+	private Integer onDeathIdxVtable;
 	private Integer getDurationRemainingIdxVtable;
 	private Integer getDurationMaxIdxVtable;
 	private Integer isTimedLifeBarIdxVtable;
@@ -46,6 +47,7 @@ public class CBuffJass extends AbstractCBuff implements CBuff {
 		final StructJassType type = structJassValue.getType();
 		this.onAddIdxVtable = type.getMethodTableIndex("onAdd");
 		this.onRemoveIdxVtable = type.getMethodTableIndex("onRemove");
+		this.onDeathIdxVtable = type.getMethodTableIndex("onDeath");
 
 		this.getDurationRemainingIdxVtable = type.getMethodTableIndex("getDurationRemaining");
 		this.getDurationMaxIdxVtable = type.getMethodTableIndex("getDurationMax");
@@ -122,7 +124,15 @@ public class CBuffJass extends AbstractCBuff implements CBuff {
 	}
 
 	@Override
-	public void onDeath(final CSimulation game, final CUnit cUnit) {
+	public void onDeath(final CSimulation game, final CUnit unit) {
+		final List<JassValue> arguments = new ArrayList<>();
+		final StructJassValue structValue = getStructValue();
+		arguments.add(structValue);
+		// TODO avoid cast
+		arguments.add(new HandleJassValue(this.globalScope.getHandleType("unit"), unit));
+		final Integer instructionPtr = structValue.getType().getMethodTable().get(this.onDeathIdxVtable);
+		this.globalScope.runThreadUntilCompletion(
+				this.globalScope.createThread(instructionPtr, arguments, this.jassAbilityBasicScope));
 	}
 
 	@Override

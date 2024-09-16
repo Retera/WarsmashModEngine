@@ -641,6 +641,7 @@ public class Jass2 {
 			final HandleJassType worldeditordatatypeType = globals.registerHandleType("worldeditordatatype");
 			final HandleJassType gameobjectType = globals.registerHandleType("gameobject");
 			final HandleJassType projectileType = globals.registerHandleType("projectile");
+			final HandleJassType abilityprojectileType = globals.registerHandleType("abilityprojectile");
 			final HandleJassType nonstackingstatbuffType = globals.registerHandleType("nonstackingstatbuff");
 			final HandleJassType nonstackingstatbufftypeType = globals.registerHandleType("nonstackingstatbufftype");
 			final HandleJassType datafieldletterType = globals.registerHandleType("datafieldletter");
@@ -7341,6 +7342,52 @@ public class Jass2 {
 
 						return BooleanJassValue.of(projectile.isReflected());
 					});
+			jassProgramVisitor.getJassNativeManager().createNative("GetProjectileX",
+					(arguments, globalScope, triggerScope) -> {
+						final CProjectile projectile = nullable(arguments, 0, ObjectJassValueVisitor.getInstance());
+
+						return RealJassValue.of(projectile.getX());
+					});
+			jassProgramVisitor.getJassNativeManager().createNative("GetProjectileY",
+					(arguments, globalScope, triggerScope) -> {
+						final CProjectile projectile = nullable(arguments, 0, ObjectJassValueVisitor.getInstance());
+
+						return RealJassValue.of(projectile.getY());
+					});
+			jassProgramVisitor.getJassNativeManager().createNative("GetProjectileSource",
+					(arguments, globalScope, triggerScope) -> {
+						final CProjectile projectile = nullable(arguments, 0, ObjectJassValueVisitor.getInstance());
+
+						return new HandleJassValue(unitType, projectile.getSource());
+					});
+			jassProgramVisitor.getJassNativeManager().createNative("CreateJassProjectile",
+					(arguments, globalScope, triggerScope) -> {
+						int argIndex = 0;
+						final CUnit casterUnit = nullable(arguments, argIndex++, ObjectJassValueVisitor.getInstance());
+
+						final int projectileRawcode = arguments.get(argIndex++)
+								.visit(IntegerJassValueVisitor.getInstance());
+
+						final float launchX = arguments.get(argIndex++).visit(RealJassValueVisitor.getInstance())
+								.floatValue();
+						final float launchY = arguments.get(argIndex++).visit(RealJassValueVisitor.getInstance())
+								.floatValue();
+						final float launchFacing = arguments.get(argIndex++).visit(RealJassValueVisitor.getInstance())
+								.floatValue();
+						final float speed = arguments.get(argIndex++).visit(RealJassValueVisitor.getInstance())
+								.floatValue();
+						final boolean homing = arguments.get(argIndex++).visit(BooleanJassValueVisitor.getInstance());
+
+						final AbilityTarget target = nullable(arguments, argIndex++,
+								ObjectJassValueVisitor.getInstance());
+
+						final CProjectile proj = this.simulation.createProjectile(casterUnit,
+								new War3ID(projectileRawcode), launchX, launchY, launchFacing, speed, homing, target);
+
+						return new HandleJassValue(projectileType, proj);
+					});
+			projectileType.setConstructorNative(new HandleJassTypeConstructor("CreateJassProjectile"));
+			projectileType.setDestructorNative(new HandleJassTypeConstructor("SetProjectileDone"));
 
 			// buff api
 			jassProgramVisitor.getJassNativeManager().createNative("AddUnitNonStackingDisplayBuff",

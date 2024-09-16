@@ -46,6 +46,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.projectile.C
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.projectile.CAttackProjectile;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.projectile.CCollisionProjectile;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.projectile.CEffect;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.projectile.CJassProjectile;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.projectile.CPsuedoProjectile;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.config.CBasePlayer;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.config.CPlayerAPI;
@@ -387,6 +388,15 @@ public class CSimulation implements CPlayerAPI {
 				launchFacing, speed, homing, source, spellAlias, target, projectileListener);
 		this.newProjectiles.add(projectile);
 		projectileListener.onLaunch(this, projectile, target);
+		return projectile;
+	}
+
+	public CJassProjectile createProjectile(final CUnit source, final War3ID spellAlias, final float launchX,
+			final float launchY, final float launchFacing, final float speed, final boolean homing,
+			final AbilityTarget target) {
+		final CJassProjectile projectile = this.simulationRenderController.createJassProjectile(this, launchX, launchY,
+				launchFacing, speed, homing, source, spellAlias, target);
+		this.newProjectiles.add(projectile);
 		return projectile;
 	}
 

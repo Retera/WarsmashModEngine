@@ -128,8 +128,8 @@ public class CAbilityData {
 		this.codeToAbilityTypeDefinition.put(War3ID.fromString("AHmt"),
 				new CAbilityTypeDefinitionSpellBase((handleId, alias) -> new CAbilityMassTeleport(handleId, alias)));
 		// Mountain King:
-		this.codeToAbilityTypeDefinition.put(War3ID.fromString("AHtb"),
-				new CAbilityTypeDefinitionSpellBase((handleId, alias) -> new CAbilityThunderBolt(handleId, alias)));
+//		this.codeToAbilityTypeDefinition.put(War3ID.fromString("AHtb"),
+//				new CAbilityTypeDefinitionSpellBase((handleId, alias) -> new CAbilityThunderBolt(handleId, alias)));
 		this.codeToAbilityTypeDefinition.put(War3ID.fromString("AHtc"),
 				new CAbilityTypeDefinitionSpellBase((handleId, alias) -> new CAbilityThunderClap(handleId, alias)));
 		this.codeToAbilityTypeDefinition.put(War3ID.fromString("ANfb"),

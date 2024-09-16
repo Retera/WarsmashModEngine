@@ -1,4 +1,4 @@
-scope SummonWaterElemental initializer register
+scope Blizzard initializer register
 	// TODO: would be great for TargetFilter to be a lambda instead
 	private struct TargetFilter
 		filterfunc filter

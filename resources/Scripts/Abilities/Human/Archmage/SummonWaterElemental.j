@@ -30,7 +30,7 @@ scope SummonWaterElemental initializer register
 				exitwhen i >= summonUnitCount
 				set summonedUnit = CreateUnit(owner, summonUnitId, x, y, facing)
 				call UnitAddType(summonedUnit, UNIT_TYPE_SUMMONED)
-				//call UnitApplyTimedLife(summonedUnit, this.buffId)
+				call AddUnitAbility(summonedUnit, BuffTimedLife.create(this.buffId, getDuration(), false))
 				call DestroyEffect(AddSpellEffectTargetById(this.getAliasId(), EFFECT_TYPE_TARGET, summonedUnit, null))
 				set i = i + 1
 			endloop

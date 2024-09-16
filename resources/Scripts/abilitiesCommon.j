@@ -2271,6 +2271,104 @@ library GenericAbilityBaseTypes requires AbilityAPI, BehaviorAPI
 endlibrary
 
 //=====================================================
+// Buff API                                        
+//=====================================================
+library BuffAPI requires AbilityAPI
+	private native CreateJassBuff takes integer codeId, integer aliasId returns buff
+	interface Buff extends buff
+		static method create takes integer aliasId returns thistype defaults .allocate(aliasId, aliasId)
+		method onAdd takes unit target returns nothing
+		method onRemove takes unit target returns nothing
+		method getDurationRemaining takes unit target returns real
+		method getDurationMax takes nothing returns real
+		method isTimedLifeBar takes nothing returns boolean
+		method getAliasId takes nothing returns integer defaults GetAbilityAliasId(this)
+		method getCodeId takes nothing returns integer defaults GetAbilityCodeId(this)
+	endinterface
+
+	struct BuffTimed extends Buff
+		effect fx
+		real duration
+		integer expireTick
+		trigger tickTrigger
+
+		public static method create takes integer aliasId, real duration returns thistype
+			local thistype this = .allocate(aliasId)
+			this.duration = duration
+			this.tickTrigger = CreateTrigger()
+			call TriggerAddAction(this.tickTrigger, method this.onTick)
+			return this
+		endmethod
+
+		method onBuffAdd takes unit target returns nothing
+		endmethod
+
+		method onBuffRemove takes unit target returns nothing
+		endmethod
+
+		method onAdd takes unit target returns nothing
+			onBuffAdd(target)
+			this.fx = AddSpellEffectTargetById(getAliasId(), EFFECT_TYPE_TARGET, target, null)
+			integer durationTicks = R2I(this.duration / au_SIMULATION_STEP_TIME)
+			this.expireTick = GetGameTurnTick() + durationTicks
+			call TriggerRegisterOnUnitTick(this.tickTrigger, target)
+		endmethod
+
+		method onRemove takes unit target returns nothing
+			onBuffRemove(target)
+			call DestroyEffect(fx)
+			call DestroyTrigger(this.tickTrigger)
+		endmethod
+
+		method onTick takes nothing returns nothing
+			unit target = GetTriggerUnit()
+			integer currentTick = GetGameTurnTick()
+			if (currentTick >= this.expireTick) then
+				call RemoveUnitAbility(target, this)
+			endif
+		endmethod
+
+		method getDurationMax takes nothing returns real
+			return this.duration
+		endmethod
+
+		method getDurationRemaining takes unit target returns real
+			integer currentTick = GetGameTurnTick()
+			integer remaining = this.expireTick - currentTick
+			if remaining < 0 then
+				remaining = 0
+			endif
+			return remaining * au_SIMULATION_STEP_TIME
+		endmethod
+	endstruct
+
+	struct BuffTimedLife extends BuffTimed
+		boolean explode
+
+		public static method create takes integer aliasId, real duration, boolean explode returns thistype
+			local thistype this = .allocate(aliasId, duration)
+			this.explode = explode
+			return this
+		endmethod
+
+		method onBuffAdd takes unit target returns nothing
+			if this.explode then
+				call SetUnitExploded(target, true)
+				call SetUnitExplodeOnDeathBuffId(target, this.getAliasId())
+			endif
+		endmethod
+
+		method onBuffRemove takes unit target returns nothing
+			call KillUnit(target)
+		endmethod
+
+		method isTimedLifeBar takes nothing returns boolean
+			return true
+		endmethod
+	endstruct
+endlibrary
+
+//=====================================================
 // AbilityFieldDefaults                                        
 //=====================================================
 // These are some expected/default names for ability
@@ -2530,6 +2628,7 @@ library AbilitySpellBaseTypes requires GenericAbilityBaseTypes, AbilityFieldDefa
 		
 		method innerPopulate takes gameobject editorData, integer level returns nothing
 			this.manaCost = GetGameObjectFieldAsInteger(editorData, ABILITY_FIELD_MANA_COST + I2S(level), 0)
+			call SetOrderButtonManaCost(this.abilityButton, manaCost)
 			this.castRange = GetGameObjectFieldAsReal(editorData, ABILITY_FIELD_CAST_RANGE + I2S(level), 0)
 			this.cooldown = GetGameObjectFieldAsReal(editorData, ABILITY_FIELD_COOLDOWN + I2S(level), 0)
 			this.castingTime = GetGameObjectFieldAsReal(editorData, ABILITY_FIELD_CASTING_TIME + I2S(level), 0)
@@ -2603,6 +2702,9 @@ library AbilitySpellBaseTypes requires GenericAbilityBaseTypes, AbilityFieldDefa
 			return this.cooldown
 		endmethod
 	
+		method getDuration takes nothing returns real
+			return this.duration
+		endmethod
 		// required by native API (see "interface Ability")
 		constant method getAbilityCategory takes nothing returns abilitycategory
 			return ABILITY_CATEGORY_SPELL

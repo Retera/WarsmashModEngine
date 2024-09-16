@@ -581,6 +581,15 @@ public class CommonTriggerExecutionScope extends TriggerExecutionScope {
 		return scope;
 	}
 
+	public static CommonTriggerExecutionScope unitTriggerScope(final JassGameEventsWar3 triggerEventId,
+			final Trigger trigger, final CUnit triggerUnit) {
+		final CommonTriggerExecutionScope scope = new CommonTriggerExecutionScope(trigger, TriggerExecutionScope.EMPTY);
+		scope.triggerWidget = triggerUnit;
+		scope.triggeringUnit = triggerUnit;
+		scope.triggerEventId = triggerEventId;
+		return scope;
+	}
+
 	public static CommonTriggerExecutionScope triggerDialogScope(final JassGameEventsWar3 triggerEventId,
 			final Trigger trigger, final CScriptDialog clickedDialog, final CScriptDialogButton clickedButton) {
 		final CommonTriggerExecutionScope scope = new CommonTriggerExecutionScope(trigger, TriggerExecutionScope.EMPTY);

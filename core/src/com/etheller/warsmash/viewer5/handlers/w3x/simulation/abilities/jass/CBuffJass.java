@@ -82,6 +82,7 @@ public class CBuffJass extends AbstractCBuff implements CBuff {
 		final List<JassValue> arguments = new ArrayList<>();
 		final StructJassValue structValue = getStructValue();
 		arguments.add(structValue);
+		arguments.add(new HandleJassValue(this.globalScope.getHandleType("unit"), unit));
 		final Integer instructionPtr = structValue.getType().getMethodTable().get(this.getDurationRemainingIdxVtable);
 		final JassThread thread = this.globalScope.createThreadCapturingReturnValue(instructionPtr, arguments,
 				this.jassAbilityBasicScope);

@@ -2272,7 +2272,8 @@ public class CUnit extends CWidget {
 					final GlobalScope globalScope = game.getGlobalScope();
 					for (int i = this.onTickTriggers.size() - 1; i >= 0; i--) {
 						final Trigger trigger = this.onTickTriggers.get(i);
-						final TriggerExecutionScope triggerExecutionScope = trigger.getTriggerExecutionScope();
+						final TriggerExecutionScope triggerExecutionScope = CommonTriggerExecutionScope
+								.unitTriggerScope(null, trigger, this);
 						if (trigger.evaluate(globalScope, triggerExecutionScope)) {
 							trigger.execute(globalScope, triggerExecutionScope);
 						}

@@ -22,24 +22,36 @@ public interface CExtensibleHandle {
 
 	default <T> T runMethod(final GlobalScope globalScope, final Integer idxVtable, final String contextNameForError,
 			final List<JassValue> arguments, final JassValueVisitor<T> visitor) {
-		final StructJassValue structValue = getStructValue();
-		final Integer instructionPtr = structValue.getType().getMethodTable().get(idxVtable);
-		arguments.add(0, structValue);
-		final JassThread thread = globalScope.createThreadCapturingReturnValue(instructionPtr, arguments,
-				TriggerExecutionScope.EMPTY);
-		final JassValue jassReturnValue = globalScope.runThreadUntilCompletionAndReadReturnValue(thread,
-				contextNameForError, null);
-		if (jassReturnValue == null) {
-			return null;
+		try {
+			final StructJassValue structValue = getStructValue();
+			final Integer instructionPtr = structValue.getType().getMethodTable().get(idxVtable);
+			arguments.add(0, structValue);
+			final JassThread thread = globalScope.createThreadCapturingReturnValue(instructionPtr, arguments,
+					TriggerExecutionScope.EMPTY);
+			final JassValue jassReturnValue = globalScope.runThreadUntilCompletionAndReadReturnValue(thread,
+					contextNameForError, null);
+			if (jassReturnValue == null) {
+				return null;
+			}
+			return jassReturnValue.visit(visitor);
 		}
-		return jassReturnValue.visit(visitor);
+		catch (final Exception exc) {
+			JassLog.report(exc);
+			throw exc;
+		}
 	}
 
 	default void runMethodReturnNothing(final GlobalScope globalScope, final Integer idxVtable,
 			final List<JassValue> arguments) {
-		final Integer instructionPtr = getStructValue().getType().getMethodTable().get(idxVtable);
-		arguments.add(0, getStructValue());
-		final JassThread thread = globalScope.createThread(instructionPtr, arguments, TriggerExecutionScope.EMPTY);
-		globalScope.runThreadUntilCompletion(thread);
+		try {
+			final Integer instructionPtr = getStructValue().getType().getMethodTable().get(idxVtable);
+			arguments.add(0, getStructValue());
+			final JassThread thread = globalScope.createThread(instructionPtr, arguments, TriggerExecutionScope.EMPTY);
+			globalScope.runThreadUntilCompletion(thread);
+		}
+		catch (final Exception exc) {
+			JassLog.report(exc);
+			throw exc;
+		}
 	}
 }

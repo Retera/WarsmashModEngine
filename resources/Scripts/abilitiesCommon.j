@@ -2266,6 +2266,20 @@ library GenericAbilityBaseTypes requires AbilityAPI, BehaviorAPI
 			// so you need to implement those 
 		endstruct
 	endscope
+	
+	scope Passive
+	
+		/* abstract */ struct AbstractGenericPassiveAbility extends GenericSingleIconAbility
+		
+			public static method create takes integer aliasId, integer orderId returns thistype
+				local thistype this = .allocate(aliasId)
+				set this.alias = aliasId
+				set this.abilityButton = OrderButtonPassive.create(orderId, this)
+				call AbilityAddOrderButton(this, this.abilityButton)
+				return this
+			endmethod
+		endstruct
+	endscope
 endlibrary
 
 //=====================================================
@@ -2284,7 +2298,7 @@ library BuffAPI requires AbilityAPI
 		method getAliasId takes nothing returns integer defaults GetAbilityAliasId(this)
 		method getCodeId takes nothing returns integer defaults GetAbilityCodeId(this)
 	endinterface
-
+	
 	struct BuffTimed extends Buff
 		effect fx
 		real duration
@@ -2294,8 +2308,6 @@ library BuffAPI requires AbilityAPI
 		public static method create takes integer aliasId, real duration returns thistype
 			local thistype this = .allocate(aliasId)
 			this.duration = duration
-			this.tickTrigger = CreateTrigger()
-			call TriggerAddAction(this.tickTrigger, method this.onTick)
 			return this
 		endmethod
 
@@ -2305,11 +2317,17 @@ library BuffAPI requires AbilityAPI
 		method onBuffRemove takes unit target returns nothing
 		endmethod
 
+		method refreshExpiration takes nothing returns nothing
+			integer durationTicks = R2I(this.duration / au_SIMULATION_STEP_TIME)
+			this.expireTick = GetGameTurnTick() + durationTicks
+		endmethod
+
 		method onAdd takes unit target returns nothing
 			onBuffAdd(target)
 			this.fx = AddSpellEffectTargetById(getAliasId(), EFFECT_TYPE_TARGET, target, null)
-			integer durationTicks = R2I(this.duration / au_SIMULATION_STEP_TIME)
-			this.expireTick = GetGameTurnTick() + durationTicks
+			this.tickTrigger = CreateTrigger()
+			call TriggerAddAction(this.tickTrigger, method this.onTick)
+			refreshExpiration()
 			call TriggerRegisterOnUnitTick(this.tickTrigger, target)
 		endmethod
 
@@ -2646,6 +2664,7 @@ library AbilitySpellBaseTypes requires GenericAbilityBaseTypes, AbilityFieldDefa
 		SecondaryTags castingSecondaryTags
 		real duration
 		real heroDuration
+		real areaOfEffect
 		
 		method innerPopulate takes gameobject editorData, integer level returns nothing
 			this.manaCost = GetGameObjectFieldAsInteger(editorData, ABILITY_FIELD_MANA_COST + I2S(level), 0)
@@ -2653,6 +2672,7 @@ library AbilitySpellBaseTypes requires GenericAbilityBaseTypes, AbilityFieldDefa
 			this.castRange = GetGameObjectFieldAsReal(editorData, ABILITY_FIELD_CAST_RANGE + I2S(level), 0)
 			this.cooldown = GetGameObjectFieldAsReal(editorData, ABILITY_FIELD_COOLDOWN + I2S(level), 0)
 			this.castingTime = GetGameObjectFieldAsReal(editorData, ABILITY_FIELD_CASTING_TIME + I2S(level), 0)
+			this.areaOfEffect = GetGameObjectFieldAsReal(editorData, ABILITY_FIELD_AREA_OF_EFFECT + I2S(level), 0)
 			
 			integer requiredLevel = GetGameObjectFieldAsInteger(editorData, ABILITY_FIELD_REQUIRED_LEVEL + I2S(level), 0)
 			if this.targetsAllowed != null then
@@ -2737,6 +2757,10 @@ library AbilitySpellBaseTypes requires GenericAbilityBaseTypes, AbilityFieldDefa
 
 		method setCastingTime takes real castingTime returns nothing
 			this.castingTime = castingTime
+		endmethod
+
+		method getAreaOfEffect takes nothing returns real
+			return this.areaOfEffect
 		endmethod
 
 		// required by native API (see "interface Ability")
@@ -3272,6 +3296,16 @@ library AbilitySpellBaseTypes requires GenericAbilityBaseTypes, AbilityFieldDefa
 			endmethod
 		endstruct
 	endscope
+
+	scope Passive
+		private interface AbilitySpellInterface extends AbstractGenericPassiveAbility
+			method populateData takes gameobject editorData, integer level returns nothing
+		endinterface
+		
+		struct AbilitySpellPassive extends AbilitySpellInterface
+			implement AbilitySpell
+		endstruct
+	endscope
 endlibrary
 
 //==============================================
@@ -3280,6 +3314,10 @@ endlibrary
 library MathUtils
 	// "struct math" is based on code by Wietlol
 	// from here: https://www.hiveworkshop.com/threads/rounding-function-in-jass.288720/#post-3097507
+	// (when I reached out to Wietlol, he agreed that it was fine to have this included in Warsmash,
+	//  although he suggested these functions should be natives for performance; so I am taking
+	//  this to mean that he provides this code to us under the terms of the Warsmash licensing
+	//  or any similar software license of our choice)
 	struct Math
 		// Rounding
 		static method floor takes real r returns real
@@ -3329,4 +3367,106 @@ library ProjectileAPI requires AbilityTargetAPI, AbilitiesCommonLegacy
 		method onHit takes abilitytarget whichTarget returns nothing
 		method onLaunch takes abilitytarget whichTarget returns nothing defaults nothing
 	endinterface
+endlibrary
+
+library AuraAPI requires AbilityAPI, BuffAPI, MathUtils
+	struct BuffAuraBase extends BuffTimed
+		public constant static real AURA_BUFF_DECAY_TIME = 2.00
+		public constant static integer AURA_BUFF_DECAY_TIME_TICKS = R2I(Math.ceil(AURA_BUFF_DECAY_TIME / au_SIMULATION_STEP_TIME))
+
+		public static method create takes integer alias returns thistype
+			return .allocate(alias, AURA_BUFF_DECAY_TIME)
+		endmethod
+
+		constant method getDurationMax takes nothing returns real
+			return 0 // publish as if we are infinite duration so it wont flash black
+		endmethod
+
+		constant method getDurationRemaining takes unit target returns real
+			return 0
+		endmethod
+
+		constant method isTimedLifeBar takes nothing returns boolean
+			return false
+		endmethod
+	endstruct
+
+	struct AbilityAuraBase extends AbilitySpellPassive
+		public constant static real AURA_PERIODIC_CHECK_TIME = 2.00
+		public constant static integer AURA_PERIODIC_CHECK_TIME_TICKS = R2I(Math.ceil(AURA_PERIODIC_CHECK_TIME / au_SIMULATION_STEP_TIME))
+
+		integer buffId
+		effect fx
+		integer nextAreaCheck = 0
+		trigger tickTrigger
+		filterfunc enumFilter
+		unit source
+
+		public static method create takes integer alias returns thistype
+			local thistype this = .allocate(alias)
+			this.enumFilter = Filter(method this.unitInRangeEnum)
+			return this
+		endmethod
+
+		method populateAuraData takes gameobject editorData, integer level returns nothing
+		endmethod
+
+		method createBuff takes unit source, unit target returns BuffAuraBase
+			return null
+		endmethod
+
+		method populateData takes gameobject editorData, integer level returns nothing
+			this.buffId = GetGameObjectBuffId(editorData, level, 0)
+			populateAuraData(editorData, level)
+		endmethod
+
+		method onAdd takes unit source returns nothing
+			this.source = source
+			this.fx = AddSpellEffectTargetById(getAliasId(), EFFECT_TYPE_TARGET, source, null)
+			this.tickTrigger = CreateTrigger()
+			call TriggerAddAction(this.tickTrigger, method this.onTick)
+			call TriggerRegisterOnUnitTick(this.tickTrigger, source)
+		endmethod
+
+		method onRemove takes unit source returns nothing
+			call DestroyEffect(this.fx)
+			call DestroyTrigger(this.tickTrigger)
+		endmethod
+
+		private method unitInRangeEnum takes nothing returns boolean
+			unit enumUnit = GetFilterUnit()
+			if (GetUnitTargetError(enumUnit, source, getTargetsAllowed(), false) == null) then
+				BuffAuraBase existingBuff = BuffAuraBase(GetUnitAbility(enumUnit, getBuffId()))
+				boolean addNewBuff = false
+				integer level = getLevel()
+				if (existingBuff == null) then
+					addNewBuff = true
+				else
+					if (GetAbilityLevel(existingBuff) < level) then
+						call RemoveUnitAbility(enumUnit, existingBuff)
+						addNewBuff = true
+					else
+						call existingBuff.refreshExpiration()
+					endif
+				endif
+				if (addNewBuff) then
+					BuffAuraBase newBuff = createBuff(source, enumUnit)
+					call AddUnitAbility(enumUnit, newBuff)
+				endif
+			endif
+			return false
+		endmethod
+
+		method onTick takes nothing returns nothing
+			integer gameTurnTick = GetGameTurnTick()
+			if (gameTurnTick >= nextAreaCheck) then
+				call GroupEnumUnitsInRangeOfUnit(null, source, getAreaOfEffect(), this.enumFilter)
+				nextAreaCheck = gameTurnTick + AURA_PERIODIC_CHECK_TIME_TICKS
+			endif
+		endmethod
+
+		method getBuffId takes nothing returns integer
+			return buffId
+		endmethod
+	endstruct
 endlibrary

@@ -37,7 +37,6 @@ scope Blizzard initializer register
 		integer shardCount
 		integer waveCount
 		real waveDelay
-		real areaOfEffect
 		integer effectId
 
 		integer currentWave
@@ -61,8 +60,7 @@ scope Blizzard initializer register
 	
 			this.waveDelay = getCastingTime()
 			setCastingTime(0) // dont use the casting time field normally
-			this.areaOfEffect = GetGameObjectFieldAsReal(editorData, ABILITY_FIELD_AREA_OF_EFFECT + I2S(level), 0)
-			call SetOrderButtonAOE(this.abilityButton, this.areaOfEffect)
+			call SetOrderButtonAOE(this.abilityButton, getAreaOfEffect())
 			this.effectId = GetGameObjectEffectID(editorData, level)
 		endmethod
 
@@ -78,13 +76,14 @@ scope Blizzard initializer register
 				real targetX = GetAbilityTargetX(target)
 				real targetY = GetAbilityTargetY(target)
 				real waveDelay
+				real areaOfEffect = getAreaOfEffect()
 				if (this.waveForDamage) then
 					this.currentWave++
 					waveDelay = this.waveDelay
 					this.waveForDamage = false
 					call GroupClear(damageTargets)
-					call SetRect(recycleRect, targetX - this.areaOfEffect, targetY - this.areaOfEffect, targetX + this.areaOfEffect, targetY + this.areaOfEffect)
-					call GroupEnumUnitsInRect(damageTargets, recycleRect, filter.reset(target, this.areaOfEffect, caster, getTargetsAllowed()))
+					call SetRect(recycleRect, targetX - areaOfEffect, targetY - areaOfEffect, targetX + areaOfEffect, targetY + areaOfEffect)
+					call GroupEnumUnitsInRect(damageTargets, recycleRect, filter.reset(target, areaOfEffect, caster, getTargetsAllowed()))
 					real damagePerTarget = this.damage
 					real damageTargetsSize = GroupGetSize(damageTargets)
 					if ((damagePerTarget * damageTargetsSize) > maximumDamagePerWave) then
@@ -115,7 +114,7 @@ scope Blizzard initializer register
 						exitwhen i >= this.shardCount
 
 						randomAngle = GetRandomReal(0, bj_PI * 2)
-						randomDistance = GetRandomReal(0, this.areaOfEffect)
+						randomDistance = GetRandomReal(0, areaOfEffect)
 						call DestroyEffect(AddSpellEffectById(this.effectId, EFFECT_TYPE_EFFECT, targetX + Cos(randomAngle) * randomDistance, targetY + Sin(randomAngle) * randomDistance))
 						call UnitSpellSoundEffect(caster, this.effectId)
 

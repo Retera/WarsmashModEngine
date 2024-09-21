@@ -27,7 +27,9 @@ public class JassNativeManager {
 			final List<JassParameterDefinition> parameterDefinitions, final JassTypeToken returnTypeToken,
 			final Scope globals) {
 		if (this.registeredNativeNames.contains(name)) {
-			throw new RuntimeException("Native already registered: " + name);
+			System.err.println("Native already registered: " + name);
+			return;
+//			throw new RuntimeException("Native already registered: " + name);
 		}
 		final JassFunction nativeCode = this.nameToNativeCode.remove(name);
 		final List<JassParameter> parameters = JassParameterDefinition.resolve(parameterDefinitions, globals);

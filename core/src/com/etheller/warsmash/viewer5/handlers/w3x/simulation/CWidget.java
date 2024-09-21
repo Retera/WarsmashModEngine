@@ -148,7 +148,10 @@ public abstract class CWidget extends CExtensibleHandleAbstract implements Abili
 			final JassGameEventsWar3 eventType) {
 		final List<CWidgetEvent> eventList = getEventList(eventType);
 		if (eventList != null) {
-			for (final CWidgetEvent event : eventList) {
+			for (int i = eventList.size() - 1; i >= 0; i--) {
+				// okay if it removes self from this during this because of reverse
+				// iteration order
+				final CWidgetEvent event = eventList.get(i);
 				event.fire(this, eventScopeBuilder.create(eventType, event.getTrigger(), this));
 			}
 		}

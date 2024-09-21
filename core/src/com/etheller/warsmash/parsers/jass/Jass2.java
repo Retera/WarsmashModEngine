@@ -762,7 +762,7 @@ public class Jass2 {
 						CommonEnvironment.this.simulation.unregisterTimer(timer);
 						return null;
 					});
-			timerType.setConstructorNative(new HandleJassTypeConstructor("DestroyTimer"));
+			timerType.setDestructorNative(new HandleJassTypeConstructor("DestroyTimer"));
 			jassProgramVisitor.getJassNativeManager().createNative("TimerStart",
 					(arguments, globalScope, triggerScope) -> {
 						final CTimerJassBase timer = nullable(arguments, 0, ObjectJassValueVisitor.getInstance());
@@ -5059,10 +5059,84 @@ public class Jass2 {
 					new LoadHashtableValueFunc(BooleanJassValue.FALSE));
 			jassProgramVisitor.getJassNativeManager().createNative("LoadStr",
 					new LoadHashtableValueFunc(StringJassValue.EMPTY_STRING));
+			jassProgramVisitor.getJassNativeManager().createNative("LoadPlayerHandle",
+					new LoadHashtableValueFunc(playerType.getNullValue()));
+			jassProgramVisitor.getJassNativeManager().createNative("LoadWidgetHandle",
+					new LoadHashtableValueFunc(widgetType.getNullValue()));
+			jassProgramVisitor.getJassNativeManager().createNative("LoadDestructableHandle",
+					new LoadHashtableValueFunc(destructableType.getNullValue()));
+			jassProgramVisitor.getJassNativeManager().createNative("LoadItemHandle",
+					new LoadHashtableValueFunc(itemType.getNullValue()));
+			jassProgramVisitor.getJassNativeManager().createNative("LoadUnitHandle",
+					new LoadHashtableValueFunc(unitType.getNullValue()));
+			jassProgramVisitor.getJassNativeManager().createNative("LoadAbilityHandle",
+					new LoadHashtableValueFunc(abilityType.getNullValue()));
+			jassProgramVisitor.getJassNativeManager().createNative("LoadTimerHandle",
+					new LoadHashtableValueFunc(timerType.getNullValue()));
 			jassProgramVisitor.getJassNativeManager().createNative("LoadTriggerHandle",
-					new LoadHashtableValueFunc(new HandleJassValue(triggerType, null)));
+					new LoadHashtableValueFunc(triggerType.getNullValue()));
+			jassProgramVisitor.getJassNativeManager().createNative("LoadTriggerConditionHandle",
+					new LoadHashtableValueFunc(triggerconditionType.getNullValue()));
+			jassProgramVisitor.getJassNativeManager().createNative("LoadTriggerActionHandle",
+					new LoadHashtableValueFunc(triggeractionType.getNullValue()));
+			jassProgramVisitor.getJassNativeManager().createNative("LoadTriggerEventHandle",
+					new LoadHashtableValueFunc(eventType.getNullValue()));
+			jassProgramVisitor.getJassNativeManager().createNative("LoadForceHandle",
+					new LoadHashtableValueFunc(forceType.getNullValue()));
+			jassProgramVisitor.getJassNativeManager().createNative("LoadGroupHandle",
+					new LoadHashtableValueFunc(groupType.getNullValue()));
+			jassProgramVisitor.getJassNativeManager().createNative("LoadLocationHandle",
+					new LoadHashtableValueFunc(locationType.getNullValue()));
+			jassProgramVisitor.getJassNativeManager().createNative("LoadRectHandle",
+					new LoadHashtableValueFunc(rectType.getNullValue()));
+			jassProgramVisitor.getJassNativeManager().createNative("LoadBooleanExprHandle",
+					new LoadHashtableValueFunc(boolexprType.getNullValue()));
 			jassProgramVisitor.getJassNativeManager().createNative("LoadSoundHandle",
-					new LoadHashtableValueFunc(new HandleJassValue(soundType, null)));
+					new LoadHashtableValueFunc(soundType.getNullValue()));
+			jassProgramVisitor.getJassNativeManager().createNative("LoadEffectHandle",
+					new LoadHashtableValueFunc(effectType.getNullValue()));
+			jassProgramVisitor.getJassNativeManager().createNative("LoadUnitPoolHandle",
+					new LoadHashtableValueFunc(unitpoolType.getNullValue()));
+			jassProgramVisitor.getJassNativeManager().createNative("LoadItemPoolHandle",
+					new LoadHashtableValueFunc(itempoolType.getNullValue()));
+			jassProgramVisitor.getJassNativeManager().createNative("LoadQuestHandle",
+					new LoadHashtableValueFunc(questType.getNullValue()));
+			jassProgramVisitor.getJassNativeManager().createNative("LoadQuestItemHandle",
+					new LoadHashtableValueFunc(questitemType.getNullValue()));
+			jassProgramVisitor.getJassNativeManager().createNative("LoadDefeatConditionHandle",
+					new LoadHashtableValueFunc(defeatconditionType.getNullValue()));
+			jassProgramVisitor.getJassNativeManager().createNative("LoadTimerDialogHandle",
+					new LoadHashtableValueFunc(timerdialogType.getNullValue()));
+			jassProgramVisitor.getJassNativeManager().createNative("LoadLeaderboardHandle",
+					new LoadHashtableValueFunc(leaderboardType.getNullValue()));
+			jassProgramVisitor.getJassNativeManager().createNative("LoadMultiboardHandle",
+					new LoadHashtableValueFunc(multiboardType.getNullValue()));
+			jassProgramVisitor.getJassNativeManager().createNative("LoadMultiboardItemHandle",
+					new LoadHashtableValueFunc(multiboarditemType.getNullValue()));
+			jassProgramVisitor.getJassNativeManager().createNative("LoadTrackableHandle",
+					new LoadHashtableValueFunc(trackableType.getNullValue()));
+			jassProgramVisitor.getJassNativeManager().createNative("LoadDialogHandle",
+					new LoadHashtableValueFunc(dialogType.getNullValue()));
+			jassProgramVisitor.getJassNativeManager().createNative("LoadButtonHandle",
+					new LoadHashtableValueFunc(buttonType.getNullValue()));
+			jassProgramVisitor.getJassNativeManager().createNative("LoadTextTagHandle",
+					new LoadHashtableValueFunc(texttagType.getNullValue()));
+			jassProgramVisitor.getJassNativeManager().createNative("LoadLightningHandle",
+					new LoadHashtableValueFunc(lightningType.getNullValue()));
+			jassProgramVisitor.getJassNativeManager().createNative("LoadImageHandle",
+					new LoadHashtableValueFunc(imageType.getNullValue()));
+			jassProgramVisitor.getJassNativeManager().createNative("LoadUbersplatHandle",
+					new LoadHashtableValueFunc(ubersplatType.getNullValue()));
+			jassProgramVisitor.getJassNativeManager().createNative("LoadRegionHandle",
+					new LoadHashtableValueFunc(regionType.getNullValue()));
+			jassProgramVisitor.getJassNativeManager().createNative("LoadFogStateHandle",
+					new LoadHashtableValueFunc(fogstateType.getNullValue()));
+			jassProgramVisitor.getJassNativeManager().createNative("LoadFogModifierHandle",
+					new LoadHashtableValueFunc(fogmodifierType.getNullValue()));
+			jassProgramVisitor.getJassNativeManager().createNative("LoadHashtableHandle",
+					new LoadHashtableValueFunc(hashtableType.getNullValue()));
+			jassProgramVisitor.getJassNativeManager().createNative("LoadAgentHandle",
+					new LoadHashtableValueFunc(agentType.getNullValue()));
 
 			jassProgramVisitor.getJassNativeManager().createNative("HaveSavedInteger",
 					new HaveSavedHashtableValueFunc(JassType.INTEGER));
@@ -8069,6 +8143,22 @@ public class Jass2 {
 							return BooleanJassValue.of(!targetUnit.isDead());
 						}
 						return BooleanJassValue.FALSE;
+					});
+			jassProgramVisitor.getJassNativeManager().createNative("GetUnitGoldCost",
+					(arguments, globalScope, triggerScope) -> {
+						final CUnit targetUnit = nullable(arguments, 0, ObjectJassValueVisitor.getInstance());
+						if (targetUnit != null) {
+							return IntegerJassValue.of(targetUnit.getUnitType().getGoldCost());
+						}
+						return IntegerJassValue.ZERO;
+					});
+			jassProgramVisitor.getJassNativeManager().createNative("GetUnitWoodCost",
+					(arguments, globalScope, triggerScope) -> {
+						final CUnit targetUnit = nullable(arguments, 0, ObjectJassValueVisitor.getInstance());
+						if (targetUnit != null) {
+							return IntegerJassValue.of(targetUnit.getUnitType().getLumberCost());
+						}
+						return IntegerJassValue.ZERO;
 					});
 
 			jassProgramVisitor.getJassNativeManager().createNative("ConvertResourceType",

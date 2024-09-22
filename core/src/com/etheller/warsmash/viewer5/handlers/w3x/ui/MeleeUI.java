@@ -3,6 +3,7 @@ package com.etheller.warsmash.viewer5.handlers.w3x.ui;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -316,13 +317,9 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 	private MeleeUIMinimap meleeUIMinimap;
 	private final CPlayerUnitOrderListener unitOrderListener;
 	private StringFrame errorMessageFrame;
-	// TODO array of game msgs?
-//	private final List<StringFrame> gameMessageFrames = new ArrayList<>();
-	private StringFrame gameMessagesFrame;
+	private final ArrayDeque<GameMessage> gameMessages = new ArrayDeque<>();
 	private long lastErrorMessageExpireTime;
 	private long lastErrorMessageFadeTime;
-	private long lastGameMessageExpireTime;
-	private long lastGameMessageFadeTime;
 
 	private MenuCursorState cursorState;
 	private Color cursorColor;
@@ -419,6 +416,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 
 	private boolean showing;
 	private final CommandCardActivationReceiverPreviewCallback activationReceiverPreviewCallback = new CommandCardActivationReceiverPreviewCallback();
+	private float worldFrameUnitMessageFontHeight;
 
 	public MeleeUI(final DataSource dataSource, final ExtendViewport uiViewport, final Scene uiScene,
 			final Scene portraitScene, final CameraPreset[] cameraPresets, final CameraRates cameraRates,
@@ -1180,17 +1178,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 		this.errorMessageFrame.setFontShadowOffsetY(GameUI.convertY(this.uiViewport, -0.001f));
 		this.errorMessageFrame.setVisible(false);
 
-		final float worldFrameUnitMessageFontHeight = fontHeights.getFieldFloatValue("WorldFrameUnitMessage");
-		this.gameMessagesFrame = this.rootFrame.createStringFrame("SmashUnitMessageFrame", this.rootFrame, Color.WHITE,
-				TextJustify.LEFT, TextJustify.MIDDLE, worldFrameUnitMessageFontHeight);
-		this.gameMessagesFrame.addAnchor(new AnchorDefinition(FramePoint.LEFT, 0, 0));
-		this.gameMessagesFrame.setWidth(GameUI.convertX(this.uiViewport, 0.35f));
-		this.gameMessagesFrame.setHeight(GameUI.convertY(this.uiViewport, worldFrameUnitMessageFontHeight));
-
-		this.gameMessagesFrame.setFontShadowColor(new Color(0f, 0f, 0f, 0.9f));
-		this.gameMessagesFrame.setFontShadowOffsetX(GameUI.convertX(this.uiViewport, 0.001f));
-		this.gameMessagesFrame.setFontShadowOffsetY(GameUI.convertY(this.uiViewport, -0.001f));
-		this.gameMessagesFrame.setVisible(true);
+		this.worldFrameUnitMessageFontHeight = fontHeights.getFieldFloatValue("WorldFrameUnitMessage");
 
 		commandButtonIndex = 0;
 		final BitmapFont commandCardNumberOverlayFont = this.rootFrame
@@ -1305,7 +1293,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 			Gdx.input.setCursorCatched(true);
 		}
 		this.includeFrames = new String[] { "EscMenuBackdrop", "ScriptDialog", "SmashHoverTip", "SmashHpBar" };
-		this.ignoreFrames = new String[] { "SmashHoverTip", "SmashHpBar" };
+		this.ignoreFrames = new String[] { "SmashHoverTip", "SmashHpBar", "SmashGameMessageFrame" };
 
 		this.meleeUIMinimap = createMinimap(this.war3MapViewer);
 
@@ -1475,14 +1463,51 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 		this.errorMessageFrame.setAlpha(1.0f);
 	}
 
+	private static final class GameMessage {
+		private final StringFrame stringFrame;
+		private final long lastGameMessageExpireTime;
+		private final long lastGameMessageFadeTime;
+
+		public GameMessage(final StringFrame stringFrame, final long lastGameMessageExpireTime,
+				final long lastGameMessageFadeTime) {
+			this.stringFrame = stringFrame;
+			this.lastGameMessageExpireTime = lastGameMessageExpireTime;
+			this.lastGameMessageFadeTime = lastGameMessageFadeTime;
+		}
+	}
+
 	public void showGameMessage(final String message, final float expireTime) {
-		this.rootFrame.setText(this.gameMessagesFrame, message);
-		this.gameMessagesFrame.setVisible(true);
+		final StringFrame gameMessagesFrame = this.rootFrame.createStringFrame("SmashGameMessageFrame", this.rootFrame,
+				Color.WHITE, TextJustify.LEFT, TextJustify.MIDDLE, this.worldFrameUnitMessageFontHeight);
+		gameMessagesFrame.setWidth(GameUI.convertX(this.uiViewport, 0.35f));
+		gameMessagesFrame.setHeight(GameUI.convertY(this.uiViewport, this.worldFrameUnitMessageFontHeight));
+
+		gameMessagesFrame.setFontShadowColor(new Color(0f, 0f, 0f, 0.9f));
+		gameMessagesFrame.setFontShadowOffsetX(GameUI.convertX(this.uiViewport, 0.001f));
+		gameMessagesFrame.setFontShadowOffsetY(GameUI.convertY(this.uiViewport, -0.001f));
+		gameMessagesFrame.setVisible(true);
+
+		this.rootFrame.setText(gameMessagesFrame, message);
+		gameMessagesFrame.setVisible(true);
+
 		final long millis = TimeUtils.millis();
 
-		this.lastGameMessageExpireTime = millis + (long) (expireTime * 1000);
-		this.lastGameMessageFadeTime = millis + (long) (expireTime * 900);
-		this.gameMessagesFrame.setAlpha(1.0f);
+		final long lastGameMessageExpireTime = millis + (long) (expireTime * 1000);
+		final long lastGameMessageFadeTime = millis + (long) (expireTime * 900);
+		gameMessagesFrame.addAnchor(new AnchorDefinition(FramePoint.LEFT, 0, 0));
+		if (!this.gameMessages.isEmpty()) {
+			final GameMessage lastFrame = this.gameMessages.getLast();
+			lastFrame.stringFrame
+					.addSetPoint(new SetPoint(FramePoint.BOTTOMLEFT, gameMessagesFrame, FramePoint.TOPLEFT, 0, 0));
+		}
+		this.gameMessages
+				.addLast(new GameMessage(gameMessagesFrame, lastGameMessageExpireTime, lastGameMessageFadeTime));
+		final Iterator<GameMessage> descendingIterator = this.gameMessages.descendingIterator();
+		while (descendingIterator.hasNext()) {
+			final GameMessage gameMessage = descendingIterator.next();
+			gameMessage.stringFrame.positionBounds(this.rootFrame, this.uiViewport);
+		}
+		gameMessagesFrame.setAlpha(1.0f);
 	}
 
 	@Override
@@ -1726,13 +1751,17 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 					/ (float) WORLD_FRAME_MESSAGE_FADE_DURATION;
 			this.errorMessageFrame.setAlpha(fadeAlpha);
 		}
-		if (currentMillis > this.lastGameMessageExpireTime) {
-			this.gameMessagesFrame.setVisible(false);
-		}
-		else if (currentMillis > this.lastGameMessageFadeTime) {
-			final float fadeAlpha = (this.lastGameMessageExpireTime - currentMillis)
-					/ (float) (this.lastGameMessageExpireTime - this.lastGameMessageFadeTime);
-			this.gameMessagesFrame.setAlpha(fadeAlpha);
+		final Iterator<GameMessage> iterator = this.gameMessages.iterator();
+		while (iterator.hasNext()) {
+			final GameMessage gameMessage = iterator.next();
+			if (currentMillis > gameMessage.lastGameMessageExpireTime) {
+				iterator.remove();
+			}
+			else if (currentMillis > gameMessage.lastGameMessageFadeTime) {
+				final float fadeAlpha = (gameMessage.lastGameMessageExpireTime - currentMillis)
+						/ (float) (gameMessage.lastGameMessageExpireTime - gameMessage.lastGameMessageFadeTime);
+				gameMessage.stringFrame.setAlpha(fadeAlpha);
+			}
 		}
 		if (this.currentMusics != null) {
 			if ((this.currentMusics[this.currentMusicIndex] != null)

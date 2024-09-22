@@ -1033,6 +1033,8 @@ library AbilitiesCommonLegacy requires TargetTypesAPI, AnimationTokensAPI
 
 	native RemoveTriggerEvent takes trigger whichTrigger, event whichEvent returns nothing
 
+	native LoadAgentHandle takes hashtable x, integer parentKey, integer childKey returns agent
+
 /*
  *	// below is the syntax of type cast, but it is not yet as simple as a native
  *
@@ -1377,6 +1379,8 @@ library HandleListAPI
 	native CreateHandleList takes nothing returns handlelist
 	native HandleListAdd takes handlelist whichList, handle toAdd returns nothing
 	native HandleListRemove takes handlelist whichList, handle toRemove returns boolean
+	native HandleListGet takes handlelist whichList, integer index returns handle
+	native HandleListSize takes handlelist whichList returns integer
 endlibrary
 
 //=====================================================
@@ -2269,7 +2273,7 @@ library GenericAbilityBaseTypes requires AbilityAPI, BehaviorAPI
 	
 	scope Passive
 	
-		/* abstract */ struct AbstractGenericPassiveAbility extends GenericSingleIconAbility
+		/* abstract */ struct AbstractGenericPassiveAbility extends GenericSingleIconAbilityBase
 		
 			public static method create takes integer aliasId, integer orderId returns thistype
 				local thistype this = .allocate(aliasId)
@@ -3292,6 +3296,18 @@ library AbilitySpellBaseTypes requires GenericAbilityBaseTypes, AbilityFieldDefa
 			endmethod
 			
 			method use takes unit caster returns nothing
+				// NOTE: in the future, maybe call "checkUsable" here instead of a custom "charge mana"
+				// function, then just literally deduct the mana or something. That would
+				// require "checkUsable" to be less stupid and not call Pass/Fail natives,
+				// and to instead work the same in jass as java
+				if (not ChargeMana(caster, this.getManaCost())) then
+					// if the unit had enough mana to click the icon of this, but was mana-drained while walking
+					// from over there to here before completing the cast, we must pop up the error
+					// independent of "this.checkUsable"
+					call ShowInterfaceError(GetOwningPlayer(caster), COMMAND_STRING_ERROR_KEY_NOT_ENOUGH_MANA)
+					return
+				endif
+				call StartUnitAbilityCooldown(caster, this.getCodeId(), this.getCooldown())
 				call this.doEffect(caster, null)
 			endmethod
 		endstruct
@@ -3371,7 +3387,7 @@ endlibrary
 
 library AuraAPI requires AbilityAPI, BuffAPI, MathUtils
 	struct BuffAuraBase extends BuffTimed
-		public constant static real AURA_BUFF_DECAY_TIME = 2.00
+		public constant static real AURA_BUFF_DECAY_TIME = 3.00
 		public constant static integer AURA_BUFF_DECAY_TIME_TICKS = R2I(Math.ceil(AURA_BUFF_DECAY_TIME / au_SIMULATION_STEP_TIME))
 
 		public static method create takes integer alias returns thistype
@@ -3402,8 +3418,8 @@ library AuraAPI requires AbilityAPI, BuffAPI, MathUtils
 		filterfunc enumFilter
 		unit source
 
-		public static method create takes integer alias returns thistype
-			local thistype this = .allocate(alias)
+		public static method create takes integer alias, integer orderId returns thistype
+			local thistype this = .allocate(alias, orderId)
 			this.enumFilter = Filter(method this.unitInRangeEnum)
 			return this
 		endmethod
@@ -3416,7 +3432,7 @@ library AuraAPI requires AbilityAPI, BuffAPI, MathUtils
 		endmethod
 
 		method populateData takes gameobject editorData, integer level returns nothing
-			this.buffId = GetGameObjectBuffId(editorData, level, 0)
+			this.buffId = GetGameObjectBuffID(editorData, level, 0)
 			populateAuraData(editorData, level)
 		endmethod
 
@@ -3443,10 +3459,12 @@ library AuraAPI requires AbilityAPI, BuffAPI, MathUtils
 					addNewBuff = true
 				else
 					if (GetAbilityLevel(existingBuff) < level) then
+						call BJDebugMsg("updating buff level")
 						call RemoveUnitAbility(enumUnit, existingBuff)
 						addNewBuff = true
 					else
 						call existingBuff.refreshExpiration()
+						call BJDebugMsg("called refresh expiration")
 					endif
 				endif
 				if (addNewBuff) then

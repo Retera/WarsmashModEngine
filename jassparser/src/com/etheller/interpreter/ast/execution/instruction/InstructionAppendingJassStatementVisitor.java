@@ -75,26 +75,35 @@ public class InstructionAppendingJassStatementVisitor
 	private static final PushLiteralInstruction PUSH_NOTHING = new PushLiteralInstruction(
 			JassReturnNothingStatement.RETURN_NOTHING_NOTICE);
 	private final List<JassInstruction> instructions;
-	private final Scope globalScope;
+	private final Scope scope;
 	private Map<String, Integer> nameToLocalId = new HashMap<>();
 	private Map<String, JassType> nameToLocalType = new HashMap<>();
 	private int nextLocalId;
 	private final ArrayDeque<LoopImpl> loopStartInstructionPtrs = new ArrayDeque<>();
 	private StructJassType enclosingStructType;
 
-	public InstructionAppendingJassStatementVisitor(final List<JassInstruction> instructions, final Scope globalScope,
+	public InstructionAppendingJassStatementVisitor(final List<JassInstruction> instructions, final Scope scope,
 			final List<JassParameter> parameters) {
 		this.instructions = instructions;
-		this.globalScope = globalScope;
+		this.scope = scope;
 		this.nextLocalId = 0;
 		for (final JassParameter parameter : parameters) {
 			this.nameToLocalId.put(parameter.getIdentifier(), this.nextLocalId++);
 			this.nameToLocalType.put(parameter.getIdentifier(), parameter.getType());
 		}
-	}
 
-	public void setEnclosingStructType(final StructJassType type) {
-		this.enclosingStructType = type;
+		final GlobalScopeAssignable thistypeGlobal = scope.getAssignableGlobal(GlobalScope.KEYWORD_THISTYPE);
+		if (thistypeGlobal != null) {
+			final JassValue thistypeValue = thistypeGlobal.getValue();
+			if (thistypeValue != null) {
+				final StaticStructTypeJassValue staticStructType = thistypeValue
+						.visit(StaticStructTypeJassValueVisitor.getInstance());
+				if (staticStructType != null) {
+					final StructJassType staticType = staticStructType.getStaticType();
+					this.enclosingStructType = staticType;
+				}
+			}
+		}
 	}
 
 	public int getLocalId(final String name) {
@@ -115,7 +124,7 @@ public class InstructionAppendingJassStatementVisitor
 			this.instructions.add(new LocalArrayAssignmentInstruction(localId));
 		}
 		else {
-			final int globalId = this.globalScope.getGlobalId(identifier);
+			final int globalId = this.scope.getGlobalId(identifier);
 			if (globalId != -1) {
 				this.instructions.add(new GlobalArrayAssignmentInstruction(globalId));
 			}
@@ -214,10 +223,10 @@ public class InstructionAppendingJassStatementVisitor
 	public Void visit(final JassLocalDefinitionStatement statement) {
 		final String identifier = statement.getIdentifier();
 		this.nameToLocalId.put(identifier, this.nextLocalId++);
-		this.nameToLocalType.put(identifier, statement.getType().resolve(this.globalScope));
+		this.nameToLocalType.put(identifier, statement.getType().resolve(this.scope));
 		insertExpressionInstructions(statement.getExpression());
 		if (CHECK_TYPES) {
-			this.instructions.add(new TypeCheckInstruction(statement.getType().resolve(this.globalScope)));
+			this.instructions.add(new TypeCheckInstruction(statement.getType().resolve(this.scope)));
 		}
 		return null;
 	}
@@ -225,7 +234,7 @@ public class InstructionAppendingJassStatementVisitor
 	@Override
 	public Void visit(final JassLocalStatement statement) {
 		final String identifier = statement.getIdentifier();
-		final JassType type = statement.getType().resolve(this.globalScope);
+		final JassType type = statement.getType().resolve(this.scope);
 		this.nameToLocalId.put(identifier, this.nextLocalId++);
 		this.nameToLocalType.put(identifier, type);
 		final ArrayJassType arrayType = type.visit(ArrayTypeVisitor.getInstance());
@@ -241,13 +250,13 @@ public class InstructionAppendingJassStatementVisitor
 	@Override
 	public Void visit(final JassGlobalStatement statement) {
 		final String identifier = statement.getIdentifier();
-		final JassType type = statement.getType().resolve(this.globalScope);
+		final JassType type = statement.getType().resolve(this.scope);
 		final JassType arrayPrimType = type.visit(ArrayPrimitiveTypeVisitor.getInstance());
 		if (arrayPrimType != null) {
-			this.globalScope.createGlobalArray(statement.getQualifiers(), identifier, type);
+			this.scope.createGlobalArray(statement.getQualifiers(), identifier, type);
 		}
 		else {
-			this.globalScope.createGlobal(statement.getQualifiers(), identifier, type);
+			this.scope.createGlobal(statement.getQualifiers(), identifier, type);
 		}
 		return null;
 	}
@@ -255,16 +264,16 @@ public class InstructionAppendingJassStatementVisitor
 	@Override
 	public Void visit(final JassGlobalDefinitionStatement statement) {
 		final String identifier = statement.getIdentifier();
-		final JassType type = statement.getType().resolve(this.globalScope);
+		final JassType type = statement.getType().resolve(this.scope);
 		final JassType arrayPrimType = type.visit(ArrayPrimitiveTypeVisitor.getInstance());
 		if (arrayPrimType != null) {
-			this.globalScope.createGlobalArray(statement.getQualifiers(), identifier, type);
+			this.scope.createGlobalArray(statement.getQualifiers(), identifier, type);
 		}
 		else {
-			this.globalScope.createGlobal(statement.getQualifiers(), identifier, type);
+			this.scope.createGlobal(statement.getQualifiers(), identifier, type);
 		}
 		insertExpressionInstructions(statement.getExpression());
-		final int globalId = this.globalScope.getGlobalId(identifier);
+		final int globalId = this.scope.getGlobalId(identifier);
 		if (globalId != -1) {
 			this.instructions.add(new GlobalAssignmentInstruction(globalId));
 		}
@@ -334,9 +343,8 @@ public class InstructionAppendingJassStatementVisitor
 			}
 			if (!found) {
 				if (this.enclosingStructType != null) {
-					final int staticStructValueGlobalId = this.globalScope
-							.getGlobalId(this.enclosingStructType.getName());
-					final GlobalScopeAssignable globalById = this.globalScope
+					final int staticStructValueGlobalId = this.scope.getGlobalId(this.enclosingStructType.getName());
+					final GlobalScopeAssignable globalById = this.scope
 							.getAssignableGlobalById(staticStructValueGlobalId);
 					final StaticStructTypeJassValue structJassType = globalById.getValue()
 							.visit(StaticStructTypeJassValueVisitor.getInstance());
@@ -355,10 +363,10 @@ public class InstructionAppendingJassStatementVisitor
 				}
 			}
 			if (!found) {
-				final int globalId = this.globalScope.getGlobalId(identifier);
+				final int globalId = this.scope.getGlobalId(identifier);
 				if (globalId != -1) {
 					if (CHECK_TYPES) {
-						final JassType type = this.globalScope.getAssignableGlobalById(globalId).getType();
+						final JassType type = this.scope.getAssignableGlobalById(globalId).getType();
 						this.instructions.add(new TypeCheckInstruction(type));
 					}
 					this.instructions.add(new GlobalAssignmentInstruction(globalId));
@@ -377,7 +385,7 @@ public class InstructionAppendingJassStatementVisitor
 		insertExpressionInstructions(structExpression);
 
 		final JassType expressionLookupType = structExpression.accept(JassTypeExpressionVisitor.getInstance()
-				.reset(this.globalScope, this.nameToLocalType, this.enclosingStructType));
+				.reset(this.scope, this.nameToLocalType, this.enclosingStructType));
 		final StructJassType structJassType = expressionLookupType.visit(StructJassTypeVisitor.getInstance());
 		StructJassTypeInterface typeInterface;
 		if (structJassType == null) {
@@ -441,9 +449,8 @@ public class InstructionAppendingJassStatementVisitor
 			}
 			if (!found) {
 				if (this.enclosingStructType != null) {
-					final int staticStructValueGlobalId = this.globalScope
-							.getGlobalId(this.enclosingStructType.getName());
-					final GlobalScopeAssignable globalById = this.globalScope
+					final int staticStructValueGlobalId = this.scope.getGlobalId(this.enclosingStructType.getName());
+					final GlobalScopeAssignable globalById = this.scope
 							.getAssignableGlobalById(staticStructValueGlobalId);
 					final StaticStructTypeJassValue structJassType = globalById.getValue()
 							.visit(StaticStructTypeJassValueVisitor.getInstance());
@@ -462,12 +469,12 @@ public class InstructionAppendingJassStatementVisitor
 				}
 			}
 			if (!found) {
-				final int globalId = this.globalScope.getGlobalId(identifier);
+				final int globalId = this.scope.getGlobalId(identifier);
 				if (globalId != -1) {
 					this.instructions.add(new GlobalReferenceInstruction(globalId));
 				}
 				else {
-					final JassValue constantValue = this.globalScope.getPreprocessorConstant(identifier);
+					final JassValue constantValue = this.scope.getPreprocessorConstant(identifier);
 					if (constantValue != null) {
 						this.instructions.add(new PushLiteralInstruction(constantValue));
 					}
@@ -485,7 +492,7 @@ public class InstructionAppendingJassStatementVisitor
 			// ensure that caller is the same as enclosing type
 			if ((this.enclosingStructType == null)
 					|| !this.enclosingStructType.canAccessPrivateMethodsOf(structJassType)) {
-				throw this.globalScope.createException(
+				throw this.scope.createException(
 						"Attempted to access private member when it is not allowed: " + identifier,
 						new IllegalArgumentException());
 			}
@@ -577,17 +584,16 @@ public class InstructionAppendingJassStatementVisitor
 			final int argumentCount) {
 		if (argumentCount == 1) {
 			try {
-				final JassType functionNameAsType = this.globalScope.parseType(functionName);
+				final JassType functionNameAsType = this.scope.parseType(functionName);
 				final JassExpression jassExpression = arguments.get(0);
 				insertTypeCastInstructions(functionNameAsType, jassExpression);
 			}
 			catch (final Exception exc) {
-				throw this.globalScope.createException("Undefined function: " + functionName, exc);
+				throw this.scope.createException("Undefined function: " + functionName, exc);
 			}
 		}
 		else {
-			throw this.globalScope.createException("Undefined function: " + functionName,
-					new IllegalArgumentException());
+			throw this.scope.createException("Undefined function: " + functionName, new IllegalArgumentException());
 		}
 	}
 
@@ -598,7 +604,7 @@ public class InstructionAppendingJassStatementVisitor
 		final List<JassExpression> arguments = expression.getArguments();
 		final int argumentCount = arguments.size();
 		final JassType expressionLookupType = structExpression.accept(JassTypeExpressionVisitor.getInstance()
-				.reset(this.globalScope, this.nameToLocalType, this.enclosingStructType));
+				.reset(this.scope, this.nameToLocalType, this.enclosingStructType));
 		final StructJassType structJassType = expressionLookupType.visit(StructJassTypeVisitor.getInstance());
 		if (structJassType == null) {
 			final StaticStructTypeJassValue staticStruct = expressionLookupType
@@ -626,21 +632,20 @@ public class InstructionAppendingJassStatementVisitor
 		if (methodDefinition.getQualifiers().contains(JassQualifier.PRIVATE)) {
 			// ensure that caller is the same as enclosing type
 			if ((this.enclosingStructType == null) || !this.enclosingStructType.canAccessPrivateMethodsOf(staticType)) {
-				throw this.globalScope.createException(
+				throw this.scope.createException(
 						"Attempted to call private method when it is not allowed: " + functionName,
 						new IllegalArgumentException());
 			}
 		}
 		final Integer tableIndex = staticType.getMethodTableIndex(functionName);
 		if (tableIndex == null) {
-			throw this.globalScope.createException("Undefined function: " + functionName,
-					new IllegalArgumentException());
+			throw this.scope.createException("Undefined function: " + functionName, new IllegalArgumentException());
 		}
 		// TODO looking in method table here means that a static struct method call
 		// cannot be called recursively, nor from above its declaration
 		final Integer nonvirtualBranchInstructionPtr = staticType.getMethodTable().get(tableIndex);
 		if (nonvirtualBranchInstructionPtr == -1) {
-			throw this.globalScope.createException(
+			throw this.scope.createException(
 					"Call to a static method that was defined after us: " + functionName + " (move it before us!)",
 					new IllegalArgumentException());
 		}
@@ -661,7 +666,7 @@ public class InstructionAppendingJassStatementVisitor
 			// ensure that caller is the same as enclosing type
 			if ((this.enclosingStructType == null)
 					|| !this.enclosingStructType.canAccessPrivateMethodsOf(structJassType)) {
-				throw this.globalScope.createException(
+				throw this.scope.createException(
 						"Attempted to call private method when it is not allowed: " + functionName,
 						new IllegalArgumentException());
 			}
@@ -671,8 +676,7 @@ public class InstructionAppendingJassStatementVisitor
 		}
 		final Integer methodTableIndex = structJassType.getMethodTableIndex(functionName);
 		if (methodTableIndex == null) {
-			throw this.globalScope.createException("Undefined function: " + functionName,
-					new IllegalArgumentException());
+			throw this.scope.createException("Undefined function: " + functionName, new IllegalArgumentException());
 		}
 
 		final int newStackFrameInstructionPtr = this.instructions.size();
@@ -691,12 +695,12 @@ public class InstructionAppendingJassStatementVisitor
 	}
 
 	public void insertFunctionCallInstructions(final String functionName, final List<JassExpression> arguments) {
-		final Integer userFunctionInstructionPtr = this.globalScope.getUserFunctionInstructionPtr(functionName);
+		final Integer userFunctionInstructionPtr = this.scope.getUserFunctionInstructionPtr(functionName);
 		if (userFunctionInstructionPtr != null) {
 			insertFuncInstructions(arguments, new BranchInstruction(userFunctionInstructionPtr.intValue()));
 		}
 		else {
-			final Integer nativeId = this.globalScope.getNativeId(functionName);
+			final Integer nativeId = this.scope.getNativeId(functionName);
 			if (nativeId != null) {
 				insertFuncInstructions(arguments, new NativeInstruction(nativeId, arguments.size()));
 			}
@@ -720,7 +724,7 @@ public class InstructionAppendingJassStatementVisitor
 	@Override
 	public Void visit(final FunctionReferenceJassExpression expression) {
 		final String identifier = expression.getIdentifier();
-		final Integer userFunctionInstructionPtr = this.globalScope.getUserFunctionInstructionPtr(identifier);
+		final Integer userFunctionInstructionPtr = this.scope.getUserFunctionInstructionPtr(identifier);
 		if (userFunctionInstructionPtr == null) {
 			throw new RuntimeException("Unable to find function: " + identifier);
 		}
@@ -733,7 +737,7 @@ public class InstructionAppendingJassStatementVisitor
 		final JassExpression structExpression = expression.getStructExpression();
 		final String functionName = expression.getIdentifier();
 		final JassType expressionLookupType = structExpression.accept(JassTypeExpressionVisitor.getInstance()
-				.reset(this.globalScope, this.nameToLocalType, this.enclosingStructType));
+				.reset(this.scope, this.nameToLocalType, this.enclosingStructType));
 		final StructJassType structJassType = expressionLookupType.visit(StructJassTypeVisitor.getInstance());
 		if (structJassType == null) {
 			final StaticStructTypeJassValue staticStruct = expressionLookupType
@@ -784,7 +788,7 @@ public class InstructionAppendingJassStatementVisitor
 	public Void visit(final MemberJassExpression expression) {
 		insertExpressionInstructions(expression.getStructExpression());
 		final JassType expressionLookupType = expression.getStructExpression().accept(JassTypeExpressionVisitor
-				.getInstance().reset(this.globalScope, this.nameToLocalType, this.enclosingStructType));
+				.getInstance().reset(this.scope, this.nameToLocalType, this.enclosingStructType));
 		final StructJassType structJassType = expressionLookupType.visit(StructJassTypeVisitor.getInstance());
 		StructJassTypeInterface typeInterface;
 		if (structJassType == null) {

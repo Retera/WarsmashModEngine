@@ -66,6 +66,8 @@ ENDSCOPE = "endscope"
 INTERFACE = "interface"
 ENDINTERFACE = "endinterface"
 REQUIRES = "requires"
+USES = "uses"
+NEEDS = "needs"
 OPTIONAL = "optional"
 INITIALIZER = "initializer"
 DEFAULTS = "defaults"
@@ -179,6 +181,8 @@ MULTILINE_COMMENT = ("/*"(("*"[^"/"])|[^"*"])*?"*/")
 {INTERFACE} { return SmashJassParser.Lexer.INTERFACE; }
 {ENDINTERFACE} { return SmashJassParser.Lexer.ENDINTERFACE; }
 {REQUIRES} { return SmashJassParser.Lexer.REQUIRES; }
+{USES} { return SmashJassParser.Lexer.REQUIRES; }
+{NEEDS} { return SmashJassParser.Lexer.REQUIRES; }
 {OPTIONAL} { return SmashJassParser.Lexer.OPTIONAL; }
 {INITIALIZER} { return SmashJassParser.Lexer.INITIALIZER; }
 {DEFAULTS} { return SmashJassParser.Lexer.DEFAULTS; }

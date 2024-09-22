@@ -55,13 +55,15 @@ public class TypeCastToStructJassValueVisitor implements JassValueVisitor<JassVa
 
 	@Override
 	public JassValue accept(final HandleJassValue value) {
-		if (value instanceof CExtensibleHandle) {
-			final CExtensibleHandle structHandle = (CExtensibleHandle) value;
+		final Object javaValue = value.getJavaValue();
+		if (javaValue instanceof CExtensibleHandle) {
+			final CExtensibleHandle structHandle = (CExtensibleHandle) javaValue;
 			final StructJassValue structValue = structHandle.getStructValue();
 			return structValue.visit(this);
 		}
-		throw new ClassCastException(
-				"Cannot cast " + value.getType().getName() + " to unrelated type " + this.destinationType.getName());
+		return this.destinationType.getNullValue();
+//		throw new ClassCastException(
+//				"Cannot cast " + value.getType().getName() + " to unrelated type " + this.destinationType.getName());
 	}
 
 	@Override

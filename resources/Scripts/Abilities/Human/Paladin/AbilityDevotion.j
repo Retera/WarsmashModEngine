@@ -1,21 +1,27 @@
 scope Devotion initializer register
 	struct BuffDevotion extends BuffAuraBase
-		real armorBonus
-		boolean percentBonus
+		nonstackingstatbufftype statModifierType
+		nonstackingstatbuff statModifier
 		
 		public static method create takes integer aliasId, real armorBonus, boolean percentBonus returns thistype
 			thistype this = .allocate(aliasId)
-			this.armorBonus = armorBonus
-			this.percentBonus = percentBonus
+			if percentBonus then
+			    this.statModifierType = NON_STACKING_STAT_BUFF_TYPE_DEFPCT
+			else
+			    this.statModifierType = NON_STACKING_STAT_BUFF_TYPE_DEF
+			endif
+			this.statModifier = CreateNonStackingStatBuff(this.statModifierType, "BHad", armorBonus)
 			return this
 		endmethod
 
 		method onBuffAdd takes unit target returns nothing
-
+            AddUnitNonStackingStatBuff(target, this.statModifier)
+            RecomputeStatBuffsOnUnit(target, this.statModifierType)
 		endmethod
 
 		method onBuffRemove takes unit target returns nothing
-
+            RemoveUnitNonStackingStatBuff(target, this.statModifier)
+            RecomputeStatBuffsOnUnit(target, this.statModifierType)
 		endmethod
 	endstruct
 
@@ -29,7 +35,7 @@ scope Devotion initializer register
 			return .allocate(aliasId, ORDER_ID)
 		endmethod
 
-		method populateData takes gameobject editorData, integer level returns nothing
+		method populateAuraData takes gameobject editorData, integer level returns nothing
 			this.armorBonus = GetGameObjectFieldAsReal(editorData, ABILITY_FIELD_DATA_A + I2S(level), 0)
 			this.percentBonus = GetGameObjectFieldAsBoolean(editorData, ABILITY_FIELD_DATA_B + I2S(level), 0)
 		endmethod

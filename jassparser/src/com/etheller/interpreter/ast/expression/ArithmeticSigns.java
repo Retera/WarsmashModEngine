@@ -10,7 +10,6 @@ import com.etheller.interpreter.ast.value.RealJassValue;
 import com.etheller.interpreter.ast.value.StringJassValue;
 import com.etheller.interpreter.ast.value.StructJassValue;
 import com.etheller.interpreter.ast.value.visitor.ObjectJassValueVisitor;
-import com.etheller.interpreter.ast.value.visitor.StructSuperJassValueVisitor;
 
 public enum ArithmeticSigns implements ArithmeticSign {
 	ADD() {
@@ -875,8 +874,6 @@ public enum ArithmeticSigns implements ArithmeticSign {
 	}
 
 	private static boolean isEqual(final StructJassValue left, final StructJassValue right) {
-		final JassValue leftValue = left.visit(StructSuperJassValueVisitor.getInstance());
-		final JassValue rightValue = right.visit(StructSuperJassValueVisitor.getInstance());
-		return leftValue == rightValue;
+		return left == right;
 	}
 }

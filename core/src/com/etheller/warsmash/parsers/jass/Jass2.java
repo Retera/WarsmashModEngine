@@ -527,6 +527,7 @@ public class Jass2 {
 			final Rectangle tempRect = new Rectangle();
 			this.simulation = war3MapViewer.simulation;
 			final GlobalScope globals = jassProgramVisitor.getGlobalScope();
+			final HandleJassType handleType = globals.registerHandleType("handle");
 			final HandleJassType agentType = globals.registerHandleType("agent");
 			final HandleJassType eventType = globals.registerHandleType("event");
 			final HandleJassType playerType = globals.registerHandleType("player");
@@ -5876,7 +5877,7 @@ public class Jass2 {
 			jassProgramVisitor.getJassNativeManager().createNative("HandleListAdd",
 					(arguments, globalScope, triggerScope) -> {
 						final HandleList whichList = nullable(arguments, 0, ObjectJassValueVisitor.getInstance());
-						final CHandle x = nullable(arguments, 1, ObjectJassValueVisitor.getInstance());
+						final JassValue x = arguments.get(1);
 						if (whichList != null) {
 							whichList.add(x);
 						}
@@ -5885,11 +5886,28 @@ public class Jass2 {
 			jassProgramVisitor.getJassNativeManager().createNative("HandleListRemove",
 					(arguments, globalScope, triggerScope) -> {
 						final HandleList whichList = nullable(arguments, 0, ObjectJassValueVisitor.getInstance());
-						final CHandle x = nullable(arguments, 1, ObjectJassValueVisitor.getInstance());
+						final JassValue x = arguments.get(1);
 						if (whichList != null) {
 							return BooleanJassValue.of(whichList.remove(x));
 						}
 						return BooleanJassValue.FALSE;
+					});
+			jassProgramVisitor.getJassNativeManager().createNative("HandleListSize",
+					(arguments, globalScope, triggerScope) -> {
+						final HandleList whichList = nullable(arguments, 0, ObjectJassValueVisitor.getInstance());
+						if (whichList != null) {
+							return IntegerJassValue.of(whichList.size());
+						}
+						return IntegerJassValue.ZERO;
+					});
+			jassProgramVisitor.getJassNativeManager().createNative("HandleListGet",
+					(arguments, globalScope, triggerScope) -> {
+						final HandleList whichList = nullable(arguments, 0, ObjectJassValueVisitor.getInstance());
+						final int x = nullable(arguments, 1, IntegerJassValueVisitor.getInstance());
+						if (whichList != null) {
+							return whichList.get(x);
+						}
+						return handleType.getNullValue();
 					});
 
 			jassProgramVisitor.getJassNativeManager().createNative("CreateStringList",

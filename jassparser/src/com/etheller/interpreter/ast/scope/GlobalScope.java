@@ -245,7 +245,6 @@ public final class GlobalScope {
 		this.instructions.add(new BeginFunctionInstruction(lineNo, sourceFile, name));
 		final InstructionAppendingJassStatementVisitor visitor = new InstructionAppendingJassStatementVisitor(
 				this.instructions, scope, function.getParameters());
-		visitor.setEnclosingStructType(type);
 		for (final JassStatement statement : statements) {
 			statement.accept(visitor);
 		}

@@ -264,16 +264,32 @@ public class Jass2 {
 				jassFilePath = jassFilePath
 						.substring(Math.max(jassFilePath.lastIndexOf('/'), jassFilePath.lastIndexOf('\\')) + 1);
 			}
-			final String jassFile = jassFilePath;
-			try {
-				try (InputStreamReader reader = new InputStreamReader(dataSource.getResourceAsStream(jassFile))) {
-					final SmashJassParser smashJassParser = new SmashJassParser(reader);
-					smashJassParser.scanAndParse(jassFile, jassProgramVisitor);
+			if (!dataSource.has(jassFilePath)) {
+				final String lowerCaseDirectoryPath = jassFilePath.toLowerCase(Locale.US);
+				final String lowerCaseDirectoryPathLinux = jassFilePath.toLowerCase(Locale.US).replace("\\", "/");
+
+				final Collection<String> listfile = dataSource.getListfile();
+				final Map<String, String> fixedListfile = new HashMap<>();
+				for (final String path : listfile) {
+					fixedListfile.put(path.toLowerCase(Locale.US), path);
+				}
+				for (final Map.Entry<String, String> pathAndPath : fixedListfile.entrySet()) {
+					final String lowerCasePath = pathAndPath.getKey();
+					final String realPath = pathAndPath.getValue();
+					if (lowerCasePath.startsWith(lowerCaseDirectoryPath)
+							|| lowerCasePath.startsWith(lowerCaseDirectoryPathLinux)) {
+						try {
+							readJassFile(dataSource, jassProgramVisitor, realPath);
+						}
+						catch (final Exception e) {
+							e.printStackTrace();
+							JassLog.report(e);
+						}
+					}
 				}
 			}
-			catch (final Exception e) {
-				e.printStackTrace();
-				JassLog.report(e);
+			else {
+				readJassFile(dataSource, jassProgramVisitor, jassFilePath);
 			}
 		}
 		try {
@@ -287,6 +303,21 @@ public class Jass2 {
 		return environment;
 	}
 
+	private static void readJassFile(final DataSource dataSource, final JassProgram jassProgramVisitor,
+			final String jassFilePath) {
+		final String jassFile = jassFilePath;
+		try {
+			try (InputStreamReader reader = new InputStreamReader(dataSource.getResourceAsStream(jassFile))) {
+				final SmashJassParser smashJassParser = new SmashJassParser(reader);
+				smashJassParser.scanAndParse(jassFile, jassProgramVisitor);
+			}
+		}
+		catch (final Exception e) {
+			e.printStackTrace();
+			JassLog.report(e);
+		}
+	}
+
 	public static ConfigEnvironment loadConfig(final DataSource dataSource, final Viewport uiViewport,
 			final Scene uiScene, final GameUI gameUI, final War3MapConfig mapConfig, final String... files) {
 
@@ -298,16 +329,32 @@ public class Jass2 {
 				jassFilePath = jassFilePath
 						.substring(Math.max(jassFilePath.lastIndexOf('/'), jassFilePath.lastIndexOf('\\')) + 1);
 			}
-			final String jassFile = jassFilePath;
-			try {
-				try (InputStreamReader reader = new InputStreamReader(dataSource.getResourceAsStream(jassFile))) {
-					final SmashJassParser smashJassParser = new SmashJassParser(reader);
-					smashJassParser.scanAndParse(jassFile, jassProgramVisitor);
+			if (!dataSource.has(jassFilePath)) {
+				final String lowerCaseDirectoryPath = jassFilePath.toLowerCase(Locale.US);
+				final String lowerCaseDirectoryPathLinux = jassFilePath.toLowerCase(Locale.US).replace("\\", "/");
+
+				final Collection<String> listfile = dataSource.getListfile();
+				final Map<String, String> fixedListfile = new HashMap<>();
+				for (final String path : listfile) {
+					fixedListfile.put(path.toLowerCase(Locale.US), path);
+				}
+				for (final Map.Entry<String, String> pathAndPath : fixedListfile.entrySet()) {
+					final String lowerCasePath = pathAndPath.getKey();
+					final String realPath = pathAndPath.getValue();
+					if (lowerCasePath.startsWith(lowerCaseDirectoryPath)
+							|| lowerCasePath.startsWith(lowerCaseDirectoryPathLinux)) {
+						try {
+							readJassFile(dataSource, jassProgramVisitor, realPath);
+						}
+						catch (final Exception e) {
+							e.printStackTrace();
+							JassLog.report(e);
+						}
+					}
 				}
 			}
-			catch (final Exception e) {
-				e.printStackTrace();
-				JassLog.report(e);
+			else {
+				readJassFile(dataSource, jassProgramVisitor, jassFilePath);
 			}
 		}
 		try {

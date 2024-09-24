@@ -13,6 +13,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.pars
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehaviorCategory;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CTargetType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.unit.NonStackingStatBuffType;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.unit.StateModBuffType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.CommandStringErrorKeysEnum;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.ResourceType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.TextTagConfigType;
@@ -31,6 +32,10 @@ public class JassGeneratorForType {
 		for (final NonStackingStatBuffType type : NonStackingStatBuffType.values()) {
 			System.out.println(String.format(
 					"    constant nonstackingstatbufftype NON_STACKING_STAT_BUFF_TYPE_%-34s= ConvertNonStackingStatBuffType(%d)",
+					type.name(), type.ordinal()));
+		}
+		for (final StateModBuffType type : StateModBuffType.values()) {
+			System.out.println(String.format("    constant statemodtype STATE_MOD_TYPE_%-34s= ConvertStateModType(%d)",
 					type.name(), type.ordinal()));
 		}
 		for (final DataFieldLetter type : DataFieldLetter.values()) {

@@ -1,6 +1,8 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.unit;
 
-public enum StateModBuffType {
+import com.etheller.interpreter.ast.util.CHandle;
+
+public enum StateModBuffType implements CHandle {
 	ETHEREAL,
 	RESISTANT,
 	SLEEPING,
@@ -22,4 +24,11 @@ public enum StateModBuffType {
 	INVISIBLE,
 	DETECTOR,
 	DETECTED;
+
+	@Override
+	public int getHandleId() {
+		return ordinal();
+	}
+
+	public static final StateModBuffType[] VALUES = values();
 }

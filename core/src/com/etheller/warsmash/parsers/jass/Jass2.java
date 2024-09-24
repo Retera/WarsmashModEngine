@@ -234,6 +234,8 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.C
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.unit.CUnitTypeJass;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.unit.NonStackingStatBuff;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.unit.NonStackingStatBuffType;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.unit.StateModBuff;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.unit.StateModBuffType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.BooleanAbilityActivationReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.BooleanAbilityTargetCheckReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.CHashtable;
@@ -690,8 +692,10 @@ public class Jass2 {
 			final HandleJassType gameobjectType = globals.registerHandleType("gameobject");
 			final HandleJassType projectileType = globals.registerHandleType("projectile");
 			final HandleJassType abilityprojectileType = globals.registerHandleType("abilityprojectile");
-			final HandleJassType nonstackingstatbuffType = globals.registerHandleType("nonstackingstatbuff");
-			final HandleJassType nonstackingstatbufftypeType = globals.registerHandleType("nonstackingstatbufftype");
+			final HandleJassType nonstackingstatbuffType = globals.registerHandleType("nonstackingstatbonus");
+			final HandleJassType nonstackingstatbufftypeType = globals.registerHandleType("nonstackingstatbonustype");
+			final HandleJassType statemodType = globals.registerHandleType("statemod");
+			final HandleJassType statemodtypeType = globals.registerHandleType("statemodtype");
 			final HandleJassType datafieldletterType = globals.registerHandleType("datafieldletter");
 			final HandleJassType autocasttypeType = globals.registerHandleType("autocasttype");
 			final HandleJassType abconftypeType = globals.registerHandleType("abconftype");
@@ -6285,7 +6289,7 @@ public class Jass2 {
 			registerAbilityUserDataHandleNatives(jassProgramVisitor, destructablebuffType, "DestructableBuff");
 			registerAbilityUserDataHandleNatives(jassProgramVisitor, abtimeofdayeventType, "ABTimeOfDayEvent");
 			registerAbilityUserDataHandleNatives(jassProgramVisitor, gameobjectType, "GameObject");
-			registerAbilityUserDataHandleNatives(jassProgramVisitor, nonstackingstatbuffType, "NonStackingStatBuff");
+			registerAbilityUserDataHandleNatives(jassProgramVisitor, nonstackingstatbuffType, "NonStackingStatBonus");
 			registerAbilityUserDataHandleNatives(jassProgramVisitor, projectileType, "Projectile");
 			registerAbilityUserDataHandleNatives(jassProgramVisitor, locationType, "Location");
 			registerAbilityUserDataHandleNatives(jassProgramVisitor, timerType, "Timer");
@@ -8427,17 +8431,17 @@ public class Jass2 {
 					});
 
 			// non stacking stat buffs
-			jassProgramVisitor.getJassNativeManager().createNative("String2NonStackingStatBuffType",
+			jassProgramVisitor.getJassNativeManager().createNative("String2NonStackingStatBonusType",
 					(arguments, globalScope, triggerScope) -> {
 						final String key = nullable(arguments, 0, StringJassValueVisitor.getInstance());
-						return new HandleJassValue(damagetypeType, NonStackingStatBuffType.valueOf(key));
+						return new HandleJassValue(nonstackingstatbuffType, NonStackingStatBuffType.valueOf(key));
 					});
-			jassProgramVisitor.getJassNativeManager().createNative("ConvertNonStackingStatBuffType",
+			jassProgramVisitor.getJassNativeManager().createNative("ConvertNonStackingStatBonusType",
 					(arguments, globalScope, triggerScope) -> {
 						final int i = arguments.get(0).visit(IntegerJassValueVisitor.getInstance());
 						return new HandleJassValue(nonstackingstatbufftypeType, NonStackingStatBuffType.VALUES[i]);
 					});
-			jassProgramVisitor.getJassNativeManager().createNative("CreateNonStackingStatBuff",
+			jassProgramVisitor.getJassNativeManager().createNative("CreateNonStackingStatBonus",
 					(arguments, globalScope, triggerScope) -> {
 						final NonStackingStatBuffType whichType = nullable(arguments, 0,
 								ObjectJassValueVisitor.getInstance());
@@ -8446,21 +8450,21 @@ public class Jass2 {
 						return new HandleJassValue(nonstackingstatbuffType,
 								new NonStackingStatBuff(whichType, stackingKey, value));
 					});
-			jassProgramVisitor.getJassNativeManager().createNative("AddUnitNonStackingStatBuff",
+			jassProgramVisitor.getJassNativeManager().createNative("AddUnitNonStackingStatBonus",
 					(arguments, globalScope, triggerScope) -> {
 						final CUnit unit = nullable(arguments, 0, ObjectJassValueVisitor.getInstance());
 						final NonStackingStatBuff buff = arguments.get(1).visit(ObjectJassValueVisitor.getInstance());
 						unit.addNonStackingStatBuff(buff);
 						return null;
 					});
-			jassProgramVisitor.getJassNativeManager().createNative("RemoveUnitNonStackingStatBuff",
+			jassProgramVisitor.getJassNativeManager().createNative("RemoveUnitNonStackingStatBonus",
 					(arguments, globalScope, triggerScope) -> {
 						final CUnit unit = nullable(arguments, 0, ObjectJassValueVisitor.getInstance());
 						final NonStackingStatBuff buff = arguments.get(1).visit(ObjectJassValueVisitor.getInstance());
 						unit.removeNonStackingStatBuff(buff);
 						return null;
 					});
-			jassProgramVisitor.getJassNativeManager().createNative("RecomputeStatBuffsOnUnit",
+			jassProgramVisitor.getJassNativeManager().createNative("RecomputeStatBonusesOnUnit",
 					(arguments, globalScope, triggerScope) -> {
 						final CUnit unit = nullable(arguments, 0, ObjectJassValueVisitor.getInstance());
 						final NonStackingStatBuffType whichBuffType = arguments.get(1)
@@ -8468,10 +8472,57 @@ public class Jass2 {
 						unit.computeDerivedFields(whichBuffType);
 						return null;
 					});
-			jassProgramVisitor.getJassNativeManager().createNative("UpdateNonStackingStatBuff",
+			jassProgramVisitor.getJassNativeManager().createNative("UpdateNonStackingStatBonus",
 					(arguments, globalScope, triggerScope) -> {
 						final NonStackingStatBuff buff = nullable(arguments, 0, ObjectJassValueVisitor.getInstance());
 						final float value = arguments.get(1).visit(RealJassValueVisitor.getInstance()).floatValue();
+						buff.setValue(value);
+						return null;
+					});
+
+			// state mod buffs
+			jassProgramVisitor.getJassNativeManager().createNative("String2StateModType",
+					(arguments, globalScope, triggerScope) -> {
+						final String key = nullable(arguments, 0, StringJassValueVisitor.getInstance());
+						return new HandleJassValue(statemodtypeType, StateModBuffType.valueOf(key));
+					});
+			jassProgramVisitor.getJassNativeManager().createNative("ConvertStateModType",
+					(arguments, globalScope, triggerScope) -> {
+						final int i = arguments.get(0).visit(IntegerJassValueVisitor.getInstance());
+						return new HandleJassValue(statemodtypeType, NonStackingStatBuffType.VALUES[i]);
+					});
+			jassProgramVisitor.getJassNativeManager().createNative("CreateStateMod",
+					(arguments, globalScope, triggerScope) -> {
+						final StateModBuffType whichType = nullable(arguments, 0, ObjectJassValueVisitor.getInstance());
+						final int value = arguments.get(1).visit(IntegerJassValueVisitor.getInstance()).intValue();
+						return new HandleJassValue(statemodType, new StateModBuff(whichType, value));
+					});
+			jassProgramVisitor.getJassNativeManager().createNative("AddUnitStateMod",
+					(arguments, globalScope, triggerScope) -> {
+						final CUnit unit = nullable(arguments, 0, ObjectJassValueVisitor.getInstance());
+						final StateModBuff buff = arguments.get(1).visit(ObjectJassValueVisitor.getInstance());
+						unit.addStateModBuff(buff);
+						return null;
+					});
+			jassProgramVisitor.getJassNativeManager().createNative("RemoveUnitStateMod",
+					(arguments, globalScope, triggerScope) -> {
+						final CUnit unit = nullable(arguments, 0, ObjectJassValueVisitor.getInstance());
+						final StateModBuff buff = arguments.get(1).visit(ObjectJassValueVisitor.getInstance());
+						unit.removeStateModBuff(buff);
+						return null;
+					});
+			jassProgramVisitor.getJassNativeManager().createNative("RecomputeStateModsOnUnit",
+					(arguments, globalScope, triggerScope) -> {
+						final CUnit unit = nullable(arguments, 0, ObjectJassValueVisitor.getInstance());
+						final StateModBuffType whichBuffType = arguments.get(1)
+								.visit(ObjectJassValueVisitor.getInstance());
+						unit.computeUnitState(this.simulation, whichBuffType);
+						return null;
+					});
+			jassProgramVisitor.getJassNativeManager().createNative("UpdateStateMod",
+					(arguments, globalScope, triggerScope) -> {
+						final StateModBuff buff = nullable(arguments, 0, ObjectJassValueVisitor.getInstance());
+						final int value = arguments.get(1).visit(IntegerJassValueVisitor.getInstance()).intValue();
 						buff.setValue(value);
 						return null;
 					});

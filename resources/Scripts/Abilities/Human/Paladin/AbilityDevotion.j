@@ -1,27 +1,27 @@
 scope Devotion initializer register
 	struct BuffDevotion extends BuffAuraBase
-		nonstackingstatbufftype statModifierType
-		nonstackingstatbuff statModifier
+		nonstackingstatbonustype statModifierType
+		nonstackingstatbonus statModifier
 		
 		public static method create takes integer aliasId, real armorBonus, boolean percentBonus returns thistype
 			thistype this = .allocate(aliasId)
 			if percentBonus then
-			    this.statModifierType = NON_STACKING_STAT_BUFF_TYPE_DEFPCT
+			    this.statModifierType = NON_STACKING_STAT_BONUS_TYPE_DEFPCT
 			else
-			    this.statModifierType = NON_STACKING_STAT_BUFF_TYPE_DEF
+			    this.statModifierType = NON_STACKING_STAT_BONUS_TYPE_DEF
 			endif
-			this.statModifier = CreateNonStackingStatBuff(this.statModifierType, "BHad", armorBonus)
+			this.statModifier = CreateNonStackingStatMod(this.statModifierType, "BHad", armorBonus)
 			return this
 		endmethod
 
 		method onBuffAdd takes unit target returns nothing
-            AddUnitNonStackingStatBuff(target, this.statModifier)
-            RecomputeStatBuffsOnUnit(target, this.statModifierType)
+			AddUnitNonStackingStatMod(target, this.statModifier)
+			RecomputeStatModsOnUnit(target, this.statModifierType)
 		endmethod
 
 		method onBuffRemove takes unit target returns nothing
-            RemoveUnitNonStackingStatBuff(target, this.statModifier)
-            RecomputeStatBuffsOnUnit(target, this.statModifierType)
+			RemoveUnitNonStackingStatMod(target, this.statModifier)
+			RecomputeStatModsOnUnit(target, this.statModifierType)
 		endmethod
 	endstruct
 

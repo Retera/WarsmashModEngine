@@ -119,8 +119,10 @@ library AbilitiesCommonLegacy requires TargetTypesAPI, AnimationTokensAPI
 	type projectile extends handle
 	type gameobject extends handle
 	type worldeditordatatype extends handle
-	type nonstackingstatbuff extends handle
-	type nonstackingstatbufftype extends handle
+	type nonstackingstatbonus extends handle
+	type nonstackingstatbonustype extends handle
+	type statemod extends handle
+	type statemodtype extends handle
 	type abilitybuilderconfiguration extends handle
 	type autocasttype extends handle
 	type abconftype extends handle
@@ -139,7 +141,8 @@ library AbilitiesCommonLegacy requires TargetTypesAPI, AnimationTokensAPI
 
 	constant native ConvertTextTagConfigType takes integer x returns texttagconfigtype
 	constant native ConvertWorldEditorDataType takes integer x returns worldeditordatatype
-	constant native ConvertNonStackingStatBuffType takes integer x returns nonstackingstatbufftype
+	constant native ConvertNonStackingStatBonusType takes integer x returns nonstackingstatbonustype
+	constant native ConvertStateModType takes integer x returns statemodtype
 	constant native ConvertDataFieldLetter takes integer x returns datafieldletter
 	constant native ConvertAutocastType takes integer x returns autocasttype
 	constant native ConvertABConfType takes integer x returns abconftype
@@ -200,32 +203,54 @@ library AbilitiesCommonLegacy requires TargetTypesAPI, AnimationTokensAPI
 		constant worldeditordatatype WORLD_EDITOR_DATA_TYPE_BUFFS_EFFECTS            = ConvertWorldEditorDataType(5)
 		constant worldeditordatatype WORLD_EDITOR_DATA_TYPE_UPGRADES                 = ConvertWorldEditorDataType(6)
 		
-		constant nonstackingstatbufftype NON_STACKING_STAT_BUFF_TYPE_MELEEATK                          = ConvertNonStackingStatBuffType(0)
-		constant nonstackingstatbufftype NON_STACKING_STAT_BUFF_TYPE_MELEEATKPCT                       = ConvertNonStackingStatBuffType(1)
-		constant nonstackingstatbufftype NON_STACKING_STAT_BUFF_TYPE_RNGDATK                           = ConvertNonStackingStatBuffType(2)
-		constant nonstackingstatbufftype NON_STACKING_STAT_BUFF_TYPE_RNGDATKPCT                        = ConvertNonStackingStatBuffType(3)
-		constant nonstackingstatbufftype NON_STACKING_STAT_BUFF_TYPE_ATKSPD                            = ConvertNonStackingStatBuffType(4)
-		constant nonstackingstatbufftype NON_STACKING_STAT_BUFF_TYPE_DEF                               = ConvertNonStackingStatBuffType(5)
-		constant nonstackingstatbufftype NON_STACKING_STAT_BUFF_TYPE_DEFPCT                            = ConvertNonStackingStatBuffType(6)
-		constant nonstackingstatbufftype NON_STACKING_STAT_BUFF_TYPE_HPGEN                             = ConvertNonStackingStatBuffType(7)
-		constant nonstackingstatbufftype NON_STACKING_STAT_BUFF_TYPE_HPGENPCT                          = ConvertNonStackingStatBuffType(8)
-		constant nonstackingstatbufftype NON_STACKING_STAT_BUFF_TYPE_MAXHPGENPCT                       = ConvertNonStackingStatBuffType(9)
-		constant nonstackingstatbufftype NON_STACKING_STAT_BUFF_TYPE_MPGEN                             = ConvertNonStackingStatBuffType(10)
-		constant nonstackingstatbufftype NON_STACKING_STAT_BUFF_TYPE_MPGENPCT                          = ConvertNonStackingStatBuffType(11)
-		constant nonstackingstatbufftype NON_STACKING_STAT_BUFF_TYPE_MAXMPGENPCT                       = ConvertNonStackingStatBuffType(12)
-		constant nonstackingstatbufftype NON_STACKING_STAT_BUFF_TYPE_MVSPD                             = ConvertNonStackingStatBuffType(13)
-		constant nonstackingstatbufftype NON_STACKING_STAT_BUFF_TYPE_MVSPDPCT                          = ConvertNonStackingStatBuffType(14)
-		constant nonstackingstatbufftype NON_STACKING_STAT_BUFF_TYPE_HPSTEAL                           = ConvertNonStackingStatBuffType(15)
-		constant nonstackingstatbufftype NON_STACKING_STAT_BUFF_TYPE_THORNS                            = ConvertNonStackingStatBuffType(16)
-		constant nonstackingstatbufftype NON_STACKING_STAT_BUFF_TYPE_THORNSPCT                         = ConvertNonStackingStatBuffType(17)
-		constant nonstackingstatbufftype NON_STACKING_STAT_BUFF_TYPE_MAXHP                             = ConvertNonStackingStatBuffType(18)
-		constant nonstackingstatbufftype NON_STACKING_STAT_BUFF_TYPE_MAXHPPCT                          = ConvertNonStackingStatBuffType(19)
-		constant nonstackingstatbufftype NON_STACKING_STAT_BUFF_TYPE_MAXMP                             = ConvertNonStackingStatBuffType(20)
-		constant nonstackingstatbufftype NON_STACKING_STAT_BUFF_TYPE_MAXMPPCT                          = ConvertNonStackingStatBuffType(21)
+		constant nonstackingstatbonustype NON_STACKING_STAT_BONUS_TYPE_MELEEATK                          = ConvertNonStackingStatBonusType(0)
+		constant nonstackingstatbonustype NON_STACKING_STAT_BONUS_TYPE_MELEEATKPCT                       = ConvertNonStackingStatBonusType(1)
+		constant nonstackingstatbonustype NON_STACKING_STAT_BONUS_TYPE_RNGDATK                           = ConvertNonStackingStatBonusType(2)
+		constant nonstackingstatbonustype NON_STACKING_STAT_BONUS_TYPE_RNGDATKPCT                        = ConvertNonStackingStatBonusType(3)
+		constant nonstackingstatbonustype NON_STACKING_STAT_BONUS_TYPE_ATKSPD                            = ConvertNonStackingStatBonusType(4)
+		constant nonstackingstatbonustype NON_STACKING_STAT_BONUS_TYPE_DEF                               = ConvertNonStackingStatBonusType(5)
+		constant nonstackingstatbonustype NON_STACKING_STAT_BONUS_TYPE_DEFPCT                            = ConvertNonStackingStatBonusType(6)
+		constant nonstackingstatbonustype NON_STACKING_STAT_BONUS_TYPE_HPGEN                             = ConvertNonStackingStatBonusType(7)
+		constant nonstackingstatbonustype NON_STACKING_STAT_BONUS_TYPE_HPGENPCT                          = ConvertNonStackingStatBonusType(8)
+		constant nonstackingstatbonustype NON_STACKING_STAT_BONUS_TYPE_MAXHPGENPCT                       = ConvertNonStackingStatBonusType(9)
+		constant nonstackingstatbonustype NON_STACKING_STAT_BONUS_TYPE_MPGEN                             = ConvertNonStackingStatBonusType(10)
+		constant nonstackingstatbonustype NON_STACKING_STAT_BONUS_TYPE_MPGENPCT                          = ConvertNonStackingStatBonusType(11)
+		constant nonstackingstatbonustype NON_STACKING_STAT_BONUS_TYPE_MAXMPGENPCT                       = ConvertNonStackingStatBonusType(12)
+		constant nonstackingstatbonustype NON_STACKING_STAT_BONUS_TYPE_MVSPD                             = ConvertNonStackingStatBonusType(13)
+		constant nonstackingstatbonustype NON_STACKING_STAT_BONUS_TYPE_MVSPDPCT                          = ConvertNonStackingStatBonusType(14)
+		constant nonstackingstatbonustype NON_STACKING_STAT_BONUS_TYPE_HPSTEAL                           = ConvertNonStackingStatBonusType(15)
+		constant nonstackingstatbonustype NON_STACKING_STAT_BONUS_TYPE_THORNS                            = ConvertNonStackingStatBonusType(16)
+		constant nonstackingstatbonustype NON_STACKING_STAT_BONUS_TYPE_THORNSPCT                         = ConvertNonStackingStatBonusType(17)
+		constant nonstackingstatbonustype NON_STACKING_STAT_BONUS_TYPE_MAXHP                             = ConvertNonStackingStatBonusType(18)
+		constant nonstackingstatbonustype NON_STACKING_STAT_BONUS_TYPE_MAXHPPCT                          = ConvertNonStackingStatBonusType(19)
+		constant nonstackingstatbonustype NON_STACKING_STAT_BONUS_TYPE_MAXMP                             = ConvertNonStackingStatBonusType(20)
+		constant nonstackingstatbonustype NON_STACKING_STAT_BONUS_TYPE_MAXMPPCT                          = ConvertNonStackingStatBonusType(21)
 		// These are for parsing
-		constant nonstackingstatbufftype NON_STACKING_STAT_BUFF_TYPE_ALLATK                            = ConvertNonStackingStatBuffType(22)
-		constant nonstackingstatbufftype NON_STACKING_STAT_BUFF_TYPE_ALLATKPCT                         = ConvertNonStackingStatBuffType(23)
+		constant nonstackingstatbonustype NON_STACKING_STAT_BONUS_TYPE_ALLATK                            = ConvertNonStackingStatBonusType(22)
+		constant nonstackingstatbonustype NON_STACKING_STAT_BONUS_TYPE_ALLATKPCT                         = ConvertNonStackingStatBonusType(23)
 		
+		constant statemodtype STATE_MOD_TYPE_ETHEREAL                          = ConvertStateModType(0)
+		constant statemodtype STATE_MOD_TYPE_RESISTANT                         = ConvertStateModType(1)
+		constant statemodtype STATE_MOD_TYPE_SLEEPING                          = ConvertStateModType(2)
+		constant statemodtype STATE_MOD_TYPE_STUN                              = ConvertStateModType(3)
+		constant statemodtype STATE_MOD_TYPE_MAGIC_IMMUNE                      = ConvertStateModType(4)
+		constant statemodtype STATE_MOD_TYPE_MORPH_IMMUNE                      = ConvertStateModType(5)
+		constant statemodtype STATE_MOD_TYPE_SNARED                            = ConvertStateModType(6)
+		constant statemodtype STATE_MOD_TYPE_DISABLE_AUTO_ATTACK               = ConvertStateModType(7)
+		constant statemodtype STATE_MOD_TYPE_DISABLE_AUTO_CAST                 = ConvertStateModType(8)
+		constant statemodtype STATE_MOD_TYPE_DISABLE_ASSIST_ALLY               = ConvertStateModType(9)
+		constant statemodtype STATE_MOD_TYPE_DISABLE_ATTACK                    = ConvertStateModType(10)
+		constant statemodtype STATE_MOD_TYPE_DISABLE_MELEE_ATTACK              = ConvertStateModType(11)
+		constant statemodtype STATE_MOD_TYPE_DISABLE_RANGED_ATTACK             = ConvertStateModType(12)
+		constant statemodtype STATE_MOD_TYPE_DISABLE_SPECIAL_ATTACK            = ConvertStateModType(13)
+		constant statemodtype STATE_MOD_TYPE_DISABLE_SPELLS                    = ConvertStateModType(14)
+		constant statemodtype STATE_MOD_TYPE_DISABLE_UNIT_COLLISION            = ConvertStateModType(15)
+		constant statemodtype STATE_MOD_TYPE_DISABLE_BUILDING_COLLISION        = ConvertStateModType(16)
+		constant statemodtype STATE_MOD_TYPE_INVULNERABLE                      = ConvertStateModType(17)
+		constant statemodtype STATE_MOD_TYPE_INVISIBLE                         = ConvertStateModType(18)
+		constant statemodtype STATE_MOD_TYPE_DETECTOR                          = ConvertStateModType(19)
+		constant statemodtype STATE_MOD_TYPE_DETECTED                          = ConvertStateModType(20)
+
 		// These are exposing resource types from within the code system, not offering a mechanism for adding more. At the moment, if you
 		// want to add more, you should edit the Java code and fork the engine, copy the ResourceType enum values in the Java, and then
 		// add a corresponding entry below.
@@ -334,7 +359,7 @@ library AbilitiesCommonLegacy requires TargetTypesAPI, AnimationTokensAPI
 	native GetLocalStoreDestructableBuffHandle takes localstore whichLocalStore, string childKey returns destructablebuff
 	native GetLocalStoreABTimeOfDayEventHandle takes localstore whichLocalStore, string childKey returns abtimeofdayevent
 	native GetLocalStoreGameObjectHandle takes localstore whichLocalStore, string childKey returns gameobject
-	native GetLocalStoreNonStackingStatBuffHandle takes localstore whichLocalStore, string childKey returns nonstackingstatbuff
+	native GetLocalStoreNonStackingStatBonusHandle takes localstore whichLocalStore, string childKey returns nonstackingstatbonus
 	native GetLocalStoreProjectileHandle takes localstore whichLocalStore, string childKey returns projectile
 	native GetLocalStoreLocationHandle takes localstore whichLocalStore, string childKey returns location
 	native GetLocalStoreTimerHandle takes localstore whichLocalStore, string childKey returns timer
@@ -357,7 +382,7 @@ library AbilitiesCommonLegacy requires TargetTypesAPI, AnimationTokensAPI
 	native SetLocalStoreDestructableBuffHandle takes localstore whichLocalStore, string childKey, destructablebuff value returns boolean
 	native SetLocalStoreABTimeOfDayEventHandle takes localstore whichLocalStore, string childKey, abtimeofdayevent value returns boolean
 	native SetLocalStoreGameObjectHandle takes localstore whichLocalStore, string childKey, gameobject value returns boolean
-	native SetLocalStoreNonStackingStatBuffHandle takes localstore whichLocalStore, string childKey, nonstackingstatbuff value returns boolean
+	native SetLocalStoreNonStackingStatBonusHandle takes localstore whichLocalStore, string childKey, nonstackingstatbonus value returns boolean
 	native SetLocalStoreProjectileHandle takes localstore whichLocalStore, string childKey, projectile value returns boolean
 	native SetLocalStoreTimerHandle takes localstore whichLocalStore, string childKey, timer value returns boolean
 	native SetLocalStoreHandle takes localstore whichLocalStore, string childKey, handle value returns boolean
@@ -903,25 +928,45 @@ library AbilitiesCommonLegacy requires TargetTypesAPI, AnimationTokensAPI
 	// Non Stacking Stat Buff API
 	//=================================================================================================
 	// These are not buffs. They appear to be stat modifiers, but scoped on a name.
-	// So I assume that if you `CreateNonStackingStatBuff(NON_STACKING_STAT_BUFF_TYPE_DEF, "My Devotion Aura Thing", 10)`
-	// and also `CreateNonStackingStatBuff(NON_STACKING_STAT_BUFF_TYPE_DEF, "My Devotion Aura Thing", 12)` and
+	// So I assume that if you `CreateNonStackingStatBonus(NON_STACKING_STAT_BONUS_TYPE_DEF, "My Devotion Aura Thing", 10)`
+	// and also `CreateNonStackingStatBonus(NON_STACKING_STAT_BONUS_TYPE_DEF, "My Devotion Aura Thing", 12)` and
 	// add them together on a unit, since they are non stacking I'm guessing this means the unit would gain a total of 12
 	// and not 22 defense, because they were both applied by "My Devotion Aura Thing"??
-	native CreateNonStackingStatBuff takes nonstackingstatbufftype whichType, string stackingKey, real value returns nonstackingstatbuff
+	native CreateNonStackingStatBonus takes nonstackingstatbonustype whichType, string stackingKey, real value returns nonstackingstatbonus
 
-	native AddUnitNonStackingStatBuff takes unit targetUnit, nonstackingstatbuff whichBuff returns nothing
+	native AddUnitNonStackingStatBonus takes unit targetUnit, nonstackingstatbonus whichBuff returns nothing
 
-	native RemoveUnitNonStackingStatBuff takes unit targetUnit, nonstackingstatbuff whichBuff returns nothing
+	native RemoveUnitNonStackingStatBonus takes unit targetUnit, nonstackingstatbonus whichBuff returns nothing
 
-	native RecomputeStatBuffsOnUnit takes unit targetUnit, nonstackingstatbufftype whichBuffType returns nothing
+	native RecomputeStatBonusesOnUnit takes unit targetUnit, nonstackingstatbonustype whichBuffType returns nothing
 
-	// NOTE: seems like, if you call `UpdateNonStackingStatBuff`, you probably also have to call `RecomputeStatBuffsOnUnit`,
+	// NOTE: seems like, if you call `UpdateNonStackingStatBonus`, you probably also have to call `RecomputeStatBuffsOnUnit`,
 	// otherwise you update some invisible thing without applying it to the unit.
-	native UpdateNonStackingStatBuff takes nonstackingstatbuff whichBuff, real value returns nothing
+	native UpdateNonStackingStatBonus takes nonstackingstatbonus whichBuff, real value returns nothing
 
 	// See "String2DamageType" for notes on how "String2Thing" native is probably not good, and you
-	// should probably use NON_STACKING_STAT_BUFF_TYPE_MVSPDPCT values
-	native String2NonStackingStatBuffType takes string x returns nonstackingstatbufftype
+	// should probably use NON_STACKING_STAT_BONUS_TYPE_MVSPDPCT values
+	native String2NonStackingStatBonusType takes string x returns nonstackingstatbonustype
+
+	//=================================================================================================
+	// State Mod Buff API
+	//=================================================================================================
+	// addable/removable edit to unit state. After you add or remove it, call the recompute function
+	native CreateStateMod takes statemodtype whichType, integer value returns statemod
+
+	native AddUnitStateMod takes unit targetUnit, statemod whichBuff returns nothing
+
+	native RemoveUnitStateMod takes unit targetUnit, statemod whichBuff returns nothing
+
+	native RecomputeStateModsOnUnit takes unit targetUnit, statemodtype whichBuffType returns nothing
+
+	// NOTE: seems like, if you call `UpdateStateMod`, you probably also have to call `RecomputeStateModsOnUnit`,
+	// otherwise you update some invisible thing without applying it to the unit.
+	native UpdateStateMod takes statemod whichBuff, integer value returns nothing
+
+	// See "String2DamageType" for notes on how "String2Thing" native is probably not good, and you
+	// should probably use STATE_MOD_TYPE_INVULNERABLE values
+	native String2StateModType takes string x returns statemodtype
 
 	//=================================================================================================
 	// Code API

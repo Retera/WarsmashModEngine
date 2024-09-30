@@ -1235,6 +1235,7 @@ public class Jass2 {
 						if (rect != null) {
 							final TriggerBooleanExpression filter = nullable(arguments, 2,
 									ObjectJassValueVisitor.<TriggerBooleanExpression>getInstance());
+							// TODO: maybe change so that calling corpse function here as well is not needed
 							CommonEnvironment.this.simulation.getWorldCollision().enumUnitsInRect(rect, (unit) -> {
 								if ((filter == null) || filter.evaluate(globalScope,
 										CommonTriggerExecutionScope.filterScope(triggerScope, unit))) {
@@ -1254,7 +1255,7 @@ public class Jass2 {
 						final TriggerBooleanExpression filter = nullable(arguments, 2,
 								ObjectJassValueVisitor.<TriggerBooleanExpression>getInstance());
 						final Integer countLimit = arguments.get(3).visit(IntegerJassValueVisitor.getInstance());
-						CommonEnvironment.this.simulation.getWorldCollision().enumUnitsInRect(rect,
+						CommonEnvironment.this.simulation.getWorldCollision().enumUnitsOrCorpsesInRect(rect,
 								new CUnitEnumFunction() {
 									int count = 0;
 
@@ -1283,7 +1284,7 @@ public class Jass2 {
 						final float radius = arguments.get(3).visit(RealJassValueVisitor.getInstance()).floatValue();
 						final TriggerBooleanExpression filter = nullable(arguments, 4,
 								ObjectJassValueVisitor.<TriggerBooleanExpression>getInstance());
-						CommonEnvironment.this.simulation.getWorldCollision().enumUnitsInRect(
+						CommonEnvironment.this.simulation.getWorldCollision().enumUnitsOrCorpsesInRect(
 								tempRect.set(x - radius, y - radius, radius * 2, radius * 2), (unit) -> {
 									if (unit.distance(x, y) <= radius) {
 										if ((filter == null) || filter.evaluate(globalScope,
@@ -1308,7 +1309,7 @@ public class Jass2 {
 						final TriggerBooleanExpression filter = nullable(arguments, 3,
 								ObjectJassValueVisitor.<TriggerBooleanExpression>getInstance());
 
-						CommonEnvironment.this.simulation.getWorldCollision().enumUnitsInRect(
+						CommonEnvironment.this.simulation.getWorldCollision().enumUnitsOrCorpsesInRect(
 								tempRect.set(x - radius, y - radius, radius * 2, radius * 2), (unit) -> {
 									if (unit.distance(x, y) <= radius) {
 										if ((filter == null) || filter.evaluate(globalScope,
@@ -1331,7 +1332,7 @@ public class Jass2 {
 						final TriggerBooleanExpression filter = nullable(arguments, 4,
 								ObjectJassValueVisitor.<TriggerBooleanExpression>getInstance());
 						final Integer countLimit = arguments.get(5).visit(IntegerJassValueVisitor.getInstance());
-						CommonEnvironment.this.simulation.getWorldCollision().enumUnitsInRect(
+						CommonEnvironment.this.simulation.getWorldCollision().enumUnitsOrCorpsesInRect(
 								tempRect.set(x - radius, y - radius, radius, radius), new CUnitEnumFunction() {
 									int count = 0;
 
@@ -1366,7 +1367,7 @@ public class Jass2 {
 						final TriggerBooleanExpression filter = nullable(arguments, 3,
 								ObjectJassValueVisitor.<TriggerBooleanExpression>getInstance());
 						final Integer countLimit = arguments.get(4).visit(IntegerJassValueVisitor.getInstance());
-						CommonEnvironment.this.simulation.getWorldCollision().enumUnitsInRect(
+						CommonEnvironment.this.simulation.getWorldCollision().enumUnitsOrCorpsesnRect(
 								tempRect.set(x - radius, y - radius, radius, radius), new CUnitEnumFunction() {
 									int count = 0;
 
@@ -8416,7 +8417,7 @@ public class Jass2 {
 						final TriggerBooleanExpression filter = nullable(arguments, 3,
 								ObjectJassValueVisitor.getInstance());
 
-						CommonEnvironment.this.simulation.getWorldCollision().enumUnitsInRect(
+						CommonEnvironment.this.simulation.getWorldCollision().enumUnitsOrCorpsesInRect(
 								tempRect.set(x - radius, y - radius, radius * 2, radius * 2), (unit) -> {
 									if (whichUnit.canReach(unit, radius)) {
 										if ((filter == null) || filter.evaluate(globalScope,
@@ -8426,6 +8427,39 @@ public class Jass2 {
 										}
 									}
 									return false;
+								});
+						return null;
+					});
+			jassProgramVisitor.getJassNativeManager().createNative("GroupEnumUnitsInRangeOfUnitCounted",
+					(arguments, globalScope, triggerScope) -> {
+						final List<CUnit> group = nullable(arguments, 0, ObjectJassValueVisitor.getInstance());
+						final CUnit whichUnit = arguments.get(1).visit(ObjectJassValueVisitor.getInstance());
+						final float x = whichUnit.getX();
+						final float y = whichUnit.getY();
+						final float radius = arguments.get(2).visit(RealJassValueVisitor.getInstance()).floatValue();
+						final TriggerBooleanExpression filter = nullable(arguments, 3,
+						final Integer countLimit = arguments.get(4).visit(IntegerJassValueVisitor.getInstance());
+								ObjectJassValueVisitor.getInstance());
+
+						CommonEnvironment.this.simulation.getWorldCollision().enumUnitsOrCorpsesInRect(
+								tempRect.set(x - radius, y - radius, radius * 2, radius * 2), new CUnitEnumFunction() {
+									int count = 0;
+
+									@Override
+									public boolean call(final CUnit unit) {
+										if (whichUnit.canReach(unit, radius)) {
+											if ((filter == null) || filter.evaluate(globalScope,
+													CommonTriggerExecutionScope.filterScope(triggerScope, unit))) {
+												// TODO the trigger scope for evaluation here might need to be a clean one?
+												group.add(unit);
+												this.count++;
+												if (this.count >= countLimit) {
+													return true;
+												}
+											}
+										}
+										return false;
+									}
 								});
 						return null;
 					});
@@ -8478,6 +8512,11 @@ public class Jass2 {
 						final float value = arguments.get(1).visit(RealJassValueVisitor.getInstance()).floatValue();
 						buff.setValue(value);
 						return null;
+					});
+			jassProgramVisitor.getJassNativeManager().createNative("GetNonStackingStatBonusType",
+					(arguments, globalScope, triggerScope) -> {
+						final NonStackingStatBuff buff = nullable(arguments, 0, ObjectJassValueVisitor.getInstance());
+						return new HandleJassValue(nonstackingstatbufftypeType, buff.getBuffType());
 					});
 
 			// state mod buffs

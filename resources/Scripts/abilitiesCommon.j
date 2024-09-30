@@ -916,6 +916,7 @@ library AbilitiesCommonLegacy requires TargetTypesAPI, AnimationTokensAPI
 	// - enum units in range of unit... considers collision sizes of both units, so it's not quite the same
 	//   as if we enumerated units in range of the location of the center unit
 	native GroupEnumUnitsInRangeOfUnit takes group whichGroup, unit whichUnit, real radius, boolexpr filter returns nothing
+	native GroupEnumUnitsInRangeOfUnitCounted takes group whichGroup, unit whichUnit, real radius, boolexpr filter, integer countLimit returns nothing
 
 	// same function as "blz" versions, but the ones declared here are available regardless
 	// of which game version being emulated:
@@ -943,6 +944,7 @@ library AbilitiesCommonLegacy requires TargetTypesAPI, AnimationTokensAPI
 	// NOTE: seems like, if you call `UpdateNonStackingStatBonus`, you probably also have to call `RecomputeStatBuffsOnUnit`,
 	// otherwise you update some invisible thing without applying it to the unit.
 	native UpdateNonStackingStatBonus takes nonstackingstatbonus whichBuff, real value returns nothing
+	native GetNonStackingStatBonusType takes nonstackingstatbonus whichBonus returns nonstackingstatbonustype
 
 	// See "String2DamageType" for notes on how "String2Thing" native is probably not good, and you
 	// should probably use NON_STACKING_STAT_BONUS_TYPE_MVSPDPCT values
@@ -2430,6 +2432,36 @@ library BuffAPI requires AbilityAPI
 		endmethod
 	endstruct
 
+	struct BuffTimedStatBonus extends BuffTimed
+		nonstackingstatbonus statBonus
+		nonstackingstatbonustype statBonusType
+
+		public static method create takes integer aliasId, real duration, nonstackingstatbonus statBonus returns thistype
+			thistype this = .allocate(aliasId, duration)
+			this.statBonus = statBonus
+			// (NOTE: in the long distant future, you could imagine that we might call "GetNonStackingStatBonusType(...)"
+			//   in onBuffAdd and onBuffRemove instead of caching it here. But for now, in my current handle system,
+			//   the "ConvertXYZ" call to create NON_STACKING_STAT_BONUS_TYPE_DEF constant, and the getter method,
+			//   both separately allocate a handle wrapper)
+			this.statBonusType = GetNonStackingStatBonusType(statBonus)
+			return this
+		endmethod
+
+		method onBuffAdd takes unit target returns nothing
+			AddUnitNonStackingStatMod(target, this.statBonus)
+			RecomputeStatModsOnUnit(target, this.statBonusType)
+		endmethod
+
+		method onBuffRemove takes unit target returns nothing
+			RemoveUnitNonStackingStatMod(target, this.statBonus)
+			RecomputeStatModsOnUnit(target, this.statBonusType)
+		endmethod
+
+		method isTimedLifeBar takes nothing returns boolean
+			return false
+		endmethod
+	endstruct
+
 	struct BuffTimedLife extends BuffTimed
 		boolean explode
 
@@ -3467,6 +3499,11 @@ library AuraAPI requires AbilityAPI, BuffAPI, MathUtils
 			local thistype this = .allocate(alias, orderId)
 			this.enumFilter = Filter(method this.unitInRangeEnum)
 			return this
+		endmethod
+
+		public static method destroy takes nothing returns nothing
+			call DestroyBoolExpr(enumFilter)
+			call this.deallocate()
 		endmethod
 
 		method populateAuraData takes gameobject editorData, integer level returns nothing

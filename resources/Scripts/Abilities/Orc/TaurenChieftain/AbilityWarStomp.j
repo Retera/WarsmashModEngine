@@ -11,6 +11,11 @@ scope WarStomp
 			this.enumFilter = Filter(method this.unitInRangeEnum)
             return this
         endmethod
+
+	method destroy takes nothing returns nothing
+		call DestroyBoolExpr(enumFilter)
+		call this.deallocate()
+	endmethod
         
         method populateData takes gameobject editorData, integer level returns nothing
             set damage = GetGameObjectFieldAsReal(editorData, ABILITY_FIELD_DATA_A + I2S(level), 0)

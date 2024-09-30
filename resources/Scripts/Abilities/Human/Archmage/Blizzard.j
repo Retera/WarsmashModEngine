@@ -18,6 +18,11 @@ scope Blizzard initializer register
 			return this
 		endmethod
 
+		method destroy takes nothing returns nothing
+			call DestroyBoolExpr(filter)
+			call this.deallocate()
+		endmethod
+
 		method reset takes abilitytarget target, real areaOfEffect, unit caster, targettypes targetsAllowed returns filterfunc
 			set this.target = target
 			set this.areaOfEffect = areaOfEffect
@@ -48,6 +53,11 @@ scope Blizzard initializer register
 
 		public static method create takes integer aliasId returns thistype
 			return .allocate(aliasId, ORDER_ID)
+		endmethod
+
+		method destroy takes nothing returns nothing
+			call this.filter.destroy()
+			call this.deallocate()
 		endmethod
 
 		method populateData takes gameobject editorData, integer level returns nothing

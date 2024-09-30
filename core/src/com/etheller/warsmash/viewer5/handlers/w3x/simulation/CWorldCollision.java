@@ -178,6 +178,21 @@ public class CWorldCollision {
 			return callback.call(unit);
 		});
 	}
+	
+	public void enumUnitsOrCorpsesInRect(final Rectangle rect, final CUnitEnumFunction callback) {
+		// NOTE: allocation here seems quite wasteful, see note on enumUnitsInRect
+		final Set<CUnit> intersectedUnits = new HashSet<>();
+		final QuadtreeIntersector<CUnit> intersectorFxn = (unit) -> {
+			if (unit.isHidden() || !intersectedUnits.add(unit)) {
+				return false;
+			}
+			return callback.call(unit);
+		};
+		if (!this.anyUnitEnumerableCollision.intersect(rect, intersectorFxn)) {
+			this.deadUnitCollision.intersect(rect, intersectorFxn);
+		}
+
+	}
 
 	public void enumCorpsesInRange(final float x, final float y, final float radius, final CUnitEnumFunction callback) {
 		enumCorpsesInRect(new Rectangle(x - radius, y - radius, radius * 2, radius * 2), (enumUnit) -> {
@@ -190,6 +205,15 @@ public class CWorldCollision {
 
 	public void enumUnitsInRange(final float x, final float y, final float radius, final CUnitEnumFunction callback) {
 		enumUnitsInRect(new Rectangle(x - radius, y - radius, radius * 2, radius * 2), (enumUnit) -> {
+			if (enumUnit.canReach(x, y, radius)) {
+				return callback.call(enumUnit);
+			}
+			return false;
+		});
+	}
+
+	public void enumUnitsOrCorpsesInRange(final float x, final float y, final float radius, final CUnitEnumFunction callback) {
+		enumUnitsOrCorpsesInRect(new Rectangle(x - radius, y - radius, radius * 2, radius * 2), (enumUnit) -> {
 			if (enumUnit.canReach(x, y, radius)) {
 				return callback.call(enumUnit);
 			}

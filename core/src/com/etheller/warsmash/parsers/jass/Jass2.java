@@ -261,14 +261,15 @@ public class Jass2 {
 		final JassProgram jassProgramVisitor = new JassProgram();
 		final CommonEnvironment environment = new CommonEnvironment(jassProgramVisitor, dataSource, uiViewport, uiScene,
 				war3MapViewer, meleeUI, files);
-		for (String jassFilePath : files) {
+		for (String file : files) {
+			String jassFilePath = file;
 			if (!dataSource.has(jassFilePath)) {
 				jassFilePath = jassFilePath
 						.substring(Math.max(jassFilePath.lastIndexOf('/'), jassFilePath.lastIndexOf('\\')) + 1);
 			}
 			if (!dataSource.has(jassFilePath)) {
-				final String lowerCaseDirectoryPath = jassFilePath.toLowerCase(Locale.US);
-				final String lowerCaseDirectoryPathLinux = jassFilePath.toLowerCase(Locale.US).replace("\\", "/");
+				final String lowerCaseDirectoryPath = file.toLowerCase(Locale.US);
+				final String lowerCaseDirectoryPathLinux = file.toLowerCase(Locale.US).replace("\\", "/");
 
 				final Collection<String> listfile = dataSource.getListfile();
 				final Map<String, String> fixedListfile = new HashMap<>();
@@ -326,14 +327,15 @@ public class Jass2 {
 		final JassProgram jassProgramVisitor = new JassProgram();
 		final ConfigEnvironment environment = new ConfigEnvironment(jassProgramVisitor, dataSource, uiViewport, uiScene,
 				gameUI, mapConfig);
-		for (String jassFilePath : files) {
+		for (String file : files) {
+			String jassFilePath = file;
 			if (!dataSource.has(jassFilePath)) {
 				jassFilePath = jassFilePath
 						.substring(Math.max(jassFilePath.lastIndexOf('/'), jassFilePath.lastIndexOf('\\')) + 1);
 			}
 			if (!dataSource.has(jassFilePath)) {
-				final String lowerCaseDirectoryPath = jassFilePath.toLowerCase(Locale.US);
-				final String lowerCaseDirectoryPathLinux = jassFilePath.toLowerCase(Locale.US).replace("\\", "/");
+				final String lowerCaseDirectoryPath = file.toLowerCase(Locale.US);
+				final String lowerCaseDirectoryPathLinux = file.toLowerCase(Locale.US).replace("\\", "/");
 
 				final Collection<String> listfile = dataSource.getListfile();
 				final Map<String, String> fixedListfile = new HashMap<>();
@@ -4352,7 +4354,7 @@ public class Jass2 {
 					(arguments, globalScope, triggerScope) -> {
 						final int abilityRawcode = arguments.get(0).visit(IntegerJassValueVisitor.getInstance());
 						final CEffectType artType = nullable(arguments, 1, ObjectJassValueVisitor.getInstance());
-						final int index = arguments.get(1).visit(IntegerJassValueVisitor.getInstance());
+						final int index = arguments.get(2).visit(IntegerJassValueVisitor.getInstance());
 						return StringJassValue.of(war3MapViewer
 								.getEffectAttachmentUI(new War3ID(abilityRawcode), artType, index).getModelPath());
 					});

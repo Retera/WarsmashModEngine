@@ -13,12 +13,22 @@ import com.etheller.interpreter.ast.scope.GlobalScope;
 public class JassProgram {
 	public final GlobalScope globalScope = new GlobalScope();
 	public final JassNativeManager jassNativeManager = new JassNativeManager();
-	public final List<JassDefinitionBlock> definitionBlocks = new ArrayList<>();
+
+	public final List<JassLibraryDefinitionBlock> libraries = new ArrayList<>();
+    public final List<JassScopeDefinitionBlock> scopes = new ArrayList<>();
+	public final List<JassDefinitionBlock> everythingElse = new ArrayList<>();
 
 	public void initialize() {
 		try {
 			final DefaultScope defaultScope = new DefaultScope(this.globalScope);
-			for (final JassDefinitionBlock definitionBlock : this.definitionBlocks) {
+		    JassLibraryDefinitionBlock.topologicalSort(libraries);
+			for (final JassDefinitionBlock definitionBlock : this.everythingElse) {
+				definitionBlock.define(defaultScope, this);
+			}
+			for (final JassDefinitionBlock definitionBlock : this.libraries) {
+				definitionBlock.define(defaultScope, this);
+			}
+			for (final JassDefinitionBlock definitionBlock : this.scopes) {
 				definitionBlock.define(defaultScope, this);
 			}
 			final Integer globalsInitializerFunctionPtr = this.globalScope
@@ -29,16 +39,14 @@ public class JassProgram {
 			this.globalScope.resetGlobalInitialization();
 		}
 		finally {
-			this.definitionBlocks.clear();
+			this.libraries.clear();
+			this.everythingElse.clear();
+			this.scopes.clear();
 		}
 	}
 
 	public void addAll(final List<JassDefinitionBlock> blocks) {
 		final List<JassDefinitionBlock> sortedBlocks = new ArrayList<>();
-
-		final List<JassLibraryDefinitionBlock> libraries = new ArrayList<>();
-		final List<JassScopeDefinitionBlock> scopes = new ArrayList<>();
-		final List<JassDefinitionBlock> everythingElse = new ArrayList<>();
 
 		for (final JassDefinitionBlock definitionBlock : blocks) {
 			// TODO: change to visitor
@@ -53,13 +61,6 @@ public class JassProgram {
 			}
 		}
 
-		JassLibraryDefinitionBlock.topologicalSort(libraries);
-
-		sortedBlocks.addAll(libraries);
-		sortedBlocks.addAll(everythingElse);
-		sortedBlocks.addAll(scopes);
-
-		this.definitionBlocks.addAll(blocks);
 	}
 
 	public GlobalScope getGlobalScope() {

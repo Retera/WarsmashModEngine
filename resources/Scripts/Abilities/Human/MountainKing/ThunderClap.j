@@ -1,5 +1,5 @@
 scope ThunderClap initializer register
-    struct AbilityRessurect extends AbilitySpellNoTarget
+    struct AbilityThunderClap extends AbilitySpellNoTarget
         public static constant integer ORDER_ID = OrderId("thunderclap")
         
 	real damage
@@ -31,13 +31,13 @@ scope ThunderClap initializer register
 		unit caster = this.behavior.behavingUnit // NOTE: not good API to get caster, what should API be instead?
 		if (not IsUnitAlly(enumUnit, GetOwningPlayer(caster)) and GetUnitTargetError(enumUnit, caster, getTargetsAllowed(), false) == null) then
 			if CheckUnitForAbilityEffectReaction(enumUnit, caster, this) then
-				call AddUnitAbility(enumUnit, BuffThunderClap.create(buffId, getDurationForTarget(enumUnit), attackSpeedReductionPercent, movementSpeedReductionPercent))
-				call UnitDamageTarget(casterUnit, targetUnit, damage, false, true, ATTACK_TYPE_NORMAL, DAMAGE_TYPE_LIGHTNING, WEAPON_TYPE_WHOKNOWS)
+				call AddUnitAbility(enumUnit, BuffTimedSlow.create(buffId, getDurationForTarget(enumUnit), "BHtc", attackSpeedReductionPercent, movementSpeedReductionPercent))
+				call UnitDamageTarget(casterUnit, enumUnit, damage, false, true, ATTACK_TYPE_NORMAL, DAMAGE_TYPE_LIGHTNING, WEAPON_TYPE_WHOKNOWS)
 			endif
 		endif
 	endmethod
         
-        method doEffect takes unit caster, abilitytarget target returns boolean
+        method doEffect takes unit caster returns boolean
 		call GroupEnumUnitsInRangeOfUnit(null, caster, getAreaOfEffect(), this.areaUnitFilter)
 		call DestroyEffect(AddSpellEffectById(getAliasId(), EFFECT_TYPE_CASTER, GetUnitX(caster), GetUnitY(caster)))
 		return false

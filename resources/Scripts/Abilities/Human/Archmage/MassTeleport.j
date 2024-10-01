@@ -30,7 +30,7 @@ scope MassTeleport initializer register
 			this.channelEndTick = GetGameTurnTick() + R2I(Math.ceil(castingDelay / au_SIMULATION_STEP_TIME))
 			this.sourceAreaEffect = AddSpellEffectById(getAliasId(), EFFECT_TYPE_AREA_EFFECT, GetUnitX(caster), GetUnitY(caster))
 			this.targetAreaEffect = AddSpellEffectById(getAliasId(), EFFECT_TYPE_AREA_EFFECT, GetAbilityTargetX(target), GetAbilityTargetY(target))
-			call DestroyEffect(AddSpellEffectTargetById(getAliasId(), EFFECT_TYPE_CASTER, target, null))
+			call DestroyEffect(AddSpellEffectTargetById(getAliasId(), EFFECT_TYPE_CASTER, target, DEFAULT_ATTACH_POINTS))
 			unit targetUnit = unit(target)
 			if targetUnit != null then
 				call UnitAddType(targetUnit, UNIT_TYPE_STUNNED)

@@ -1,5 +1,5 @@
 scope Resurrect initializer register
-    struct AbilityRessurect extends AbilitySpellNoTarget
+    struct AbilityResurrect extends AbilitySpellNoTarget
         public static constant integer ORDER_ID = OrderId("resurrection")
         
 	integer numberOfCorpsesRaised
@@ -26,7 +26,7 @@ scope Resurrect initializer register
 	private method unitInRangeEnum takes nothing returns nothing
 		unit enumUnit = GetEnumUnit()
 		call ResurrectUnit(enumUnit)
-		call DestroyEffect(AddSpellEffectTargetById(getAliasId(), EFFECT_TYPE_TARGET, enumUnit, null))
+		call DestroyEffect(AddSpellEffectTargetById(getAliasId(), EFFECT_TYPE_TARGET, enumUnit, DEFAULT_ATTACH_POINTS))
 	endmethod
 
 	method checkTarget takes unit caster returns nothing
@@ -39,11 +39,11 @@ scope Resurrect initializer register
 		endif
 	endmethod
         
-        method doEffect takes unit caster, abilitytarget target returns boolean
+        method doEffect takes unit caster returns boolean
 		call GroupClear(resurrectGroup)
 		call GroupEnumUnitsInRangeOfUnitCounted(resurrectGroup, caster, getAreaOfEffect(), this.deadUnitFilter, this.numberOfCorpsesRaised)
 		call ForGroup(resurrectGroup, this.unitInRangeEnum)
-		call DestroyEffect(AddSpellEffectTargetById(getAliasId(), EFFECT_TYPE_CASTER, caster, null))
+		call DestroyEffect(AddSpellEffectTargetById(getAliasId(), EFFECT_TYPE_CASTER, caster, DEFAULT_ATTACH_POINTS))
 		return false
         endmethod
     

@@ -269,6 +269,8 @@ library AbilitiesCommonLegacy requires TargetTypesAPI, AnimationTokensAPI
 		constant datafieldletter DATA_FIELD_LETTER_H                                 = ConvertDataFieldLetter(7)
 		constant datafieldletter DATA_FIELD_LETTER_I                                 = ConvertDataFieldLetter(8)
 		constant datafieldletter DATA_FIELD_LETTER_J                                 = ConvertDataFieldLetter(9)
+
+		constant string DEFAULT_ATTACH_POINTS = null /* at the moment, null is hardcoded to use defaults */
 	endglobals                                                                                         
 
 	//=================================================================================================
@@ -2375,7 +2377,7 @@ library BuffAPI requires AbilityAPI
 
 		method onAdd takes unit target returns nothing
 			onBuffAdd(target)
-			this.fx = AddSpellEffectTargetById(getAliasId(), EFFECT_TYPE_TARGET, target, null)
+			this.fx = AddSpellEffectTargetById(getAliasId(), EFFECT_TYPE_TARGET, target, DEFAULT_ATTACH_POINTS)
 			this.tickTrigger = CreateTrigger()
 			call TriggerAddAction(this.tickTrigger, method this.onTick)
 			refreshExpiration()
@@ -2432,6 +2434,36 @@ library BuffAPI requires AbilityAPI
 		endmethod
 	endstruct
 
+	struct BuffTimedSlow extends BuffTimed
+		nonstackingstatbonus movementSpeedBonus
+		nonstackingstatbonus attackSpeedBonus
+
+		public static method create takes integer aliasId, real duration, string stackingKey, real attackSpeedReductionPercent, real movementSpeedReductionPercent returns thistype
+			thistype this = .allocate(aliasId, duration)
+			this.attackSpeedBonus = CreateNonStackingStatBonus(NON_STACKING_STAT_BONUS_TYPE_ATKSPD, stackingKey, -attackSpeedReductionPercent)
+			this.movementSpeedBonus = CreateNonStackingStatBonus(NON_STACKING_STAT_BONUS_TYPE_MVSPDPCT, stackingKey, -movementSpeedReductionPercent)
+			return this
+		endmethod
+
+		method onBuffAdd takes unit target returns nothing
+			AddUnitNonStackingStatBonus(target, this.movementSpeedBonus)
+			AddUnitNonStackingStatBonus(target, this.attackSpeedBonus)
+			RecomputeStatBonusesOnUnit(target, NON_STACKIN_STAT_BONUS_TYPE_ATKSPDPCT)
+			RecomputeStatBonusesOnUnit(target, NON_STACKIN_STAT_BONUS_TYPE_MVSPDPCT)
+		endmethod
+
+		method onBuffRemove takes unit target returns nothing
+			RemoveUnitNonStackingStatBonus(target, this.movementSpeedBonus)
+			RemoveUnitNonStackingStatBonus(target, this.attackSpeedBonus)
+			RecomputeStatBonusesOnUnit(target, NON_STACKIN_STAT_BONUS_TYPE_ATKSPDPCT)
+			RecomputeStatBonusesOnUnit(target, NON_STACKIN_STAT_BONUS_TYPE_MVSPDPCT)
+		endmethod
+
+		method isTimedLifeBar takes nothing returns boolean
+			return false
+		endmethod
+	endstruct
+
 	struct BuffTimedStatBonus extends BuffTimed
 		nonstackingstatbonus statBonus
 		nonstackingstatbonustype statBonusType
@@ -2448,13 +2480,13 @@ library BuffAPI requires AbilityAPI
 		endmethod
 
 		method onBuffAdd takes unit target returns nothing
-			AddUnitNonStackingStatMod(target, this.statBonus)
-			RecomputeStatModsOnUnit(target, this.statBonusType)
+			AddUnitNonStackingStatBonus(target, this.statBonus)
+			RecomputeStatBonusesOnUnit(target, this.statBonusType)
 		endmethod
 
 		method onBuffRemove takes unit target returns nothing
-			RemoveUnitNonStackingStatMod(target, this.statBonus)
-			RecomputeStatModsOnUnit(target, this.statBonusType)
+			RemoveUnitNonStackingStatBonus(target, this.statBonus)
+			RecomputeStatBonusesOnUnit(target, this.statBonusType)
 		endmethod
 
 		method isTimedLifeBar takes nothing returns boolean
@@ -2842,6 +2874,10 @@ library AbilitySpellBaseTypes requires GenericAbilityBaseTypes, AbilityFieldDefa
 
 		method getAreaOfEffect takes nothing returns real
 			return this.areaOfEffect
+		endmethod
+
+		method setCastingPrimaryTag takes primarytag whichTag returns nothing
+			this.castingPrimaryTag = whichTag
 		endmethod
 
 		// required by native API (see "interface Ability")
@@ -3520,7 +3556,7 @@ library AuraAPI requires AbilityAPI, BuffAPI, MathUtils
 
 		method onAdd takes unit source returns nothing
 			this.source = source
-			this.fx = AddSpellEffectTargetById(getAliasId(), EFFECT_TYPE_TARGET, source, null)
+			this.fx = AddSpellEffectTargetById(getAliasId(), EFFECT_TYPE_TARGET, source, DEFAULT_ATTACH_POINTS)
 			this.tickTrigger = CreateTrigger()
 			call TriggerAddAction(this.tickTrigger, method this.onTick)
 			call TriggerRegisterOnUnitTick(this.tickTrigger, source)
@@ -3541,12 +3577,10 @@ library AuraAPI requires AbilityAPI, BuffAPI, MathUtils
 					addNewBuff = true
 				else
 					if (GetAbilityLevel(existingBuff) < level) then
-						call BJDebugMsg("updating buff level")
 						call RemoveUnitAbility(enumUnit, existingBuff)
 						addNewBuff = true
 					else
 						call existingBuff.refreshExpiration()
-						call BJDebugMsg("called refresh expiration")
 					endif
 				endif
 				if (addNewBuff) then

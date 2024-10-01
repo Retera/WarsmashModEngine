@@ -37,11 +37,11 @@ scope HolyLight initializer register
 				if IsUnitType(targetUnit, UNIT_TYPE_UNDEAD) then
 					if CheckUnitForAbilityEffectReaction(targetUnit, caster, this) then
 						call UnitDamageTarget(caster, targetUnit, healAmount * 0.5, false, true, ATTACK_TYPE_NORMAL, DAMAGE_TYPE_DIVINE, WEAPON_TYPE_WHOKNOWS)
-						call DestroyEffect(AddSpellEffectTargetById(getAliasId(), EFFECT_TYPE_TARGET, targetUnit, null))
+						call DestroyEffect(AddSpellEffectTargetById(getAliasId(), EFFECT_TYPE_TARGET, targetUnit, DEFAULT_ATTACH_POINTS))
 					endif
 				else
 					call HealUnit(targetUnit, healAmount)
-					call DestroyEffect(AddSpellEffectTargetById(getAliasId(), EFFECT_TYPE_TARGET, targetUnit, null))
+					call DestroyEffect(AddSpellEffectTargetById(getAliasId(), EFFECT_TYPE_TARGET, targetUnit, DEFAULT_ATTACH_POINTS))
 				endif
 			endif
 			return false

@@ -1,5 +1,7 @@
 scope DivineShield initializer register
-    struct BuffDevotion extends BuffTimed
+    struct BuffDivineShield extends BuffTimed
+	statemod invulnerableBonus = CreateStateMod(STATE_MOD_TYPE_INVULNERABLE, 1)
+
         public static method create takes integer aliasId, real duration returns thistype
             return .allocate(aliasId, duration)
         endmethod
@@ -9,11 +11,13 @@ scope DivineShield initializer register
         endmethod
         
         method onBuffAdd takes unit target returns nothing
-            SetUnitInvulnerable(target, true)
+            AddUnitStateMod(target, invulnerableBonus)
+	    RecomputeStateModsOnUnit(target, STATE_MOD_TYPE_INVULNERABLE)
         endmethod
         
         method onBuffRemove takes unit target returns nothing
-            SetUnitInvulnerable(target, false)
+            RemoveUnitStateMod(target, invulnerableBonus)
+	    RecomputeStateModsOnUnit(target, STATE_MOD_TYPE_INVULNERABLE)
         endmethod
     endstruct
 
@@ -32,8 +36,8 @@ scope DivineShield initializer register
             this.buffId = GetGameObjectBuffID(editorData, level, 0)
         endmethod
         
-        method doEffect takes unit caster, abilitytarget target returns boolean
-            call AddUnitAbility(caster, BuffDevotion.create(buffId, getDuration()))
+        method doEffect takes unit caster returns boolean
+            call AddUnitAbility(caster, BuffDivineShield.create(buffId, getDuration()))
             return false
         endmethod
     

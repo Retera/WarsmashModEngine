@@ -1367,7 +1367,7 @@ public class Jass2 {
 						final TriggerBooleanExpression filter = nullable(arguments, 3,
 								ObjectJassValueVisitor.<TriggerBooleanExpression>getInstance());
 						final Integer countLimit = arguments.get(4).visit(IntegerJassValueVisitor.getInstance());
-						CommonEnvironment.this.simulation.getWorldCollision().enumUnitsOrCorpsesnRect(
+						CommonEnvironment.this.simulation.getWorldCollision().enumUnitsOrCorpsesInRect(
 								tempRect.set(x - radius, y - radius, radius, radius), new CUnitEnumFunction() {
 									int count = 0;
 
@@ -8438,8 +8438,8 @@ public class Jass2 {
 						final float y = whichUnit.getY();
 						final float radius = arguments.get(2).visit(RealJassValueVisitor.getInstance()).floatValue();
 						final TriggerBooleanExpression filter = nullable(arguments, 3,
-						final Integer countLimit = arguments.get(4).visit(IntegerJassValueVisitor.getInstance());
 								ObjectJassValueVisitor.getInstance());
+						final Integer countLimit = arguments.get(4).visit(IntegerJassValueVisitor.getInstance());
 
 						CommonEnvironment.this.simulation.getWorldCollision().enumUnitsOrCorpsesInRect(
 								tempRect.set(x - radius, y - radius, radius * 2, radius * 2), new CUnitEnumFunction() {
@@ -8450,7 +8450,8 @@ public class Jass2 {
 										if (whichUnit.canReach(unit, radius)) {
 											if ((filter == null) || filter.evaluate(globalScope,
 													CommonTriggerExecutionScope.filterScope(triggerScope, unit))) {
-												// TODO the trigger scope for evaluation here might need to be a clean one?
+												// TODO the trigger scope for evaluation here might need to be a clean
+												// one?
 												group.add(unit);
 												this.count++;
 												if (this.count >= countLimit) {

@@ -10,18 +10,18 @@ scope Brilliance initializer register
 			else
 			    this.statModifierType = NON_STACKING_STAT_BONUS_TYPE_MPGEN
 			endif
-			this.statModifier = CreateNonStackingStatMod(this.statModifierType, "BHab", manaRegenerationIncrease)
+			this.statModifier = CreateNonStackingStatBonus(this.statModifierType, "BHab", manaRegenerationIncrease)
 			return this
 		endmethod
 
 		method onBuffAdd takes unit target returns nothing
-			AddUnitNonStackingStatMod(target, this.statModifier)
-			RecomputeStatModsOnUnit(target, this.statModifierType)
+			AddUnitNonStackingStatBonus(target, this.statModifier)
+			RecomputeStatBonusesOnUnit(target, this.statModifierType)
 		endmethod
 
 		method onBuffRemove takes unit target returns nothing
-			RemoveUnitNonStackingStatMod(target, this.statModifier)
-			RecomputeStatModsOnUnit(target, this.statModifierType)
+			RemoveUnitNonStackingStatBonus(target, this.statModifier)
+			RecomputeStatBonusesOnUnit(target, this.statModifierType)
 		endmethod
 	endstruct
 

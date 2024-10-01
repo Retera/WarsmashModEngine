@@ -21,12 +21,12 @@ public enum NonStackingStatBuffType implements CHandle {
 	HPSTEAL,
 	THORNS,
 	THORNSPCT,
-	
+
 	MAXHP,
 	MAXHPPCT,
 	MAXMP,
 	MAXMPPCT,
-	
+
 	ALLATK, // These are for parsing
 	ALLATKPCT;
 
@@ -34,6 +34,6 @@ public enum NonStackingStatBuffType implements CHandle {
 	public int getHandleId() {
 		return ordinal();
 	}
-	
+
 	public static final NonStackingStatBuffType[] VALUES = values();
 }

@@ -30,7 +30,7 @@ scope SummonWaterElemental initializer register
 				set summonedUnit = CreateUnit(owner, summonUnitId, x, y, facing)
 				call UnitAddType(summonedUnit, UNIT_TYPE_SUMMONED)
 				call AddUnitAbility(summonedUnit, BuffTimedLife.create(this.buffId, getDuration(), false))
-				call DestroyEffect(AddSpellEffectTargetById(this.getAliasId(), EFFECT_TYPE_TARGET, summonedUnit, null))
+				call DestroyEffect(AddSpellEffectTargetById(this.getAliasId(), EFFECT_TYPE_TARGET, summonedUnit, DEFAULT_ATTACH_POINTS))
 				set i = i + 1
 			endloop
 			return false

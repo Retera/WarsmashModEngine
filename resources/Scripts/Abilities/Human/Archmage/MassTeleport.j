@@ -57,13 +57,13 @@ scope MassTeleport initializer register
 				call SetUnitPosition(caster, targetX, targetY)
 				call DestroyEffect(AddSpellEffectById(getAliasId(), EFFECT_TYPE_SPECIAL, GetUnitX(caster), GetUnitY(caster)))
 				integer teleportingUnitIndex = 0
-				integer teleportingUnitsCount = GroupGetSize(this.teleportingUnits)
+				integer teleportingUnitsCount = GroupGetSize(teleportingUnits)
 				unit teleportingUnit
 				if (this.useTeleportClustering) then
 					loop
 						exitwhen teleportingUnitIndex >= teleportingUnitsCount
-						teleportingUnit = GroupUnitAt(teleportingUnitIndex)
-						call DestroyEffect(AddSpellEffectById(getAliasId(), EFFECT_TYPE_SPECIAL, teleportingUnitX, teleportingUnitY))
+						teleportingUnit = GroupUnitAt(teleportingUnits, teleportingUnitIndex)
+						call DestroyEffect(AddSpellEffectById(getAliasId(), EFFECT_TYPE_SPECIAL, GetUnitX(teleportingUnit), GetUnitY(teleportingUnit)))
 						call SetUnitPosition(teleportingUnit, targetX, targetY)
 						call DestroyEffect(AddSpellEffectById(getAliasId(), EFFECT_TYPE_SPECIAL, GetUnitX(teleportingUnit), GetUnitY(teleportingUnit)))
 						teleportingUnitIndex++
@@ -72,15 +72,16 @@ scope MassTeleport initializer register
 				else
 					loop
 						exitwhen teleportingUnitIndex >= teleportingUnitsCount
-						teleportingUnit = GroupUnitAt(teleportingUnitIndex)
-						call DestroyEffect(AddSpellEffectById(getAliasId(), EFFECT_TYPE_SPECIAL, targetX + (GetUnitX(teleportingUnit) - casterX), targetY + (GetUnitY(teleportingUnit) - casterY)))
-						call SetUnitPosition(teleportingUnit, targetX, targetY)
+						teleportingUnit = GroupUnitAt(teleportingUnits, teleportingUnitIndex)
+						call DestroyEffect(AddSpellEffectById(getAliasId(), EFFECT_TYPE_SPECIAL, GetUnitX(teleportingUnit), GetUnitY(teleportingUnit)))
+						call SetUnitPosition(teleportingUnit, targetX + (GetUnitX(teleportingUnit) - casterX), targetY + (GetUnitY(teleportingUnit) - casterY))
 						call DestroyEffect(AddSpellEffectById(getAliasId(), EFFECT_TYPE_SPECIAL, GetUnitX(teleportingUnit), GetUnitY(teleportingUnit)))
 						
 						teleportingUnitIndex++
 					endloop
 
 				endif
+				call DestroyGroup(teleportingUnits)
 				return false
 			endif
 			return true

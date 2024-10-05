@@ -261,7 +261,7 @@ public class Jass2 {
 		final JassProgram jassProgramVisitor = new JassProgram();
 		final CommonEnvironment environment = new CommonEnvironment(jassProgramVisitor, dataSource, uiViewport, uiScene,
 				war3MapViewer, meleeUI, files);
-		for (String file : files) {
+		for (final String file : files) {
 			String jassFilePath = file;
 			if (!dataSource.has(jassFilePath)) {
 				jassFilePath = jassFilePath
@@ -327,7 +327,7 @@ public class Jass2 {
 		final JassProgram jassProgramVisitor = new JassProgram();
 		final ConfigEnvironment environment = new ConfigEnvironment(jassProgramVisitor, dataSource, uiViewport, uiScene,
 				gameUI, mapConfig);
-		for (String file : files) {
+		for (final String file : files) {
 			String jassFilePath = file;
 			if (!dataSource.has(jassFilePath)) {
 				jassFilePath = jassFilePath
@@ -1286,8 +1286,8 @@ public class Jass2 {
 						final float radius = arguments.get(3).visit(RealJassValueVisitor.getInstance()).floatValue();
 						final TriggerBooleanExpression filter = nullable(arguments, 4,
 								ObjectJassValueVisitor.<TriggerBooleanExpression>getInstance());
-						CommonEnvironment.this.simulation.getWorldCollision().enumUnitsOrCorpsesInRect(
-								tempRect.set(x - radius, y - radius, radius * 2, radius * 2), (unit) -> {
+						CommonEnvironment.this.simulation.getWorldCollision().enumUnitsOrCorpsesInRange(x, y, radius,
+								(unit) -> {
 									if (unit.distance(x, y) <= radius) {
 										if ((filter == null) || filter.evaluate(globalScope,
 												CommonTriggerExecutionScope.filterScope(triggerScope, unit))) {
@@ -1311,8 +1311,8 @@ public class Jass2 {
 						final TriggerBooleanExpression filter = nullable(arguments, 3,
 								ObjectJassValueVisitor.<TriggerBooleanExpression>getInstance());
 
-						CommonEnvironment.this.simulation.getWorldCollision().enumUnitsOrCorpsesInRect(
-								tempRect.set(x - radius, y - radius, radius * 2, radius * 2), (unit) -> {
+						CommonEnvironment.this.simulation.getWorldCollision().enumUnitsOrCorpsesInRange(x, y, radius,
+								(unit) -> {
 									if (unit.distance(x, y) <= radius) {
 										if ((filter == null) || filter.evaluate(globalScope,
 												CommonTriggerExecutionScope.filterScope(triggerScope, unit))) {
@@ -1334,8 +1334,8 @@ public class Jass2 {
 						final TriggerBooleanExpression filter = nullable(arguments, 4,
 								ObjectJassValueVisitor.<TriggerBooleanExpression>getInstance());
 						final Integer countLimit = arguments.get(5).visit(IntegerJassValueVisitor.getInstance());
-						CommonEnvironment.this.simulation.getWorldCollision().enumUnitsOrCorpsesInRect(
-								tempRect.set(x - radius, y - radius, radius, radius), new CUnitEnumFunction() {
+						CommonEnvironment.this.simulation.getWorldCollision().enumUnitsOrCorpsesInRange(x, y, radius,
+								new CUnitEnumFunction() {
 									int count = 0;
 
 									@Override
@@ -1369,8 +1369,8 @@ public class Jass2 {
 						final TriggerBooleanExpression filter = nullable(arguments, 3,
 								ObjectJassValueVisitor.<TriggerBooleanExpression>getInstance());
 						final Integer countLimit = arguments.get(4).visit(IntegerJassValueVisitor.getInstance());
-						CommonEnvironment.this.simulation.getWorldCollision().enumUnitsOrCorpsesInRect(
-								tempRect.set(x - radius, y - radius, radius, radius), new CUnitEnumFunction() {
+						CommonEnvironment.this.simulation.getWorldCollision().enumUnitsOrCorpsesInRange(x, y, radius,
+								new CUnitEnumFunction() {
 									int count = 0;
 
 									@Override
@@ -8531,7 +8531,7 @@ public class Jass2 {
 			jassProgramVisitor.getJassNativeManager().createNative("ConvertStateModType",
 					(arguments, globalScope, triggerScope) -> {
 						final int i = arguments.get(0).visit(IntegerJassValueVisitor.getInstance());
-						return new HandleJassValue(statemodtypeType, NonStackingStatBuffType.VALUES[i]);
+						return new HandleJassValue(statemodtypeType, StateModBuffType.VALUES[i]);
 					});
 			jassProgramVisitor.getJassNativeManager().createNative("CreateStateMod",
 					(arguments, globalScope, triggerScope) -> {

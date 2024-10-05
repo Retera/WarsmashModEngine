@@ -42,7 +42,7 @@ scope Resurrect initializer register
         method doEffect takes unit caster returns boolean
 		call GroupClear(resurrectGroup)
 		call GroupEnumUnitsInRangeOfUnitCounted(resurrectGroup, caster, getAreaOfEffect(), this.deadUnitFilter, this.numberOfCorpsesRaised)
-		call ForGroup(resurrectGroup, this.unitInRangeEnum)
+		call ForGroup(resurrectGroup, method this.unitInRangeEnum)
 		call DestroyEffect(AddSpellEffectTargetById(getAliasId(), EFFECT_TYPE_CASTER, caster, DEFAULT_ATTACH_POINTS))
 		return false
         endmethod

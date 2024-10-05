@@ -21,20 +21,16 @@ scope ThunderClap initializer register
 		this.movementSpeedReductionPercent = GetGameObjectFieldAsReal(editorData, ABILITY_FIELD_DATA_C + I2S(level), 0)
         endmethod
 
-	private method unitInRangeFilter takes nothing returns boolean
-		unit filterUnit = GetFilterUnit()
-		return GetUnitTargetError(filterUnit, caster, getTargetsAllowed(), false) == null
-	endmethod
-
-	private method unitInRangeEnum takes nothing returns nothing
+	private method unitInRangeEnum takes nothing returns boolean
 		unit enumUnit = GetFilterUnit()
 		unit caster = this.behavior.behavingUnit // NOTE: not good API to get caster, what should API be instead?
 		if (not IsUnitAlly(enumUnit, GetOwningPlayer(caster)) and GetUnitTargetError(enumUnit, caster, getTargetsAllowed(), false) == null) then
 			if CheckUnitForAbilityEffectReaction(enumUnit, caster, this) then
 				call AddUnitAbility(enumUnit, BuffTimedSlow.create(buffId, getDurationForTarget(enumUnit), "BHtc", attackSpeedReductionPercent, movementSpeedReductionPercent))
-				call UnitDamageTarget(casterUnit, enumUnit, damage, false, true, ATTACK_TYPE_NORMAL, DAMAGE_TYPE_LIGHTNING, WEAPON_TYPE_WHOKNOWS)
+				call UnitDamageTarget(caster, enumUnit, damage, false, true, ATTACK_TYPE_NORMAL, DAMAGE_TYPE_LIGHTNING, WEAPON_TYPE_WHOKNOWS)
 			endif
 		endif
+		return false
 	endmethod
         
         method doEffect takes unit caster returns boolean

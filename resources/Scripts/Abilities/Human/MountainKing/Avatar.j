@@ -1,6 +1,7 @@
 scope Avatar initializer register
 	struct BuffAvatar extends BuffTimed
-		private static constant string AVATAR_BUFF_STACKING_KEY = "BHav"
+		// TODO originally this constant was private, but private is bugged on static members
+		static constant string AVATAR_BUFF_STACKING_KEY = "BHav"
 		 
 		nonstackingstatbonus hitPointBonus
 		nonstackingstatbonus damageBonus
@@ -25,9 +26,9 @@ scope Avatar initializer register
 			AddUnitNonStackingStatBonus(target, this.damageBonus)
 			AddUnitNonStackingStatBonus(target, this.defenseBonus)
 			AddUnitStateMod(target, this.magicImmuneBonus)
-			RecomputeStatBonusesOnUnit(target, NON_STACKIN_STAT_BONUS_TYPE_MAXHP)
-			RecomputeStatBonusesOnUnit(target, NON_STACKIN_STAT_BONUS_TYPE_ALLATK)
-			RecomputeStatBonusesOnUnit(target, NON_STACKIN_STAT_BONUS_TYPE_DEF)
+			RecomputeStatBonusesOnUnit(target, NON_STACKING_STAT_BONUS_TYPE_MAXHP)
+			RecomputeStatBonusesOnUnit(target, NON_STACKING_STAT_BONUS_TYPE_ALLATK)
+			RecomputeStatBonusesOnUnit(target, NON_STACKING_STAT_BONUS_TYPE_DEF)
 			RecomputeStateModsOnUnit(target, STATE_MOD_TYPE_MAGIC_IMMUNE)
 		endmethod
 		
@@ -36,9 +37,9 @@ scope Avatar initializer register
 			RemoveUnitNonStackingStatBonus(target, this.damageBonus)
 			RemoveUnitNonStackingStatBonus(target, this.defenseBonus)
 			RemoveUnitStateMod(target, this.magicImmuneBonus)
-			RecomputeStatBonusesOnUnit(target, NON_STACKIN_STAT_BONUS_TYPE_MAXHP)
-			RecomputeStatBonusesOnUnit(target, NON_STACKIN_STAT_BONUS_TYPE_ALLATK)
-			RecomputeStatBonusesOnUnit(target, NON_STACKIN_STAT_BONUS_TYPE_DEF)
+			RecomputeStatBonusesOnUnit(target, NON_STACKING_STAT_BONUS_TYPE_MAXHP)
+			RecomputeStatBonusesOnUnit(target, NON_STACKING_STAT_BONUS_TYPE_ALLATK)
+			RecomputeStatBonusesOnUnit(target, NON_STACKING_STAT_BONUS_TYPE_DEF)
 			RecomputeStateModsOnUnit(target, STATE_MOD_TYPE_MAGIC_IMMUNE)
 		endmethod
 		
@@ -66,7 +67,7 @@ scope Avatar initializer register
 
         method doEffect takes unit caster returns boolean
 		call DestroyEffect(AddSpellEffectTargetById(getAliasId(), EFFECT_TYPE_CASTER, caster, DEFAULT_ATTACH_POINTS))
-		call AddUnitAbility(enumUnit, BuffAvatar.create(AVATAR_BUFF, getDuration(), hitPointBonus, damageBonus, defenseBonus))
+		call AddUnitAbility(caster, BuffAvatar.create(AVATAR_BUFF, getDuration(), hitPointBonus, damageBonus, defenseBonus))
 		return false
         endmethod
     

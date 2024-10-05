@@ -547,11 +547,7 @@ public class InstructionAppendingJassStatementVisitor
 
 	public void performParentlessMethodCall(final String functionName, final List<JassExpression> arguments) {
 		final int argumentCount = arguments.size();
-		final Integer thisStruct = this.nameToLocalId.get(GlobalScope.KEYNAME_THIS);
-		final JassType thisStructType = this.nameToLocalType.get(GlobalScope.KEYNAME_THIS);
-		StructJassType structJassType;
-		if ((thisStruct != null)
-				&& ((structJassType = thisStructType.visit(StructJassTypeVisitor.getInstance())) != null)) {
+		if (this.enclosingStructType != null) {
 			final JassCodeDefinitionBlock methodDefinition = this.enclosingStructType.tryGetMethodByName(functionName);
 			if (methodDefinition == null) {
 				insertTypeCastInstructionsOrFail(functionName, arguments, argumentCount);
@@ -564,19 +560,24 @@ public class InstructionAppendingJassStatementVisitor
 						this.enclosingStructType);
 			}
 			else {
-				this.instructions.add(new LocalReferenceInstruction(thisStruct));
-				addVirtualMethodCallInstructions(functionName, arguments, argumentCount, structJassType,
-						methodDefinition);
+				final Integer thisStruct = this.nameToLocalId.get(GlobalScope.KEYNAME_THIS);
+				final JassType thisStructType = this.nameToLocalType.get(GlobalScope.KEYNAME_THIS);
+				StructJassType structJassType;
+				if ((thisStruct != null)
+						&& ((structJassType = thisStructType.visit(StructJassTypeVisitor.getInstance())) != null)) {
+					this.instructions.add(new LocalReferenceInstruction(thisStruct));
+					addVirtualMethodCallInstructions(functionName, arguments, argumentCount, structJassType,
+							methodDefinition);
+				}
+				else {
+					throw this.scope.createException(
+							"Attempt to call nonstatic method without 'this' context: " + functionName,
+							new IllegalArgumentException());
+				}
 			}
 		}
 		else {
-			if (this.enclosingStructType != null) {
-				insertCompileTimeStaticMethodCallInstructions(functionName, arguments, argumentCount,
-						this.enclosingStructType);
-			}
-			else {
-				insertTypeCastInstructionsOrFail(functionName, arguments, argumentCount);
-			}
+			insertTypeCastInstructionsOrFail(functionName, arguments, argumentCount);
 		}
 	}
 

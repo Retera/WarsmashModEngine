@@ -336,9 +336,9 @@ function CheckAbilityProjReactionAU takes unit caster, localstore localStore, in
 	endif
 endfunction
 
-function CreateNonStackingStatBuffAU takes localstore whichLocalStore, nonstackingstatbufftype whichType, string stackingKey, real value returns nonstackingstatbuff
-    local nonstackingstatbuff theBuff = CreateNonStackingStatBuff(whichType, stackingKey, value)
-    call SetLocalStoreNonStackingStatBuffHandle(whichLocalStore, AB_LOCAL_STORE_KEY_LASTCREATEDNSSB, theBuff)
+function CreateNonStackingStatBuffAU takes localstore whichLocalStore, nonstackingstatbonustype whichType, string stackingKey, real value returns nonstackingstatbonus
+    local nonstackingstatbonus theBuff = CreateNonStackingStatBonus(whichType, stackingKey, value)
+    call SetLocalStoreNonStackingStatBonusHandle(whichLocalStore, AB_LOCAL_STORE_KEY_LASTCREATEDNSSB, theBuff)
     return theBuff
 endfunction
 
@@ -484,19 +484,19 @@ function StoreHandleLocallyAU takes localstore whichLocalStore, string childKey,
     endif
 endfunction
 
-function GetLocalStoreUserNonStackingStatBuffHandleAU takes localstore whichLocalStore, string childKey returns nonstackingstatbuff
-    return GetLocalStoreNonStackingStatBuffHandle(whichLocalStore, "__" + childKey)
+function GetLocalStoreUserNonStackingStatBonusHandleAU takes localstore whichLocalStore, string childKey returns nonstackingstatbonus
+    return GetLocalStoreNonStackingStatBonusHandle(whichLocalStore, "__" + childKey)
 endfunction 
 
-function GetLocalStoreUserCastNonStackingStatBuffHandleAU takes localstore whichLocalStore, string childKey, integer castId returns nonstackingstatbuff
-    return GetLocalStoreNonStackingStatBuffHandle(whichLocalStore, "__" + childKey + "#" + I2S(castId))
+function GetLocalStoreUserCastNonStackingStatBonusHandleAU takes localstore whichLocalStore, string childKey, integer castId returns nonstackingstatbonus
+    return GetLocalStoreNonStackingStatBonusHandle(whichLocalStore, "__" + childKey + "#" + I2S(castId))
 endfunction 
 
-function GetStoredNonStackingStatBuffAU takes localstore whichLocalStore, string childKey, integer castId, boolean instanceValue returns nonstackingstatbuff
+function GetStoredNonStackingStatBuffAU takes localstore whichLocalStore, string childKey, integer castId, boolean instanceValue returns nonstackingstatbonus
     if instanceValue then
-        return GetLocalStoreUserCastNonStackingStatBuffHandleAU(whichLocalStore, childKey, castId)
+        return GetLocalStoreUserCastNonStackingStatBonusHandleAU(whichLocalStore, childKey, castId)
     else
-        return GetLocalStoreUserNonStackingStatBuffHandleAU(whichLocalStore, childKey)
+        return GetLocalStoreUserNonStackingStatBonusHandleAU(whichLocalStore, childKey)
     endif
 endfunction
 

@@ -2448,15 +2448,15 @@ library BuffAPI requires AbilityAPI
 		method onBuffAdd takes unit target returns nothing
 			AddUnitNonStackingStatBonus(target, this.movementSpeedBonus)
 			AddUnitNonStackingStatBonus(target, this.attackSpeedBonus)
-			RecomputeStatBonusesOnUnit(target, NON_STACKIN_STAT_BONUS_TYPE_ATKSPDPCT)
-			RecomputeStatBonusesOnUnit(target, NON_STACKIN_STAT_BONUS_TYPE_MVSPDPCT)
+			RecomputeStatBonusesOnUnit(target, NON_STACKING_STAT_BONUS_TYPE_ATKSPD)
+			RecomputeStatBonusesOnUnit(target, NON_STACKING_STAT_BONUS_TYPE_MVSPDPCT)
 		endmethod
 
 		method onBuffRemove takes unit target returns nothing
 			RemoveUnitNonStackingStatBonus(target, this.movementSpeedBonus)
 			RemoveUnitNonStackingStatBonus(target, this.attackSpeedBonus)
-			RecomputeStatBonusesOnUnit(target, NON_STACKIN_STAT_BONUS_TYPE_ATKSPDPCT)
-			RecomputeStatBonusesOnUnit(target, NON_STACKIN_STAT_BONUS_TYPE_MVSPDPCT)
+			RecomputeStatBonusesOnUnit(target, NON_STACKING_STAT_BONUS_TYPE_ATKSPD)
+			RecomputeStatBonusesOnUnit(target, NON_STACKING_STAT_BONUS_TYPE_MVSPDPCT)
 		endmethod
 
 		method isTimedLifeBar takes nothing returns boolean
@@ -2527,7 +2527,7 @@ endlibrary
 // fields. Note that these are strings; these do not
 // at all prohibit you from looking up other ability
 // fields with other names beyond these.
-library AbilityFieldDefaults
+library AbilityFieldDefaults requires AbilitiesCommonLegacy
 	globals
 		constant string ABILITY_FIELD_CODE                              = "code"
 		constant string ABILITY_FIELD_DATA_A                            = "DataA"
@@ -3537,7 +3537,7 @@ library AuraAPI requires AbilityAPI, BuffAPI, MathUtils
 			return this
 		endmethod
 
-		public static method destroy takes nothing returns nothing
+		public method destroy takes nothing returns nothing
 			call DestroyBoolExpr(enumFilter)
 			call this.deallocate()
 		endmethod

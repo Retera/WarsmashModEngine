@@ -52,6 +52,7 @@ import com.etheller.interpreter.ast.statement.JassSetMemberStatement;
 import com.etheller.interpreter.ast.statement.JassSetStatement;
 import com.etheller.interpreter.ast.statement.JassStatement;
 import com.etheller.interpreter.ast.statement.JassStatementVisitor;
+import com.etheller.interpreter.ast.statement.JassThrowStatement;
 import com.etheller.interpreter.ast.struct.JassStructMemberType;
 import com.etheller.interpreter.ast.value.ArrayJassType;
 import com.etheller.interpreter.ast.value.BooleanJassValue;
@@ -831,6 +832,12 @@ public class InstructionAppendingJassStatementVisitor
 		final JassType castToType = expression.getCastToType();
 		final JassExpression valueExpression = expression.getValueExpression();
 		insertTypeCastInstructions(castToType, valueExpression);
+		return null;
+	}
+
+	@Override
+	public Void visit(final JassThrowStatement statement) {
+		this.instructions.add(new JassThrowInstruction(statement.getExceptionMessage()));
 		return null;
 	}
 

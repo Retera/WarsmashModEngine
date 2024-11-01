@@ -4,8 +4,8 @@ import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
 
+import com.etheller.interpreter.ast.debug.DebuggingJassStatement;
 import com.etheller.interpreter.ast.expression.JassExpression;
-import com.etheller.interpreter.ast.expression.LiteralJassExpression;
 import com.etheller.interpreter.ast.function.JassParameter;
 import com.etheller.interpreter.ast.function.UserJassFunction;
 import com.etheller.interpreter.ast.qualifier.JassQualifier;
@@ -13,8 +13,9 @@ import com.etheller.interpreter.ast.scope.GlobalScope;
 import com.etheller.interpreter.ast.scope.Scope;
 import com.etheller.interpreter.ast.statement.JassReturnStatement;
 import com.etheller.interpreter.ast.statement.JassStatement;
+import com.etheller.interpreter.ast.statement.JassThrowStatement;
 import com.etheller.interpreter.ast.type.JassTypeToken;
-import com.etheller.interpreter.ast.value.JassType;
+import com.etheller.interpreter.ast.util.JassSettings;
 import com.etheller.interpreter.ast.value.StructJassType;
 
 public class JassMethodDefinitionBlock extends JassCodeDefinitionBlock {
@@ -30,10 +31,24 @@ public class JassMethodDefinitionBlock extends JassCodeDefinitionBlock {
 			final JassExpression defaultsExpression) {
 		final List<JassStatement> statements = new ArrayList<>();
 		if (defaultsExpression != null) {
-			statements.add(new JassReturnStatement(defaultsExpression));
+			final JassReturnStatement returnStatement = new JassReturnStatement(defaultsExpression);
+			if (JassSettings.DEBUG) {
+				statements.add(new DebuggingJassStatement(lineNo, returnStatement));
+			}
+			else {
+				statements.add(returnStatement);
+			}
 		}
 		else {
-			statements.add(new JassReturnStatement(new LiteralJassExpression(JassType.NOTHING.getNullValue())));
+//			statements.add(new JassReturnStatement(new LiteralJassExpression(JassType.NOTHING.getNullValue())));
+			final JassThrowStatement throwStatement = new JassThrowStatement(lineNo, sourceFile,
+					"Called an interface method that was not defined in the derived type: " + name);
+			if (JassSettings.DEBUG) {
+				statements.add(new DebuggingJassStatement(lineNo, throwStatement));
+			}
+			else {
+				statements.add(throwStatement);
+			}
 		}
 		return new JassMethodDefinitionBlock(lineNo, sourceFile, qualifiers, name, statements, parameterDefinitions,
 				returnType);

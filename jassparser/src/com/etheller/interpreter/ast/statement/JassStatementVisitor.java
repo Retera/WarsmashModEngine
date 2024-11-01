@@ -38,4 +38,6 @@ public interface JassStatementVisitor<TYPE> {
 	TYPE visit(JassGlobalDefinitionStatement statement);
 
 	TYPE visit(JassGlobalStatement statement);
+
+	TYPE visit(JassThrowStatement statement);
 }

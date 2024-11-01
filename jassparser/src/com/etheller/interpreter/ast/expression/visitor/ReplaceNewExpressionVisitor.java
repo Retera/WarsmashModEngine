@@ -41,6 +41,7 @@ import com.etheller.interpreter.ast.statement.JassSetMemberStatement;
 import com.etheller.interpreter.ast.statement.JassSetStatement;
 import com.etheller.interpreter.ast.statement.JassStatement;
 import com.etheller.interpreter.ast.statement.JassStatementVisitor;
+import com.etheller.interpreter.ast.statement.JassThrowStatement;
 import com.etheller.interpreter.ast.value.StructJassType;
 
 public class ReplaceNewExpressionVisitor
@@ -404,6 +405,11 @@ public class ReplaceNewExpressionVisitor
 			return statements;
 		}
 		return newStatements;
+	}
+
+	@Override
+	public JassStatement visit(final JassThrowStatement statement) {
+		return statement;
 	}
 
 }

@@ -295,6 +295,18 @@ public class CAbilityJass extends AbstractGenericAliasedAbility implements CExte
 				}
 			}
 		}
+		if (orderId != 0) {
+			for (final CAbilityOrderButtonJass orderButton : this.orderButtons) {
+				if (orderButton.getAutoCastOrderId() == orderId) {
+					orderButton.setAutoCastActive(true);
+					return false;
+				}
+				else if (orderButton.getAutoCastUnOrderId() == orderId) {
+					orderButton.setAutoCastActive(false);
+					return false;
+				}
+			}
+		}
 		return true;
 	}
 

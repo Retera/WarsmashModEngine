@@ -3041,6 +3041,10 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 							@Override
 							public void removeUnit(final CUnit unit) {
 								final RenderUnit renderUnit = War3MapViewer.this.unitToRenderPeer.remove(unit);
+								if (renderUnit == null) {
+									System.err.println("Attempted to remove a null unit!");
+									return;
+								}
 								War3MapViewer.this.widgets.remove(renderUnit);
 								War3MapViewer.this.units.remove(renderUnit);
 								War3MapViewer.this.worldScene.removeInstance(renderUnit.instance);

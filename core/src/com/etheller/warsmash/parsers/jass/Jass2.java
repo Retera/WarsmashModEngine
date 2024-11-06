@@ -2852,6 +2852,13 @@ public class Jass2 {
 						dest.setLife(CommonEnvironment.this.simulation, 0f);
 						return null;
 					});
+			jassProgramVisitor.getJassNativeManager().createNative("RemoveDestructable",
+					(arguments, globalScope, triggerScope) -> {
+						final CDestructable dest = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());
+						dest.setLife(CommonEnvironment.this.simulation, 0f);
+						this.simulation.removeDestructable(dest);
+						return null;
+					});
 
 			final JassFunction createUnitFxn = (arguments, globalScope, triggerScope) -> {
 				final CPlayer player = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());

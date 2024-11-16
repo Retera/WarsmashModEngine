@@ -54,6 +54,7 @@ import com.etheller.interpreter.ast.statement.JassStatement;
 import com.etheller.interpreter.ast.statement.JassStatementVisitor;
 import com.etheller.interpreter.ast.statement.JassThrowStatement;
 import com.etheller.interpreter.ast.struct.JassStructMemberType;
+import com.etheller.interpreter.ast.util.JassSettings;
 import com.etheller.interpreter.ast.value.ArrayJassType;
 import com.etheller.interpreter.ast.value.BooleanJassValue;
 import com.etheller.interpreter.ast.value.CodeJassValue;
@@ -72,7 +73,7 @@ import com.etheller.interpreter.ast.value.visitor.cast.TypeCastConverterGettingJ
 
 public class InstructionAppendingJassStatementVisitor
 		implements JassStatementVisitor<Void>, JassExpressionVisitor<Void> {
-	private static final boolean CHECK_TYPES = true;
+	private static final boolean CHECK_TYPES = JassSettings.CHECK_TYPES;
 	private static final PushLiteralInstruction PUSH_NOTHING = new PushLiteralInstruction(
 			JassReturnNothingStatement.RETURN_NOTHING_NOTICE);
 	private final List<JassInstruction> instructions;

@@ -418,12 +418,12 @@ negatableExpression:
 		$$ = $1;
 	}
 	|
-	NOT baseExpression // NotExpression
+	NOT negatableExpression // NotExpression
 	{
 		$$ = new NotJassExpression($2);
 	}
 	|
-	MINUS baseExpression // NegateExpression
+	MINUS negatableExpression // NegateExpression
 	{
 		$$ = new NegateJassExpression($2);
 	}

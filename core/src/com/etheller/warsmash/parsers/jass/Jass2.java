@@ -793,7 +793,7 @@ public class Jass2 {
 			jassProgramVisitor.getJassNativeManager().createNative("GetUnitName",
 					(arguments, globalScope, triggerScope) -> {
 						final CUnit whichWidget = nullable(arguments, 0, ObjectJassValueVisitor.getInstance());
-						return new StringJassValue(whichWidget == null ? "" : whichWidget.getUnitType().getName());
+						return whichWidget == null ? JassType.STRING.getNullValue() : new StringJassValue(whichWidget.getUnitType().getName());
 					});
 			registerConversionAndStringNatives(jassProgramVisitor, war3MapViewer.getGameUI());
 			final War3MapConfig mapConfig = war3MapViewer.getMapConfig();
@@ -1515,7 +1515,7 @@ public class Jass2 {
 							final CodeJassValue callback = arguments.get(1).visit(CodeJassValueVisitor.getInstance());
 							try {
 								for (final CUnit unit : group) {
-									globalScope.queueThread(globalScope.createThread(callback,
+									globalScope.runThreadUntilCompletion(globalScope.createThread(callback,
 											CommonTriggerExecutionScope.enumScope(triggerScope, unit)));
 								}
 							}
@@ -9332,10 +9332,10 @@ public class Jass2 {
 			final CHashtable table = nullable(arguments, 0, ObjectJassValueVisitor.getInstance());
 			final Integer parentKey = arguments.get(1).visit(IntegerJassValueVisitor.getInstance());
 			final Integer childKey = arguments.get(2).visit(IntegerJassValueVisitor.getInstance());
-			table.save(parentKey, childKey, arguments.get(3));
 			if (table == null) {
 				return BooleanJassValue.FALSE;
 			}
+			table.save(parentKey, childKey, arguments.get(3));
 			return BooleanJassValue.TRUE;
 		}
 	}
@@ -9353,6 +9353,9 @@ public class Jass2 {
 			final CHashtable table = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());
 			final Integer parentKey = arguments.get(1).visit(IntegerJassValueVisitor.getInstance());
 			final Integer childKey = arguments.get(2).visit(IntegerJassValueVisitor.getInstance());
+			if (table == null) {
+				return this.nullValue;
+			}
 			final Object loadedValue = table.load(parentKey, childKey);
 			if (loadedValue == null) {
 				return this.nullValue;

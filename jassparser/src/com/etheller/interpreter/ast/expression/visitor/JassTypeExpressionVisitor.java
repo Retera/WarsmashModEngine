@@ -29,6 +29,7 @@ import com.etheller.interpreter.ast.value.JassType;
 import com.etheller.interpreter.ast.value.JassValue;
 import com.etheller.interpreter.ast.value.StaticStructTypeJassValue;
 import com.etheller.interpreter.ast.value.StructJassType;
+import com.etheller.interpreter.ast.value.StructJassTypeInterface;
 import com.etheller.interpreter.ast.value.visitor.ArrayPrimitiveTypeVisitor;
 import com.etheller.interpreter.ast.value.visitor.JassTypeGettingValueVisitor;
 import com.etheller.interpreter.ast.value.visitor.StaticStructTypeJassTypeVisitor;
@@ -183,11 +184,11 @@ public class JassTypeExpressionVisitor implements JassExpressionVisitor<JassType
 	@Override
 	public JassType visit(final MemberJassExpression expression) {
 		final JassType jassTypeOfStruct = expression.getStructExpression().accept(this);
-		StructJassType structType = jassTypeOfStruct.visit(StructJassTypeVisitor.getInstance());
+		StructJassTypeInterface structType = jassTypeOfStruct.visit(StructJassTypeVisitor.getInstance());
 		if (structType == null) {
 			final StaticStructTypeJassValue staticStruct = jassTypeOfStruct
 					.visit(StaticStructTypeJassTypeVisitor.getInstance());
-			structType = staticStruct.getStaticType();
+			structType = staticStruct;
 		}
 		return structType.getMemberByName(expression.getIdentifier()).getType();
 	}

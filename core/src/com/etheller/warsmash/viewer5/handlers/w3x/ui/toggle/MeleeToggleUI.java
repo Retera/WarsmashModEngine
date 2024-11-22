@@ -13,6 +13,7 @@ import com.etheller.warsmash.viewer5.Scene;
 import com.etheller.warsmash.viewer5.handlers.w3x.camera.GameCameraManager;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CItem;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayerColor;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.timers.CTimer;
 import com.etheller.warsmash.viewer5.handlers.w3x.ui.MeleeUI;
 import com.etheller.warsmash.viewer5.handlers.w3x.ui.WarsmashBaseUI;
@@ -196,6 +197,22 @@ public class MeleeToggleUI implements WarsmashUI {
 	@Override
 	public void displayTimedText(final float x, final float y, final float duration, final String message) {
 		this.meleeUI.displayTimedText(x, y, duration, message);
+	}
+
+	@Override
+	public void clearTextMessages() {
+		this.meleeUI.clearTextMessages();
+	}
+
+	@Override
+	public void showInterface(boolean show, float fadeDuration) {
+		this.meleeUI.showInterface(show, fadeDuration);
+	}
+
+	@Override
+	public void setCinematicScene(int portraitUnitId, CPlayerColor color, String speakerTitle, String text,
+			float sceneDuration, float voiceoverDuration) {
+		this.meleeUI.setCinematicScene(portraitUnitId, color, speakerTitle, text, sceneDuration, voiceoverDuration);
 	}
 
 }

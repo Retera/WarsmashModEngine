@@ -294,7 +294,12 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 		final FrameDefinition frameDefinition = this.templates.getFrame(name);
 		if (frameDefinition == null) {
 			final SimpleFrame simpleFrame = new SimpleFrame(name, owner);
-			add(simpleFrame);
+			if (owner instanceof AbstractUIFrame) {
+				((AbstractUIFrame) owner).add(simpleFrame);
+			}
+			else {
+				add(simpleFrame);
+			}
 			return simpleFrame;
 		}
 		else if (frameDefinition.getFrameClass() == FrameClass.Frame) {
@@ -302,7 +307,12 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 			if (this.autoPosition) {
 				inflated.positionBounds(this, this.viewport);
 			}
-			add(inflated);
+			if (owner instanceof AbstractUIFrame) {
+				((AbstractUIFrame) owner).add(inflated);
+			}
+			else {
+				add(inflated);
+			}
 			return inflated;
 		}
 		return null;
@@ -343,6 +353,12 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 		add(stringFrame);
 		checkInternalMappingSize();
 		return stringFrame;
+	}
+
+	@Override
+	public void remove(UIFrame childFrame) {
+		this.nameToFrame.remove(childFrame.getName());
+		super.remove(childFrame);
 	}
 
 	public BitmapFont generateFont(final float fdfFontSize) {

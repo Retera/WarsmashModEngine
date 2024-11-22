@@ -88,6 +88,10 @@ public class Terrain {
 	public float[] minDeepColor = new float[4];
 	public float[] maxShallowColor = new float[4];
 	public float[] minShallowColor = new float[4];
+	public float[] maxDeepColorApplied = new float[4];
+	public float[] minDeepColorApplied = new float[4];
+	public float[] maxShallowColorApplied = new float[4];
+	public float[] minShallowColorApplied = new float[4];
 
 	private final DataTable terrainTable;
 	private final DataTable cliffTable;
@@ -212,6 +216,7 @@ public class Terrain {
 				this.maxDeepColor[i] = this.minDeepColor[i];
 			}
 		}
+		setWaterBaseColor(1.0f, 1.0f, 1.0f, 1.0f);
 
 		// Cliff Meshes
 
@@ -1117,10 +1122,10 @@ public class Terrain {
 		gl.glBlendFunc(GL30.GL_SRC_ALPHA, GL30.GL_ONE_MINUS_SRC_ALPHA);
 
 		this.waterShader.setUniformMatrix4fv("MVP", this.camera.viewProjectionMatrix.val, 0, 16);
-		this.waterShader.setUniform4fv("shallow_color_min", this.minShallowColor, 0, 4);
-		this.waterShader.setUniform4fv("shallow_color_max", this.maxShallowColor, 0, 4);
-		this.waterShader.setUniform4fv("deep_color_min", this.minDeepColor, 0, 4);
-		this.waterShader.setUniform4fv("deep_color_max", this.maxDeepColor, 0, 4);
+		this.waterShader.setUniform4fv("shallow_color_min", this.minShallowColorApplied, 0, 4);
+		this.waterShader.setUniform4fv("shallow_color_max", this.maxShallowColorApplied, 0, 4);
+		this.waterShader.setUniform4fv("deep_color_min", this.minDeepColorApplied, 0, 4);
+		this.waterShader.setUniform4fv("deep_color_max", this.maxDeepColorApplied, 0, 4);
 		this.waterShader.setUniformf("water_offset", this.waterHeightOffset);
 		this.waterShader.setUniformi("current_texture", (int) this.waterIndex);
 		this.waterShader.setUniformf("centerOffsetX", this.centerOffset[0]);
@@ -1750,5 +1755,15 @@ public class Terrain {
 
 	public int getFogOfWarMap() {
 		return this.fogOfWarMap;
+	}
+
+	public void setWaterBaseColor(float red, float green, float blue, float alpha) {
+		final float[] rgba = { red, green, blue, alpha };
+		for (int i = 0; i < 4; i++) {
+			this.maxDeepColorApplied[i] = this.maxDeepColor[i] * rgba[i];
+			this.minDeepColorApplied[i] = this.minDeepColor[i] * rgba[i];
+			this.maxShallowColorApplied[i] = this.maxShallowColor[i] * rgba[i];
+			this.minShallowColorApplied[i] = this.minShallowColor[i] * rgba[i];
+		}
 	}
 }

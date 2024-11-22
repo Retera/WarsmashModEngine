@@ -26,6 +26,7 @@ public class MeleeUIMinimap {
 	private final Texture[] specialIcons;
 	private float heroAlpha = 0.90f;
 	private byte polarity = -1;
+	private boolean visible;
 
 	public MeleeUIMinimap(final Rectangle displayArea, final Rectangle playableMapArea, final Texture minimapTexture,
 			final Texture[] teamColors, final Texture[] specialIcons) {
@@ -47,6 +48,9 @@ public class MeleeUIMinimap {
 
 	public void render(final CSimulation game, final SpriteBatch batch, final Iterable<RenderUnit> units,
 			final PathingGrid pathingGrid, final CPlayerFogOfWar fogOfWar, final CPlayer player) {
+		if (!this.visible) {
+			return;
+		}
 		batch.draw(this.minimapTexture, this.minimap.x, this.minimap.y, this.minimap.width, this.minimap.height);
 		final Color og = batch.getColor();
 
@@ -143,5 +147,9 @@ public class MeleeUIMinimap {
 
 	public boolean containsMouse(final float x, final float y) {
 		return this.minimapFilledArea.contains(x, y);
+	}
+
+	public void setVisible(boolean visible) {
+		this.visible = visible;
 	}
 }

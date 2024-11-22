@@ -177,6 +177,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.OrderIds;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.pathing.CBuildingPathingType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CAllianceType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayer;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayerColor;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayerUnitOrderListener;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CRace;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CRaceManagerEntry;
@@ -346,7 +347,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 	private final float heightRatioCorrection;
 	private ClickableFrame mouseDownUIFrame;
 	private ClickableFrame mouseOverUIFrame;
-	private UIFrame smashSimpleInfoPanel;
+	private SimpleFrame smashSimpleInfoPanel;
 	private SimpleFrame smashAttack1IconWrapper;
 	private SimpleFrame smashAttack2IconWrapper;
 	private SimpleFrame smashArmorIconWrapper;
@@ -417,6 +418,11 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 	private boolean showing;
 	private final CommandCardActivationReceiverPreviewCallback activationReceiverPreviewCallback = new CommandCardActivationReceiverPreviewCallback();
 	private float worldFrameUnitMessageFontHeight;
+	private UIFrame upperButtonBar;
+	private UIFrame cinematicPanel;
+	private StringFrame cinematicSpeakerText;
+	private StringFrame cinematicDialogueText;
+	private UIFrame cinematicPortrait;
 
 	public MeleeUI(final DataSource dataSource, final ExtendViewport uiViewport, final Scene uiScene,
 			final Scene portraitScene, final CameraPreset[] cameraPresets, final CameraRates cameraRates,
@@ -561,8 +567,8 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 		this.resourceBarLumberText.setWidth(this.resourceBarUpkeepText.getAssignedWidth());
 		this.resourceBarGoldText.setWidth(this.resourceBarUpkeepText.getAssignedWidth());
 
-		final UIFrame upperButtonBar = this.rootFrame.createSimpleFrame("UpperButtonBarFrame", this.consoleUI, 0);
-		upperButtonBar.addSetPoint(new SetPoint(FramePoint.TOPLEFT, this.consoleUI, FramePoint.TOPLEFT, 0, 0));
+		this.upperButtonBar = this.rootFrame.createSimpleFrame("UpperButtonBarFrame", this.consoleUI, 0);
+		this.upperButtonBar.addSetPoint(new SetPoint(FramePoint.TOPLEFT, this.consoleUI, FramePoint.TOPLEFT, 0, 0));
 
 		this.questsButton = (SimpleButtonFrame) this.rootFrame.getFrameByName("UpperButtonBarQuestsButton", 0);
 		this.questsButton.setEnabled(false);
@@ -709,7 +715,8 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 
 		final float infoPanelUnitDetailWidth = GameUI.convertY(this.uiViewport, 0.180f);
 		final float infoPanelUnitDetailHeight = GameUI.convertY(this.uiViewport, 0.120f);
-		this.smashSimpleInfoPanel = this.rootFrame.createSimpleFrame("SmashSimpleInfoPanel", this.rootFrame, 0);
+		this.smashSimpleInfoPanel = (SimpleFrame) this.rootFrame.createSimpleFrame("SmashSimpleInfoPanel",
+				this.rootFrame, 0);
 		this.smashSimpleInfoPanel
 				.addAnchor(new AnchorDefinition(FramePoint.BOTTOM, 0, GameUI.convertY(this.uiViewport, 0.0f)));
 		this.smashSimpleInfoPanel.setWidth(infoPanelUnitDetailWidth);
@@ -815,7 +822,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 		this.queueIconFrames[0].setHeight(this.frontQueueIconWidth);
 		queueIconFrameBackdrop0.setWidth(this.frontQueueIconWidth);
 		queueIconFrameBackdrop0.setHeight(this.frontQueueIconWidth);
-		this.rootFrame.add(this.queueIconFrames[0]);
+		this.smashSimpleInfoPanel.add(this.queueIconFrames[0]);
 
 		for (int i = 1; i < this.queueIconFrames.length; i++) {
 			this.queueIconFrames[i] = new QueueIcon("SmashBuildQueueIcon" + i, this.smashSimpleInfoPanel, this, i);
@@ -832,7 +839,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 			this.queueIconFrames[i].setHeight(queueIconWidth);
 			queueIconFrameBackdrop.setWidth(queueIconWidth);
 			queueIconFrameBackdrop.setHeight(queueIconWidth);
-			this.rootFrame.add(this.queueIconFrames[i]);
+			this.smashSimpleInfoPanel.add(this.queueIconFrames[i]);
 		}
 		this.selectWorkerInsideFrame = new QueueIcon("SmashBuildQueueWorkerIcon", this.smashSimpleInfoPanel, this, 1);
 		final TextureFrame selectWorkerInsideIconFrameBackdrop = new TextureFrame("SmashBuildQueueWorkerIconBackdrop",
@@ -846,7 +853,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 		this.selectWorkerInsideFrame.setHeight(this.frontQueueIconWidth);
 		selectWorkerInsideIconFrameBackdrop.setWidth(this.frontQueueIconWidth);
 		selectWorkerInsideIconFrameBackdrop.setHeight(this.frontQueueIconWidth);
-		this.rootFrame.add(this.selectWorkerInsideFrame);
+		this.smashSimpleInfoPanel.add(this.selectWorkerInsideFrame);
 
 		final int halfSelectionMaxSize = this.selectedUnitFrames.length / 2;
 		for (int i = 0; i < this.selectedUnitFrames.length; i++) {
@@ -860,7 +867,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 				selectedSubgroupHighlightBackdrop.setWidth(this.frontQueueIconWidth * 1.37f);
 				selectedSubgroupHighlightBackdrop.setHeight(this.frontQueueIconWidth * 1.75f);
 				selectedSubgroupHighlightBackdrop.setColor(1.0f, 1.0f, 0.0f, 1.0f);
-				this.rootFrame.add(selectedSubgroupHighlightBackdrop);
+				this.smashSimpleInfoPanel.add(selectedSubgroupHighlightBackdrop);
 				selectedSubgroupHighlightBackdrop
 						.addSetPoint(new SetPoint(FramePoint.TOPLEFT, this.smashSimpleInfoPanel, FramePoint.TOPLEFT,
 								((-this.frontQueueIconWidth * .37f) / 2) + (this.frontQueueIconWidth * .10f)
@@ -877,7 +884,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 				cargoBackdrop.setWidth(this.frontQueueIconWidth * 1.37f);
 				cargoBackdrop.setHeight(this.frontQueueIconWidth * 1.75f);
 				cargoBackdrop.setColor(1.0f, 1.0f, 0.0f, 1.0f);
-				this.rootFrame.add(cargoBackdrop);
+				this.smashSimpleInfoPanel.add(cargoBackdrop);
 				cargoBackdrop
 						.addSetPoint(new SetPoint(FramePoint.TOPLEFT, this.smashSimpleInfoPanel, FramePoint.TOPLEFT,
 								((-this.frontQueueIconWidth * .37f) / 2) + (this.frontQueueIconWidth * .0f)
@@ -958,7 +965,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 					this.selectedUnitFrames[i], false, new Vector4Definition(0, 1, 0, 1));
 
 			final SimpleStatusBarFrame hpBarFrame = new SimpleStatusBarFrame(
-					"SmashMultiSelectHpBar" + this.hpBarFrameIndex, this.rootFrame, true, true, 3.0f);
+					"SmashMultiSelectHpBar" + this.hpBarFrameIndex, this.smashSimpleInfoPanel, true, true, 3.0f);
 			hpBarFrame.getBarFrame().setTexture("SimpleHpBarConsole", this.rootFrame);
 			hpBarFrame.getBorderFrame().setTexture("Textures\\Black32.blp", this.rootFrame);
 			hpBarFrame.setWidth(this.frontQueueIconWidth);
@@ -967,7 +974,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 					-this.frontQueueIconWidth * MultiSelectionIcon.HP_BAR_SPACING_RATIO));
 
 			final SimpleStatusBarFrame manaBarFrame = new SimpleStatusBarFrame(
-					"SmashMultiSelectManaBar" + this.hpBarFrameIndex, this.rootFrame, true, true, 3.0f);
+					"SmashMultiSelectManaBar" + this.hpBarFrameIndex, this.smashSimpleInfoPanel, true, true, 3.0f);
 			manaBarFrame.getBarFrame().setTexture("SimpleManaBarConsole", this.rootFrame);
 			manaBarFrame.getBorderFrame().setTexture("Textures\\Black32.blp", this.rootFrame);
 			manaBarFrame.setWidth(this.frontQueueIconWidth);
@@ -989,7 +996,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 			this.selectedUnitFrames[i].setHeight(this.frontQueueIconWidth);
 			multiSelectUnitIconFrameBackdrop.setWidth(this.frontQueueIconWidth);
 			multiSelectUnitIconFrameBackdrop.setHeight(this.frontQueueIconWidth);
-			this.rootFrame.add(this.selectedUnitFrames[i]);
+			this.smashSimpleInfoPanel.add(this.selectedUnitFrames[i]);
 
 			this.selectedUnitFrames[i].setVisible(false);
 		}
@@ -1001,7 +1008,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 					this.cargoUnitFrames[i], false, new Vector4Definition(0, 1, 0, 1));
 
 			final SimpleStatusBarFrame hpBarFrame = new SimpleStatusBarFrame(
-					"SmashMultiSelectHpBar" + this.hpBarFrameIndex, this.rootFrame, true, true, 3.0f);
+					"SmashMultiSelectHpBar" + this.hpBarFrameIndex, this.smashSimpleInfoPanel, true, true, 3.0f);
 			hpBarFrame.getBarFrame().setTexture("SimpleHpBarConsole", this.rootFrame);
 			hpBarFrame.getBorderFrame().setTexture("Textures\\Black32.blp", this.rootFrame);
 			hpBarFrame.setWidth(this.frontQueueIconWidth);
@@ -1010,7 +1017,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 					-this.frontQueueIconWidth * MultiSelectionIcon.HP_BAR_SPACING_RATIO));
 
 			final SimpleStatusBarFrame manaBarFrame = new SimpleStatusBarFrame(
-					"SmashMultiSelectManaBar" + this.hpBarFrameIndex, this.rootFrame, true, true, 3.0f);
+					"SmashMultiSelectManaBar" + this.hpBarFrameIndex, this.smashSimpleInfoPanel, true, true, 3.0f);
 			manaBarFrame.getBarFrame().setTexture("SimpleManaBarConsole", this.rootFrame);
 			manaBarFrame.getBorderFrame().setTexture("Textures\\Black32.blp", this.rootFrame);
 			manaBarFrame.setWidth(this.frontQueueIconWidth);
@@ -1032,7 +1039,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 			this.cargoUnitFrames[i].setHeight(this.frontQueueIconWidth);
 			cargoUnitIconFrameBackdrop.setWidth(this.frontQueueIconWidth);
 			cargoUnitIconFrameBackdrop.setHeight(this.frontQueueIconWidth);
-			this.rootFrame.add(this.cargoUnitFrames[i]);
+			this.smashSimpleInfoPanel.add(this.cargoUnitFrames[i]);
 
 			this.cargoUnitFrames[i].setVisible(false);
 		}
@@ -1087,7 +1094,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 		this.intelligenceValue = (StringFrame) this.rootFrame.getFrameByName("InfoPanelIconHeroIntellectValue", 0);
 
 		this.inventoryBarFrame = (SimpleFrame) this.rootFrame.createSimpleFrame("SmashSimpleInventoryBar",
-				this.rootFrame, 0);
+				this.smashSimpleInfoPanel, 0);
 		this.inventoryBarFrame.setWidth(GameUI.convertX(this.uiViewport, 0.079f));
 		this.inventoryBarFrame.setHeight(GameUI.convertY(this.uiViewport, 0.115f));
 		this.inventoryBarFrame.addSetPoint(new SetPoint(FramePoint.BOTTOMRIGHT, this.consoleUI, FramePoint.BOTTOMLEFT,
@@ -1282,7 +1289,17 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 			((AbstractUIFrame) this.tooltipFrame).add(this.tooltipResourceFrames[i]);
 			this.rootFrame.remove(this.tooltipResourceFrames[i]);
 		}
-//		this.tooltipFrame = this.rootFrame.createFrameByType("BACKDROP", "SmashToolTipBackdrop", this.rootFrame, "", 0);
+
+		this.cinematicPanel = this.rootFrame.createFrame("CinematicPanel", this.rootFrame, 0, 0);
+		this.cinematicPanel.setVisible(false);
+		this.cinematicSpeakerText = (StringFrame) this.rootFrame.getFrameByName("CinematicSpeakerText", 0);
+		this.rootFrame.setText(this.cinematicSpeakerText, "");
+		this.cinematicDialogueText = (StringFrame) this.rootFrame.getFrameByName("CinematicDialogueText", 0);
+		this.rootFrame.setText(this.cinematicDialogueText, "");
+		this.cinematicPortrait = this.rootFrame.getFrameByName("CinematicPortrait", 0);
+
+		// this.tooltipFrame = this.rootFrame.createFrameByType("BACKDROP",
+		// "SmashToolTipBackdrop", this.rootFrame, "", 0);
 
 		this.cursorFrame = (SpriteFrame) this.rootFrame.createFrameByType("SPRITE", "SmashCursorFrame", this.rootFrame,
 				"", 0);
@@ -1480,12 +1497,11 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 		final StringFrame gameMessagesFrame = this.rootFrame.createStringFrame("SmashGameMessageFrame", this.rootFrame,
 				Color.WHITE, TextJustify.LEFT, TextJustify.MIDDLE, this.worldFrameUnitMessageFontHeight);
 		gameMessagesFrame.setWidth(GameUI.convertX(this.uiViewport, 0.35f));
-		gameMessagesFrame.setHeight(GameUI.convertY(this.uiViewport, this.worldFrameUnitMessageFontHeight));
+//		gameMessagesFrame.setHeight(GameUI.convertY(this.uiViewport, this.worldFrameUnitMessageFontHeight));
 
 		gameMessagesFrame.setFontShadowColor(new Color(0f, 0f, 0f, 0.9f));
 		gameMessagesFrame.setFontShadowOffsetX(GameUI.convertX(this.uiViewport, 0.001f));
 		gameMessagesFrame.setFontShadowOffsetY(GameUI.convertY(this.uiViewport, -0.001f));
-		gameMessagesFrame.setVisible(true);
 
 		this.rootFrame.setText(gameMessagesFrame, message);
 		gameMessagesFrame.setVisible(true);
@@ -1506,6 +1522,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 		while (descendingIterator.hasNext()) {
 			final GameMessage gameMessage = descendingIterator.next();
 			gameMessage.stringFrame.positionBounds(this.rootFrame, this.uiViewport);
+			gameMessage.stringFrame.setHeight(gameMessage.stringFrame.getPredictedViewportHeight());
 		}
 		gameMessagesFrame.setAlpha(1.0f);
 	}
@@ -1755,6 +1772,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 		while (iterator.hasNext()) {
 			final GameMessage gameMessage = iterator.next();
 			if (currentMillis > gameMessage.lastGameMessageExpireTime) {
+				this.rootFrame.remove(gameMessage.stringFrame);
 				iterator.remove();
 			}
 			else if (currentMillis > gameMessage.lastGameMessageFadeTime) {
@@ -2099,7 +2117,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 	}
 
 	public void portraitTalk(final UnitSound us) {
-		this.portrait.talk(us);
+		this.portrait.talk(us, 0);
 	}
 
 	private final class AnyClickableUnitFilter implements CWidgetFilterFunction {
@@ -2610,7 +2628,8 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 		private final Scene portraitScene;
 		private final EnumSet<AnimationTokens.SecondaryTag> recycleSet = EnumSet
 				.noneOf(AnimationTokens.SecondaryTag.class);
-		private RenderUnit unit;
+		private EnumSet<AnimationTokens.SecondaryTag> secondaryTags;
+		private RenderUnit lastUnit;
 		// If animationTargetDuration is 0, it will play the whole animation.
 		private long portraitTargetDuration = 0;
 		private long portraitCurrentDuration = 0;
@@ -2639,18 +2658,18 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 
 				if (this.modelInstance.sequenceEnded || (this.modelInstance.sequence == -1)) {
 					this.recycleSet.clear();
-					this.recycleSet.addAll(this.unit.getSecondaryAnimationTags());
+					this.recycleSet.addAll(this.secondaryTags);
 					SequenceUtils.randomSequence(this.modelInstance, PrimaryTag.PORTRAIT, this.recycleSet, true);
 				}
 			}
 		}
 
-		public void talk(final UnitSound us) {
+		public void talk(final UnitSound us, float extraDuration) {
 			// TODO we somehow called talk from null by clicking a unit right at the same
 			// time it died, so I do a null check here until I study that case further.
 			if (this.modelInstance != null) {
 				this.recycleSet.clear();
-				this.recycleSet.addAll(this.unit.getSecondaryAnimationTags());
+				this.recycleSet.addAll(this.secondaryTags);
 				this.recycleSet.add(SecondaryTag.TALK);
 				if (us != null) {
 					this.portraitTargetDuration = (long) (1000 * Extensions.audio.getDuration(us.getLastPlayedSound()));
@@ -2658,15 +2677,17 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 				else {
 					this.portraitTargetDuration = 0;
 				}
+				this.portraitTargetDuration += (long) (1000 * extraDuration);
 				this.portraitCurrentDuration = 0;
 				SequenceUtils.randomSequence(this.modelInstance, PrimaryTag.PORTRAIT, this.recycleSet, true);
 			}
 		}
 
 		public void setSelectedUnit(final RenderUnit unit) {
-			if (this.unit != unit) {
-				this.unit = unit;
+			if (this.lastUnit != unit) {
+				this.lastUnit = unit;
 				if (unit == null) {
+					this.secondaryTags = SequenceUtils.EMPTY;
 					if (this.modelInstance != null) {
 						this.portraitScene.removeInstance(this.modelInstance);
 					}
@@ -2674,6 +2695,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 					this.portraitCameraManager.setModelInstance(null, null);
 				}
 				else {
+					this.secondaryTags = this.lastUnit.getSecondaryAnimationTags();
 					final MdxModel portraitModel = unit.portraitModel;
 					if (portraitModel != null) {
 						if (this.modelInstance != null) {
@@ -2689,6 +2711,23 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 					}
 				}
 			}
+		}
+
+		public void setCinematicTalkingHead(MdxModel portraitModel, int teamColorIndex,
+				EnumSet<SecondaryTag> secondaryTags) {
+			if (this.modelInstance != null) {
+				this.portraitScene.removeInstance(this.modelInstance);
+			}
+			this.secondaryTags = secondaryTags;
+			if (portraitModel != null) {
+				this.modelInstance = (MdxComplexInstance) portraitModel.addInstance();
+				this.portraitCameraManager.setModelInstance(this.modelInstance, portraitModel);
+				this.modelInstance.setBlendTime(portraitModel.blendTime);
+				this.modelInstance.setSequenceLoopMode(SequenceLoopMode.NEVER_LOOP);
+				this.modelInstance.setScene(this.portraitScene);
+				this.modelInstance.setTeamColor(teamColorIndex);
+			}
+			this.lastUnit = null;
 		}
 	}
 
@@ -3480,18 +3519,27 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 	}
 
 	public void positionPortrait() {
-		this.projectionTemp1.x = 422 * this.widthRatioCorrection;
-		this.projectionTemp1.y = 57 * this.heightRatioCorrection;
-		this.projectionTemp2.x = (422 + 167) * this.widthRatioCorrection;
-		this.projectionTemp2.y = (57 + 170) * this.heightRatioCorrection;
-		this.uiViewport.project(this.projectionTemp1);
-		this.uiViewport.project(this.projectionTemp2);
+		if (this.cinematicPanel.isVisible()) {
+			this.tempRect.x = this.cinematicPortrait.getFramePointX(FramePoint.LEFT);
+			this.tempRect.y = this.cinematicPortrait.getFramePointY(FramePoint.BOTTOM);
+			this.tempRect.width = this.cinematicPortrait.getFramePointY(FramePoint.RIGHT) - this.tempRect.x;
+			this.tempRect.height = this.cinematicPortrait.getFramePointY(FramePoint.TOP) - this.tempRect.y;
+			this.portrait.portraitScene.camera.viewport(this.tempRect);
+		}
+		else {
+			this.projectionTemp1.x = 422 * this.widthRatioCorrection;
+			this.projectionTemp1.y = 57 * this.heightRatioCorrection;
+			this.projectionTemp2.x = (422 + 167) * this.widthRatioCorrection;
+			this.projectionTemp2.y = (57 + 170) * this.heightRatioCorrection;
+			this.uiViewport.project(this.projectionTemp1);
+			this.uiViewport.project(this.projectionTemp2);
 
-		this.tempRect.x = this.projectionTemp1.x + this.uiViewport.getScreenX();
-		this.tempRect.y = this.projectionTemp1.y + this.uiViewport.getScreenY();
-		this.tempRect.width = this.projectionTemp2.x - this.projectionTemp1.x;
-		this.tempRect.height = this.projectionTemp2.y - this.projectionTemp1.y;
-		this.portrait.portraitScene.camera.viewport(this.tempRect);
+			this.tempRect.x = this.projectionTemp1.x + this.uiViewport.getScreenX();
+			this.tempRect.y = this.projectionTemp1.y + this.uiViewport.getScreenY();
+			this.tempRect.width = this.projectionTemp2.x - this.projectionTemp1.x;
+			this.tempRect.height = this.projectionTemp2.y - this.projectionTemp1.y;
+			this.portrait.portraitScene.camera.viewport(this.tempRect);
+		}
 	}
 
 	private static final class InfoPanelIconBackdrops {
@@ -4867,6 +4915,14 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 	}
 
 	@Override
+	public void clearTextMessages() {
+		for (final GameMessage gameMessage : this.gameMessages) {
+			this.rootFrame.remove(gameMessage.stringFrame);
+		}
+		this.gameMessages.clear();
+	}
+
+	@Override
 	public CScriptDialog createScriptDialog(final GlobalScope globalScope) {
 		final SimpleFrame scriptDialog = (SimpleFrame) this.rootFrame.createFrame("ScriptDialog", this.rootFrame, 0, 0);
 		scriptDialog.addAnchor(new AnchorDefinition(FramePoint.TOP, 0, GameUI.convertY(this.uiViewport, -0.05f)));
@@ -4991,6 +5047,45 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 		this.timeIndicator.setVisible(true);
 		this.cursorFrame.setVisible(true);
 		this.showing = true;
+	}
+
+	@Override
+	public void showInterface(boolean show, float fadeDuration) {
+		updateInterfaceVisibility(show);
+	}
+
+	private void updateInterfaceVisibility(boolean show) {
+		this.consoleUI.setVisible(show);
+		this.resourceBar.setVisible(show);
+		this.timeIndicator.setVisible(show);
+		this.meleeUIMinimap.setVisible(show);
+		this.smashSimpleInfoPanel.setVisible(show);
+		if (!show) {
+			for (int i = 0; i < this.commandCard.length; i++) {
+				for (int j = 0; j < this.commandCard[i].length; j++) {
+					this.commandCard[i][j].setVisible(show);
+				}
+			}
+		}
+		this.upperButtonBar.setVisible(show);
+		this.inventoryCover.setVisible(show);
+		if (!show) {
+			for (int i = 0; i < this.inventoryIcons.length; i++) {
+				for (int j = 0; j < this.inventoryIcons[i].length; j++) {
+					this.inventoryIcons[i][j].setVisible(show);
+				}
+			}
+		}
+		this.inventoryTitleFrame.setVisible(show);
+		this.cinematicPanel.setVisible(!show);
+
+		positionPortrait();
+	}
+
+	@Override
+	public void setCinematicScene(int portraitUnitId, CPlayerColor color, String speakerTitle, String text,
+			float sceneDuration, float voiceoverDuration) {
+//		this.war3MapViewer.
 	}
 
 }

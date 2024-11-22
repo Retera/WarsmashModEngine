@@ -1,6 +1,7 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.sound;
 
 import com.etheller.warsmash.viewer5.AudioContext;
+import com.etheller.warsmash.viewer5.gl.Extensions;
 import com.etheller.warsmash.viewer5.handlers.w3x.UnitSound;
 
 public class CSoundFromLabel implements CSound {
@@ -27,6 +28,11 @@ public class CSoundFromLabel implements CSound {
 	@Override
 	public void start() {
 		this.sound.play(this.audioContext, 0, 0, 0);
+	}
+
+	@Override
+	public float getPredictedDuration() {
+		return Extensions.audio.getDuration(this.sound.getLastPlayedSound());
 	}
 
 }

@@ -793,7 +793,8 @@ public class Jass2 {
 			jassProgramVisitor.getJassNativeManager().createNative("GetUnitName",
 					(arguments, globalScope, triggerScope) -> {
 						final CUnit whichWidget = nullable(arguments, 0, ObjectJassValueVisitor.getInstance());
-						return whichWidget == null ? JassType.STRING.getNullValue() : new StringJassValue(whichWidget.getUnitType().getName());
+						return whichWidget == null ? JassType.STRING.getNullValue()
+								: new StringJassValue(whichWidget.getUnitType().getName());
 					});
 			registerConversionAndStringNatives(jassProgramVisitor, war3MapViewer.getGameUI());
 			final War3MapConfig mapConfig = war3MapViewer.getMapConfig();
@@ -3837,6 +3838,15 @@ public class Jass2 {
 						final int layerHeight = war3MapViewer.terrain.getCorner(x, y).getLayerHeight();
 						return IntegerJassValue.of(layerHeight);
 					});
+			jassProgramVisitor.getJassNativeManager().createNative("SetWaterBaseColor",
+					(arguments, globalScope, triggerScope) -> {
+						final int red = arguments.get(0).visit(IntegerJassValueVisitor.getInstance());
+						final int green = arguments.get(1).visit(IntegerJassValueVisitor.getInstance());
+						final int blue = arguments.get(2).visit(IntegerJassValueVisitor.getInstance());
+						final int alpha = arguments.get(3).visit(IntegerJassValueVisitor.getInstance());
+						war3MapViewer.terrain.setWaterBaseColor(red / 255f, green / 255f, blue / 255f, alpha / 255f);
+						return null;
+					});
 			jassProgramVisitor.getJassNativeManager().createNative("CreateSoundFromLabel",
 					(arguments, globalScope, triggerScope) -> {
 						final String soundLabel = arguments.get(0).visit(StringJassValueVisitor.getInstance());
@@ -4200,6 +4210,30 @@ public class Jass2 {
 								final CTimerSleepAction timer = new CTimerSleepAction(currentThread);
 								timer.setRepeats(false);
 								timer.setTimeoutTime(seconds.floatValue());
+								timer.start(this.simulation);
+							}
+							else {
+								throw new JassException(globalScope,
+										"Needs to sleep " + seconds + " but no thread was found", null);
+							}
+						}
+						return null;
+					});
+			jassProgramVisitor.getJassNativeManager().createNative("TriggerWaitForSound",
+					(arguments, globalScope, triggerScope) -> {
+						final Trigger triggeringTrigger = triggerScope.getTriggeringTrigger();
+						if ((triggeringTrigger == null) || triggeringTrigger.isWaitOnSleeps()) {
+							final CSound sound = nullable(arguments, 0, ObjectJassValueVisitor.getInstance());
+							float seconds = arguments.get(1).visit(RealJassValueVisitor.getInstance()).floatValue();
+							if (sound != null) {
+								seconds += sound.getPredictedDuration(); // PRONE TO DESYNC (?)
+							}
+							final JassThread currentThread = globalScope.getCurrentThread();
+							if (currentThread != null) {
+								currentThread.setSleeping(true);
+								final CTimerSleepAction timer = new CTimerSleepAction(currentThread);
+								timer.setRepeats(false);
+								timer.setTimeoutTime(seconds);
 								timer.start(this.simulation);
 							}
 							else {
@@ -4715,6 +4749,19 @@ public class Jass2 {
 								.getPlayer(war3MapViewer.getLocalPlayerIndex())) {
 							meleeUI.displayTimedText(x, y, (message.length() / 6) + 5, message);
 						}
+						return null;
+					});
+			jassProgramVisitor.getJassNativeManager().createNative("ClearTextMessages",
+					(arguments, globalScope, triggerScope) -> {
+						meleeUI.clearTextMessages();
+						return null;
+					});
+			jassProgramVisitor.getJassNativeManager().createNative("ShowInterface",
+					(arguments, globalScope, triggerScope) -> {
+						final boolean show = arguments.get(0).visit(BooleanJassValueVisitor.getInstance());
+						final float fadeDuration = arguments.get(1).visit(RealJassValueVisitor.getInstance())
+								.floatValue();
+						meleeUI.showInterface(show, fadeDuration);
 						return null;
 					});
 			jassProgramVisitor.getJassNativeManager().createNative("IsPlayerInForce",

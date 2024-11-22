@@ -16,4 +16,9 @@ public class CMIDISound implements CSound {
 		System.err.println(
 				"Not starting MIDI sound because we don't have a LibGDX API to play those: " + this.soundLabel);
 	}
+
+	@Override
+	public float getPredictedDuration() {
+		return 0;
+	}
 }

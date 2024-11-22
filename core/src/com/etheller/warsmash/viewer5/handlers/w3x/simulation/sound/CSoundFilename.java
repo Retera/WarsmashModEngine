@@ -4,6 +4,7 @@ import com.badlogic.gdx.audio.Sound;
 import com.etheller.warsmash.viewer5.AudioBufferSource;
 import com.etheller.warsmash.viewer5.AudioContext;
 import com.etheller.warsmash.viewer5.AudioPanner;
+import com.etheller.warsmash.viewer5.gl.Extensions;
 
 public class CSoundFilename implements CSound {
 
@@ -59,6 +60,11 @@ public class CSoundFilename implements CSound {
 
 		// Make a sound.
 		source.start(0, this.volume, this.pitch, this.looping);
+	}
+
+	@Override
+	public float getPredictedDuration() {
+		return Extensions.audio.getDuration(this.sound);
 	}
 
 }

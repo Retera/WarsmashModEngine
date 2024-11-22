@@ -3041,10 +3041,12 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 							@Override
 							public void removeUnit(final CUnit unit) {
 								final RenderUnit renderUnit = War3MapViewer.this.unitToRenderPeer.remove(unit);
-								War3MapViewer.this.widgets.remove(renderUnit);
-								War3MapViewer.this.units.remove(renderUnit);
-								War3MapViewer.this.worldScene.removeInstance(renderUnit.instance);
-								renderUnit.onRemove(War3MapViewer.this);
+								if (renderUnit != null) {
+									War3MapViewer.this.widgets.remove(renderUnit);
+									War3MapViewer.this.units.remove(renderUnit);
+									War3MapViewer.this.worldScene.removeInstance(renderUnit.instance);
+									renderUnit.onRemove(War3MapViewer.this);
+								}
 							}
 
 							@Override

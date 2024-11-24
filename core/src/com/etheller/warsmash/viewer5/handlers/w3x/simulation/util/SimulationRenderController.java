@@ -148,6 +148,8 @@ public interface SimulationRenderController {
 
 	void changeUnitColor(CUnit unit, int playerIndex);
 
+	void changeUnitPlayerColor(CUnit unit, int previousColor, int newColor);
+
 	void changeUnitVertexColor(CUnit unit, Color color);
 
 	void changeUnitVertexColor(CUnit unit, float r, float g, float b);

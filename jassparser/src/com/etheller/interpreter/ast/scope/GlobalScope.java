@@ -579,6 +579,7 @@ public final class GlobalScope {
 		do {
 			runOneThreadLooop();
 			anyThreadsAdded = !this.newThreads.isEmpty();
+			Collections.reverse(this.newThreads);
 			this.threads.addAll(this.newThreads);
 			this.newThreads.clear();
 		}

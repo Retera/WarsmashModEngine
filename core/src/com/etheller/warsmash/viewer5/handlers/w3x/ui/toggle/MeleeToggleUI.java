@@ -175,6 +175,41 @@ public class MeleeToggleUI implements WarsmashUI {
 	}
 
 	@Override
+	public Music setMapMusic(String musicField, boolean random, int index) {
+		return this.meleeUI.setMapMusic(musicField, random, index);
+	}
+
+	@Override
+	public void playMapMusic() {
+		this.meleeUI.playMapMusic();
+	}
+
+	@Override
+	public Music playMusicEx(String musicField, boolean random, int index, int fromMSecs, int fadeInMSecs) {
+		return this.meleeUI.playMusicEx(musicField, random, index, fromMSecs, fadeInMSecs);
+	}
+
+	@Override
+	public void stopMusic(boolean fadeOut) {
+		this.meleeUI.stopMusic(fadeOut);
+	}
+
+	@Override
+	public void resumeMusic() {
+		this.meleeUI.resumeMusic();
+	}
+
+	@Override
+	public void setMusicVolume(int volume) {
+		this.meleeUI.setMusicVolume(volume);
+	}
+
+	@Override
+	public void setMusicPlayPosition(int millisecs) {
+		this.meleeUI.setMusicPlayPosition(millisecs);
+	}
+
+	@Override
 	public Scene getUiScene() {
 		return this.meleeUI.getUiScene();
 	}
@@ -215,4 +250,18 @@ public class MeleeToggleUI implements WarsmashUI {
 		this.meleeUI.setCinematicScene(portraitUnitId, color, speakerTitle, text, sceneDuration, voiceoverDuration);
 	}
 
+	@Override
+	public void enableUserControl(boolean value) {
+		this.meleeUI.enableUserControl(value);
+	}
+
+	@Override
+	public void endCinematicScene() {
+		this.meleeUI.endCinematicScene();
+	}
+
+	@Override
+	public void forceCinematicSubtitles(boolean value) {
+		this.meleeUI.forceCinematicSubtitles(value);
+	}
 }

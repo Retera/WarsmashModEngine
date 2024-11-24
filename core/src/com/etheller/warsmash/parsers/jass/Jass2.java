@@ -1393,16 +1393,6 @@ public class Jass2 {
 								});
 						return null;
 					});
-			jassProgramVisitor.getJassNativeManager().createNative("GroupEnumUnitsSelected",
-					(arguments, globalScope, triggerScope) -> {
-						final List<CUnit> group = arguments.get(0)
-								.visit(ObjectJassValueVisitor.<List<CUnit>>getInstance());
-						final CPlayerJass whichPlayer = arguments.get(1)
-								.visit(ObjectJassValueVisitor.<CPlayerJass>getInstance());
-						final TriggerBooleanExpression filter = nullable(arguments, 2,
-								ObjectJassValueVisitor.<TriggerBooleanExpression>getInstance());
-						throw new UnsupportedOperationException("GroupEnumUnitsSelected not supported yet.");
-					});
 			jassProgramVisitor.getJassNativeManager().createNative("GroupImmediateOrder",
 					(arguments, globalScope, triggerScope) -> {
 						final List<CUnit> group = arguments.get(0)
@@ -2286,6 +2276,11 @@ public class Jass2 {
 						war3MapViewer.worldScene.fogSettings.setStyleByIndex(fogStyle + 1);
 						return null;
 					});
+			jassProgramVisitor.getJassNativeManager().createNative("ResetTerrainFog",
+					(arguments, globalScope, triggerScope) -> {
+						war3MapViewer.resetTerrainFog();
+						return null;
+					});
 			jassProgramVisitor.getJassNativeManager().createNative("NewSoundEnvironment",
 					(arguments, globalScope, triggerScope) -> {
 						final String environmentName = arguments.get(0).visit(StringJassValueVisitor.getInstance());
@@ -2347,7 +2342,7 @@ public class Jass2 {
 						final int index = arguments.get(2).visit(IntegerJassValueVisitor.getInstance());
 
 						final String musicField = CommonEnvironment.this.gameUI.trySkinField(musicName);
-						meleeUI.playMusic(musicField, random, index);
+						meleeUI.setMapMusic(musicField, random, index);
 						return null;
 					});
 			jassProgramVisitor.getJassNativeManager().createNative("PlayMusic",
@@ -2357,6 +2352,72 @@ public class Jass2 {
 						final String musicField = CommonEnvironment.this.gameUI.trySkinField(musicName);
 						meleeUI.playMusic(musicField, true, 0);
 						return null;
+					});
+			jassProgramVisitor.getJassNativeManager().createNative("PlayMusicEx",
+					(arguments, globalScope, triggerScope) -> {
+						final String musicName = arguments.get(0).visit(StringJassValueVisitor.getInstance());
+						final int frommsecs = arguments.get(1).visit(IntegerJassValueVisitor.getInstance());
+						final int fadeInMSecs = arguments.get(2).visit(IntegerJassValueVisitor.getInstance());
+
+						final String musicField = CommonEnvironment.this.gameUI.trySkinField(musicName);
+						meleeUI.playMusicEx(musicField, true, 0, frommsecs, fadeInMSecs);
+						return null;
+					});
+			jassProgramVisitor.getJassNativeManager().createNative("StopMusic",
+					(arguments, globalScope, triggerScope) -> {
+						final boolean fadeOut = arguments.get(0).visit(BooleanJassValueVisitor.getInstance());
+						meleeUI.stopMusic(fadeOut);
+						return null;
+					});
+			jassProgramVisitor.getJassNativeManager().createNative("ResumeMusic",
+					(arguments, globalScope, triggerScope) -> {
+						final boolean fadeOut = arguments.get(0).visit(BooleanJassValueVisitor.getInstance());
+						meleeUI.resumeMusic();
+						return null;
+					});
+			jassProgramVisitor.getJassNativeManager().createNative("PlayThematicMusic",
+					(arguments, globalScope, triggerScope) -> {
+						final String musicName = arguments.get(0).visit(StringJassValueVisitor.getInstance());
+						final String musicField = CommonEnvironment.this.gameUI.trySkinField(musicName);
+						meleeUI.playMusic(musicField, true, 0);
+						return null;
+					});
+			jassProgramVisitor.getJassNativeManager().createNative("PlayThematicMusicEx",
+					(arguments, globalScope, triggerScope) -> {
+						final String musicName = arguments.get(0).visit(StringJassValueVisitor.getInstance());
+						final String musicField = CommonEnvironment.this.gameUI.trySkinField(musicName);
+						final int frommsecs = arguments.get(1).visit(IntegerJassValueVisitor.getInstance());
+						meleeUI.playMusicEx(musicField, true, 0, frommsecs, -1);
+						return null;
+					});
+			jassProgramVisitor.getJassNativeManager().createNative("EndThematicMusic",
+					(arguments, globalScope, triggerScope) -> {
+						meleeUI.stopMusic(false);
+						meleeUI.playMapMusic();
+						return null;
+					});
+			jassProgramVisitor.getJassNativeManager().createNative("SetMusicVolume",
+					(arguments, globalScope, triggerScope) -> {
+						final int volume = arguments.get(0).visit(IntegerJassValueVisitor.getInstance());
+						meleeUI.setMusicVolume(volume);
+						return null;
+					});
+			jassProgramVisitor.getJassNativeManager().createNative("SetMusicPlayPosition",
+					(arguments, globalScope, triggerScope) -> {
+						final int millisecs = arguments.get(0).visit(IntegerJassValueVisitor.getInstance());
+						meleeUI.setMusicPlayPosition(millisecs);
+						return null;
+					});
+			jassProgramVisitor.getJassNativeManager().createNative("SetThematicMusicPlayPosition",
+					(arguments, globalScope, triggerScope) -> {
+						final int millisecs = arguments.get(0).visit(IntegerJassValueVisitor.getInstance());
+						meleeUI.setMusicPlayPosition(millisecs);
+						return null;
+					});
+			jassProgramVisitor.getJassNativeManager().createNative("GetSoundDuration",
+					(arguments, globalScope, triggerScope) -> {
+						final CSound sound = nullable(arguments, 0, ObjectJassValueVisitor.getInstance());
+						return IntegerJassValue.of((int) (sound.getPredictedDuration() * 1000)); // PRONE TO DESYNC (?)
 					});
 
 			// text tags
@@ -3426,6 +3487,13 @@ public class Jass2 {
 								.visit(ObjectJassValueVisitor.getInstance());
 						final int value = arguments.get(2).visit(IntegerJassValueVisitor.getInstance());
 						player.setPlayerState(CommonEnvironment.this.simulation, whichPlayerState, value);
+						return null;
+					});
+			jassProgramVisitor.getJassNativeManager().createNative("RemovePlayer",
+					(arguments, globalScope, triggerScope) -> {
+						final CPlayer player = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());
+						player.firePlayerEvents(CommonTriggerExecutionScope::triggerPlayerScope,
+								JassGameEventsWar3.EVENT_PLAYER_LEAVE);
 						return null;
 					});
 			jassProgramVisitor.getJassNativeManager().createNative("GetPlayerState",
@@ -4518,16 +4586,15 @@ public class Jass2 {
 					(arguments, globalScope, triggerScope) -> {
 						final float x = arguments.get(0).visit(RealJassValueVisitor.getInstance()).floatValue();
 						final float y = arguments.get(1).visit(RealJassValueVisitor.getInstance()).floatValue();
-						meleeUI.getCameraManager().target.x = x;
-						meleeUI.getCameraManager().target.y = y;
+						meleeUI.getCameraManager().panTo(x, y);
 						return null;
 					});
 			jassProgramVisitor.getJassNativeManager().createNative("PanCameraToTimed",
 					(arguments, globalScope, triggerScope) -> {
 						final float x = arguments.get(0).visit(RealJassValueVisitor.getInstance()).floatValue();
 						final float y = arguments.get(1).visit(RealJassValueVisitor.getInstance()).floatValue();
-						meleeUI.getCameraManager().target.x = x;
-						meleeUI.getCameraManager().target.y = y;
+						final float duration = arguments.get(2).visit(RealJassValueVisitor.getInstance()).floatValue();
+						meleeUI.getCameraManager().panToTimed(x, y, duration);
 						return null;
 					});
 			jassProgramVisitor.getJassNativeManager().createNative("PanCameraToWithZ",
@@ -4536,8 +4603,7 @@ public class Jass2 {
 						final float y = arguments.get(1).visit(RealJassValueVisitor.getInstance()).floatValue();
 						final float zOffsetDest = arguments.get(2).visit(RealJassValueVisitor.getInstance())
 								.floatValue();
-						meleeUI.getCameraManager().target.x = x;
-						meleeUI.getCameraManager().target.y = y;
+						meleeUI.getCameraManager().panTo(x, y);
 						meleeUI.getCameraManager().setTargetZOffset(zOffsetDest);
 						return null;
 					});
@@ -4547,9 +4613,9 @@ public class Jass2 {
 						final float y = arguments.get(1).visit(RealJassValueVisitor.getInstance()).floatValue();
 						final float zOffsetDest = arguments.get(2).visit(RealJassValueVisitor.getInstance())
 								.floatValue();
-						meleeUI.getCameraManager().target.x = x;
-						meleeUI.getCameraManager().target.y = y;
-						meleeUI.getCameraManager().setTargetZOffset(zOffsetDest);
+						final float duration = arguments.get(3).visit(RealJassValueVisitor.getInstance()).floatValue();
+						meleeUI.getCameraManager().panToTimed(x, y, duration);
+						meleeUI.getCameraManager().setTargetZOffset(zOffsetDest, duration);
 						return null;
 					});
 			jassProgramVisitor.getJassNativeManager().createNative("CreateCameraSetup",
@@ -4618,6 +4684,24 @@ public class Jass2 {
 						}
 						return RealJassValue.ZERO;
 					});
+			jassProgramVisitor.getJassNativeManager().createNative("CameraSetupApply",
+					(arguments, globalScope, triggerScope) -> {
+						final CustomCameraSetup cameraSetup = nullable(arguments, 0,
+								ObjectJassValueVisitor.getInstance());
+						final boolean doPan = arguments.get(1).visit(BooleanJassValueVisitor.getInstance());
+						final boolean panTimed = arguments.get(2).visit(BooleanJassValueVisitor.getInstance());
+						meleeUI.getCameraManager().applyCameraSetup(cameraSetup, doPan, panTimed);
+						return null;
+					});
+			jassProgramVisitor.getJassNativeManager().createNative("CameraSetupApplyWithZ",
+					(arguments, globalScope, triggerScope) -> {
+						final CustomCameraSetup cameraSetup = nullable(arguments, 0,
+								ObjectJassValueVisitor.getInstance());
+						final float zOffset = arguments.get(1).visit(RealJassValueVisitor.getInstance()).floatValue();
+						meleeUI.getCameraManager().applyCameraSetup(cameraSetup, true, true);
+						meleeUI.getCameraManager().setTargetZOffset(zOffset);
+						return null;
+					});
 			jassProgramVisitor.getJassNativeManager().createNative("CameraSetupApplyForceDuration",
 					(arguments, globalScope, triggerScope) -> {
 						final CustomCameraSetup cameraSetup = nullable(arguments, 0,
@@ -4626,6 +4710,24 @@ public class Jass2 {
 						final float forceDuration = arguments.get(2).visit(RealJassValueVisitor.getInstance())
 								.floatValue();
 						meleeUI.getCameraManager().applyCameraSetupForceDuration(cameraSetup, doPan, forceDuration);
+						return null;
+					});
+			jassProgramVisitor.getJassNativeManager().createNative("CameraSetupApplyForceDurationWithZ",
+					(arguments, globalScope, triggerScope) -> {
+						final CustomCameraSetup cameraSetup = nullable(arguments, 0,
+								ObjectJassValueVisitor.getInstance());
+						final float zOffset = arguments.get(1).visit(RealJassValueVisitor.getInstance()).floatValue();
+						final float forceDuration = arguments.get(2).visit(RealJassValueVisitor.getInstance())
+								.floatValue();
+						meleeUI.getCameraManager().applyCameraSetupForceDuration(cameraSetup, true, forceDuration);
+						meleeUI.getCameraManager().setTargetZOffset(zOffset, forceDuration);
+						return null;
+					});
+			jassProgramVisitor.getJassNativeManager().createNative("ResetToGameCamera",
+					(arguments, globalScope, triggerScope) -> {
+						final float forceDuration = arguments.get(0).visit(RealJassValueVisitor.getInstance())
+								.floatValue();
+						meleeUI.getCameraManager().resetToGameCamera(forceDuration);
 						return null;
 					});
 			jassProgramVisitor.getJassNativeManager().createNative("LeaderboardGetItemCount",
@@ -4684,18 +4786,31 @@ public class Jass2 {
 					});
 			jassProgramVisitor.getJassNativeManager().createNative("GetDestructableLife",
 					(arguments, globalScope, triggerScope) -> {
-						final CDestructable whichDestructable = arguments.get(0)
-								.visit(ObjectJassValueVisitor.getInstance());
+						final CDestructable whichDestructable = nullable(arguments, 0,
+								ObjectJassValueVisitor.getInstance());
 						if (whichDestructable == null) {
-							// TODO this should not be the way to solve the problem i am facing
 							return RealJassValue.ZERO;
 						}
 						return RealJassValue.of(whichDestructable.getLife());
 					});
+			jassProgramVisitor.getJassNativeManager().createNative("SetDestructableLife",
+					(arguments, globalScope, triggerScope) -> {
+						final CDestructable whichDestructable = nullable(arguments, 0,
+								ObjectJassValueVisitor.getInstance());
+						final float life = arguments.get(1).visit(RealJassValueVisitor.getInstance()).floatValue();
+						if (whichDestructable == null) {
+							return RealJassValue.ZERO;
+						}
+						whichDestructable.setLife(this.simulation, life);
+						return null;
+					});
 			jassProgramVisitor.getJassNativeManager().createNative("GetDestructableMaxLife",
 					(arguments, globalScope, triggerScope) -> {
-						final CDestructable whichDestructable = arguments.get(0)
-								.visit(ObjectJassValueVisitor.getInstance());
+						final CDestructable whichDestructable = nullable(arguments, 0,
+								ObjectJassValueVisitor.getInstance());
+						if (whichDestructable == null) {
+							return RealJassValue.ZERO;
+						}
 						return RealJassValue.of(whichDestructable.getMaxLife());
 					});
 			jassProgramVisitor.getJassNativeManager().createNative("SetDestructableAnimation",
@@ -4762,6 +4877,41 @@ public class Jass2 {
 						final float fadeDuration = arguments.get(1).visit(RealJassValueVisitor.getInstance())
 								.floatValue();
 						meleeUI.showInterface(show, fadeDuration);
+						return null;
+					});
+			jassProgramVisitor.getJassNativeManager().createNative("EnableUserControl",
+					(arguments, globalScope, triggerScope) -> {
+						final boolean value = arguments.get(0).visit(BooleanJassValueVisitor.getInstance());
+						meleeUI.enableUserControl(value);
+						return null;
+					});
+			jassProgramVisitor.getJassNativeManager().createNative("SetCinematicScene",
+					(arguments, globalScope, triggerScope) -> {
+						final int portraitUnitId = arguments.get(0).visit(IntegerJassValueVisitor.getInstance());
+						final CPlayerColor color = nullable(arguments, 1, ObjectJassValueVisitor.getInstance());
+						String speakerTitle = nullable(arguments, 2, StringJassValueVisitor.getInstance());
+						String text = nullable(arguments, 3, StringJassValueVisitor.getInstance());
+						final float sceneDuration = arguments.get(4).visit(RealJassValueVisitor.getInstance())
+								.floatValue();
+						final float voiceoverDuration = arguments.get(4).visit(RealJassValueVisitor.getInstance())
+								.floatValue();
+
+						speakerTitle = this.gameUI.getTrigStr(speakerTitle);
+						text = this.gameUI.getTrigStr(text);
+
+						meleeUI.setCinematicScene(portraitUnitId, color, speakerTitle, text, sceneDuration,
+								voiceoverDuration);
+						return null;
+					});
+			jassProgramVisitor.getJassNativeManager().createNative("EndCinematicScene",
+					(arguments, globalScope, triggerScope) -> {
+						meleeUI.endCinematicScene();
+						return null;
+					});
+			jassProgramVisitor.getJassNativeManager().createNative("ForceCinematicSubtitles",
+					(arguments, globalScope, triggerScope) -> {
+						final boolean value = arguments.get(0).visit(BooleanJassValueVisitor.getInstance());
+						meleeUI.forceCinematicSubtitles(value);
 						return null;
 					});
 			jassProgramVisitor.getJassNativeManager().createNative("IsPlayerInForce",
@@ -9652,7 +9802,7 @@ public class Jass2 {
 							.visit(ObjectJassValueVisitor.<CPlayerJass>getInstance());
 					final CPlayerColor playerColor = arguments.get(1)
 							.visit(ObjectJassValueVisitor.<CPlayerColor>getInstance());
-					player.setColor(playerColor.ordinal());
+					playerAPI.setColor(player, playerColor);
 					return null;
 				});
 		jassProgramVisitor.getJassNativeManager().createNative("SetPlayerAlliance",

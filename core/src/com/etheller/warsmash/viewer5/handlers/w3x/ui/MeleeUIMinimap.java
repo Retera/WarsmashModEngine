@@ -26,7 +26,7 @@ public class MeleeUIMinimap {
 	private final Texture[] specialIcons;
 	private float heroAlpha = 0.90f;
 	private byte polarity = -1;
-	private boolean visible;
+	private boolean visible = true;
 
 	public MeleeUIMinimap(final Rectangle displayArea, final Rectangle playableMapArea, final Texture minimapTexture,
 			final Texture[] teamColors, final Texture[] specialIcons) {

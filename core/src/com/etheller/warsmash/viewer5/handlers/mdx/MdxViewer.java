@@ -35,7 +35,7 @@ public class MdxViewer extends AbstractMdxModelViewer {
 		if (this.defaultLighting != null) {
 			return new W3xScenePortraitLightManager(this, this.defaultLighting);
 		}
-		return new W3xScenePortraitLightManager(this);
+		return new W3xScenePortraitLightManager(this.gl);
 	}
 
 	@Override

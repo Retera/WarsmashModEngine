@@ -140,4 +140,8 @@ public class RenderDoodad {
 			((MdxComplexInstance) this.instance).setVertexColor(VERTEX_COLOR_HEAP);
 		}
 	}
+
+	public float[] getVertexColor() {
+		return ((MdxComplexInstance) this.instance).vertexColor;
+	}
 }

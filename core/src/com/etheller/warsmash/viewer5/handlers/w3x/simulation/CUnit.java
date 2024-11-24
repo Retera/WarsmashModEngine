@@ -1702,7 +1702,8 @@ public class CUnit extends CWidget {
 //					System.err.println("Disabling ability: " + ability.getAlias().asStringValue());
 					this.disabledAbilities.add(ability);
 					ability.onRemove(simulation, this);
-					if (ability.equals(this.currentBehavior.visit(BehaviorAbilityVisitor.INSTANCE))) {
+					if ((this.currentBehavior != null)
+							&& ability.equals(this.currentBehavior.visit(BehaviorAbilityVisitor.INSTANCE))) {
 						performDefaultBehavior(simulation);
 					}
 				}
@@ -4113,10 +4114,7 @@ public class CUnit extends CWidget {
 	}
 
 	public static enum QueueItemType {
-		UNIT,
-		RESEARCH,
-		HERO_REVIVE,
-		SACRIFICE;
+		UNIT, RESEARCH, HERO_REVIVE, SACRIFICE;
 	}
 
 	public void setRallyPoint(final AbilityTarget target) {
@@ -4451,8 +4449,7 @@ public class CUnit extends CWidget {
 	}
 
 	private static enum StateListenerUpdateType {
-		ADD,
-		REMOVE;
+		ADD, REMOVE;
 	}
 
 	private static final class StateListenerUpdate {

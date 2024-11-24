@@ -57,14 +57,13 @@ import com.etheller.warsmash.parsers.fdf.frames.SimpleFrame;
 import com.etheller.warsmash.parsers.fdf.frames.SimpleStatusBarFrame;
 import com.etheller.warsmash.parsers.fdf.frames.SingleStringFrame;
 import com.etheller.warsmash.parsers.fdf.frames.SpriteFrame;
+import com.etheller.warsmash.parsers.fdf.frames.SpriteFrame2;
 import com.etheller.warsmash.parsers.fdf.frames.StringFrame;
 import com.etheller.warsmash.parsers.fdf.frames.TextureFrame;
 import com.etheller.warsmash.parsers.fdf.frames.UIFrame;
 import com.etheller.warsmash.parsers.jass.Jass2.RootFrameListener;
 import com.etheller.warsmash.units.DataTable;
 import com.etheller.warsmash.units.Element;
-import com.etheller.warsmash.units.ObjectData;
-import com.etheller.warsmash.util.DataSourceFileHandle;
 import com.etheller.warsmash.util.FastNumberFormat;
 import com.etheller.warsmash.util.ImageUtils;
 import com.etheller.warsmash.util.RenderMathUtils;
@@ -101,6 +100,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.environment.Terrain;
 import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.RenderDestructable;
 import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.RenderItem;
 import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.RenderUnit;
+import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.RenderUnitType;
 import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.RenderWidget;
 import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.ability.AbilityDataUI;
 import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.ability.IconUI;
@@ -397,9 +397,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 	private MultiSelectionIconListener cargoClickListener;
 	private float frontQueueIconWidth;
 	private int draggingMouseButton;
-	private Music[] currentMusics;
-	private int currentMusicIndex;
-	private boolean currentMusicRandomizeIndex;
+	private MusicPlayer musicPlayer;
 	private final List<CTimerDialog> timerDialogs = new ArrayList<>();
 	private final AnyClickableUnitFilter anyClickableUnitFilter;
 	private final AnyTargetableUnitFilter anyTargetableUnitFilter;
@@ -422,7 +420,16 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 	private UIFrame cinematicPanel;
 	private StringFrame cinematicSpeakerText;
 	private StringFrame cinematicDialogueText;
-	private UIFrame cinematicPortrait;
+	private UIFrame simpleInfoPanelItemDetail;
+	private StringFrame simpleItemNameValue;
+	private StringFrame simpleItemDescriptionValue;
+	private UIFrame simpleInfoPanelDestructableDetail;
+	private StringFrame simpleDestructableNameValue;
+	private SimpleFrame smashCommandButtons;
+	private boolean userControlEnabled = true;
+	private boolean subtitleDisplayOverride;
+	private UIFrame cinematicScenePanel;
+	private CinematicPortrait cinematicPortrait;
 
 	public MeleeUI(final DataSource dataSource, final ExtendViewport uiViewport, final Scene uiScene,
 			final Scene portraitScene, final CameraPreset[] cameraPresets, final CameraRates cameraRates,
@@ -468,6 +475,13 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 			catch (final IOException e) {
 				e.printStackTrace();
 			}
+		}
+
+		if (WarsmashConstants.ENABLE_MUSIC) {
+			this.musicPlayer = new MusicPlayerLibGDX(dataSource, this.musicSLK);
+		}
+		else {
+			this.musicPlayer = MusicPlayer.DO_NOTHING;
 		}
 	}
 
@@ -703,7 +717,6 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 
 		// Create the unit portrait stuff
 		this.portrait = new Portrait(this.war3MapViewer, this.portraitScene);
-		positionPortrait();
 		this.unitPortrait = (SimpleFrame) this.rootFrame.createSimpleFrame("UnitPortrait", this.consoleUI, 0);
 		final SimpleFrame unitPortraitModel = (SimpleFrame) this.rootFrame.getFrameByName("UnitPortraitModel", 0);
 		this.clickablePortrait = new ClickablePortrait("SmashClickablePortrait", unitPortraitModel);
@@ -807,6 +820,20 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 		this.simpleBuildQueueBackdrop.setWidth(infoPanelUnitDetailWidth);
 		this.simpleBuildQueueBackdrop.setHeight(infoPanelUnitDetailWidth * 0.5f);
 		this.simpleBuildQueueBackdrop.setVisible(false);
+
+		// Create Simple Info Panel Item Detail
+		this.simpleInfoPanelItemDetail = this.rootFrame.createSimpleFrame("SimpleInfoPanelItemDetail",
+				this.smashSimpleInfoPanel, 0);
+		this.simpleItemNameValue = (StringFrame) this.rootFrame.getFrameByName("SimpleItemNameValue", 0);
+		this.simpleItemDescriptionValue = (StringFrame) this.rootFrame.getFrameByName("SimpleItemDescriptionValue", 0);
+		this.simpleInfoPanelItemDetail.setVisible(false);
+
+		// Create Simple Info Panel Destructable Detail
+		this.simpleInfoPanelDestructableDetail = this.rootFrame.createSimpleFrame("SimpleInfoPanelDestructableDetail",
+				this.smashSimpleInfoPanel, 0);
+		this.simpleDestructableNameValue = (StringFrame) this.rootFrame.getFrameByName("SimpleDestructableNameValue",
+				0);
+		this.simpleInfoPanelDestructableDetail.setVisible(false);
 
 		this.queueIconFrames[0] = new QueueIcon("SmashBuildQueueIcon0", this.smashSimpleInfoPanel, this, 0);
 		final TextureFrame queueIconFrameBackdrop0 = new TextureFrame("SmashBuildQueueIcon0Backdrop",
@@ -1190,11 +1217,13 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 		commandButtonIndex = 0;
 		final BitmapFont commandCardNumberOverlayFont = this.rootFrame
 				.generateFont(DEFAULT_COMMAND_CARD_ICON_WIDTH * 0.25f);
+		this.smashCommandButtons = (SimpleFrame) this.rootFrame.createFrameByType("SIMPLEFRAME", "SmashCommandButtons",
+				this.rootFrame, "", 0);
 		for (int j = 0; j < COMMAND_CARD_HEIGHT; j++) {
 			for (int i = 0; i < COMMAND_CARD_WIDTH; i++) {
 				final CommandCardIcon commandCardIcon = new CommandCardIcon("SmashCommandButton_" + commandButtonIndex,
 						this.rootFrame, this);
-				this.rootFrame.add(commandCardIcon);
+				this.smashCommandButtons.add(commandCardIcon);
 				final TextureFrame iconFrame = new TextureFrame("SmashCommandButton_" + commandButtonIndex + "_Icon",
 						this.rootFrame, false, null);
 				final FilterModeTextureFrame activeHighlightFrame = new FilterModeTextureFrame(
@@ -1296,7 +1325,11 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 		this.rootFrame.setText(this.cinematicSpeakerText, "");
 		this.cinematicDialogueText = (StringFrame) this.rootFrame.getFrameByName("CinematicDialogueText", 0);
 		this.rootFrame.setText(this.cinematicDialogueText, "");
-		this.cinematicPortrait = this.rootFrame.getFrameByName("CinematicPortrait", 0);
+		this.cinematicScenePanel = this.rootFrame.getFrameByName("CinematicScenePanel", 0);
+		final SpriteFrame2 cinematicPortraitSprite = (SpriteFrame2) this.rootFrame.getFrameByName("CinematicPortrait",
+				0);
+		this.cinematicPortrait = new CinematicPortrait(cinematicPortraitSprite, this.cinematicScenePanel);
+		positionPortrait();
 
 		// this.tooltipFrame = this.rootFrame.createFrameByType("BACKDROP",
 		// "SmashToolTipBackdrop", this.rootFrame, "", 0);
@@ -1554,6 +1587,13 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 	@Override
 	public void update(final float deltaTime) {
 		this.portrait.update(deltaTime);
+		if (this.portrait.isResetNeeded()) {
+			this.portrait.resetCinematicSequence();
+			this.portrait.setSelectedUnit(this.selectedUnit);
+		}
+		if (this.cinematicPanel.isVisible()) {
+			this.cinematicPortrait.update(deltaTime);
+		}
 
 		final int baseMouseX = Gdx.input.getX();
 		int mouseX = baseMouseX;
@@ -1781,20 +1821,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 				gameMessage.stringFrame.setAlpha(fadeAlpha);
 			}
 		}
-		if (this.currentMusics != null) {
-			if ((this.currentMusics[this.currentMusicIndex] != null)
-					&& !this.currentMusics[this.currentMusicIndex].isPlaying()) {
-				if (this.currentMusicRandomizeIndex) {
-					this.currentMusicIndex = (int) (Math.random() * this.currentMusics.length);
-				}
-				else {
-					this.currentMusicIndex = (this.currentMusicIndex + 1) % this.currentMusics.length;
-				}
-				if (this.currentMusics[this.currentMusicIndex] != null) {
-					this.currentMusics[this.currentMusicIndex].play();
-				}
-			}
-		}
+		this.musicPlayer.update();
 		for (final CTimerDialog timerDialog : this.timerDialogs) {
 			timerDialog.update(this.rootFrame, this.war3MapViewer.simulation);
 		}
@@ -2369,11 +2396,9 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 			boolean justLoaded = false;
 			final War3MapViewer viewer = MeleeUI.this.war3MapViewer;
 			if (MeleeUI.this.cursorModelInstance == null) {
-				final ObjectData unitData = viewer.getAllObjectData().getUnits();
 				final War3ID buildingTypeId = new War3ID(previewBuildUnitId);
 				MeleeUI.this.cursorBuildingUnitType = viewer.simulation.getUnitData().getUnitType(buildingTypeId);
-				final String unitModelPath = viewer.getUnitModelPath(unitData.get(buildingTypeId));
-				final MdxModel model = viewer.loadModelMdx(unitModelPath);
+				final MdxModel model = viewer.getUnitTypeData(buildingTypeId).getModel();
 				MeleeUI.this.cursorModelInstance = (MdxComplexInstance) model.addInstance();
 //				MeleeUI.this.cursorModelInstance.setVertexColor(new float[] { 1, 1, 1, 0.5f });
 				final int playerColorIndex = viewer.simulation
@@ -2629,10 +2654,11 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 		private final EnumSet<AnimationTokens.SecondaryTag> recycleSet = EnumSet
 				.noneOf(AnimationTokens.SecondaryTag.class);
 		private EnumSet<AnimationTokens.SecondaryTag> secondaryTags;
-		private RenderUnit lastUnit;
+		private RenderWidget lastUnit;
 		// If animationTargetDuration is 0, it will play the whole animation.
 		private long portraitTargetDuration = 0;
 		private long portraitCurrentDuration = 0;
+		private long faceLockTime = 0;
 
 		public Portrait(final War3MapViewer war3MapViewer, final Scene portraitScene) {
 			this.portraitScene = portraitScene;
@@ -2641,12 +2667,22 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 			this.portraitScene.camera.viewport(new Rectangle(100, 0, 6400, 48));
 		}
 
+		public void resetCinematicSequence() {
+			this.secondaryTags = SequenceUtils.EMPTY;
+			if (this.modelInstance != null) {
+				this.portraitScene.removeInstance(this.modelInstance);
+			}
+			this.modelInstance = null;
+			this.portraitCameraManager.setModelInstance(null, null);
+			this.faceLockTime = 0;
+		}
+
 		public void update(final float dt) {
 			this.portraitCameraManager.updateCamera();
 			if (this.modelInstance != null) {
+				this.portraitCurrentDuration += (dt * 1000);
 				if (this.portraitTargetDuration != 0) {
 					if (this.portraitCurrentDuration < this.portraitTargetDuration) {
-						this.portraitCurrentDuration += (dt * 1000);
 						this.modelInstance.sequenceLoopMode = SequenceLoopMode.ALWAYS_LOOP;
 					}
 					else {
@@ -2659,9 +2695,16 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 				if (this.modelInstance.sequenceEnded || (this.modelInstance.sequence == -1)) {
 					this.recycleSet.clear();
 					this.recycleSet.addAll(this.secondaryTags);
-					SequenceUtils.randomSequence(this.modelInstance, PrimaryTag.PORTRAIT, this.recycleSet, true);
+					if (SequenceUtils.randomSequence(this.modelInstance, PrimaryTag.PORTRAIT, this.recycleSet,
+							true) == null) {
+						SequenceUtils.randomSequence(this.modelInstance, PrimaryTag.STAND, this.recycleSet, true);
+					}
 				}
 			}
+		}
+
+		public boolean isResetNeeded() {
+			return (this.faceLockTime != 0) && (this.portraitCurrentDuration > this.faceLockTime);
 		}
 
 		public void talk(final UnitSound us, float extraDuration) {
@@ -2679,11 +2722,17 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 				}
 				this.portraitTargetDuration += (long) (1000 * extraDuration);
 				this.portraitCurrentDuration = 0;
-				SequenceUtils.randomSequence(this.modelInstance, PrimaryTag.PORTRAIT, this.recycleSet, true);
+				if (SequenceUtils.randomSequence(this.modelInstance, PrimaryTag.PORTRAIT, this.recycleSet,
+						true) == null) {
+					SequenceUtils.randomSequence(this.modelInstance, PrimaryTag.STAND, this.recycleSet, true);
+				}
 			}
 		}
 
 		public void setSelectedUnit(final RenderUnit unit) {
+			if ((this.faceLockTime > 0) && (this.portraitCurrentDuration <= this.faceLockTime)) {
+				return;
+			}
 			if (this.lastUnit != unit) {
 				this.lastUnit = unit;
 				if (unit == null) {
@@ -2695,7 +2744,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 					this.portraitCameraManager.setModelInstance(null, null);
 				}
 				else {
-					this.secondaryTags = this.lastUnit.getSecondaryAnimationTags();
+					this.secondaryTags = unit.getSecondaryAnimationTags();
 					final MdxModel portraitModel = unit.portraitModel;
 					if (portraitModel != null) {
 						if (this.modelInstance != null) {
@@ -2713,8 +2762,70 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 			}
 		}
 
+		public void setSelectedItem(final RenderItem unit) {
+			if ((this.faceLockTime > 0) && (this.portraitCurrentDuration <= this.faceLockTime)) {
+				return;
+			}
+			if (this.lastUnit != unit) {
+				this.lastUnit = unit;
+				this.secondaryTags = SequenceUtils.EMPTY;
+				if (unit == null) {
+					if (this.modelInstance != null) {
+						this.portraitScene.removeInstance(this.modelInstance);
+					}
+					this.modelInstance = null;
+					this.portraitCameraManager.setModelInstance(null, null);
+				}
+				else {
+					final MdxModel portraitModel = unit.portraitModel;
+					if (portraitModel != null) {
+						if (this.modelInstance != null) {
+							this.portraitScene.removeInstance(this.modelInstance);
+						}
+						this.modelInstance = (MdxComplexInstance) portraitModel.addInstance();
+						this.portraitCameraManager.setModelInstance(this.modelInstance, portraitModel);
+						this.modelInstance.setBlendTime(portraitModel.blendTime);
+						this.modelInstance.setSequenceLoopMode(SequenceLoopMode.NEVER_LOOP);
+						this.modelInstance.setScene(this.portraitScene);
+						this.modelInstance.setVertexColor(unit.instance.vertexColor);
+					}
+				}
+			}
+		}
+
+		public void setSelectedDestructable(final RenderDestructable unit) {
+			if ((this.faceLockTime > 0) && (this.portraitCurrentDuration <= this.faceLockTime)) {
+				return;
+			}
+			if (this.lastUnit != unit) {
+				this.lastUnit = unit;
+				this.secondaryTags = SequenceUtils.EMPTY;
+				if (unit == null) {
+					if (this.modelInstance != null) {
+						this.portraitScene.removeInstance(this.modelInstance);
+					}
+					this.modelInstance = null;
+					this.portraitCameraManager.setModelInstance(null, null);
+				}
+				else {
+					final MdxModel portraitModel = unit.getPortraitModel();
+					if (portraitModel != null) {
+						if (this.modelInstance != null) {
+							this.portraitScene.removeInstance(this.modelInstance);
+						}
+						this.modelInstance = (MdxComplexInstance) portraitModel.addInstance();
+						this.portraitCameraManager.setModelInstance(this.modelInstance, portraitModel);
+						this.modelInstance.setBlendTime(portraitModel.blendTime);
+						this.modelInstance.setSequenceLoopMode(SequenceLoopMode.NEVER_LOOP);
+						this.modelInstance.setScene(this.portraitScene);
+					}
+				}
+			}
+		}
+
 		public void setCinematicTalkingHead(MdxModel portraitModel, int teamColorIndex,
-				EnumSet<SecondaryTag> secondaryTags) {
+				EnumSet<SecondaryTag> secondaryTags, float faceLockTime) {
+			this.faceLockTime = (long) (1000 * faceLockTime);
 			if (this.modelInstance != null) {
 				this.portraitScene.removeInstance(this.modelInstance);
 			}
@@ -2728,6 +2839,90 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 				this.modelInstance.setTeamColor(teamColorIndex);
 			}
 			this.lastUnit = null;
+		}
+	}
+
+	private static final class CinematicPortrait {
+		private final EnumSet<AnimationTokens.SecondaryTag> recycleSet = EnumSet
+				.noneOf(AnimationTokens.SecondaryTag.class);
+		private EnumSet<AnimationTokens.SecondaryTag> secondaryTags;
+		// If animationTargetDuration is 0, it will play the whole animation.
+		private long portraitTargetDuration = 0;
+		private long portraitCurrentDuration = 0;
+		private long portraitShowDuration = -1;
+
+		private final SpriteFrame2 cinematicPortrait;
+		private final UIFrame cinematicScenePanel;
+
+		public CinematicPortrait(SpriteFrame2 cinematicPortrait, UIFrame cinematicScenePanel) {
+			this.cinematicPortrait = cinematicPortrait;
+			this.cinematicScenePanel = cinematicScenePanel;
+			this.secondaryTags = SequenceUtils.EMPTY;
+		}
+
+		public void endCinematicSequence() {
+			this.secondaryTags = SequenceUtils.EMPTY;
+			this.cinematicScenePanel.setVisible(false);
+		}
+
+		public void update(final float dt) {
+			if (isResetNeeded()) {
+				endCinematicSequence();
+			}
+			else {
+				this.portraitCurrentDuration += (dt * 1000);
+				if (this.portraitTargetDuration != 0) {
+					if (this.portraitCurrentDuration < this.portraitTargetDuration) {
+						this.cinematicPortrait.setSequenceLoopMode(SequenceLoopMode.ALWAYS_LOOP);
+					}
+					else {
+						this.cinematicPortrait.setSequenceEnded(true);
+						this.cinematicPortrait.setSequenceLoopMode(SequenceLoopMode.NEVER_LOOP);
+						this.portraitTargetDuration = 0;
+					}
+				}
+
+				if (this.cinematicPortrait.isSequenceEnded()) {
+					this.recycleSet.clear();
+					this.recycleSet.addAll(this.secondaryTags);
+					if (this.cinematicPortrait.setSequence(PrimaryTag.PORTRAIT, this.recycleSet) == null) {
+						this.cinematicPortrait.setSequence(PrimaryTag.STAND, this.recycleSet);
+					}
+				}
+			}
+		}
+
+		private boolean isResetNeeded() {
+			return this.portraitCurrentDuration > this.portraitShowDuration;
+		}
+
+		public void talk(final UnitSound us, float extraDuration) {
+			// TODO we somehow called talk from null by clicking a unit right at the same
+			// time it died, so I do a null check here until I study that case further.
+			this.recycleSet.clear();
+			this.recycleSet.addAll(this.secondaryTags);
+			this.recycleSet.add(SecondaryTag.TALK);
+			if (us != null) {
+				this.portraitTargetDuration = (long) (1000 * Extensions.audio.getDuration(us.getLastPlayedSound()));
+			}
+			else {
+				this.portraitTargetDuration = 0;
+			}
+			this.portraitTargetDuration += (long) (1000 * extraDuration);
+			this.portraitCurrentDuration = 0;
+
+			if (this.cinematicPortrait.setSequence(PrimaryTag.PORTRAIT, this.recycleSet) == null) {
+				this.cinematicPortrait.setSequence(PrimaryTag.STAND, this.recycleSet);
+			}
+		}
+
+		public void setCinematicTalkingHead(MdxModel portraitModel, int teamColorIndex,
+				EnumSet<SecondaryTag> secondaryTags, float faceLockTime) {
+			this.cinematicScenePanel.setVisible(true);
+			this.portraitShowDuration = (long) (1000 * faceLockTime);
+			this.secondaryTags = secondaryTags;
+			this.cinematicPortrait.setModel(portraitModel);
+			this.cinematicPortrait.setTeamColor(teamColorIndex);
 		}
 	}
 
@@ -2807,6 +3002,8 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 			this.simpleHeroLevelBar.setVisible(false);
 			this.simpleBuildingBuildTimeIndicator.setVisible(false);
 			this.simpleInfoPanelBuildingDetail.setVisible(false);
+			this.simpleInfoPanelItemDetail.setVisible(false);
+			this.simpleInfoPanelDestructableDetail.setVisible(false);
 			this.simpleInfoPanelUnitDetail.setVisible(false);
 			for (final QueueIcon queueIconFrame : this.queueIconFrames) {
 				queueIconFrame.setVisible(false);
@@ -3009,6 +3206,8 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 				}
 			}
 			this.simpleInfoPanelBuildingDetail.setVisible(!multiSelect);
+			this.simpleInfoPanelItemDetail.setVisible(false);
+			this.simpleInfoPanelDestructableDetail.setVisible(false);
 			this.simpleBuildQueueBackdrop.setVisible(true);
 			this.simpleInfoPanelUnitDetail.setVisible(false);
 			this.rootFrame.setText(this.simpleBuildingNameValue, simulationUnit.getUnitType().getName());
@@ -3081,6 +3280,8 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 				}
 			}
 			this.simpleInfoPanelBuildingDetail.setVisible(false);
+			this.simpleInfoPanelItemDetail.setVisible(false);
+			this.simpleInfoPanelDestructableDetail.setVisible(false);
 			this.simpleInfoPanelUnitDetail.setVisible(false);
 			this.simpleBuildingBuildTimeIndicator.setVisible(false);
 			this.simpleBuildTimeIndicator.setVisible(false);
@@ -3097,6 +3298,8 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 				queueIconFrame.setVisible(false);
 			}
 			this.simpleInfoPanelBuildingDetail.setVisible(false);
+			this.simpleInfoPanelItemDetail.setVisible(false);
+			this.simpleInfoPanelDestructableDetail.setVisible(false);
 			this.simpleInfoPanelUnitDetail.setVisible(!multiSelect);
 			final boolean constructing = simulationUnit.isConstructingOrUpgrading();
 			this.smashBuffStatusBar.setVisible(!multiSelect && !simulationUnit.isBuilding() && !constructing);
@@ -3506,6 +3709,9 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 	public void resize(final int width, final int height) {
 		this.cameraManager.resize(setupWorldFrameViewport(width, height));
 		positionPortrait();
+		if (this.rootFrame.isAutoPosition()) {
+			this.rootFrame.positionBounds(this.rootFrame, this.uiViewport);
+		}
 	}
 
 	private Rectangle setupWorldFrameViewport(final int width, final int height) {
@@ -3520,26 +3726,23 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 
 	public void positionPortrait() {
 		if (this.cinematicPanel.isVisible()) {
-			this.tempRect.x = this.cinematicPortrait.getFramePointX(FramePoint.LEFT);
-			this.tempRect.y = this.cinematicPortrait.getFramePointY(FramePoint.BOTTOM);
-			this.tempRect.width = this.cinematicPortrait.getFramePointY(FramePoint.RIGHT) - this.tempRect.x;
-			this.tempRect.height = this.cinematicPortrait.getFramePointY(FramePoint.TOP) - this.tempRect.y;
-			this.portrait.portraitScene.camera.viewport(this.tempRect);
+			this.portrait.portraitScene.show = false;
 		}
 		else {
+			this.portrait.portraitScene.show = true;
 			this.projectionTemp1.x = 422 * this.widthRatioCorrection;
 			this.projectionTemp1.y = 57 * this.heightRatioCorrection;
 			this.projectionTemp2.x = (422 + 167) * this.widthRatioCorrection;
 			this.projectionTemp2.y = (57 + 170) * this.heightRatioCorrection;
 			this.uiViewport.project(this.projectionTemp1);
 			this.uiViewport.project(this.projectionTemp2);
-
-			this.tempRect.x = this.projectionTemp1.x + this.uiViewport.getScreenX();
-			this.tempRect.y = this.projectionTemp1.y + this.uiViewport.getScreenY();
-			this.tempRect.width = this.projectionTemp2.x - this.projectionTemp1.x;
-			this.tempRect.height = this.projectionTemp2.y - this.projectionTemp1.y;
-			this.portrait.portraitScene.camera.viewport(this.tempRect);
 		}
+
+		this.tempRect.x = this.projectionTemp1.x + this.uiViewport.getScreenX();
+		this.tempRect.y = this.projectionTemp1.y + this.uiViewport.getScreenY();
+		this.tempRect.width = this.projectionTemp2.x - this.projectionTemp1.x;
+		this.tempRect.height = this.projectionTemp2.y - this.projectionTemp1.y;
+		this.portrait.portraitScene.camera.viewport(this.tempRect);
 	}
 
 	private static final class InfoPanelIconBackdrops {
@@ -3765,6 +3968,13 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 				Terrain.WIREFRAME_TERRAIN = !Terrain.WIREFRAME_TERRAIN;
 			}
 		}
+		if (keycode == Input.Keys.ESCAPE) {
+			this.unitOrderListener.issueGuiPlayerEvent(JassGameEventsWar3.EVENT_PLAYER_END_CINEMATIC.getEventId());
+			return true;
+		}
+		if (!this.userControlEnabled) {
+			return false;
+		}
 		if (keycode == Input.Keys.TAB) {
 			if (this.selectedUnits.size() > 1) {
 				advanceSelectedSubGroup();
@@ -3772,10 +3982,6 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 						0, 0);
 				return true;
 			}
-		}
-		if (keycode == Input.Keys.ESCAPE) {
-			this.unitOrderListener.issueGuiPlayerEvent(JassGameEventsWar3.EVENT_PLAYER_END_CINEMATIC.getEventId());
-			return true;
 		}
 		final String keyString = Input.Keys.toString(keycode);
 		final char c = keyString.length() == 1 ? keyString.charAt(0) : ' ';
@@ -3807,17 +4013,26 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 
 	@Override
 	public boolean keyUp(final int keycode) {
+		if (!this.userControlEnabled) {
+			return false;
+		}
 		return this.cameraManager.keyUp(keycode);
 	}
 
 	@Override
 	public boolean scrolled(final float amountX, final float amountY) {
+		if (!this.userControlEnabled) {
+			return false;
+		}
 		this.cameraManager.scrolled((int) amountY);
 		return false;
 	}
 
 	@Override
 	public boolean touchDown(final int screenX, final int screenY, final float worldScreenY, final int button) {
+		if (!this.userControlEnabled) {
+			return false;
+		}
 		this.allowDrag = false;
 		if (button == Input.Buttons.FORWARD) {
 			if (this.selectedUnits.size() > 1) {
@@ -4194,6 +4409,16 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 	}
 
 	private void selectWidgets(final List<RenderWidget> selectedUnits) {
+		if ((selectedUnits.size() == 1) && (selectedUnits.get(0) instanceof RenderItem)) {
+			final RenderItem selectedItem = (RenderItem) selectedUnits.get(0);
+			selectItem(selectedItem);
+			return;
+		}
+		if ((selectedUnits.size() == 1) && (selectedUnits.get(0) instanceof RenderDestructable)) {
+			final RenderDestructable selectedItem = (RenderDestructable) selectedUnits.get(0);
+			selectDestructable(selectedItem);
+			return;
+		}
 		final List<RenderUnit> units = new ArrayList<>();
 		Collections.sort(selectedUnits, new Comparator<RenderWidget>() {
 			@Override
@@ -4221,6 +4446,24 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 			}
 		}
 		selectUnits(units);
+	}
+
+	private void selectItem(RenderItem selectedItem) {
+		selectUnit(null);
+		this.portrait.setSelectedItem(selectedItem);
+		this.simpleInfoPanelItemDetail.setVisible(true);
+		final War3ID typeId = selectedItem.getSimulationItem().getTypeId();
+		final ItemUI itemUI = this.war3MapViewer.getAbilityDataUI().getItemUI(typeId);
+		this.rootFrame.setText(this.simpleItemNameValue, itemUI.getName());
+		this.rootFrame.setText(this.simpleItemDescriptionValue, itemUI.getDescription());
+	}
+
+	private void selectDestructable(RenderDestructable selectedItem) {
+		selectUnit(null);
+		this.portrait.setSelectedDestructable(selectedItem);
+		this.simpleInfoPanelDestructableDetail.setVisible(true);
+		final String name = selectedItem.getSimulationDestructable().getDestType().getName();
+		this.rootFrame.setText(this.simpleDestructableNameValue, name);
 	}
 
 	private void selectUnits(final List<RenderUnit> selectedUnits) {
@@ -4310,6 +4553,9 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 			return false;
 		}
 		else if (button == Input.Buttons.BACK) {
+			return false;
+		}
+		if (!this.userControlEnabled) {
 			return false;
 		}
 		this.currentlyDraggingPointer = -1;
@@ -4435,6 +4681,9 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 
 	@Override
 	public boolean touchDragged(final int screenX, final int screenY, final float worldScreenY, final int pointer) {
+		if (!this.userControlEnabled) {
+			return false;
+		}
 		screenCoordsVector.set(screenX, screenY);
 		this.uiViewport.unproject(screenCoordsVector);
 
@@ -4511,8 +4760,13 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 	}
 
 	private void updateMouseOverUnit(final int screenX, final float worldScreenY) {
-		final RenderWidget newMouseOverUnit = this.war3MapViewer.rayPickUnit(screenX, worldScreenY,
-				this.anyClickableUnitFilter);
+		final RenderWidget newMouseOverUnit;
+		if (this.userControlEnabled) {
+			newMouseOverUnit = this.war3MapViewer.rayPickUnit(screenX, worldScreenY, this.anyClickableUnitFilter);
+		}
+		else {
+			newMouseOverUnit = null;
+		}
 		if (newMouseOverUnit != this.mouseOverUnit) {
 			this.war3MapViewer.clearUnitMouseOverHighlight();
 			this.dragSelectPreviewUnits.clear();
@@ -4829,71 +5083,47 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 
 	@Override
 	public Music playMusic(final String musicField, final boolean random, int index) {
-		if (WarsmashConstants.ENABLE_MUSIC) {
-			stopMusic();
+		return playMusicEx(musicField, random, index, 0, -1);
+	}
 
-			final String[] semicolonMusics = musicField.split(";");
-			final List<String> musicPaths = new ArrayList<>();
-			for (String musicPath : semicolonMusics) {
-				// dumb support for comma as well as semicolon, I wonder if we can
-				// clean this up, simplify?
-				if (this.musicSLK.get(musicPath) != null) {
-					musicPath = this.musicSLK.get(musicPath).getField("FileNames");
-				}
-				final String[] moreSplitMusics = musicPath.split(",");
-				for (final String finalSplitPath : moreSplitMusics) {
-					musicPaths.add(finalSplitPath);
-				}
-			}
-			final String[] musics = musicPaths.toArray(new String[musicPaths.size()]);
+	@Override
+	public Music setMapMusic(String musicField, boolean random, int index) {
+		return this.musicPlayer.setDefaultMusic(musicField, random, index);
+	}
 
-			this.currentMusics = new Music[musics.length];
-			int validMusicCount = 0;
-			for (int i = 0; i < musics.length; i++) {
-				if (this.war3MapViewer.dataSource.has(musics[i])) {
-					final Music newMusic = Gdx.audio
-							.newMusic(new DataSourceFileHandle(this.war3MapViewer.dataSource, musics[i]));
-					newMusic.setVolume(1.0f);
-					this.currentMusics[i] = newMusic;
-					validMusicCount++;
-				}
-			}
-			if (this.currentMusics.length != validMusicCount) {
-				final Music[] fixedList = new Music[validMusicCount];
-				int fixedListIndex = 0;
-				for (int i = 0; i < this.currentMusics.length; i++) {
-					if (this.currentMusics[i] != null) {
-						fixedList[fixedListIndex++] = this.currentMusics[i];
-					}
-				}
-				this.currentMusics = fixedList;
-			}
-			if (random) {
-				index = (int) (Math.random() * this.currentMusics.length);
-			}
-			this.currentMusicIndex = index;
-			this.currentMusicRandomizeIndex = random;
-			if (this.currentMusics[index] != null) {
-				this.currentMusics[index].play();
-			}
-		}
-		return null;
+	@Override
+	public void playMapMusic() {
+		this.musicPlayer.playDefaultMusic();
+	}
+
+	@Override
+	public Music playMusicEx(String musicField, boolean random, int index, int fromMSecs, int fadeInMSecs) {
+		return this.musicPlayer.playMusicEx(musicField, random, index, fromMSecs, fadeInMSecs);
+	}
+
+	@Override
+	public void stopMusic(boolean fadeOut) {
+		this.musicPlayer.stopMusic();
+	}
+
+	@Override
+	public void resumeMusic() {
+		this.musicPlayer.resumeMusic();
+	}
+
+	@Override
+	public void setMusicVolume(int volume) {
+		this.musicPlayer.setVolume(volume);
+	}
+
+	@Override
+	public void setMusicPlayPosition(int millisecs) {
+		this.musicPlayer.setMusicPosition(millisecs);
 	}
 
 	@Override
 	public void gameClosed() {
-		stopMusic();
-	}
-
-	private void stopMusic() {
-		if (this.currentMusics != null) {
-			for (final Music music : this.currentMusics) {
-				if (music != null) {
-					music.stop();
-				}
-			}
-			this.currentMusics = null;
-		}
+		this.musicPlayer.stopMusic();
 	}
 
 	@Override
@@ -5060,22 +5290,10 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 		this.timeIndicator.setVisible(show);
 		this.meleeUIMinimap.setVisible(show);
 		this.smashSimpleInfoPanel.setVisible(show);
-		if (!show) {
-			for (int i = 0; i < this.commandCard.length; i++) {
-				for (int j = 0; j < this.commandCard[i].length; j++) {
-					this.commandCard[i][j].setVisible(show);
-				}
-			}
-		}
+		this.smashCommandButtons.setVisible(show);
 		this.upperButtonBar.setVisible(show);
 		this.inventoryCover.setVisible(show);
-		if (!show) {
-			for (int i = 0; i < this.inventoryIcons.length; i++) {
-				for (int j = 0; j < this.inventoryIcons[i].length; j++) {
-					this.inventoryIcons[i][j].setVisible(show);
-				}
-			}
-		}
+		this.inventoryBarFrame.setVisible(show);
 		this.inventoryTitleFrame.setVisible(show);
 		this.cinematicPanel.setVisible(!show);
 
@@ -5085,7 +5303,52 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 	@Override
 	public void setCinematicScene(int portraitUnitId, CPlayerColor color, String speakerTitle, String text,
 			float sceneDuration, float voiceoverDuration) {
-//		this.war3MapViewer.
+		final RenderUnitType unitTypeData = this.war3MapViewer.getUnitTypeData(new War3ID(portraitUnitId));
+		if (this.cinematicPanel.isVisible()) {
+			this.rootFrame.setText(this.cinematicSpeakerText, speakerTitle);
+			this.rootFrame.setText(this.cinematicDialogueText, text);
+			this.cinematicPortrait.setCinematicTalkingHead(
+					unitTypeData == null ? null : unitTypeData.getPortraitModel(), color.getHandleId(),
+					unitTypeData.getRequiredAnimationNames(), sceneDuration);
+			this.cinematicPortrait.talk(null, voiceoverDuration);
+		}
+		else {
+			if (unitTypeData != null) {
+				this.portrait.setCinematicTalkingHead(unitTypeData.getPortraitModel(), color.getHandleId(),
+						unitTypeData.getRequiredAnimationNames(), sceneDuration);
+				this.portrait.talk(null, voiceoverDuration);
+			}
+			if (this.subtitleDisplayOverride || true) {
+				showGameMessage("|Cffffcc00" + speakerTitle + "|r: " + text, sceneDuration);
+			}
+		}
 	}
 
+	@Override
+	public void endCinematicScene() {
+		this.portrait.faceLockTime = 0;
+		selectUnit(this.selectedUnit);
+	}
+
+	@Override
+	public void forceCinematicSubtitles(boolean value) {
+		this.subtitleDisplayOverride = value;
+	}
+
+	@Override
+	public void enableUserControl(boolean value) {
+		this.userControlEnabled = value;
+		this.cursorFrame.setVisible(value);
+		if (!value) {
+			this.allowDrag = false;
+			this.subMenuOrderIdStack.clear();
+			this.activeCommandUnit = null;
+			this.activeCommand = null;
+			this.activeCommandOrderId = -1;
+			this.mouseDownUIFrame = null;
+			this.war3MapViewer.clearUnitMouseOverHighlight();
+			this.dragSelectPreviewUnits.clear();
+			this.mouseOverUnit = null;
+		}
+	}
 }

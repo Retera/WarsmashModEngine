@@ -273,7 +273,7 @@ public class CAbilityData {
 		System.err.println("Starting to load ability builder");
 		System.err.println("========================================================================");
 
-		if (false) {
+		if (true) {
 			AbilityBuilderParserUtil.loadAbilityBuilderFiles(behavior -> {
 				if (behavior.getType().equals(AbilityBuilderType.TEMPLATE)) {
 					for (final AbilityBuilderDupe dupe : behavior.getIds()) {

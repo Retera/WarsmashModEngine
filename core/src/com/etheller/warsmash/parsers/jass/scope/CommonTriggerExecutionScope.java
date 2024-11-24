@@ -770,6 +770,14 @@ public class CommonTriggerExecutionScope extends TriggerExecutionScope {
 		return scope;
 	}
 
+	public static CommonTriggerExecutionScope triggerPlayerScope(final JassGameEventsWar3 triggerEventId,
+			final Trigger trigger, final CPlayerJass player) {
+		final CommonTriggerExecutionScope scope = new CommonTriggerExecutionScope(trigger, TriggerExecutionScope.EMPTY);
+		scope.triggeringPlayer = player;
+		scope.triggerEventId = triggerEventId;
+		return scope;
+	}
+
 	public static CommonTriggerExecutionScope jassAbilityTargetScope(final CAbility spellAbility,
 			final CUnit spellAbilityUnit, final CUnit targetUnit, final War3ID spellAbilityId,
 			final int spellAbilityOrderId, final JassOrderButtonType spellAbilityTargetType,

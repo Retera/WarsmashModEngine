@@ -5,6 +5,8 @@ import java.util.EnumMap;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CMapControl;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CMapFlag;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CMapPlacement;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayerColor;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayerJass;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CGameSpeed;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CGameType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CMapDensity;
@@ -155,5 +157,10 @@ public class War3MapConfig implements CPlayerAPI {
 	@Override
 	public CBasePlayer getPlayer(final int index) {
 		return this.players[index];
+	}
+
+	@Override
+	public void setColor(CPlayerJass player, CPlayerColor color) {
+		player.setColor(color.ordinal());
 	}
 }

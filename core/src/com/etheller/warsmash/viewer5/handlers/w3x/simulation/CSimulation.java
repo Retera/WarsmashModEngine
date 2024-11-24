@@ -59,7 +59,9 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.data.CUnitData;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.data.CUpgradeData;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.pathing.CPathfindingProcessor;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CAllianceType;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CMapControl;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayer;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayerColor;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayerJass;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayerState;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayerUnitOrderExecutor;
@@ -164,6 +166,7 @@ public class CSimulation implements CPlayerAPI {
 		this.seededRandom = seededRandom;
 		this.players = new ArrayList<>();
 		this.defaultPlayerUnitOrderExecutors = new ArrayList<>();
+		final List<CPlayer> neutralPlayers = new ArrayList<>();
 		for (int i = 0; i < WarsmashConstants.MAX_PLAYERS; i++) {
 			final CBasePlayer configPlayer = config.getPlayer(i);
 			final War3MapConfigStartLoc startLoc = config.getStartLoc(configPlayer.getStartLocationIndex());
@@ -190,6 +193,9 @@ public class CSimulation implements CPlayerAPI {
 			newPlayer.setAIDifficulty(configPlayer.getAIDifficulty());
 			this.players.add(newPlayer);
 			this.defaultPlayerUnitOrderExecutors.add(new CPlayerUnitOrderExecutor(this, i));
+			if ((newPlayer.getController() == CMapControl.NEUTRAL) && (i < (WarsmashConstants.MAX_PLAYERS - 4))) {
+				neutralPlayers.add(newPlayer);
+			}
 		}
 		final CPlayer neutralAggressive = this.players.get(this.players.size() - 4);
 		neutralAggressive.setName(miscData.getLocalizedString("WESTRING_PLAYER_NA"));
@@ -203,6 +209,10 @@ public class CSimulation implements CPlayerAPI {
 			final CPlayer cPlayer = this.players.get(i);
 			cPlayer.setAlliance(neutralPassive, CAllianceType.PASSIVE, true);
 			neutralPassive.setAlliance(cPlayer, CAllianceType.PASSIVE, true);
+			for (final CPlayer otherNeutral : neutralPlayers) {
+				cPlayer.setAlliance(otherNeutral, CAllianceType.PASSIVE, true);
+				otherNeutral.setAlliance(cPlayer, CAllianceType.PASSIVE, true);
+			}
 		}
 
 		this.commandErrorListener = commandErrorListener;
@@ -1142,6 +1152,23 @@ public class CSimulation implements CPlayerAPI {
 
 	public boolean isFogEnabled() {
 		return this.fogEnabled;
+	}
+
+	@Override
+	public void setColor(CPlayerJass player, CPlayerColor color) {
+		final int previousColor = player.getColor();
+		final int newColor = color.ordinal();
+		player.setColor(newColor);
+		for (final CUnit unit : this.units) {
+			if (unit.getPlayerIndex() == player.getId()) {
+				this.simulationRenderController.changeUnitPlayerColor(unit, previousColor, newColor);
+			}
+		}
+		for (final CUnit unit : this.newUnits) {
+			if (unit.getPlayerIndex() == player.getId()) {
+				this.simulationRenderController.changeUnitPlayerColor(unit, previousColor, newColor);
+			}
+		}
 	}
 
 }

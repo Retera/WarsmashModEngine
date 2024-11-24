@@ -27,6 +27,20 @@ public interface WarsmashUI extends CommandErrorListener, WarsmashBaseUI {
 
 	Music playMusic(String musicField, boolean random, int index);
 
+	Music setMapMusic(String musicField, boolean random, int index);
+
+	void playMapMusic();
+
+	Music playMusicEx(String musicField, boolean random, int index, int fromMSecs, int fadeInMSecs);
+
+	void stopMusic(boolean fadeOut);
+
+	void resumeMusic();
+
+	void setMusicVolume(int volume);
+
+	void setMusicPlayPosition(int millisecs);
+
 	Scene getUiScene();
 
 	CTimerDialog createTimerDialog(CTimer timer);
@@ -43,5 +57,11 @@ public interface WarsmashUI extends CommandErrorListener, WarsmashBaseUI {
 
 	void setCinematicScene(int portraitUnitId, CPlayerColor color, String speakerTitle, String text,
 			float sceneDuration, float voiceoverDuration);
+
+	void enableUserControl(boolean value);
+
+	void endCinematicScene();
+
+	void forceCinematicSubtitles(boolean value);
 
 }

@@ -299,6 +299,7 @@ public class WarsmashGdxMapScreen implements InputProcessor, Screen {
 
 	private void renderLibGDXContent() {
 
+		Gdx.gl30.glClear(GL30.GL_DEPTH_BUFFER_BIT);
 		Gdx.gl30.glDisable(GL30.GL_SCISSOR_TEST);
 
 		Gdx.gl30.glDisable(GL30.GL_CULL_FACE);

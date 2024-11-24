@@ -7,7 +7,6 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.math.Quaternion;
 import com.badlogic.gdx.math.Vector3;
 import com.etheller.warsmash.parsers.fdf.GameUI;
-import com.etheller.warsmash.units.GameObject;
 import com.etheller.warsmash.util.RenderMathUtils;
 import com.etheller.warsmash.viewer5.handlers.mdx.MdxComplexInstance;
 import com.etheller.warsmash.viewer5.handlers.mdx.MdxModel;
@@ -38,19 +37,8 @@ public class RenderUnit implements RenderWidget {
 	public static final Color ETHEREAL = new Color(0.75f, 1, 0.5f, 0.5f);
 	public static final Color DEFAULT = new Color(1, 1, 1, 1);
 	public static final Quaternion tempQuat = new Quaternion();
-	private static final String RED = "red"; // replaced from 'uclr'
-	private static final String GREEN = "green"; // replaced from 'uclg'
-	private static final String BLUE = "blue"; // replaced from 'uclb'
-	private static final String MOVE_HEIGHT = "moveHeight"; // replaced from 'umvh'
-	private static final String ORIENTATION_INTERPOLATION = "orientInterp"; // replaced from 'uori'
-	public static final String ANIM_PROPS = "animProps"; // replaced from 'uani'
-	public static final String ATTACHMENT_ANIM_PROPS = "Attachmentanimprops"; // replaced from 'uaap'
-	private static final String BLEND_TIME = "blend"; // replaced from 'uble'
-	private static final String BUILD_SOUND_LABEL = "BuildingSoundLabel"; // replaced from 'ubsl'
-	private static final String UNIT_SELECT_HEIGHT = "selZ"; // replaced from 'uslz'
 	private static final float[] heapZ = new float[3];
 	public MdxComplexInstance instance;
-	public GameObject row;
 	public final float[] location = new float[3];
 	public float selectionScale;
 	public UnitSoundset soundset;
@@ -58,7 +46,7 @@ public class RenderUnit implements RenderWidget {
 	public int playerIndex;
 	private final CUnit simulationUnit;
 	public SplatMover shadow;
-	private BuildingShadow buildingShadowInstance;
+	public BuildingShadow buildingShadowInstance;
 	public SplatMover selectionCircle;
 	public SplatMover selectionPreviewHighlight;
 
@@ -77,33 +65,30 @@ public class RenderUnit implements RenderWidget {
 	private boolean corpse;
 	private boolean boneCorpse;
 	private boolean building;
-	private RenderUnitTypeData typeData;
+	private RenderUnitType typeData;
 	public MdxModel specialArtModel;
 	public SplatMover uberSplat;
 	private float selectionHeight;
 	private RenderUnit preferredSelectionReplacement;
 	private float[] currentColor = { 1, 1, 1, 1 };
 
-	public RenderUnit(final War3MapViewer map, final MdxModel model, final GameObject row, final float x, final float y,
-			final float z, final int playerIndex, final UnitSoundset soundset, final MdxModel portraitModel,
-			final CUnit simulationUnit, final RenderUnitTypeData typeData, final MdxModel specialArtModel,
-			final BuildingShadow buildingShadow, final float selectionCircleScaleFactor, final float animationWalkSpeed,
-			final float animationRunSpeed, final float scalingValue) {
+	public RenderUnit(final War3MapViewer map, final float x, final float y, final float z, final int playerIndex,
+			final CUnit simulationUnit, final RenderUnitType typeData, final BuildingShadow buildingShadow,
+			final float selectionCircleScaleFactor, final float animationWalkSpeed, final float animationRunSpeed,
+			final float scalingValue) {
 		this.simulationUnit = simulationUnit;
-		resetRenderUnit(map, model, row, x, y, z, playerIndex, soundset, portraitModel, simulationUnit, typeData,
-				specialArtModel, buildingShadow, selectionCircleScaleFactor, animationWalkSpeed, animationRunSpeed,
-				scalingValue);
+		resetRenderUnit(map, x, y, z, playerIndex, simulationUnit, typeData, buildingShadow, selectionCircleScaleFactor,
+				animationWalkSpeed, animationRunSpeed, scalingValue);
 
 	}
 
-	public void resetRenderUnit(final War3MapViewer map, final MdxModel model, final GameObject row, final float x,
-			final float y, final float z, final int playerIndex, final UnitSoundset soundset,
-			final MdxModel portraitModel, final CUnit simulationUnit, final RenderUnitTypeData typeData,
-			final MdxModel specialArtModel, final BuildingShadow buildingShadow, final float selectionCircleScaleFactor,
-			final float animationWalkSpeed, final float animationRunSpeed, final float scalingValue) {
-		this.portraitModel = portraitModel;
+	public void resetRenderUnit(final War3MapViewer map, final float x, final float y, final float z,
+			final int playerIndex, final CUnit simulationUnit, final RenderUnitType typeData,
+			final BuildingShadow buildingShadow, final float selectionCircleScaleFactor, final float animationWalkSpeed,
+			final float animationRunSpeed, final float scalingValue) {
+		this.portraitModel = typeData.getPortraitModel();
 		this.typeData = typeData;
-		this.specialArtModel = specialArtModel;
+		this.specialArtModel = typeData.getSpecialArtModel();
 		if (this.buildingShadowInstance != null) {
 			this.buildingShadowInstance.remove();
 		}
@@ -111,7 +96,7 @@ public class RenderUnit implements RenderWidget {
 		if (this.instance != null) {
 			this.instance.detach();
 		}
-		final MdxComplexInstance instance = (MdxComplexInstance) model.addInstance();
+		final MdxComplexInstance instance = (MdxComplexInstance) typeData.getModel().addInstance();
 
 		this.location[0] = x;
 		this.location[1] = y;
@@ -126,57 +111,44 @@ public class RenderUnit implements RenderWidget {
 		instance.setScene(map.worldScene);
 		this.unitAnimationListenerImpl = new UnitAnimationListenerImpl(instance, animationWalkSpeed, animationRunSpeed);
 		simulationUnit.setUnitAnimationListener(this.unitAnimationListenerImpl);
-		final String requiredAnimationNames = row.getFieldAsString(ANIM_PROPS, 0);
-		boolean changedAnimProps = false;
-		TokenLoop: for (final String animationName : requiredAnimationNames.split(",")) {
-			final String upperCaseToken = animationName.toUpperCase();
-			for (final SecondaryTag secondaryTag : SecondaryTag.values()) {
-				if (upperCaseToken.equals(secondaryTag.name())) {
-					if (this.unitAnimationListenerImpl.addSecondaryTag(secondaryTag)) {
-						changedAnimProps = true;
-					}
-					continue TokenLoop;
+
+		if (typeData != null) {
+			boolean changedAnimProps = false;
+			for (final SecondaryTag secondaryTag : typeData.getRequiredAnimationNames()) {
+				if (this.unitAnimationListenerImpl.addSecondaryTag(secondaryTag)) {
+					changedAnimProps = true;
 				}
 			}
-		}
-		if (changedAnimProps) {
-			this.unitAnimationListenerImpl.forceResetCurrentAnimation();
-		}
+			if (changedAnimProps) {
+				this.unitAnimationListenerImpl.forceResetCurrentAnimation();
+			}
 
-		if (row != null) {
 			heapZ[2] = simulationUnit.getFlyHeight();
 			this.location[2] += heapZ[2];
 
 			instance.move(heapZ);
-			String red;
-			String green;
-			String blue;
-			red = RED;
-			green = GREEN;
-			blue = BLUE;
-			this.currentColor = new float[] { (row.getFieldAsInteger(red, 0)) / 255f,
-					(row.getFieldAsInteger(green, 0)) / 255f, (row.getFieldAsInteger(blue, 0)) / 255f, 1.0f };
+			final Vector3 tintingColor = typeData.getTintingColor();
+			this.currentColor = new float[] { tintingColor.x, tintingColor.y, tintingColor.z, 1.0f };
 			instance.uniformScale(scalingValue);
 
-			this.selectionScale = row.getFieldAsFloat(War3MapViewer.UNIT_SELECT_SCALE, 0) * selectionCircleScaleFactor;
-			this.selectionHeight = row.getFieldAsFloat(UNIT_SELECT_HEIGHT, 0);
-			int orientationInterpolationOrdinal = row.getFieldAsInteger(ORIENTATION_INTERPOLATION, 0);
+			this.selectionScale = typeData.getSelectScale() * selectionCircleScaleFactor;
+			this.selectionHeight = typeData.getSelectHeight();
+			int orientationInterpolationOrdinal = typeData.getOrientationInterpolation();
 			if ((orientationInterpolationOrdinal < 0)
 					|| (orientationInterpolationOrdinal >= OrientationInterpolation.VALUES.length)) {
 				orientationInterpolationOrdinal = 0;
 			}
 			this.orientationInterpolation = OrientationInterpolation.VALUES[orientationInterpolationOrdinal];
 
-			final float blendTime = row.getFieldAsFloat(BLEND_TIME, 0);
+			final float blendTime = typeData.getBlendTime();
 			instance.setBlendTime(blendTime * 1000.0f);
 		}
 
 		this.instance = instance;
-		this.row = row;
-		if (row != null) {
+		if (typeData != null) {
 			updateColor(map);
 		}
-		this.soundset = soundset;
+		this.soundset = typeData.getSoundset();
 		this.building = simulationUnit.isBuilding();
 	}
 
@@ -699,7 +671,7 @@ public class RenderUnit implements RenderWidget {
 				|| (this.simulationUnit.getMovementType() == MovementType.FLY);
 	}
 
-	public RenderUnitTypeData getTypeData() {
+	public RenderUnitType getTypeData() {
 		return this.typeData;
 	}
 

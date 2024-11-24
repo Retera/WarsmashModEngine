@@ -245,7 +245,8 @@ public abstract class Scene {
 		// If this scene doesn't want alpha, clear it.
 		gl.glDepthMask(true);
 		if (!this.alpha) {
-			gl.glClearColor(backgroundColor.r, backgroundColor.g, backgroundColor.b, backgroundColor.a);
+			gl.glClearColor(this.backgroundColor.r, this.backgroundColor.g, this.backgroundColor.b,
+					this.backgroundColor.a);
 			gl.glClear(GL20.GL_DEPTH_BUFFER_BIT | GL20.GL_COLOR_BUFFER_BIT);
 		}
 		else {
@@ -255,7 +256,7 @@ public abstract class Scene {
 	}
 
 	public void renderOpaque() {
-		if (!show) {
+		if (!this.show) {
 			return;
 		}
 		final Rectangle viewport = this.camera.rect;
@@ -268,7 +269,7 @@ public abstract class Scene {
 
 		// Add all of the batched instances to batches.
 		for (final ModelInstance instance : this.batchedInstances) {
-			this.addToBatch(instance);
+			addToBatch(instance);
 		}
 
 		// Render all of the batches.
@@ -283,7 +284,7 @@ public abstract class Scene {
 	}
 
 	public void renderOpaque(final DynamicShadowManager dynamicShadowManager, final WebGL webGL) {
-		if (!show) {
+		if (!this.show) {
 			return;
 		}
 		final Matrix4 depthMatrix = dynamicShadowManager.prepareShadowMatrix();
@@ -308,7 +309,7 @@ public abstract class Scene {
 	 * camera's viewport.
 	 */
 	public void renderTranslucent() {
-		if (!show) {
+		if (!this.show) {
 			return;
 		}
 		final Rectangle viewport = this.camera.rect;

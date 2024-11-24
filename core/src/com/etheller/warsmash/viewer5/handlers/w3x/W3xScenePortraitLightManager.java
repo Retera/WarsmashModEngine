@@ -6,6 +6,7 @@ import java.nio.FloatBuffer;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.math.Vector3;
 import com.etheller.warsmash.viewer5.ModelViewer;
 import com.etheller.warsmash.viewer5.SceneLightInstance;
@@ -14,21 +15,19 @@ import com.etheller.warsmash.viewer5.StaticSceneLightInstance;
 import com.etheller.warsmash.viewer5.gl.DataTexture;
 
 public class W3xScenePortraitLightManager implements SceneLightManager, W3xSceneLightManager {
-	private final ModelViewer viewer;
 	public final List<SceneLightInstance> lights;
 	private FloatBuffer lightDataCopyHeap;
 	private final DataTexture unitLightsTexture;
 	private int unitLightCount;
 
-	public W3xScenePortraitLightManager(final ModelViewer viewer) {
-		this.viewer = viewer;
+	public W3xScenePortraitLightManager(GL20 gl) {
 		this.lights = new ArrayList<>();
-		this.unitLightsTexture = new DataTexture(viewer.gl, 4, 4, 1);
+		this.unitLightsTexture = new DataTexture(gl, 4, 4, 1);
 		this.lightDataCopyHeap = ByteBuffer.allocateDirect(16 * 1 * 4).order(ByteOrder.nativeOrder()).asFloatBuffer();
 	}
 
 	public W3xScenePortraitLightManager(final ModelViewer viewer, final Vector3 lightDirection) {
-		this(viewer);
+		this(viewer.gl);
 		add(StaticSceneLightInstance.createDefault(lightDirection));
 	}
 

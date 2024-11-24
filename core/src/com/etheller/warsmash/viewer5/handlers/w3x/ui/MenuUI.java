@@ -47,6 +47,7 @@ import com.etheller.warsmash.parsers.fdf.frames.ListBoxFrame.ListBoxSelelectionL
 import com.etheller.warsmash.parsers.fdf.frames.SetPoint;
 import com.etheller.warsmash.parsers.fdf.frames.SimpleFrame;
 import com.etheller.warsmash.parsers.fdf.frames.SpriteFrame;
+import com.etheller.warsmash.parsers.fdf.frames.SpriteFrame2;
 import com.etheller.warsmash.parsers.fdf.frames.StringFrame;
 import com.etheller.warsmash.parsers.fdf.frames.UIFrame;
 import com.etheller.warsmash.parsers.jass.Jass2;
@@ -1805,7 +1806,7 @@ public class MenuUI {
 	}
 
 	public void resize() {
-
+		this.rootFrame.positionBounds(this.rootFrame, this.uiViewport);
 	}
 
 	public void render(final SpriteBatch batch, final GlyphLayout glyphLayout) {

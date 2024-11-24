@@ -58,6 +58,7 @@ import com.etheller.warsmash.parsers.fdf.frames.SimpleButtonFrame;
 import com.etheller.warsmash.parsers.fdf.frames.SimpleFrame;
 import com.etheller.warsmash.parsers.fdf.frames.SimpleStatusBarFrame;
 import com.etheller.warsmash.parsers.fdf.frames.SpriteFrame;
+import com.etheller.warsmash.parsers.fdf.frames.SpriteFrame2;
 import com.etheller.warsmash.parsers.fdf.frames.StringFrame;
 import com.etheller.warsmash.parsers.fdf.frames.TextAreaFrame;
 import com.etheller.warsmash.parsers.fdf.frames.TextButtonFrame;
@@ -89,7 +90,7 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 	private final int racialCommandIndex;
 	private final FrameTemplateEnvironment templates;
 	private final Map<String, Texture> pathToTexture = new HashMap<>();
-	private final boolean autoPosition = false;
+	private boolean autoPosition = true;
 	private final FontGeneratorHolder fontGenerator;
 	private final FreeTypeFontParameter fontParam;
 	private final Map<String, UIFrame> nameToFrame = new HashMap<>();
@@ -304,9 +305,6 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 		}
 		else if (frameDefinition.getFrameClass() == FrameClass.Frame) {
 			final UIFrame inflated = inflate(frameDefinition, owner, null, frameDefinition.has("DecorateFileNames"));
-			if (this.autoPosition) {
-				inflated.positionBounds(this, this.viewport);
-			}
 			if (owner instanceof AbstractUIFrame) {
 				((AbstractUIFrame) owner).add(inflated);
 			}
@@ -467,27 +465,54 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 				inflatedFrame = scrollBarFrame;
 			}
 			else if ("SPRITE".equals(frameDefinition.getFrameType())) {
-				final SpriteFrame spriteFrame = new SpriteFrame(frameDefinition.getName(), parent, this.uiScene,
-						viewport2);
-				String backgroundArt = frameDefinition.getString("BackgroundArt");
-				if (frameDefinition.has("DecorateFileNames") || inDecorateFileNames) {
-					if (backgroundArt != null) {
-						if (this.skin.hasField(backgroundArt)) {
-							backgroundArt = this.skin.getField(backgroundArt);
+				if (frameDefinition.getName().endsWith("Portrait")) {
+					final SpriteFrame2 spriteFrame = new SpriteFrame2(frameDefinition.getName(), parent, viewport2,
+							this.modelViewer);
+					String backgroundArt = frameDefinition.getString("BackgroundArt");
+					if (frameDefinition.has("DecorateFileNames") || inDecorateFileNames) {
+						if (backgroundArt != null) {
+							if (this.skin.hasField(backgroundArt)) {
+								backgroundArt = this.skin.getField(backgroundArt);
+							}
 						}
 					}
+					if (backgroundArt != null) {
+						setSpriteFrameModel(spriteFrame, backgroundArt);
+					}
+					viewport2 = this.viewport; // TODO was fdfCoordinateResolutionDummyViewport here previously, but is
+												// that
+					// a good idea?
+					this.nameToFrame.put(frameDefinition.getName(), spriteFrame);
+					for (final FrameDefinition childDefinition : frameDefinition.getInnerFrames()) {
+						spriteFrame.add(inflate(childDefinition, spriteFrame, frameDefinition,
+								inDecorateFileNames || childDefinition.has("DecorateFileNames")));
+					}
+					inflatedFrame = spriteFrame;
 				}
-				if (backgroundArt != null) {
-					setSpriteFrameModel(spriteFrame, backgroundArt);
+				else {
+					final SpriteFrame spriteFrame = new SpriteFrame(frameDefinition.getName(), parent, this.uiScene,
+							viewport2);
+					String backgroundArt = frameDefinition.getString("BackgroundArt");
+					if (frameDefinition.has("DecorateFileNames") || inDecorateFileNames) {
+						if (backgroundArt != null) {
+							if (this.skin.hasField(backgroundArt)) {
+								backgroundArt = this.skin.getField(backgroundArt);
+							}
+						}
+					}
+					if (backgroundArt != null) {
+						setSpriteFrameModel(spriteFrame, backgroundArt);
+					}
+					viewport2 = this.viewport; // TODO was fdfCoordinateResolutionDummyViewport here previously, but is
+												// that
+					// a good idea?
+					this.nameToFrame.put(frameDefinition.getName(), spriteFrame);
+					for (final FrameDefinition childDefinition : frameDefinition.getInnerFrames()) {
+						spriteFrame.add(inflate(childDefinition, spriteFrame, frameDefinition,
+								inDecorateFileNames || childDefinition.has("DecorateFileNames")));
+					}
+					inflatedFrame = spriteFrame;
 				}
-				viewport2 = this.viewport; // TODO was fdfCoordinateResolutionDummyViewport here previously, but is that
-				// a good idea?
-				this.nameToFrame.put(frameDefinition.getName(), spriteFrame);
-				for (final FrameDefinition childDefinition : frameDefinition.getInnerFrames()) {
-					spriteFrame.add(inflate(childDefinition, spriteFrame, frameDefinition,
-							inDecorateFileNames || childDefinition.has("DecorateFileNames")));
-				}
-				inflatedFrame = spriteFrame;
 			}
 			else if ("FRAME".equals(frameDefinition.getFrameType())) {
 				final SimpleFrame simpleFrame = new SimpleFrame(frameDefinition.getName(), parent);
@@ -1355,9 +1380,9 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 				Vector4Definition backgroundInsets = frameDefinition.getVector4("BackdropBackgroundInsets");
 				if (backgroundInsets != null) {
 					backgroundInsets = new Vector4Definition(GameUI.convertX(viewport2, backgroundInsets.getX()),
-							GameUI.convertY(viewport2, backgroundInsets.getY()),
+							GameUI.convertY(viewport2, backgroundInsets.getW()),
 							GameUI.convertX(viewport2, backgroundInsets.getZ()),
-							GameUI.convertY(viewport2, backgroundInsets.getW()));
+							GameUI.convertY(viewport2, backgroundInsets.getY()));
 				}
 				else {
 					backgroundInsets = new Vector4Definition(0, 0, 0, 0);
@@ -1511,6 +1536,12 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 		}
 		checkInternalMappingSize();
 		return inflatedFrame;
+	}
+
+	public void setSpriteFrameModel(final SpriteFrame2 spriteFrame, final String backgroundArt) {
+		final MdxModel model = War3MapViewer.loadModelMdx(this.modelViewer.dataSource, this.modelViewer, backgroundArt,
+				this.modelViewer.mapPathSolver, this.modelViewer.solverParams);
+		spriteFrame.setModel(model);
 	}
 
 	public void setSpriteFrameModel(final SpriteFrame spriteFrame, final String backgroundArt) {
@@ -1669,5 +1700,13 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 
 	public List<FocusableFrame> getFocusableFrames() {
 		return this.focusableFrames;
+	}
+
+	public void setAutoPosition(boolean autoPosition) {
+		this.autoPosition = autoPosition;
+	}
+
+	public boolean isAutoPosition() {
+		return this.autoPosition;
 	}
 }

@@ -6,9 +6,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.nio.channels.SeekableByteChannel;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.zip.Checksum;
@@ -38,7 +35,8 @@ import mpq.MPQException;
  */
 public class War3Map implements DataSource {
 
-	private CompoundDataSource dataSource;
+	private CompoundDataSource baseDataSource;
+	private DataSource dataSource;
 	private DataSource internalMpqContentsDataSource;
 
 	public War3Map(final DataSource dataSource, final String mapFileName) {
@@ -51,7 +49,8 @@ public class War3Map implements DataSource {
 			SeekableByteChannel sbc;
 			sbc = new SeekableInMemoryByteChannel(dataSource.read(mapFileName).array());
 			this.internalMpqContentsDataSource = new MpqDataSource(new MPQArchive(sbc), sbc);
-			this.dataSource = new CompoundDataSource(Arrays.asList(dataSource, this.internalMpqContentsDataSource));
+			this.baseDataSource = new CompoundDataSource(Arrays.asList(dataSource, this.internalMpqContentsDataSource));
+			this.dataSource = this.baseDataSource;
 		}
 		catch (final IOException e) {
 			throw new RuntimeException(e);
@@ -78,7 +77,8 @@ public class War3Map implements DataSource {
 					this.internalMpqContentsDataSource = new MpqDataSource(new MPQArchive(sbc), sbc);
 				}
 			}
-			this.dataSource = new CompoundDataSource(Arrays.asList(dataSource, this.internalMpqContentsDataSource));
+			this.baseDataSource = new CompoundDataSource(Arrays.asList(dataSource, this.internalMpqContentsDataSource));
+			this.dataSource = this.baseDataSource;
 		}
 		catch (final IOException e) {
 			throw new RuntimeException(e);
@@ -194,7 +194,11 @@ public class War3Map implements DataSource {
 	}
 
 	public DataSource getCompoundDataSource() {
-		return this;// .dataSource;
+		return this.baseDataSource;
+	}
+
+	public void setDataSource(DataSource tilesetSource) {
+		this.dataSource = tilesetSource;
 	}
 
 	public long computeChecksum(final Checksum checksum) {

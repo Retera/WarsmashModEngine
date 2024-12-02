@@ -4,6 +4,7 @@ import java.nio.ByteBuffer;
 
 import com.badlogic.gdx.math.Rectangle;
 import com.etheller.warsmash.viewer5.handlers.w3x.environment.PathingGrid;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CFogMaskSettings;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CFogState;
 
@@ -45,16 +46,17 @@ public class CPlayerFogOfWar {
 		return this.fogOfWarBuffer;
 	}
 
-	private byte getState(final PathingGrid pathingGrid, final float x, final float y) {
+	private byte getState(CFogMaskSettings fogMaskSettings, final PathingGrid pathingGrid, final float x,
+			final float y) {
 		final int indexX = pathingGrid.getFogOfWarIndexX(x);
 		final int indexY = pathingGrid.getFogOfWarIndexY(y);
-		return getState(indexX, indexY);
+		return getState(fogMaskSettings, indexX, indexY);
 	}
 
-	private byte getState(final int indexX, final int indexY) {
+	private byte getState(CFogMaskSettings fogMaskSettings, final int indexX, final int indexY) {
 		final int index = (indexY * getWidth()) + indexX;
 		if ((index >= 0) && (index < this.fogOfWarBuffer.capacity())) {
-			return this.fogOfWarBuffer.get(index);
+			return fogMaskSettings.getFogStateFromSettings(this.fogOfWarBuffer.get(index));
 		}
 		return 0;
 	}
@@ -67,30 +69,35 @@ public class CPlayerFogOfWar {
 		return 0;
 	}
 
-	public CFogState getFogState(final PathingGrid pathingGrid, final float x, final float y) {
-		return CFogState.getByMask(getState(pathingGrid, x, y));
+	public CFogState getFogState(CFogMaskSettings fogMaskSettings, final PathingGrid pathingGrid, final float x,
+			final float y) {
+		return CFogState.getByMask(getState(fogMaskSettings, pathingGrid, x, y));
 	}
 
-	public CFogState getFogState(final int indexX, final int indexY) {
-		return CFogState.getByMask(getState(indexX, indexY));
+	public CFogState getFogState(CFogMaskSettings fogMaskSettings, final int indexX, final int indexY) {
+		return CFogState.getByMask(getState(fogMaskSettings, indexX, indexY));
 	}
 
-	public boolean isVisible(final PathingGrid pathingGrid, final float x, final float y) {
-		return getState(pathingGrid, x, y) == 0;
+	public boolean isVisible(CFogMaskSettings fogMaskSettings, final PathingGrid pathingGrid, final float x,
+			final float y) {
+		return getState(fogMaskSettings, pathingGrid, x, y) == 0;
 	}
 
-	public boolean isVisible(final int indexX, final int indexY) {
-		return getState(indexX, indexY) == 0;
+	public boolean isVisible(CFogMaskSettings fogMaskSettings, final int indexX, final int indexY) {
+		return getState(fogMaskSettings, indexX, indexY) == 0;
 	}
 
-	public boolean isDetecting(PathingGrid pathingGrid, float x, float y, byte invisLevels) {
+	public boolean isDetecting(CFogMaskSettings fogMaskSettings, PathingGrid pathingGrid, float x, float y,
+			byte invisLevels) {
 		final int indexX = pathingGrid.getFogOfWarIndexX(x);
 		final int indexY = pathingGrid.getFogOfWarIndexY(y);
-		return (getState(indexX, indexY) == 0) && ((getDetectionState(indexX, indexY) & invisLevels) == invisLevels);
+		return isVisible(fogMaskSettings, indexX, indexY)
+				&& ((getDetectionState(indexX, indexY) & invisLevels) == invisLevels);
 	}
 
-	public boolean isDetecting(final int indexX, final int indexY, byte invisLevels) {
-		return (getState(indexX, indexY) == 0) && ((getDetectionState(indexX, indexY) & invisLevels) == invisLevels);
+	public boolean isDetecting(CFogMaskSettings fogMaskSettings, final int indexX, final int indexY, byte invisLevels) {
+		return isVisible(fogMaskSettings, indexX, indexY)
+				&& ((getDetectionState(indexX, indexY) & invisLevels) == invisLevels);
 	}
 
 	private void setState(final PathingGrid pathingGrid, final float x, final float y, final byte fogOfWarState) {
@@ -146,7 +153,7 @@ public class CPlayerFogOfWar {
 			final float dxfp, final float dyfp, final int myZ) {
 		if ((flying || game.isTerrainWater(dxf, dyf) || (myZ > game.getTerrainHeight(dxf, dyf))
 				|| (!game.isTerrainRomp(dxf, dyf) && (myZ == game.getTerrainHeight(dxf, dyf))))
-				&& (flying || !pathingGrid.isBlockVision(dxfp, dyfp)) && this.isVisible(dxp, dyp)) {
+				&& (flying || !pathingGrid.isBlockVision(dxfp, dyfp)) && this.isVisible(game, dxp, dyp)) {
 			this.setVisible(dx, dy, CFogState.VISIBLE);
 		}
 	}
@@ -156,7 +163,7 @@ public class CPlayerFogOfWar {
 			final float dyf, final float dxfp, final float dyfp, final int myZ) {
 		if ((flying || game.isTerrainWater(dxf, dyf) || (myZ > game.getTerrainHeight(dxf, dyf))
 				|| (!game.isTerrainRomp(dxf, dyf) && (myZ == game.getTerrainHeight(dxf, dyf))))
-				&& (flying || !pathingGrid.isBlockVision(dxfp, dyfp)) && this.isVisible(dxp, dyp)) {
+				&& (flying || !pathingGrid.isBlockVision(dxfp, dyfp)) && this.isVisible(game, dxp, dyp)) {
 			this.setDetecting(dx, dy, CFogState.VISIBLE, detections);
 		}
 	}
@@ -166,10 +173,12 @@ public class CPlayerFogOfWar {
 			final float dyf, final float dxfp, final float dyfp, final int myZ) {
 		if ((flying || game.isTerrainWater(dxf, dyf) || (myZ > game.getTerrainHeight(dxf, dyf))
 				|| (!game.isTerrainRomp(dxf, dyf) && (myZ == game.getTerrainHeight(dxf, dyf))))
-				&& (flying || !pathingGrid.isBlockVision(dxfp, dyfp)) && this.isVisible(dxp, dyp)
+				&& (flying || !pathingGrid.isBlockVision(dxfp, dyfp)) && this.isVisible(game, dxp, dyp)
 				&& ((x == y)
-						|| ((x > y) && this.isVisible(dxp, dy) && (flying || !pathingGrid.isBlockVision(dxfp, dyf)))
-						|| ((x < y) && this.isVisible(dx, dyp) && (flying || !pathingGrid.isBlockVision(dxf, dyfp))))) {
+						|| ((x > y) && this.isVisible(game, dxp, dy)
+								&& (flying || !pathingGrid.isBlockVision(dxfp, dyf)))
+						|| ((x < y) && this.isVisible(game, dx, dyp)
+								&& (flying || !pathingGrid.isBlockVision(dxf, dyfp))))) {
 			this.setVisible(dx, dy, CFogState.VISIBLE);
 		}
 	}
@@ -179,10 +188,12 @@ public class CPlayerFogOfWar {
 			final float dxf, final float dyf, final float dxfp, final float dyfp, final int myZ) {
 		if ((flying || game.isTerrainWater(dxf, dyf) || (myZ > game.getTerrainHeight(dxf, dyf))
 				|| (!game.isTerrainRomp(dxf, dyf) && (myZ == game.getTerrainHeight(dxf, dyf))))
-				&& (flying || !pathingGrid.isBlockVision(dxfp, dyfp)) && this.isVisible(dxp, dyp)
+				&& (flying || !pathingGrid.isBlockVision(dxfp, dyfp)) && this.isVisible(game, dxp, dyp)
 				&& ((x == y)
-						|| ((x > y) && this.isVisible(dxp, dy) && (flying || !pathingGrid.isBlockVision(dxfp, dyf)))
-						|| ((x < y) && this.isVisible(dx, dyp) && (flying || !pathingGrid.isBlockVision(dxf, dyfp))))) {
+						|| ((x > y) && this.isVisible(game, dxp, dy)
+								&& (flying || !pathingGrid.isBlockVision(dxfp, dyf)))
+						|| ((x < y) && this.isVisible(game, dx, dyp)
+								&& (flying || !pathingGrid.isBlockVision(dxf, dyfp))))) {
 			this.setDetecting(dx, dy, CFogState.VISIBLE, detections);
 		}
 	}

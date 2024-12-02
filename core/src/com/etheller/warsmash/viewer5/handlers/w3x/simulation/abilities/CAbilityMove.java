@@ -4,7 +4,6 @@ import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.cargohold.CAbilityLoad;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityPointTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTargetVisitor;
@@ -20,10 +19,10 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetC
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.CommandStringErrorKeys;
 
 public class CAbilityMove extends AbstractCAbility {
+	public static final War3ID CODE = War3ID.fromString("Amov");
 
 	public CAbilityMove(final int handleId) {
-		super(handleId, War3ID.fromString("AMov"));
-		setPermanent(true);
+		super(handleId, CODE);
 	}
 
 	@Override
@@ -111,9 +110,11 @@ public class CAbilityMove extends AbstractCAbility {
 		if (targetUnit != null) {
 			CBehavior behavior = null;
 			if (smart) {
-				final CAbilityLoad transportLoad = CAbilityLoad.getTransportLoad(game, caster, targetUnit, true, true);
+				final CBehaviorBoardTransport boardTransportBehavior = caster.getBoardTransportBehavior();
+				final CAbilityRanged transportLoad = boardTransportBehavior.getPartnerAbility(game, caster, targetUnit,
+						true, true);
 				if (transportLoad != null) {
-					behavior = caster.getBoardTransportBehavior().reset(game, OrderIds.move, targetUnit);
+					behavior = boardTransportBehavior.reset(game, OrderIds.move, targetUnit);
 				}
 			}
 			if (behavior == null) {

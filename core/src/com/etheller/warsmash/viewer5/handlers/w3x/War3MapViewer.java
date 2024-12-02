@@ -51,6 +51,7 @@ import com.etheller.warsmash.parsers.w3x.objectdata.Warcraft3MapRuntimeObjectDat
 import com.etheller.warsmash.parsers.w3x.unitsdoo.War3MapUnitsDoo;
 import com.etheller.warsmash.parsers.w3x.w3e.War3MapW3e;
 import com.etheller.warsmash.parsers.w3x.w3i.War3MapW3i;
+import com.etheller.warsmash.parsers.w3x.w3i.War3MapW3iFlags;
 import com.etheller.warsmash.parsers.w3x.wpm.War3MapWpm;
 import com.etheller.warsmash.units.DataTable;
 import com.etheller.warsmash.units.Element;
@@ -662,7 +663,7 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 		// After we finish loading units, we need to update & create the stored shadow
 		// information for all unit shadows
 		this.terrain.initShadows();
-		this.terrain.setFogOfWarData(this.simulation.getPlayer(this.localPlayerIndex).getFogOfWar());
+		this.terrain.setFogOfWarData(this.simulation, this.simulation.getPlayer(this.localPlayerIndex).getFogOfWar());
 		final CTimer fogUpdateTimer = new CTimer() {
 			@Override
 			public void onFire(final CSimulation simulation) {
@@ -674,7 +675,7 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 		final CTimer fogGpuUpdateTimer = new CTimer() {
 			@Override
 			public void onFire(final CSimulation simulation) {
-				War3MapViewer.this.terrain.reloadFogOfWarDataToGPU();
+				War3MapViewer.this.terrain.reloadFogOfWarDataToGPU(simulation);
 				for (final RenderDoodad doodad : War3MapViewer.this.decals) {
 					doodad.updateFog(War3MapViewer.this);
 				}
@@ -2242,8 +2243,11 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 				final float distSquared = (dx * dx) + (dy * dy);
 				if (distSquared <= rSquared) {
 					final RenderCorner corner = this.terrain.getCorner(x, y);
+					if (corner == null) {
+						continue;
+					}
 					final GroundTexture currentTex = this.terrain.groundTextures.get(corner.getGroundTexture());
-					if ((corner != null) && currentTex.isBuildable()) {
+					if (currentTex.isBuildable()) {
 						changedData |= corner.setBlight(blighted);
 					}
 					else {
@@ -2308,6 +2312,7 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 			this.loadMapTasks.add(() -> {
 				this.tileset = 'A';
 				this.tileset = w3iFile.getTileset();
+				int gameDataSet = w3iFile.getGameDataSet();
 
 				try {
 					// Slightly complex. Here's the theory:
@@ -2316,33 +2321,46 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 					// from either the map or the game, giving the map priority.
 					SeekableByteChannel sbc;
 					final DataSource compoundDataSource = war3Map.getCompoundDataSource();
+					final List<DataSource> dataSources = new ArrayList<>();
+					dataSources.add(compoundDataSource);
 					if (WarsmashConstants.FIX_FLAT_FILES_TILESET_LOADING) {
-						this.tilesetSource = new CompoundDataSource(Arrays.asList(compoundDataSource,
-								new SubdirDataSource(compoundDataSource, this.tileset + ".mpq/")));
+						dataSources.add(new SubdirDataSource(compoundDataSource, this.tileset + ".mpq/"));
 					}
 					else {
 						try (InputStream mapStream = compoundDataSource.getResourceAsStream(this.tileset + ".mpq")) {
 							if (mapStream == null) {
-								this.tilesetSource = new CompoundDataSource(Arrays.asList(compoundDataSource,
-										new SubdirDataSource(compoundDataSource, this.tileset + ".mpq/"),
-										new SubdirDataSource(compoundDataSource,
-												"_tilesets/" + this.tileset + ".w3mod/")));
+								dataSources.add(new SubdirDataSource(compoundDataSource, this.tileset + ".mpq/"));
+								dataSources.add(new SubdirDataSource(compoundDataSource,
+										"_tilesets/" + this.tileset + ".w3mod/"));
 							}
 							else {
 								final byte[] mapData = IOUtils.toByteArray(mapStream);
 								sbc = new SeekableInMemoryByteChannel(mapData);
 								final DataSource internalMpqContentsDataSource = new MpqDataSource(new MPQArchive(sbc),
 										sbc);
-								this.tilesetSource = new CompoundDataSource(
-										Arrays.asList(compoundDataSource, internalMpqContentsDataSource));
+								dataSources.add(internalMpqContentsDataSource);
 							}
 						}
 						catch (final IOException exc) {
-							this.tilesetSource = new CompoundDataSource(Arrays.asList(compoundDataSource,
-									new SubdirDataSource(compoundDataSource, this.tileset + ".mpq/"),
-									new SubdirDataSource(compoundDataSource, "_tilesets/" + this.tileset + ".w3mod/")));
+							dataSources.add(new SubdirDataSource(compoundDataSource, this.tileset + ".mpq/"));
+							dataSources.add(
+									new SubdirDataSource(compoundDataSource, "_tilesets/" + this.tileset + ".w3mod/"));
 						}
 					}
+					if (gameDataSet <= 0) {
+						gameDataSet = w3iFile.hasFlag(War3MapW3iFlags.MELEE_MAP) ? 2 : 1;
+					}
+					if (gameDataSet == 1) {
+						// Custom data
+						dataSources.add(new SubdirDataSource(compoundDataSource,
+								"Custom_V" + WarsmashConstants.GAME_VERSION + "\\"));
+					}
+					else {
+						// Melee data
+						dataSources.add(new SubdirDataSource(compoundDataSource,
+								"Melee_V" + WarsmashConstants.GAME_VERSION + "\\"));
+					}
+					this.tilesetSource = new CompoundDataSource(dataSources);
 				}
 				catch (final MPQException e) {
 					throw new RuntimeException(e);
@@ -2351,6 +2369,7 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 
 			this.loadMapTasks.add(() -> {
 				setDataSource(this.tilesetSource);
+				War3MapViewer.this.mapMpq.setDataSource(this.tilesetSource);
 			});
 			this.loadMapTasks.add(() -> {
 				War3MapViewer.this.worldEditStrings = new WorldEditStrings(War3MapViewer.this.dataSource);
@@ -2605,18 +2624,20 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 										finalRadius, collisionInterval, projectileListener, provideCounts);
 
 								final MdxModel model = loadModelMdx(missileArt);
-								final MdxComplexInstance modelInstance = (MdxComplexInstance) model.addInstance();
+								if (model != null) {
+									final MdxComplexInstance modelInstance = (MdxComplexInstance) model.addInstance();
 
-								final RenderUnit renderPeer = getRenderPeer(source);
-								modelInstance.setTeamColor(renderPeer.playerIndex);
-								modelInstance.setScene(War3MapViewer.this.worldScene);
-								SequenceUtils.randomBirthSequence(modelInstance);
-								modelInstance.setLocation(x, y, height);
-								final RenderProjectile renderProjectile = new RenderProjectile(
-										simulationAbilityProjectile, modelInstance, height, projectileArc,
-										War3MapViewer.this);
+									final RenderUnit renderPeer = getRenderPeer(source);
+									modelInstance.setTeamColor(renderPeer.playerIndex);
+									modelInstance.setScene(War3MapViewer.this.worldScene);
+									SequenceUtils.randomBirthSequence(modelInstance);
+									modelInstance.setLocation(x, y, height);
+									final RenderProjectile renderProjectile = new RenderProjectile(
+											simulationAbilityProjectile, modelInstance, height, projectileArc,
+											War3MapViewer.this);
 
-								War3MapViewer.this.projectiles.add(renderProjectile);
+									War3MapViewer.this.projectiles.add(renderProjectile);
+								}
 
 								return simulationAbilityProjectile;
 							}

@@ -122,10 +122,11 @@ public class BatchGroup extends GenericGroup {
 				final Layer emissiveLayer = material.layers.get(3);
 				final Layer teamColorLayer = material.layers.get(4);
 				final Layer environmentMapLayer = material.layers.get(5);
+				final float[] geosetColor = instance.geosetColors[geoset.index];
 				final float layerAlpha = instance.layerAlphas[diffuseLayer.index];
 
-				if (layerAlpha > 0) {
-					shader.setUniformf("u_layerAlpha", layerAlpha);
+				if ((geosetColor[3] > 0.01) && (layerAlpha > 0)) {
+					shader.setUniformf("u_layerAlpha", layerAlpha * geosetColor[3]);
 					shader.setUniformf("u_filterMode", diffuseLayer.filterMode);
 
 					final int diffuseId = Math.max(0, instance.layerTextures[diffuseLayer.index]);

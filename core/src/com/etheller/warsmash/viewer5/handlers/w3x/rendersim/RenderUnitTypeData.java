@@ -70,6 +70,9 @@ public class RenderUnitTypeData extends RenderWidgetTypeData<RenderUnitType> {
 		if ((row.readSLKTagInt("fileVerFlags") == 2) && this.dataSource.has(path + "_V1.mdx")) {
 			path += "_V1";
 		}
+		else if ((row.readSLKTagInt("fileVerFlags") == 1) && this.dataSource.has(path + "_V0.mdx")) {
+			path += "_V0";
+		}
 
 		path += ".mdx";
 		return path;

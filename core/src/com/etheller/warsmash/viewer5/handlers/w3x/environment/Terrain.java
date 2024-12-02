@@ -53,6 +53,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.Variations;
 import com.etheller.warsmash.viewer5.handlers.w3x.W3xSceneLightManager;
 import com.etheller.warsmash.viewer5.handlers.w3x.W3xShaders;
 import com.etheller.warsmash.viewer5.handlers.w3x.War3MapViewer;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CFogMaskSettings;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.vision.CPlayerFogOfWar;
 
 public class Terrain {
@@ -1731,18 +1732,18 @@ public class Terrain {
 		return this.defaultCameraBounds;
 	}
 
-	public void setFogOfWarData(final CPlayerFogOfWar fogOfWarData) {
+	public void setFogOfWarData(CFogMaskSettings fogMaskSettings, final CPlayerFogOfWar fogOfWarData) {
 		this.fogOfWarData = fogOfWarData;
 		this.visualFogData = ByteBuffer.allocateDirect(fogOfWarData.getFogOfWarBuffer().capacity());
-		reloadFogOfWarDataToGPU();
+		reloadFogOfWarDataToGPU(fogMaskSettings);
 	}
 
-	public void reloadFogOfWarDataToGPU() {
+	public void reloadFogOfWarDataToGPU(CFogMaskSettings fogMaskSettings) {
 		final GL30 gl = Gdx.gl30;
 		final ByteBuffer fogOfWarBuffer = this.fogOfWarData.getFogOfWarBuffer();
 		for (int i = 0; i < this.visualFogData.capacity(); i++) {
-			this.visualFogData.put(i,
-					War3MapViewer.fadeLineOfSightColor(this.visualFogData.get(i), fogOfWarBuffer.get(i)));
+			this.visualFogData.put(i, War3MapViewer.fadeLineOfSightColor(this.visualFogData.get(i),
+					fogMaskSettings.getFogStateFromSettings(fogOfWarBuffer.get(i))));
 		}
 		gl.glBindTexture(GL30.GL_TEXTURE_2D, Terrain.this.fogOfWarMap);
 		gl.glTexParameteri(GL30.GL_TEXTURE_2D, GL30.GL_TEXTURE_MAG_FILTER, GL30.GL_LINEAR);

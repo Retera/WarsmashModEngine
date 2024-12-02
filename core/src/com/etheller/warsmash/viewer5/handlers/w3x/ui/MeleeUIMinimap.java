@@ -63,7 +63,7 @@ public class MeleeUIMinimap {
 
 		for (int y = 0; y < (maxY - minY); y++) {
 			for (int x = 0; x < (maxX - minX); x++) {
-				final CFogState state = fogOfWar.getFogState(x + minX, y + minY);
+				final CFogState state = fogOfWar.getFogState(game, x + minX, y + minY);
 				if (CFogState.FOGGED.equals(state)) {
 					batch.setColor(0f, 0f, 0f, 0.5f);
 					batch.draw(this.teamColors[0], this.minimapFilledArea.x + (x * mapXMod),

@@ -7,6 +7,7 @@ import com.badlogic.gdx.math.Vector2;
 import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.RenderUnit;
 
 public final class GameCameraManager extends CameraManager {
+	private static final float TWO_PI = (float) Math.PI * 2;
 	private static final CameraRates INFINITE_CAMERA_RATES = new CameraRates(Float.POSITIVE_INFINITY,
 			Float.POSITIVE_INFINITY, Float.POSITIVE_INFINITY, Float.POSITIVE_INFINITY, Float.POSITIVE_INFINITY,
 			Float.POSITIVE_INFINITY);
@@ -101,11 +102,11 @@ public final class GameCameraManager extends CameraManager {
 		else {
 			newHorizontalAngle = (float) Math.toRadians(cameraPreset.getRotation() - 90);
 		}
-		this.horizontalAngle = applyAtRate(this.horizontalAngle, newHorizontalAngle,
+		this.horizontalAngle = applyAtRateAngle(this.horizontalAngle, newHorizontalAngle,
 				(float) Math.toRadians(cameraRate.rotation));
 		this.quatHeap.setFromAxisRad(0, 0, 1, this.horizontalAngle);
 		this.distance = applyAtRate(this.distance, cameraPreset.getDistance(), cameraRate.distance);
-		this.verticalAngle = applyAtRate(this.verticalAngle, (float) Math.toRadians(cameraPreset.getAoa() - 270),
+		this.verticalAngle = applyAtRateAngle(this.verticalAngle, (float) Math.toRadians(cameraPreset.getAoa() - 270),
 				(float) Math.toRadians(cameraRate.aoa));
 		this.quatHeap2.setFromAxisRad(1, 0, 0, this.verticalAngle);
 		this.quatHeap.mul(this.quatHeap2);
@@ -130,6 +131,22 @@ public final class GameCameraManager extends CameraManager {
 		}
 		else {
 			return oldValue + (Math.signum(deltaDistance) * rate);
+		}
+	}
+
+	public static float applyAtRateAngle(final float oldValue, final float newValue, float rate) {
+		rate *= Gdx.graphics.getDeltaTime();
+		final float deltaDistance = newValue - oldValue;
+		final float absDistance = Math.abs(deltaDistance);
+		if ((absDistance <= rate) || ((TWO_PI - absDistance) <= rate)) {
+			return newValue;
+		}
+		else {
+			float signum = Math.signum(deltaDistance);
+			if (absDistance > Math.PI) {
+				signum *= -1;
+			}
+			return (oldValue + (signum * rate)) % TWO_PI;
 		}
 	}
 
@@ -361,7 +378,9 @@ public final class GameCameraManager extends CameraManager {
 			final CameraSetup cameraSetup = getCurrentSetup();
 			final float aoaRate = (cameraSetup.getAoa() - previousSetup.getAoa()) / duration;
 			final float fovRate = (cameraSetup.getFov() - previousSetup.getFov()) / duration;
-			final float rotationRate = (cameraSetup.getRotation() - previousSetup.getRotation()) / duration;
+			float rotationDistance = Math.abs(cameraSetup.getRotation() - previousSetup.getRotation());
+			rotationDistance = Math.min(rotationDistance, TWO_PI - rotationDistance);
+			final float rotationRate = rotationDistance / duration;
 			final float distanceRate = (cameraSetup.getDistance() - previousSetup.getDistance()) / duration;
 			this.customCameraRates = new CameraRates(Math.abs(aoaRate), Math.abs(fovRate), Math.abs(rotationRate),
 					Math.abs(distanceRate), this.cameraRates.forward, this.cameraRates.strafe);

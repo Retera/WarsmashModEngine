@@ -38,7 +38,7 @@ public class CDestructable extends CWidget {
 		this.pathingInstance = pathingInstance;
 		this.pathingInstanceDeath = pathingInstanceDeath;
 		if ((this.destType.getOcclusionHeight() > 0) && (pathingInstance != null)) {
-			this.pathingInstance.setBlocksVision();
+			this.pathingInstance.setBlocksVision(true);
 		}
 	}
 
@@ -95,6 +95,7 @@ public class CDestructable extends CWidget {
 
 	private void kill(final CSimulation simulation) {
 		if (this.pathingInstance != null) {
+			this.pathingInstance.setBlocksVision(false);
 			this.pathingInstance.remove();
 		}
 		if (this.pathingInstanceDeath != null) {
@@ -116,6 +117,17 @@ public class CDestructable extends CWidget {
 		super.setLife(simulation, life);
 		if (isDead() && !wasDead) {
 			kill(simulation);
+		}
+		else if (!isDead() && wasDead) {
+			if (this.pathingInstanceDeath != null) {
+				this.pathingInstanceDeath.remove();
+			}
+			if (this.pathingInstance != null) {
+				this.pathingInstance.add();
+				if ((this.destType.getOcclusionHeight() > 0) && (this.pathingInstance != null)) {
+					this.pathingInstance.setBlocksVision(true);
+				}
+			}
 		}
 	}
 

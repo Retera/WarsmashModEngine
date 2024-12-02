@@ -75,6 +75,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.state.FalseTimeOfDa
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.timers.CTimer;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.JassGameEventsWar3;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CEffectType;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CFogState;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.ResourceType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.SimulationRenderComponent;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.SimulationRenderComponentLightning;
@@ -83,7 +84,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.SimulationRend
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.TextTagConfigType;
 import com.etheller.warsmash.viewer5.handlers.w3x.ui.command.CommandErrorListener;
 
-public class CSimulation implements CPlayerAPI {
+public class CSimulation implements CPlayerAPI, CFogMaskSettings {
 	private final CAbilityData abilityData;
 	private final CUnitData unitData;
 	private final CDestructableData destructableData;
@@ -131,6 +132,8 @@ public class CSimulation implements CPlayerAPI {
 	private GlobalScope globalScope;
 	private boolean fogMaskEnabled = true;
 	private boolean fogEnabled = true;
+	private final List<Runnable> postUpdateCallbacks = new ArrayList<>();
+	private final List<Runnable> runningPostUpdateCallbacks = new ArrayList<>();
 
 	public CSimulation(final War3MapConfig config, final int mapVersion, final DataTable miscData,
 			final ObjectData parsedUnitData, final ObjectData parsedItemData, final ObjectData parsedDestructableData,
@@ -583,6 +586,13 @@ public class CSimulation implements CPlayerAPI {
 		this.removedOnTickTriggers.clear();
 
 		this.globalScope.runThreads();
+
+		this.runningPostUpdateCallbacks.clear();
+		this.runningPostUpdateCallbacks.addAll(this.postUpdateCallbacks);
+		this.postUpdateCallbacks.clear();
+		for (final Runnable runnable : this.runningPostUpdateCallbacks) {
+			runnable.run();
+		}
 	}
 
 	public void removeUnit(final CUnit unit) {
@@ -760,9 +770,11 @@ public class CSimulation implements CPlayerAPI {
 		this.simulationRenderController.destroyTextTag(textTag);
 	}
 
-	public void unitGainLevelEvent(final CUnit unit) {
+	public void unitGainLevelEvent(final CUnit unit, boolean showEffect) {
 		this.players.get(unit.getPlayerIndex()).fireHeroLevelEvents(unit);
-		this.simulationRenderController.spawnGainLevelEffect(unit);
+		if (showEffect) {
+			this.simulationRenderController.spawnGainLevelEffect(unit);
+		}
 	}
 
 	public void heroCreateEvent(final CUnit hero) {
@@ -1142,6 +1154,7 @@ public class CSimulation implements CPlayerAPI {
 		this.fogMaskEnabled = enable;
 	}
 
+	@Override
 	public boolean isFogMaskEnabled() {
 		return this.fogMaskEnabled;
 	}
@@ -1150,8 +1163,49 @@ public class CSimulation implements CPlayerAPI {
 		this.fogEnabled = fogEnabled;
 	}
 
+	@Override
 	public boolean isFogEnabled() {
 		return this.fogEnabled;
+	}
+
+	@Override
+	public byte getFogStateFromSettings(byte mask) {
+		final CFogState state = CFogState.getByMask(mask);
+		switch (state) {
+		case MASKED:
+			if (this.fogMaskEnabled) {
+				if (this.fogEnabled) {
+					return CFogState.MASKED.getMask();
+				}
+				else {
+					return CFogState.MASKED.getMask();
+				}
+			}
+			else if (this.fogEnabled) {
+				return CFogState.FOGGED.getMask();
+			}
+			else {
+				return CFogState.VISIBLE.getMask();
+			}
+		case FOGGED:
+			if (this.fogMaskEnabled) {
+				if (this.fogEnabled) {
+					return CFogState.FOGGED.getMask();
+				}
+				else {
+					return CFogState.VISIBLE.getMask();
+				}
+			}
+			else if (this.fogEnabled) {
+				return CFogState.FOGGED.getMask();
+			}
+			else {
+				return CFogState.VISIBLE.getMask();
+			}
+		case VISIBLE:
+			return state.getMask();
+		}
+		return 0;
 	}
 
 	@Override
@@ -1169,6 +1223,19 @@ public class CSimulation implements CPlayerAPI {
 				this.simulationRenderController.changeUnitPlayerColor(unit, previousColor, newColor);
 			}
 		}
+	}
+
+	public void fireRequirementUpdateForAbilities(CPlayer player, boolean disable) {
+		this.postUpdateCallbacks.add(new Runnable() {
+			@Override
+			public void run() {
+				for (final CUnit unit : getUnits()) {
+					if (unit.getPlayerIndex() == player.getId()) {
+						unit.checkDisabledAbilities(CSimulation.this, disable);
+					}
+				}
+			}
+		});
 	}
 
 }

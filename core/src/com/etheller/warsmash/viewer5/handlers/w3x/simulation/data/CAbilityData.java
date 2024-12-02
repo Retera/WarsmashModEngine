@@ -18,6 +18,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.item.CAbi
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.item.CAbilityItemManaRegain;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.item.CAbilityItemPermanentLifeGain;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.mine.CAbilityEntangledMine;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.neutral.CAbilityWayGate;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.nightelf.eattree.CAbilityEatTree;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.nightelf.moonwell.CAbilityMoonWell;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.nightelf.root.CAbilityEntangleGoldMine;
@@ -35,6 +36,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.skills.ni
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.skills.nightelf.keeper.CAbilityForceOfNature;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.skills.nightelf.moonpriestess.CAbilitySummonOwlScout;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.skills.nightelf.warden.CAbilityBlink;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.skills.orc.blademaster.CAbilityWhirlWind;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.skills.orc.farseer.CAbilityChainLightning;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.skills.orc.farseer.CAbilityFeralSpirit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.skills.orc.taurenchieftain.CAbilityWarStomp;
@@ -268,6 +270,10 @@ public class CAbilityData {
 				(handleId, alias) -> new CAbilityDropInstant(handleId, alias, alias)));
 		this.codeToAbilityTypeDefinition.put(War3ID.fromString("Aroo"), new CAbilityTypeDefinitionRoot());
 		this.codeToAbilityTypeDefinition.put(War3ID.fromString("ARal"), new CAbilityTypeDefinitionRally());
+		this.codeToAbilityTypeDefinition.put(War3ID.fromString("Awrp"),
+				new CAbilityTypeDefinitionSpellBase((handleId, alias) -> new CAbilityWayGate(handleId, alias)));
+		this.codeToAbilityTypeDefinition.put(War3ID.fromString("AOww"),
+				new CAbilityTypeDefinitionSpellBase((handleId, alias) -> new CAbilityWhirlWind(handleId, alias)));
 
 		System.err.println("========================================================================");
 		System.err.println("Starting to load ability builder");

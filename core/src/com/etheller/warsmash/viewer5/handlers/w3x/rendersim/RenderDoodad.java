@@ -128,7 +128,7 @@ public class RenderDoodad {
 		final PathingGrid pathingGrid = war3MapViewer.simulation.getPathingGrid();
 		final int fogOfWarIndexX = pathingGrid.getFogOfWarIndexX(this.x);
 		final int fogOfWarIndexY = pathingGrid.getFogOfWarIndexY(this.y);
-		final CFogState newFogState = fogOfWar.getFogState(fogOfWarIndexX, fogOfWarIndexY);
+		final CFogState newFogState = fogOfWar.getFogState(war3MapViewer.simulation, fogOfWarIndexX, fogOfWarIndexY);
 		if (newFogState != this.fogState) {
 			this.fogState = newFogState;
 		}

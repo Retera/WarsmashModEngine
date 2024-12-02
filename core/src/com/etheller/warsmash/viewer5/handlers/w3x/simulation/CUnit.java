@@ -1790,7 +1790,8 @@ public class CUnit extends CWidget {
 		sharedAbilities.retainAll(newIds); // TODO Seems wasteful, but need to avoid messing up heros on transform
 		final List<CAbility> persistedAbilities = new ArrayList<>();
 		final List<CAbility> removedAbilities = new ArrayList<>();
-		for (final CAbility ability : this.abilities) {
+		final List<CAbility> startingAbilities = new ArrayList<>(this.abilities);
+		for (final CAbility ability : startingAbilities) {
 			if (!ability.isPermanent() && !sharedAbilities.contains(ability.getAlias())
 					&& !(ability.getAbilityCategory() == CAbilityCategory.BUFF)) {
 				ability.onRemove(game, this);
@@ -2946,10 +2947,13 @@ public class CUnit extends CWidget {
 						&& !this.classifications.contains(CUnitClassification.PEON)) {
 					for (final CUnitAttack attack : getCurrentAttacks()) {
 						if (source.canBeTargetedBy(simulation, this, attack.getTargetsAllowed())) {
-							beginBehavior(simulation, getAttackBehavior().reset(simulation, OrderIds.attack, attack,
-									source, false, CBehaviorAttackListener.DO_NOTHING));
-							foundMatchingReturnFireAttack = true;
-							break;
+							final CBehaviorAttack attackBehaviorForAtk = getAttackBehavior();
+							if (attackBehaviorForAtk != null) {
+								beginBehavior(simulation, attackBehaviorForAtk.reset(simulation, OrderIds.attack,
+										attack, source, false, CBehaviorAttackListener.DO_NOTHING));
+								foundMatchingReturnFireAttack = true;
+								break;
+							}
 						}
 					}
 				}
@@ -3103,7 +3107,8 @@ public class CUnit extends CWidget {
 						final CAbilityHero heroData = receivingHero.getHeroData();
 						heroData.addXp(simulation, receivingHero,
 								(int) (availableAwardXp * (1f / xpReceivingHeroes.size())
-										* gameplayConstants.getHeroFactorXp(heroData.getHeroLevel())));
+										* gameplayConstants.getHeroFactorXp(heroData.getHeroLevel())),
+								true);
 					}
 				}
 			}
@@ -5511,9 +5516,10 @@ public class CUnit extends CWidget {
 			return true;
 		}
 		if ((this.invisLevels > 0) && ((this.detections & (1 << toPlayerIndex)) == 0)) {
-			return toPlayer.getFogOfWar().isDetecting(simulation.getPathingGrid(), getX(), getY(), this.invisLevels);
+			return toPlayer.getFogOfWar().isDetecting(simulation, simulation.getPathingGrid(), getX(), getY(),
+					this.invisLevels);
 		}
-		return toPlayer.getFogOfWar().isVisible(simulation.getPathingGrid(), getX(), getY());
+		return toPlayer.getFogOfWar().isVisible(simulation, simulation.getPathingGrid(), getX(), getY());
 	}
 
 	private final class CTimerUnitFade extends CTimer {

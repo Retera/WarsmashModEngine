@@ -4,4 +4,6 @@ public interface CSound {
 	void start();
 
 	float getPredictedDuration();
+
+	float getRemainingTimeToPlayOnTheDesyncLocalComputer();
 }

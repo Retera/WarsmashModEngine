@@ -47,7 +47,6 @@ import com.etheller.warsmash.parsers.fdf.frames.ListBoxFrame.ListBoxSelelectionL
 import com.etheller.warsmash.parsers.fdf.frames.SetPoint;
 import com.etheller.warsmash.parsers.fdf.frames.SimpleFrame;
 import com.etheller.warsmash.parsers.fdf.frames.SpriteFrame;
-import com.etheller.warsmash.parsers.fdf.frames.SpriteFrame2;
 import com.etheller.warsmash.parsers.fdf.frames.StringFrame;
 import com.etheller.warsmash.parsers.fdf.frames.UIFrame;
 import com.etheller.warsmash.parsers.jass.Jass2;
@@ -1661,8 +1660,6 @@ public class MenuUI {
 			final DataTable worldEditData = viewer.loadWorldEditData(map);
 			final WTS wts = viewer.preloadWTS(map);
 
-			final int loadingScreen = mapInfo.getLoadingScreen();
-			System.out.println("LOADING SCREEN INT: " + loadingScreen);
 			final int campaignBackground = mapInfo.getCampaignBackground();
 			int animationSequenceIndex;
 			final String campaignScreenModel;
@@ -1734,7 +1731,9 @@ public class MenuUI {
 		MenuUI.this.campaignSelectFrame.setVisible(false);
 		MenuUI.this.campaignWarcraftIIILogo.setVisible(false);
 		MenuUI.this.campaignRootMenuUI.setVisible(false);
-		MenuUI.this.currentMissionSelectMenuUI.setVisible(false);
+		if (this.currentMissionSelectMenuUI != null) {
+			MenuUI.this.currentMissionSelectMenuUI.setVisible(false);
+		}
 		MenuUI.this.skirmish.setVisible(false);
 		MenuUI.this.glueSpriteLayerTopLeft.setSequence("Death");
 		MenuUI.this.glueSpriteLayerTopRight.setSequence("Death");
@@ -1782,7 +1781,9 @@ public class MenuUI {
 		this.campaignButton.setEnabled(b);
 		this.loadSavedButton.setEnabled(b && ENABLE_NOT_YET_IMPLEMENTED_BUTTONS);
 		this.viewReplayButton.setEnabled(b && ENABLE_NOT_YET_IMPLEMENTED_BUTTONS);
-		this.customCampaignButton.setEnabled(b && ENABLE_NOT_YET_IMPLEMENTED_BUTTONS);
+		if (this.customCampaignButton != null) {
+			this.customCampaignButton.setEnabled(b && ENABLE_NOT_YET_IMPLEMENTED_BUTTONS);
+		}
 		this.skirmishButton.setEnabled(b);
 		this.singlePlayerCancelButton.setEnabled(b);
 	}

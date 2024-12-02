@@ -309,6 +309,7 @@ public class WarsmashGdxMapScreen implements InputProcessor, Screen {
 		Gdx.gl30.glActiveTexture(GL30.GL_TEXTURE0);
 
 		this.uiViewport.apply();
+		this.batch.setColor(1, 1, 1, 1);
 		this.batch.setProjectionMatrix(this.uiCamera.combined);
 		this.batch.begin();
 		this.meleeUI.render(this.batch, this.glyphLayout);

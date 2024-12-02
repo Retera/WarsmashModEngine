@@ -194,6 +194,10 @@ public class TransformationHandler {
 			final CUnit unit, final CUnitType newType, final OnTransformationActions actions,
 			final AbilityBuilderAbility ability, final boolean addAlternateTagAfter, final boolean permanent,
 			final boolean playMorph) {
+		if (newType.getTypeId().equals(unit.getTypeId())) {
+			return;
+		}
+		System.err.println("setting " + newType.getTypeId() + " on " + unit.getTypeId());
 		setUnitID(game, localStore, unit, newType, addAlternateTagAfter, actions, ability, false);
 		if (playMorph) {
 			TransformationHandler.playMorphAnimation(unit, addAlternateTagAfter);

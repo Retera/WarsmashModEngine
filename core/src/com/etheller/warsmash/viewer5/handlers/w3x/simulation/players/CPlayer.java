@@ -793,10 +793,6 @@ public class CPlayer extends CBasePlayer {
 	}
 
 	public void fireRequirementUpdateForAbilities(final CSimulation simulation, final boolean disable) {
-		for (final CUnit unit : simulation.getUnits()) {
-			if (unit.getPlayerIndex() == getId()) {
-				unit.checkDisabledAbilities(simulation, disable);
-			}
-		}
+		simulation.fireRequirementUpdateForAbilities(this, disable);
 	}
 }

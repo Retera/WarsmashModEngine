@@ -882,7 +882,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 		selectWorkerInsideIconFrameBackdrop.setHeight(this.frontQueueIconWidth);
 		this.smashSimpleInfoPanel.add(this.selectWorkerInsideFrame);
 
-		final int halfSelectionMaxSize = this.selectedUnitFrames.length / 2;
+		final int halfSelectionMaxSize = this.selectedUnitFrames.length / 3;
 		for (int i = 0; i < this.selectedUnitFrames.length; i++) {
 			{
 				final FilterModeTextureFrame selectedSubgroupHighlightBackdrop = new FilterModeTextureFrame(
@@ -1193,8 +1193,13 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 		this.inventoryTitleFrame.setFontShadowColor(new Color(0f, 0f, 0f, 0.9f));
 		this.inventoryTitleFrame.setFontShadowOffsetX(GameUI.convertX(this.uiViewport, 0.001f));
 		this.inventoryTitleFrame.setFontShadowOffsetY(GameUI.convertY(this.uiViewport, -0.001f));
-		this.consoleInventoryNoCapacityTexture = ImageUtils.getAnyExtensionTexture(this.dataSource,
-				this.rootFrame.getSkinField("ConsoleInventoryNoCapacity"));
+		try {
+			this.consoleInventoryNoCapacityTexture = ImageUtils.getAnyExtensionTexture(this.dataSource,
+					this.rootFrame.getSkinField("ConsoleInventoryNoCapacity"));
+		}
+		catch (final Exception exc) {
+			exc.printStackTrace();
+		}
 
 		this.inventoryCover = this.rootFrame.createSimpleFrame("SmashConsoleInventoryCover", this.rootFrame, 0);
 
@@ -1603,10 +1608,10 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 		final int maxX = minX + this.uiViewport.getScreenWidth();
 		final int minY = this.uiViewport.getScreenY();
 		final int maxY = minY + this.uiViewport.getScreenHeight();
-		final boolean left = (mouseX <= (minX + 3)) && WarsmashConstants.CATCH_CURSOR;
-		final boolean right = (mouseX >= (maxX - 3)) && WarsmashConstants.CATCH_CURSOR;
-		final boolean up = (mouseY <= (minY + 3)) && WarsmashConstants.CATCH_CURSOR;
-		final boolean down = (mouseY >= (maxY - 3)) && WarsmashConstants.CATCH_CURSOR;
+		final boolean left = (mouseX <= (minX + 3)) && WarsmashConstants.CATCH_CURSOR && this.userControlEnabled;
+		final boolean right = (mouseX >= (maxX - 3)) && WarsmashConstants.CATCH_CURSOR && this.userControlEnabled;
+		final boolean up = (mouseY <= (minY + 3)) && WarsmashConstants.CATCH_CURSOR && this.userControlEnabled;
+		final boolean down = (mouseY >= (maxY - 3)) && WarsmashConstants.CATCH_CURSOR && this.userControlEnabled;
 		this.cameraManager.applyVelocity(deltaTime, up, down, left, right);
 
 		mouseX = Math.max(minX, Math.min(maxX, mouseX));
@@ -2679,8 +2684,8 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 
 		public void update(final float dt) {
 			this.portraitCameraManager.updateCamera();
+			this.portraitCurrentDuration += (dt * 1000);
 			if (this.modelInstance != null) {
-				this.portraitCurrentDuration += (dt * 1000);
 				if (this.portraitTargetDuration != 0) {
 					if (this.portraitCurrentDuration < this.portraitTargetDuration) {
 						this.modelInstance.sequenceLoopMode = SequenceLoopMode.ALWAYS_LOOP;
@@ -2708,6 +2713,13 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 		}
 
 		public void talk(final UnitSound us, float extraDuration) {
+			if ((this.faceLockTime > 0) && (this.portraitCurrentDuration <= this.faceLockTime)) {
+				return;
+			}
+			innerTalk(us, extraDuration);
+		}
+
+		private void innerTalk(final UnitSound us, float extraDuration) {
 			// TODO we somehow called talk from null by clicking a unit right at the same
 			// time it died, so I do a null check here until I study that case further.
 			if (this.modelInstance != null) {
@@ -2824,7 +2836,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 		}
 
 		public void setCinematicTalkingHead(MdxModel portraitModel, int teamColorIndex,
-				EnumSet<SecondaryTag> secondaryTags, float faceLockTime) {
+				EnumSet<SecondaryTag> secondaryTags, float faceLockTime, final UnitSound us, float extraDuration) {
 			this.faceLockTime = (long) (1000 * faceLockTime);
 			if (this.modelInstance != null) {
 				this.portraitScene.removeInstance(this.modelInstance);
@@ -2839,6 +2851,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 				this.modelInstance.setTeamColor(teamColorIndex);
 			}
 			this.lastUnit = null;
+			innerTalk(us, extraDuration);
 		}
 	}
 
@@ -4005,6 +4018,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 					this.commandCard[j][i].onClick(Input.Buttons.LEFT);
 					this.war3MapViewer.getUiSounds().getSound("InterfaceClick").play(this.uiScene.audioContext, 0, 0,
 							0);
+					return true;
 				}
 			}
 		}
@@ -5315,8 +5329,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 		else {
 			if (unitTypeData != null) {
 				this.portrait.setCinematicTalkingHead(unitTypeData.getPortraitModel(), color.getHandleId(),
-						unitTypeData.getRequiredAnimationNames(), sceneDuration);
-				this.portrait.talk(null, voiceoverDuration);
+						unitTypeData.getRequiredAnimationNames(), sceneDuration, null, voiceoverDuration);
 			}
 			if (this.subtitleDisplayOverride || true) {
 				showGameMessage("|Cffffcc00" + speakerTitle + "|r: " + text, sceneDuration);

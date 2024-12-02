@@ -21,4 +21,9 @@ public class CMIDISound implements CSound {
 	public float getPredictedDuration() {
 		return 0;
 	}
+
+	@Override
+	public float getRemainingTimeToPlayOnTheDesyncLocalComputer() {
+		return 0;
+	}
 }

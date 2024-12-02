@@ -67,7 +67,7 @@ public class RenderItem implements RenderWidget {
 		final PathingGrid pathingGrid = map.simulation.getPathingGrid();
 		final int fogOfWarIndexX = pathingGrid.getFogOfWarIndexX(this.location[0]);
 		final int fogOfWarIndexY = pathingGrid.getFogOfWarIndexY(this.location[1]);
-		final boolean fogHidden = !fogOfWar.isVisible(fogOfWarIndexX, fogOfWarIndexY);
+		final boolean fogHidden = !fogOfWar.isVisible(map.simulation, fogOfWarIndexX, fogOfWarIndexY);
 		final boolean hidden = this.simulationItem.isHidden();
 		if ((hidden || fogHidden) != this.hidden) {
 			this.hidden = hidden || fogHidden;

@@ -404,7 +404,8 @@ public class CUnitData {
 		unit.setUnitSpecificAttacks(unitSpecificAttacks);
 		unit.setUnitSpecificCurrentAttacks(
 				getEnabledAttacks(unitSpecificAttacks, unitTypeInstance.getAttacksEnabled()));
-		if (!unit.getCurrentAttacks().isEmpty()) {
+		final CAbilityAttack preAttack = unit.getFirstAbilityOfType(CAbilityAttack.class);
+		if (!unit.getCurrentAttacks().isEmpty() && (preAttack == null)) {
 			unit.add(simulation, new CAbilityAttack(handleIdAllocator.createId()));
 		}
 		final List<War3ID> structuresBuilt = unitTypeInstance.getStructuresBuilt();
@@ -784,13 +785,14 @@ public class CUnitData {
 					decay, defenseType, impactZ, buildingPathingPixelMap, deathTime, targetedAs, acquisitionRange,
 					minimumAttackRange, structuresBuilt, unitsTrained, researchesAvailable, upgradesUsed,
 					upgradeClassToType, upgradesTo, itemsSold, itemsMade, unitRace, goldCost, lumberCost, foodUsed,
-					foodMade, buildTime, goldRepairCost, lumberRepairCost, repairTime, preventedPathingTypes, requiredPathingTypes, propWindow, turnRate,
-					requirements, requirementTiers, unitLevel, hero, strength, strPlus, agility, agiPlus, intelligence,
-					intPlus, primaryAttribute, heroAbilityList, heroProperNames, properNamesCount, canFlee, priority,
-					revivesHeroes, pointValue, castBackswingPoint, castPoint, canBeBuiltOnThem, canBuildOnMe,
-					defenseUpgradeBonus, sightRadiusDay, sightRadiusNight, extendedLineOfSight, goldBountyAwardedBase,
-					goldBountyAwardedDice, goldBountyAwardedSides, lumberBountyAwardedBase, lumberBountyAwardedDice,
-					lumberBountyAwardedSides, neutralBuildingShowMinimapIcon);
+					foodMade, buildTime, goldRepairCost, lumberRepairCost, repairTime, preventedPathingTypes,
+					requiredPathingTypes, propWindow, turnRate, requirements, requirementTiers, unitLevel, hero,
+					strength, strPlus, agility, agiPlus, intelligence, intPlus, primaryAttribute, heroAbilityList,
+					heroProperNames, properNamesCount, canFlee, priority, revivesHeroes, pointValue, castBackswingPoint,
+					castPoint, canBeBuiltOnThem, canBuildOnMe, defenseUpgradeBonus, sightRadiusDay, sightRadiusNight,
+					extendedLineOfSight, goldBountyAwardedBase, goldBountyAwardedDice, goldBountyAwardedSides,
+					lumberBountyAwardedBase, lumberBountyAwardedDice, lumberBountyAwardedSides,
+					neutralBuildingShowMinimapIcon);
 			this.unitIdToUnitType.put(typeId, unitTypeInstance);
 			this.jassLegacyNameToUnitId.put(legacyName, typeId);
 		}

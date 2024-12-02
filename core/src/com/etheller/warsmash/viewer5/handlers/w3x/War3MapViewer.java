@@ -3251,8 +3251,18 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 									final String message) {
 								final RenderUnit renderPeer = War3MapViewer.this.unitToRenderPeer.get(unit);
 								final TextTagConfig textTagConfig = getTextTagConfig(configType.getKey());
-								final Vector3 unitPosition = new Vector3(renderPeer.location);
-								final Bounds bounds = renderPeer.instance.getBounds();
+								final Vector3 unitPosition;
+								if (renderPeer != null) {
+									unitPosition = new Vector3(renderPeer.location);
+								}
+								else if (unit != null) {
+									// try to fudge it and spawn in place of stale unit
+									unitPosition = new Vector3(unit.getX(), unit.getY(),
+											War3MapViewer.this.terrain.getGroundHeight(unit.getX(), unit.getY()));
+								}
+								else {
+									unitPosition = new Vector3(0, 0, 0);
+								}
 								final TextTag textTag = new TextTag(unitPosition, new Vector2(0, 60f), message,
 										textTagConfig.getColor(), textTagConfig.getLifetime(),
 										textTagConfig.getFadeStart(), textTagConfig.getHeight(),

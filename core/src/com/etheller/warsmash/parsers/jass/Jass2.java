@@ -4589,6 +4589,17 @@ public class Jass2 {
 						}
 						return null;
 					});
+			jassProgramVisitor.getJassNativeManager().createNative("UnitRemoveItem",
+					(arguments, globalScope, triggerScope) -> {
+						final CUnit whichUnit = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());
+						final CItem whichItem = arguments.get(1).visit(ObjectJassValueVisitor.getInstance());
+						final CAbilityInventory inventoryData = whichUnit.getInventoryData();
+						if (inventoryData != null) {
+							inventoryData.dropItem(this.simulation, whichUnit, whichItem, whichUnit.getX(),
+									whichUnit.getY(), true);
+						}
+						return null;
+					});
 			jassProgramVisitor.getJassNativeManager().createNative("UnitAddType",
 					(arguments, globalScope, triggerScope) -> {
 						final CUnit whichUnit = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());

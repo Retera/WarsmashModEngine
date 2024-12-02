@@ -235,4 +235,13 @@ public class CDestructable extends CWidget {
 		this.buffs.remove(buff);
 		buff.onRemove(simulation, this);
 	}
+
+	public void onRemove(CSimulation cSimulation) {
+		if (this.pathingInstance != null) {
+			this.pathingInstance.remove();
+		}
+		if (this.pathingInstanceDeath != null) {
+			this.pathingInstanceDeath.remove();
+		}
+	}
 }

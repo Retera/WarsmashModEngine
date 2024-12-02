@@ -94,6 +94,7 @@ public class CSimulation implements CPlayerAPI, CFogMaskSettings {
 	private final List<CUnit> newUnits;
 	private final List<CUnit> removedUnits;
 	private final List<CDestructable> destructables;
+	private final List<CDestructable> removedDestructables;
 	private final List<CItem> items;
 	private final List<CPlayer> players;
 	private final List<CPlayerUnitOrderExecutor> defaultPlayerUnitOrderExecutors;
@@ -156,6 +157,7 @@ public class CSimulation implements CPlayerAPI, CFogMaskSettings {
 		this.newUnits = new ArrayList<>();
 		this.removedUnits = new ArrayList<>();
 		this.destructables = new ArrayList<>();
+		this.removedDestructables = new ArrayList<>();
 		this.items = new ArrayList<>();
 		this.projectiles = new ArrayList<>();
 		this.newProjectiles = new ArrayList<>();
@@ -519,6 +521,11 @@ public class CSimulation implements CPlayerAPI, CFogMaskSettings {
 			}
 		}
 		finishAddingNewUnits();
+		for (final CDestructable destructable : this.removedDestructables) {
+			this.simulationRenderController.removeDestructable(destructable);
+			destructable.onRemove(this);
+		}
+		this.removedDestructables.clear();
 		final Iterator<CEffect> projectileIterator = this.projectiles.iterator();
 		while (projectileIterator.hasNext()) {
 			final CEffect projectile = projectileIterator.next();
@@ -997,6 +1004,11 @@ public class CSimulation implements CPlayerAPI, CFogMaskSettings {
 		cItem.forceDropIfHeld(this);
 		cItem.setHidden(true); // TODO fix
 		cItem.setLife(this, 0);
+	}
+
+	public void removeDestructable(CDestructable dest) {
+		dest.setLife(this, 0);
+		this.removedDestructables.add(dest);
 	}
 
 	public SimulationRenderComponentModel createSpellEffectOverDestructable(final CUnit source,

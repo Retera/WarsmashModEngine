@@ -3053,6 +3053,23 @@ public class Jass2 {
 						}
 						return null;
 					});
+			jassProgramVisitor.getJassNativeManager().createNative("SetWidgetLife",
+					(arguments, globalScope, triggerScope) -> {
+						final CWidget whichUnit = nullable(arguments, 0, ObjectJassValueVisitor.getInstance());
+						final float value = arguments.get(1).visit(RealJassValueVisitor.getInstance()).floatValue();
+						if (whichUnit != null) {
+							whichUnit.setLife(this.simulation, value);
+						}
+						return null;
+					});
+			jassProgramVisitor.getJassNativeManager().createNative("GetWidgetLife",
+					(arguments, globalScope, triggerScope) -> {
+						final CWidget whichUnit = nullable(arguments, 0, ObjectJassValueVisitor.getInstance());
+						if (whichUnit != null) {
+							return RealJassValue.of(whichUnit.getLife());
+						}
+						return null;
+					});
 			jassProgramVisitor.getJassNativeManager().createNative("SetUnitX",
 					(arguments, globalScope, triggerScope) -> {
 						final CUnit whichUnit = nullable(arguments, 0, ObjectJassValueVisitor.getInstance());

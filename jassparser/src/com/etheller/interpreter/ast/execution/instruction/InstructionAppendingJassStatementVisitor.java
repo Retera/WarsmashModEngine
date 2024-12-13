@@ -17,6 +17,7 @@ import com.etheller.interpreter.ast.expression.FunctionCallJassExpression;
 import com.etheller.interpreter.ast.expression.FunctionReferenceJassExpression;
 import com.etheller.interpreter.ast.expression.JassExpression;
 import com.etheller.interpreter.ast.expression.JassExpressionVisitor;
+import com.etheller.interpreter.ast.expression.JassNewArrayExpression;
 import com.etheller.interpreter.ast.expression.JassNewExpression;
 import com.etheller.interpreter.ast.expression.LiteralJassExpression;
 import com.etheller.interpreter.ast.expression.MemberJassExpression;
@@ -118,19 +119,10 @@ public class InstructionAppendingJassStatementVisitor
 
 	@Override
 	public Void visit(final JassArrayedAssignmentStatement statement) {
+		insertExpressionInstructions(statement.getIdentifierExpression());
 		insertExpressionInstructions(statement.getIndexExpression());
 		insertExpressionInstructions(statement.getExpression());
-		final String identifier = statement.getIdentifier();
-		final int localId = getLocalId(identifier);
-		if (localId != -1) {
-			this.instructions.add(new LocalArrayAssignmentInstruction(localId));
-		}
-		else {
-			final int globalId = this.scope.getGlobalId(identifier);
-			if (globalId != -1) {
-				this.instructions.add(new GlobalArrayAssignmentInstruction(globalId));
-			}
-		}
+		this.instructions.add(ArrayAssignmentInstruction.INSTANCE);
 		return null;
 	}
 
@@ -533,7 +525,7 @@ public class InstructionAppendingJassStatementVisitor
 
 	@Override
 	public Void visit(final ArrayRefJassExpression expression) {
-		insertReferenceExpressionInstructions(expression.getIdentifier());
+		insertExpressionInstructions(expression.getIdentifierExpression());
 		insertExpressionInstructions(expression.getIndexExpression());
 		this.instructions.add(new ArrayReferenceInstruction());
 		return null;
@@ -825,6 +817,12 @@ public class InstructionAppendingJassStatementVisitor
 	@Override
 	public Void visit(final JassNewExpression expression) {
 		this.instructions.add(new AllocateInstruction(expression.getType()));
+		return null;
+	}
+
+	@Override
+	public Void visit(final JassNewArrayExpression expression) {
+		this.instructions.add(new AllocateArrayInstruction(expression.getType()));
 		return null;
 	}
 

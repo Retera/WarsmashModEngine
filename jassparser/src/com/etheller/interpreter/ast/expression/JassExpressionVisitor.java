@@ -27,6 +27,8 @@ public interface JassExpressionVisitor<TYPE> {
 
 	TYPE visit(JassNewExpression expression);
 
+	TYPE visit(JassNewArrayExpression expression);
+
 	TYPE visit(AllocateAsNewTypeExpression expression);
 
 	TYPE visit(ExtendHandleExpression expression);

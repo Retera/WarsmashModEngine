@@ -389,7 +389,7 @@ baseExpression:
 		$$ = new LiteralJassExpression(BooleanJassValue.FALSE);
 	}
 	|
-	ID OPEN_BRACKET expression CLOSE_BRACKET // ArrayReferenceExpression
+	baseExpression OPEN_BRACKET expression CLOSE_BRACKET // ArrayReferenceExpression
 	{
 		$$ = new ArrayRefJassExpression($1, $3);
 	}
@@ -490,12 +490,12 @@ setPart:
 		$$ = new JassSetStatement($1, $3);
 	}
 	|
-	ID OPEN_BRACKET expression CLOSE_BRACKET EQUALS expression // ArrayedAssignmentStatement
+	baseExpression OPEN_BRACKET expression CLOSE_BRACKET EQUALS expression // ArrayedAssignmentStatement
 	{
 		$$ = new JassArrayedAssignmentStatement($1, $3, $6);
 	}
 	|
-	baseExpression DOT ID EQUALS expression //SetStatement
+	baseExpression DOT ID EQUALS expression //SetMemberStatement
 	{
 		$$ = new JassSetMemberStatement($1, $3, $5);
 	}

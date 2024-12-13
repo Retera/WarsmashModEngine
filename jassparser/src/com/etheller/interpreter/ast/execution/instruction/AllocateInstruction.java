@@ -7,6 +7,7 @@ import com.etheller.interpreter.ast.value.StructJassValue;
 import com.etheller.interpreter.ast.value.visitor.StructJassTypeVisitor;
 
 public class AllocateInstruction implements JassInstruction {
+
 	private final JassType jassType;
 
 	public AllocateInstruction(final JassType jassType) {

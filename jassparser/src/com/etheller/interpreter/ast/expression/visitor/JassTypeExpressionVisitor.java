@@ -10,6 +10,7 @@ import com.etheller.interpreter.ast.expression.ExtendHandleExpression;
 import com.etheller.interpreter.ast.expression.FunctionCallJassExpression;
 import com.etheller.interpreter.ast.expression.FunctionReferenceJassExpression;
 import com.etheller.interpreter.ast.expression.JassExpressionVisitor;
+import com.etheller.interpreter.ast.expression.JassNewArrayExpression;
 import com.etheller.interpreter.ast.expression.JassNewExpression;
 import com.etheller.interpreter.ast.expression.LiteralJassExpression;
 import com.etheller.interpreter.ast.expression.MemberJassExpression;
@@ -109,7 +110,7 @@ public class JassTypeExpressionVisitor implements JassExpressionVisitor<JassType
 
 	@Override
 	public JassType visit(final ArrayRefJassExpression expression) {
-		final JassType arrayType = getTypeForIdentifier(expression.getIdentifier());
+		final JassType arrayType = expression.getIdentifierExpression().accept(this);
 		final JassType primitiveType = arrayType.visit(ArrayPrimitiveTypeVisitor.getInstance());
 		return primitiveType;
 	}
@@ -195,6 +196,11 @@ public class JassTypeExpressionVisitor implements JassExpressionVisitor<JassType
 
 	@Override
 	public JassType visit(final JassNewExpression expression) {
+		return expression.getType();
+	}
+
+	@Override
+	public JassType visit(final JassNewArrayExpression expression) {
 		return expression.getType();
 	}
 

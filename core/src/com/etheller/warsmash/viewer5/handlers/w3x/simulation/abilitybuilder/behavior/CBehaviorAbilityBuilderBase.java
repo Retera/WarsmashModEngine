@@ -18,39 +18,42 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.JassGameEve
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.CommandStringErrorKeys;
 
 public class CBehaviorAbilityBuilderBase extends CAbstractRangedBehavior implements ABBehavior {
-	private Map<String, Object> localStore;
-	private AbilityBuilderActiveAbility ability;
-	private ABAbilityTargetStillTargetableVisitor preCastTargetableVisitor;
-	
+	private final Map<String, Object> localStore;
+	private final AbilityBuilderActiveAbility ability;
+	private final ABAbilityTargetStillTargetableVisitor preCastTargetableVisitor;
+
 	private int castStartTick = 0;
 	private int castBehaviorNotifyTick = 0;
 	private boolean doneEffect = false;
 	private boolean channeling = false;
 	private boolean preventReInterrupt = false;
-	
+
 	private int castId = 0;
 	private int orderId;
-	
+
 	private boolean instant = false;
 	private CBehaviorCategory behaviorCategory = null;
 
-	public CBehaviorAbilityBuilderBase(final CUnit unit,
-			final Map<String, Object> localStore, AbilityBuilderActiveAbility ability) {
+	public CBehaviorAbilityBuilderBase(final CUnit unit, final Map<String, Object> localStore,
+			final AbilityBuilderActiveAbility ability) {
 		super(unit);
 		this.localStore = localStore;
 		this.ability = ability;
 		this.preCastTargetableVisitor = new ABAbilityTargetStillTargetableVisitor();
-		
+
 	}
-	
-	public void setInstant(boolean instant) {
+
+	@Override
+	public void setInstant(final boolean instant) {
 		this.instant = instant;
 	}
-	
-	public void setBehaviorCategory(CBehaviorCategory behaviorCategory) {
+
+	@Override
+	public void setBehaviorCategory(final CBehaviorCategory behaviorCategory) {
 		this.behaviorCategory = behaviorCategory;
 	}
 
+	@Override
 	public CBehavior reset(final CSimulation game, final CWidget target) {
 		this.doneEffect = false;
 		this.castStartTick = 0;
@@ -60,7 +63,8 @@ public class CBehaviorAbilityBuilderBase extends CAbstractRangedBehavior impleme
 		return innerReset(game, target, false);
 	}
 
-	public CBehavior reset(final CSimulation game, final CWidget target, int orderId) {
+	@Override
+	public CBehavior reset(final CSimulation game, final CWidget target, final int orderId) {
 		this.doneEffect = false;
 		this.castStartTick = 0;
 		this.localStore.put(ABLocalStoreKeys.CHANNELING, false);
@@ -69,6 +73,7 @@ public class CBehaviorAbilityBuilderBase extends CAbstractRangedBehavior impleme
 		return innerReset(game, target, false);
 	}
 
+	@Override
 	public CBehavior reset(final CSimulation game, final AbilityPointTarget target) {
 		this.doneEffect = false;
 		this.castStartTick = 0;
@@ -78,7 +83,8 @@ public class CBehaviorAbilityBuilderBase extends CAbstractRangedBehavior impleme
 		return innerReset(game, target, false);
 	}
 
-	public CBehavior reset(final CSimulation game, final AbilityPointTarget target, int orderId) {
+	@Override
+	public CBehavior reset(final CSimulation game, final AbilityPointTarget target, final int orderId) {
 		this.doneEffect = false;
 		this.castStartTick = 0;
 		this.localStore.put(ABLocalStoreKeys.CHANNELING, false);
@@ -87,87 +93,91 @@ public class CBehaviorAbilityBuilderBase extends CAbstractRangedBehavior impleme
 		return innerReset(game, target, false);
 	}
 
+	@Override
 	public ABBehavior reset() {
 		return null;
 	}
 
-	public ABBehavior reset(int orderId) {
+	@Override
+	public ABBehavior reset(final int orderId) {
 		return null;
 	}
 
 	@Override
-	public CBehavior update(final CSimulation game, boolean withinFacingWindow) {
-		boolean wasChanneling = this.channeling;
+	public CBehavior update(final CSimulation game, final boolean withinFacingWindow) {
+		final boolean wasChanneling = this.channeling;
 		if (this.castStartTick == 0) {
-			CBehavior prevBeh = this.unit.getCurrentBehavior();
+			final CBehavior prevBeh = this.unit.getCurrentBehavior();
 			this.unit.fireSpellEvents(game, JassGameEventsWar3.EVENT_UNIT_SPELL_CAST, this.ability, this.target);
 			if (this.unit.getCurrentBehavior() != prevBeh) {
 				return this.unit.getCurrentBehavior();
-			} else if (this.unit.isPaused()) {
+			}
+			else if (this.unit.isPaused()) {
 				return this;
 			}
-			
+
 			this.castStartTick = game.getGameTurnTick();
-			this.castBehaviorNotifyTick = (int) (this.castStartTick + 0.5/WarsmashConstants.SIMULATION_STEP_TIME);
-			
-			if (!this.target.visit(this.preCastTargetableVisitor.reset(game, this.unit, ability, false, orderId))) {
+			this.castBehaviorNotifyTick = (int) (this.castStartTick + (0.5 / WarsmashConstants.SIMULATION_STEP_TIME));
+
+			if (!this.target.visit(this.preCastTargetableVisitor.reset(game, this.unit, this.ability, false,
+					this.unit.getPlayerIndex(), this.orderId))) {
 				return this.unit.pollNextOrderBehavior(game);
 			}
-			
+
 			if (!this.unit.chargeMana(this.ability.getChargedManaCost())) {
 				game.getCommandErrorListener().showInterfaceError(this.unit.getPlayerIndex(),
 						CommandStringErrorKeys.NOT_ENOUGH_MANA);
 				return this.unit.pollNextOrderBehavior(game);
 			}
 			this.ability.startCooldown(game, this.unit);
-			
-			this.ability.runBeginCastingActions(game, unit, orderId);
 
-			CBehavior newBehavior = (CBehavior) localStore.get(ABLocalStoreKeys.NEWBEHAVIOR);
+			this.ability.runBeginCastingActions(game, this.unit, this.orderId);
+
+			final CBehavior newBehavior = (CBehavior) this.localStore.get(ABLocalStoreKeys.NEWBEHAVIOR);
 			if (newBehavior != null) {
 				cleanupInputs();
-				localStore.remove(ABLocalStoreKeys.NEWBEHAVIOR);
+				this.localStore.remove(ABLocalStoreKeys.NEWBEHAVIOR);
 				return newBehavior;
 			}
-			if (!instant) {
+			if (!this.instant) {
 				this.unit.getUnitAnimationListener().playAnimation(false, this.ability.getCastingPrimaryTag(),
 						this.ability.getCastingSecondaryTags(), 1.0f, true);
 			}
-			this.channeling = (boolean) localStore.get(ABLocalStoreKeys.CHANNELING);
+			this.channeling = (boolean) this.localStore.get(ABLocalStoreKeys.CHANNELING);
 		}
-		
 
-		if (instant) {
-			CBehavior beh = tryDoEffect(game, wasChanneling);
+		if (this.instant) {
+			final CBehavior beh = tryDoEffect(game, wasChanneling);
 			if (beh != null) {
 				return beh;
 			}
-			CBehavior newBehavior = (CBehavior) localStore.get(ABLocalStoreKeys.NEWBEHAVIOR);
+			final CBehavior newBehavior = (CBehavior) this.localStore.get(ABLocalStoreKeys.NEWBEHAVIOR);
 			if (newBehavior != null) {
 				cleanupInputs();
-				localStore.remove(ABLocalStoreKeys.NEWBEHAVIOR);
+				this.localStore.remove(ABLocalStoreKeys.NEWBEHAVIOR);
 				return newBehavior;
 			}
-			
+
 			if (!this.channeling) {
 				cleanupInputs();
 				return this.unit.pollNextOrderBehavior(game);
 			}
-		} else {
+		}
+		else {
 			final int ticksSinceCast = game.getGameTurnTick() - this.castStartTick;
 			final int castPointTicks = (int) (this.unit.getUnitType().getCastPoint()
 					/ WarsmashConstants.SIMULATION_STEP_TIME);
 			final int backswingTicks = (int) (this.unit.getUnitType().getCastBackswingPoint()
 					/ WarsmashConstants.SIMULATION_STEP_TIME);
 			if ((ticksSinceCast >= castPointTicks) || (ticksSinceCast >= backswingTicks)) {
-				CBehavior beh = tryDoEffect(game, wasChanneling);
+				final CBehavior beh = tryDoEffect(game, wasChanneling);
 				if (beh != null) {
 					return beh;
 				}
-				CBehavior newBehavior = (CBehavior) localStore.get(ABLocalStoreKeys.NEWBEHAVIOR);
+				final CBehavior newBehavior = (CBehavior) this.localStore.get(ABLocalStoreKeys.NEWBEHAVIOR);
 				if (newBehavior != null) {
 					cleanupInputs();
-					localStore.remove(ABLocalStoreKeys.NEWBEHAVIOR);
+					this.localStore.remove(ABLocalStoreKeys.NEWBEHAVIOR);
 					return newBehavior;
 				}
 			}
@@ -178,29 +188,31 @@ public class CBehaviorAbilityBuilderBase extends CAbstractRangedBehavior impleme
 		}
 		return this;
 	}
-	
+
 	private void cleanupInputs() {
-		this.localStore.remove(ABLocalStoreKeys.ABILITYTARGETEDUNIT + castId);
-		this.localStore.remove(ABLocalStoreKeys.ABILITYTARGETEDDESTRUCTABLE + castId);
-		this.localStore.remove(ABLocalStoreKeys.ABILITYTARGETEDITEM + castId);
-		this.localStore.remove(ABLocalStoreKeys.ABILITYTARGETEDLOCATION + castId);
+		this.localStore.remove(ABLocalStoreKeys.ABILITYTARGETEDUNIT + this.castId);
+		this.localStore.remove(ABLocalStoreKeys.ABILITYTARGETEDDESTRUCTABLE + this.castId);
+		this.localStore.remove(ABLocalStoreKeys.ABILITYTARGETEDITEM + this.castId);
+		this.localStore.remove(ABLocalStoreKeys.ABILITYTARGETEDLOCATION + this.castId);
 	}
-	
-	private CBehavior tryDoEffect(CSimulation game, boolean wasChanneling) {
-		boolean wasEffectDone = this.doneEffect;
+
+	private CBehavior tryDoEffect(final CSimulation game, final boolean wasChanneling) {
+		final boolean wasEffectDone = this.doneEffect;
 		if (!wasEffectDone) {
-			CBehavior prevBeh = this.unit.getCurrentBehavior();
+			final CBehavior prevBeh = this.unit.getCurrentBehavior();
 			this.unit.fireSpellEvents(game, JassGameEventsWar3.EVENT_UNIT_SPELL_EFFECT, this.ability, this.target);
 			if (this.unit.getCurrentBehavior() != prevBeh) {
 				return this.unit.getCurrentBehavior();
-			} else if (this.unit.isPaused()) {
+			}
+			else if (this.unit.isPaused()) {
 				return this;
 			}
 			if (this.channeling) {
 				this.unit.fireSpellEvents(game, JassGameEventsWar3.EVENT_UNIT_SPELL_CHANNEL, this.ability, this.target);
 				if (this.unit.getCurrentBehavior() != prevBeh) {
 					return this.unit.getCurrentBehavior();
-				} else if (this.unit.isPaused()) {
+				}
+				else if (this.unit.isPaused()) {
 					return this;
 				}
 				game.unitLoopSoundEffectEvent(this.unit, this.ability.getAlias());
@@ -209,10 +221,10 @@ public class CBehaviorAbilityBuilderBase extends CAbstractRangedBehavior impleme
 				game.unitSoundEffectEvent(this.unit, this.ability.getAlias());
 			}
 			this.doneEffect = true;
-			
-			this.ability.runEndCastingActions(game, unit, orderId);
-			this.channeling = (boolean) localStore.get(ABLocalStoreKeys.CHANNELING);
-			
+
+			this.ability.runEndCastingActions(game, this.unit, this.orderId);
+			this.channeling = (boolean) this.localStore.get(ABLocalStoreKeys.CHANNELING);
+
 		}
 		this.channeling = this.channeling && this.doChannelTick(game, this.unit, this.target);
 		if (wasEffectDone && wasChanneling && !this.channeling) {
@@ -225,13 +237,13 @@ public class CBehaviorAbilityBuilderBase extends CAbstractRangedBehavior impleme
 	public void begin(final CSimulation game) {
 	}
 
-	public boolean doChannelTick(CSimulation game, CUnit caster, AbilityTarget target) {
-		this.ability.runChannelTickActions(game, caster, orderId);
-		return (boolean) localStore.get(ABLocalStoreKeys.CHANNELING);
+	public boolean doChannelTick(final CSimulation game, final CUnit caster, final AbilityTarget target) {
+		this.ability.runChannelTickActions(game, caster, this.orderId);
+		return (boolean) this.localStore.get(ABLocalStoreKeys.CHANNELING);
 	}
 
 	@Override
-	public void end(final CSimulation game, boolean interrupted) {
+	public void end(final CSimulation game, final boolean interrupted) {
 		checkEndChannel(game, interrupted);
 		this.unit.fireSpellEvents(game, JassGameEventsWar3.EVENT_UNIT_SPELL_ENDCAST, this.ability, this.target);
 		this.unit.fireSpellEvents(game, JassGameEventsWar3.EVENT_UNIT_SPELL_FINISH, this.ability, this.target);
@@ -245,10 +257,10 @@ public class CBehaviorAbilityBuilderBase extends CAbstractRangedBehavior impleme
 		}
 	}
 
-	private void endChannel(CSimulation game, boolean interrupted) {
+	private void endChannel(final CSimulation game, final boolean interrupted) {
 		this.localStore.put(ABLocalStoreKeys.INTERRUPTED, interrupted);
 		game.unitStopSoundEffectEvent(this.unit, this.ability.getAlias());
-		this.ability.runEndChannelActions(game, unit, orderId);
+		this.ability.runEndChannelActions(game, this.unit, this.orderId);
 		cleanupInputs();
 	}
 
@@ -258,35 +270,37 @@ public class CBehaviorAbilityBuilderBase extends CAbstractRangedBehavior impleme
 	}
 
 	@Override
-	public boolean isWithinRange(CSimulation simulation) {
+	public boolean isWithinRange(final CSimulation simulation) {
 		return this.unit.canReach(this.target, this.ability.getCastRange());
 	}
 
 	@Override
-	public void endMove(CSimulation game, boolean interrupted) {
-		if (interrupted && !preventReInterrupt) {
-			preventReInterrupt = true;
-			this.ability.runCancelPreCastActions(game, unit, orderId);
+	public void endMove(final CSimulation game, final boolean interrupted) {
+		if (interrupted && !this.preventReInterrupt) {
+			this.preventReInterrupt = true;
+			this.ability.runCancelPreCastActions(game, this.unit, this.orderId);
 			checkEndChannel(game, interrupted);
 		}
 	}
 
 	@Override
-	protected CBehavior updateOnInvalidTarget(CSimulation simulation) {
+	protected CBehavior updateOnInvalidTarget(final CSimulation simulation) {
 		return this.unit.pollNextOrderBehavior(simulation);
 	}
 
 	@Override
-	protected boolean checkTargetStillValid(CSimulation simulation) {
-		return this.doneEffect || this.target.visit(this.preCastTargetableVisitor.reset(simulation, this.unit, this.ability, this.channeling, orderId));
+	protected boolean checkTargetStillValid(final CSimulation simulation) {
+		return this.doneEffect || this.target.visit(this.preCastTargetableVisitor.reset(simulation, this.unit,
+				this.ability, this.channeling, this.unit.getPlayerIndex(), this.orderId));
 	}
 
 	@Override
-	protected void resetBeforeMoving(CSimulation simulation) {
+	protected void resetBeforeMoving(final CSimulation simulation) {
 		this.castStartTick = 0;
 	}
-	
-	public void setCastId(int castId) {
+
+	@Override
+	public void setCastId(final int castId) {
 		this.castId = castId;
 	}
 
@@ -298,14 +312,14 @@ public class CBehaviorAbilityBuilderBase extends CAbstractRangedBehavior impleme
 	@Override
 	public CBehaviorCategory getBehaviorCategory() {
 		if (this.behaviorCategory != null) {
-			return this.behaviorCategory ;
+			return this.behaviorCategory;
 		}
 		return CBehaviorCategory.SPELL;
 	}
 
 	@Override
 	public CAbility getAbility() {
-		return ability;
+		return this.ability;
 	}
 
 }

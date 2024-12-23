@@ -10,37 +10,39 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehavior
 
 public class CBehaviorSendOrder implements CBehavior {
 
-	private CUnit unit;
-	private CAbility ability;
-	private int orderId;
-	private int visibleOrderId;
-	private CWidget target;
+	private final CUnit unit;
+	private final CAbility ability;
+	private final int playerIndex;
+	private final int orderId;
+	private final int visibleOrderId;
+	private final CWidget target;
 
-	public CBehaviorSendOrder(final CUnit unit, CAbility ability, final int orderId, final int visibleOrderId,
-			final CWidget target) {
+	public CBehaviorSendOrder(final CUnit unit, final CAbility ability, final int playerIndex, final int orderId,
+			final int visibleOrderId, final CWidget target) {
 		this.unit = unit;
 		this.ability = ability;
+		this.playerIndex = playerIndex;
 		this.orderId = orderId;
 		this.visibleOrderId = visibleOrderId;
 		this.target = target;
 	}
 
 	@Override
-	public CBehavior update(CSimulation game) {
-		return ability.begin(game, unit, orderId, target);
+	public CBehavior update(final CSimulation game) {
+		return this.ability.begin(game, this.unit, this.playerIndex, this.orderId, this.target);
 	}
 
 	@Override
-	public void begin(CSimulation game) {
+	public void begin(final CSimulation game) {
 	}
 
 	@Override
-	public void end(CSimulation game, boolean interrupted) {
+	public void end(final CSimulation game, final boolean interrupted) {
 	}
 
 	@Override
 	public int getHighlightOrderId() {
-		return visibleOrderId;
+		return this.visibleOrderId;
 	}
 
 	@Override
@@ -57,6 +59,5 @@ public class CBehaviorSendOrder implements CBehavior {
 	public CBehaviorCategory getBehaviorCategory() {
 		return CBehaviorCategory.IDLE;
 	}
-
 
 }

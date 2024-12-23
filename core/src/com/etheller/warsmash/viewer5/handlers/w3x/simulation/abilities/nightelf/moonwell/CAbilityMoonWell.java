@@ -104,7 +104,7 @@ public class CAbilityMoonWell extends CAbilitySpellBase implements CAutocastAbil
 		}
 		if (this.autoCastActive) {
 			final int gameTurnTick = game.getGameTurnTick();
-			if (gameTurnTick >= this.lastAutoCastCheckTick && unit.getMana() > this.autocastRequirement) {
+			if ((gameTurnTick >= this.lastAutoCastCheckTick) && (unit.getMana() > this.autocastRequirement)) {
 				checkAutoCast(game, unit);
 				this.lastAutoCastCheckTick = gameTurnTick + (int) (2.0f / WarsmashConstants.SIMULATION_STEP_TIME);
 			}
@@ -136,7 +136,8 @@ public class CAbilityMoonWell extends CAbilitySpellBase implements CAutocastAbil
 	}
 
 	@Override
-	public CBehavior begin(final CSimulation game, final CUnit caster, final int orderId, final CWidget target) {
+	public CBehavior begin(final CSimulation game, final CUnit caster, final int playerIndex, final int orderId,
+			final CWidget target) {
 		final CUnit unitTarget = target.visit(AbilityTargetVisitor.UNIT);
 		if (unitTarget != null) {
 			final float life = unitTarget.getLife();
@@ -146,13 +147,13 @@ public class CAbilityMoonWell extends CAbilitySpellBase implements CAutocastAbil
 			final float lifeWanted = life > maximumLife ? 0 : maximumLife - life;
 			final float manaWanted = mana > maximumMana ? 0 : maximumMana - mana;
 			float availableCasterMana = caster.getMana();
-			if (lifeWanted > 0 && availableCasterMana > 0) {
+			if ((lifeWanted > 0) && (availableCasterMana > 0)) {
 				final float availableLifeOffered = availableCasterMana / this.hitPointsGained;
 				final float lifeGained = Math.min(availableLifeOffered, lifeWanted);
 				unitTarget.heal(game, lifeGained);
 				availableCasterMana -= lifeGained * this.hitPointsGained;
 			}
-			if (manaWanted > 0 && availableCasterMana > 0) {
+			if ((manaWanted > 0) && (availableCasterMana > 0)) {
 				final float availableManaOffered = availableCasterMana / this.manaGained;
 				final float manaGained = Math.min(availableManaOffered, manaWanted);
 				unitTarget.setMana(mana + manaGained);
@@ -168,13 +169,14 @@ public class CAbilityMoonWell extends CAbilitySpellBase implements CAutocastAbil
 	}
 
 	@Override
-	public CBehavior begin(final CSimulation game, final CUnit caster, final int orderId,
+	public CBehavior begin(final CSimulation game, final CUnit caster, final int playerIndex, final int orderId,
 			final AbilityPointTarget point) {
 		return null;
 	}
 
 	@Override
-	public CBehavior beginNoTarget(final CSimulation game, final CUnit caster, final int orderId) {
+	public CBehavior beginNoTarget(final CSimulation game, final CUnit caster, final int playerIndex,
+			final int orderId) {
 		return null;
 	}
 
@@ -256,20 +258,20 @@ public class CAbilityMoonWell extends CAbilitySpellBase implements CAutocastAbil
 	}
 
 	@Override
-	public void checkCanAutoTarget(CSimulation game, CUnit unit, int orderId, CWidget target,
-			AbilityTargetCheckReceiver<CWidget> receiver) {
-		this.checkCanTarget(game, unit, orderId, target, receiver);
+	public void checkCanAutoTarget(final CSimulation game, final CUnit unit, final int playerIndex, final int orderId,
+			final CWidget target, final AbilityTargetCheckReceiver<CWidget> receiver) {
+		this.checkCanTarget(game, unit, playerIndex, orderId, target, receiver);
 	}
 
 	@Override
-	public void checkCanAutoTarget(CSimulation game, CUnit unit, int orderId, AbilityPointTarget target,
-			AbilityTargetCheckReceiver<AbilityPointTarget> receiver) {
+	public void checkCanAutoTarget(final CSimulation game, final CUnit unit, final int playerIndex, final int orderId,
+			final AbilityPointTarget target, final AbilityTargetCheckReceiver<AbilityPointTarget> receiver) {
 		receiver.orderIdNotAccepted();
 	}
 
 	@Override
-	public void checkCanAutoTargetNoTarget(CSimulation game, CUnit unit, int orderId,
-			AbilityTargetCheckReceiver<Void> receiver) {
+	public void checkCanAutoTargetNoTarget(final CSimulation game, final CUnit unit, final int playerIndex,
+			final int orderId, final AbilityTargetCheckReceiver<Void> receiver) {
 		receiver.orderIdNotAccepted();
 	}
 

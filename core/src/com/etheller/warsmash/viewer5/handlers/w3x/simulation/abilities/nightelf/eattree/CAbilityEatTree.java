@@ -59,13 +59,13 @@ public class CAbilityEatTree extends CAbilityTargetSpellBase {
 	}
 
 	@Override
-	public void checkCanTarget(final CSimulation game, final CUnit unit, final int orderId, final CWidget target,
-			final AbilityTargetCheckReceiver<CWidget> receiver) {
+	public void checkCanTarget(final CSimulation game, final CUnit unit, int playerIndex, final int orderId,
+			final CWidget target, final AbilityTargetCheckReceiver<CWidget> receiver) {
 		if (orderId == OrderIds.smart) {
-			super.checkCanTarget(game, unit, getBaseOrderId(), target, receiver);
+			super.checkCanTarget(game, unit, playerIndex, getBaseOrderId(), target, receiver);
 		}
 		else {
-			super.checkCanTarget(game, unit, orderId, target, receiver);
+			super.checkCanTarget(game, unit, playerIndex, orderId, target, receiver);
 		}
 	}
 

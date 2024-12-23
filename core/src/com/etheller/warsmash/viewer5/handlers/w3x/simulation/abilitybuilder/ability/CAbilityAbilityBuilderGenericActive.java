@@ -482,8 +482,8 @@ public abstract class CAbilityAbilityBuilderGenericActive extends AbstractGeneri
 	}
 
 	@Override
-	protected void innerCheckCanUse(final CSimulation game, final CUnit unit, final int orderId,
-			final AbilityActivationReceiver receiver) {
+	protected void innerCheckCanUse(final CSimulation game, final CUnit unit, int playerIndex,
+			final int orderId, final AbilityActivationReceiver receiver) {
 		if ((orderId != 0) && ((orderId == getAutoCastOffOrderId()) || (orderId == getAutoCastOnOrderId()))) {
 			receiver.useOk();
 			return;
@@ -549,8 +549,8 @@ public abstract class CAbilityAbilityBuilderGenericActive extends AbstractGeneri
 			AbilityActivationReceiver receiver);
 
 	@Override
-	public void checkCanTarget(final CSimulation game, final CUnit unit, final int orderId, final CWidget target,
-			final AbilityTargetCheckReceiver<CWidget> receiver) {
+	public void checkCanTarget(final CSimulation game, final CUnit unit, int playerIndex, final int orderId,
+			final CWidget target, final AbilityTargetCheckReceiver<CWidget> receiver) {
 		if (innerCheckCastOrderId(game, unit, orderId)) {
 			innerCheckCanTarget(game, unit, orderId, target, receiver);
 		} else if (orderId == OrderIds.smart) {
@@ -561,8 +561,8 @@ public abstract class CAbilityAbilityBuilderGenericActive extends AbstractGeneri
 	}
 
 	@Override
-	public void checkCanAutoTarget(final CSimulation game, final CUnit unit, final int orderId, final CWidget target,
-			final AbilityTargetCheckReceiver<CWidget> receiver) {
+	public void checkCanAutoTarget(final CSimulation game, final CUnit unit, int playerIndex, final int orderId,
+			final CWidget target, final AbilityTargetCheckReceiver<CWidget> receiver) {
 		if (orderId == getBaseOrderId()) {
 			if (innerCheckCanTargetSpell(game, unit, orderId, target, receiver)) {
 				if (innerCheckTargetTargetable(game, unit, target, receiver)) {
@@ -597,8 +597,8 @@ public abstract class CAbilityAbilityBuilderGenericActive extends AbstractGeneri
 	}
 
 	@Override
-	public void checkCanTarget(final CSimulation game, final CUnit unit, final int orderId,
-			final AbilityPointTarget target, final AbilityTargetCheckReceiver<AbilityPointTarget> receiver) {
+	public void checkCanTarget(final CSimulation game, final CUnit unit, int playerIndex,
+			final int orderId, final AbilityPointTarget target, final AbilityTargetCheckReceiver<AbilityPointTarget> receiver) {
 		if (innerCheckCastOrderId(game, unit, orderId)) {
 			innerCheckCanTarget(game, unit, orderId, target, receiver);
 		} else if (orderId == OrderIds.smart) {
@@ -609,8 +609,8 @@ public abstract class CAbilityAbilityBuilderGenericActive extends AbstractGeneri
 	}
 
 	@Override
-	public void checkCanAutoTarget(final CSimulation game, final CUnit unit, final int orderId,
-			final AbilityPointTarget target, final AbilityTargetCheckReceiver<AbilityPointTarget> receiver) {
+	public void checkCanAutoTarget(final CSimulation game, final CUnit unit, int playerIndex,
+			final int orderId, final AbilityPointTarget target, final AbilityTargetCheckReceiver<AbilityPointTarget> receiver) {
 		if (orderId == getBaseOrderId()) {
 			if (innerCheckCanTargetSpell(game, unit, orderId, target, receiver)) {
 				if (innerCheckTargetInRange(unit, target)) {
@@ -636,8 +636,8 @@ public abstract class CAbilityAbilityBuilderGenericActive extends AbstractGeneri
 	}
 
 	@Override
-	public void checkCanTargetNoTarget(final CSimulation game, final CUnit unit, final int orderId,
-			final AbilityTargetCheckReceiver<Void> receiver) {
+	public void checkCanTargetNoTarget(final CSimulation game, final CUnit unit, int playerIndex,
+			final int orderId, final AbilityTargetCheckReceiver<Void> receiver) {
 		if ((orderId != 0) && ((orderId == getAutoCastOffOrderId()) || (orderId == getAutoCastOnOrderId()))) {
 			receiver.targetOk(null);
 		} else if (innerCheckCastOrderId(game, unit, orderId)) {
@@ -648,8 +648,8 @@ public abstract class CAbilityAbilityBuilderGenericActive extends AbstractGeneri
 	}
 
 	@Override
-	public void checkCanAutoTargetNoTarget(final CSimulation game, final CUnit unit, final int orderId,
-			final AbilityTargetCheckReceiver<Void> receiver) {
+	public void checkCanAutoTargetNoTarget(final CSimulation game, final CUnit unit, int playerIndex,
+			final int orderId, final AbilityTargetCheckReceiver<Void> receiver) {
 		if (orderId == getBaseOrderId()) {
 			if (innerCheckCanTargetSpell(game, unit, orderId, receiver)) {
 				String extraFailReason = innerCheckExtraAutoNoTargetConditions(game, unit, orderId, receiver);
@@ -992,14 +992,14 @@ public abstract class CAbilityAbilityBuilderGenericActive extends AbstractGeneri
 	}
 
 	@Override
-	public boolean checkBeforeQueue(final CSimulation game, final CUnit caster, final int orderId,
-			final AbilityTarget target) {
+	public boolean checkBeforeQueue(final CSimulation game, final CUnit caster, int playerIndex,
+			final int orderId, final AbilityTarget target) {
 //		System.err.println("Checking queue top level: " + active + " orderID : " + orderId + " offID: " + this.getOffOrderId());
 		if (this.allowCastlessDeactivate && this.toggleable && this.active && orderId == this.getOffOrderId()) {
 			this.deactivate(game, caster);
 			return false;
 		}
-		return super.checkBeforeQueue(game, caster, orderId, target);
+		return super.checkBeforeQueue(game, caster, playerIndex, orderId, target);
 	}
 
 	@Override
@@ -1008,7 +1008,7 @@ public abstract class CAbilityAbilityBuilderGenericActive extends AbstractGeneri
 	}
 
 	@Override
-	public void onCancelFromQueue(CSimulation game, CUnit unit, int orderId) {
+	public void onCancelFromQueue(CSimulation game, CUnit unit, int playerIndex, int orderId) {
 
 	}
 

@@ -1,7 +1,8 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.item.shop;
 
-import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CItem;
@@ -23,24 +24,22 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetC
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.CommandStringErrorKeys;
 
 public final class CAbilitySellItems extends AbstractCAbility {
-	private final List<War3ID> itemsSold;
+	private final Set<War3ID> itemsSold;
 
 	public CAbilitySellItems(final int handleId, final List<War3ID> itemsSold) {
 		super(handleId, War3ID.fromString("Asei"));
-		this.itemsSold = new ArrayList<>(itemsSold);
+		this.itemsSold = new HashSet<>(itemsSold);
 	}
 
-	public List<War3ID> getItemsSold() {
+	public Set<War3ID> getItemsSold() {
 		return this.itemsSold;
 	}
 
 	@Override
-	protected void innerCheckCanUse(final CSimulation game, final CUnit unit, final int orderId,
+	protected void innerCheckCanUse(final CSimulation game, final CUnit unit, final int playerIndex, final int orderId,
 			final AbilityActivationReceiver receiver) {
-		final int playerIndex = orderId & 0xFF; // TODO this is stupid, and should be passed as some "acting player" arg
-		final int itemIndex = ((orderId & 0xFF00) >> 8) - 1;
-		if ((itemIndex >= 0) && (itemIndex < this.itemsSold.size())) {
-			final War3ID itemTypeId = this.itemsSold.get(itemIndex);
+		final War3ID itemTypeId = new War3ID(orderId);
+		if (this.itemsSold.contains(itemTypeId)) {
 			final CItemType itemType = game.getItemData().getItemType(itemTypeId);
 			if (itemType != null) {
 				final CPlayer player = game.getPlayer(playerIndex);
@@ -66,23 +65,22 @@ public final class CAbilitySellItems extends AbstractCAbility {
 	}
 
 	@Override
-	public final void checkCanTarget(final CSimulation game, final CUnit unit, final int orderId, final CWidget target,
-			final AbilityTargetCheckReceiver<CWidget> receiver) {
+	public final void checkCanTarget(final CSimulation game, final CUnit unit, final int playerIndex, final int orderId,
+			final CWidget target, final AbilityTargetCheckReceiver<CWidget> receiver) {
 		receiver.orderIdNotAccepted();
 	}
 
 	@Override
-	public final void checkCanTarget(final CSimulation game, final CUnit unit, final int orderId,
+	public final void checkCanTarget(final CSimulation game, final CUnit unit, final int playerIndex, final int orderId,
 			final AbilityPointTarget target, final AbilityTargetCheckReceiver<AbilityPointTarget> receiver) {
 		receiver.orderIdNotAccepted();
 	}
 
 	@Override
-	public final void checkCanTargetNoTarget(final CSimulation game, final CUnit unit, final int orderId,
-			final AbilityTargetCheckReceiver<Void> receiver) {
-		final int playerIndex = orderId & 0xFF; // TODO this is stupid, and should be passed as some "acting player" arg
-		final int itemIndex = ((orderId & 0xFF00) >> 8) - 1;
-		if ((itemIndex >= 0) && (itemIndex < this.itemsSold.size())) {
+	public final void checkCanTargetNoTarget(final CSimulation game, final CUnit unit, final int playerIndex,
+			final int orderId, final AbilityTargetCheckReceiver<Void> receiver) {
+		final War3ID itemTypeId = new War3ID(orderId);
+		if (this.itemsSold.contains(itemTypeId)) {
 			receiver.targetOk(null);
 		}
 		else {
@@ -91,8 +89,8 @@ public final class CAbilitySellItems extends AbstractCAbility {
 	}
 
 	@Override
-	public boolean checkBeforeQueue(final CSimulation game, final CUnit caster, final int orderId,
-			final AbilityTarget target) {
+	public boolean checkBeforeQueue(final CSimulation game, final CUnit caster, final int playerIndex,
+			final int orderId, final AbilityTarget target) {
 		return true;
 	}
 
@@ -111,23 +109,23 @@ public final class CAbilitySellItems extends AbstractCAbility {
 	}
 
 	@Override
-	public CBehavior begin(final CSimulation game, final CUnit caster, final int orderId, final CWidget target) {
+	public CBehavior begin(final CSimulation game, final CUnit caster, final int playerIndex, final int orderId,
+			final CWidget target) {
 		return null;
 	}
 
 	@Override
-	public CBehavior begin(final CSimulation game, final CUnit caster, final int orderId,
+	public CBehavior begin(final CSimulation game, final CUnit caster, final int playerIndex, final int orderId,
 			final AbilityPointTarget point) {
 		return null;
 	}
 
 	@Override
-	public CBehavior beginNoTarget(final CSimulation game, final CUnit caster, final int orderId) {
-		final int playerIndex = orderId & 0xFF; // TODO this is stupid, and should be passed as some "acting player" arg
-		final int itemIndex = ((orderId & 0xFF00) >> 8) - 1;
+	public CBehavior beginNoTarget(final CSimulation game, final CUnit caster, final int playerIndex,
+			final int orderId) {
+		final War3ID itemTypeId = new War3ID(orderId);
 		final CAbilityNeutralBuilding neutralBuildingData = caster.getNeutralBuildingData();
-		if ((itemIndex >= 0) && (itemIndex < this.itemsSold.size())) {
-			final War3ID itemTypeId = this.itemsSold.get(itemIndex);
+		if (this.itemsSold.contains(itemTypeId)) {
 			final CItemType itemType = game.getItemData().getItemType(itemTypeId);
 			if ((neutralBuildingData != null) && (neutralBuildingData.getSelectedPlayerUnit(playerIndex) != null)) {
 				final CUnit purchasingHero = neutralBuildingData.getSelectedPlayerUnit(playerIndex);
@@ -154,7 +152,7 @@ public final class CAbilitySellItems extends AbstractCAbility {
 	}
 
 	@Override
-	public void onCancelFromQueue(final CSimulation game, final CUnit unit, final int orderId) {
+	public void onCancelFromQueue(final CSimulation game, final CUnit unit, final int playerIndex, final int orderId) {
 	}
 
 	@Override

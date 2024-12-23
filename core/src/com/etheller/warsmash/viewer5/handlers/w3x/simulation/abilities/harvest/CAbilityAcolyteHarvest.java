@@ -42,18 +42,18 @@ public class CAbilityAcolyteHarvest extends AbstractGenericSingleIconActiveAbili
 	}
 
 	@Override
-	public CBehavior begin(final CSimulation game, final CUnit caster, final int orderId, final CWidget target) {
+	public CBehavior begin(final CSimulation game, final CUnit caster, int playerIndex, final int orderId, final CWidget target) {
 		return this.behaviorAcolyteHarvest.reset(game, target);
 	}
 
 	@Override
-	public CBehavior begin(final CSimulation game, final CUnit caster, final int orderId,
-			final AbilityPointTarget point) {
+	public CBehavior begin(final CSimulation game, final CUnit caster, int playerIndex,
+			final int orderId, final AbilityPointTarget point) {
 		return caster.pollNextOrderBehavior(game);
 	}
 
 	@Override
-	public CBehavior beginNoTarget(final CSimulation game, final CUnit caster, final int orderId) {
+	public CBehavior beginNoTarget(final CSimulation game, final CUnit caster, int playerIndex, final int orderId) {
 		return caster.pollNextOrderBehavior(game);
 	}
 
@@ -68,8 +68,8 @@ public class CAbilityAcolyteHarvest extends AbstractGenericSingleIconActiveAbili
 	}
 
 	@Override
-	protected void innerCheckCanUse(final CSimulation game, final CUnit unit, final int orderId,
-			final AbilityActivationReceiver receiver) {
+	protected void innerCheckCanUse(final CSimulation game, final CUnit unit, int playerIndex,
+			final int orderId, final AbilityActivationReceiver receiver) {
 		receiver.useOk();
 	}
 
@@ -126,7 +126,7 @@ public class CAbilityAcolyteHarvest extends AbstractGenericSingleIconActiveAbili
 	}
 
 	@Override
-	public void onCancelFromQueue(final CSimulation game, final CUnit unit, final int orderId) {
+	public void onCancelFromQueue(final CSimulation game, final CUnit unit, int playerIndex, final int orderId) {
 	}
 
 	public void setCastRange(final float castRange) {

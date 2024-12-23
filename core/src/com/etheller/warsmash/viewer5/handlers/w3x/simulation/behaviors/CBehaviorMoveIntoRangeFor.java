@@ -57,8 +57,8 @@ public class CBehaviorMoveIntoRangeFor extends CAbstractRangedBehavior {
 				final boolean queue = (currentOrder != null) && (currentOrder.getOrderId() == OrderIds.smart);
 				if (!((currentOrder instanceof COrderTargetWidget)
 						&& (currentOrder.getTarget(simulation) == this.unit))) {
-					targetUnit.order(simulation, new COrderTargetWidget(partnerAbility.getHandleId(), OrderIds.smart,
-							this.unit.getHandleId(), queue), queue);
+					targetUnit.order(simulation, new COrderTargetWidget(this.unit.getPlayerIndex(),
+							partnerAbility.getHandleId(), OrderIds.smart, this.unit.getHandleId(), queue), queue);
 					return this.unit.pollNextOrderBehavior(simulation);
 				} // else we might be looping the queueing and that's wasteful
 			}

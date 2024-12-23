@@ -67,43 +67,43 @@ public abstract class CBuffAuraBase extends AbstractCBuff {
 	}
 
 	@Override
-	public void onCancelFromQueue(CSimulation game, CUnit unit, int orderId) {
+	public void onCancelFromQueue(CSimulation game, CUnit unit, int playerIndex, int orderId) {
 	}
 
 	@Override
-	public CBehavior begin(CSimulation game, CUnit caster, int orderId, CWidget target) {
+	public CBehavior begin(CSimulation game, CUnit caster, int playerIndex, int orderId, CWidget target) {
 		return null;
 	}
 
 	@Override
-	public CBehavior begin(CSimulation game, CUnit caster, int orderId, AbilityPointTarget point) {
+	public CBehavior begin(CSimulation game, CUnit caster, int playerIndex, int orderId, AbilityPointTarget point) {
 		return null;
 	}
 
 	@Override
-	public CBehavior beginNoTarget(CSimulation game, CUnit caster, int orderId) {
+	public CBehavior beginNoTarget(CSimulation game, CUnit caster, int playerIndex, int orderId) {
 		return null;
 	}
 
 	@Override
-	public void checkCanTarget(CSimulation game, CUnit unit, int orderId, CWidget target,
-							   AbilityTargetCheckReceiver<CWidget> receiver) {
+	public void checkCanTarget(CSimulation game, CUnit unit, int playerIndex, int orderId,
+							   CWidget target, AbilityTargetCheckReceiver<CWidget> receiver) {
 		receiver.notAnActiveAbility();
 	}
 
 	@Override
-	public void checkCanTarget(CSimulation game, CUnit unit, int orderId, AbilityPointTarget target,
-							   AbilityTargetCheckReceiver<AbilityPointTarget> receiver) {
+	public void checkCanTarget(CSimulation game, CUnit unit, int playerIndex, int orderId,
+							   AbilityPointTarget target, AbilityTargetCheckReceiver<AbilityPointTarget> receiver) {
 		receiver.notAnActiveAbility();
 	}
 
 	@Override
-	public void checkCanTargetNoTarget(CSimulation game, CUnit unit, int orderId,
-									   AbilityTargetCheckReceiver<Void> receiver) {
+	public void checkCanTargetNoTarget(CSimulation game, CUnit unit, int playerIndex,
+									   int orderId, AbilityTargetCheckReceiver<Void> receiver) {
 		receiver.notAnActiveAbility();
 	}
 	@Override
-	protected void innerCheckCanUse(CSimulation game, CUnit unit, int orderId, AbilityActivationReceiver receiver) {
+	protected void innerCheckCanUse(CSimulation game, CUnit unit, int playerIndex, int orderId, AbilityActivationReceiver receiver) {
 		receiver.notAnActiveAbility();
 	}
 

@@ -52,18 +52,18 @@ public class CAbilityAbilityBuilderActiveNoTarget extends CAbilityAbilityBuilder
 	}
 
 	@Override
-	public CBehavior begin(CSimulation game, CUnit caster, int orderId, CWidget target) {
+	public CBehavior begin(CSimulation game, CUnit caster, int playerIndex, int orderId, CWidget target) {
 		return null;
 	}
 
 	@Override
-	public CBehavior begin(CSimulation game, CUnit caster, int orderId, AbilityPointTarget point) {
+	public CBehavior begin(CSimulation game, CUnit caster, int playerIndex, int orderId, AbilityPointTarget point) {
 		return null;
 	}
 
 	@Override
-	public boolean checkBeforeQueue(final CSimulation game, final CUnit caster, final int orderId,
-			final AbilityTarget target) {
+	public boolean checkBeforeQueue(final CSimulation game, final CUnit caster, int playerIndex,
+			final int orderId, final AbilityTarget target) {
 
 //		System.err.println("Checking queue notarg level: " + active + " orderID : " + orderId + " offID: " + this.getOffOrderId());
 		if (castless && orderId == this.getBaseOrderId()) {
@@ -80,11 +80,11 @@ public class CAbilityAbilityBuilderActiveNoTarget extends CAbilityAbilityBuilder
 			this.runEndCastingActions(game, caster, orderId);
 			return false;
 		}
-		return super.checkBeforeQueue(game, caster, orderId, target);
+		return super.checkBeforeQueue(game, caster, playerIndex, orderId, target);
 	}
 
 	@Override
-	public CBehavior beginNoTarget(CSimulation game, CUnit caster, int orderId) {
+	public CBehavior beginNoTarget(CSimulation game, CUnit caster, int playerIndex, int orderId) {
 		this.castId++;
 		if (castless) {
 			return null;

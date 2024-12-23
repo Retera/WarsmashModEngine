@@ -53,8 +53,8 @@ public class CAbilityItemManaRegain extends AbstractGenericSingleIconNoSmartActi
 	}
 
 	@Override
-	protected void innerCheckCanUse(final CSimulation game, final CUnit unit, final int orderId,
-			final AbilityActivationReceiver receiver) {
+	protected void innerCheckCanUse(final CSimulation game, final CUnit unit, int playerIndex,
+			final int orderId, final AbilityActivationReceiver receiver) {
 		final float cooldownRemaining = CAbilitySpellBase.getCooldownRemaining(game, unit, CODE);
 		if (cooldownRemaining > 0) {
 			final float cooldownLengthDisplay = unit.getCooldownLengthDisplayTicks(game, CODE)
@@ -95,35 +95,35 @@ public class CAbilityItemManaRegain extends AbstractGenericSingleIconNoSmartActi
 	}
 
 	@Override
-	public void onCancelFromQueue(final CSimulation game, final CUnit unit, final int orderId) {
+	public void onCancelFromQueue(final CSimulation game, final CUnit unit, int playerIndex, final int orderId) {
 
 	}
 
 	@Override
-	public boolean checkBeforeQueue(final CSimulation game, final CUnit caster, final int orderId,
-			final AbilityTarget target) {
+	public boolean checkBeforeQueue(final CSimulation game, final CUnit caster, int playerIndex,
+			final int orderId, final AbilityTarget target) {
 		if ((target == null) && (orderId == getBaseOrderId())) {
 			caster.restoreMana(game, this.manaToRegain);
 			game.createTemporarySpellEffectOnUnit(caster, getAlias(), CEffectType.CASTER);
 			caster.beginCooldown(game, CODE, cooldown);
 			return false;
 		}
-		return super.checkBeforeQueue(game, caster, orderId, target);
+		return super.checkBeforeQueue(game, caster, playerIndex, orderId, target);
 	}
 
 	@Override
-	public CBehavior begin(final CSimulation game, final CUnit caster, final int orderId, final CWidget target) {
+	public CBehavior begin(final CSimulation game, final CUnit caster, int playerIndex, final int orderId, final CWidget target) {
 		return null;
 	}
 
 	@Override
-	public CBehavior begin(final CSimulation game, final CUnit caster, final int orderId,
-			final AbilityPointTarget point) {
+	public CBehavior begin(final CSimulation game, final CUnit caster, int playerIndex,
+			final int orderId, final AbilityPointTarget point) {
 		return null;
 	}
 
 	@Override
-	public CBehavior beginNoTarget(final CSimulation game, final CUnit caster, final int orderId) {
+	public CBehavior beginNoTarget(final CSimulation game, final CUnit caster, int playerIndex, final int orderId) {
 		return null;
 	}
 

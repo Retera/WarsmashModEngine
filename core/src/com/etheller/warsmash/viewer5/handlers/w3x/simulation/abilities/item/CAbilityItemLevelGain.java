@@ -33,8 +33,8 @@ public class CAbilityItemLevelGain extends CAbilitySpellBase {
 	}
 
 	@Override
-	public boolean checkBeforeQueue(final CSimulation game, final CUnit caster, final int orderId,
-			final AbilityTarget target) {
+	public boolean checkBeforeQueue(final CSimulation game, final CUnit caster, int playerIndex,
+			final int orderId, final AbilityTarget target) {
 		if (orderId == getBaseOrderId()) {
 			final CAbilityHero heroData = caster.getHeroData();
 			heroData.setHeroLevel(game, caster, heroData.getHeroLevel() + levelsToGain, true);
@@ -60,18 +60,18 @@ public class CAbilityItemLevelGain extends CAbilitySpellBase {
 	}
 
 	@Override
-	public CBehavior begin(final CSimulation game, final CUnit caster, final int orderId, final CWidget target) {
+	public CBehavior begin(final CSimulation game, final CUnit caster, int playerIndex, final int orderId, final CWidget target) {
 		return null;
 	}
 
 	@Override
-	public CBehavior begin(final CSimulation game, final CUnit caster, final int orderId,
-			final AbilityPointTarget point) {
+	public CBehavior begin(final CSimulation game, final CUnit caster, int playerIndex,
+			final int orderId, final AbilityPointTarget point) {
 		return null;
 	}
 
 	@Override
-	public CBehavior beginNoTarget(final CSimulation game, final CUnit caster, final int orderId) {
+	public CBehavior beginNoTarget(final CSimulation game, final CUnit caster, int playerIndex, final int orderId) {
 		return null;
 	}
 
@@ -99,13 +99,13 @@ public class CAbilityItemLevelGain extends CAbilitySpellBase {
 	}
 
 	@Override
-	protected void innerCheckCanUse(final CSimulation game, final CUnit unit, final int orderId,
-			final AbilityActivationReceiver receiver) {
+	protected void innerCheckCanUse(final CSimulation game, final CUnit unit, int playerIndex,
+			final int orderId, final AbilityActivationReceiver receiver) {
 		receiver.useOk();
 	}
 
 	@Override
-	public void onCancelFromQueue(final CSimulation game, final CUnit unit, final int orderId) {
+	public void onCancelFromQueue(final CSimulation game, final CUnit unit, int playerIndex, final int orderId) {
 	}
 
 	@Override

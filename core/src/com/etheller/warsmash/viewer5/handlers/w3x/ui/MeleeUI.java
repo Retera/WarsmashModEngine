@@ -941,11 +941,12 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 						if ((index >= 0) && (index < cargoData.getCargoCount())) {
 							final BooleanAbilityActivationReceiver activationReceiver = BooleanAbilityActivationReceiver.INSTANCE;
 							final CSimulation simulation = MeleeUI.this.war3MapViewer.simulation;
-							cargoData.checkCanUse(simulation, simulationUnit, OrderIds.unload, activationReceiver);
+							cargoData.checkCanUse(simulation, simulationUnit, MeleeUI.this.localPlayer.getId(),
+									OrderIds.unload, activationReceiver);
 							if (activationReceiver.isOk()) {
 								final CWidgetAbilityTargetCheckReceiver targetCheckReceiver = CWidgetAbilityTargetCheckReceiver.INSTANCE;
-								cargoData.checkCanTarget(simulation, simulationUnit, OrderIds.unload, unitInside,
-										targetCheckReceiver.reset());
+								cargoData.checkCanTarget(simulation, simulationUnit, MeleeUI.this.localPlayer.getId(),
+										OrderIds.unload, unitInside, targetCheckReceiver.reset());
 								if (targetCheckReceiver.getTarget() != null) {
 									final CPlayer player = simulation.getPlayer(simulationUnit.getPlayerIndex());
 									MeleeUI.this.unitOrderListener.issueTargetOrder(simulationUnit.getHandleId(),
@@ -1397,14 +1398,14 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 			}
 		}
 		if (abilityToUse != null) {
-			abilityToUse.checkCanUse(this.war3MapViewer.simulation, this.selectedUnit.getSimulationUnit(), orderId,
-					this.meleeUIAbilityActivationReceiver.reset(this, this.war3MapViewer.worldScene.audioContext,
-							this.selectedUnit));
+			abilityToUse.checkCanUse(this.war3MapViewer.simulation, this.selectedUnit.getSimulationUnit(),
+					this.localPlayer.getId(), orderId, this.meleeUIAbilityActivationReceiver.reset(this,
+							this.war3MapViewer.worldScene.audioContext, this.selectedUnit));
 			if (this.meleeUIAbilityActivationReceiver.isUseOk()) {
 				final BooleanAbilityTargetCheckReceiver<Void> noTargetReceiver = BooleanAbilityTargetCheckReceiver
 						.<Void>getInstance().reset();
 				abilityToUse.checkCanTargetNoTarget(this.war3MapViewer.simulation,
-						this.selectedUnit.getSimulationUnit(), orderId, noTargetReceiver);
+						this.selectedUnit.getSimulationUnit(), this.localPlayer.getId(), orderId, noTargetReceiver);
 				if (noTargetReceiver.isTargetable()) {
 					final boolean shiftDown = isShiftDown();
 					this.unitOrderListener.issueImmediateOrder(this.selectedUnit.getSimulationUnit().getHandleId(),
@@ -1424,7 +1425,8 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 									final BooleanAbilityTargetCheckReceiver<Void> receiver = BooleanAbilityTargetCheckReceiver
 											.<Void>getInstance().reset();
 									ability.checkCanTargetNoTarget(this.war3MapViewer.simulation,
-											otherSelectedUnit.getSimulationUnit(), this.activeCommandOrderId, receiver);
+											otherSelectedUnit.getSimulationUnit(), this.localPlayer.getId(),
+											this.activeCommandOrderId, receiver);
 									if (receiver.isTargetable()) {
 										abilityToUse = ability;
 									}
@@ -2641,8 +2643,8 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 			final ExternStringMsgTargetCheckReceiver<CWidget> targetReceiver = ExternStringMsgTargetCheckReceiver
 					.<CWidget>getInstance().reset();
 			MeleeUI.this.activeCommand.checkCanTarget(MeleeUI.this.war3MapViewer.simulation,
-					MeleeUI.this.activeCommandUnit.getSimulationUnit(), MeleeUI.this.activeCommandOrderId, unit,
-					targetReceiver);
+					MeleeUI.this.activeCommandUnit.getSimulationUnit(), MeleeUI.this.localPlayer.getId(),
+					MeleeUI.this.activeCommandOrderId, unit, targetReceiver);
 			this.lastFailureMessage = targetReceiver.getExternStringKey();
 			return targetReceiver.getTarget() != null;
 		}
@@ -2712,14 +2714,14 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 			return (this.faceLockTime != 0) && (this.portraitCurrentDuration > this.faceLockTime);
 		}
 
-		public void talk(final UnitSound us, float extraDuration) {
+		public void talk(final UnitSound us, final float extraDuration) {
 			if ((this.faceLockTime > 0) && (this.portraitCurrentDuration <= this.faceLockTime)) {
 				return;
 			}
 			innerTalk(us, extraDuration);
 		}
 
-		private void innerTalk(final UnitSound us, float extraDuration) {
+		private void innerTalk(final UnitSound us, final float extraDuration) {
 			// TODO we somehow called talk from null by clicking a unit right at the same
 			// time it died, so I do a null check here until I study that case further.
 			if (this.modelInstance != null) {
@@ -2835,8 +2837,9 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 			}
 		}
 
-		public void setCinematicTalkingHead(MdxModel portraitModel, int teamColorIndex,
-				EnumSet<SecondaryTag> secondaryTags, float faceLockTime, final UnitSound us, float extraDuration) {
+		public void setCinematicTalkingHead(final MdxModel portraitModel, final int teamColorIndex,
+				final EnumSet<SecondaryTag> secondaryTags, final float faceLockTime, final UnitSound us,
+				final float extraDuration) {
 			this.faceLockTime = (long) (1000 * faceLockTime);
 			if (this.modelInstance != null) {
 				this.portraitScene.removeInstance(this.modelInstance);
@@ -2867,7 +2870,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 		private final SpriteFrame2 cinematicPortrait;
 		private final UIFrame cinematicScenePanel;
 
-		public CinematicPortrait(SpriteFrame2 cinematicPortrait, UIFrame cinematicScenePanel) {
+		public CinematicPortrait(final SpriteFrame2 cinematicPortrait, final UIFrame cinematicScenePanel) {
 			this.cinematicPortrait = cinematicPortrait;
 			this.cinematicScenePanel = cinematicScenePanel;
 			this.secondaryTags = SequenceUtils.EMPTY;
@@ -2909,7 +2912,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 			return this.portraitCurrentDuration > this.portraitShowDuration;
 		}
 
-		public void talk(final UnitSound us, float extraDuration) {
+		public void talk(final UnitSound us, final float extraDuration) {
 			// TODO we somehow called talk from null by clicking a unit right at the same
 			// time it died, so I do a null check here until I study that case further.
 			this.recycleSet.clear();
@@ -2929,8 +2932,8 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 			}
 		}
 
-		public void setCinematicTalkingHead(MdxModel portraitModel, int teamColorIndex,
-				EnumSet<SecondaryTag> secondaryTags, float faceLockTime) {
+		public void setCinematicTalkingHead(final MdxModel portraitModel, final int teamColorIndex,
+				final EnumSet<SecondaryTag> secondaryTags, final float faceLockTime) {
 			this.cinematicScenePanel.setVisible(true);
 			this.portraitShowDuration = (long) (1000 * faceLockTime);
 			this.secondaryTags = secondaryTags;
@@ -3608,7 +3611,8 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 							this.recycleStringBuilder.append("|n");
 						}
 						inventory.checkCanUse(this.war3MapViewer.simulation, this.selectedUnit.getSimulationUnit(),
-								OrderIds.itemuse00 + index, this.activationReceiverPreviewCallback.reset());
+								this.localPlayer.getId(), OrderIds.itemuse00 + index,
+								this.activationReceiverPreviewCallback.reset());
 						this.recycleStringBuilder.append(uberTip);
 						inventoryIcon.setCommandButtonData(
 								inventoryEnabled ? iconUI.getIcon() : iconUI.getIconDisabled(), 0,
@@ -4122,8 +4126,8 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 									.getInstance();
 							pointTargetReceiver.reset();
 							this.activeCommand.checkCanTarget(this.war3MapViewer.simulation,
-									this.activeCommandUnit.getSimulationUnit(), this.activeCommandOrderId,
-									clickLocationTemp2, pointTargetReceiver);
+									this.activeCommandUnit.getSimulationUnit(), this.localPlayer.getId(),
+									this.activeCommandOrderId, clickLocationTemp2, pointTargetReceiver);
 							final Vector2 target = pointTargetReceiver.getTarget();
 							if (target != null) {
 								if ((this.activeCommand instanceof CAbilityAttack)
@@ -4147,7 +4151,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 												final PointAbilityTargetCheckReceiver receiver = PointAbilityTargetCheckReceiver.INSTANCE
 														.reset();
 												ability.checkCanTarget(this.war3MapViewer.simulation,
-														otherSelectedUnit.getSimulationUnit(),
+														otherSelectedUnit.getSimulationUnit(), this.localPlayer.getId(),
 														this.activeCommandOrderId, clickLocationTemp2, receiver);
 												if (receiver.getTarget() != null) {
 													abilityToUse = ability;
@@ -4227,7 +4231,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 								CWidget targetToUse = null;
 								for (final CAbility ability : unit.getSimulationUnit().getAbilities()) {
 									ability.checkCanTarget(this.war3MapViewer.simulation, unit.getSimulationUnit(),
-											OrderIds.smart, rayPickUnit.getSimulationWidget(),
+											this.localPlayer.getId(), OrderIds.smart, rayPickUnit.getSimulationWidget(),
 											CWidgetAbilityTargetCheckReceiver.INSTANCE);
 									final CWidget targetWidget = CWidgetAbilityTargetCheckReceiver.INSTANCE.getTarget();
 									if (targetWidget != null) {
@@ -4347,7 +4351,8 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 							final CWidgetAbilityTargetCheckReceiver receiver = CWidgetAbilityTargetCheckReceiver.INSTANCE
 									.reset();
 							ability.checkCanTarget(this.war3MapViewer.simulation, otherSelectedUnit.getSimulationUnit(),
-									this.activeCommandOrderId, rayPickUnit.getSimulationWidget(), receiver);
+									this.localPlayer.getId(), this.activeCommandOrderId,
+									rayPickUnit.getSimulationWidget(), receiver);
 							if (receiver.getTarget() != null) {
 								abilityToUse = ability;
 								targetToUse = receiver.getTarget();
@@ -4391,11 +4396,12 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 		for (final RenderUnit unit : this.selectedUnits) {
 			if (unit.getSimulationUnit().getPlayerIndex() == this.war3MapViewer.getLocalPlayerIndex()) {
 				for (final CAbility ability : unit.getSimulationUnit().getAbilities()) {
-					ability.checkCanUse(this.war3MapViewer.simulation, unit.getSimulationUnit(), OrderIds.smart,
-							BooleanAbilityActivationReceiver.INSTANCE);
+					ability.checkCanUse(this.war3MapViewer.simulation, unit.getSimulationUnit(),
+							this.localPlayer.getId(), OrderIds.smart, BooleanAbilityActivationReceiver.INSTANCE);
 					if (BooleanAbilityActivationReceiver.INSTANCE.isOk()) {
-						ability.checkCanTarget(this.war3MapViewer.simulation, unit.getSimulationUnit(), OrderIds.smart,
-								clickLocationTemp2, PointAbilityTargetCheckReceiver.INSTANCE);
+						ability.checkCanTarget(this.war3MapViewer.simulation, unit.getSimulationUnit(),
+								this.localPlayer.getId(), OrderIds.smart, clickLocationTemp2,
+								PointAbilityTargetCheckReceiver.INSTANCE);
 						final Vector2 target = PointAbilityTargetCheckReceiver.INSTANCE.getTarget();
 						if (target != null) {
 							this.unitOrderListener.issuePointOrder(unit.getSimulationUnit().getHandleId(),
@@ -4462,7 +4468,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 		selectUnits(units);
 	}
 
-	private void selectItem(RenderItem selectedItem) {
+	private void selectItem(final RenderItem selectedItem) {
 		selectUnit(null);
 		this.portrait.setSelectedItem(selectedItem);
 		this.simpleInfoPanelItemDetail.setVisible(true);
@@ -4472,7 +4478,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 		this.rootFrame.setText(this.simpleItemDescriptionValue, itemUI.getDescription());
 	}
 
-	private void selectDestructable(RenderDestructable selectedItem) {
+	private void selectDestructable(final RenderDestructable selectedItem) {
 		selectUnit(null);
 		this.portrait.setSelectedDestructable(selectedItem);
 		this.simpleInfoPanelDestructableDetail.setVisible(true);
@@ -4861,14 +4867,14 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 			switch (index) {
 			case 0:
 				for (final CAbility ability : simulationUnit.getAbilities()) {
-					ability.checkCanUse(this.war3MapViewer.simulation, simulationUnit, OrderIds.cancel,
-							BooleanAbilityActivationReceiver.INSTANCE);
+					ability.checkCanUse(this.war3MapViewer.simulation, simulationUnit, this.localPlayer.getId(),
+							OrderIds.cancel, BooleanAbilityActivationReceiver.INSTANCE);
 					if (BooleanAbilityActivationReceiver.INSTANCE.isOk()) {
 
 						final BooleanAbilityTargetCheckReceiver<Void> targetCheckReceiver = BooleanAbilityTargetCheckReceiver
 								.<Void>getInstance().reset();
-						ability.checkCanTargetNoTarget(this.war3MapViewer.simulation, simulationUnit, OrderIds.cancel,
-								targetCheckReceiver);
+						ability.checkCanTargetNoTarget(this.war3MapViewer.simulation, simulationUnit,
+								this.localPlayer.getId(), OrderIds.cancel, targetCheckReceiver);
 						if (targetCheckReceiver.isTargetable()) {
 							this.unitOrderListener.issueImmediateOrder(simulationUnit.getHandleId(),
 									ability.getHandleId(), OrderIds.cancel, false);
@@ -4930,12 +4936,13 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 				final CSimulation game = MeleeUI.this.war3MapViewer.simulation;
 				final ExternStringMsgAbilityActivationReceiver receiver = ExternStringMsgAbilityActivationReceiver.INSTANCE;
 				receiver.reset();
-				inventoryData.checkCanUse(game, simulationUnit, orderId, receiver);
+				inventoryData.checkCanUse(game, simulationUnit, MeleeUI.this.localPlayer.getId(), orderId, receiver);
 				if (receiver.isUseOk()) {
 					final BooleanAbilityTargetCheckReceiver<Void> targetReceiver = BooleanAbilityTargetCheckReceiver
 							.getInstance();
 					targetReceiver.reset();
-					inventoryData.checkCanTargetNoTarget(game, simulationUnit, orderId, targetReceiver);
+					inventoryData.checkCanTargetNoTarget(game, simulationUnit, MeleeUI.this.localPlayer.getId(),
+							orderId, targetReceiver);
 					if (targetReceiver.isTargetable()) {
 						MeleeUI.this.unitOrderListener.issueImmediateOrder(simulationUnit.getHandleId(),
 								inventoryData.getHandleId(), orderId, isShiftDown());
@@ -5096,12 +5103,12 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 	}
 
 	@Override
-	public Music playMusic(final String musicField, final boolean random, int index) {
+	public Music playMusic(final String musicField, final boolean random, final int index) {
 		return playMusicEx(musicField, random, index, 0, -1);
 	}
 
 	@Override
-	public Music setMapMusic(String musicField, boolean random, int index) {
+	public Music setMapMusic(final String musicField, final boolean random, final int index) {
 		return this.musicPlayer.setDefaultMusic(musicField, random, index);
 	}
 
@@ -5111,12 +5118,13 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 	}
 
 	@Override
-	public Music playMusicEx(String musicField, boolean random, int index, int fromMSecs, int fadeInMSecs) {
+	public Music playMusicEx(final String musicField, final boolean random, final int index, final int fromMSecs,
+			final int fadeInMSecs) {
 		return this.musicPlayer.playMusicEx(musicField, random, index, fromMSecs, fadeInMSecs);
 	}
 
 	@Override
-	public void stopMusic(boolean fadeOut) {
+	public void stopMusic(final boolean fadeOut) {
 		this.musicPlayer.stopMusic();
 	}
 
@@ -5126,12 +5134,12 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 	}
 
 	@Override
-	public void setMusicVolume(int volume) {
+	public void setMusicVolume(final int volume) {
 		this.musicPlayer.setVolume(volume);
 	}
 
 	@Override
-	public void setMusicPlayPosition(int millisecs) {
+	public void setMusicPlayPosition(final int millisecs) {
 		this.musicPlayer.setMusicPosition(millisecs);
 	}
 
@@ -5294,11 +5302,11 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 	}
 
 	@Override
-	public void showInterface(boolean show, float fadeDuration) {
+	public void showInterface(final boolean show, final float fadeDuration) {
 		updateInterfaceVisibility(show);
 	}
 
-	private void updateInterfaceVisibility(boolean show) {
+	private void updateInterfaceVisibility(final boolean show) {
 		this.consoleUI.setVisible(show);
 		this.resourceBar.setVisible(show);
 		this.timeIndicator.setVisible(show);
@@ -5315,8 +5323,8 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 	}
 
 	@Override
-	public void setCinematicScene(int portraitUnitId, CPlayerColor color, String speakerTitle, String text,
-			float sceneDuration, float voiceoverDuration) {
+	public void setCinematicScene(final int portraitUnitId, final CPlayerColor color, final String speakerTitle,
+			final String text, final float sceneDuration, final float voiceoverDuration) {
 		final RenderUnitType unitTypeData = this.war3MapViewer.getUnitTypeData(new War3ID(portraitUnitId));
 		if (this.cinematicPanel.isVisible()) {
 			this.rootFrame.setText(this.cinematicSpeakerText, speakerTitle);
@@ -5344,12 +5352,12 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 	}
 
 	@Override
-	public void forceCinematicSubtitles(boolean value) {
+	public void forceCinematicSubtitles(final boolean value) {
 		this.subtitleDisplayOverride = value;
 	}
 
 	@Override
-	public void enableUserControl(boolean value) {
+	public void enableUserControl(final boolean value) {
 		this.userControlEnabled = value;
 		this.cursorFrame.setVisible(value);
 		if (!value) {

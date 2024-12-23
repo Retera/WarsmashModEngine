@@ -97,19 +97,19 @@ public abstract class AbstractCAbility extends CExtensibleHandleAbstract impleme
 	}
 
 	@Override
-	public final void checkCanUse(final CSimulation game, final CUnit unit, final int orderId,
+	public final void checkCanUse(final CSimulation game, final CUnit unit, final int playerIndex, final int orderId,
 			final AbilityActivationReceiver receiver) {
 		if (isDisabled()) {
 			receiver.disabled();
 			checkRequirementsMet(game, unit, receiver);
 		}
 		else {
-			innerCheckCanUse(game, unit, orderId, receiver);
+			innerCheckCanUse(game, unit, playerIndex, orderId, receiver);
 		}
 	}
 
-	protected abstract void innerCheckCanUse(final CSimulation game, final CUnit unit, final int orderId,
-			final AbilityActivationReceiver receiver);
+	protected abstract void innerCheckCanUse(final CSimulation game, final CUnit unit, int playerIndex,
+			final int orderId, final AbilityActivationReceiver receiver);
 
 	@Override
 	public void onSetUnitType(final CSimulation game, final CUnit cUnit) {

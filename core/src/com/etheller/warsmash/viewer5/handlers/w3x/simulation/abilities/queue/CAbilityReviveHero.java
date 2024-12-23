@@ -24,8 +24,8 @@ public final class CAbilityReviveHero extends AbstractCAbility {
 	}
 
 	@Override
-	protected void innerCheckCanUse(final CSimulation game, final CUnit unit, final int orderId,
-			final AbilityActivationReceiver receiver) {
+	protected void innerCheckCanUse(final CSimulation game, final CUnit unit, int playerIndex,
+			final int orderId, final AbilityActivationReceiver receiver) {
 		final CUnit deadHero = game.getUnit(orderId);
 		if ((deadHero != null) && (deadHero.getPlayerIndex() == unit.getPlayerIndex())) {
 			final CAbilityHero heroData = deadHero.getHeroData();
@@ -63,20 +63,20 @@ public final class CAbilityReviveHero extends AbstractCAbility {
 	}
 
 	@Override
-	public final void checkCanTarget(final CSimulation game, final CUnit unit, final int orderId, final CWidget target,
-			final AbilityTargetCheckReceiver<CWidget> receiver) {
+	public final void checkCanTarget(final CSimulation game, final CUnit unit, int playerIndex, final int orderId,
+			final CWidget target, final AbilityTargetCheckReceiver<CWidget> receiver) {
 		receiver.orderIdNotAccepted();
 	}
 
 	@Override
-	public final void checkCanTarget(final CSimulation game, final CUnit unit, final int orderId,
-			final AbilityPointTarget target, final AbilityTargetCheckReceiver<AbilityPointTarget> receiver) {
+	public final void checkCanTarget(final CSimulation game, final CUnit unit, int playerIndex,
+			final int orderId, final AbilityPointTarget target, final AbilityTargetCheckReceiver<AbilityPointTarget> receiver) {
 		receiver.orderIdNotAccepted();
 	}
 
 	@Override
-	public final void checkCanTargetNoTarget(final CSimulation game, final CUnit unit, final int orderId,
-			final AbilityTargetCheckReceiver<Void> receiver) {
+	public final void checkCanTargetNoTarget(final CSimulation game, final CUnit unit, int playerIndex,
+			final int orderId, final AbilityTargetCheckReceiver<Void> receiver) {
 		final CUnit deadHero = game.getUnit(orderId);
 		if ((deadHero != null) && (deadHero.getPlayerIndex() == unit.getPlayerIndex())) {
 			receiver.targetOk(null);
@@ -90,8 +90,8 @@ public final class CAbilityReviveHero extends AbstractCAbility {
 	}
 
 	@Override
-	public boolean checkBeforeQueue(final CSimulation game, final CUnit caster, final int orderId,
-			final AbilityTarget target) {
+	public boolean checkBeforeQueue(final CSimulation game, final CUnit caster, int playerIndex,
+			final int orderId, final AbilityTarget target) {
 		return true;
 	}
 
@@ -110,18 +110,18 @@ public final class CAbilityReviveHero extends AbstractCAbility {
 	}
 
 	@Override
-	public CBehavior begin(final CSimulation game, final CUnit caster, final int orderId, final CWidget target) {
+	public CBehavior begin(final CSimulation game, final CUnit caster, int playerIndex, final int orderId, final CWidget target) {
 		return null;
 	}
 
 	@Override
-	public CBehavior begin(final CSimulation game, final CUnit caster, final int orderId,
-			final AbilityPointTarget point) {
+	public CBehavior begin(final CSimulation game, final CUnit caster, int playerIndex,
+			final int orderId, final AbilityPointTarget point) {
 		return null;
 	}
 
 	@Override
-	public CBehavior beginNoTarget(final CSimulation game, final CUnit caster, final int orderId) {
+	public CBehavior beginNoTarget(final CSimulation game, final CUnit caster, int playerIndex, final int orderId) {
 		if (orderId == OrderIds.cancel) {
 			caster.cancelBuildQueueItem(game, 0);
 		}
@@ -137,7 +137,7 @@ public final class CAbilityReviveHero extends AbstractCAbility {
 	}
 
 	@Override
-	public void onCancelFromQueue(final CSimulation game, final CUnit unit, final int orderId) {
+	public void onCancelFromQueue(final CSimulation game, final CUnit unit, int playerIndex, final int orderId) {
 	}
 
 	@Override

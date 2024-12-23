@@ -17,19 +17,24 @@ public class ABConditionIsUnitPassAllAbilityTargetChecks implements ABCondition 
 	private ABUnitCallback target;
 
 	@Override
-	public boolean evaluate(CSimulation game, CUnit casterUnit, Map<String, Object> localStore, final int castId) {
+	public boolean evaluate(final CSimulation game, final CUnit casterUnit, final Map<String, Object> localStore,
+			final int castId) {
 		CUnit theCaster = casterUnit;
 
-		if (caster != null) {
-			theCaster = caster.callback(game, casterUnit, localStore, castId);
+		if (this.caster != null) {
+			theCaster = this.caster.callback(game, casterUnit, localStore, castId);
 		}
 
-		AbilityBuilderActiveAbility abil = (AbilityBuilderActiveAbility) localStore.get(ABLocalStoreKeys.ABILITY);
+		final AbilityBuilderActiveAbility abil = (AbilityBuilderActiveAbility) localStore.get(ABLocalStoreKeys.ABILITY);
 		final BooleanAbilityTargetCheckReceiver<CWidget> booleanTargetReceiver = BooleanAbilityTargetCheckReceiver
 				.<CWidget>getInstance().reset();
 
-		abil.checkCanTarget(game, theCaster, abil.getBaseOrderId(),
-				target.callback(game, casterUnit, localStore, castId), booleanTargetReceiver);
+		// NOTE: below "theCaster.getPlayerIndex()" added in refactor, assumes all AB
+		// actions are triggered by owning player! for neutral building sales/control
+		// functions, we may with to disambiguate between the owner of the unit and the
+		// player responsible for the command
+		abil.checkCanTarget(game, theCaster, theCaster.getPlayerIndex(), abil.getBaseOrderId(),
+				this.target.callback(game, casterUnit, localStore, castId), booleanTargetReceiver);
 
 		if (booleanTargetReceiver.isTargetable()) {
 			return true;

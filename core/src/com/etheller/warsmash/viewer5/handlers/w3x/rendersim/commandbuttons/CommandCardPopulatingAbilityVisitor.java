@@ -491,7 +491,7 @@ public class CommandCardPopulatingAbilityVisitor implements CAbilityVisitor<Void
 				return;
 			}
 		}
-		ability.checkCanUse(this.game, this.unit, orderId, this.previewCallback.reset());
+		ability.checkCanUse(this.game, this.unit, this.localPlayerIndex, orderId, this.previewCallback.reset());
 		if (!this.previewCallback.isOmitIconEntirely()) {
 			if (requiresPatron) {
 				this.previewCallback
@@ -609,7 +609,6 @@ public class CommandCardPopulatingAbilityVisitor implements CAbilityVisitor<Void
 	@Override
 	public Void accept(final CAbilitySellItems ability) {
 		if ((this.menuBaseOrderId == 0) && ability.isIconShowing()) {
-			int itemIndex = 1;
 			for (final War3ID unitType : ability.getItemsSold()) {
 				final IconUI unitUI = this.abilityDataUI.getItemUI(unitType).getIconUI();
 				if (unitUI != null) {
@@ -617,10 +616,9 @@ public class CommandCardPopulatingAbilityVisitor implements CAbilityVisitor<Void
 					int goldCost, lumberCost;
 					goldCost = simulationUnitType.getGoldCost();
 					lumberCost = simulationUnitType.getLumberCost();
-					addCommandButton(ability, unitUI, ability.getHandleId(), this.localPlayerIndex | (itemIndex << 8),
-							0, false, false, goldCost, lumberCost, 0, 0, -1);
+					addCommandButton(ability, unitUI, ability.getHandleId(), unitType.getValue(), 0, false, false,
+							goldCost, lumberCost, 0, 0, -1);
 				}
-				itemIndex++;
 			}
 		}
 		return null;

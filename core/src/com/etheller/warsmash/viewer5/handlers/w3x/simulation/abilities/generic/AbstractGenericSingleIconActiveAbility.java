@@ -17,8 +17,8 @@ public abstract class AbstractGenericSingleIconActiveAbility extends AbstractGen
 	}
 
 	@Override
-	public boolean checkBeforeQueue(final CSimulation game, final CUnit caster, final int orderId,
-			final AbilityTarget target) {
+	public boolean checkBeforeQueue(final CSimulation game, final CUnit caster, int playerIndex,
+			final int orderId, final AbilityTarget target) {
 		final int autoCastOnOrderId = getAutoCastOnOrderId();
 		final int autoCastOffOrderId = getAutoCastOffOrderId();
 		if (orderId != 0) {
@@ -31,17 +31,17 @@ public abstract class AbstractGenericSingleIconActiveAbility extends AbstractGen
 				return false;
 			}
 			else {
-				return super.checkBeforeQueue(game, caster, orderId, target);
+				return super.checkBeforeQueue(game, caster, playerIndex, orderId, target);
 			}
 		}
 		else {
-			return super.checkBeforeQueue(game, caster, orderId, target);
+			return super.checkBeforeQueue(game, caster, playerIndex, orderId, target);
 		}
 	}
 
 	@Override
-	public void checkCanTarget(final CSimulation game, final CUnit unit, final int orderId, final CWidget target,
-			final AbilityTargetCheckReceiver<CWidget> receiver) {
+	public void checkCanTarget(final CSimulation game, final CUnit unit, int playerIndex, final int orderId,
+			final CWidget target, final AbilityTargetCheckReceiver<CWidget> receiver) {
 		if (orderId == getBaseOrderId()) {
 			innerCheckCanTarget(game, unit, orderId, target, receiver);
 		}
@@ -60,8 +60,8 @@ public abstract class AbstractGenericSingleIconActiveAbility extends AbstractGen
 			AbilityTargetCheckReceiver<CWidget> receiver);
 
 	@Override
-	public void checkCanTarget(final CSimulation game, final CUnit unit, final int orderId,
-			final AbilityPointTarget target, final AbilityTargetCheckReceiver<AbilityPointTarget> receiver) {
+	public void checkCanTarget(final CSimulation game, final CUnit unit, int playerIndex,
+			final int orderId, final AbilityPointTarget target, final AbilityTargetCheckReceiver<AbilityPointTarget> receiver) {
 		if (orderId == getBaseOrderId()) {
 			innerCheckCanTarget(game, unit, orderId, target, receiver);
 		}
@@ -80,8 +80,8 @@ public abstract class AbstractGenericSingleIconActiveAbility extends AbstractGen
 			AbilityPointTarget target, AbilityTargetCheckReceiver<AbilityPointTarget> receiver);
 
 	@Override
-	public void checkCanTargetNoTarget(final CSimulation game, final CUnit unit, final int orderId,
-			final AbilityTargetCheckReceiver<Void> receiver) {
+	public void checkCanTargetNoTarget(final CSimulation game, final CUnit unit, int playerIndex,
+			final int orderId, final AbilityTargetCheckReceiver<Void> receiver) {
 		if ((orderId != 0) && ((orderId == getAutoCastOffOrderId()) || (orderId == getAutoCastOnOrderId()))) {
 			receiver.targetOk(null);
 		}

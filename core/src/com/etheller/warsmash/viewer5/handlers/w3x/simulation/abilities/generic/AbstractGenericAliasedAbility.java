@@ -16,8 +16,8 @@ public abstract class AbstractGenericAliasedAbility extends AbstractCAbility imp
 	}
 
 	@Override
-	public boolean checkBeforeQueue(final CSimulation game, final CUnit caster, final int orderId,
-			final AbilityTarget target) {
+	public boolean checkBeforeQueue(final CSimulation game, final CUnit caster, int playerIndex,
+			final int orderId, final AbilityTarget target) {
 		return true;
 	}
 

@@ -10,6 +10,8 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.ExternStringMs
 public interface COrder {
 	int getAbilityHandleId();
 
+	int getPlayerIndex();
+
 	int getOrderId();
 
 	CBehavior begin(final CSimulation game, CUnit caster);

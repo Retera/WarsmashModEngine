@@ -75,12 +75,12 @@ public class CAbilityEntangleGoldMine extends CAbilityTargetSpellBase {
 	}
 
 	@Override
-	public void checkCanTarget(final CSimulation game, final CUnit unit, int orderId, final CWidget target,
-			final AbilityTargetCheckReceiver<CWidget> receiver) {
+	public void checkCanTarget(final CSimulation game, final CUnit unit, int playerIndex, int orderId,
+			final CWidget target, final AbilityTargetCheckReceiver<CWidget> receiver) {
 		if (orderId == OrderIds.entangleinstant) {
 			orderId = getBaseOrderId();
 		}
-		super.checkCanTarget(game, unit, orderId, target, receiver);
+		super.checkCanTarget(game, unit, playerIndex, orderId, target, receiver);
 	}
 
 	@Override
@@ -101,20 +101,20 @@ public class CAbilityEntangleGoldMine extends CAbilityTargetSpellBase {
 	}
 
 	@Override
-	protected void innerCheckCanUse(final CSimulation game, final CUnit unit, final int orderId,
-			final AbilityActivationReceiver receiver) {
+	protected void innerCheckCanUse(final CSimulation game, final CUnit unit, int playerIndex,
+			final int orderId, final AbilityActivationReceiver receiver) {
 		if (this.entangledMine != null) {
 			receiver.disabled();
 		}
 		else {
-			super.innerCheckCanUse(game, unit, orderId, receiver);
+			super.innerCheckCanUse(game, unit, playerIndex, orderId, receiver);
 		}
 	}
 
 	@Override
-	public CBehavior begin(final CSimulation game, final CUnit caster, final int orderId, final CWidget target) {
+	public CBehavior begin(final CSimulation game, final CUnit caster, int playerIndex, final int orderId, final CWidget target) {
 		instant = orderId == OrderIds.entangleinstant;
-		return super.begin(game, caster, orderId, target);
+		return super.begin(game, caster, playerIndex, orderId, target);
 	}
 
 	@Override

@@ -32,19 +32,19 @@ public class CAbilityNeutralBuild extends AbstractCAbilityBuild {
 	}
 
 	@Override
-	public CBehavior begin(final CSimulation game, final CUnit caster, final int orderId, final CWidget target) {
+	public CBehavior begin(final CSimulation game, final CUnit caster, int playerIndex, final int orderId, final CWidget target) {
 		return caster.pollNextOrderBehavior(game);
 	}
 
 	@Override
-	public CBehavior begin(final CSimulation game, final CUnit caster, final int orderId,
-			final AbilityPointTarget point) {
+	public CBehavior begin(final CSimulation game, final CUnit caster, int playerIndex,
+			final int orderId, final AbilityPointTarget point) {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
-	public CBehavior beginNoTarget(final CSimulation game, final CUnit caster, final int orderId) {
+	public CBehavior beginNoTarget(final CSimulation game, final CUnit caster, int playerIndex, final int orderId) {
 		return caster.pollNextOrderBehavior(game);
 	}
 
@@ -54,7 +54,7 @@ public class CAbilityNeutralBuild extends AbstractCAbilityBuild {
 	}
 
 	@Override
-	public void onCancelFromQueue(final CSimulation game, final CUnit unit, final int orderId) {
+	public void onCancelFromQueue(final CSimulation game, final CUnit unit, int playerIndex, final int orderId) {
 		// TODO Auto-generated method stub
 
 	}

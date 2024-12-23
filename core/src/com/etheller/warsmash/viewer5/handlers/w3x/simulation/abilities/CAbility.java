@@ -31,16 +31,16 @@ public interface CAbility extends CAbilityView, CExtensibleHandle {
 	 */
 	void onSetUnitType(CSimulation game, CUnit cUnit);
 
-	void onCancelFromQueue(CSimulation game, CUnit unit, int orderId);
+	void onCancelFromQueue(CSimulation game, CUnit unit, int playerIndex, int orderId);
 
 	/* return false to not do anything, such as for toggling autocast */
-	boolean checkBeforeQueue(CSimulation game, CUnit caster, int orderId, AbilityTarget target);
+	boolean checkBeforeQueue(CSimulation game, CUnit caster, int playerIndex, int orderId, AbilityTarget target);
 
-	CBehavior begin(CSimulation game, CUnit caster, int orderId, CWidget target);
+	CBehavior begin(CSimulation game, CUnit caster, int playerIndex, int orderId, CWidget target);
 
-	CBehavior begin(CSimulation game, CUnit caster, int orderId, AbilityPointTarget point);
+	CBehavior begin(CSimulation game, CUnit caster, int playerIndex, int orderId, AbilityPointTarget point);
 
-	CBehavior beginNoTarget(CSimulation game, CUnit caster, int orderId);
+	CBehavior beginNoTarget(CSimulation game, CUnit caster, int playerIndex, int orderId);
 
 	void setDisabled(boolean disabled, CAbilityDisableType type);
 

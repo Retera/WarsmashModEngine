@@ -45,7 +45,7 @@ public class CAbilityAbilityBuilderActiveAutoTarget extends CAbilityAbilityBuild
 	}
 
 	@Override
-	public CBehavior beginNoTarget(CSimulation game, CUnit caster, int orderId) {
+	public CBehavior beginNoTarget(CSimulation game, CUnit caster, int playerIndex, int orderId) {
 		castId++;
 		CWidget target = autoTarget(game, caster);
 		if (target != null) {
@@ -106,12 +106,12 @@ public class CAbilityAbilityBuilderActiveAutoTarget extends CAbilityAbilityBuild
 	// Unused
 
 	@Override
-	public CBehavior begin(CSimulation game, CUnit caster, int orderId, CWidget target) {
+	public CBehavior begin(CSimulation game, CUnit caster, int playerIndex, int orderId, CWidget target) {
 		return null;
 	}
 	
 	@Override
-	public CBehavior begin(CSimulation game, CUnit caster, int orderId, AbilityPointTarget point) {
+	public CBehavior begin(CSimulation game, CUnit caster, int playerIndex, int orderId, AbilityPointTarget point) {
 		return null;
 	}
 

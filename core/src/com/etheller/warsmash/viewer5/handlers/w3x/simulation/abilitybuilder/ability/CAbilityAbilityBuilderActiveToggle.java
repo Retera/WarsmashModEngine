@@ -113,8 +113,8 @@ public class CAbilityAbilityBuilderActiveToggle extends CAbilityAbilityBuilderGe
 	}
 
 	@Override
-	public boolean checkBeforeQueue(final CSimulation game, final CUnit caster, final int orderId,
-			final AbilityTarget target) {
+	public boolean checkBeforeQueue(final CSimulation game, final CUnit caster, int playerIndex,
+			final int orderId, final AbilityTarget target) {
 		if (this.active && (orderId == this.unorderId)) {
 			this.runOnOrderIssuedActions(game, caster, orderId);
 			deactivate(game, caster);
@@ -126,7 +126,7 @@ public class CAbilityAbilityBuilderActiveToggle extends CAbilityAbilityBuilderGe
 			}
 			return false;
 		}
-		return super.checkBeforeQueue(game, caster, orderId, target);
+		return super.checkBeforeQueue(game, caster, playerIndex, orderId, target);
 	}
 	
 	@Override
@@ -160,17 +160,17 @@ public class CAbilityAbilityBuilderActiveToggle extends CAbilityAbilityBuilderGe
 	}
 
 	@Override
-	public CBehavior begin(CSimulation game, CUnit caster, int orderId, CWidget target) {
+	public CBehavior begin(CSimulation game, CUnit caster, int playerIndex, int orderId, CWidget target) {
 		return null;
 	}
 
 	@Override
-	public CBehavior begin(CSimulation game, CUnit caster, int orderId, AbilityPointTarget point) {
+	public CBehavior begin(CSimulation game, CUnit caster, int playerIndex, int orderId, AbilityPointTarget point) {
 		return null;
 	}
 
 	@Override
-	public CBehavior beginNoTarget(CSimulation game, CUnit caster, int orderId) {
+	public CBehavior beginNoTarget(CSimulation game, CUnit caster, int playerIndex, int orderId) {
 		return null;
 	}
 
@@ -202,7 +202,7 @@ public class CAbilityAbilityBuilderActiveToggle extends CAbilityAbilityBuilderGe
 	}
 
 	@Override
-	protected void innerCheckCanUse(CSimulation game, CUnit unit, int orderId, AbilityActivationReceiver receiver) {
+	protected void innerCheckCanUse(CSimulation game, CUnit unit, int playerIndex, int orderId, AbilityActivationReceiver receiver) {
 		int cooldownRemaining = unit.getCooldownRemainingTicks(game, getAlias());
 		if (!this.active) {
 			if (cooldownRemaining > 0) {

@@ -86,13 +86,13 @@ public class CAbilityHero extends AbstractCAbility {
 	}
 
 	@Override
-	public void onCancelFromQueue(final CSimulation game, final CUnit unit, final int orderId) {
+	public void onCancelFromQueue(final CSimulation game, final CUnit unit, final int playerIndex, final int orderId) {
 
 	}
 
 	@Override
-	public boolean checkBeforeQueue(final CSimulation game, final CUnit caster, final int orderId,
-			final AbilityTarget target) {
+	public boolean checkBeforeQueue(final CSimulation game, final CUnit caster, final int playerIndex,
+			final int orderId, final AbilityTarget target) {
 		final War3ID orderIdAsRawtype = new War3ID(orderId);
 		learnSkill(game, caster, orderIdAsRawtype);
 		return false;
@@ -120,43 +120,45 @@ public class CAbilityHero extends AbstractCAbility {
 
 	public void selectHeroSkill(final CSimulation game, final CUnit caster, final War3ID skillId) {
 		final BooleanAbilityActivationReceiver activationReceiver = BooleanAbilityActivationReceiver.INSTANCE;
-		checkCanUse(game, caster, skillId.getValue(), activationReceiver);
+		checkCanUse(game, caster, caster.getPlayerIndex(), skillId.getValue(), activationReceiver);
 		if (activationReceiver.isOk()) {
 			learnSkill(game, caster, skillId);
 		}
 	}
 
 	@Override
-	public CBehavior begin(final CSimulation game, final CUnit caster, final int orderId, final CWidget target) {
+	public CBehavior begin(final CSimulation game, final CUnit caster, final int playerIndex, final int orderId,
+			final CWidget target) {
 		return null;
 	}
 
 	@Override
-	public CBehavior begin(final CSimulation game, final CUnit caster, final int orderId,
+	public CBehavior begin(final CSimulation game, final CUnit caster, final int playerIndex, final int orderId,
 			final AbilityPointTarget point) {
 		return null;
 	}
 
 	@Override
-	public CBehavior beginNoTarget(final CSimulation game, final CUnit caster, final int orderId) {
+	public CBehavior beginNoTarget(final CSimulation game, final CUnit caster, final int playerIndex,
+			final int orderId) {
 		return null;
 	}
 
 	@Override
-	public void checkCanTarget(final CSimulation game, final CUnit unit, final int orderId, final CWidget target,
-			final AbilityTargetCheckReceiver<CWidget> receiver) {
+	public void checkCanTarget(final CSimulation game, final CUnit unit, final int playerIndex, final int orderId,
+			final CWidget target, final AbilityTargetCheckReceiver<CWidget> receiver) {
 		receiver.orderIdNotAccepted();
 	}
 
 	@Override
-	public void checkCanTarget(final CSimulation game, final CUnit unit, final int orderId,
+	public void checkCanTarget(final CSimulation game, final CUnit unit, final int playerIndex, final int orderId,
 			final AbilityPointTarget target, final AbilityTargetCheckReceiver<AbilityPointTarget> receiver) {
 		receiver.orderIdNotAccepted();
 	}
 
 	@Override
-	public void checkCanTargetNoTarget(final CSimulation game, final CUnit unit, final int orderId,
-			final AbilityTargetCheckReceiver<Void> receiver) {
+	public void checkCanTargetNoTarget(final CSimulation game, final CUnit unit, final int playerIndex,
+			final int orderId, final AbilityTargetCheckReceiver<Void> receiver) {
 		final War3ID orderIdAsRawtype = new War3ID(orderId);
 		if (this.skillsAvailable.contains(orderIdAsRawtype)) {
 			receiver.targetOk(null);
@@ -172,7 +174,7 @@ public class CAbilityHero extends AbstractCAbility {
 	}
 
 	@Override
-	protected void innerCheckCanUse(final CSimulation game, final CUnit unit, final int orderId,
+	protected void innerCheckCanUse(final CSimulation game, final CUnit unit, final int playerIndex, final int orderId,
 			final AbilityActivationReceiver receiver) {
 		final War3ID orderIdAsRawtype = new War3ID(orderId);
 		if (this.skillsAvailable.contains(orderIdAsRawtype)) {
@@ -255,7 +257,7 @@ public class CAbilityHero extends AbstractCAbility {
 		return this.reviving;
 	}
 
-	private void levelUpHero(final CSimulation simulation, final CUnit unit, boolean showEffect) {
+	private void levelUpHero(final CSimulation simulation, final CUnit unit, final boolean showEffect) {
 		final CGameplayConstants gameplayConstants = simulation.getGameplayConstants();
 		while ((this.heroLevel < gameplayConstants.getMaxHeroLevel())
 				&& (this.xp >= gameplayConstants.getNeedHeroXPSum(this.heroLevel))) {
@@ -266,7 +268,7 @@ public class CAbilityHero extends AbstractCAbility {
 		}
 	}
 
-	public void addXp(final CSimulation simulation, final CUnit unit, final int xp, boolean showEffect) {
+	public void addXp(final CSimulation simulation, final CUnit unit, final int xp, final boolean showEffect) {
 		this.xp += xp * simulation.getPlayer(unit.getPlayerIndex()).getHandicapXP();
 		levelUpHero(simulation, unit, showEffect);
 		unit.internalPublishHeroStatsChanged();
@@ -275,7 +277,7 @@ public class CAbilityHero extends AbstractCAbility {
 	// In the original engine setXp is only called if the passed xp value > the
 	// hero's current xp.
 	// setXp cannot be used to decrease the hero's xp or level.
-	public void setXp(final CSimulation simulation, final CUnit unit, final int xp, boolean showEyeCandy) {
+	public void setXp(final CSimulation simulation, final CUnit unit, final int xp, final boolean showEyeCandy) {
 		final int newXpVal = xp * Math.round(simulation.getPlayer(unit.getPlayerIndex()).getHandicapXP());
 		if (newXpVal > this.xp) {
 			addXp(simulation, unit, newXpVal - this.xp, showEyeCandy);

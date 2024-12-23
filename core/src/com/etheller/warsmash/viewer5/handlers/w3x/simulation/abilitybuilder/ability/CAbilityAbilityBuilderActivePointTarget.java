@@ -38,12 +38,12 @@ public class CAbilityAbilityBuilderActivePointTarget extends CAbilityAbilityBuil
 	}
 
 	@Override
-	public CBehavior begin(CSimulation game, CUnit caster, int orderId, CWidget target) {
+	public CBehavior begin(CSimulation game, CUnit caster, int playerIndex, int orderId, CWidget target) {
 		return null;
 	}
 
 	@Override
-	public CBehavior begin(CSimulation game, CUnit caster, int orderId, AbilityPointTarget point) {
+	public CBehavior begin(CSimulation game, CUnit caster, int playerIndex, int orderId, AbilityPointTarget point) {
 		this.castId++;
 		localStore.put(ABLocalStoreKeys.ABILITYTARGETEDLOCATION+this.castId, point);
 		this.runOnOrderIssuedActions(game, caster, orderId);
@@ -52,7 +52,7 @@ public class CAbilityAbilityBuilderActivePointTarget extends CAbilityAbilityBuil
 	}
 
 	@Override
-	public CBehavior beginNoTarget(CSimulation game, CUnit caster, int orderId) {
+	public CBehavior beginNoTarget(CSimulation game, CUnit caster, int playerIndex, int orderId) {
 		return null;
 	}
 	

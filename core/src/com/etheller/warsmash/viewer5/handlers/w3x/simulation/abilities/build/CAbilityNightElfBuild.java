@@ -37,13 +37,13 @@ public class CAbilityNightElfBuild extends AbstractCAbilityBuild {
 	}
 
 	@Override
-	public CBehavior begin(final CSimulation game, final CUnit caster, final int orderId, final CWidget target) {
+	public CBehavior begin(final CSimulation game, final CUnit caster, int playerIndex, final int orderId, final CWidget target) {
 		return caster.pollNextOrderBehavior(game);
 	}
 
 	@Override
-	public CBehavior begin(final CSimulation game, final CUnit caster, final int orderId,
-			final AbilityPointTarget point) {
+	public CBehavior begin(final CSimulation game, final CUnit caster, int playerIndex,
+			final int orderId, final AbilityPointTarget point) {
 		final War3ID orderIdAsRawtype = new War3ID(orderId);
 		final CUnitType unitType = game.getUnitData().getUnitType(orderIdAsRawtype);
 		roundTargetPoint(point, unitType);
@@ -56,7 +56,7 @@ public class CAbilityNightElfBuild extends AbstractCAbilityBuild {
 	}
 
 	@Override
-	public CBehavior beginNoTarget(final CSimulation game, final CUnit caster, final int orderId) {
+	public CBehavior beginNoTarget(final CSimulation game, final CUnit caster, int playerIndex, final int orderId) {
 		return caster.pollNextOrderBehavior(game);
 	}
 

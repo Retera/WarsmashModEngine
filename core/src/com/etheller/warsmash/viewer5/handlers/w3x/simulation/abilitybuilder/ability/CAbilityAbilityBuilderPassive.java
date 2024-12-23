@@ -267,8 +267,8 @@ public class CAbilityAbilityBuilderPassive extends AbilityGenericSingleIconPassi
 	}
 
 	@Override
-	protected void innerCheckCanUse(final CSimulation game, final CUnit unit, final int orderId,
-			final AbilityActivationReceiver receiver) {
+	protected void innerCheckCanUse(final CSimulation game, final CUnit unit, int playerIndex,
+			final int orderId, final AbilityActivationReceiver receiver) {
 		final int cooldownRemaining = unit.getCooldownRemainingTicks(game, getCooldownId());
 
 		if (cooldownRemaining > 0) {
@@ -278,7 +278,7 @@ public class CAbilityAbilityBuilderPassive extends AbilityGenericSingleIconPassi
 					cooldownLengthDisplay);
 		}
 		
-		super.innerCheckCanUse(game, unit, orderId, receiver);
+		super.innerCheckCanUse(game, unit, playerIndex, orderId, receiver);
 	}
 
 }

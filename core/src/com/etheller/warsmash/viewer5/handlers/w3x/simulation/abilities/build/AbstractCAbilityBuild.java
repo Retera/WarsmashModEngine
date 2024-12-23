@@ -35,8 +35,8 @@ public abstract class AbstractCAbilityBuild extends AbstractCAbility implements 
 	}
 
 	@Override
-	protected void innerCheckCanUse(final CSimulation game, final CUnit unit, final int orderId,
-			final AbilityActivationReceiver receiver) {
+	protected void innerCheckCanUse(final CSimulation game, final CUnit unit, int playerIndex,
+			final int orderId, final AbilityActivationReceiver receiver) {
 		final War3ID orderIdAsRawtype = new War3ID(orderId);
 		if (this.structuresBuilt.contains(orderIdAsRawtype)) {
 			final CUnitType unitType = game.getUnitData().getUnitType(orderIdAsRawtype);
@@ -92,14 +92,14 @@ public abstract class AbstractCAbilityBuild extends AbstractCAbility implements 
 	}
 
 	@Override
-	public final void checkCanTarget(final CSimulation game, final CUnit unit, final int orderId, final CWidget target,
-			final AbilityTargetCheckReceiver<CWidget> receiver) {
+	public final void checkCanTarget(final CSimulation game, final CUnit unit, int playerIndex, final int orderId,
+			final CWidget target, final AbilityTargetCheckReceiver<CWidget> receiver) {
 		receiver.orderIdNotAccepted();
 	}
 
 	@Override
-	public final void checkCanTarget(final CSimulation game, final CUnit unit, final int orderId,
-			final AbilityPointTarget target, final AbilityTargetCheckReceiver<AbilityPointTarget> receiver) {
+	public final void checkCanTarget(final CSimulation game, final CUnit unit, int playerIndex,
+			final int orderId, final AbilityPointTarget target, final AbilityTargetCheckReceiver<AbilityPointTarget> receiver) {
 		War3ID orderIdAsWar3ID = new War3ID(orderId);
 		if (this.structuresBuilt.contains(orderIdAsWar3ID)) {
 			final CUnitType unitTypeToCreate = game.getUnitData().getUnitType(orderIdAsWar3ID);
@@ -121,19 +121,19 @@ public abstract class AbstractCAbilityBuild extends AbstractCAbility implements 
 	}
 
 	@Override
-	public final void checkCanTargetNoTarget(final CSimulation game, final CUnit unit, final int orderId,
-			final AbilityTargetCheckReceiver<Void> receiver) {
+	public final void checkCanTargetNoTarget(final CSimulation game, final CUnit unit, int playerIndex,
+			final int orderId, final AbilityTargetCheckReceiver<Void> receiver) {
 		receiver.orderIdNotAccepted();
 	}
 
 	@Override
-	public boolean checkBeforeQueue(final CSimulation game, final CUnit caster, final int orderId,
-			final AbilityTarget target) {
+	public boolean checkBeforeQueue(final CSimulation game, final CUnit caster, int playerIndex,
+			final int orderId, final AbilityTarget target) {
 		return true;
 	}
 
 	@Override
-	public void onCancelFromQueue(final CSimulation game, final CUnit unit, final int orderId) {
+	public void onCancelFromQueue(final CSimulation game, final CUnit unit, int playerIndex, final int orderId) {
 		if (REFUND_ON_ORDER_CANCEL) {
 			final CPlayer player = game.getPlayer(unit.getPlayerIndex());
 			final War3ID orderIdAsRawtype = new War3ID(orderId);

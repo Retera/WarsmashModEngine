@@ -80,25 +80,25 @@ public class CAbilityAbilityBuilderActiveSmart extends AbstractGenericSingleIcon
 	}
 
 	@Override
-	public void onCancelFromQueue(CSimulation game, CUnit unit, int orderId) {
+	public void onCancelFromQueue(CSimulation game, CUnit unit, int playerIndex, int orderId) {
 		// TODO Auto-generated method stub
 		
 	}
 
 	@Override
-	public CBehavior begin(CSimulation game, CUnit caster, int orderId, CWidget target) {
+	public CBehavior begin(CSimulation game, CUnit caster, int playerIndex, int orderId, CWidget target) {
 		this.castId++;
 		return this.behavior.reset();
 	}
 
 	@Override
-	public CBehavior begin(CSimulation game, CUnit caster, int orderId, AbilityPointTarget point) {
+	public CBehavior begin(CSimulation game, CUnit caster, int playerIndex, int orderId, AbilityPointTarget point) {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
-	public CBehavior beginNoTarget(CSimulation game, CUnit caster, int orderId) {
+	public CBehavior beginNoTarget(CSimulation game, CUnit caster, int playerIndex, int orderId) {
 		// TODO Auto-generated method stub
 		return null;
 	}
@@ -139,7 +139,7 @@ public class CAbilityAbilityBuilderActiveSmart extends AbstractGenericSingleIcon
 	}
 
 	@Override
-	protected void innerCheckCanUse(CSimulation game, CUnit unit, int orderId, AbilityActivationReceiver receiver) {
+	protected void innerCheckCanUse(CSimulation game, CUnit unit, int playerIndex, int orderId, AbilityActivationReceiver receiver) {
 		// TODO Auto-generated method stub
 		
 	}
@@ -292,22 +292,22 @@ public class CAbilityAbilityBuilderActiveSmart extends AbstractGenericSingleIcon
 	}
 
 	@Override
-	public void checkCanAutoTarget(CSimulation game, CUnit unit, int orderId, CWidget target,
-			AbilityTargetCheckReceiver<CWidget> receiver) {
+	public void checkCanAutoTarget(CSimulation game, CUnit unit, int playerIndex, int orderId,
+			CWidget target, AbilityTargetCheckReceiver<CWidget> receiver) {
 		// TODO Auto-generated method stub
 		
 	}
 
 	@Override
-	public void checkCanAutoTarget(CSimulation game, CUnit unit, int orderId, AbilityPointTarget target,
-			AbilityTargetCheckReceiver<AbilityPointTarget> receiver) {
+	public void checkCanAutoTarget(CSimulation game, CUnit unit, int playerIndex, int orderId,
+			AbilityPointTarget target, AbilityTargetCheckReceiver<AbilityPointTarget> receiver) {
 		// TODO Auto-generated method stub
 		
 	}
 
 	@Override
-	public void checkCanAutoTargetNoTarget(CSimulation game, CUnit unit, int orderId,
-			AbilityTargetCheckReceiver<Void> receiver) {
+	public void checkCanAutoTargetNoTarget(CSimulation game, CUnit unit, int playerIndex,
+			int orderId, AbilityTargetCheckReceiver<Void> receiver) {
 		// TODO Auto-generated method stub
 		
 	}

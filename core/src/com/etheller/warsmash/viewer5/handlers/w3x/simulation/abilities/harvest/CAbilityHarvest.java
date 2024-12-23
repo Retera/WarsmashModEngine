@@ -86,18 +86,18 @@ public class CAbilityHarvest extends AbstractGenericSingleIconActiveAbility {
 	}
 
 	@Override
-	public CBehavior begin(final CSimulation game, final CUnit caster, final int orderId, final CWidget target) {
+	public CBehavior begin(final CSimulation game, final CUnit caster, int playerIndex, final int orderId, final CWidget target) {
 		return this.behaviorHarvest.reset(game, target);
 	}
 
 	@Override
-	public CBehavior begin(final CSimulation game, final CUnit caster, final int orderId,
-			final AbilityPointTarget point) {
+	public CBehavior begin(final CSimulation game, final CUnit caster, int playerIndex,
+			final int orderId, final AbilityPointTarget point) {
 		return caster.pollNextOrderBehavior(game);
 	}
 
 	@Override
-	public CBehavior beginNoTarget(final CSimulation game, final CUnit caster, final int orderId) {
+	public CBehavior beginNoTarget(final CSimulation game, final CUnit caster, int playerIndex, final int orderId) {
 		if (isToggleOn() && (orderId == OrderIds.returnresources)) {
 			return this.behaviorReturnResources.reset(game);
 		}
@@ -115,8 +115,8 @@ public class CAbilityHarvest extends AbstractGenericSingleIconActiveAbility {
 	}
 
 	@Override
-	protected void innerCheckCanUse(final CSimulation game, final CUnit unit, final int orderId,
-			final AbilityActivationReceiver receiver) {
+	protected void innerCheckCanUse(final CSimulation game, final CUnit unit, int playerIndex,
+			final int orderId, final AbilityActivationReceiver receiver) {
 		receiver.useOk();
 	}
 
@@ -234,7 +234,7 @@ public class CAbilityHarvest extends AbstractGenericSingleIconActiveAbility {
 	}
 
 	@Override
-	public void onCancelFromQueue(final CSimulation game, final CUnit unit, final int orderId) {
+	public void onCancelFromQueue(final CSimulation game, final CUnit unit, int playerIndex, final int orderId) {
 	}
 
 	public CBehaviorAttack getBehaviorTreeAttack() {

@@ -35,11 +35,11 @@ public class CAbilityNeutralBuilding extends AbstractGenericAliasedAbility {
 		@Override
 		public boolean call(final CUnit enumUnit) {
 			final int playerIndex = enumUnit.getPlayerIndex();
-			if (playerIndex < maxMapPlayers) {
-				if (selectedPlayerUnit[playerIndex] == null) {
-					if (canSelectUnit(game, unit, enumUnit)) {
-						selectUnit(game, enumUnit, playerIndex);
-						updated = true;
+			if (playerIndex < this.maxMapPlayers) {
+				if (CAbilityNeutralBuilding.this.selectedPlayerUnit[playerIndex] == null) {
+					if (canSelectUnit(this.game, this.unit, enumUnit)) {
+						selectUnit(this.game, enumUnit, playerIndex);
+						this.updated = true;
 					}
 				}
 			}
@@ -65,9 +65,9 @@ public class CAbilityNeutralBuilding extends AbstractGenericAliasedAbility {
 	private final SimulationRenderComponent[] selectedPlayerUnitFx = new SimulationRenderComponent[WarsmashConstants.MAX_PLAYERS];
 	private final Rectangle recycleRect = new Rectangle();
 
-	public CAbilityNeutralBuilding(final int handleId, final War3ID code, final War3ID alias, final float activationRadius,
-			final int interactionType, final boolean showSelectUnitButton, final boolean showUnitIndicator,
-			final boolean onlySelectAllies) {
+	public CAbilityNeutralBuilding(final int handleId, final War3ID code, final War3ID alias,
+			final float activationRadius, final int interactionType, final boolean showSelectUnitButton,
+			final boolean showUnitIndicator, final boolean onlySelectAllies) {
 		super(handleId, code, alias);
 		this.activationRadius = activationRadius;
 		this.interactionType = interactionType;
@@ -91,11 +91,11 @@ public class CAbilityNeutralBuilding extends AbstractGenericAliasedAbility {
 	@Override
 	public void onTick(final CSimulation game, final CUnit unit) {
 		final int gameTurnTick = game.getGameTurnTick();
-		if (gameTurnTick >= nextUpdateTick) {
+		if (gameTurnTick >= this.nextUpdateTick) {
 			boolean searchUnits = false;
 			final int maxMapPlayers = WarsmashConstants.MAX_PLAYERS - 4;
 			for (int i = 0; i < maxMapPlayers; i++) {
-				final CUnit selectedUnit = selectedPlayerUnit[i];
+				final CUnit selectedUnit = this.selectedPlayerUnit[i];
 				if (!canSelectUnit(game, unit, selectedUnit)) {
 					unselectUnit(i);
 					searchUnits = true;
@@ -104,31 +104,32 @@ public class CAbilityNeutralBuilding extends AbstractGenericAliasedAbility {
 			if (searchUnits) {
 				final CUnitEnumFunctionImplementation perUnitCallback = new CUnitEnumFunctionImplementation(
 						maxMapPlayers, game, unit);
-				game.getWorldCollision().enumUnitsInRect(recycleRect.set(unit.getX() - activationRadius,
-						unit.getY() - activationRadius, activationRadius * 2, activationRadius * 2), perUnitCallback);
+				game.getWorldCollision().enumUnitsInRect(this.recycleRect.set(unit.getX() - this.activationRadius,
+						unit.getY() - this.activationRadius, this.activationRadius * 2, this.activationRadius * 2),
+						perUnitCallback);
 				unit.notifyOrdersChanged();
 			}
-			nextUpdateTick = gameTurnTick + UNIT_CHECK_DELAY;
+			this.nextUpdateTick = gameTurnTick + UNIT_CHECK_DELAY;
 		}
 	}
 
 	private void unselectUnit(final int i) {
-		if (selectedPlayerUnit[i] != null) {
-			selectedPlayerUnit[i].notifyOrdersChanged();
-			selectedPlayerUnit[i] = null;
+		if (this.selectedPlayerUnit[i] != null) {
+			this.selectedPlayerUnit[i].notifyOrdersChanged();
+			this.selectedPlayerUnit[i] = null;
 		}
-		if (selectedPlayerUnitFx[i] != null) {
-			selectedPlayerUnitFx[i].remove();
-			selectedPlayerUnitFx[i] = null;
+		if (this.selectedPlayerUnitFx[i] != null) {
+			this.selectedPlayerUnitFx[i].remove();
+			this.selectedPlayerUnitFx[i] = null;
 		}
 	}
 
 	private boolean canSelectUnit(final CSimulation game, final CUnit shop, final CUnit unit) {
-		if ((unit == null) || !shop.canReach(unit, activationRadius) || unit.isDead()
-				|| (onlySelectAllies && !unit.isUnitAlly(game.getPlayer(shop.getPlayerIndex())))) {
+		if ((unit == null) || !shop.canReach(unit, this.activationRadius) || unit.isDead()
+				|| (this.onlySelectAllies && !unit.isUnitAlly(game.getPlayer(shop.getPlayerIndex())))) {
 			return false;
 		}
-		switch (interactionType) {
+		switch (this.interactionType) {
 		case INTERACTION_TYPE_ANY:
 		case INTERACTION_TYPE_ANY_ANE2:
 			return true;
@@ -147,16 +148,17 @@ public class CAbilityNeutralBuilding extends AbstractGenericAliasedAbility {
 	}
 
 	@Override
-	public void onCancelFromQueue(final CSimulation game, final CUnit unit, final int orderId) {
+	public void onCancelFromQueue(final CSimulation game, final CUnit unit, final int playerIndex, final int orderId) {
 		// TODO Auto-generated method stub
 
 	}
 
 	@Override
-	public CBehavior begin(final CSimulation game, final CUnit caster, final int orderId, final CWidget target) {
+	public CBehavior begin(final CSimulation game, final CUnit caster, final int playerIndex, final int orderId,
+			final CWidget target) {
 		final CUnit targetUnit = target.visit(AbilityTargetVisitor.UNIT);
-		if (showSelectUnitButton && (orderId == OrderIds.neutralinteract) && canSelectUnit(game, caster, targetUnit)) {
-			final int playerIndex = targetUnit.getPlayerIndex();
+		if (this.showSelectUnitButton && (orderId == OrderIds.neutralinteract)
+				&& canSelectUnit(game, caster, targetUnit)) {
 			unselectUnit(playerIndex);
 			selectUnit(game, targetUnit, playerIndex);
 		}
@@ -164,22 +166,23 @@ public class CAbilityNeutralBuilding extends AbstractGenericAliasedAbility {
 	}
 
 	@Override
-	public CBehavior begin(final CSimulation game, final CUnit caster, final int orderId,
+	public CBehavior begin(final CSimulation game, final CUnit caster, final int playerIndex, final int orderId,
 			final AbilityPointTarget point) {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
-	public CBehavior beginNoTarget(final CSimulation game, final CUnit caster, final int orderId) {
+	public CBehavior beginNoTarget(final CSimulation game, final CUnit caster, final int playerIndex,
+			final int orderId) {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
-	public void checkCanTarget(final CSimulation game, final CUnit unit, final int orderId, final CWidget target,
-			final AbilityTargetCheckReceiver<CWidget> receiver) {
-		if (showSelectUnitButton && (orderId == OrderIds.neutralinteract)
+	public void checkCanTarget(final CSimulation game, final CUnit unit, final int playerIndex, final int orderId,
+			final CWidget target, final AbilityTargetCheckReceiver<CWidget> receiver) {
+		if (this.showSelectUnitButton && (orderId == OrderIds.neutralinteract)
 				&& canSelectUnit(game, unit, target.visit(AbilityTargetVisitor.UNIT))) {
 			receiver.targetOk(target);
 		}
@@ -189,14 +192,14 @@ public class CAbilityNeutralBuilding extends AbstractGenericAliasedAbility {
 	}
 
 	@Override
-	public void checkCanTarget(final CSimulation game, final CUnit unit, final int orderId,
+	public void checkCanTarget(final CSimulation game, final CUnit unit, final int playerIndex, final int orderId,
 			final AbilityPointTarget target, final AbilityTargetCheckReceiver<AbilityPointTarget> receiver) {
 		receiver.orderIdNotAccepted();
 	}
 
 	@Override
-	public void checkCanTargetNoTarget(final CSimulation game, final CUnit unit, final int orderId,
-			final AbilityTargetCheckReceiver<Void> receiver) {
+	public void checkCanTargetNoTarget(final CSimulation game, final CUnit unit, final int playerIndex,
+			final int orderId, final AbilityTargetCheckReceiver<Void> receiver) {
 		receiver.orderIdNotAccepted();
 	}
 
@@ -206,25 +209,25 @@ public class CAbilityNeutralBuilding extends AbstractGenericAliasedAbility {
 	}
 
 	@Override
-	protected void innerCheckCanUse(final CSimulation game, final CUnit unit, final int orderId,
-			final AbilityActivationReceiver receiver) {
+	protected void innerCheckCanUse(final CSimulation game, final CUnit unit, int playerIndex,
+			final int orderId, final AbilityActivationReceiver receiver) {
 		receiver.useOk();
 	}
 
 	public float getActivationRadius() {
-		return activationRadius;
+		return this.activationRadius;
 	}
 
 	public int getInteractionType() {
-		return interactionType;
+		return this.interactionType;
 	}
 
 	public boolean isShowSelectUnitButton() {
-		return showSelectUnitButton;
+		return this.showSelectUnitButton;
 	}
 
 	public boolean isShowUnitIndicator() {
-		return showUnitIndicator;
+		return this.showUnitIndicator;
 	}
 
 	public void setActivationRadius(final float activationRadius) {
@@ -244,14 +247,14 @@ public class CAbilityNeutralBuilding extends AbstractGenericAliasedAbility {
 	}
 
 	public CUnit getSelectedPlayerUnit(final int playerIndex) {
-		return selectedPlayerUnit[playerIndex];
+		return this.selectedPlayerUnit[playerIndex];
 	}
 
 	private void selectUnit(final CSimulation game, final CUnit enumUnit, final int playerIndex) {
-		selectedPlayerUnit[playerIndex] = enumUnit;
-		if (showUnitIndicator) {
-			selectedPlayerUnitFx[playerIndex] = game.createPersistentSpellEffectOnUnit(enumUnit, getAlias(), CEffectType.TARGET,
-					0);
+		this.selectedPlayerUnit[playerIndex] = enumUnit;
+		if (this.showUnitIndicator) {
+			this.selectedPlayerUnitFx[playerIndex] = game.createPersistentSpellEffectOnUnit(enumUnit, getAlias(),
+					CEffectType.TARGET, 0);
 		}
 	}
 

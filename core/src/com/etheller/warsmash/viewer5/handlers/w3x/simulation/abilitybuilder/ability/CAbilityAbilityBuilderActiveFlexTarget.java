@@ -107,18 +107,18 @@ public class CAbilityAbilityBuilderActiveFlexTarget extends CAbilityAbilityBuild
 	}
 
 	@Override
-	public boolean checkBeforeQueue(final CSimulation game, final CUnit caster, final int orderId,
-			final AbilityTarget target) {
+	public boolean checkBeforeQueue(final CSimulation game, final CUnit caster, int playerIndex,
+			final int orderId, final AbilityTarget target) {
 		if (!this.isTargetedSpell() && castless && orderId == this.getBaseOrderId()) {
 			this.runBeginCastingActions(game, caster, orderId);
 			this.runEndCastingActions(game, caster, orderId);
 			return false;
 		}
-		return super.checkBeforeQueue(game, caster, orderId, target);
+		return super.checkBeforeQueue(game, caster, playerIndex, orderId, target);
 	}
 
 	@Override
-	public CBehavior begin(CSimulation game, CUnit caster, int orderId, CWidget target) {
+	public CBehavior begin(CSimulation game, CUnit caster, int playerIndex, int orderId, CWidget target) {
 		if (this.isTargetedSpell() && !this.isPointTarget()) {
 			this.localStore.put(ABLocalStoreKeys.ABILITYTARGETEDUNIT + castId, target.visit(AbilityTargetVisitor.UNIT));
 			this.localStore.put(ABLocalStoreKeys.ABILITYTARGETEDITEM + castId, target.visit(AbilityTargetVisitor.ITEM));
@@ -131,7 +131,7 @@ public class CAbilityAbilityBuilderActiveFlexTarget extends CAbilityAbilityBuild
 	}
 
 	@Override
-	public CBehavior begin(CSimulation game, CUnit caster, int orderId, AbilityPointTarget point) {
+	public CBehavior begin(CSimulation game, CUnit caster, int playerIndex, int orderId, AbilityPointTarget point) {
 		if (this.isTargetedSpell() && this.isPointTarget()) {
 			localStore.put(ABLocalStoreKeys.ABILITYTARGETEDLOCATION+this.castId, point);
 			this.runOnOrderIssuedActions(game, caster, orderId);
@@ -142,7 +142,7 @@ public class CAbilityAbilityBuilderActiveFlexTarget extends CAbilityAbilityBuild
 	}
 
 	@Override
-	public CBehavior beginNoTarget(CSimulation game, CUnit caster, int orderId) {
+	public CBehavior beginNoTarget(CSimulation game, CUnit caster, int playerIndex, int orderId) {
 		if (!this.isTargetedSpell()) {
 			if (castless) {
 				return null;

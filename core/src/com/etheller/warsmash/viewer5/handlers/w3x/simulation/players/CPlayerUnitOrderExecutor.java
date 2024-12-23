@@ -46,7 +46,8 @@ public class CPlayerUnitOrderExecutor implements CPlayerUnitOrderListener {
 			return;
 		}
 		if ((this.playerIndex == unit.getPlayerIndex()) || sharedControl(unit)) {
-			unit.order(this.game, new COrderTargetWidget(abilityHandleId, orderId, targetHandleId, queue), queue);
+			unit.order(this.game,
+					new COrderTargetWidget(this.playerIndex, abilityHandleId, orderId, targetHandleId, queue), queue);
 		}
 	}
 
@@ -58,7 +59,7 @@ public class CPlayerUnitOrderExecutor implements CPlayerUnitOrderListener {
 			return;
 		}
 		if ((this.playerIndex == unit.getPlayerIndex()) || sharedControl(unit)) {
-			unit.order(this.game, new COrderDropItemAtPoint(abilityHandleId, orderId, targetHandleId,
+			unit.order(this.game, new COrderDropItemAtPoint(this.playerIndex, abilityHandleId, orderId, targetHandleId,
 					new AbilityPointTarget(x, y), queue), queue);
 		}
 	}
@@ -71,8 +72,8 @@ public class CPlayerUnitOrderExecutor implements CPlayerUnitOrderListener {
 			return;
 		}
 		if ((this.playerIndex == unit.getPlayerIndex()) || sharedControl(unit)) {
-			unit.order(this.game, new COrderDropItemAtTargetWidget(abilityHandleId, orderId, targetItemHandleId,
-					targetHeroHandleId, queue), queue);
+			unit.order(this.game, new COrderDropItemAtTargetWidget(this.playerIndex, abilityHandleId, orderId,
+					targetItemHandleId, targetHeroHandleId, queue), queue);
 		}
 	}
 
@@ -84,8 +85,8 @@ public class CPlayerUnitOrderExecutor implements CPlayerUnitOrderListener {
 			return;
 		}
 		if ((this.playerIndex == unit.getPlayerIndex()) || sharedControl(unit)) {
-			unit.order(this.game, new COrderTargetPoint(abilityHandleId, orderId, new AbilityPointTarget(x, y), queue),
-					queue);
+			unit.order(this.game, new COrderTargetPoint(this.playerIndex, abilityHandleId, orderId,
+					new AbilityPointTarget(x, y), queue), queue);
 		}
 	}
 
@@ -110,7 +111,7 @@ public class CPlayerUnitOrderExecutor implements CPlayerUnitOrderListener {
 				}
 			}
 			else {
-				unit.order(this.game, new COrderNoTarget(abilityHandleId, orderId, queue), queue);
+				unit.order(this.game, new COrderNoTarget(this.playerIndex, abilityHandleId, orderId, queue), queue);
 			}
 		}
 	}
@@ -128,7 +129,7 @@ public class CPlayerUnitOrderExecutor implements CPlayerUnitOrderListener {
 
 	@Override
 	public void issueGuiPlayerEvent(final int eventId) {
-		final CPlayer player = this.game.getPlayer(playerIndex);
+		final CPlayer player = this.game.getPlayer(this.playerIndex);
 		final JassGameEventsWar3 eventType = JassGameEventsWar3.getByEventId(eventId);
 		if (eventType != null) {
 			player.firePlayerEvents(CommonTriggerExecutionScope::guiPlayerEventTriggerScope, eventType);

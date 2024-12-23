@@ -160,17 +160,17 @@ public class CAbilityRoot extends AbstractGenericSingleIconNoSmartActiveAbility 
 	}
 
 	@Override
-	public void onCancelFromQueue(final CSimulation game, final CUnit unit, final int orderId) {
+	public void onCancelFromQueue(final CSimulation game, final CUnit unit, int playerIndex, final int orderId) {
 	}
 
 	@Override
-	public CBehavior begin(final CSimulation game, final CUnit caster, final int orderId, final CWidget target) {
+	public CBehavior begin(final CSimulation game, final CUnit caster, int playerIndex, final int orderId, final CWidget target) {
 		return null;
 	}
 
 	@Override
-	public CBehavior begin(final CSimulation game, final CUnit caster, final int orderId,
-			final AbilityPointTarget point) {
+	public CBehavior begin(final CSimulation game, final CUnit caster, int playerIndex,
+			final int orderId, final AbilityPointTarget point) {
 		if (!this.rooted && (orderId == OrderIds.root)) {
 			return this.behaviorRoot.reset(game, point);
 		}
@@ -178,7 +178,7 @@ public class CAbilityRoot extends AbstractGenericSingleIconNoSmartActiveAbility 
 	}
 
 	@Override
-	public CBehavior beginNoTarget(final CSimulation game, final CUnit caster, final int orderId) {
+	public CBehavior beginNoTarget(final CSimulation game, final CUnit caster, int playerIndex, final int orderId) {
 		if (this.rooted && (orderId == OrderIds.unroot)) {
 			return this.behaviorUproot.reset();
 		}
@@ -214,8 +214,8 @@ public class CAbilityRoot extends AbstractGenericSingleIconNoSmartActiveAbility 
 	}
 
 	@Override
-	protected void innerCheckCanUse(final CSimulation game, final CUnit unit, final int orderId,
-			final AbilityActivationReceiver receiver) {
+	protected void innerCheckCanUse(final CSimulation game, final CUnit unit, int playerIndex,
+			final int orderId, final AbilityActivationReceiver receiver) {
 		if (unit.isBuildQueueActive()) {
 			receiver.disabled();
 		}

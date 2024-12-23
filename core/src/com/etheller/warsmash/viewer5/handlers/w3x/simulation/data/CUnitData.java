@@ -165,6 +165,8 @@ public class CUnitData {
 
 	private static final String STRUCTURES_BUILT = "Builds"; // replaced from 'ubui'
 	private static final String UNITS_TRAINED = "Trains"; // replaced from 'utra'
+	private static final String UNITS_SOLD = "Sellunits";
+	private static final String DEPENDENCY_EQUIVALENTS = "DependencyOr";
 	private static final String RESEARCHES_AVAILABLE = "Researches"; // replaced from 'ures'
 	private static final String UPGRADES_USED = "upgrades"; // replaced from 'upgr'
 	private static final String UPGRADES_TO = "Upgrade"; // replaced from 'uupt'
@@ -719,10 +721,13 @@ public class CUnitData {
 			final boolean revivesHeroes = unitType.getFieldAsBoolean(REVIVES_HEROES, 0);
 
 			final List<War3ID> unitsTrained = parseIDList(unitType.getFieldAsList(UNITS_TRAINED));
+			final List<War3ID> unitsSold = parseIDList(unitType.getFieldAsList(UNITS_SOLD));
 
 			final List<War3ID> upgradesTo = parseIDList(unitType.getFieldAsList(UPGRADES_TO));
 
 			final List<War3ID> researchesAvailable = parseIDList(unitType.getFieldAsList(RESEARCHES_AVAILABLE));
+
+			final List<War3ID> dependencyOr = parseIDList(unitType.getFieldAsList(DEPENDENCY_EQUIVALENTS));
 
 			final List<War3ID> upgradesUsed = parseIDList(unitType.getFieldAsList(UPGRADES_USED));
 			final EnumMap<CUpgradeClass, War3ID> upgradeClassToType = new EnumMap<>(CUpgradeClass.class);
@@ -783,9 +788,9 @@ public class CUnitData {
 					manaInitial, manaMaximum, speed, defense, defaultAutocastAbilityId, abilityList, isBldg,
 					movementType, moveHeight, collisionSize, classifications, attacks, attacksEnabled, armorType, raise,
 					decay, defenseType, impactZ, buildingPathingPixelMap, deathTime, targetedAs, acquisitionRange,
-					minimumAttackRange, structuresBuilt, unitsTrained, researchesAvailable, upgradesUsed,
-					upgradeClassToType, upgradesTo, itemsSold, itemsMade, unitRace, goldCost, lumberCost, foodUsed,
-					foodMade, buildTime, goldRepairCost, lumberRepairCost, repairTime, preventedPathingTypes,
+					minimumAttackRange, structuresBuilt, unitsTrained, unitsSold, researchesAvailable, upgradesUsed,
+					dependencyOr, upgradeClassToType, upgradesTo, itemsSold, itemsMade, unitRace, goldCost, lumberCost,
+					foodUsed, foodMade, buildTime, goldRepairCost, lumberRepairCost, repairTime, preventedPathingTypes,
 					requiredPathingTypes, propWindow, turnRate, requirements, requirementTiers, unitLevel, hero,
 					strength, strPlus, agility, agiPlus, intelligence, intPlus, primaryAttribute, heroAbilityList,
 					heroProperNames, properNamesCount, canFlee, priority, revivesHeroes, pointValue, castBackswingPoint,

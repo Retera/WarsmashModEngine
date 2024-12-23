@@ -15,13 +15,15 @@ public class JassProgram {
 	public final JassNativeManager jassNativeManager = new JassNativeManager();
 
 	public final List<JassLibraryDefinitionBlock> libraries = new ArrayList<>();
-    public final List<JassScopeDefinitionBlock> scopes = new ArrayList<>();
+	public final List<JassScopeDefinitionBlock> scopes = new ArrayList<>();
 	public final List<JassDefinitionBlock> everythingElse = new ArrayList<>();
+
+	private boolean paused = false;
 
 	public void initialize() {
 		try {
 			final DefaultScope defaultScope = new DefaultScope(this.globalScope);
-		    JassLibraryDefinitionBlock.topologicalSort(libraries);
+			JassLibraryDefinitionBlock.topologicalSort(this.libraries);
 			for (final JassDefinitionBlock definitionBlock : this.everythingElse) {
 				definitionBlock.define(defaultScope, this);
 			}
@@ -51,16 +53,24 @@ public class JassProgram {
 		for (final JassDefinitionBlock definitionBlock : blocks) {
 			// TODO: change to visitor
 			if (definitionBlock instanceof JassLibraryDefinitionBlock) {
-				libraries.add((JassLibraryDefinitionBlock) definitionBlock);
+				this.libraries.add((JassLibraryDefinitionBlock) definitionBlock);
 			}
 			else if (definitionBlock instanceof JassScopeDefinitionBlock) {
-				scopes.add((JassScopeDefinitionBlock) definitionBlock);
+				this.scopes.add((JassScopeDefinitionBlock) definitionBlock);
 			}
 			else {
-				everythingElse.add(definitionBlock);
+				this.everythingElse.add(definitionBlock);
 			}
 		}
 
+	}
+
+	public void setPaused(final boolean paused) {
+		this.paused = paused;
+	}
+
+	public boolean isPaused() {
+		return this.paused;
 	}
 
 	public GlobalScope getGlobalScope() {
@@ -73,5 +83,9 @@ public class JassProgram {
 
 	public JassNativeManager getJassNativeManager() {
 		return this.jassNativeManager;
+	}
+
+	public void inheritFrom(final JassProgram jassProgramVisitor) {
+		this.globalScope.inheritFrom(jassProgramVisitor.getGlobalScope());
 	}
 }

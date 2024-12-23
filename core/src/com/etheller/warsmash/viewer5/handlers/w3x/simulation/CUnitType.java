@@ -58,8 +58,10 @@ public class CUnitType {
 	private final float minimumAttackRange;
 	private final List<War3ID> structuresBuilt;
 	private final List<War3ID> unitsTrained;
+	private final List<War3ID> unitsSold;
 	private final List<War3ID> researchesAvailable;
 	private final List<War3ID> upgradesUsed;
+	private final List<War3ID> dependencyOr;
 	private final EnumMap<CUpgradeClass, War3ID> upgradeClassToType;
 	private final List<War3ID> upgradesTo;
 	private final List<War3ID> itemsSold;
@@ -121,11 +123,12 @@ public class CUnitType {
 			final CDefenseType defenseType, final float impactZ, final BufferedImage buildingPathingPixelMap,
 			final float deathTime, final EnumSet<CTargetType> targetedAs, final float defaultAcquisitionRange,
 			final float minimumAttackRange, final List<War3ID> structuresBuilt, final List<War3ID> unitsTrained,
-			final List<War3ID> researchesAvailable, final List<War3ID> upgradesUsed,
-			final EnumMap<CUpgradeClass, War3ID> upgradeClassToType, final List<War3ID> upgradesTo,
-			final List<War3ID> itemsSold, final List<War3ID> itemsMade, final CUnitRace unitRace, final int goldCost,
-			final int lumberCost, final int foodUsed, final int foodMade, final int buildTime, final int goldRepairCost,
-			final int lumberRepairCost, final int repairTime, final EnumSet<CBuildingPathingType> preventedPathingTypes,
+			final List<War3ID> unitsSold, final List<War3ID> researchesAvailable, final List<War3ID> upgradesUsed,
+			final List<War3ID> dependencyOr, final EnumMap<CUpgradeClass, War3ID> upgradeClassToType,
+			final List<War3ID> upgradesTo, final List<War3ID> itemsSold, final List<War3ID> itemsMade,
+			final CUnitRace unitRace, final int goldCost, final int lumberCost, final int foodUsed, final int foodMade,
+			final int buildTime, final int goldRepairCost, final int lumberRepairCost, final int repairTime,
+			final EnumSet<CBuildingPathingType> preventedPathingTypes,
 			final EnumSet<CBuildingPathingType> requiredPathingTypes, final float propWindow, final float turnRate,
 			final List<CUnitTypeRequirement> requirements, final List<List<CUnitTypeRequirement>> requirementTiers,
 			final int level, final boolean hero, final int strength, final float strengthPerLevel, final int agility,
@@ -137,7 +140,7 @@ public class CUnitType {
 			final int sightRadiusDay, final int sightRadiusNight, final boolean extendedLineOfSight,
 			final int goldBountyAwardedBase, final int goldBountyAwardedDice, final int goldBountyAwardedSides,
 			final int lumberBountyAwardedBase, final int lumberBountyAwardedDice, final int lumberBountyAwardedSides,
-			boolean neutralBuildingShowMinimapIcon) {
+			final boolean neutralBuildingShowMinimapIcon) {
 		this.name = name;
 		this.legacyName = legacyName;
 		this.typeId = typeId;
@@ -170,8 +173,10 @@ public class CUnitType {
 		this.minimumAttackRange = minimumAttackRange;
 		this.structuresBuilt = structuresBuilt;
 		this.unitsTrained = unitsTrained;
+		this.unitsSold = unitsSold;
 		this.researchesAvailable = researchesAvailable;
 		this.upgradesUsed = upgradesUsed;
+		this.dependencyOr = dependencyOr;
 		this.upgradeClassToType = upgradeClassToType;
 		this.upgradesTo = upgradesTo;
 		this.itemsSold = itemsSold;
@@ -355,12 +360,20 @@ public class CUnitType {
 		return this.unitsTrained;
 	}
 
+	public List<War3ID> getUnitsSold() {
+		return this.unitsSold;
+	}
+
 	public List<War3ID> getResearchesAvailable() {
 		return this.researchesAvailable;
 	}
 
 	public List<War3ID> getUpgradesUsed() {
 		return this.upgradesUsed;
+	}
+
+	public List<War3ID> getDependencyOr() {
+		return this.dependencyOr;
 	}
 
 	public EnumMap<CUpgradeClass, War3ID> getUpgradeClassToType() {
@@ -439,7 +452,8 @@ public class CUnitType {
 		final int index = tier - 1;
 		if ((index >= 0) && (index < this.requirementTiers.size())) {
 			return this.requirementTiers.get(index);
-		} else {
+		}
+		else {
 			return Collections.emptyList();
 		}
 	}

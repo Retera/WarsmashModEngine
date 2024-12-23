@@ -23,6 +23,7 @@ import com.etheller.interpreter.ast.scope.trigger.Trigger;
 import com.etheller.interpreter.ast.scope.trigger.TriggerBooleanExpression;
 import com.etheller.interpreter.ast.scope.variableevent.CLimitOp;
 import com.etheller.interpreter.ast.scope.variableevent.VariableEvent;
+import com.etheller.warsmash.parsers.jass.JassAIEnvironment;
 import com.etheller.warsmash.parsers.jass.scope.CommonTriggerExecutionScope;
 import com.etheller.warsmash.units.DataTable;
 import com.etheller.warsmash.units.ObjectData;
@@ -593,6 +594,12 @@ public class CSimulation implements CPlayerAPI, CFogMaskSettings {
 		this.removedOnTickTriggers.clear();
 
 		this.globalScope.runThreads();
+		for (final CPlayer player : this.players) {
+			final JassAIEnvironment aiScript = player.getAiScript();
+			if (aiScript != null) {
+				aiScript.update();
+			}
+		}
 
 		this.runningPostUpdateCallbacks.clear();
 		this.runningPostUpdateCallbacks.addAll(this.postUpdateCallbacks);
@@ -777,7 +784,7 @@ public class CSimulation implements CPlayerAPI, CFogMaskSettings {
 		this.simulationRenderController.destroyTextTag(textTag);
 	}
 
-	public void unitGainLevelEvent(final CUnit unit, boolean showEffect) {
+	public void unitGainLevelEvent(final CUnit unit, final boolean showEffect) {
 		this.players.get(unit.getPlayerIndex()).fireHeroLevelEvents(unit);
 		if (showEffect) {
 			this.simulationRenderController.spawnGainLevelEffect(unit);
@@ -1006,7 +1013,7 @@ public class CSimulation implements CPlayerAPI, CFogMaskSettings {
 		cItem.setLife(this, 0);
 	}
 
-	public void removeDestructable(CDestructable dest) {
+	public void removeDestructable(final CDestructable dest) {
 		dest.setLife(this, 0);
 		this.removedDestructables.add(dest);
 	}
@@ -1181,7 +1188,7 @@ public class CSimulation implements CPlayerAPI, CFogMaskSettings {
 	}
 
 	@Override
-	public byte getFogStateFromSettings(byte mask) {
+	public byte getFogStateFromSettings(final byte mask) {
 		final CFogState state = CFogState.getByMask(mask);
 		switch (state) {
 		case MASKED:
@@ -1221,7 +1228,7 @@ public class CSimulation implements CPlayerAPI, CFogMaskSettings {
 	}
 
 	@Override
-	public void setColor(CPlayerJass player, CPlayerColor color) {
+	public void setColor(final CPlayerJass player, final CPlayerColor color) {
 		final int previousColor = player.getColor();
 		final int newColor = color.ordinal();
 		player.setColor(newColor);
@@ -1237,7 +1244,7 @@ public class CSimulation implements CPlayerAPI, CFogMaskSettings {
 		}
 	}
 
-	public void fireRequirementUpdateForAbilities(CPlayer player, boolean disable) {
+	public void fireRequirementUpdateForAbilities(final CPlayer player, final boolean disable) {
 		this.postUpdateCallbacks.add(new Runnable() {
 			@Override
 			public void run() {

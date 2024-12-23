@@ -110,7 +110,7 @@ public class CBehaviorHumanBuild extends CAbstractRangedBehavior {
 						this.target.getX() + ((deltaX / delta) * unitTypeToCreate.getCollisionSize()),
 						this.target.getY() + ((deltaY / delta) * unitTypeToCreate.getCollisionSize()), simulation);
 				simulation.unitRepositioned(this.unit);
-				simulation.getPlayer(playerIndex).addTechtreeInProgress(this.orderId);
+				simulation.getPlayer(playerIndex).addTechtreeInProgress(simulation, this.orderId);
 				simulation.unitConstructedEvent(this.unit, constructedStructure);
 				for (final CAbility ability : this.unit.getAbilities()) {
 					if (ability instanceof CAbilityHumanRepair) {

@@ -28,6 +28,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityPointTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.config.CBasePlayer;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.data.CUnitData;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.COrderNoTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.COrderTargetPoint;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.COrderTargetWidget;
@@ -186,6 +187,19 @@ public class CPlayer extends CBasePlayer {
 	}
 
 	public void addTechtreeUnlocked(final CSimulation simulation, final War3ID rawcode) {
+		addSingleTechtreeUnlocked(rawcode);
+		final CUnitData unitData = simulation.getUnitData();
+		final CUnitType unitType = unitData.getUnitType(rawcode);
+		if (unitType != null) {
+			final List<War3ID> dependencyOr = unitType.getDependencyOr();
+			for (final War3ID otherDependency : dependencyOr) {
+				addSingleTechtreeUnlocked(otherDependency);
+			}
+		}
+		fireRequirementUpdateForAbilities(simulation, false);
+	}
+
+	private void addSingleTechtreeUnlocked(final War3ID rawcode) {
 		final Integer techtreeUnlocked = this.rawcodeToTechtreeUnlocked.get(rawcode);
 		if (techtreeUnlocked == null) {
 			this.rawcodeToTechtreeUnlocked.put(rawcode, 1);
@@ -193,7 +207,6 @@ public class CPlayer extends CBasePlayer {
 		else {
 			this.rawcodeToTechtreeUnlocked.put(rawcode, techtreeUnlocked + 1);
 		}
-		fireRequirementUpdateForAbilities(simulation, false);
 	}
 
 	public void setTechtreeUnlocked(final CSimulation simulation, final War3ID rawcode, final int setToLevel) {
@@ -203,6 +216,19 @@ public class CPlayer extends CBasePlayer {
 	}
 
 	public void removeTechtreeUnlocked(final CSimulation simulation, final War3ID rawcode) {
+		removeSingleTechtreeUnlocked(rawcode);
+		final CUnitData unitData = simulation.getUnitData();
+		final CUnitType unitType = unitData.getUnitType(rawcode);
+		if (unitType != null) {
+			final List<War3ID> dependencyOr = unitType.getDependencyOr();
+			for (final War3ID otherDependency : dependencyOr) {
+				removeSingleTechtreeUnlocked(otherDependency);
+			}
+		}
+		fireRequirementUpdateForAbilities(simulation, true);
+	}
+
+	private void removeSingleTechtreeUnlocked(final War3ID rawcode) {
 		final Integer techtreeUnlocked = this.rawcodeToTechtreeUnlocked.get(rawcode);
 		if (techtreeUnlocked == null) {
 			this.rawcodeToTechtreeUnlocked.put(rawcode, -1);
@@ -210,10 +236,21 @@ public class CPlayer extends CBasePlayer {
 		else {
 			this.rawcodeToTechtreeUnlocked.put(rawcode, techtreeUnlocked - 1);
 		}
-		fireRequirementUpdateForAbilities(simulation, true);
 	}
 
-	public void addTechtreeInProgress(final War3ID rawcode) {
+	public void addTechtreeInProgress(final CSimulation simulation, final War3ID rawcode) {
+		addSingleTechtreeInProgress(rawcode);
+		final CUnitData unitData = simulation.getUnitData();
+		final CUnitType unitType = unitData.getUnitType(rawcode);
+		if (unitType != null) {
+			final List<War3ID> dependencyOr = unitType.getDependencyOr();
+			for (final War3ID otherDependency : dependencyOr) {
+				addSingleTechtreeInProgress(otherDependency);
+			}
+		}
+	}
+
+	private void addSingleTechtreeInProgress(final War3ID rawcode) {
 		final Integer techtreeUnlocked = this.rawcodeToTechtreeInProgress.get(rawcode);
 		if (techtreeUnlocked == null) {
 			this.rawcodeToTechtreeInProgress.put(rawcode, 1);
@@ -223,7 +260,19 @@ public class CPlayer extends CBasePlayer {
 		}
 	}
 
-	public void removeTechtreeInProgress(final War3ID rawcode) {
+	public void removeTechtreeInProgress(final CSimulation simulation, final War3ID rawcode) {
+		removeSingleTechtreeInProgress(rawcode);
+		final CUnitData unitData = simulation.getUnitData();
+		final CUnitType unitType = unitData.getUnitType(rawcode);
+		if (unitType != null) {
+			final List<War3ID> dependencyOr = unitType.getDependencyOr();
+			for (final War3ID otherDependency : dependencyOr) {
+				removeSingleTechtreeInProgress(otherDependency);
+			}
+		}
+	}
+
+	private void removeSingleTechtreeInProgress(final War3ID rawcode) {
 		final Integer techtreeUnlocked = this.rawcodeToTechtreeInProgress.get(rawcode);
 		if (techtreeUnlocked == null) {
 			this.rawcodeToTechtreeInProgress.put(rawcode, -1);

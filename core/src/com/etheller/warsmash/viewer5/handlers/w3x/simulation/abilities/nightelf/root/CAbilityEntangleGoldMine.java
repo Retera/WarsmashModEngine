@@ -75,7 +75,7 @@ public class CAbilityEntangleGoldMine extends CAbilityTargetSpellBase {
 	}
 
 	@Override
-	public void checkCanTarget(final CSimulation game, final CUnit unit, int playerIndex, int orderId,
+	public void checkCanTarget(final CSimulation game, final CUnit unit, final int playerIndex, int orderId,
 			final CWidget target, final AbilityTargetCheckReceiver<CWidget> receiver) {
 		if (orderId == OrderIds.entangleinstant) {
 			orderId = getBaseOrderId();
@@ -101,8 +101,8 @@ public class CAbilityEntangleGoldMine extends CAbilityTargetSpellBase {
 	}
 
 	@Override
-	protected void innerCheckCanUse(final CSimulation game, final CUnit unit, int playerIndex,
-			final int orderId, final AbilityActivationReceiver receiver) {
+	protected void innerCheckCanUse(final CSimulation game, final CUnit unit, final int playerIndex, final int orderId,
+			final AbilityActivationReceiver receiver) {
 		if (this.entangledMine != null) {
 			receiver.disabled();
 		}
@@ -112,8 +112,9 @@ public class CAbilityEntangleGoldMine extends CAbilityTargetSpellBase {
 	}
 
 	@Override
-	public CBehavior begin(final CSimulation game, final CUnit caster, int playerIndex, final int orderId, final CWidget target) {
-		instant = orderId == OrderIds.entangleinstant;
+	public CBehavior begin(final CSimulation game, final CUnit caster, final int playerIndex, final int orderId,
+			final CWidget target) {
+		this.instant = orderId == OrderIds.entangleinstant;
 		return super.begin(game, caster, playerIndex, orderId, target);
 	}
 
@@ -122,14 +123,14 @@ public class CAbilityEntangleGoldMine extends CAbilityTargetSpellBase {
 		final CUnit unitTarget = target.visit(AbilityTargetVisitor.UNIT);
 		if (unitTarget != null) {
 			final CAbilityGoldMinable goldMineData = unitTarget.getGoldMineData();
-			if (goldMineData != null && goldMineData.isBaseMine()) {
+			if ((goldMineData != null) && goldMineData.isBaseMine()) {
 				unitTarget.setHidden(true);
 				unitTarget.setPaused(true);
 				// == stuff copied from build behavior ==
 				this.entangledMine = simulation.createUnit(this.resultingTypeId, unit.getPlayerIndex(),
 						unitTarget.getX(), unitTarget.getY(), simulation.getGameplayConstants().getBuildingAngle());
 
-				if (!instant) {
+				if (!this.instant) {
 					this.entangledMine.setConstructing(true);
 					this.entangledMine.setLife(simulation,
 							this.entangledMine.getMaximumLife() * WarsmashConstants.BUILDING_CONSTRUCT_START_LIFE);
@@ -141,7 +142,7 @@ public class CAbilityEntangleGoldMine extends CAbilityTargetSpellBase {
 					unit.checkDisabledAbilities(simulation, true);
 				}
 				this.entangledMine.setFoodUsed(this.entangledMine.getUnitType().getFoodUsed());
-				simulation.getPlayer(unit.getPlayerIndex()).addTechtreeInProgress(this.resultingTypeId);
+				simulation.getPlayer(unit.getPlayerIndex()).addTechtreeInProgress(simulation, this.resultingTypeId);
 				simulation.unitConstructedEvent(unit, this.entangledMine);
 				// == end stuff copied from build behavior (this was noted in case it refactors
 				// to a common subroutine later) ==

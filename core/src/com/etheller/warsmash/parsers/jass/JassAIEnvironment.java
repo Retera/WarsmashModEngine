@@ -36,8 +36,17 @@ public class JassAIEnvironment {
 		// TODO GetHeroLevelAI
 		jassNativeManager.createNative("GetUnitCount", (arguments, globalScope, triggerScope) -> {
 			final Integer unitId = arguments.get(0).visit(IntegerJassValueVisitor.getInstance());
-			simulation.getPlayer(playerIndex).getTechtreeUnlocked(new War3ID(unitId));
-			return IntegerJassValue.of(playerIndex);
+			final War3ID typeId = new War3ID(unitId);
+			final int techtreeUnlocked = simulation.getPlayer(playerIndex).getTechtreeUnlocked(typeId);
+			final int techtreeInProgress = simulation.getPlayer(playerIndex).getTechtreeInProgress(typeId);
+			return IntegerJassValue.of(techtreeUnlocked + techtreeInProgress);
+		});
+
+		jassNativeManager.createNative("GetUnitCountDone", (arguments, globalScope, triggerScope) -> {
+			final Integer unitId = arguments.get(0).visit(IntegerJassValueVisitor.getInstance());
+			final War3ID typeId = new War3ID(unitId);
+			final int techtreeUnlocked = simulation.getPlayer(playerIndex).getTechtreeUnlocked(typeId);
+			return IntegerJassValue.of(techtreeUnlocked);
 		});
 	}
 

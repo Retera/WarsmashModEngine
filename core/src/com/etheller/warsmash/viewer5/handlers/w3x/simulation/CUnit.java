@@ -2008,9 +2008,9 @@ public class CUnit extends CWidget {
 						if (this.unitType.getFoodMade() != 0) {
 							player.setFoodCap(player.getFoodCap() + this.unitType.getFoodMade());
 						}
-						player.removeTechtreeInProgress(this.unitType.getTypeId());
-						player.addTechtreeUnlocked(game, this.unitType.getTypeId());
+						player.removeTechtreeInProgress(game, this.unitType.getTypeId());
 						if (!upgrading) {
+							player.addTechtreeUnlocked(game, this.unitType.getTypeId());
 							game.unitConstructFinishEvent(this);
 							fireConstructFinishEvents(game);
 						}
@@ -2075,7 +2075,7 @@ public class CUnit extends CWidget {
 								trainedUnit.setFoodUsed(trainedUnitType.getFoodUsed());
 								final CPlayer player = game.getPlayer(this.playerIndex);
 								player.setUnitFoodMade(trainedUnit, trainedUnitType.getFoodMade());
-								player.removeTechtreeInProgress(queuedRawcode);
+								player.removeTechtreeInProgress(game, queuedRawcode);
 								player.addTechtreeUnlocked(game, queuedRawcode);
 								fireTrainFinishEvents(game, trainedUnit);
 								// nudge the trained unit out around us
@@ -2106,7 +2106,7 @@ public class CUnit extends CWidget {
 								trainedUnit.setFoodUsed(trainedUnitType.getFoodUsed());
 								final CPlayer player = game.getPlayer(this.playerIndex);
 								player.setUnitFoodMade(trainedUnit, trainedUnitType.getFoodMade());
-								player.removeTechtreeInProgress(queuedRawcode);
+								player.removeTechtreeInProgress(game, queuedRawcode);
 								player.addTechtreeUnlocked(game, queuedRawcode);
 								fireTrainFinishEvents(game, trainedUnit);
 								// nudge the trained unit out around us
@@ -2183,7 +2183,7 @@ public class CUnit extends CWidget {
 									setBuildQueueItem(game, i, this.buildQueue[i + 1], this.buildQueueTypes[i + 1]);
 								}
 								setBuildQueueItem(game, this.buildQueue.length - 1, null, null);
-								player.removeTechtreeInProgress(queuedRawcode);
+								player.removeTechtreeInProgress(game, queuedRawcode);
 								player.addTechResearched(game, queuedRawcode, 1);
 								fireResearchFinishEvents(game, queuedRawcode);
 								game.researchFinishEvent(this, queuedRawcode,
@@ -3033,7 +3033,7 @@ public class CUnit extends CWidget {
 		}
 		if (getHeroData() == null) {
 			if (this.constructing) {
-				player.removeTechtreeInProgress(this.unitType.getTypeId());
+				player.removeTechtreeInProgress(simulation, this.unitType.getTypeId());
 			}
 			else {
 				player.removeTechtreeUnlocked(simulation, this.unitType.getTypeId());
@@ -3911,7 +3911,7 @@ public class CUnit extends CWidget {
 				if ((queueItemType == QueueItemType.UNIT) || (queueItemType == QueueItemType.RESEARCH)
 						|| (queueItemType == QueueItemType.SACRIFICE)) {
 					final CPlayer player = game.getPlayer(this.playerIndex);
-					player.addTechtreeInProgress(rawcode);
+					player.addTechtreeInProgress(game, rawcode);
 				}
 				return true;
 			}
@@ -3988,21 +3988,21 @@ public class CUnit extends CWidget {
 					final CPlayer player = game.getPlayer(this.playerIndex);
 					final CUpgradeType upgradeType = game.getUpgradeData().getType(this.buildQueue[cancelIndex]);
 					player.refundFor(upgradeType);
-					player.removeTechtreeInProgress(this.buildQueue[cancelIndex]);
+					player.removeTechtreeInProgress(game, this.buildQueue[cancelIndex]);
 					break;
 				}
 				case UNIT: {
 					final CPlayer player = game.getPlayer(this.playerIndex);
 					final CUnitType unitType = game.getUnitData().getUnitType(this.buildQueue[cancelIndex]);
 					player.refundFor(unitType);
-					player.removeTechtreeInProgress(this.buildQueue[cancelIndex]);
+					player.removeTechtreeInProgress(game, this.buildQueue[cancelIndex]);
 					break;
 				}
 				case SACRIFICE: {
 					final CPlayer player = game.getPlayer(this.playerIndex);
 					final CUnitType unitType = game.getUnitData().getUnitType(this.buildQueue[cancelIndex]);
 					player.refundFor(unitType);
-					player.removeTechtreeInProgress(this.buildQueue[cancelIndex]);
+					player.removeTechtreeInProgress(game, this.buildQueue[cancelIndex]);
 
 					getWorker().setHidden(false);
 					break;
@@ -4049,7 +4049,7 @@ public class CUnit extends CWidget {
 							this.queuedUnitFoodPaid = false;
 							game.getCommandErrorListener().showInterfaceError(this.playerIndex,
 									CommandStringErrorKeys.NOT_ENOUGH_FOOD);
-							player.removeTechtreeInProgress(rawcode);
+							player.removeTechtreeInProgress(game, rawcode);
 						}
 					}
 				}
@@ -4451,7 +4451,7 @@ public class CUnit extends CWidget {
 		else {
 			if (!isDead()) {
 				if (this.constructing) {
-					player.removeTechtreeInProgress(this.unitType.getTypeId());
+					player.removeTechtreeInProgress(simulation, this.unitType.getTypeId());
 				}
 				else {
 					player.removeTechtreeUnlocked(simulation, this.unitType.getTypeId());
@@ -4545,7 +4545,7 @@ public class CUnit extends CWidget {
 			ability.visit(AbilityDisableWhileUpgradingVisitor.INSTANCE);
 		}
 		checkDisabledAbilities(game, true);
-		player.addTechtreeInProgress(rawcode);
+		player.addTechtreeInProgress(game, rawcode);
 
 		game.unitUpgradingEvent(this, rawcode);
 		this.unitAnimationListener.playAnimation(true, PrimaryTag.BIRTH, SequenceUtils.EMPTY, 0.0f, true);

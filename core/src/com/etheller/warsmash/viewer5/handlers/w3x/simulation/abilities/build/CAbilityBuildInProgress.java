@@ -37,11 +37,11 @@ public class CAbilityBuildInProgress extends AbstractCAbility {
 	}
 
 	@Override
-	public boolean checkBeforeQueue(final CSimulation game, final CUnit caster, int playerIndex,
+	public boolean checkBeforeQueue(final CSimulation game, final CUnit caster, final int playerIndex,
 			final int orderId, final AbilityTarget target) {
 		final CPlayer player = game.getPlayer(caster.getPlayerIndex());
 		if (caster.isUpgrading()) {
-			player.removeTechtreeInProgress(caster.getUpgradeIdType());
+			player.removeTechtreeInProgress(game, caster.getUpgradeIdType());
 			caster.cancelUpgrade(game);
 		}
 		else {
@@ -54,52 +54,54 @@ public class CAbilityBuildInProgress extends AbstractCAbility {
 	public void onDeath(final CSimulation game, final CUnit caster) {
 		final CPlayer player = game.getPlayer(caster.getPlayerIndex());
 		if (caster.isUpgrading()) {
-			player.removeTechtreeInProgress(caster.getUpgradeIdType());
+			player.removeTechtreeInProgress(game, caster.getUpgradeIdType());
 			caster.cancelUpgrade(game);
 		}
 		else {
 			final CUnitType unitType = caster.getUnitType();
 			player.refundFor(unitType);
-			player.removeTechtreeInProgress(unitType.getTypeId());
+			player.removeTechtreeInProgress(game, unitType.getTypeId());
 		}
 	}
 
 	@Override
-	public CBehavior begin(final CSimulation game, final CUnit caster, int playerIndex, final int orderId, final CWidget target) {
+	public CBehavior begin(final CSimulation game, final CUnit caster, final int playerIndex, final int orderId,
+			final CWidget target) {
 		return null;
 	}
 
 	@Override
-	public CBehavior begin(final CSimulation game, final CUnit caster, int playerIndex,
-			final int orderId, final AbilityPointTarget point) {
+	public CBehavior begin(final CSimulation game, final CUnit caster, final int playerIndex, final int orderId,
+			final AbilityPointTarget point) {
 		return null;
 	}
 
 	@Override
-	public CBehavior beginNoTarget(final CSimulation game, final CUnit caster, int playerIndex, final int orderId) {
+	public CBehavior beginNoTarget(final CSimulation game, final CUnit caster, final int playerIndex,
+			final int orderId) {
 		return null;
 	}
 
 	@Override
-	protected void innerCheckCanUse(final CSimulation game, final CUnit unit, int playerIndex,
-			final int orderId, final AbilityActivationReceiver receiver) {
+	protected void innerCheckCanUse(final CSimulation game, final CUnit unit, final int playerIndex, final int orderId,
+			final AbilityActivationReceiver receiver) {
 		receiver.useOk();
 	}
 
 	@Override
-	public void checkCanTarget(final CSimulation game, final CUnit unit, int playerIndex, final int orderId,
+	public void checkCanTarget(final CSimulation game, final CUnit unit, final int playerIndex, final int orderId,
 			final CWidget target, final AbilityTargetCheckReceiver<CWidget> receiver) {
 		receiver.orderIdNotAccepted();
 	}
 
 	@Override
-	public void checkCanTarget(final CSimulation game, final CUnit unit, int playerIndex,
-			final int orderId, final AbilityPointTarget target, final AbilityTargetCheckReceiver<AbilityPointTarget> receiver) {
+	public void checkCanTarget(final CSimulation game, final CUnit unit, final int playerIndex, final int orderId,
+			final AbilityPointTarget target, final AbilityTargetCheckReceiver<AbilityPointTarget> receiver) {
 		receiver.orderIdNotAccepted();
 	}
 
 	@Override
-	public void checkCanTargetNoTarget(final CSimulation game, final CUnit unit, int playerIndex,
+	public void checkCanTargetNoTarget(final CSimulation game, final CUnit unit, final int playerIndex,
 			final int orderId, final AbilityTargetCheckReceiver<Void> receiver) {
 		if (orderId == OrderIds.cancel) {
 			receiver.targetOk(null);
@@ -115,7 +117,7 @@ public class CAbilityBuildInProgress extends AbstractCAbility {
 	}
 
 	@Override
-	public void onCancelFromQueue(final CSimulation game, final CUnit unit, int playerIndex, final int orderId) {
+	public void onCancelFromQueue(final CSimulation game, final CUnit unit, final int playerIndex, final int orderId) {
 		// TODO Auto-generated method stub
 
 	}

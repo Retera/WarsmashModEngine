@@ -36,7 +36,8 @@ public class CBehaviorUndeadBuild extends CAbstractRangedBehavior {
 		this.buildOnBuildingIntersector = new BuildOnBuildingIntersector();
 	}
 
-	public CBehavior reset(CSimulation game, final AbilityPointTarget target, final int orderId, final int highlightOrderId) {
+	public CBehavior reset(final CSimulation game, final AbilityPointTarget target, final int orderId,
+			final int highlightOrderId) {
 		this.highlightOrderId = highlightOrderId;
 		this.orderId = new War3ID(orderId);
 		this.unitCreated = false;
@@ -75,7 +76,9 @@ public class CBehaviorUndeadBuild extends CAbstractRangedBehavior {
 			final CUnitType unitTypeToCreate = simulation.getUnitData().getUnitType(this.orderId);
 			final BufferedImage buildingPathingPixelMap = unitTypeToCreate.getBuildingPathingPixelMap();
 			final boolean canBeBuiltOnThem = unitTypeToCreate.isCanBeBuiltOnThem();
-			boolean buildLocationObstructed = AbstractCAbilityBuild.isBuildLocationObstructed(simulation, unitTypeToCreate, buildingPathingPixelMap, canBeBuiltOnThem, this.target.getX(), this.target.getY(), this.unit, this.buildOnBuildingIntersector);
+			final boolean buildLocationObstructed = AbstractCAbilityBuild.isBuildLocationObstructed(simulation,
+					unitTypeToCreate, buildingPathingPixelMap, canBeBuiltOnThem, this.target.getX(), this.target.getY(),
+					this.unit, this.buildOnBuildingIntersector);
 			final int playerIndex = this.unit.getPlayerIndex();
 			if (!buildLocationObstructed) {
 				final CUnit constructedStructure = simulation.createUnit(this.orderId, playerIndex, this.target.getX(),
@@ -113,7 +116,7 @@ public class CBehaviorUndeadBuild extends CAbstractRangedBehavior {
 				for (final CAbility ability : constructedStructure.getAbilities()) {
 					ability.visit(AbilityDisableWhileUnderConstructionVisitor.INSTANCE);
 				}
-				unit.checkDisabledAbilities(simulation, true);
+				this.unit.checkDisabledAbilities(simulation, true);
 				final float deltaX = this.unit.getX() - this.target.getX();
 				final float deltaY = this.unit.getY() - this.target.getY();
 				final float delta = (float) Math.sqrt((deltaX * deltaX) + (deltaY * deltaY));
@@ -121,14 +124,15 @@ public class CBehaviorUndeadBuild extends CAbstractRangedBehavior {
 						this.target.getX() + ((deltaX / delta) * unitTypeToCreate.getCollisionSize()),
 						this.target.getY() + ((deltaY / delta) * unitTypeToCreate.getCollisionSize()), simulation);
 				simulation.unitRepositioned(this.unit);
-				simulation.getPlayer(playerIndex).addTechtreeInProgress(this.orderId);
+				simulation.getPlayer(playerIndex).addTechtreeInProgress(simulation, this.orderId);
 				simulation.unitConstructedEvent(this.unit, constructedStructure);
 				this.doneTick = simulation.getGameTurnTick() + delayAnimationTicks;
 			}
 			else {
 				final CPlayer player = simulation.getPlayer(playerIndex);
 				refund(player, unitTypeToCreate);
-				simulation.getCommandErrorListener().showInterfaceError(playerIndex, CommandStringErrorKeys.UNABLE_TO_BUILD_THERE);
+				simulation.getCommandErrorListener().showInterfaceError(playerIndex,
+						CommandStringErrorKeys.UNABLE_TO_BUILD_THERE);
 				return this.unit.pollNextOrderBehavior(simulation);
 			}
 		}

@@ -32,6 +32,7 @@ public class ParticleEmitter2Object extends GenericObject implements EmitterObje
 	public float[][] intervals;
 	public int blendSrc;
 	public int blendDst;
+	public int filterModeForShader;
 	public int filterModeForSort;
 	public int priorityPlane;
 
@@ -100,6 +101,7 @@ public class ParticleEmitter2Object extends GenericObject implements EmitterObje
 
 		final int[] blendModes = FilterMode.emitterFilterMode(emitter.getFilterMode());
 
+		this.filterModeForShader = emitter.getFilterMode().ordinal();
 		this.filterModeForSort = emitter.getFilterMode().ordinal() + 2;
 		this.blendSrc = blendModes[0];
 		this.blendDst = blendModes[1];

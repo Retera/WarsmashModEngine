@@ -4,6 +4,7 @@ import java.util.List;
 
 import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.CLevelingAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.item.CAbilityItemHeal;
@@ -20,18 +21,18 @@ public class CAbilityTypeItemHeal extends CAbilityType<CAbilityTypeItemHealLevel
 	@Override
 	public CAbility createAbility(final int handleId) {
 		final CAbilityTypeItemHealLevelData levelData = getLevelData(0);
-		return new CAbilityItemHeal(handleId, getAlias(), levelData.getLifeToRegain());
+		return new CAbilityItemHeal(handleId, getCode(), getAlias(), levelData.getLifeToRegain(), levelData.getCooldown());
 	}
 
 	@Override
-	public void setLevel(final CSimulation game, final CLevelingAbility existingAbility, final int level) {
+	public void setLevel(final CSimulation game, final CUnit unit, final CLevelingAbility existingAbility, final int level) {
 
 		final CAbilityTypeLevelData levelData = getLevelData(level - 1);
 		final CLevelingAbility heroAbility = (existingAbility);
 
 		// TODO ignores fields
 
-		heroAbility.setLevel(level);
+		heroAbility.setLevel(game, unit, level);
 
 	}
 }

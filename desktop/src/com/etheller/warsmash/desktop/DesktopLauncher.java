@@ -45,7 +45,7 @@ import com.etheller.warsmash.viewer5.gl.WireframeExtension;
 
 public class DesktopLauncher {
 	public static void main(final String[] arg) {
-		System.out.println("You ran it.");
+		System.out.println("Warsmash engine is starting...");
 		final LwjglApplicationConfiguration config = new LwjglApplicationConfiguration();
 		config.useGL30 = true;
 		config.gles30ContextMajorVersion = 3;
@@ -197,10 +197,10 @@ public class DesktopLauncher {
 			}
 
 			@Override
-			public void play(final Sound buffer, final float volume, final float pitch, final float x, final float y,
+			public long play(final Sound buffer, final float volume, final float pitch, final float x, final float y,
 					final float z, final boolean is3dSound, final float maxDistance, final float refDistance,
 					final boolean looping) {
-				((OpenALSound) buffer).play(volume, pitch, x, y, z, is3dSound, maxDistance, refDistance, looping);
+				return ((OpenALSound) buffer).play(volume, pitch, x, y, z, is3dSound, maxDistance, refDistance, looping);
 			}
 
 			@Override

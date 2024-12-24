@@ -8,10 +8,13 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CDestructableEnumFu
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnitEnumFunction;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTarget;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTargetWidgetVisitor;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CAttackType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CTargetType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CWeaponType;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.listeners.CUnitAttackPreDamageListenerDamageModResult;
 
 public class CUnitAttackMissileSplash extends CUnitAttackMissile {
 	private int areaOfEffectFullDamage;
@@ -110,11 +113,10 @@ public class CUnitAttackMissileSplash extends CUnitAttackMissile {
 			final CUnitAttackListener attackListener) {
 		SplashDamageConsumer.INSTANCE.doDamage(cSimulation, source, target, this, x, y, damage, attackListener);
 		if (!SplashDamageConsumer.INSTANCE.hitTarget) {
-			float originalTargetDamage = damage;
-			if (Math.abs(this.damageFactorSmall) > 0.0001) {
-				originalTargetDamage *= this.damageFactorSmall;
+			final CWidget widget = target.visit(AbilityTargetWidgetVisitor.INSTANCE);
+			if (widget != null) {
+				SplashDamageConsumer.INSTANCE.damageTarget(widget);
 			}
-			super.doDamage(cSimulation, source, target, originalTargetDamage, x, y, bounceIndex, attackListener);
 		}
 	}
 
@@ -128,6 +130,7 @@ public class CUnitAttackMissileSplash extends CUnitAttackMissile {
 		private float x;
 		private float y;
 		private float damage;
+		private float bonusDamage;
 		private CUnitAttackListener attackListener;
 		private boolean hitTarget;
 
@@ -143,32 +146,23 @@ public class CUnitAttackMissileSplash extends CUnitAttackMissile {
 			this.damage = damage;
 			this.attackListener = attackListener;
 			this.hitTarget = false;
-			final float doubleMaxArea = (attack.areaOfEffectSmallDamage) * 2;
+			final float doubleMaxArea = Math.max(Math.max(attack.areaOfEffectFullDamage, attack.areaOfEffectMediumDamage), attack.areaOfEffectSmallDamage) * 2;
 			final float maxArea = doubleMaxArea / 2;
 			this.rect.set(x - maxArea, y - maxArea, doubleMaxArea, doubleMaxArea);
+			CUnitAttackPreDamageListenerDamageModResult result = this.attack.runPreDamageListeners(simulation, this.source, this.target, this.damage);
+			this.damage = result.computeFinalDamage();
+			this.bonusDamage = result.getBonusDamage();
 			simulation.getWorldCollision().enumUnitsInRect(this.rect, this);
 			simulation.getWorldCollision().enumDestructablesInRect(this.rect, this);
 		}
 
 		@Override
 		public boolean call(final CUnit enumUnit) {
-			if (enumUnit.canBeTargetedBy(this.simulation, this.source, this.attack.areaOfEffectTargets)) {
-				final double distance = enumUnit.distance(this.x, this.y);
-				if (distance <= (this.attack.areaOfEffectFullDamage)) {
-					enumUnit.damage(this.simulation, this.source, this.attack.getAttackType(),
-							this.attack.getWeaponSound(), this.damage);
-					this.attackListener.onHit(enumUnit, this.damage);
-				} else if (distance <= (this.attack.areaOfEffectMediumDamage)) {
-					enumUnit.damage(this.simulation, this.source, this.attack.getAttackType(),
-							this.attack.getWeaponSound(), this.damage * this.attack.damageFactorMedium);
-					this.attackListener.onHit(enumUnit, this.damage);
-				} else if (distance <= (this.attack.areaOfEffectSmallDamage)) {
-					enumUnit.damage(this.simulation, this.source, this.attack.getAttackType(),
-							this.attack.getWeaponSound(), this.damage * this.attack.damageFactorSmall);
-					this.attackListener.onHit(enumUnit, this.damage);
-				}
+			if (enumUnit != this.source && enumUnit.canBeTargetedBy(this.simulation, this.source, this.attack.areaOfEffectTargets)) {
+				float damageDealt = damageTarget(enumUnit);
 				if (enumUnit == this.target) {
 					this.hitTarget = true;
+					this.attack.runPostDamageListeners(simulation, this.source, target, damageDealt);
 				}
 			}
 			return false;
@@ -177,25 +171,34 @@ public class CUnitAttackMissileSplash extends CUnitAttackMissile {
 		@Override
 		public boolean call(final CDestructable enumDestructable) {
 			if (enumDestructable.canBeTargetedBy(this.simulation, this.source, this.attack.areaOfEffectTargets)) {
-				final double distance = enumDestructable.distance(this.x, this.y);
-				if (distance <= (this.attack.areaOfEffectFullDamage)) {
-					enumDestructable.damage(this.simulation, this.source, this.attack.getAttackType(),
-							this.attack.getWeaponSound(), this.damage);
-					this.attackListener.onHit(enumDestructable, this.damage);
-				} else if (distance <= (this.attack.areaOfEffectMediumDamage)) {
-					enumDestructable.damage(this.simulation, this.source, this.attack.getAttackType(),
-							this.attack.getWeaponSound(), this.damage * this.attack.damageFactorMedium);
-					this.attackListener.onHit(enumDestructable, this.damage);
-				} else if (distance <= (this.attack.areaOfEffectSmallDamage)) {
-					enumDestructable.damage(this.simulation, this.source, this.attack.getAttackType(),
-							this.attack.getWeaponSound(), this.damage * this.attack.damageFactorSmall);
-					this.attackListener.onHit(enumDestructable, this.damage);
-				}
+				float damageDealt = damageTarget(enumDestructable);
 				if (enumDestructable == this.target) {
 					this.hitTarget = true;
+					this.attack.runPostDamageListeners(simulation, this.source, target, damageDealt);
 				}
 			}
 			return false;
+		}
+
+		public float damageTarget(final CWidget enumUnit) {
+			float damageDealt = this.damage;
+			final double distance = enumUnit.distance(this.x, this.y);
+			if (distance <= (this.attack.areaOfEffectFullDamage)) {
+				damageDealt = enumUnit.damage(this.simulation, this.source, true, true, this.attack.getAttackType(),
+						this.attack.getWeaponType().getDamageType(), this.attack.getWeaponSound(), this.damage, this.bonusDamage);
+				this.attackListener.onHit(enumUnit, this.damage + this.bonusDamage);
+			} else if (distance <= (this.attack.areaOfEffectMediumDamage)) {
+				damageDealt = enumUnit.damage(this.simulation, this.source, true, true, this.attack.getAttackType(),
+						this.attack.getWeaponType().getDamageType(), this.attack.getWeaponSound(),
+						this.damage * this.attack.damageFactorMedium, this.bonusDamage * this.attack.damageFactorMedium);
+				this.attackListener.onHit(enumUnit, this.damage + this.bonusDamage);
+			} else if (distance <= (this.attack.areaOfEffectSmallDamage)) {
+				damageDealt = enumUnit.damage(this.simulation, this.source, true, true, this.attack.getAttackType(),
+						this.attack.getWeaponType().getDamageType(), this.attack.getWeaponSound(),
+						this.damage * this.attack.damageFactorSmall, this.bonusDamage * this.attack.damageFactorSmall);
+				this.attackListener.onHit(enumUnit, this.damage + this.bonusDamage);
+			}
+			return damageDealt;
 		}
 	}
 }

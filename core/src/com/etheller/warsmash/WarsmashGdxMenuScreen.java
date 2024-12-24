@@ -1,6 +1,5 @@
 package com.etheller.warsmash;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -29,10 +28,11 @@ import com.etheller.warsmash.parsers.fdf.GameUI;
 import com.etheller.warsmash.parsers.jass.Jass2.RootFrameListener;
 import com.etheller.warsmash.units.DataTable;
 import com.etheller.warsmash.units.Element;
-import com.etheller.warsmash.util.StringBundle;
+import com.etheller.warsmash.util.WarsmashConstants;
 import com.etheller.warsmash.util.WarsmashUtils;
 import com.etheller.warsmash.viewer5.Camera;
 import com.etheller.warsmash.viewer5.CanvasProvider;
+import com.etheller.warsmash.viewer5.FogSettings;
 import com.etheller.warsmash.viewer5.Model;
 import com.etheller.warsmash.viewer5.ModelInstance;
 import com.etheller.warsmash.viewer5.ModelViewer;
@@ -99,7 +99,7 @@ public class WarsmashGdxMenuScreen implements InputProcessor, Screen, SingleMode
 			System.err.println("Renderer: " + renderer);
 
 			this.codebase = WarsmashGdxMapScreen.parseDataSources(this.warsmashIni);
-			this.viewer = new MdxViewer(this.codebase, this.game, Vector3.Zero);
+			this.viewer = new MdxViewer(this.codebase, this.game);
 
 			this.viewer.addHandler(new MdxHandler());
 			this.viewer.enableAudio();
@@ -178,16 +178,6 @@ public class WarsmashGdxMenuScreen implements InputProcessor, Screen, SingleMode
 
 			System.out.println("Loaded");
 			Gdx.gl30.glClearColor(0.0f, 0.0f, 0.0f, 1);
-			final DataTable musicSLK = new DataTable(StringBundle.EMPTY);
-			final String musicSLKPath = "UI\\SoundInfo\\Music.SLK";
-			if (this.viewer.dataSource.has(musicSLKPath)) {
-				try (InputStream miscDataTxtStream = this.viewer.dataSource.getResourceAsStream(musicSLKPath)) {
-					musicSLK.readSLK(miscDataTxtStream);
-				}
-				catch (final IOException e) {
-					e.printStackTrace();
-				}
-			}
 
 			String server;
 			String mapDownloadDir;
@@ -208,18 +198,6 @@ public class WarsmashGdxMenuScreen implements InputProcessor, Screen, SingleMode
 						@Override
 						public void onCreate(final GameUI rootFrame) {
 //						WarsmashGdxMapGame.this.viewer.setGameUI(rootFrame);
-
-							singleModelScene(WarsmashGdxMenuScreen.this.scene,
-									rootFrame.getSkinField("GlueSpriteLayerBackground"), "Stand");
-							if (!WarsmashGdxMenuScreen.this.mainModel.cameras.isEmpty()) {
-								WarsmashGdxMenuScreen.this.modelCamera = WarsmashGdxMenuScreen.this.mainModel.cameras
-										.get(0);
-							}
-							else {
-								WarsmashGdxMenuScreen.this.mainInstance.detach();
-								WarsmashGdxMenuScreen.this.mainInstance.setLocation(0, 0, 0);
-								WarsmashGdxMenuScreen.this.mainInstance.setScene(WarsmashGdxMenuScreen.this.uiScene);
-							}
 						}
 					}, new GamingNetworkConnectionImpl(server), mapDownloadDir);
 
@@ -331,7 +309,7 @@ public class WarsmashGdxMenuScreen implements InputProcessor, Screen, SingleMode
 	}
 
 	@Override
-	public void setModel(final String path) {
+	public void setModel(final String path, final FogSettings fogSettings) {
 		if (this.mainInstance != null) {
 			this.mainInstance.detach();
 		}
@@ -356,6 +334,19 @@ public class WarsmashGdxMenuScreen implements InputProcessor, Screen, SingleMode
 			// hacky replica of a model viewer tool with a bunch of irrelevant loop type
 			// settings instead of what it should be
 			this.hasPlayedStandHack = false;
+		}
+		if (fogSettings != null) {
+			this.scene.fogSettings.style = fogSettings.style;
+			this.scene.fogSettings.color = fogSettings.color;
+			this.scene.fogSettings.density = fogSettings.density;
+			this.scene.fogSettings.start = fogSettings.start;
+			this.scene.fogSettings.end = fogSettings.end;
+//			if (this.modelCamera != null) {
+//				this.scene.fogSettings.start = (fogSettings.start - this.modelCamera.nearClippingPlane)
+//						/ (this.modelCamera.farClippingPlane - this.modelCamera.nearClippingPlane);
+//				this.scene.fogSettings.end = (fogSettings.end - this.modelCamera.nearClippingPlane)
+//						/ (this.modelCamera.farClippingPlane - this.modelCamera.nearClippingPlane);
+//			}
 		}
 
 	}
@@ -601,18 +592,22 @@ public class WarsmashGdxMenuScreen implements InputProcessor, Screen, SingleMode
 	public void resize(final int width, final int height) {
 		this.tempRect.width = width;
 		this.tempRect.height = height;
-		final float fourThirdsHeight = (this.tempRect.height * 4) / 3;
-		if (fourThirdsHeight < this.tempRect.width) {
-			final float dx = this.tempRect.width - fourThirdsHeight;
-			this.tempRect.width = fourThirdsHeight;
-			this.tempRect.x = dx / 2;
-		}
-		else {
-			final float threeFourthsWidth = (this.tempRect.width * 3) / 4;
-			if (threeFourthsWidth < this.tempRect.height) {
-				final float dy = this.tempRect.height - threeFourthsWidth;
-				this.tempRect.height = threeFourthsWidth;
-				this.tempRect.y = dy;
+		this.tempRect.x = 0;
+		this.tempRect.y = 0;
+		if (!WarsmashConstants.FULL_SCREEN_MENU_BACKDROP) {
+			final float fourThirdsHeight = (this.tempRect.height * 4) / 3;
+			if (fourThirdsHeight < this.tempRect.width) {
+				final float dx = this.tempRect.width - fourThirdsHeight;
+				this.tempRect.width = fourThirdsHeight;
+				this.tempRect.x = dx / 2;
+			}
+			else {
+				final float threeFourthsWidth = (this.tempRect.width * 3) / 4;
+				if (threeFourthsWidth < this.tempRect.height) {
+					final float dy = this.tempRect.height - threeFourthsWidth;
+					this.tempRect.height = threeFourthsWidth;
+					this.tempRect.y = dy;
+				}
 			}
 		}
 		this.cameraManager.camera.viewport(this.tempRect);
@@ -792,8 +787,12 @@ public class WarsmashGdxMenuScreen implements InputProcessor, Screen, SingleMode
 	}
 
 	@Override
-	public boolean scrolled(final int amount) {
-		// TODO Auto-generated method stub
+	public boolean scrolled(final float amountX, final float amountY) {
+		return false;
+	}
+
+	@Override
+	public boolean touchCancelled(final int screenX, final int screenY, final int pointer, final int button) {
 		return false;
 	}
 

@@ -33,7 +33,7 @@ public class Sequence {
 		primaryTags.clear();
 		secondaryTags.clear();
 		TokenLoop:
-		for (final String token : name.split("\\s+")) {
+		for (final String token : name.split("\\s+|,")) {
 			final String upperCaseToken = token.toUpperCase();
 			for (final PrimaryTag primaryTag : PrimaryTag.values()) {
 				if (upperCaseToken.equals(primaryTag.name())) {
@@ -49,6 +49,28 @@ public class Sequence {
 			}
 			break;
 		}
+	}
+
+	public static AnimationTokens.PrimaryTag any(final EnumSet<AnimationTokens.PrimaryTag> primaryTags) {
+		AnimationTokens.PrimaryTag primaryTag;
+		if (primaryTags.isEmpty()) {
+			primaryTag = null;
+		}
+		else {
+			primaryTag = primaryTags.iterator().next();
+		}
+		return primaryTag;
+	}
+
+	public static AnimationTokens.SecondaryTag anySecondary(final EnumSet<AnimationTokens.SecondaryTag> primaryTags) {
+		AnimationTokens.SecondaryTag primaryTag;
+		if (primaryTags.isEmpty()) {
+			primaryTag = null;
+		}
+		else {
+			primaryTag = primaryTags.iterator().next();
+		}
+		return primaryTag;
 	}
 
 	public String getName() {

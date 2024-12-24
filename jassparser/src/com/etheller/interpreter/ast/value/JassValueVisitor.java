@@ -14,4 +14,10 @@ public interface JassValueVisitor<TYPE> {
 	TYPE accept(ArrayJassValue value);
 
 	TYPE accept(HandleJassValue value);
+
+	TYPE accept(DummyJassValue value);
+
+	TYPE accept(StructJassValue value);
+
+	TYPE accept(StaticStructTypeJassValue value);
 }

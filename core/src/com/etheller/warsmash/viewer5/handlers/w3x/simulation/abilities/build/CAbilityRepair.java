@@ -6,6 +6,9 @@ import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityCategory;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.autocast.AutocastType;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.autocast.CAutocastAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.AbstractGenericSingleIconActiveAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityPointTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTargetVisitor;
@@ -15,19 +18,21 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CTargetType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.OrderIds;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityActivationReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetCheckReceiver;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.CommandStringErrorKeys;
 
-public class CAbilityRepair extends AbstractGenericSingleIconActiveAbility {
+public class CAbilityRepair extends AbstractGenericSingleIconActiveAbility implements CAutocastAbility {
 	private EnumSet<CTargetType> targetsAllowed;
 	private float navalRangeBonus;
 	private float repairCostRatio;
 	private float repairTimeRatio;
 	private float castRange;
 	private CBehaviorRepair behaviorRepair;
+	private boolean autocasting = false;
 
-	public CAbilityRepair(final int handleId, final War3ID alias, final EnumSet<CTargetType> targetsAllowed,
+	public CAbilityRepair(final int handleId, final War3ID code, final War3ID alias, final EnumSet<CTargetType> targetsAllowed,
 			final float navalRangeBonus, final float repairCostRatio, final float repairTimeRatio,
 			final float castRange) {
-		super(handleId, alias);
+		super(handleId, code, alias);
 		this.targetsAllowed = targetsAllowed;
 		this.navalRangeBonus = navalRangeBonus;
 		this.repairCostRatio = repairCostRatio;
@@ -38,17 +43,28 @@ public class CAbilityRepair extends AbstractGenericSingleIconActiveAbility {
 	@Override
 	protected void innerCheckCanTarget(final CSimulation game, final CUnit unit, final int orderId,
 			final CWidget target, final AbilityTargetCheckReceiver<CWidget> receiver) {
-		if (target.canBeTargetedBy(game, unit, this.targetsAllowed) && (target.getLife() < target.getMaxLife())) {
-			final CUnit targetUnit = target.visit(AbilityTargetVisitor.UNIT);
-			if ((targetUnit != null) && targetUnit.isConstructing()) {
-				receiver.orderIdNotAccepted();
+		if(target.getLife() < target.getMaxLife()) {
+			if (target.canBeTargetedBy(game, unit, this.targetsAllowed, receiver)) {
+				final CUnit targetUnit = target.visit(AbilityTargetVisitor.UNIT);
+				if ((targetUnit != null) && targetUnit.isConstructing()) {
+					if(orderId == OrderIds.smart) {
+						receiver.orderIdNotAccepted();
+					} else {
+						receiver.targetCheckFailed(CommandStringErrorKeys.THAT_BUILDING_IS_CURRENTLY_UNDER_CONSTRUCTION);
+					}
+				}
+				else {
+					receiver.targetOk(target);
+				}
 			}
-			else {
-				receiver.targetOk(target);
-			}
+			// else receiver called by canBeTargetedBy
 		}
 		else {
-			receiver.orderIdNotAccepted();
+			if(orderId == OrderIds.smart) {
+				receiver.orderIdNotAccepted();
+			} else {
+				receiver.targetCheckFailed(CommandStringErrorKeys.TARGET_IS_NOT_DAMAGED);
+			}
 		}
 	}
 
@@ -61,7 +77,7 @@ public class CAbilityRepair extends AbstractGenericSingleIconActiveAbility {
 	@Override
 	protected void innerCheckCanTarget(final CSimulation game, final CUnit unit, final int orderId,
 			final AbilityPointTarget target, final AbilityTargetCheckReceiver<AbilityPointTarget> receiver) {
-		receiver.mustTargetType(AbilityTargetCheckReceiver.TargetType.UNIT);
+		receiver.targetCheckFailed(CommandStringErrorKeys.MUST_TARGET_A_UNIT_WITH_THIS_ACTION);
 	}
 
 	@Override
@@ -104,7 +120,7 @@ public class CAbilityRepair extends AbstractGenericSingleIconActiveAbility {
 
 	@Override
 	public CBehavior begin(final CSimulation game, final CUnit caster, final int orderId, final CWidget target) {
-		return this.behaviorRepair.reset(target);
+		return this.behaviorRepair.reset(game, target);
 	}
 
 	@Override
@@ -166,6 +182,70 @@ public class CAbilityRepair extends AbstractGenericSingleIconActiveAbility {
 
 	public void setCastRange(final float castRange) {
 		this.castRange = castRange;
+	}
+
+	@Override
+	public AutocastType getAutocastType() {
+		return AutocastType.NEARESTVALID;
+	}
+
+	@Override
+	public void setAutoCastOn(final CUnit caster, final boolean autoCastOn) {
+		this.autocasting = autoCastOn;
+		caster.setAutocastAbility(autoCastOn ? this : null);
+	}
+
+	@Override
+	public boolean isAutoCastOn() {
+		return autocasting ;
+	}
+
+	@Override
+	public void setAutoCastOff() {
+		this.autocasting = false;
+	}
+
+	@Override
+	public int getAutoCastOnOrderId() {
+		return OrderIds.repairon;
+	}
+
+	@Override
+	public int getAutoCastOffOrderId() {
+		return OrderIds.repairoff;
+	}
+
+	@Override
+	public void checkCanAutoTarget(CSimulation game, CUnit unit, int orderId, CWidget target,
+			AbilityTargetCheckReceiver<CWidget> receiver) {
+		this.checkCanTarget(game, unit, orderId, target, receiver);
+	}
+
+	@Override
+	public void checkCanAutoTarget(CSimulation game, CUnit unit, int orderId, AbilityPointTarget target,
+			AbilityTargetCheckReceiver<AbilityPointTarget> receiver) {
+		receiver.orderIdNotAccepted();
+	}
+
+	@Override
+	public void checkCanAutoTargetNoTarget(CSimulation game, CUnit unit, int orderId,
+			AbilityTargetCheckReceiver<Void> receiver) {
+		receiver.orderIdNotAccepted();
+	}
+
+	@Override
+	public boolean isPhysical() {
+		return true;
+	}
+
+	@Override
+	public boolean isUniversal() {
+		return false;
+	}
+
+	@Override
+	public CAbilityCategory getAbilityCategory() {
+		return CAbilityCategory.CORE;
 	}
 
 }

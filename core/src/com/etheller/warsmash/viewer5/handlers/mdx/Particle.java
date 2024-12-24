@@ -100,4 +100,10 @@ public class Particle extends EmittedObject<MdxComplexInstance, ParticleEmitter>
 			internalInstance.move(tempVector);
 		}
 	}
+
+	public void onRemove() {
+		if (this.internalInstance != null) {
+			this.internalInstance.detach();
+		}
+	}
 }

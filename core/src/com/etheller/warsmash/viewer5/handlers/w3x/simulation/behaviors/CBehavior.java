@@ -16,4 +16,10 @@ public interface CBehavior {
 	void end(CSimulation game, boolean interrupted);
 
 	int getHighlightOrderId();
+	
+	boolean interruptable();
+	
+	CBehaviorCategory getBehaviorCategory();
+
+	public <T> T visit(CBehaviorVisitor<T> visitor);
 }

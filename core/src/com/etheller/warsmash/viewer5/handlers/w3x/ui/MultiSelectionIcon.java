@@ -108,9 +108,9 @@ public class MultiSelectionIcon extends AbstractRenderableFrame implements Click
 		this.iconFrame.setWidth(newWidth);
 		this.iconFrame.setHeight(newHeight);
 		this.hpBarFrame.setWidth(newWidth * 1.05f);
-		this.hpBarFrame.setHeight(newHeight * HP_BAR_HEIGHT_RATIO);
+		this.hpBarFrame.setHeight(Math.max(7, newHeight * HP_BAR_HEIGHT_RATIO));
 		this.manaBarFrame.setWidth(newWidth * 1.05f);
-		this.manaBarFrame.setHeight(newHeight * HP_BAR_HEIGHT_RATIO);
+		this.manaBarFrame.setHeight(Math.max(7, newHeight * HP_BAR_HEIGHT_RATIO));
 	}
 
 	public void showUnFocused(final GameUI gameUI, final Viewport uiViewport) {
@@ -210,7 +210,7 @@ public class MultiSelectionIcon extends AbstractRenderableFrame implements Click
 	}
 
 	public void setLifeRatioRemaining(final float lifeRatioRemaining) {
-		this.hpBarFrame.getBarFrame().setColor(Math.min(1.0f, 2.0f - (lifeRatioRemaining * 2)),
+		this.hpBarFrame.getBarFrame().setColor(Math.min(1.0f, 2.0f - lifeRatioRemaining * 2),
 				Math.min(1.0f, lifeRatioRemaining * 2), 0, 1.0f);
 		this.hpBarFrame.setValue(lifeRatioRemaining);
 	}

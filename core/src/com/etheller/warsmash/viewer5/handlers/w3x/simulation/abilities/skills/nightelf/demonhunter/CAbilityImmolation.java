@@ -7,6 +7,7 @@ import com.etheller.warsmash.util.WarsmashConstants;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityCategory;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.AbstractGenericSingleIconNoSmartActiveAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityPointTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTarget;
@@ -15,7 +16,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CTargetType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.OrderIds;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityActivationReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetCheckReceiver;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.ResourceType;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.CommandStringErrorKeys;
 
 public class CAbilityImmolation extends AbstractGenericSingleIconNoSmartActiveAbility {
 	private float bufferManaRequired;
@@ -31,10 +32,10 @@ public class CAbilityImmolation extends AbstractGenericSingleIconNoSmartActiveAb
 	private CBuffImmolationCaster buffImmolationCaster;
 	private int nextChargeManaTick;
 
-	public CAbilityImmolation(final int handleId, final War3ID alias, final float bufferManaRequired,
+	public CAbilityImmolation(final int handleId, final War3ID code, final War3ID alias, final float bufferManaRequired,
 			final float damagePerInterval, final float manaDrainedPerSecond, final float areaOfEffect,
 			final int manaCost, final float duration, final EnumSet<CTargetType> targetsAllowed, final War3ID buffId) {
-		super(handleId, alias);
+		super(handleId, code, alias);
 		this.bufferManaRequired = bufferManaRequired;
 		this.damagePerInterval = damagePerInterval;
 		this.manaDrainedPerSecond = manaDrainedPerSecond;
@@ -165,7 +166,7 @@ public class CAbilityImmolation extends AbstractGenericSingleIconNoSmartActiveAb
 	protected void innerCheckCanUse(final CSimulation game, final CUnit unit, final int orderId,
 			final AbilityActivationReceiver receiver) {
 		if (!this.active && (unit.getMana() < (this.manaCost + this.bufferManaRequired))) {
-			receiver.notEnoughResources(ResourceType.MANA);
+			receiver.activationCheckFailed(CommandStringErrorKeys.NOT_ENOUGH_MANA);
 		}
 		else {
 			receiver.useOk();
@@ -242,5 +243,20 @@ public class CAbilityImmolation extends AbstractGenericSingleIconNoSmartActiveAb
 	@Override
 	public int getUIManaCost() {
 		return (int) (getManaCost() + this.bufferManaRequired);
+	}
+
+	@Override
+	public boolean isPhysical() {
+		return false;
+	}
+
+	@Override
+	public boolean isUniversal() {
+		return false;
+	}
+
+	@Override
+	public CAbilityCategory getAbilityCategory() {
+		return CAbilityCategory.SPELL;
 	}
 }

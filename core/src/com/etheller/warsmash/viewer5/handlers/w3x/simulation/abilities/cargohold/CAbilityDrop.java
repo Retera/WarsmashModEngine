@@ -4,6 +4,7 @@ import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityCategory;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.AbstractGenericSingleIconNoSmartActiveAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityPointTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehavior;
@@ -11,13 +12,14 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.cargohold
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.OrderIds;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityActivationReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetCheckReceiver;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.CommandStringErrorKeys;
 
 public class CAbilityDrop extends AbstractGenericSingleIconNoSmartActiveAbility {
 	private float castRange;
 	private CBehaviorDrop behaviorDrop;
 
-	public CAbilityDrop(final int handleId, final War3ID alias, final float castRange) {
-		super(handleId, alias);
+	public CAbilityDrop(final int handleId, final War3ID code, final War3ID alias, final float castRange) {
+		super(handleId, code, alias);
 		this.castRange = castRange;
 	}
 
@@ -48,7 +50,7 @@ public class CAbilityDrop extends AbstractGenericSingleIconNoSmartActiveAbility 
 	@Override
 	public CBehavior begin(final CSimulation game, final CUnit caster, final int orderId,
 			final AbilityPointTarget point) {
-		return this.behaviorDrop.reset(point);
+		return this.behaviorDrop.reset(game, point);
 	}
 
 	@Override
@@ -88,7 +90,7 @@ public class CAbilityDrop extends AbstractGenericSingleIconNoSmartActiveAbility 
 			receiver.targetOk(target);
 		}
 		else {
-			receiver.targetOutsideRange();
+			receiver.targetCheckFailed(CommandStringErrorKeys.TARGET_IS_OUTSIDE_RANGE);
 		}
 	}
 
@@ -104,5 +106,20 @@ public class CAbilityDrop extends AbstractGenericSingleIconNoSmartActiveAbility 
 
 	public void setCastRange(final float castRange) {
 		this.castRange = castRange;
+	}
+
+	@Override
+	public boolean isPhysical() {
+		return false;
+	}
+
+	@Override
+	public boolean isUniversal() {
+		return false;
+	}
+
+	@Override
+	public CAbilityCategory getAbilityCategory() {
+		return CAbilityCategory.CORE;
 	}
 }

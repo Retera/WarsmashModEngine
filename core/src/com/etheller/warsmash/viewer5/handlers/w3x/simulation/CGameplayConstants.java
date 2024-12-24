@@ -27,8 +27,23 @@ public class CGameplayConstants {
 	private final float structureDecayTime;
 	private final float buildingAngle;
 	private final float rootAngle;
+	
+	private final float fogFlashTime;
+	private final float dyingRevealRadius;
+	private final float foggedAttackRevealRadius;
 
 	private final float defenseArmor;
+
+	private final float etherealDamageBonusSpells;
+	private final float etherealDamageBonusMagic;
+	private final boolean etherealDamageBonusAlly;
+	
+	private final boolean magicImmuneResistsDamage;
+	private final boolean magicImmuneResistsLeech;
+	private final boolean magicImmuneResistsThorns;
+	private final boolean magicImmuneResistsUltimates;
+	
+	private final boolean defendDeflection;
 
 	private final int heroMaxReviveCostGold;
 	private final int heroMaxReviveCostLumber;
@@ -106,6 +121,13 @@ public class CGameplayConstants {
 	private final float spellCastRangeBuffer;
 
 	private final boolean relativeUpgradeCosts;
+	private final float minUnitSpeed;
+	private final float maxUnitSpeed;
+	private final float minBldgSpeed;
+	private final float maxBldgSpeed;
+	
+	private final float chanceToMiss;
+	private final float missDamageReduction;
 
 	public CGameplayConstants(final DataTable parsedDataTable) {
 		final Element miscData = parsedDataTable.get("Misc");
@@ -127,13 +149,21 @@ public class CGameplayConstants {
 		this.buildingAngle = miscData.getFieldFloatValue("BuildingAngle");
 		this.rootAngle = miscData.getFieldFloatValue("RootAngle");
 
+		this.fogFlashTime = miscData.getFieldFloatValue("FogFlashTime");
+		this.dyingRevealRadius = miscData.getFieldFloatValue("DyingRevealRadius");
+		this.foggedAttackRevealRadius = miscData.getFieldFloatValue("FoggedAttackRevealRadius");
+
 		final CDefenseType[] defenseTypeOrder = { CDefenseType.SMALL, CDefenseType.MEDIUM, CDefenseType.LARGE,
 				CDefenseType.FORT, CDefenseType.NORMAL, CDefenseType.HERO, CDefenseType.DIVINE, CDefenseType.NONE, };
 		this.damageBonusTable = new float[CAttackType.values().length][defenseTypeOrder.length];
 		for (int i = 0; i < CAttackType.VALUES.length; i++) {
 			Arrays.fill(this.damageBonusTable[i], 1.0f);
 			final CAttackType attackType = CAttackType.VALUES[i];
-			final String damageBonus = miscData.getField("DamageBonus" + attackType.getDamageKey());
+			String fieldName = "DamageBonus" + attackType.getDamageKey();
+			if (!miscData.hasField(fieldName) && attackType == CAttackType.SPELLS) {
+				fieldName = "DamageBonus" + CAttackType.MAGIC.getDamageKey();
+			}
+			final String damageBonus = miscData.getField(fieldName);
 			final String[] damageComponents = damageBonus.split(",");
 			for (int j = 0; j < damageComponents.length; j++) {
 				if (damageComponents[j].length() > 0) {
@@ -143,13 +173,49 @@ public class CGameplayConstants {
 //						System.out.println(attackType + ":" + defenseType + ": " + damageComponents[j]);
 					}
 					catch (final NumberFormatException e) {
-						throw new RuntimeException("DamageBonus" + attackType.getDamageKey(), e);
+						throw new RuntimeException(fieldName, e);
 					}
 				}
 			}
 		}
 
 		this.defenseArmor = miscData.getFieldFloatValue("DefenseArmor");
+
+		final String damageBonus = miscData.getField("EtherealDamageBonus");
+		final String[] damageComponents = damageBonus.split(",");
+		float magBonus = 1;
+		float spellBonus = 1;
+		for (int j = 0; j < damageComponents.length; j++) {
+			if (j == 3) {
+				if (damageComponents[j].length() > 0) {
+					try {
+						magBonus = Float.parseFloat(damageComponents[j]);
+					}
+					catch (final NumberFormatException e) {
+						throw new RuntimeException("EtherealDamageBonus", e);
+					}
+				}
+			} else if (j == 5) {
+				if (damageComponents[j].length() > 0) {
+					try {
+						spellBonus = Float.parseFloat(damageComponents[j]);
+					}
+					catch (final NumberFormatException e) {
+						throw new RuntimeException("EtherealDamageBonus", e);
+					}
+				}
+			}
+		}
+		this.etherealDamageBonusMagic = magBonus;
+		this.etherealDamageBonusSpells = spellBonus;
+		this.etherealDamageBonusAlly = miscData.getFieldValue("EtherealDamageBonusAlly") != 0;
+
+		this.magicImmuneResistsDamage = miscData.getFieldValue("MagicImmunesResistDamage") != 0;
+		this.magicImmuneResistsLeech = miscData.getFieldValue("MagicImmunesResistLeech") != 0;
+		this.magicImmuneResistsThorns = miscData.getFieldValue("MagicImmunesResistThorns") != 0;
+		this.magicImmuneResistsUltimates = miscData.getFieldValue("MagicImmunesResistUltimates") != 0;
+		
+		this.defendDeflection = miscData.getFieldValue("DefendDeflection") != 0;
 
 		this.globalExperience = miscData.getFieldValue("GlobalExperience") != 0;
 		this.maxLevelHeroesDrainExp = miscData.getFieldValue("MaxLevelHeroesDrainExp") != 0;
@@ -240,6 +306,14 @@ public class CGameplayConstants {
 		this.spellCastRangeBuffer = miscData.getFieldFloatValue("SpellCastRangeBuffer");
 
 		this.relativeUpgradeCosts = miscData.getFieldValue("RelativeUpgradeCost") == 0;
+
+		this.minUnitSpeed = miscData.getFieldFloatValue("MinUnitSpeed");
+		this.maxUnitSpeed = miscData.getFieldFloatValue("MaxUnitSpeed");
+		this.minBldgSpeed = miscData.getFieldFloatValue("MinBldgSpeed");
+		this.maxBldgSpeed = miscData.getFieldFloatValue("MaxBldgSpeed");
+
+		this.chanceToMiss = miscData.getFieldFloatValue("ChanceToMiss");
+		this.missDamageReduction = miscData.getFieldFloatValue("MissDamageReduction");
 	}
 
 	public float getAttackHalfAngle() {
@@ -302,8 +376,51 @@ public class CGameplayConstants {
 		return this.rootAngle;
 	}
 
+	public float getFogFlashTime() {
+		return fogFlashTime;
+	}
+
+	public float getDyingRevealRadius() {
+		return dyingRevealRadius;
+	}
+
+	public float getFoggedAttackRevealRadius() {
+		return foggedAttackRevealRadius;
+	}
+
 	public float getDefenseArmor() {
 		return this.defenseArmor;
+	}
+
+	public float getEtherealDamageBonusSpells() {
+		return etherealDamageBonusSpells;
+	}
+
+	public float getEtherealDamageBonusMagic() {
+		return etherealDamageBonusMagic;
+	}
+
+	public boolean isEtherealDamageBonusAlly() {
+		return etherealDamageBonusAlly;
+	}
+
+	public boolean isMagicImmuneResistsDamage() {
+		return magicImmuneResistsDamage;
+	}
+
+	public boolean isMagicImmuneResistsLeech() {
+		return magicImmuneResistsLeech;
+	}
+
+	public boolean isMagicImmuneResistsThorns() {
+		return magicImmuneResistsThorns;
+	}
+
+	public boolean isMagicImmuneResistsUltimates() {
+		return magicImmuneResistsUltimates;
+	}
+	public boolean isDefendDeflection() {
+		return defendDeflection;
 	}
 
 	public boolean isGlobalExperience() {
@@ -461,6 +578,30 @@ public class CGameplayConstants {
 
 	public boolean isRelativeUpgradeCosts() {
 		return this.relativeUpgradeCosts;
+	}
+
+	public float getMinUnitSpeed() {
+		return minUnitSpeed;
+	}
+
+	public float getMaxUnitSpeed() {
+		return maxUnitSpeed;
+	}
+
+	public float getMinBldgSpeed() {
+		return minBldgSpeed;
+	}
+
+	public float getMaxBldgSpeed() {
+		return maxBldgSpeed;
+	}
+
+	public float getChanceToMiss() {
+		return chanceToMiss;
+	}
+
+	public float getMissDamageReduction() {
+		return missDamageReduction;
 	}
 
 	private static int getTableValue(final int[] table, int level) {

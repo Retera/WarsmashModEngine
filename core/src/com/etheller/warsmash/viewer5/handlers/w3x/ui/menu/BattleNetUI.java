@@ -501,12 +501,19 @@ public class BattleNetUI {
 		final MapListContainer mapListContainer = new MapListContainer(this.rootFrame, this.uiViewport,
 				"MapListContainer", dataSource, mapListLabel.getFrameFont());
 		mapListContainer.addSelectionListener(new ListBoxSelelectionListener() {
+			String prevSelectedItem = "";
 
 			@Override
 			public void onSelectionChanged(final int newSelectedIndex, final String newSelectedItem) {
-				BattleNetUI.this.customCreateCurrentMapConfig = null;
-				BattleNetUI.this.customCreateCurrentMapInfo = null;
 				if (newSelectedItem != null) {
+					if (newSelectedItem.compareTo(this.prevSelectedItem) == 0) {
+						return;
+					}
+					this.prevSelectedItem = newSelectedItem;
+
+					BattleNetUI.this.customCreateCurrentMapConfig = null;
+					BattleNetUI.this.customCreateCurrentMapInfo = null;
+
 					BattleNetUI.this.customCreatePanelCurrentSelectedMapPath = newSelectedItem;
 
 					try {

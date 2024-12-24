@@ -16,7 +16,7 @@ public class CBuffEatTree extends CBuffTimed {
 
 	public CBuffEatTree(final int handleId, final War3ID alias, final float delay, final float duration,
 			final float hitPointsGained) {
-		super(handleId, alias, delay + duration);
+		super(handleId, alias, alias, delay + duration);
 		this.delay = delay;
 		this.duration = duration;
 		this.hitPointsGained = hitPointsGained;

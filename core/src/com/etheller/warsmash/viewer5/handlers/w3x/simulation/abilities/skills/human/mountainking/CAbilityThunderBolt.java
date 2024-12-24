@@ -1,51 +1,32 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.skills.human.mountainking;
 
-import java.util.EnumSet;
-
+import com.etheller.warsmash.units.GameObject;
 import com.etheller.warsmash.util.War3ID;
-import com.etheller.warsmash.util.WarsmashConstants;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.AbstractGenericSingleIconNoSmartActiveAbility;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityPointTarget;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehavior;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.skills.human.mountainking.CBehaviorThunderBolt;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CTargetType;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.skills.CAbilityTargetSpellBase;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.skills.util.CBuffStun;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTarget;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTargetUnitVisitor;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTargetVisitor;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.definitions.impl.AbilityFields;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.definitions.impl.AbstractCAbilityTypeDefinition;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CAttackType;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.projectile.CAbilityProjectileListener;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.projectile.CProjectile;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.OrderIds;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityActivationReceiver;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetCheckReceiver;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetCheckReceiver.TargetType;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.ResourceType;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CDamageType;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CWeaponSoundTypeJass;
 
-public class CAbilityThunderBolt extends AbstractGenericSingleIconNoSmartActiveAbility {
-	private int manaCost;
+public class CAbilityThunderBolt extends CAbilityTargetSpellBase {
+
 	private float damage;
-	private float castRange;
-	private float cooldown;
-	private float duration;
-	private float heroDuration;
 	private float projectileSpeed;
 	private boolean projectileHomingEnabled;
 	private War3ID buffId;
-	private EnumSet<CTargetType> targetsAllowed;
-	private float cooldownRemaining;
-	private CBehaviorThunderBolt behaviorThunderBolt;
 
-	public CAbilityThunderBolt(int handleId, War3ID alias, int manaCost, float damage, float castRange, float cooldown,
-			float duration, float heroDuration, float projectileSpeed, boolean projectileHomingEnabled, War3ID buffId,
-			EnumSet<CTargetType> targetsAllowed) {
+	public CAbilityThunderBolt(final int handleId, final War3ID alias) {
 		super(handleId, alias);
-		this.manaCost = manaCost;
-		this.damage = damage;
-		this.castRange = castRange;
-		this.cooldown = cooldown;
-		this.duration = duration;
-		this.heroDuration = heroDuration;
-		this.projectileSpeed = projectileSpeed;
-		this.projectileHomingEnabled = projectileHomingEnabled;
-		this.buffId = buffId;
-		this.targetsAllowed = targetsAllowed;
 	}
 
 	@Override
@@ -54,163 +35,55 @@ public class CAbilityThunderBolt extends AbstractGenericSingleIconNoSmartActiveA
 	}
 
 	@Override
-	public boolean isToggleOn() {
+	public void populateData(final GameObject worldEditorAbility, final int level) {
+		damage = worldEditorAbility.getFieldAsFloat(AbilityFields.DATA_A + level, 0);
+		projectileSpeed = worldEditorAbility.getFieldAsFloat(AbilityFields.PROJECTILE_SPEED, 0);
+		projectileHomingEnabled = worldEditorAbility.getFieldAsBoolean(AbilityFields.PROJECTILE_HOMING_ENABLED, 0);
+		this.buffId = AbstractCAbilityTypeDefinition.getBuffId(worldEditorAbility, level);
+	}
+
+	@Override
+	public boolean doEffect(final CSimulation simulation, final CUnit caster, final AbilityTarget target) {
+		final CUnit targetUnit = target.visit(AbilityTargetVisitor.UNIT);
+		if (targetUnit != null) {
+			simulation.createProjectile(targetUnit, getAlias(), caster.getX(), caster.getY(),
+					(float) caster.angleTo(targetUnit), projectileSpeed, projectileHomingEnabled, targetUnit,
+					new CAbilityProjectileListener() {
+						@Override
+						public void onLaunch(final CSimulation game, CProjectile projectile, final AbilityTarget target) {
+
+						}
+
+						@Override
+						public void onHit(final CSimulation game, CProjectile projectile, final AbilityTarget target) {
+							final CUnit unitTarget = target.visit(AbilityTargetUnitVisitor.INSTANCE);
+							if (unitTarget != null) {
+								unitTarget.damage(game, caster, false, true, CAttackType.SPELLS, CDamageType.LIGHTNING,
+										CWeaponSoundTypeJass.WHOKNOWS.name(), damage);
+								if (!unitTarget.isDead()) {
+									unitTarget.add(game, new CBuffStun(game.getHandleIdAllocator().createId(),
+											getBuffId(), getDurationForTarget(unitTarget)));
+								}
+							}
+						}
+					});
+		}
 		return false;
-	}
-
-	@Override
-	public void onAdd(final CSimulation game, final CUnit unit) {
-		this.behaviorThunderBolt = new CBehaviorThunderBolt(unit, this);
-	}
-
-	@Override
-	public void onRemove(final CSimulation game, final CUnit unit) {
-
-	}
-
-	@Override
-	public void onTick(final CSimulation game, final CUnit unit) {
-		if (this.cooldownRemaining > 0) {
-			this.cooldownRemaining -= WarsmashConstants.SIMULATION_STEP_TIME;
-		}
-	}
-
-	@Override
-	public void onCancelFromQueue(final CSimulation game, final CUnit unit, final int orderId) {
-
-	}
-
-	@Override
-	public CBehavior begin(final CSimulation game, final CUnit caster, final int orderId, final CWidget target) {
-		return this.behaviorThunderBolt.reset(target);
-	}
-
-	@Override
-	public CBehavior begin(final CSimulation game, final CUnit caster, final int orderId,
-			final AbilityPointTarget point) {
-		return null;
-	}
-
-	@Override
-	public CBehavior beginNoTarget(final CSimulation game, final CUnit caster, final int orderId) {
-		return null;
-	}
-
-	@Override
-	protected void innerCheckCanTarget(final CSimulation game, final CUnit unit, final int orderId,
-			final CWidget target, final AbilityTargetCheckReceiver<CWidget> receiver) {
-		if (target instanceof CUnit && target.canBeTargetedBy(game, unit, this.targetsAllowed)) {
-			if (!unit.isMovementDisabled() || unit.canReach(target, this.castRange)) {
-				receiver.targetOk(target);
-			} else {
-				receiver.targetOutsideRange();
-			}
-		} else {
-			receiver.mustTargetType(TargetType.UNIT);
-		}
-	}
-
-	@Override
-	protected void innerCheckCanTarget(final CSimulation game, final CUnit unit, final int orderId,
-			final AbilityPointTarget target, final AbilityTargetCheckReceiver<AbilityPointTarget> receiver) {
-		receiver.orderIdNotAccepted();
-	}
-
-	@Override
-	protected void innerCheckCanTargetNoTarget(final CSimulation game, final CUnit unit, final int orderId,
-			final AbilityTargetCheckReceiver<Void> receiver) {
-		receiver.orderIdNotAccepted();
-	}
-
-	@Override
-	protected void innerCheckCanUse(final CSimulation game, final CUnit unit, final int orderId,
-			final AbilityActivationReceiver receiver) {
-		if (this.cooldownRemaining > 0) {
-			receiver.cooldownNotYetReady(this.cooldownRemaining, this.cooldown);
-		} else if (unit.getMana() < this.manaCost) {
-			receiver.notEnoughResources(ResourceType.MANA);
-		} else {
-			receiver.useOk();
-		}
-	}
-
-	public void setManaCost(final int manaCost) {
-		this.manaCost = manaCost;
-	}
-
-	public void setCastRange(final float castRange) {
-		this.castRange = castRange;
-	}
-
-	public void setCooldown(final float cooldown) {
-		this.cooldown = cooldown;
-	}
-
-	public void setDamage(float damage) {
-		this.damage = damage;
-	}
-
-	public void setTargetsAllowed(final EnumSet<CTargetType> targetsAllowed) {
-		this.targetsAllowed = targetsAllowed;
-	}
-
-	public void setCooldownRemaining(final float cooldownRemaining) {
-		this.cooldownRemaining = cooldownRemaining;
-	}
-
-	public int getManaCost() {
-		return this.manaCost;
-	}
-
-	@Override
-	public int getUIManaCost() {
-		return getManaCost();
 	}
 
 	public float getDamage() {
 		return damage;
 	}
 
-	public float getCastRange() {
-		return this.castRange;
-	}
-
-	public float getCooldown() {
-		return this.cooldown;
-	}
-
-	public EnumSet<CTargetType> getTargetsAllowed() {
-		return this.targetsAllowed;
-	}
-
-	public float getCooldownRemaining() {
-		return this.cooldownRemaining;
-	}
-
-	public float getDuration(CUnit unitTarget) {
-		if (unitTarget.isHero()) {
-			return heroDuration;
-		}
-		return duration;
-	}
-
-	public void setDuration(float duration) {
-		this.duration = duration;
-	}
-
-	public float getHeroDuration() {
-		return heroDuration;
-	}
-
-	public void setHeroDuration(float heroDuration) {
-		this.heroDuration = heroDuration;
+	public void setDamage(final float damage) {
+		this.damage = damage;
 	}
 
 	public float getProjectileSpeed() {
 		return projectileSpeed;
 	}
 
-	public void setProjectileSpeed(float projectileSpeed) {
+	public void setProjectileSpeed(final float projectileSpeed) {
 		this.projectileSpeed = projectileSpeed;
 	}
 
@@ -218,7 +91,7 @@ public class CAbilityThunderBolt extends AbstractGenericSingleIconNoSmartActiveA
 		return projectileHomingEnabled;
 	}
 
-	public void setProjectileHomingEnabled(boolean projectileHomingEnabled) {
+	public void setProjectileHomingEnabled(final boolean projectileHomingEnabled) {
 		this.projectileHomingEnabled = projectileHomingEnabled;
 	}
 
@@ -226,7 +99,7 @@ public class CAbilityThunderBolt extends AbstractGenericSingleIconNoSmartActiveA
 		return buffId;
 	}
 
-	public void setBuffId(War3ID buffId) {
+	public void setBuffId(final War3ID buffId) {
 		this.buffId = buffId;
 	}
 }

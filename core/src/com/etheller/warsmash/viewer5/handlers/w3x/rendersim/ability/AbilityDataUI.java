@@ -10,97 +10,94 @@ import java.util.Map;
 
 import com.badlogic.gdx.graphics.Texture;
 import com.etheller.warsmash.parsers.fdf.GameUI;
-import com.etheller.warsmash.parsers.w3x.objectdata.Warcraft3MapObjectData;
+import com.etheller.warsmash.parsers.w3x.objectdata.Warcraft3MapRuntimeObjectData;
 import com.etheller.warsmash.units.Element;
-import com.etheller.warsmash.units.manager.MutableObjectData;
-import com.etheller.warsmash.units.manager.MutableObjectData.MutableGameObject;
+import com.etheller.warsmash.units.GameObject;
+import com.etheller.warsmash.units.ObjectData;
 import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.util.WarsmashConstants;
 import com.etheller.warsmash.viewer5.handlers.w3x.War3MapViewer;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.COrderButton;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.definitions.impl.AbilityFields;
 
 public class AbilityDataUI {
 	// Standard ability icon fields
-	private static final War3ID ICON_NORMAL_X = War3ID.fromString("abpx");
-	private static final War3ID ICON_NORMAL_Y = War3ID.fromString("abpy");
-	private static final War3ID ICON_NORMAL = War3ID.fromString("aart");
-	private static final War3ID ICON_TURN_OFF = War3ID.fromString("auar");
-	private static final War3ID ICON_TURN_OFF_X = War3ID.fromString("aubx");
-	private static final War3ID ICON_TURN_OFF_Y = War3ID.fromString("auby");
-	private static final War3ID ICON_RESEARCH = War3ID.fromString("arar");
-	private static final War3ID ICON_RESEARCH_X = War3ID.fromString("arpx");
-	private static final War3ID ICON_RESEARCH_Y = War3ID.fromString("arpy");
-	private static final War3ID ABILITY_TIP = War3ID.fromString("atp1");
-	private static final War3ID ABILITY_UBER_TIP = War3ID.fromString("aub1");
-	private static final War3ID ABILITY_UN_TIP = War3ID.fromString("aut1");
-	private static final War3ID ABILITY_UN_UBER_TIP = War3ID.fromString("auu1");
-	private static final War3ID ABILITY_RESEARCH_TIP = War3ID.fromString("aret");
-	private static final War3ID ABILITY_RESEARCH_UBER_TIP = War3ID.fromString("arut");
-	private static final War3ID ABILITY_EFFECT_SOUND = War3ID.fromString("aefs");
-	private static final War3ID ABILITY_EFFECT_SOUND_LOOPED = War3ID.fromString("aefl");
+	private static final String ICON_NORMAL_XY = "Buttonpos"; // replaced from 'abpx'
+	private static final String ICON_NORMAL = "Art"; // replaced from 'aart'
+	private static final String ICON_TURN_OFF = "Unart"; // replaced from 'auar'
+	private static final String ICON_TURN_OFF_XY = "UnButtonpos"; // replaced from 'aubx'
+	private static final String ICON_RESEARCH = "ResearchArt"; // replaced from 'arar'
+	private static final String ICON_RESEARCH_XY = "Researchbuttonpos"; // replaced from 'arpx'
+	private static final String ABILITY_TIP = "Tip"; // replaced from 'atp1'
+	private static final String ABILITY_UBER_TIP = "Ubertip"; // replaced from 'aub1'
+	private static final String ABILITY_UN_TIP = "Untip"; // replaced from 'aut1'
+	private static final String ABILITY_UN_UBER_TIP = "Unubertip"; // replaced from 'auu1'
+	private static final String ABILITY_RESEARCH_TIP = "Researchtip"; // replaced from 'aret'
+	private static final String ABILITY_RESEARCH_UBER_TIP = "Researchubertip"; // replaced from 'arut'
+	private static final String ABILITY_EFFECT_SOUND = "Effectsound"; // replaced from 'aefs'
+	private static final String ABILITY_EFFECT_SOUND_LOOPED = "Effectsoundlooped"; // replaced from 'aefl'
 
-	private static final War3ID ABILITY_HOTKEY_NORMAL = War3ID.fromString("ahky");
-	private static final War3ID ABILITY_HOTKEY_TURNOFF = War3ID.fromString("auhk");
-	private static final War3ID ABILITY_HOTKEY_LEARN = War3ID.fromString("arhk");
+	private static final String ABILITY_HOTKEY_NORMAL = "Hotkey"; // replaced from 'ahky'
+	private static final String ABILITY_HOTKEY_TURNOFF = "Unhotkey"; // replaced from 'auhk'
+	private static final String ABILITY_HOTKEY_LEARN = "Researchhotkey"; // replaced from 'arhk'
 
-	private static final War3ID CASTER_ART = War3ID.fromString("acat");
-	private static final War3ID[] CASTER_ART_ATTACHMENT_POINT = { War3ID.fromString("acap"),
-			War3ID.fromString("aca1") };
-	private static final War3ID CASTER_ART_ATTACHMENT_COUNT = War3ID.fromString("acac");
-	private static final War3ID TARGET_ART = War3ID.fromString("atat");
-	private static final War3ID[] TARGET_ART_ATTACHMENT_POINT = { War3ID.fromString("ata0"), War3ID.fromString("ata1"),
-			War3ID.fromString("ata2"), War3ID.fromString("ata3"), War3ID.fromString("ata4"),
-			War3ID.fromString("ata5") };
-	private static final War3ID TARGET_ART_ATTACHMENT_COUNT = War3ID.fromString("atac");
-	private static final War3ID SPECIAL_ART = War3ID.fromString("asat");
-	private static final War3ID SPECIAL_ART_ATTACHMENT_POINT = War3ID.fromString("aspt");
-	private static final War3ID EFFECT_ART = War3ID.fromString("aeat");
-	private static final War3ID AREA_EFFECT_ART = War3ID.fromString("aaea");
-	private static final War3ID MISSILE_ART = War3ID.fromString("amat");
-	private static final War3ID MISSILE_ARC = War3ID.fromString("amac");
+	private static final String CASTER_ART = "CasterArt"; // replaced from 'acat'
+	private static final String[] CASTER_ART_ATTACHMENT_POINT = { "Casterattach", // replaced from 'acap'
+			"Casterattach1" }; // replaced from 'aca1'
+	private static final String CASTER_ART_ATTACHMENT_COUNT = "Casterattachcount"; // replaced from 'acac'
+	private static final String TARGET_ART = "TargetArt"; // replaced from 'atat'
+	private static final String[] TARGET_ART_ATTACHMENT_POINT = { "Targetattach", "Targetattach1",
+			// replaced from 'ata0'
+			"Targetattach2", "Targetattach3", "Targetattach4", // replaced from 'ata2'
+			"Targetattach5" }; // replaced from 'ata5'
+	private static final String TARGET_ART_ATTACHMENT_COUNT = "Targetattachcount"; // replaced from 'atac'
+	private static final String SPECIAL_ART = "SpecialArt"; // replaced from 'asat'
+	private static final String SPECIAL_ART_ATTACHMENT_POINT = "Specialattach"; // replaced from 'aspt'
+	private static final String EFFECT_ART = "EffectArt"; // replaced from 'aeat'
+	private static final String AREA_EFFECT_ART = "Areaeffectart"; // replaced from 'aaea'
+	private static final String MISSILE_ART = "Missileart"; // replaced from 'amat'
+	private static final String MISSILE_ARC = "Missilearc"; // replaced from 'amac'
+	private static final String LIGHTNING_EFFECTS = "LightningEffect";
 
 	// Standard buff icon fields
-	private static final War3ID BUFF_ICON_NORMAL = War3ID.fromString("fart");
-	private static final War3ID BUFF_ABILITY_TIP = War3ID.fromString("ftip");
-	private static final War3ID BUFF_ABILITY_UBER_TIP = War3ID.fromString("fube");
-	private static final War3ID BUFF_ABILITY_EFFECT_SOUND = War3ID.fromString("fefs");
-	private static final War3ID BUFF_ABILITY_EFFECT_SOUND_LOOPED = War3ID.fromString("fefl");
+	private static final String BUFF_ICON_NORMAL = "Buffart"; // replaced from 'fart'
+	private static final String BUFF_ABILITY_TIP = "Bufftip"; // replaced from 'ftip'
+	private static final String BUFF_ABILITY_UBER_TIP = "Buffubertip"; // replaced from 'fube'
+	private static final String BUFF_ABILITY_EFFECT_SOUND = "Effectsound"; // replaced from 'fefs'
+	private static final String BUFF_ABILITY_EFFECT_SOUND_LOOPED = "Effectsoundlooped"; // replaced from 'fefl'
 
-	private static final War3ID BUFF_TARGET_ART = War3ID.fromString("ftat");
-	private static final War3ID[] BUFF_TARGET_ART_ATTACHMENT_POINT = { War3ID.fromString("fta0"),
-			War3ID.fromString("fta1"), War3ID.fromString("fta2"), War3ID.fromString("fta3"), War3ID.fromString("fta4"),
-			War3ID.fromString("fta5") };
-	private static final War3ID BUFF_TARGET_ART_ATTACHMENT_COUNT = War3ID.fromString("ftac");
-	private static final War3ID BUFF_SPECIAL_ART = War3ID.fromString("fsat");
-	private static final War3ID BUFF_SPECIAL_ART_ATTACHMENT_POINT = War3ID.fromString("fspt");
-	private static final War3ID BUFF_EFFECT_ART = War3ID.fromString("feat");
-	private static final War3ID BUFF_EFFECT_ART_ATTACHMENT_POINT = War3ID.fromString("feft");
-	private static final War3ID BUFF_MISSILE_ART = War3ID.fromString("fmat");
+	private static final String BUFF_TARGET_ART = "TargetArt"; // replaced from 'ftat'
+	private static final String[] BUFF_TARGET_ART_ATTACHMENT_POINT = { "Targetattach", // replaced from 'fta0'
+			"Targetattach1", "Targetattach2", "Targetattach3", "Targetattach4", // replaced from 'fta1'
+			"Targetattach5" }; // replaced from 'fta5'
+	private static final String BUFF_TARGET_ART_ATTACHMENT_COUNT = "Targetattachcount"; // replaced from 'ftac'
+	private static final String BUFF_SPECIAL_ART = "SpecialArt"; // replaced from 'fsat'
+	private static final String BUFF_SPECIAL_ART_ATTACHMENT_POINT = "Specialattach"; // replaced from 'fspt'
+	private static final String BUFF_EFFECT_ART = "EffectArt"; // replaced from 'feat'
+	private static final String BUFF_EFFECT_ART_ATTACHMENT_POINT = "Effectattach"; // replaced from 'feft'
+	private static final String BUFF_MISSILE_ART = "Missileart"; // replaced from 'fmat'
 
-	private static final War3ID UNIT_ICON_NORMAL_X = War3ID.fromString("ubpx");
-	private static final War3ID UNIT_ICON_NORMAL_Y = War3ID.fromString("ubpy");
-	private static final War3ID UNIT_ICON_NORMAL = War3ID.fromString("uico");
-	private static final War3ID UNIT_TIP = War3ID.fromString("utip");
-	private static final War3ID UNIT_REVIVE_TIP = War3ID.fromString("utpr");
-	private static final War3ID UNIT_AWAKEN_TIP = War3ID.fromString("uawt");
-	private static final War3ID UNIT_UBER_TIP = War3ID.fromString("utub");
-	private static final War3ID UNIT_HOTKEY = War3ID.fromString("uhot");
+	private static final String UNIT_ICON_NORMAL_XY = "Buttonpos"; // replaced from 'ubpx'
+	private static final String UNIT_ICON_NORMAL = "Art"; // replaced from 'uico'
+	private static final String UNIT_TIP = "Tip"; // replaced from 'utip'
+	private static final String UNIT_REVIVE_TIP = "Revivetip"; // replaced from 'utpr'
+	private static final String UNIT_AWAKEN_TIP = "Awakentip"; // replaced from 'uawt'
+	private static final String UNIT_UBER_TIP = "Ubertip"; // replaced from 'utub'
+	private static final String UNIT_HOTKEY = "Hotkey"; // replaced from 'uhot'
 
-	private static final War3ID ITEM_ICON_NORMAL_X = War3ID.fromString("ubpx");
-	private static final War3ID ITEM_ICON_NORMAL_Y = War3ID.fromString("ubpy");
-	private static final War3ID ITEM_ICON_NORMAL = War3ID.fromString("iico");
-	private static final War3ID ITEM_TIP = War3ID.fromString("utip");
-	private static final War3ID ITEM_UBER_TIP = War3ID.fromString("utub");
-	private static final War3ID ITEM_DESCRIPTION = War3ID.fromString("ides");
-	private static final War3ID ITEM_HOTKEY = War3ID.fromString("uhot");
+	private static final String ITEM_ICON_NORMAL_XY = "Buttonpos"; // replaced from 'ubpx'
+	private static final String ITEM_ICON_NORMAL = "Art"; // replaced from 'iico'
+	private static final String ITEM_TIP = "Tip"; // replaced from 'utip'
+	private static final String ITEM_UBER_TIP = "Ubertip"; // replaced from 'utub'
+	private static final String ITEM_DESCRIPTION = "Description"; // replaced from 'ides'
+	private static final String ITEM_HOTKEY = "Hotkey"; // replaced from 'uhot'
 
-	private static final War3ID UPGRADE_ICON_NORMAL_X = War3ID.fromString("gbpx");
-	private static final War3ID UPGRADE_ICON_NORMAL_Y = War3ID.fromString("gbpy");
-	private static final War3ID UPGRADE_ICON_NORMAL = War3ID.fromString("gar1");
-	private static final War3ID UPGRADE_LEVELS = War3ID.fromString("glvl");
-	private static final War3ID UPGRADE_TIP = War3ID.fromString("gtp1");
-	private static final War3ID UPGRADE_UBER_TIP = War3ID.fromString("gub1");
-	private static final War3ID UPGRADE_HOTKEY = War3ID.fromString("ghk1");
+	private static final String UPGRADE_ICON_NORMAL_XY = "Buttonpos"; // replaced from 'gbpx'
+	private static final String UPGRADE_ICON_NORMAL = "Art"; // replaced from 'gar1'
+	private static final String UPGRADE_LEVELS = "maxlevel"; // replaced from 'glvl'
+	private static final String UPGRADE_TIP = "Tip"; // replaced from 'gtp1'
+	private static final String UPGRADE_UBER_TIP = "Ubertip"; // replaced from 'gub1'
+	private static final String UPGRADE_HOTKEY = "Hotkey"; // replaced from 'ghk1'
 
 	private final Map<War3ID, AbilityUI> rawcodeToUI = new HashMap<>();
 	private final Map<War3ID, BuffUI> rawcodeToBuffUI = new HashMap<>();
@@ -126,16 +123,18 @@ public class AbilityDataUI {
 	private final IconUI selectSkillUI;
 	private final IconUI neutralInteractUI;
 	private final String disabledPrefix;
+	private final Map<COrderButton, OrderButtonUI> buttonToRenderPeer = new HashMap<>();
 
-	public AbilityDataUI(final Warcraft3MapObjectData allObjectData, final GameUI gameUI, final War3MapViewer viewer) {
-		final MutableObjectData abilityData = allObjectData.getAbilities();
-		final MutableObjectData buffData = allObjectData.getBuffs();
-		final MutableObjectData unitData = allObjectData.getUnits();
-		final MutableObjectData itemData = allObjectData.getItems();
-		final MutableObjectData upgradeData = allObjectData.getUpgrades();
+	public AbilityDataUI(final Warcraft3MapRuntimeObjectData allObjectData, final GameUI gameUI,
+			final War3MapViewer viewer) {
+		final ObjectData abilityData = allObjectData.getAbilities();
+		final ObjectData buffData = allObjectData.getBuffs();
+		final ObjectData unitData = allObjectData.getUnits();
+		final ObjectData itemData = allObjectData.getItems();
+		final ObjectData upgradeData = allObjectData.getUpgrades();
 		this.disabledPrefix = gameUI.getSkinField("CommandButtonDisabledArtPath");
-		for (final War3ID alias : abilityData.keySet()) {
-			final MutableGameObject abilityTypeData = abilityData.get(alias);
+		for (final String alias : abilityData.keySet()) {
+			final GameObject abilityTypeData = abilityData.get(alias);
 			final String iconResearchPath = gameUI.trySkinField(abilityTypeData.getFieldAsString(ICON_RESEARCH, 0));
 			final String iconNormalPath = gameUI.trySkinField(abilityTypeData.getFieldAsString(ICON_NORMAL, 0));
 			final String iconTurnOffPath = gameUI.trySkinField(abilityTypeData.getFieldAsString(ICON_TURN_OFF, 0));
@@ -145,12 +144,12 @@ public class AbilityDataUI {
 			final String iconResearchUberTip = parseUbertip(allObjectData,
 					abilityTypeData.getFieldAsString(ABILITY_RESEARCH_UBER_TIP, 0));
 			final char iconResearchHotkey = getHotkey(abilityTypeData, ABILITY_HOTKEY_LEARN);
-			final int iconResearchX = abilityTypeData.getFieldAsInteger(ICON_RESEARCH_X, 0);
-			final int iconResearchY = abilityTypeData.getFieldAsInteger(ICON_RESEARCH_Y, 0);
-			final int iconNormalX = abilityTypeData.getFieldAsInteger(ICON_NORMAL_X, 0);
-			final int iconNormalY = abilityTypeData.getFieldAsInteger(ICON_NORMAL_Y, 0);
-			final int iconTurnOffX = abilityTypeData.getFieldAsInteger(ICON_TURN_OFF_X, 0);
-			final int iconTurnOffY = abilityTypeData.getFieldAsInteger(ICON_TURN_OFF_Y, 0);
+			final int iconResearchX = abilityTypeData.getFieldAsInteger(ICON_RESEARCH_XY, 0);
+			final int iconResearchY = abilityTypeData.getFieldAsInteger(ICON_RESEARCH_XY, 1);
+			final int iconNormalX = abilityTypeData.getFieldAsInteger(ICON_NORMAL_XY, 0);
+			final int iconNormalY = abilityTypeData.getFieldAsInteger(ICON_NORMAL_XY, 1);
+			final int iconTurnOffX = abilityTypeData.getFieldAsInteger(ICON_TURN_OFF_XY, 0);
+			final int iconTurnOffY = abilityTypeData.getFieldAsInteger(ICON_TURN_OFF_XY, 1);
 			final Texture iconResearch = gameUI.loadTexture(iconResearchPath);
 			final Texture iconResearchDisabled = gameUI.loadTexture(disable(iconResearchPath, this.disabledPrefix));
 			final Texture iconNormal = gameUI.loadTexture(iconNormalPath);
@@ -161,7 +160,7 @@ public class AbilityDataUI {
 			final List<IconUI> turnOffIconUIs = new ArrayList<>();
 			final List<IconUI> normalIconUIs = new ArrayList<>();
 			final int levels = Math.max(1, abilityTypeData.getFieldAsInteger(AbilityFields.LEVELS, 0));
-			for (int i = 1; i <= levels; i++) {
+			for (int i = 0; i < levels; i++) {
 				final String iconTip = abilityTypeData.getFieldAsString(ABILITY_TIP, i);
 				final String iconUberTip = parseUbertip(allObjectData,
 						abilityTypeData.getFieldAsString(ABILITY_UBER_TIP, i));
@@ -176,29 +175,26 @@ public class AbilityDataUI {
 			}
 
 			final List<EffectAttachmentUI> casterArt = new ArrayList<>();
-			final List<String> casterArtPaths = Arrays
-					.asList(abilityTypeData.getFieldAsString(CASTER_ART, 0).split(","));
+			final List<String> casterArtPaths = abilityTypeData.getFieldAsList(CASTER_ART);
 			final int casterAttachmentCount = abilityTypeData.getFieldAsInteger(CASTER_ART_ATTACHMENT_COUNT, 0);
 			final int casterAttachmentIndexMax = Math.min(casterAttachmentCount - 1, casterArtPaths.size() - 1);
 			final int casterIteratorCount = Math.max(casterAttachmentCount, casterArtPaths.size());
 			for (int i = 0; i < casterIteratorCount; i++) {
-				final String modelPath = casterArtPaths.get(Math.max(0, Math.min(i, casterAttachmentIndexMax)));
-				final War3ID attachmentPointKey = tryGet(CASTER_ART_ATTACHMENT_POINT, i);
-				final List<String> attachmentPoints = Arrays
-						.asList(abilityTypeData.getFieldAsString(attachmentPointKey, 0).split(","));
+				final String modelPath = casterArtPaths.isEmpty() ? ""
+						: casterArtPaths.get(Math.max(0, Math.min(i, casterAttachmentIndexMax)));
+				final String attachmentPointKey = tryGet(CASTER_ART_ATTACHMENT_POINT, i);
+				final List<String> attachmentPoints = abilityTypeData.getFieldAsList(attachmentPointKey);
 				casterArt.add(new EffectAttachmentUI(modelPath, attachmentPoints));
 			}
 			final List<EffectAttachmentUI> targetArt = new ArrayList<>();
-			final List<String> targetArtPaths = Arrays
-					.asList(abilityTypeData.getFieldAsString(TARGET_ART, 0).split(","));
+			final List<String> targetArtPaths = abilityTypeData.getFieldAsList(TARGET_ART);
 			final int targetAttachmentCount = abilityTypeData.getFieldAsInteger(TARGET_ART_ATTACHMENT_COUNT, 0);
 			final int targetAttachmentIndexMax = Math.min(targetAttachmentCount - 1, targetArtPaths.size() - 1);
 			final int targetIteratorCount = Math.max(targetAttachmentCount, targetArtPaths.size());
 			for (int i = 0; i < targetIteratorCount; i++) {
 				final String modelPath = targetArtPaths.get(Math.max(0, Math.min(i, targetAttachmentIndexMax)));
-				final War3ID attachmentPointKey = tryGet(TARGET_ART_ATTACHMENT_POINT, i);
-				final List<String> attachmentPoints = Arrays
-						.asList(abilityTypeData.getFieldAsString(attachmentPointKey, 0).split(","));
+				final String attachmentPointKey = tryGet(TARGET_ART_ATTACHMENT_POINT, i);
+				final List<String> attachmentPoints = abilityTypeData.getFieldAsList(attachmentPointKey);
 				targetArt.add(new EffectAttachmentUI(modelPath, attachmentPoints));
 			}
 			final List<EffectAttachmentUI> specialArt = new ArrayList<>();
@@ -238,38 +234,48 @@ public class AbilityDataUI {
 				missileArt.add(new EffectAttachmentUIMissile(missileArtPath, Collections.emptyList(), missileArc));
 			}
 
+			final List<String> LightningEffectList = Arrays
+					.asList(abilityTypeData.getFieldAsString(LIGHTNING_EFFECTS, 0).split(","));
+			final List<War3ID> LightningEffects = new ArrayList<>();
+
+			for (final String lightning : LightningEffectList) {
+				if ((lightning != null) && !lightning.isBlank()) {
+					LightningEffects.add(War3ID.fromString(lightning));
+				}
+			}
+
 			final String effectSound = abilityTypeData.getFieldAsString(ABILITY_EFFECT_SOUND, 0);
 			final String effectSoundLooped = abilityTypeData.getFieldAsString(ABILITY_EFFECT_SOUND_LOOPED, 0);
 
-			this.rawcodeToUI.put(alias, new AbilityUI(
-					new IconUI(iconResearch, iconResearchDisabled, iconResearchX, iconResearchY, iconResearchTip,
-							iconResearchUberTip, iconResearchHotkey),
-					normalIconUIs, turnOffIconUIs, casterArt, targetArt, specialArt, effectArt, areaEffectArt,
-					missileArt, effectSound, effectSoundLooped));
+			this.rawcodeToUI.put(War3ID.fromString(alias),
+					new AbilityUI(
+							new IconUI(iconResearch, iconResearchDisabled, iconResearchX, iconResearchY,
+									iconResearchTip, iconResearchUberTip, iconResearchHotkey),
+							normalIconUIs, turnOffIconUIs, casterArt, targetArt, specialArt, effectArt, areaEffectArt,
+							missileArt, LightningEffects, effectSound, effectSoundLooped));
 		}
-		for (final War3ID alias : buffData.keySet()) {
+		for (final String alias : buffData.keySet()) {
 			// TODO pretty sure that in WC3 the buffs and abilities are stored in the same
 			// table, but I was already using an object editor tab emulator that I wrote
 			// previously and so it has these divided...
-			final MutableGameObject abilityTypeData = buffData.get(alias);
+			final GameObject abilityTypeData = buffData.get(alias);
 			final String iconNormalPath = gameUI.trySkinField(abilityTypeData.getFieldAsString(BUFF_ICON_NORMAL, 0));
-			final String iconTip = abilityTypeData.getFieldAsString(BUFF_ABILITY_TIP, 1);
+			final String iconTip = abilityTypeData.getFieldAsString(BUFF_ABILITY_TIP, 0);
 			final String iconUberTip = parseUbertip(allObjectData,
-					abilityTypeData.getFieldAsString(BUFF_ABILITY_UBER_TIP, 1));
+					abilityTypeData.getFieldAsString(BUFF_ABILITY_UBER_TIP, 0));
 			final Texture iconNormal = gameUI.loadTexture(iconNormalPath);
 			final Texture iconNormalDisabled = gameUI.loadTexture(disable(iconNormalPath, this.disabledPrefix));
 
 			final List<EffectAttachmentUI> targetArt = new ArrayList<>();
-			final List<String> targetArtPaths = Arrays
-					.asList(abilityTypeData.getFieldAsString(BUFF_TARGET_ART, 0).split(","));
+			final List<String> targetArtPaths = abilityTypeData.getFieldAsList(BUFF_TARGET_ART);
 			final int targetAttachmentCount = abilityTypeData.getFieldAsInteger(BUFF_TARGET_ART_ATTACHMENT_COUNT, 0);
 			final int targetAttachmentIndexMax = Math.min(targetAttachmentCount - 1, targetArtPaths.size() - 1);
 			final int targetIteratorCount = Math.max(targetAttachmentCount, targetArtPaths.size());
 			for (int i = 0; i < targetIteratorCount; i++) {
-				final String modelPath = targetArtPaths.get(Math.max(0, Math.min(i, targetAttachmentIndexMax)));
-				final War3ID attachmentPointKey = tryGet(BUFF_TARGET_ART_ATTACHMENT_POINT, i);
-				final List<String> attachmentPoints = Arrays
-						.asList(abilityTypeData.getFieldAsString(attachmentPointKey, 0).split(","));
+				final String modelPath = targetArtPaths.isEmpty() ? ""
+						: targetArtPaths.get(Math.max(0, Math.min(i, targetAttachmentIndexMax)));
+				final String attachmentPointKey = tryGet(BUFF_TARGET_ART_ATTACHMENT_POINT, i);
+				final List<String> attachmentPoints = abilityTypeData.getFieldAsList(attachmentPointKey);
 				targetArt.add(new EffectAttachmentUI(modelPath, attachmentPoints));
 			}
 			final List<EffectAttachmentUI> specialArt = new ArrayList<>();
@@ -304,15 +310,15 @@ public class AbilityDataUI {
 			final String effectSound = abilityTypeData.getFieldAsString(BUFF_ABILITY_EFFECT_SOUND, 0);
 			final String effectSoundLooped = abilityTypeData.getFieldAsString(BUFF_ABILITY_EFFECT_SOUND_LOOPED, 0);
 
-			this.rawcodeToBuffUI.put(alias,
+			this.rawcodeToBuffUI.put(War3ID.fromString(alias),
 					new BuffUI(new IconUI(iconNormal, iconNormalDisabled, 0, 0, iconTip, iconUberTip, '\0'), targetArt,
 							specialArt, effectArt, missileArt, effectSound, effectSoundLooped));
 		}
-		for (final War3ID alias : unitData.keySet()) {
-			final MutableGameObject abilityTypeData = unitData.get(alias);
+		for (final String alias : unitData.keySet()) {
+			final GameObject abilityTypeData = unitData.get(alias);
 			final String iconNormalPath = gameUI.trySkinField(abilityTypeData.getFieldAsString(UNIT_ICON_NORMAL, 0));
-			final int iconNormalX = abilityTypeData.getFieldAsInteger(UNIT_ICON_NORMAL_X, 0);
-			final int iconNormalY = abilityTypeData.getFieldAsInteger(UNIT_ICON_NORMAL_Y, 0);
+			final int iconNormalX = abilityTypeData.getFieldAsInteger(UNIT_ICON_NORMAL_XY, 0);
+			final int iconNormalY = abilityTypeData.getFieldAsInteger(UNIT_ICON_NORMAL_XY, 1);
 			final String iconTip = abilityTypeData.getFieldAsString(UNIT_TIP, 0);
 			final String reviveTip = abilityTypeData.getFieldAsString(UNIT_REVIVE_TIP, 0);
 			final String awakenTip = abilityTypeData.getFieldAsString(UNIT_AWAKEN_TIP, 0);
@@ -320,14 +326,14 @@ public class AbilityDataUI {
 			final char iconHotkey = getHotkey(abilityTypeData, UNIT_HOTKEY);
 			final Texture iconNormal = gameUI.loadTexture(iconNormalPath);
 			final Texture iconNormalDisabled = gameUI.loadTexture(disable(iconNormalPath, this.disabledPrefix));
-			this.rawcodeToUnitUI.put(alias, new UnitIconUI(iconNormal, iconNormalDisabled, iconNormalX, iconNormalY,
-					iconTip, iconUberTip, iconHotkey, reviveTip, awakenTip));
+			this.rawcodeToUnitUI.put(War3ID.fromString(alias), new UnitIconUI(iconNormal, iconNormalDisabled,
+					iconNormalX, iconNormalY, iconTip, iconUberTip, iconHotkey, reviveTip, awakenTip));
 		}
-		for (final War3ID alias : itemData.keySet()) {
-			final MutableGameObject abilityTypeData = itemData.get(alias);
+		for (final String alias : itemData.keySet()) {
+			final GameObject abilityTypeData = itemData.get(alias);
 			final String iconNormalPath = gameUI.trySkinField(abilityTypeData.getFieldAsString(ITEM_ICON_NORMAL, 0));
-			final int iconNormalX = abilityTypeData.getFieldAsInteger(ITEM_ICON_NORMAL_X, 0);
-			final int iconNormalY = abilityTypeData.getFieldAsInteger(ITEM_ICON_NORMAL_Y, 0);
+			final int iconNormalX = abilityTypeData.getFieldAsInteger(ITEM_ICON_NORMAL_XY, 0);
+			final int iconNormalY = abilityTypeData.getFieldAsInteger(ITEM_ICON_NORMAL_XY, 1);
 			final String iconTip = abilityTypeData.getFieldAsString(ITEM_TIP, 0);
 			final String iconUberTip = parseUbertip(allObjectData, abilityTypeData.getFieldAsString(ITEM_UBER_TIP, 0));
 			final String iconDescription = abilityTypeData.getFieldAsString(ITEM_DESCRIPTION, 0);
@@ -335,20 +341,19 @@ public class AbilityDataUI {
 			final Texture iconNormal = gameUI.loadTexture(iconNormalPath);
 			final Texture iconNormalDisabled = gameUI.loadTexture(disable(iconNormalPath, this.disabledPrefix));
 			this.rawcodeToItemUI
-					.put(alias,
+					.put(War3ID.fromString(alias),
 							new ItemUI(
 									new IconUI(iconNormal, iconNormalDisabled, iconNormalX, iconNormalY, iconTip,
 											iconUberTip, iconHotkey),
 									abilityTypeData.getName(), iconDescription, iconNormalPath));
 		}
-		for (final War3ID alias : upgradeData.keySet()) {
-			final MutableGameObject upgradeTypeData = upgradeData.get(alias);
+		for (final String alias : upgradeData.keySet()) {
+			final GameObject upgradeTypeData = upgradeData.get(alias);
 			final int upgradeLevels = upgradeTypeData.getFieldAsInteger(UPGRADE_LEVELS, 0);
-			final int iconNormalX = upgradeTypeData.getFieldAsInteger(UPGRADE_ICON_NORMAL_X, 0);
-			final int iconNormalY = upgradeTypeData.getFieldAsInteger(UPGRADE_ICON_NORMAL_Y, 0);
+			final int iconNormalX = upgradeTypeData.getFieldAsInteger(UPGRADE_ICON_NORMAL_XY, 0);
+			final int iconNormalY = upgradeTypeData.getFieldAsInteger(UPGRADE_ICON_NORMAL_XY, 1);
 			final List<IconUI> upgradeIconsByLevel = new ArrayList<>();
-			for (int i = 0; i < upgradeLevels; i++) {
-				final int upgradeLevelValue = i;
+			for (int upgradeLevelValue = 0; upgradeLevelValue < upgradeLevels; upgradeLevelValue++) {
 				final String iconTip = upgradeTypeData.getFieldAsString(UPGRADE_TIP, upgradeLevelValue);
 				final String iconUberTip = parseUbertip(allObjectData,
 						upgradeTypeData.getFieldAsString(UPGRADE_UBER_TIP, upgradeLevelValue));
@@ -360,7 +365,7 @@ public class AbilityDataUI {
 				upgradeIconsByLevel.add(new IconUI(iconNormal, iconNormalDisabled, iconNormalX, iconNormalY, iconTip,
 						iconUberTip, iconHotkey));
 			}
-			this.rawcodeToUpgradeUI.put(alias, upgradeIconsByLevel);
+			this.rawcodeToUpgradeUI.put(War3ID.fromString(alias), upgradeIconsByLevel);
 		}
 		this.moveUI = createBuiltInIconUI(gameUI, "CmdMove", this.disabledPrefix);
 		this.stopUI = createBuiltInIconUI(gameUI, "CmdStop", this.disabledPrefix);
@@ -383,7 +388,7 @@ public class AbilityDataUI {
 		this.neutralInteractUI = getUI(War3ID.fromString("Anei")).getOnIconUI(0);
 	}
 
-	private static String parseUbertip(final Warcraft3MapObjectData allObjectData, final String originalText) {
+	private static String parseUbertip(final Warcraft3MapRuntimeObjectData allObjectData, final String originalText) {
 		String tooltipText = originalText;
 		int openBracketIndex = tooltipText.indexOf('<');
 		int closeBracketIndex = tooltipText.indexOf('>');
@@ -395,10 +400,9 @@ public class AbilityDataUI {
 			String valueText = "";
 			boolean percent = false;
 			if (((codeTextParts.length == 2)
-					|| ((codeTextParts.length == 3) && (percent = "%".equals(codeTextParts[2]))))
-					&& (codeTextParts[0].length() == 4)) {
-				final War3ID rawcode = War3ID.fromString(codeTextParts[0]);
-				MutableGameObject unit = allObjectData.getUnits().get(rawcode);
+					|| ((codeTextParts.length == 3) && (percent = "%".equals(codeTextParts[2]))))) {
+				final String rawcode = codeTextParts[0];
+				GameObject unit = allObjectData.getUnits().get(rawcode);
 				if (unit == null) {
 					unit = allObjectData.getItems().get(rawcode);
 				}
@@ -428,12 +432,12 @@ public class AbilityDataUI {
 		return tooltipText;
 	}
 
-	private char getHotkey(final MutableGameObject abilityTypeData, final War3ID abilityHotkeyNormal) {
-		return getHotkey(abilityTypeData, abilityHotkeyNormal, 1);
+	private char getHotkey(final GameObject abilityTypeData, final String abilityHotkeyNormal) {
+		return getHotkey(abilityTypeData, abilityHotkeyNormal, 0);
 	}
 
-	private char getHotkey(final MutableGameObject abilityTypeData, final War3ID abilityHotkeyNormal, final int level) {
-		final String iconHotkeyString = abilityTypeData.getFieldAsString(abilityHotkeyNormal, level);
+	private char getHotkey(final GameObject abilityTypeData, final String abilityHotkeyNormal, final int index) {
+		final String iconHotkeyString = abilityTypeData.getFieldAsString(abilityHotkeyNormal, index);
 		final char itemHotkey = getHotkeyChar(iconHotkeyString);
 		return itemHotkey;
 	}
@@ -453,11 +457,11 @@ public class AbilityDataUI {
 	}
 
 	private IconUI createBuiltInIconUISplit(final GameUI gameUI, final String key, final String funckey,
-			final MutableGameObject worldEditorObject, final String disabledPrefix) {
+			final GameObject worldEditorObject, final String disabledPrefix) {
 		final Element builtInAbility = gameUI.getSkinData().get(key);
 		final Element builtInAbilityFunc = gameUI.getSkinData().get(funckey);
 		String iconPath = gameUI.trySkinField(builtInAbilityFunc.getField("Art"));
-		final String worldEditorValue = worldEditorObject.readSLKTag("Art");
+		final String worldEditorValue = worldEditorObject.getField("Art");
 		if (worldEditorValue.length() > 0) {
 			iconPath = worldEditorValue;
 		}
@@ -618,10 +622,22 @@ public class AbilityDataUI {
 		return this.disabledPrefix;
 	}
 
-	private War3ID tryGet(final War3ID[] ids, final int index) {
+	private String tryGet(final String[] ids, final int index) {
 		if ((index >= 0) && (index < ids.length)) {
 			return ids[index];
 		}
 		return ids[ids.length - 1];
+	}
+
+	public OrderButtonUI getRenderPeer(final COrderButton orderButton) {
+		return this.buttonToRenderPeer.get(orderButton);
+	}
+
+	public void createRenderPeer(final COrderButton orderButton) {
+		this.buttonToRenderPeer.put(orderButton, new OrderButtonUI());
+	}
+
+	public void removeRenderPeer(final COrderButton orderButton) {
+		this.buttonToRenderPeer.remove(orderButton);
 	}
 }

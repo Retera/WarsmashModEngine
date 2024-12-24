@@ -4,6 +4,7 @@ import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.Buffer;
+import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -52,7 +53,8 @@ import com.etheller.warsmash.viewer5.handlers.w3x.Variations;
 import com.etheller.warsmash.viewer5.handlers.w3x.W3xSceneLightManager;
 import com.etheller.warsmash.viewer5.handlers.w3x.W3xShaders;
 import com.etheller.warsmash.viewer5.handlers.w3x.War3MapViewer;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayerFogOfWar;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CFogMaskSettings;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.vision.CPlayerFogOfWar;
 
 public class Terrain {
 	public static final float CELL_SIZE = 128f;
@@ -87,6 +89,10 @@ public class Terrain {
 	public float[] minDeepColor = new float[4];
 	public float[] maxShallowColor = new float[4];
 	public float[] minShallowColor = new float[4];
+	public float[] maxDeepColorApplied = new float[4];
+	public float[] minDeepColorApplied = new float[4];
+	public float[] maxShallowColorApplied = new float[4];
+	public float[] minShallowColorApplied = new float[4];
 
 	private final DataTable terrainTable;
 	private final DataTable cliffTable;
@@ -138,6 +144,7 @@ public class Terrain {
 	private byte[] staticShadowData;
 	private byte[] shadowData;
 	private CPlayerFogOfWar fogOfWarData;
+	private ByteBuffer visualFogData;
 
 	public Terrain(final War3MapW3e w3eFile, final War3MapWpm terrainPathing, final War3MapW3i w3iFile,
 			final WebGL webGL, final DataSource dataSource, final WorldEditStrings worldEditStrings,
@@ -210,6 +217,7 @@ public class Terrain {
 				this.maxDeepColor[i] = this.minDeepColor[i];
 			}
 		}
+		setWaterBaseColor(1.0f, 1.0f, 1.0f, 1.0f);
 
 		// Cliff Meshes
 
@@ -241,15 +249,17 @@ public class Terrain {
 			}
 			final String dir = terrainTileInfo.getField("dir");
 			final String file = terrainTileInfo.getField("file");
-			this.groundTextures.add(new GroundTexture(dir + "\\" + file + texturesExt, dataSource, Gdx.gl30));
+			this.groundTextures
+					.add(new GroundTexture(dir + "\\" + file + texturesExt, terrainTileInfo, dataSource, Gdx.gl30));
 			this.groundTextureToId.put(groundTile.asStringValue(), this.groundTextures.size() - 1);
 		}
 
 		final Element tilesets = worldEditData.get("TileSets");
 
 		this.blightTextureIndex = this.groundTextures.size();
-		this.groundTextures.add(new GroundTexture(
-				tilesets.getField(Character.toString(tileset)).split(",")[1] + texturesExt, dataSource, Gdx.gl30));
+		this.groundTextures
+				.add(new GroundTexture(tilesets.getField(Character.toString(tileset)).split(",")[1] + texturesExt, null,
+						dataSource, Gdx.gl30));
 
 		// Cliff Textures
 		for (final War3ID cliffTile : w3eFile.getCliffTiles()) {
@@ -366,35 +376,37 @@ public class Terrain {
 		this.waterTextureArray = gl.glGenTexture();
 		gl.glBindTexture(GL30.GL_TEXTURE_2D_ARRAY, this.waterTextureArray);
 
-		final String fileName = waterInfo == null ? "" : waterInfo.getField("texFile");
-		final List<BufferedImage> waterTextures = new ArrayList<>();
-		boolean anyWaterTextureNeedsSRGB = false;
-		int waterImageDimension = 128;
-		for (int i = 0; i < this.waterTextureCount; i++) {
-			final AnyExtensionImage imageInfo = ImageUtils.getAnyExtensionImageFixRGB(dataSource,
-					fileName + (i < 10 ? "0" : "") + Integer.toString(i) + texturesExt, "water texture");
-			final BufferedImage image = imageInfo.getImageData();
-			if ((image.getWidth() != 128) || (image.getHeight() != 128)) {
-				System.err
-						.println("Odd water texture size detected of " + image.getWidth() + " x " + image.getHeight());
-				waterImageDimension = image.getWidth();
+		if (waterInfo != null) {
+			final String fileName = waterInfo.getField("texFile");
+			final List<BufferedImage> waterTextures = new ArrayList<>();
+			boolean anyWaterTextureNeedsSRGB = false;
+			int waterImageDimension = 128;
+			for (int i = 0; i < this.waterTextureCount; i++) {
+				final AnyExtensionImage imageInfo = ImageUtils.getAnyExtensionImageFixRGB(dataSource,
+						fileName + (i < 10 ? "0" : "") + Integer.toString(i) + texturesExt, "water texture");
+				final BufferedImage image = imageInfo.getImageData();
+				if ((image.getWidth() != 128) || (image.getHeight() != 128)) {
+					System.err.println(
+							"Odd water texture size detected of " + image.getWidth() + " x " + image.getHeight());
+					waterImageDimension = image.getWidth();
+				}
+				anyWaterTextureNeedsSRGB |= imageInfo.isNeedsSRGBFix();
+				waterTextures.add(image);
 			}
-			anyWaterTextureNeedsSRGB |= imageInfo.isNeedsSRGBFix();
-			waterTextures.add(image);
+			gl.glTexImage3D(GL30.GL_TEXTURE_2D_ARRAY, 0,
+					anyWaterTextureNeedsSRGB ? GL30.GL_SRGB8_ALPHA8 : GL30.GL_RGBA8, waterImageDimension,
+					waterImageDimension, this.waterTextureCount, 0, GL30.GL_RGBA, GL30.GL_UNSIGNED_BYTE, null);
+			gl.glTexParameteri(GL30.GL_TEXTURE_2D_ARRAY, GL30.GL_TEXTURE_WRAP_S, GL30.GL_CLAMP_TO_EDGE);
+			gl.glTexParameteri(GL30.GL_TEXTURE_2D_ARRAY, GL30.GL_TEXTURE_WRAP_T, GL30.GL_CLAMP_TO_EDGE);
+			gl.glTexParameteri(GL30.GL_TEXTURE_2D_ARRAY, GL30.GL_TEXTURE_BASE_LEVEL, 0);
+
+			for (int i = 0; i < waterTextures.size(); i++) {
+				final BufferedImage image = waterTextures.get(i);
+				gl.glTexSubImage3D(GL30.GL_TEXTURE_2D_ARRAY, 0, 0, 0, i, image.getWidth(), image.getHeight(), 1,
+						GL30.GL_RGBA, GL30.GL_UNSIGNED_BYTE, ImageUtils.getTextureBuffer(image));
+			}
 		}
 
-		gl.glTexImage3D(GL30.GL_TEXTURE_2D_ARRAY, 0, anyWaterTextureNeedsSRGB ? GL30.GL_SRGB8_ALPHA8 : GL30.GL_RGBA8,
-				waterImageDimension, waterImageDimension, this.waterTextureCount, 0, GL30.GL_RGBA,
-				GL30.GL_UNSIGNED_BYTE, null);
-		gl.glTexParameteri(GL30.GL_TEXTURE_2D_ARRAY, GL30.GL_TEXTURE_WRAP_S, GL30.GL_CLAMP_TO_EDGE);
-		gl.glTexParameteri(GL30.GL_TEXTURE_2D_ARRAY, GL30.GL_TEXTURE_WRAP_T, GL30.GL_CLAMP_TO_EDGE);
-		gl.glTexParameteri(GL30.GL_TEXTURE_2D_ARRAY, GL30.GL_TEXTURE_BASE_LEVEL, 0);
-
-		for (int i = 0; i < waterTextures.size(); i++) {
-			final BufferedImage image = waterTextures.get(i);
-			gl.glTexSubImage3D(GL30.GL_TEXTURE_2D_ARRAY, 0, 0, 0, i, image.getWidth(), image.getHeight(), 1,
-					GL30.GL_RGBA, GL30.GL_UNSIGNED_BYTE, ImageUtils.getTextureBuffer(image));
-		}
 		gl.glGenerateMipmap(GL30.GL_TEXTURE_2D_ARRAY);
 
 		updateGroundHeights(new Rectangle(0, 0, width - 1, height - 1));
@@ -480,7 +492,7 @@ public class Terrain {
 				final RenderCorner corner = this.corners[i][j];
 				final float newGroundCornerHeight = corner.computeFinalGroundHeight() + rampHeight;
 				this.groundCornerHeights[(j * this.columns) + i] = newGroundCornerHeight;
-				corner.depth = (corner.getWater() != 0)
+				corner.depth = corner.getWater() != 0
 						? (this.waterHeightOffset + corner.getWaterHeight()) - newGroundCornerHeight
 						: 0;
 			}
@@ -624,16 +636,16 @@ public class Terrain {
 					}
 					if (!(facingDown && (j == 0)) && !(!facingDown && (j >= (this.rows - 2)))
 							&& !(facingLeft && (i == 0)) && !(!facingLeft && (i >= (this.columns - 2)))) {
-						final boolean verticalRamp = ((bottomLeft.isRamp()) != (bottomRight.isRamp()))
-								&& ((topLeft.isRamp()) != (topRight.isRamp()));
+						final boolean verticalRamp = (bottomLeft.isRamp() != bottomRight.isRamp())
+								&& (topLeft.isRamp() != topRight.isRamp());
 
-						final boolean horizontalRamp = ((bottomLeft.isRamp()) != (topLeft.isRamp()))
-								&& ((bottomRight.isRamp()) != (topRight.isRamp()));
+						final boolean horizontalRamp = (bottomLeft.isRamp() != topLeft.isRamp())
+								&& (bottomRight.isRamp() != topRight.isRamp());
 
 						if (verticalRamp || horizontalRamp) {
-							final boolean rampBlockedByCliff = ((verticalRamp
+							final boolean rampBlockedByCliff = (verticalRamp
 									&& this.corners[i][j + (facingDown ? -1 : 1)].cliff)
-									|| (horizontalRamp && this.corners[i + (facingLeft ? -1 : 1)][j].cliff));
+									|| (horizontalRamp && this.corners[i + (facingLeft ? -1 : 1)][j].cliff);
 							final int topLeftHeight = topLeft.getLayerHeight() - base;
 							final int topRightHeight = topRight.getLayerHeight() - base;
 							final int bottomRightHeight = bottomRight.getLayerHeight() - base;
@@ -685,8 +697,8 @@ public class Terrain {
 										}
 									}
 
-									this.cliffs.add(new IVec3((i + ((horizontalRamp ? 1 : 0) * (facingLeft ? -1 : 0))),
-											(j - ((verticalRamp ? 1 : 0) * (facingDown ? 1 : 0))),
+									this.cliffs.add(new IVec3(i + ((horizontalRamp ? 1 : 0) * (facingLeft ? -1 : 0)),
+											j - ((verticalRamp ? 1 : 0) * (facingDown ? 1 : 0)),
 											this.pathToCliff.get(fileName)));
 									bottomLeft.romp = true;
 									bottomLeft.setCliffTexture(bottomLeftCliffTex);
@@ -762,8 +774,8 @@ public class Terrain {
 		final Rectangle updateArea = new Rectangle();
 		Intersector.intersectRectangles(new Rectangle(0, 0, this.columns - 1, this.rows - 1), adjusted, updateArea);
 
-		for (int j = (int) (updateArea.getY()); j <= (int) ((updateArea.getY() + updateArea.getHeight()) - 1); j++) {
-			for (int i = (int) (updateArea.getX()); i <= (int) ((updateArea.getX() + updateArea.getWidth()) - 1); i++) {
+		for (int j = (int) updateArea.getY(); j <= (int) ((updateArea.getY() + updateArea.getHeight()) - 1); j++) {
+			for (int i = (int) updateArea.getX(); i <= (int) ((updateArea.getX() + updateArea.getWidth()) - 1); i++) {
 				getTextureVariations(i, j, this.groundTextureList, ((j * (this.columns - 1)) + i) * 4);
 
 				if (this.corners[i][j].cliff || this.corners[i][j].romp) {
@@ -860,9 +872,8 @@ public class Terrain {
 							final RenderCorner topLeft = this.corners[x + i][y + j + 1];
 							final RenderCorner topRight = this.corners[x + i + 1][y + j + 1];
 
-							if ((bottomLeft.isRamp()) && (topLeft.isRamp()) && (bottomRight.isRamp())
-									&& (topRight.isRamp()) && (!bottomLeft.romp) && (!bottomRight.romp)
-									&& (!topLeft.romp) && (!topRight.romp)) {
+							if (bottomLeft.isRamp() && topLeft.isRamp() && bottomRight.isRamp() && topRight.isRamp()
+									&& !bottomLeft.romp && !bottomRight.romp && !topLeft.romp && !topRight.romp) {
 								break ILoop;
 							}
 						}
@@ -897,7 +908,7 @@ public class Terrain {
 		final RenderCorner topLeft = this.corners[x][y + 1];
 		final RenderCorner topRight = this.corners[x + 1][y + 1];
 
-		return (bottomLeft.isRamp()) && (topLeft.isRamp()) && (bottomRight.isRamp()) && (topRight.isRamp())
+		return bottomLeft.isRamp() && topLeft.isRamp() && bottomRight.isRamp() && topRight.isRamp()
 				&& !((bottomLeft.getLayerHeight() == topRight.getLayerHeight())
 						&& (topLeft.getLayerHeight() == bottomRight.getLayerHeight()));
 	}
@@ -972,6 +983,10 @@ public class Terrain {
 		gl.glUniform1i(this.groundShader.getUniformLocation("lightTexture"), 21);
 		gl.glUniform1f(this.groundShader.getUniformLocation("lightCount"), lightManager.getTerrainLightCount());
 		gl.glUniform1f(this.groundShader.getUniformLocation("lightTextureHeight"), unitLightsTexture.getHeight());
+		this.groundShader.setUniformf("u_fogColor", this.viewer.worldScene.fogSettings.color);
+		this.groundShader.setUniformf("u_fogParams", this.viewer.worldScene.fogSettings.style.ordinal(),
+				this.viewer.worldScene.fogSettings.start, this.viewer.worldScene.fogSettings.end,
+				this.viewer.worldScene.fogSettings.density);
 
 		gl.glUniformMatrix4fv(this.groundShader.getUniformLocation("DepthBiasMVP"), 1, false,
 				dynamicShadowManager.getDepthBiasMVP().val, 0);
@@ -1064,6 +1079,7 @@ public class Terrain {
 		shader.setUniformi("u_texture", 1);
 		shader.setUniformi("u_shadowMap", 2);
 		shader.setUniformi("u_waterHeightsMap", 3);
+		shader.setUniformi("u_fogOfWarMap", 4);
 		shader.setUniformf("u_waterHeightOffset", this.waterHeightOffset);
 
 		gl.glActiveTexture(GL30.GL_TEXTURE0);
@@ -1075,6 +1091,9 @@ public class Terrain {
 		gl.glActiveTexture(GL30.GL_TEXTURE3);
 		gl.glBindTexture(GL30.GL_TEXTURE_2D, this.waterHeight);
 
+		gl.glActiveTexture(GL30.GL_TEXTURE4);
+		gl.glBindTexture(GL30.GL_TEXTURE_2D, this.fogOfWarMap);
+
 		final W3xSceneLightManager lightManager = (W3xSceneLightManager) this.viewer.worldScene.getLightManager();
 		final DataTexture terrainLightsTexture = lightManager.getTerrainLightsTexture();
 
@@ -1082,6 +1101,10 @@ public class Terrain {
 		gl.glUniform1i(shader.getUniformLocation("u_lightTexture"), 21);
 		gl.glUniform1f(shader.getUniformLocation("u_lightCount"), lightManager.getTerrainLightCount());
 		gl.glUniform1f(shader.getUniformLocation("u_lightTextureHeight"), terrainLightsTexture.getHeight());
+		shader.setUniformf("u_fogColor", this.viewer.worldScene.fogSettings.color);
+		shader.setUniformf("u_fogParams", this.viewer.worldScene.fogSettings.style.ordinal(),
+				this.viewer.worldScene.fogSettings.start, this.viewer.worldScene.fogSettings.end,
+				this.viewer.worldScene.fogSettings.density);
 
 		// Render the cliffs
 		for (final SplatModel splat : this.uberSplatModelsList) {
@@ -1102,10 +1125,10 @@ public class Terrain {
 		gl.glBlendFunc(GL30.GL_SRC_ALPHA, GL30.GL_ONE_MINUS_SRC_ALPHA);
 
 		this.waterShader.setUniformMatrix4fv("MVP", this.camera.viewProjectionMatrix.val, 0, 16);
-		this.waterShader.setUniform4fv("shallow_color_min", this.minShallowColor, 0, 4);
-		this.waterShader.setUniform4fv("shallow_color_max", this.maxShallowColor, 0, 4);
-		this.waterShader.setUniform4fv("deep_color_min", this.minDeepColor, 0, 4);
-		this.waterShader.setUniform4fv("deep_color_max", this.maxDeepColor, 0, 4);
+		this.waterShader.setUniform4fv("shallow_color_min", this.minShallowColorApplied, 0, 4);
+		this.waterShader.setUniform4fv("shallow_color_max", this.maxShallowColorApplied, 0, 4);
+		this.waterShader.setUniform4fv("deep_color_min", this.minDeepColorApplied, 0, 4);
+		this.waterShader.setUniform4fv("deep_color_max", this.maxDeepColorApplied, 0, 4);
 		this.waterShader.setUniformf("water_offset", this.waterHeightOffset);
 		this.waterShader.setUniformi("current_texture", (int) this.waterIndex);
 		this.waterShader.setUniformf("centerOffsetX", this.centerOffset[0]);
@@ -1119,6 +1142,10 @@ public class Terrain {
 		this.waterShader.setUniformi("lightTexture", 3);
 		this.waterShader.setUniformf("lightCount", lightManager.getTerrainLightCount());
 		this.waterShader.setUniformf("lightTextureHeight", terrainLightsTexture.getHeight());
+		this.waterShader.setUniformf("u_fogColor", this.viewer.worldScene.fogSettings.color);
+		this.waterShader.setUniformf("u_fogParams", this.viewer.worldScene.fogSettings.style.ordinal(),
+				this.viewer.worldScene.fogSettings.start, this.viewer.worldScene.fogSettings.end,
+				this.viewer.worldScene.fogSettings.density);
 
 		this.waterShader.setUniformi("water_height_texture", 0);
 		this.waterShader.setUniformi("ground_height_texture", 1);
@@ -1182,6 +1209,10 @@ public class Terrain {
 		gl.glUniform1i(this.cliffShader.getUniformLocation("lightTexture"), 21);
 		gl.glUniform1f(this.cliffShader.getUniformLocation("lightCount"), lightManager.getTerrainLightCount());
 		gl.glUniform1f(this.cliffShader.getUniformLocation("lightTextureHeight"), unitLightsTexture.getHeight());
+		this.cliffShader.setUniformf("u_fogColor", this.viewer.worldScene.fogSettings.color);
+		this.cliffShader.setUniformf("u_fogParams", this.viewer.worldScene.fogSettings.style.ordinal(),
+				this.viewer.worldScene.fogSettings.start, this.viewer.worldScene.fogSettings.end,
+				this.viewer.worldScene.fogSettings.density);
 
 		this.cliffShader.setUniformi("shadowMap", 2);
 		gl.glActiveTexture(GL30.GL_TEXTURE2);
@@ -1499,7 +1530,7 @@ public class Terrain {
 				height = topRight + ((bottomRight - topRight) * (1 - sqY)) + ((topLeft - topRight) * (1 - sqX));
 			}
 
-			return ((height + this.waterHeightOffset) * 128.0f);
+			return (height + this.waterHeightOffset) * 128.0f;
 		}
 
 		return this.waterHeightOffset * 128.0f;
@@ -1540,12 +1571,12 @@ public class Terrain {
 	}
 
 	public SplatMover addUberSplat(final String path, final float x, final float y, final float z, final float scale,
-			final boolean unshaded, final boolean noDepthTest, final boolean highPriority) {
+			final boolean unshaded, final boolean noDepthTest, final boolean highPriority, final boolean aboveWater) {
 		SplatModel splatModel = this.uberSplatModels.get(path);
 		if (splatModel == null) {
 			splatModel = new SplatModel(Gdx.gl30, (Texture) this.viewer.load(path, PathSolver.DEFAULT, null),
 					new ArrayList<>(), this.centerOffset, new ArrayList<>(), unshaded, noDepthTest, highPriority,
-					false);
+					aboveWater);
 			addSplatBatchModel(path, splatModel);
 		}
 		return splatModel.add(x - scale, y - scale, x + scale, y + scale, z, this.centerOffset);
@@ -1577,7 +1608,7 @@ public class Terrain {
 					for (int vertexId = 0; vertexId < Shapes.INSTANCE.quadVertices.length; vertexId++) {
 						final float vPositionX = Shapes.INSTANCE.quadVertices[vertexId][0];
 						final float vPositionY = Shapes.INSTANCE.quadVertices[vertexId][1];
-						final int groundCornerHeightIndex = (int) (((vPositionY + y) * (columns)) + (vPositionX + x));
+						final int groundCornerHeightIndex = (int) (((vPositionY + y) * columns) + (vPositionX + x));
 						final float height = groundCornerHeights[groundCornerHeightIndex];
 						this.vertices[(instanceId * 4 * 3) + (vertexId * 3)] = ((vPositionX + x) * 128f)
 								+ centerOffset[0];
@@ -1588,7 +1619,7 @@ public class Terrain {
 					for (int triangle = 0; triangle < Shapes.INSTANCE.quadIndices.length; triangle++) {
 						for (int vertexId = 0; vertexId < Shapes.INSTANCE.quadIndices[triangle].length; vertexId++) {
 							final int vertexIndex = Shapes.INSTANCE.quadIndices[triangle][vertexId];
-							final int indexValue = (vertexIndex + (instanceId * 4));
+							final int indexValue = vertexIndex + (instanceId * 4);
 							if ((indexValue * 3) >= this.vertices.length) {
 								throw new IllegalStateException();
 							}
@@ -1615,7 +1646,7 @@ public class Terrain {
 					for (int vertexId = 0; vertexId < Shapes.INSTANCE.quadVertices.length; vertexId++) {
 						final float vPositionX = Shapes.INSTANCE.quadVertices[vertexId][0];
 						final float vPositionY = Shapes.INSTANCE.quadVertices[vertexId][1];
-						final int groundCornerHeightIndex = (int) (((vPositionY + y) * (columns)) + (vPositionX + x));
+						final int groundCornerHeightIndex = (int) (((vPositionY + y) * columns) + (vPositionX + x));
 						final float height;
 						if (waterExistsData[groundCornerHeightIndex] != 0) {
 							height = Math.max(groundCornerHeights[groundCornerHeightIndex],
@@ -1633,7 +1664,7 @@ public class Terrain {
 					for (int triangle = 0; triangle < Shapes.INSTANCE.quadIndices.length; triangle++) {
 						for (int vertexId = 0; vertexId < Shapes.INSTANCE.quadIndices[triangle].length; vertexId++) {
 							final int vertexIndex = Shapes.INSTANCE.quadIndices[triangle][vertexId];
-							final int indexValue = (vertexIndex + (instanceId * 4));
+							final int indexValue = vertexIndex + (instanceId * 4);
 							if ((indexValue * 3) >= this.vertices.length) {
 								throw new IllegalStateException();
 							}
@@ -1703,23 +1734,39 @@ public class Terrain {
 		return this.defaultCameraBounds;
 	}
 
-	public void setFogOfWarData(final CPlayerFogOfWar fogOfWarData) {
+	public void setFogOfWarData(CFogMaskSettings fogMaskSettings, final CPlayerFogOfWar fogOfWarData) {
 		this.fogOfWarData = fogOfWarData;
-		reloadFogOfWarDataToGPU();
+		this.visualFogData = ByteBuffer.allocateDirect(fogOfWarData.getFogOfWarBuffer().capacity());
+		reloadFogOfWarDataToGPU(fogMaskSettings);
 	}
 
-	public void reloadFogOfWarDataToGPU() {
+	public void reloadFogOfWarDataToGPU(CFogMaskSettings fogMaskSettings) {
 		final GL30 gl = Gdx.gl30;
+		final ByteBuffer fogOfWarBuffer = this.fogOfWarData.getFogOfWarBuffer();
+		for (int i = 0; i < this.visualFogData.capacity(); i++) {
+			this.visualFogData.put(i, War3MapViewer.fadeLineOfSightColor(this.visualFogData.get(i),
+					fogMaskSettings.getFogStateFromSettings(fogOfWarBuffer.get(i))));
+		}
 		gl.glBindTexture(GL30.GL_TEXTURE_2D, Terrain.this.fogOfWarMap);
 		gl.glTexParameteri(GL30.GL_TEXTURE_2D, GL30.GL_TEXTURE_MAG_FILTER, GL30.GL_LINEAR);
 		gl.glTexParameteri(GL30.GL_TEXTURE_2D, GL30.GL_TEXTURE_MIN_FILTER, GL30.GL_LINEAR);
 		gl.glTexParameteri(GL30.GL_TEXTURE_2D, GL30.GL_TEXTURE_WRAP_S, GL30.GL_CLAMP_TO_EDGE);
 		gl.glTexParameteri(GL30.GL_TEXTURE_2D, GL30.GL_TEXTURE_WRAP_T, GL30.GL_CLAMP_TO_EDGE);
 		gl.glTexImage2D(GL30.GL_TEXTURE_2D, 0, GL30.GL_R8, this.fogOfWarData.getWidth(), this.fogOfWarData.getHeight(),
-				0, GL30.GL_RED, GL30.GL_UNSIGNED_BYTE, this.fogOfWarData.getFogOfWarBuffer());
+				0, GL30.GL_RED, GL30.GL_UNSIGNED_BYTE, this.visualFogData);
 	}
 
 	public int getFogOfWarMap() {
 		return this.fogOfWarMap;
+	}
+
+	public void setWaterBaseColor(float red, float green, float blue, float alpha) {
+		final float[] rgba = { red, green, blue, alpha };
+		for (int i = 0; i < 4; i++) {
+			this.maxDeepColorApplied[i] = this.maxDeepColor[i] * rgba[i];
+			this.minDeepColorApplied[i] = this.minDeepColor[i] * rgba[i];
+			this.maxShallowColorApplied[i] = this.maxShallowColor[i] * rgba[i];
+			this.minShallowColorApplied[i] = this.minShallowColor[i] * rgba[i];
+		}
 	}
 }

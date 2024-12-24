@@ -258,8 +258,13 @@ public class DataTable implements ObjectData {
 						if (flipMode && input.contains("Y") && (input == kInput)) {
 							eIndex = Math.min(subYIndex, eIndex);
 						}
-						final int fieldIdEndIndex = kInput != input ? input.length() : eIndex - 1;
-						fieldId = Integer.parseInt(input.substring(subXIndex + 1, fieldIdEndIndex));
+						final String afterX = input.substring(subXIndex + 1);
+						int afterXSemicolon = afterX.indexOf(';');
+						if (afterXSemicolon == -1) {
+							afterXSemicolon = afterX.length();
+						}
+						fieldId = Integer.parseInt(afterX.substring(0, afterXSemicolon));
+//						final int fieldIdEndIndex = kInput != input ? input.length() : eIndex - 1;
 					}
 
 					final int quotationIndex = kInput.indexOf("\"");
@@ -294,15 +299,26 @@ public class DataTable implements ObjectData {
 				if (flipMode && kInput.contains("Y")) {
 					eIndex = Math.min(kInput.indexOf("Y"), eIndex);
 				}
-				final int fieldIdEndIndex = kInput != input ? input.length() : eIndex - 1;
+				final int nIndex = kInput.indexOf("N");
+				final int eIndexCutoff = ((nIndex != -1) && (nIndex < eIndex)) ? nIndex : eIndex;
+				final int fieldIdEndIndex = kInput != input ? input.length() : eIndexCutoff - 1;
 				final int fieldId = (subXIndex == -1) || (subXIndex > fieldIdEndIndex) ? 1
 						: Integer.parseInt(input.substring(subXIndex + 1, fieldIdEndIndex));
 				String fieldValue = kInput.substring(eIndex + 1);
-				if ((fieldValue.length() > 1) && fieldValue.startsWith("\"") && fieldValue.endsWith("\"")) {
-					fieldValue = fieldValue.substring(1, fieldValue.length() - 1);
-				}
 				if (dataNames[fieldId - 1] != null) {
-					currentUnit.setField(dataNames[fieldId - 1], fieldValue);
+					if ((fieldValue.length() > 1) && fieldValue.startsWith("\"") && fieldValue.endsWith("\"")) {
+						fieldValue = fieldValue.substring(1, fieldValue.length() - 1);
+					}
+					final int indexOfComma = fieldValue.indexOf(",");
+					if (indexOfComma != -1) {
+						final String[] splitLine = fieldValue.split(",");
+						for (int splitChunkId = 0; splitChunkId < splitLine.length; splitChunkId++) {
+							currentUnit.setField(dataNames[fieldId - 1], splitLine[splitChunkId], splitChunkId);
+						}
+					}
+					else {
+						currentUnit.setField(dataNames[fieldId - 1], fieldValue);
+					}
 				}
 			}
 		}
@@ -316,7 +332,43 @@ public class DataTable implements ObjectData {
 	}
 
 	@Override
-	public void setValue(final String id, final String field, final String value) {
+	public void cloneUnit(final String parentId, final String cloneId) {
+		final Element parentEntry = get(parentId);
+		if (parentEntry != null) {
+			final LMUnit cloneUnit = new LMUnit(cloneId, this);
+			for (final String key : parentEntry.keySet()) {
+				final List<String> fieldList = parentEntry.getFieldAsList(key);
+				for (int i = 0; i < fieldList.size(); i++) {
+					cloneUnit.setField(key, fieldList.get(i), i);
+				}
+			}
+			put(cloneId, cloneUnit);
+		}
+	}
+
+	@Override
+	public void inheritFrom(String childKey, String parentKey) {
+		final Element childEntry = get(childKey);
+		final Element parentEntry = get(parentKey);
+		if (parentEntry != null) {
+			if (childEntry != null) {
+				for (final String key : parentEntry.keySet()) {
+					if (!childEntry.hasField(key)) {
+						final List<String> fieldList = parentEntry.getFieldAsList(key);
+						for (int i = 0; i < fieldList.size(); i++) {
+							childEntry.setField(key, fieldList.get(i), i);
+						}
+					}
+				}
+			}
+			else {
+				cloneUnit(parentKey, childKey);
+			}
+		}
+	}
+
+	@Override
+	public void setValue(final String slk, final String id, final String field, final String value) {
 		get(id).setField(field, value);
 	}
 

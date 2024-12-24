@@ -4,11 +4,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.etheller.warsmash.util.War3ID;
+import com.etheller.warsmash.viewer5.handlers.w3x.AnimationTokens.SecondaryTag;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityAttack;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityCategory;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityMove;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityVisitor;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.AbstractGenericSingleIconNoSmartActiveAbility;
@@ -48,10 +50,10 @@ public class CAbilityRoot extends AbstractGenericSingleIconNoSmartActiveAbility 
 
 	private List<CUnitAttack> uprootedAttacks;
 
-	public CAbilityRoot(final int handleId, final War3ID alias, final int rootedWeaponsAttackBits,
+	public CAbilityRoot(final int handleId, final War3ID code, final War3ID alias, final int rootedWeaponsAttackBits,
 			final int uprootedWeaponsAttackBits, final boolean rootedTurning, final CDefenseType uprootedDefenseType,
 			final float duration, final float offDuration) {
-		super(handleId, alias);
+		super(handleId, code, alias);
 		this.rootedWeaponsAttackBits = rootedWeaponsAttackBits;
 		this.uprootedWeaponsAttackBits = uprootedWeaponsAttackBits;
 		this.rootedTurning = rootedTurning;
@@ -100,6 +102,9 @@ public class CAbilityRoot extends AbstractGenericSingleIconNoSmartActiveAbility 
 		}
 		unit.setFacing(game.getGameplayConstants().getRootAngle());
 		unit.setUnitSpecificCurrentAttacks(this.rootedAttacks);
+		if (unit.getUnitAnimationListener().addSecondaryTag(SecondaryTag.ALTERNATE)) {
+			unit.getUnitAnimationListener().forceResetCurrentAnimation();
+		}
 	}
 
 	@Override
@@ -130,6 +135,9 @@ public class CAbilityRoot extends AbstractGenericSingleIconNoSmartActiveAbility 
 			unit.setAttackMoveBehavior(null);
 			unit.setFacing(game.getGameplayConstants().getRootAngle());
 			unit.setUnitSpecificCurrentAttacks(this.rootedAttacks);
+			if (unit.getUnitAnimationListener().addSecondaryTag(SecondaryTag.ALTERNATE)) {
+				unit.getUnitAnimationListener().forceResetCurrentAnimation();
+			}
 		}
 		else {
 			for (final CAbility ability : this.rootedAbilities) {
@@ -164,7 +172,7 @@ public class CAbilityRoot extends AbstractGenericSingleIconNoSmartActiveAbility 
 	public CBehavior begin(final CSimulation game, final CUnit caster, final int orderId,
 			final AbilityPointTarget point) {
 		if (!this.rooted && (orderId == OrderIds.root)) {
-			return this.behaviorRoot.reset(point);
+			return this.behaviorRoot.reset(game, point);
 		}
 		return caster.pollNextOrderBehavior(game);
 	}
@@ -317,6 +325,21 @@ public class CAbilityRoot extends AbstractGenericSingleIconNoSmartActiveAbility 
 	@Override
 	public <T> T visit(final CAbilityVisitor<T> visitor) {
 		return visitor.accept(this);
+	}
+
+	@Override
+	public boolean isPhysical() {
+		return false;
+	}
+
+	@Override
+	public boolean isUniversal() {
+		return false;
+	}
+
+	@Override
+	public CAbilityCategory getAbilityCategory() {
+		return CAbilityCategory.CORE;
 	}
 
 }

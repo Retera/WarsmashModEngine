@@ -8,6 +8,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehavior;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.skills.CBehaviorTargetSpellBase;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetCheckReceiver;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.CommandStringErrorKeys;
 
 public abstract class CAbilityPointTargetSpellBase extends CAbilitySpellBase {
 	private CBehaviorTargetSpellBase behavior;
@@ -29,7 +30,7 @@ public abstract class CAbilityPointTargetSpellBase extends CAbilitySpellBase {
 	@Override
 	public CBehavior begin(final CSimulation game, final CUnit caster, final int orderId,
 			final AbilityPointTarget point) {
-		return this.behavior.reset(point);
+		return this.behavior.reset(game, point);
 	}
 
 	@Override
@@ -47,11 +48,15 @@ public abstract class CAbilityPointTargetSpellBase extends CAbilitySpellBase {
 	protected void innerCheckCanTarget(CSimulation game, CUnit unit, int orderId, AbilityPointTarget target,
 			AbilityTargetCheckReceiver<AbilityPointTarget> receiver) {
 		if (!unit.isMovementDisabled() || unit.canReach(target, getCastRange())) {
-			receiver.targetOk(target);
+			this.innerCheckCanTargetSpell(game, unit, orderId, target, receiver);
+		} else {
+			receiver.targetCheckFailed(CommandStringErrorKeys.TARGET_IS_OUTSIDE_RANGE);
 		}
-		else {
-			receiver.targetOutsideRange();
-		}
+	}
+
+	protected void innerCheckCanTargetSpell(CSimulation game, CUnit unit, int orderId, AbilityPointTarget target,
+			AbilityTargetCheckReceiver<AbilityPointTarget> receiver) {
+		receiver.targetOk(target);
 	}
 
 	@Override

@@ -1,9 +1,8 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.rendersim;
 
 import com.badlogic.gdx.math.Quaternion;
-import com.etheller.warsmash.units.manager.MutableObjectData.MutableGameObject;
+import com.etheller.warsmash.units.GameObject;
 import com.etheller.warsmash.util.RenderMathUtils;
-import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.viewer5.ModelInstance;
 import com.etheller.warsmash.viewer5.handlers.mdx.MdxComplexInstance;
 import com.etheller.warsmash.viewer5.handlers.mdx.MdxModel;
@@ -11,32 +10,33 @@ import com.etheller.warsmash.viewer5.handlers.mdx.SequenceLoopMode;
 import com.etheller.warsmash.viewer5.handlers.w3x.AnimationTokens.PrimaryTag;
 import com.etheller.warsmash.viewer5.handlers.w3x.War3MapViewer;
 import com.etheller.warsmash.viewer5.handlers.w3x.environment.PathingGrid;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayerFogOfWar;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.vision.CPlayerFogOfWar;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CFogState;
 
 public class RenderDoodad {
 	private static final int SAMPLE_RADIUS = 4;
 	private static final float[] VERTEX_COLOR_BLACK = { 0f, 0f, 0f, 1f };
+	private static final float[] VERTEX_COLOR_HEAP = { 0f, 0f, 0f, 1f };
 	private static final float[] VERTEX_COLOR_UNEXPLORED = VERTEX_COLOR_BLACK; // later optionally gray
 	public final ModelInstance instance;
-	private final MutableGameObject row;
+	private final GameObject row;
 	private final float maxPitch;
 	private final float maxRoll;
 	protected float x;
 	protected float y;
 	protected float selectionScale;
 
-	private static final War3ID DOODAD_COLOR_RED = War3ID.fromString("dvr1");
-	private static final War3ID DOODAD_COLOR_GREEN = War3ID.fromString("dvg1");
-	private static final War3ID DOODAD_COLOR_BLUE = War3ID.fromString("dvb1");
+	private static final String DOODAD_COLOR_RED = "vertR"; // replaced from 'dvr1'
+	private static final String DOODAD_COLOR_GREEN = "vertG"; // replaced from 'dvg1'
+	private static final String DOODAD_COLOR_BLUE = "vertB"; // replaced from 'dvb1'
 
 	private CFogState fogState;
 	private final float[] vertexColorBase;
 	private final float[] vertexColorFogged;
 
-	public RenderDoodad(final War3MapViewer map, final MdxModel model, final MutableGameObject row,
-			final float[] location3D, final float[] scale3D, final float facingRadians, final float maxPitch,
-			final float maxRoll, final float selectionScale, final int doodadVariation) {
+	public RenderDoodad(final War3MapViewer map, final MdxModel model, final GameObject row, final float[] location3D,
+			final float[] scale3D, final float facingRadians, final float maxPitch, final float maxRoll,
+			final float selectionScale, final int doodadVariation) {
 		this.maxPitch = maxPitch;
 		this.maxRoll = maxRoll;
 		final boolean isSimple = row.readSLKTagBoolean("lightweight");
@@ -69,9 +69,10 @@ public class RenderDoodad {
 				applyColor(row, doodadVariation + 1, instance);
 			}
 		}
-		vertexColorBase = new float[] { ((MdxComplexInstance) instance).vertexColor[0],
+		this.vertexColorBase = new float[] { ((MdxComplexInstance) instance).vertexColor[0],
 				((MdxComplexInstance) instance).vertexColor[1], ((MdxComplexInstance) instance).vertexColor[2] };
-		vertexColorFogged = new float[] { vertexColorBase[0] / 2, vertexColorBase[1] / 2, vertexColorBase[2] / 2 };
+		this.vertexColorFogged = new float[] { this.vertexColorBase[0] / 2, this.vertexColorBase[1] / 2,
+				this.vertexColorBase[2] / 2 };
 		final float pitchSampleForwardX = this.x + (SAMPLE_RADIUS * (float) Math.cos(facingRadians));
 		final float pitchSampleForwardY = this.y + (SAMPLE_RADIUS * (float) Math.sin(facingRadians));
 		final float pitchSampleBackwardX = this.x - (SAMPLE_RADIUS * (float) Math.cos(facingRadians));
@@ -105,10 +106,14 @@ public class RenderDoodad {
 
 	}
 
-	public void applyColor(final MutableGameObject row, final int doodadVariation, final ModelInstance instance) {
-		final int vertR = row.getFieldAsInteger(DOODAD_COLOR_RED, doodadVariation);
-		final int vertG = row.getFieldAsInteger(DOODAD_COLOR_GREEN, doodadVariation);
-		final int vertB = row.getFieldAsInteger(DOODAD_COLOR_BLUE, doodadVariation);
+	public void applyColor(final GameObject row, final int doodadVariation, final ModelInstance instance) {
+		String variationString = Integer.toString(doodadVariation);
+		if (variationString.length() < 2) {
+			variationString = "0" + variationString;
+		}
+		final int vertR = row.getFieldValue(DOODAD_COLOR_RED + variationString);
+		final int vertG = row.getFieldValue(DOODAD_COLOR_GREEN + variationString);
+		final int vertB = row.getFieldValue(DOODAD_COLOR_BLUE + variationString);
 		((MdxComplexInstance) instance).setVertexColor(new float[] { vertR / 255f, vertG / 255f, vertB / 255f });
 	}
 
@@ -116,35 +121,27 @@ public class RenderDoodad {
 		return PrimaryTag.STAND;
 	}
 
+	private byte lastFogStateColor = 0;
+
 	public void updateFog(final War3MapViewer war3MapViewer) {
 		final CPlayerFogOfWar fogOfWar = war3MapViewer.getFogOfWar();
 		final PathingGrid pathingGrid = war3MapViewer.simulation.getPathingGrid();
-		final int fogOfWarIndexX = pathingGrid.getFogOfWarIndexX(x);
-		final int fogOfWarIndexY = pathingGrid.getFogOfWarIndexY(y);
-		final byte state = fogOfWar.getState(fogOfWarIndexX, fogOfWarIndexY);
-		CFogState newFogState = CFogState.MASKED;
-		if (state < 0) {
-			newFogState = CFogState.MASKED;
-		}
-		else if (state == 0) {
-			newFogState = CFogState.VISIBLE;
-		}
-		else {
-			newFogState = CFogState.FOGGED;
-		}
-		if (newFogState != fogState) {
+		final int fogOfWarIndexX = pathingGrid.getFogOfWarIndexX(this.x);
+		final int fogOfWarIndexY = pathingGrid.getFogOfWarIndexY(this.y);
+		final CFogState newFogState = fogOfWar.getFogState(war3MapViewer.simulation, fogOfWarIndexX, fogOfWarIndexY);
+		if (newFogState != this.fogState) {
 			this.fogState = newFogState;
-			switch (newFogState) {
-			case MASKED:
-				((MdxComplexInstance) instance).setVertexColor(VERTEX_COLOR_BLACK);
-				break;
-			case FOGGED:
-				((MdxComplexInstance) instance).setVertexColor(vertexColorFogged);
-				break;
-			case VISIBLE:
-				((MdxComplexInstance) instance).setVertexColor(vertexColorBase);
-				break;
-			}
 		}
+		if (newFogState.getMask() != this.lastFogStateColor) {
+			this.lastFogStateColor = War3MapViewer.fadeLineOfSightColor(this.lastFogStateColor, newFogState.getMask());
+			for (int i = 0; i < this.vertexColorBase.length; i++) {
+				VERTEX_COLOR_HEAP[i] = (this.vertexColorBase[i] * (255 - (this.lastFogStateColor & 0xFF))) / 255f;
+			}
+			((MdxComplexInstance) this.instance).setVertexColor(VERTEX_COLOR_HEAP);
+		}
+	}
+
+	public float[] getVertexColor() {
+		return ((MdxComplexInstance) this.instance).vertexColor;
 	}
 }

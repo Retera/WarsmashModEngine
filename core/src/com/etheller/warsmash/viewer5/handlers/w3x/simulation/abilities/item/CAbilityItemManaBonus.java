@@ -1,6 +1,6 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.item;
 
-import com.etheller.warsmash.units.manager.MutableObjectData.MutableGameObject;
+import com.etheller.warsmash.units.GameObject;
 import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
@@ -21,8 +21,8 @@ public class CAbilityItemManaBonus extends CAbilitySpellBase {
 	}
 
 	@Override
-	public void populateData(final MutableGameObject worldEditorAbility, final int level) {
-		manaBonus = worldEditorAbility.getFieldAsInteger(AbilityFields.ITEM_MANA, level);
+	public void populateData(final GameObject worldEditorAbility, final int level) {
+		manaBonus = worldEditorAbility.getFieldAsInteger(AbilityFields.DATA_A + level, 0);
 	}
 
 	@Override

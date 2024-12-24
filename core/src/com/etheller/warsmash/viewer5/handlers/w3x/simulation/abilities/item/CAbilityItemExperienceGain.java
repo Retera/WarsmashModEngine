@@ -1,6 +1,6 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.item;
 
-import com.etheller.warsmash.units.manager.MutableObjectData.MutableGameObject;
+import com.etheller.warsmash.units.GameObject;
 import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
@@ -24,8 +24,8 @@ public class CAbilityItemExperienceGain extends CAbilitySpellBase {
 	}
 
 	@Override
-	public void populateData(final MutableGameObject worldEditorAbility, final int level) {
-		this.xpToGain = worldEditorAbility.getFieldAsInteger(AbilityFields.ITEM_EXPERIENCE_GAINED, level);
+	public void populateData(final GameObject worldEditorAbility, final int level) {
+		this.xpToGain = worldEditorAbility.getFieldAsInteger(AbilityFields.DATA_A + level, 0);
 	}
 
 	@Override
@@ -37,8 +37,8 @@ public class CAbilityItemExperienceGain extends CAbilitySpellBase {
 			final AbilityTarget target) {
 		if (orderId == OrderIds.itemxpgain) {
 			final CAbilityHero heroData = caster.getHeroData();
-			heroData.addXp(game, caster, xpToGain);
-			game.createSpellEffectOnUnit(caster, getAlias(), CEffectType.CASTER);
+			heroData.addXp(game, caster, this.xpToGain, true);
+			game.createTemporarySpellEffectOnUnit(caster, getAlias(), CEffectType.CASTER);
 			return false;
 		}
 		else {
@@ -118,7 +118,7 @@ public class CAbilityItemExperienceGain extends CAbilitySpellBase {
 	}
 
 	public int getXpToGain() {
-		return xpToGain;
+		return this.xpToGain;
 	}
 
 	public void setXpToGain(final int xpToGain) {

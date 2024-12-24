@@ -26,6 +26,7 @@ public class MdlxTexture implements MdlxBlock {
 	public int replaceableId = 0;
 	public String path = "";
 	public WrapMode wrapMode = WrapMode.REPEAT_BOTH;
+	public boolean reforged = false;
 
 	@Override
 	public void readMdx(final BinaryReader reader, final int version) {

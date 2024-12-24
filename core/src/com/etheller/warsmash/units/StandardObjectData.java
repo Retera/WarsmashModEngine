@@ -4,6 +4,7 @@ import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -11,6 +12,7 @@ import java.util.Map;
 import java.util.Set;
 
 import com.etheller.warsmash.datasources.DataSource;
+import com.etheller.warsmash.util.StringBundle;
 import com.etheller.warsmash.util.WorldEditStrings;
 
 public class StandardObjectData {
@@ -71,7 +73,7 @@ public class StandardObjectData {
 			throw new RuntimeException(e);
 		}
 
-		final WarcraftData units = new WarcraftData();
+		final WarcraftData units = new WarcraftData(this.worldEditStrings);
 
 		units.add(profile, "Profile", false);
 		units.add(unitAbilities, "UnitAbilities", true);
@@ -100,7 +102,7 @@ public class StandardObjectData {
 			throw new RuntimeException(e);
 		}
 
-		final WarcraftData units = new WarcraftData();
+		final WarcraftData units = new WarcraftData(this.worldEditStrings);
 
 		units.add(profile, "Profile", false);
 		units.add(itemData, "ItemData", true);
@@ -122,7 +124,7 @@ public class StandardObjectData {
 			throw new RuntimeException(e);
 		}
 
-		final WarcraftData units = new WarcraftData();
+		final WarcraftData units = new WarcraftData(this.worldEditStrings);
 
 		units.add(destructableData, "DestructableData", true);
 
@@ -144,7 +146,7 @@ public class StandardObjectData {
 			throw new RuntimeException(e);
 		}
 
-		final WarcraftData units = new WarcraftData();
+		final WarcraftData units = new WarcraftData(this.worldEditStrings);
 
 		units.add(destructableData, "DoodadData", true);
 
@@ -218,7 +220,7 @@ public class StandardObjectData {
 			throw new RuntimeException(e);
 		}
 
-		final WarcraftData abilities = new WarcraftData();
+		final WarcraftData abilities = new WarcraftData(this.worldEditStrings);
 
 		abilities.add(profile, "Profile", true);
 		abilities.add(abilityData, "AbilityData", true);
@@ -254,7 +256,7 @@ public class StandardObjectData {
 			throw new RuntimeException(e);
 		}
 
-		final WarcraftData abilities = new WarcraftData();
+		final WarcraftData abilities = new WarcraftData(this.worldEditStrings);
 
 		abilities.add(profile, "Profile", false);
 		abilities.add(abilityData, "AbilityData", true);
@@ -286,7 +288,7 @@ public class StandardObjectData {
 			throw new RuntimeException(e);
 		}
 
-		final WarcraftData units = new WarcraftData();
+		final WarcraftData units = new WarcraftData(this.worldEditStrings);
 
 		units.add(profile, "Profile", false);
 		units.add(upgradeData, "UpgradeData", true);
@@ -391,9 +393,6 @@ public class StandardObjectData {
 			}
 		}
 
-		public WarcraftData() {
-		}
-
 		public List<DataTable> getTables() {
 			return this.tables;
 		}
@@ -412,8 +411,8 @@ public class StandardObjectData {
 		}
 
 		@Override
-		public void setValue(final String id, final String field, final String value) {
-			get(id).setField(field, value);
+		public void setValue(final String slk, final String id, final String field, final String value) {
+			get(id).setField(slk, field, value);
 		}
 
 		@Override
@@ -425,16 +424,19 @@ public class StandardObjectData {
 			return keySet;
 		}
 
+		@Override
 		public void cloneUnit(final String parentId, final String cloneId) {
 			for (final DataTable table : this.tables) {
-				final Element parentEntry = table.get(parentId);
-				final LMUnit cloneUnit = new LMUnit(cloneId, table);
-				for (final String key : parentEntry.keySet()) {
-					cloneUnit.setField(key, parentEntry.getField(key));
-				}
-				table.put(cloneId, cloneUnit);
+				table.cloneUnit(parentId, cloneId);
 			}
 			this.units.put(new StringKey(cloneId), new WarcraftObject(cloneId, this));
+		}
+
+		@Override
+		public void inheritFrom(String childKey, String parentKey) {
+			for (final DataTable table : this.tables) {
+				table.inheritFrom(childKey, parentKey);
+			}
 		}
 	}
 
@@ -447,8 +449,11 @@ public class StandardObjectData {
 			this.dataSource = dataSource;
 		}
 
-		@Override
 		public void setField(final String field, final String value, final int index) {
+			if (index == -1) {
+				setField(field, value);
+				return;
+			}
 			for (final DataTable table : this.dataSource.getTables()) {
 				final Element element = table.get(this.id);
 				if ((element != null) && element.hasField(field)) {
@@ -456,6 +461,40 @@ public class StandardObjectData {
 					return;
 				}
 			}
+		}
+
+		@Override
+		public void setField(final String slk, final String field, final String value, final int index) {
+			if (index == -1) {
+				setField(slk, field, value);
+				return;
+			}
+			DataTable slkTable = this.dataSource.getTable(slk);
+			if (slkTable == null) {
+				this.dataSource.add(new DataTable(StringBundle.EMPTY), slk, false);
+				slkTable = this.dataSource.getTable(slk);
+			}
+			Element element = slkTable.get(this.id);
+			if (element == null) {
+				element = new LMUnit(this.id, slkTable);
+				slkTable.put(this.id, element);
+			}
+			element.setField(field, value, index);
+		}
+
+		@Override
+		public void clearFieldList(final String slk, final String field) {
+			DataTable slkTable = this.dataSource.getTable(slk);
+			if (slkTable == null) {
+				this.dataSource.add(new DataTable(StringBundle.EMPTY), slk, false);
+				slkTable = this.dataSource.getTable(slk);
+			}
+			Element element = slkTable.get(this.id);
+			if (element == null) {
+				element = new LMUnit(this.id, slkTable);
+				slkTable.put(this.id, element);
+			}
+			element.clearFieldList(slk, field);
 		}
 
 		@Override
@@ -467,6 +506,17 @@ public class StandardObjectData {
 				}
 			}
 			return "";
+		}
+
+		@Override
+		public List<String> getFieldAsList(final String field) {
+			for (final DataTable table : this.dataSource.getTables()) {
+				final Element element = table.get(this.id);
+				if ((element != null) && element.hasField(field)) {
+					return element.getFieldAsList(field);
+				}
+			}
+			return Collections.emptyList();
 		}
 
 		@Override
@@ -489,7 +539,23 @@ public class StandardObjectData {
 					return;
 				}
 			}
-			throw new IllegalArgumentException("no field");
+			final Element element = this.dataSource.tables.get(0).get(this.id);
+			element.setField(field, value);
+		}
+
+		@Override
+		public void setField(final String slk, final String field, final String value) {
+			DataTable slkTable = this.dataSource.getTable(slk);
+			if (slkTable == null) {
+				this.dataSource.add(new DataTable(StringBundle.EMPTY), slk, false);
+				slkTable = this.dataSource.getTable(slk);
+			}
+			Element element = slkTable.get(this.id);
+			if (element == null) {
+				element = new LMUnit(this.id, slkTable);
+				slkTable.put(this.id, element);
+			}
+			element.setField(field, value);
 		}
 
 		@Override

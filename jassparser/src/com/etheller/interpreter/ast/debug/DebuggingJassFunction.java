@@ -34,4 +34,20 @@ public class DebuggingJassFunction implements JassFunction {
 		}
 	}
 
+	public JassFunction getDelegate() {
+		return this.delegate;
+	}
+
+	public int getLineNo() {
+		return this.lineNo;
+	}
+
+	public String getSourceFile() {
+		return this.sourceFile;
+	}
+
+	public String getFunctionName() {
+		return this.functionName;
+	}
+
 }

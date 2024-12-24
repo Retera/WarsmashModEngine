@@ -109,33 +109,6 @@ public final class ImageUtils {
 		}
 	}
 
-	public static BufferedImage getBLPImage(final DataSource dataSource, final String path) {
-		try {
-			try (final InputStream resourceAsStream = dataSource.getResourceAsStream(path)) {
-				if ((resourceAsStream == null) || path.endsWith(".tga")) {
-					final String tgaPath = path.substring(0, path.length() - 4) + ".tga";
-					try (final InputStream tgaStream = dataSource.getResourceAsStream(tgaPath)) {
-						if (tgaStream == null) {
-							throw new IllegalStateException("missing resource: " + path);
-						}
-						else {
-							return TgaFile.readTGA(tgaPath, tgaStream);
-						}
-					}
-				}
-				final BufferedImage image = ImageIO.read(resourceAsStream);
-				if (image == null) {
-					throw new IllegalStateException("corrupt resource: " + path);
-				}
-				return image;
-			}
-
-		}
-		catch (final IOException e) {
-			throw new RuntimeException(e);
-		}
-	}
-
 	public static Texture getTexture(final BufferedImage image, final boolean sRGBFix) {
 		final int[] pixels = new int[image.getWidth() * image.getHeight()];
 		image.getRGB(0, 0, image.getWidth(), image.getHeight(), pixels, 0, image.getWidth());

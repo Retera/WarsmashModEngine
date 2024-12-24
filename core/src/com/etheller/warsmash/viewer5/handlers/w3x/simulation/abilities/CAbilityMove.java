@@ -1,11 +1,14 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities;
 
+import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityPointTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTarget;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTargetVisitor;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehavior;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehaviorBoardTransport;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehaviorFollow;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehaviorHoldPosition;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehaviorMove;
@@ -13,12 +16,13 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehavior
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.OrderIds;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityActivationReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetCheckReceiver;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetCheckReceiver.TargetType;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.CommandStringErrorKeys;
 
 public class CAbilityMove extends AbstractCAbility {
+	public static final War3ID CODE = War3ID.fromString("Amov");
 
 	public CAbilityMove(final int handleId) {
-		super(handleId);
+		super(handleId, CODE);
 	}
 
 	@Override
@@ -38,7 +42,7 @@ public class CAbilityMove extends AbstractCAbility {
 				receiver.targetOk(target);
 			}
 			else {
-				receiver.mustTargetType(TargetType.UNIT_OR_POINT);
+				receiver.targetCheckFailed(CommandStringErrorKeys.MUST_TARGET_A_UNIT_WITH_THIS_ACTION);
 			}
 			break;
 		default:
@@ -81,6 +85,7 @@ public class CAbilityMove extends AbstractCAbility {
 		unit.setFollowBehavior(new CBehaviorFollow(unit));
 		unit.setPatrolBehavior(new CBehaviorPatrol(unit));
 		unit.setHoldPositionBehavior(new CBehaviorHoldPosition(unit));
+		unit.setBoardTransportBehavior(new CBehaviorBoardTransport(unit));
 	}
 
 	@Override
@@ -100,10 +105,26 @@ public class CAbilityMove extends AbstractCAbility {
 
 	@Override
 	public CBehavior begin(final CSimulation game, final CUnit caster, final int orderId, final CWidget target) {
-		final CBehavior followBehavior = caster.getFollowBehavior()
-				.reset(orderId == OrderIds.smart ? OrderIds.move : orderId, (CUnit) target);
-		caster.setDefaultBehavior(followBehavior);
-		return followBehavior;
+		final boolean smart = orderId == OrderIds.smart;
+		final CUnit targetUnit = target.visit(AbilityTargetVisitor.UNIT);
+		if (targetUnit != null) {
+			CBehavior behavior = null;
+			if (smart) {
+				final CBehaviorBoardTransport boardTransportBehavior = caster.getBoardTransportBehavior();
+				final CAbilityRanged transportLoad = boardTransportBehavior.getPartnerAbility(game, caster, targetUnit,
+						true, true);
+				if (transportLoad != null) {
+					behavior = boardTransportBehavior.reset(game, OrderIds.move, targetUnit);
+				}
+			}
+			if (behavior == null) {
+				behavior = caster.getFollowBehavior().reset(game, smart ? OrderIds.move : orderId, targetUnit);
+				caster.setDefaultBehavior(behavior);
+			}
+			return behavior;
+		}
+		// NOTE: shouldn't happen, target is always unit for this ability
+		return caster.pollNextOrderBehavior(game);
 	}
 
 	@Override
@@ -138,6 +159,21 @@ public class CAbilityMove extends AbstractCAbility {
 
 	@Override
 	public void onDeath(final CSimulation game, final CUnit cUnit) {
+	}
+
+	@Override
+	public boolean isPhysical() {
+		return false;
+	}
+
+	@Override
+	public boolean isUniversal() {
+		return false;
+	}
+
+	@Override
+	public CAbilityCategory getAbilityCategory() {
+		return CAbilityCategory.MOVEMENT;
 	}
 
 }

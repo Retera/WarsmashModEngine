@@ -13,6 +13,7 @@ import com.etheller.warsmash.parsers.w3x.wpm.War3MapWpm;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWorldCollision;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.pathing.CBuildingPathingType;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.vision.CPlayerFogOfWar;
 
 public class PathingGrid {
 	public static final BufferedImage BLANK_PATHING = new BufferedImage(1, 1, BufferedImage.TYPE_INT_ARGB);
@@ -43,7 +44,7 @@ public class PathingGrid {
 	// that in credits as well:
 	// https://github.com/stijnherfst/HiveWE/blob/master/Base/PathingMap.cpp
 	private void blitPathingOverlayTexture(final float positionX, final float positionY, final int rotationInput,
-			final BufferedImage pathingTextureTga) {
+			final BufferedImage pathingTextureTga, boolean blocksVision) {
 		final int rotation = (rotationInput + 450) % 360;
 		final int divW = ((rotation % 180) != 0) ? pathingTextureTga.getHeight() : pathingTextureTga.getWidth();
 		final int divH = ((rotation % 180) != 0) ? pathingTextureTga.getWidth() : pathingTextureTga.getHeight();
@@ -84,7 +85,8 @@ public class PathingGrid {
 					data |= PathingFlags.UNFLYABLE;
 				}
 				if (((rgb & 0xFF0000) >>> 16) > 127) {
-					data |= PathingFlags.UNWALKABLE | PathingFlags.UNSWIMABLE;
+					data |= PathingFlags.UNWALKABLE | PathingFlags.UNSWIMABLE
+							| (blocksVision ? PathingFlags.BLOCKVISION : 0);
 				}
 				this.dynamicPathingOverlay[(yy * this.pathingGridSizes[0]) + xx] |= data;
 			}
@@ -143,22 +145,22 @@ public class PathingGrid {
 		final Rectangle pathingMapRectangle = new Rectangle((positionX - (width / 2)) + offsetX,
 				(positionY - (height / 2)) + offsetY, width, height);
 		if (cWorldCollision.intersectsAnythingOtherThan(pathingMapRectangle, unitToExcludeFromCollisionChecks,
-				MovementType.AMPHIBIOUS)) {
+				MovementType.AMPHIBIOUS, true)) {
 			System.out.println("intersects amph unit");
 			anyPathingTypesInRegion |= PathingFlags.UNBUILDABLE | PathingFlags.UNWALKABLE | PathingFlags.UNSWIMABLE;
 		}
 		if (cWorldCollision.intersectsAnythingOtherThan(pathingMapRectangle, unitToExcludeFromCollisionChecks,
-				MovementType.FLOAT)) {
+				MovementType.FLOAT, true)) {
 			System.out.println("intersects float unit");
 			anyPathingTypesInRegion |= PathingFlags.UNSWIMABLE;
 		}
 		if (cWorldCollision.intersectsAnythingOtherThan(pathingMapRectangle, unitToExcludeFromCollisionChecks,
-				MovementType.FLY)) {
+				MovementType.FLY, true)) {
 			System.out.println("intersects fly unit");
 			anyPathingTypesInRegion |= PathingFlags.UNFLYABLE;
 		}
 		if (cWorldCollision.intersectsAnythingOtherThan(pathingMapRectangle, unitToExcludeFromCollisionChecks,
-				MovementType.FOOT)) {
+				MovementType.FOOT, true)) {
 			System.out.println("intersects foot unit");
 			anyPathingTypesInRegion |= PathingFlags.UNBUILDABLE | PathingFlags.UNWALKABLE;
 		}
@@ -359,21 +361,51 @@ public class PathingGrid {
 	}
 
 	public int getFogOfWarIndexX(final float x) {
-		final float userCellSpaceX = ((x + 128f) - this.centerOffset[0]) / 256.0f;
+		final float userCellSpaceX = ((x + (16f * CPlayerFogOfWar.PATHING_RATIO)) - this.centerOffset[0])
+				/ (32f * CPlayerFogOfWar.PATHING_RATIO);
 		final int cellX = (int) userCellSpaceX;
 		return cellX;
 	}
 
 	public int getFogOfWarIndexY(final float y) {
-		final float userCellSpaceY = ((y + 128f) - this.centerOffset[1]) / 256.0f;
+		final float userCellSpaceY = ((y + (16f * CPlayerFogOfWar.PATHING_RATIO)) - this.centerOffset[1])
+				/ (32f * CPlayerFogOfWar.PATHING_RATIO);
 		final int cellY = (int) userCellSpaceY;
 		return cellY;
+	}
+
+	public static int getFogOfWarDistance(final float d) {
+		return getFogOfWarDistance(d, false);
+	}
+
+	public static int getFogOfWarDistance(final float d, boolean roundUp) {
+		final float userCellSpace = ((d + (16f * CPlayerFogOfWar.PATHING_RATIO)))
+				/ (32f * CPlayerFogOfWar.PATHING_RATIO);
+		if (roundUp) {
+			return (int) (Math.ceil(userCellSpace) + 0.1);
+		}
+		else {
+			return (int) userCellSpace;
+		}
+	}
+
+	public boolean isCellBlockVision(final int cellX, final int cellY) {
+		final int index = (cellY * this.pathingGridSizes[0]) + cellX;
+		if ((index < 0) || (index >= this.pathingGrid.length)) {
+			return false;
+		}
+		return PathingFlags.isPathingFlag(this.dynamicPathingOverlay[index], PathingFlags.BLOCKVISION);
+	}
+
+	public boolean isBlockVision(final float x, final float y) {
+		return isCellBlockVision(getCellX(x), getCellY(y));
 	}
 
 	public static final class PathingFlags {
 		public static short UNWALKABLE = 0x2;
 		public static short UNFLYABLE = 0x4;
 		public static short UNBUILDABLE = 0x8;
+		public static short BLOCKVISION = 0x10;
 		public static short BLIGHTED = 0x20;
 		public static short UNSWIMABLE = 0x40; // PROBABLY, didn't confirm this flag value is accurate
 		public static short BOUDNARY = 0xF0;
@@ -397,6 +429,8 @@ public class PathingGrid {
 				return PathingFlags.isPathingFlag(pathingValue, PathingFlags.UNFLYABLE);
 			case UNWALKABLE:
 				return PathingFlags.isPathingFlag(pathingValue, PathingFlags.UNWALKABLE);
+			case BLOCKVISION:
+				return PathingFlags.isPathingFlag(pathingValue, PathingFlags.BLOCKVISION);
 			default:
 				return false;
 			}
@@ -469,7 +503,9 @@ public class PathingGrid {
 	}
 
 	public static enum PathingType {
-		WALKABLE(PathingFlags.UNWALKABLE), FLYABLE(PathingFlags.UNFLYABLE), BUILDABLE(PathingFlags.UNBUILDABLE),
+		WALKABLE(PathingFlags.UNWALKABLE),
+		FLYABLE(PathingFlags.UNFLYABLE),
+		BUILDABLE(PathingFlags.UNBUILDABLE),
 		SWIMMABLE(PathingFlags.UNSWIMABLE);
 
 		private final int preventionFlag;
@@ -484,6 +520,7 @@ public class PathingGrid {
 		private final float positionY;
 		private final int rotationInput;
 		private final BufferedImage pathingTextureTga;
+		private boolean blocksVision = false;
 
 		public RemovablePathingMapInstance(final float positionX, final float positionY, final int rotationInput,
 				final BufferedImage pathingTextureTga) {
@@ -494,7 +531,8 @@ public class PathingGrid {
 		}
 
 		private void blit() {
-			blitPathingOverlayTexture(this.positionX, this.positionY, this.rotationInput, this.pathingTextureTga);
+			blitPathingOverlayTexture(this.positionX, this.positionY, this.rotationInput, this.pathingTextureTga,
+					this.blocksVision);
 		}
 
 		public void remove() {
@@ -507,6 +545,11 @@ public class PathingGrid {
 
 		public void add() {
 			PathingGrid.this.dynamicPathingInstances.add(this);
+			blit();
+		}
+
+		public void setBlocksVision(boolean flag) {
+			this.blocksVision = flag;
 			blit();
 		}
 	}

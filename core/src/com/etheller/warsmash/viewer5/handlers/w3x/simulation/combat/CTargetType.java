@@ -1,8 +1,11 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat;
 
 import java.util.EnumSet;
+import java.util.List;
 
-public enum CTargetType {
+import com.etheller.interpreter.ast.util.CHandle;
+
+public enum CTargetType implements CHandle {
 	AIR,
 	ALIVE,
 	ALLIES,
@@ -33,7 +36,14 @@ public enum CTargetType {
 	NONANCIENT,
 	FRIEND,
 	BRIDGE,
-	DECORATION;
+	DECORATION,
+	// BELOW: internal values:
+	NON_MAGIC_IMMUNE,
+	NON_ETHEREAL
+
+	;
+
+	public final static CTargetType[] VALUES = values();
 
 	public static CTargetType parseTargetType(final String targetTypeString) {
 		if (targetTypeString == null) {
@@ -135,5 +145,21 @@ public enum CTargetType {
 			}
 		}
 		return types;
+	}
+
+	public static EnumSet<CTargetType> parseTargetTypeSet(final List<String> targetTypeStrings) {
+		final EnumSet<CTargetType> types = EnumSet.noneOf(CTargetType.class);
+		for (final String type : targetTypeStrings) {
+			final CTargetType parsedType = parseTargetType(type);
+			if (parsedType != null) {
+				types.add(parsedType);
+			}
+		}
+		return types;
+	}
+
+	@Override
+	public int getHandleId() {
+		return ordinal();
 	}
 }

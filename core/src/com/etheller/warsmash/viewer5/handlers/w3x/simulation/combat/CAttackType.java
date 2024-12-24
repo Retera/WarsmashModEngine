@@ -14,18 +14,12 @@ public enum CAttackType implements CodeKeyType, CHandle {
 
 	public static CAttackType[] VALUES = values();
 
-	private String codeKey;
-	private String damageKey;
+	private final String codeKey;
+	private final String damageKey;
 
 	private CAttackType() {
 		final String name = name();
-		final String computedCodeKey = name.charAt(0) + name.substring(1).toLowerCase();
-		if (computedCodeKey.equals("Spells")) {
-			this.codeKey = "Magic";
-		}
-		else {
-			this.codeKey = computedCodeKey;
-		}
+		this.codeKey = name.charAt(0) + name.substring(1).toLowerCase();
 		this.damageKey = this.codeKey;
 	}
 
@@ -44,6 +38,16 @@ public enum CAttackType implements CodeKeyType, CHandle {
 			return SIEGE;
 		}
 		return valueOf(upperCaseAttackType);
+	}
+
+	public String nameForJass() {
+		if (this == SPELLS) {
+			return "NORMAL";
+		}
+		if (this == NORMAL) {
+			return "MELEE";
+		}
+		return name();
 	}
 
 	@Override

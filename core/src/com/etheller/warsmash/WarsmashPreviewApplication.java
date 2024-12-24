@@ -6,6 +6,8 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.IntBuffer;
+import java.nio.file.Paths;
+import java.util.Arrays;
 
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
@@ -14,7 +16,9 @@ import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector3;
+import com.etheller.warsmash.datasources.CompoundDataSource;
 import com.etheller.warsmash.datasources.DataSource;
+import com.etheller.warsmash.datasources.FolderDataSource;
 import com.etheller.warsmash.units.DataTable;
 import com.etheller.warsmash.viewer5.CanvasProvider;
 import com.etheller.warsmash.viewer5.ModelViewer;
@@ -68,6 +72,7 @@ public class WarsmashPreviewApplication extends ApplicationAdapter implements Ca
 		this.viewer.enableAudio();
 
 		this.scene = this.viewer.addSimpleScene();
+		this.scene.backgroundColor.set(0.5f, 0.5f, 0.5f, 1);
 		this.scene.enableAudio();
 
 		this.cameraManager = new PortraitCameraManager();
@@ -136,6 +141,8 @@ public class WarsmashPreviewApplication extends ApplicationAdapter implements Ca
 
 	public MdlxModel loadCustomModel(final String filename) {
 		clearMainInstance();
+		this.viewer.setDataSource(new CompoundDataSource(
+				Arrays.asList(getCodebase(), new FolderDataSource(Paths.get(filename).getParent()))));
 		final MdxModel mdx = (MdxModel) this.mdxHandler.construct(new ResourceHandlerConstructionParams(this.viewer,
 				this.mdxHandler, ".mdx", PathSolver.DEFAULT, filename));
 		final MdlxModel mdlxModel;

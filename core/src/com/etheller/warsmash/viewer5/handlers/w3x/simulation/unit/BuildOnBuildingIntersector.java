@@ -4,6 +4,7 @@ import com.etheller.warsmash.util.QuadtreeIntersector;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 
 public final class BuildOnBuildingIntersector implements QuadtreeIntersector<CUnit> {
+	public static final BuildOnBuildingIntersector INSTANCE = new BuildOnBuildingIntersector();
 	private CUnit unitToBuildOn;
 	private float x;
 	private float y;

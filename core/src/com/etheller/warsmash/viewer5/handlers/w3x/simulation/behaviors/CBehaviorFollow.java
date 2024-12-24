@@ -16,9 +16,9 @@ public class CBehaviorFollow extends CAbstractRangedBehavior {
 		super(unit);
 	}
 
-	public CBehavior reset(final int higlightOrderId, final CWidget target) {
+	public CBehavior reset(CSimulation game, final int higlightOrderId, final CWidget target) {
 		this.higlightOrderId = higlightOrderId;
-		return innerReset(target);
+		return innerReset(game, target);
 	}
 
 	@Override
@@ -28,7 +28,7 @@ public class CBehaviorFollow extends CAbstractRangedBehavior {
 
 	@Override
 	public boolean isWithinRange(final CSimulation simulation) {
-		if (this.justAutoAttacked = this.unit.autoAcquireAttackTargets(simulation, false)) {
+		if (this.justAutoAttacked = this.unit.autoAcquireTargets(simulation, false)) {
 			return true;
 		}
 		return this.unit.canReach(this.target, this.unit.getAcquisitionRange());
@@ -74,6 +74,16 @@ public class CBehaviorFollow extends CAbstractRangedBehavior {
 	@Override
 	public void endMove(final CSimulation game, final boolean interrupted) {
 
+	}
+
+	@Override
+	public boolean interruptable() {
+		return true;
+	}
+
+	@Override
+	public CBehaviorCategory getBehaviorCategory() {
+		return CBehaviorCategory.MOVEMENT;
 	}
 
 }

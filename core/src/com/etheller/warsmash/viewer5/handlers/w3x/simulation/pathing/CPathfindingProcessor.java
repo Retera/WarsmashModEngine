@@ -104,7 +104,7 @@ public class CPathfindingProcessor {
 	private boolean isPathableDynamically(final float x, final float y, final CUnit ignoreIntersectionsWithThisUnit,
 			final CUnit ignoreIntersectionsWithThisSecondUnit, final PathingGrid.MovementType movementType) {
 		return !this.worldCollision.intersectsAnythingOtherThan(tempRect.setCenter(x, y),
-				ignoreIntersectionsWithThisUnit, ignoreIntersectionsWithThisSecondUnit, movementType);
+				ignoreIntersectionsWithThisUnit, ignoreIntersectionsWithThisSecondUnit, movementType, false);
 	}
 
 	public static boolean isCollisionSizeBetterSuitedForCorners(final float collisionSize) {
@@ -163,14 +163,8 @@ public class CPathfindingProcessor {
 	}
 
 	private static enum Direction {
-		NORTH_WEST(-1, 1),
-		NORTH(0, 1),
-		NORTH_EAST(1, 1),
-		EAST(1, 0),
-		SOUTH_EAST(1, -1),
-		SOUTH(0, -1),
-		SOUTH_WEST(-1, -1),
-		WEST(-1, 0);
+		NORTH_WEST(-1, 1), NORTH(0, 1), NORTH_EAST(1, 1), EAST(1, 0), SOUTH_EAST(1, -1), SOUTH(0, -1),
+		SOUTH_WEST(-1, -1), WEST(-1, 0);
 
 		public static final Direction[] VALUES = values();
 
@@ -265,10 +259,14 @@ public class CPathfindingProcessor {
 				this.goals = 0;
 				for (int i = goalCellX - 1; i <= (goalCellX + 1); i++) {
 					for (int j = goalCellY - 1; j <= (goalCellY + 1); j++) {
-						final Node possibleGoal = job.searchGraph[j][i];
-						possibleGoal.touch(this.pathfindJobId);
-						if (possibleGoal.point.distance(job.goalX, job.goalY) <= bestGoalDistance) {
-							this.goalSet[this.goals++] = possibleGoal;
+						if ((j >= 0) && (j <= job.searchGraph.length)) {
+							if ((i >= 0) && (i < job.searchGraph[j].length)) {
+								final Node possibleGoal = job.searchGraph[j][i];
+								possibleGoal.touch(this.pathfindJobId);
+								if (possibleGoal.point.distance(job.goalX, job.goalY) <= bestGoalDistance) {
+									this.goalSet[this.goals++] = possibleGoal;
+								}
+							}
 						}
 					}
 				}
@@ -398,7 +396,7 @@ public class CPathfindingProcessor {
 											+ CUnit.maybeMeaningfulName(job.ignoreIntersectionsWithThisUnit)
 											+ "\nUnit2:"
 											+ CUnit.maybeMeaningfulName(job.ignoreIntersectionsWithThisSecondUnit))
-													.printStackTrace();
+									.printStackTrace();
 							totalPath.clear();
 							break;
 						}

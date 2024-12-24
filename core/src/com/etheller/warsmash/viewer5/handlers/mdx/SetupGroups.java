@@ -6,6 +6,7 @@ import java.util.Comparator;
 import java.util.List;
 
 import com.etheller.warsmash.viewer5.handlers.EmitterObject;
+import com.etheller.warsmash.viewer5.handlers.mdx.MdxHandler.ShaderEnvironmentType;
 
 public class SetupGroups {
 	public static int getPrio(final Batch object) {
@@ -48,7 +49,11 @@ public class SetupGroups {
 	}
 
 	public static float getBackup2Prio(final Batch object) {
-		return (object.geoset.mdlxGeoset.extent.max[2] + object.geoset.mdlxGeoset.extent.min[2]) / 2;
+		final float result = (object.geoset.mdlxGeoset.extent.max[2] + object.geoset.mdlxGeoset.extent.min[2]) / 2;
+		if (MdxHandler.CURRENT_SHADER_TYPE == ShaderEnvironmentType.MENU) {
+			return -result;
+		}
+		return result;
 	}
 
 	public static float getBackup2Prio(final ParticleEmitter2Object object) {
@@ -163,10 +168,11 @@ public class SetupGroups {
 			}
 		});
 
-		// Event objects have no priority planes, so they might as well always be last.
+		// Event objects have no priority planes, so they might as well always be
+		// first/last.
 		final List<Object> objects = new ArrayList<>();
-		objects.addAll(sorted);
 		objects.addAll(model.eventObjects);
+		objects.addAll(sorted);
 
 		currentGroup = null;
 

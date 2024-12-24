@@ -10,6 +10,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CAttackType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CTargetType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CWeaponType;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.listeners.CUnitAttackPreDamageListenerDamageModResult;
 
 public class CUnitAttackMissile extends CUnitAttack {
 	private float projectileArc;
@@ -41,18 +42,30 @@ public class CUnitAttackMissile extends CUnitAttack {
 	}
 
 	public float getProjectileArc() {
+		if (this.attackReplacement != null) {
+			return this.attackReplacement.getProjectileArc();
+		}
 		return this.projectileArc;
 	}
 
 	public String getProjectileArt() {
+		if (this.attackReplacement != null) {
+			return this.attackReplacement.getProjectileArt();
+		}
 		return this.projectileArt;
 	}
 
 	public boolean isProjectileHomingEnabled() {
+		if (this.attackReplacement != null) {
+			return this.attackReplacement.isProjectileHomingEnabled();
+		}
 		return this.projectileHomingEnabled;
 	}
 
 	public int getProjectileSpeed() {
+		if (this.attackReplacement != null) {
+			return this.attackReplacement.getProjectileSpeed();
+		}
 		return this.projectileSpeed;
 	}
 
@@ -85,7 +98,9 @@ public class CUnitAttackMissile extends CUnitAttack {
 			final CUnitAttackListener attackListener) {
 		final CWidget widget = target.visit(AbilityTargetWidgetVisitor.INSTANCE);
 		if (widget != null) {
-			widget.damage(cSimulation, source, getAttackType(), getWeaponSound(), damage);
+			CUnitAttackPreDamageListenerDamageModResult modDamage = runPreDamageListeners(cSimulation, source, target, damage);
+			float damageDealt = widget.damage(cSimulation, source, true, true, getAttackType(), getWeaponType().getDamageType(), getWeaponSound(), modDamage.computeFinalDamage(), modDamage.getBonusDamage());
+			runPostDamageListeners(cSimulation, source, target, damageDealt);
 			attackListener.onHit(target, damage);
 		}
 	}

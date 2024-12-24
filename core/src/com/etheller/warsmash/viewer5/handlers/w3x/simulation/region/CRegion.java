@@ -139,7 +139,7 @@ public class CRegion {
 
 	public RemovableTriggerEvent add(final CRegionTriggerEnter triggerEnter) {
 		this.enterTriggers.add(triggerEnter);
-		return new RemovableTriggerEvent() {
+		return new RemovableTriggerEvent(triggerEnter.getTrigger()) {
 			@Override
 			public void remove() {
 				CRegion.this.enterTriggers.remove(triggerEnter);
@@ -149,7 +149,7 @@ public class CRegion {
 
 	public RemovableTriggerEvent add(final CRegionTriggerLeave leaveTrigger) {
 		this.leaveTriggers.add(leaveTrigger);
-		return new RemovableTriggerEvent() {
+		return new RemovableTriggerEvent(leaveTrigger.getTrigger()) {
 			@Override
 			public void remove() {
 				CRegion.this.leaveTriggers.remove(leaveTrigger);

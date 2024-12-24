@@ -5,6 +5,9 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.skills.CAbilitySpellBase;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehavior;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehaviorCategory;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehaviorVisitor;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.CommandStringErrorKeys;
 
 public class CBehaviorNoTargetSpellBase implements CBehavior {
 	protected final CUnit unit;
@@ -38,16 +41,26 @@ public class CBehaviorNoTargetSpellBase implements CBehavior {
 		final int backswingTicks = (int) (this.unit.getUnitType().getCastBackswingPoint()
 				/ WarsmashConstants.SIMULATION_STEP_TIME);
 		if ((ticksSinceCast >= castPointTicks) || (ticksSinceCast >= backswingTicks)) {
-			if (!this.doneEffect) {
+			boolean wasEffectDone = this.doneEffect;
+			boolean wasChanneling = this.channeling;
+			if (!wasEffectDone) {
 				this.doneEffect = true;
 				if (!this.unit.chargeMana(this.ability.getManaCost())) {
-					simulation.getCommandErrorListener().showNoManaError(this.unit.getPlayerIndex());
+					simulation.getCommandErrorListener().showInterfaceError(this.unit.getPlayerIndex(), CommandStringErrorKeys.NOT_ENOUGH_MANA);
 					return this.unit.pollNextOrderBehavior(simulation);
 				}
-				this.ability.setCooldownRemaining(this.ability.getCooldown());
-				this.unit.fireCooldownsChangedEvent();
+				this.unit.beginCooldown(simulation, this.ability.getCode(), this.ability.getCooldown());
+				this.channeling = this.ability.doEffect(simulation, this.unit, null);
+				if (this.channeling) {
+					simulation.unitLoopSoundEffectEvent(this.unit, this.ability.getAlias());
+				} else {
+					simulation.unitSoundEffectEvent(this.unit, this.ability.getAlias());
+				}
 			}
-			this.channeling = this.channeling && this.ability.doEffect(simulation, this.unit, null);
+			this.channeling = this.channeling && this.ability.doChannelTick(simulation, this.unit, null);
+			if (wasEffectDone && wasChanneling && !this.channeling) {
+				simulation.unitStopSoundEffectEvent(this.unit, this.ability.getAlias());
+			}
 		}
 		if ((ticksSinceCast >= backswingTicks) && !this.channeling) {
 			return this.unit.pollNextOrderBehavior(simulation);
@@ -70,5 +83,20 @@ public class CBehaviorNoTargetSpellBase implements CBehavior {
 
 	public CAbilitySpellBase getAbility() {
 		return this.ability;
+	}
+
+	@Override
+	public boolean interruptable() {
+		return true;
+	}
+
+	@Override
+	public <T> T visit(final CBehaviorVisitor<T> visitor) {
+		return visitor.accept(this);
+	}
+
+	@Override
+	public CBehaviorCategory getBehaviorCategory() {
+		return CBehaviorCategory.SPELL;
 	}
 }

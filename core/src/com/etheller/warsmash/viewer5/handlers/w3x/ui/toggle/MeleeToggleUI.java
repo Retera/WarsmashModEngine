@@ -2,6 +2,7 @@ package com.etheller.warsmash.viewer5.handlers.w3x.ui.toggle;
 
 import java.util.List;
 
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.graphics.g2d.GlyphLayout;
@@ -12,6 +13,7 @@ import com.etheller.warsmash.viewer5.Scene;
 import com.etheller.warsmash.viewer5.handlers.w3x.camera.GameCameraManager;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CItem;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayerColor;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.timers.CTimer;
 import com.etheller.warsmash.viewer5.handlers.w3x.ui.MeleeUI;
 import com.etheller.warsmash.viewer5.handlers.w3x.ui.WarsmashBaseUI;
@@ -44,43 +46,13 @@ public class MeleeToggleUI implements WarsmashUI {
 	}
 
 	@Override
-	public void showCommandError(final int playerIndex, final String message) {
-		this.meleeUI.showCommandError(playerIndex, message);
+	public void showInterfaceError(final int playerIndex, final String message) {
+		this.meleeUI.showInterfaceError(playerIndex, message);
 	}
 
 	@Override
-	public void showCantPlaceError(final int playerIndex) {
-		this.meleeUI.showCantPlaceError(playerIndex);
-	}
-
-	@Override
-	public void showCantTransportError(final int playerIndex) {
-		this.meleeUI.showCantTransportError(playerIndex);
-	}
-
-	@Override
-	public void showNoFoodError(final int playerIndex) {
-		this.meleeUI.showNoFoodError(playerIndex);
-	}
-
-	@Override
-	public void showNoManaError(final int playerIndex) {
-		this.meleeUI.showNoManaError(playerIndex);
-	}
-
-	@Override
-	public void showInventoryFullError(final int playerIndex) {
-		this.meleeUI.showInventoryFullError(playerIndex);
-	}
-
-	@Override
-	public void showUnableToFindCoupleTargetError(final int playerIndex) {
-		this.meleeUI.showUnableToFindCoupleTargetError(playerIndex);
-	}
-
-	@Override
-	public void showBlightRingFullError(final int playerIndex) {
-		this.meleeUI.showBlightRingFullError(playerIndex);
+	public void showCommandErrorWithoutSound(final int playerIndex, final String message) {
+		this.meleeUI.showCommandErrorWithoutSound(playerIndex, message);
 	}
 
 	@Override
@@ -185,8 +157,8 @@ public class MeleeToggleUI implements WarsmashUI {
 	}
 
 	@Override
-	public boolean scrolled(final int amount) {
-		return this.currentUI.scrolled(amount);
+	public boolean scrolled(final float amountX, final float amountY) {
+		return this.currentUI.scrolled(amountX, amountY);
 	}
 
 	@Override
@@ -199,6 +171,41 @@ public class MeleeToggleUI implements WarsmashUI {
 	@Override
 	public Music playMusic(final String musicField, final boolean random, final int index) {
 		return this.meleeUI.playMusic(musicField, random, index);
+	}
+
+	@Override
+	public Music setMapMusic(String musicField, boolean random, int index) {
+		return this.meleeUI.setMapMusic(musicField, random, index);
+	}
+
+	@Override
+	public void playMapMusic() {
+		this.meleeUI.playMapMusic();
+	}
+
+	@Override
+	public Music playMusicEx(String musicField, boolean random, int index, int fromMSecs, int fadeInMSecs) {
+		return this.meleeUI.playMusicEx(musicField, random, index, fromMSecs, fadeInMSecs);
+	}
+
+	@Override
+	public void stopMusic(boolean fadeOut) {
+		this.meleeUI.stopMusic(fadeOut);
+	}
+
+	@Override
+	public void resumeMusic() {
+		this.meleeUI.resumeMusic();
+	}
+
+	@Override
+	public void setMusicVolume(int volume) {
+		this.meleeUI.setMusicVolume(volume);
+	}
+
+	@Override
+	public void setMusicPlayPosition(int millisecs) {
+		this.meleeUI.setMusicPlayPosition(millisecs);
 	}
 
 	@Override
@@ -226,4 +233,34 @@ public class MeleeToggleUI implements WarsmashUI {
 		this.meleeUI.displayTimedText(x, y, duration, message);
 	}
 
+	@Override
+	public void clearTextMessages() {
+		this.meleeUI.clearTextMessages();
+	}
+
+	@Override
+	public void showInterface(boolean show, float fadeDuration) {
+		this.meleeUI.showInterface(show, fadeDuration);
+	}
+
+	@Override
+	public void setCinematicScene(int portraitUnitId, CPlayerColor color, String speakerTitle, String text,
+			float sceneDuration, float voiceoverDuration) {
+		this.meleeUI.setCinematicScene(portraitUnitId, color, speakerTitle, text, sceneDuration, voiceoverDuration);
+	}
+
+	@Override
+	public void enableUserControl(boolean value) {
+		this.meleeUI.enableUserControl(value);
+	}
+
+	@Override
+	public void endCinematicScene() {
+		this.meleeUI.endCinematicScene();
+	}
+
+	@Override
+	public void forceCinematicSubtitles(boolean value) {
+		this.meleeUI.forceCinematicSubtitles(value);
+	}
 }

@@ -103,7 +103,6 @@ public class MdxModel extends com.etheller.warsmash.viewer5.Model<MdxHandler> {
 		final PathSolver pathSolver = this.pathSolver;
 		final SolverParams solverParams = this.solverParams;
 		final boolean reforged = (parser.getVersion() > 800) && (parser.getVersion() != 1300);
-		final String texturesExt = reforged ? ".dds" : ".blp";
 
 		this.reforged = reforged;
 		this.name = parser.getName();
@@ -156,6 +155,17 @@ public class MdxModel extends com.etheller.warsmash.viewer5.Model<MdxHandler> {
 
 		final GL20 gl = viewer.gl;
 
+		for (final MdlxMaterial material : parser.getMaterials()) {
+			if ((material.shader != null) && (material.shader.length() > 1)) {
+				for (final MdlxLayer layer : material.layers) {
+					final int textureId = layer.textureId;
+					if ((textureId >= 0) && (textureId < parser.getTextures().size())) {
+						parser.getTextures().get(textureId).reforged = true;
+					}
+				}
+			}
+		}
+
 		// Textures.
 		for (final MdlxTexture texture : parser.getTextures()) {
 			String path = texture.getPath();
@@ -171,8 +181,14 @@ public class MdxModel extends com.etheller.warsmash.viewer5.Model<MdxHandler> {
 				path = "ReplaceableTextures\\" + ReplaceableIds.getPathString(replaceableId) + idString + ".blp";
 			}
 
-			if (reforged && !path.endsWith(".dds")) {
-				path = path.substring(0, path.length() - 4) + ".dds";
+			if ((texture.reforged || reforged) && !path.endsWith(".dds")) {
+				final String ddsPath = path.substring(0, path.length() - 4) + ".dds";
+				if (viewer.dataSource.has(ddsPath.replace("\\", "/"))
+						|| viewer.dataSource.has(ddsPath.replace("/", "\\")) || path.endsWith(".tif")) {
+					path = ddsPath;
+				}
+				else {
+				}
 			}
 			else if ("".equals(path)) {
 				path = "Textures\\white.blp";

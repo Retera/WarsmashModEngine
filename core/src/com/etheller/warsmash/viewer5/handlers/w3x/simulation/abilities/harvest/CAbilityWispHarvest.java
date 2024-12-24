@@ -8,6 +8,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CDestructable;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityCategory;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.AbstractGenericSingleIconActiveAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityPointTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehavior;
@@ -16,6 +17,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CTargetType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.OrderIds;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityActivationReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetCheckReceiver;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.CommandStringErrorKeys;
 
 public class CAbilityWispHarvest extends AbstractGenericSingleIconActiveAbility {
 	public static final EnumSet<CTargetType> TREE_ALIVE_TYPE_ONLY = EnumSet.of(CTargetType.TREE, CTargetType.ALIVE);
@@ -27,9 +29,9 @@ public class CAbilityWispHarvest extends AbstractGenericSingleIconActiveAbility 
 	private int periodicIntervalLengthTicks;
 	private CBehaviorWispHarvest behaviorWispHarvest;
 
-	public CAbilityWispHarvest(final int handleId, final War3ID alias, final int lumberPerInterval,
+	public CAbilityWispHarvest(final int handleId, final War3ID code, final War3ID alias, final int lumberPerInterval,
 			final float artAttachmentHeight, final float castRange, final float periodicIntervalLength) {
-		super(handleId, alias);
+		super(handleId, code, alias);
 		this.lumberPerInterval = lumberPerInterval;
 		this.artAttachmentHeight = artAttachmentHeight;
 		this.castRange = castRange;
@@ -52,7 +54,7 @@ public class CAbilityWispHarvest extends AbstractGenericSingleIconActiveAbility 
 
 	@Override
 	public CBehavior begin(final CSimulation game, final CUnit caster, final int orderId, final CWidget target) {
-		return this.behaviorWispHarvest.reset(target);
+		return this.behaviorWispHarvest.reset(game, target);
 	}
 
 	@Override
@@ -86,15 +88,12 @@ public class CAbilityWispHarvest extends AbstractGenericSingleIconActiveAbility 
 	protected void innerCheckCanTarget(final CSimulation game, final CUnit unit, final int orderId,
 			final CWidget target, final AbilityTargetCheckReceiver<CWidget> receiver) {
 		if (target instanceof CDestructable) {
-			if (target.canBeTargetedBy(game, unit, TREE_ALIVE_TYPE_ONLY)) {
+			if (target.canBeTargetedBy(game, unit, TREE_ALIVE_TYPE_ONLY, receiver)) {
 				receiver.targetOk(target);
-			}
-			else {
-				receiver.mustTargetResources();
 			}
 		}
 		else {
-			receiver.mustTargetResources();
+			receiver.targetCheckFailed(CommandStringErrorKeys.MUST_TARGET_A_TREE);
 		}
 	}
 
@@ -166,6 +165,21 @@ public class CAbilityWispHarvest extends AbstractGenericSingleIconActiveAbility 
 	public void setPeriodicIntervalLength(final float periodicIntervalLength) {
 		this.periodicIntervalLength = periodicIntervalLength;
 		this.periodicIntervalLengthTicks = (int) (periodicIntervalLength / WarsmashConstants.SIMULATION_STEP_TIME);
+	}
+
+	@Override
+	public boolean isPhysical() {
+		return true;
+	}
+
+	@Override
+	public boolean isUniversal() {
+		return false;
+	}
+
+	@Override
+	public CAbilityCategory getAbilityCategory() {
+		return CAbilityCategory.CORE;
 	}
 
 }

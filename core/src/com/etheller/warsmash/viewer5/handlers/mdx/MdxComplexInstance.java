@@ -182,7 +182,7 @@ public class MdxComplexInstance extends ModelInstance {
 			if ("SPN".equals(type)) {
 				emitter = new EventObjectSpnEmitter(this, emitterObject);
 			}
-			else if ("SPL".equals(type)) {
+			else if ("SPL".equals(type) || "FPT".equals(type)) {
 				emitter = new EventObjectSplEmitter(this, emitterObject);
 			}
 			else if ("UBR".equals(type)) {
@@ -209,6 +209,13 @@ public class MdxComplexInstance extends ModelInstance {
 		this.sortedNodes = new SkeletalNode[nodes.size()];
 		for (int i = 0, l = nodes.size(); i < l; i++) {
 			this.sortedNodes[i] = this.nodes[hierarchy.get(i)];
+		}
+
+		// Below, we allow attachments to initialize after the node tree
+		// is finished building. This allows "internalInstance.setParent(...)"
+		// to link the child model instance to the parent
+		for (final AttachmentInstance attachment : this.attachments) {
+			attachment.initialize();
 		}
 
 		// If the sequence was changed before the model was loaded, reset it now that
@@ -335,8 +342,8 @@ public class MdxComplexInstance extends ModelInstance {
 				final GenericObject.Variants variants = genericObject.variants;
 				final Vector3 localLocation = node.localLocation;
 				final Quaternion localRotation = node.localRotation;
-				final Vector3 localScale = node.localScale;
 				final Quaternion overrideWorldRotation = node.overrideWorldRotation;
+				final Vector3 localScale = node.localScale;
 
 				// Only update the local node data if there is a need to
 				if (forced || variants.generic[sequence]) {
@@ -368,6 +375,15 @@ public class MdxComplexInstance extends ModelInstance {
 						localScale.x = scaleHeap[0];
 						localScale.y = scaleHeap[1];
 						localScale.z = scaleHeap[2];
+					}
+				}
+				if (overrideWorldRotation != null) {
+					if (node.preOverrideLocalRotation != null) {
+						localRotation.set(node.preOverrideLocalRotation);
+					}
+					else {
+						localRotation.set(overrideWorldRotation);
+						localRotation.mulLeft(parent.inverseWorldRotation);
 					}
 				}
 
@@ -574,7 +590,7 @@ public class MdxComplexInstance extends ModelInstance {
 		if ((sequenceId != -1) && (model.sequences.size() != 0)) {
 			final Sequence sequence = model.sequences.get(sequenceId);
 			final long[] interval = sequence.getInterval();
-			final float frameTime = (dt * 1000 * this.animationSpeed);
+			final float frameTime = dt * 1000 * this.animationSpeed;
 
 			final int lastIntegerFrame = this.frame;
 			this.floatingFrame += frameTime;
@@ -672,8 +688,8 @@ public class MdxComplexInstance extends ModelInstance {
 		for (final LightInstance light : this.lights) {
 			light.remove(this.scene);
 		}
-		for (final AttachmentInstance attachmentInstance : this.attachments) {
-			attachmentInstance.onRemove();
+		for (final ParticleEmitter particleEmitter : this.particleEmitters) {
+			particleEmitter.onRemove();
 		}
 	}
 
@@ -728,6 +744,14 @@ public class MdxComplexInstance extends ModelInstance {
 		this.vertexColor[1] = color.g;
 		this.vertexColor[2] = color.b;
 		this.vertexColor[3] = color.a;
+		return this;
+	}
+
+	public MdxComplexInstance setVertexColor(final float r, final float g, final float b, final float a) {
+		this.vertexColor[0] = r;
+		this.vertexColor[1] = g;
+		this.vertexColor[2] = b;
+		this.vertexColor[3] = a;
 		return this;
 	}
 

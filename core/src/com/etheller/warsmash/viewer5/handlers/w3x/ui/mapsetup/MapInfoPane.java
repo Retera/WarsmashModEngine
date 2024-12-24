@@ -30,6 +30,7 @@ public class MapInfoPane {
 	private final StringFrame mapNameValue;
 	private final UIFrame authIconFrame;
 	private final TextureFrame minimapImageTextureFrame;
+	private final TextureFrame minimapImageBackgroundFrame;
 	private final StringFrame suggestedPlayersValue;
 	private final StringFrame mapSizeValue;
 	private final StringFrame mapDescValue;
@@ -51,11 +52,17 @@ public class MapInfoPane {
 		this.mapTilesetValue = (StringFrame) rootFrame.getFrameByName("MapTilesetValue", 0);
 		this.authIconFrame = rootFrame.getFrameByName("AuthIcon", 0);
 		final UIFrame minimapImageFrame = rootFrame.getFrameByName("MinimapImage", 0);
+		this.minimapImageBackgroundFrame = rootFrame.createTextureFrame("MinimapImageBackground", minimapImageFrame, false,
+				TextureFrame.DEFAULT_TEX_COORDS);
+		this.minimapImageBackgroundFrame.setTexture("Textures\\black32.blp", rootFrame);
 		this.minimapImageTextureFrame = rootFrame.createTextureFrame("MinimapImageTexture", minimapImageFrame, false,
 				TextureFrame.DEFAULT_TEX_COORDS);
 		rootFrame.remove(this.minimapImageTextureFrame);
+		rootFrame.remove(this.minimapImageBackgroundFrame);
+		((SimpleFrame) this.mapInfoPaneFrame).add(this.minimapImageBackgroundFrame);
 		((SimpleFrame) this.mapInfoPaneFrame).add(this.minimapImageTextureFrame);
 		this.minimapImageTextureFrame.setSetAllPoints(true);
+		this.minimapImageBackgroundFrame.setSetAllPoints(true);
 
 		final UIFrame suggestedPlayersLabel = rootFrame.getFrameByName("SuggestedPlayersLabel", 0);
 		final UIFrame mapSizeLabel = rootFrame.getFrameByName("MapSizeLabel", 0);

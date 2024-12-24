@@ -17,7 +17,7 @@ public class CBehaviorNightElfBuild extends CBehaviorOrcBuild {
 			final CAbilityBuildInProgress abilityBuildInProgress) {
 		if (constructedStructure.getClassifications().contains(CUnitClassification.ANCIENT)) {
 			constructedStructure.setConstructionConsumesWorker(true);
-			final CUnit worker = constructedStructure.getWorkerInside();
+			final CUnit worker = constructedStructure.getWorker();
 			final CPlayer workerPlayer = game.getPlayer(worker.getPlayerIndex());
 			workerPlayer.setUnitFoodUsed(worker, 0);
 		}

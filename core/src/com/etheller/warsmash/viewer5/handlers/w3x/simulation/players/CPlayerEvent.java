@@ -9,7 +9,7 @@ import com.etheller.warsmash.parsers.jass.scope.CommonTriggerExecutionScope;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.JassGameEventsWar3;
 
-public class CPlayerEvent implements RemovableTriggerEvent {
+public class CPlayerEvent extends RemovableTriggerEvent {
 	private final GlobalScope globalScope;
 	private final CPlayerJass player;
 	private final Trigger trigger;
@@ -18,6 +18,7 @@ public class CPlayerEvent implements RemovableTriggerEvent {
 
 	public CPlayerEvent(final GlobalScope globalScope, final CPlayerJass player, final Trigger trigger,
 			final JassGameEventsWar3 eventType, final TriggerBooleanExpression filter) {
+		super(trigger);
 		this.globalScope = globalScope;
 		this.player = player;
 		this.trigger = trigger;
@@ -40,6 +41,11 @@ public class CPlayerEvent implements RemovableTriggerEvent {
 
 	public void fire(final CUnit hero, final TriggerExecutionScope scope) {
 		this.globalScope.queueTrigger(this.filter, CommonTriggerExecutionScope.filterScope(scope, hero), this.trigger,
+				scope, scope);
+	}
+
+	public void fire(final CPlayer player, final TriggerExecutionScope scope) {
+		this.globalScope.queueTrigger(this.filter, CommonTriggerExecutionScope.filterScope(scope, player), this.trigger,
 				scope, scope);
 	}
 }

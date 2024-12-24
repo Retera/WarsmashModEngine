@@ -99,7 +99,7 @@ public class Geoset {
 
 	public int getColor(final float[] out, final int sequence, final int frame, final int counter) {
 		if (this.geosetAnimation != null) {
-			return this.geosetAnimation.getAlpha(out, sequence, frame, counter);
+			return this.geosetAnimation.getColor(out, sequence, frame, counter);
 		}
 
 		Arrays.fill(out, 1);

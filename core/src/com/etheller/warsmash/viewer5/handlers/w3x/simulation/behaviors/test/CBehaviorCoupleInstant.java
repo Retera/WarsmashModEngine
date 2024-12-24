@@ -4,10 +4,12 @@ import com.etheller.warsmash.viewer5.handlers.w3x.AnimationTokens.PrimaryTag;
 import com.etheller.warsmash.viewer5.handlers.w3x.SequenceUtils;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTargetStillAliveAndTargetableVisitor;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.test.CAbilityCoupleInstant;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CAbstractRangedBehavior;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehavior;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehaviorCategory;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.OrderIds;
 
 public class CBehaviorCoupleInstant extends CAbstractRangedBehavior {
@@ -21,9 +23,8 @@ public class CBehaviorCoupleInstant extends CAbstractRangedBehavior {
 		this.stillAliveVisitor = new AbilityTargetStillAliveAndTargetableVisitor();
 	}
 
-	public CBehaviorCoupleInstant reset(final CUnit coupleTarget) {
-		innerReset(coupleTarget);
-		return this;
+	public CBehavior reset(CSimulation game, final CUnit coupleTarget) {
+		return innerReset(game, coupleTarget);
 	}
 
 	@Override
@@ -86,6 +87,21 @@ public class CBehaviorCoupleInstant extends CAbstractRangedBehavior {
 
 	@Override
 	protected void resetBeforeMoving(final CSimulation simulation) {
+	}
+
+	@Override
+	public boolean interruptable() {
+		return true;
+	}
+
+	@Override
+	public AbilityTarget getTarget() {
+		return this.target;
+	}
+
+	@Override
+	public CBehaviorCategory getBehaviorCategory() {
+		return CBehaviorCategory.SPELL;
 	}
 
 }

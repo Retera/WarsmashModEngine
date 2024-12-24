@@ -6,6 +6,7 @@ import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityCategory;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.AbstractGenericSingleIconNoSmartActiveAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityPointTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehavior;
@@ -14,6 +15,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CTargetType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.OrderIds;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityActivationReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetCheckReceiver;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.CommandStringErrorKeys;
 
 public class CAbilityCarrionSwarmDummy extends AbstractGenericSingleIconNoSmartActiveAbility {
 
@@ -21,9 +23,9 @@ public class CAbilityCarrionSwarmDummy extends AbstractGenericSingleIconNoSmartA
 	private EnumSet<CTargetType> targetsAllowed;
 	private CBehaviorCarrionSwarmDummy behaviorCarrionSwarmDummy;
 
-	public CAbilityCarrionSwarmDummy(final int handleId, final War3ID alias, final float castRange,
+	public CAbilityCarrionSwarmDummy(final int handleId, final War3ID code, final War3ID alias, final float castRange,
 			final EnumSet<CTargetType> targetsAllowed) {
-		super(handleId, alias);
+		super(handleId, code, alias);
 		this.castRange = castRange;
 		this.targetsAllowed = targetsAllowed;
 	}
@@ -60,13 +62,13 @@ public class CAbilityCarrionSwarmDummy extends AbstractGenericSingleIconNoSmartA
 
 	@Override
 	public CBehavior begin(final CSimulation game, final CUnit caster, final int orderId, final CWidget target) {
-		return this.behaviorCarrionSwarmDummy.reset(target);
+		return this.behaviorCarrionSwarmDummy.reset(game, target);
 	}
 
 	@Override
 	public CBehavior begin(final CSimulation game, final CUnit caster, final int orderId,
 			final AbilityPointTarget point) {
-		return this.behaviorCarrionSwarmDummy.reset(point);
+		return this.behaviorCarrionSwarmDummy.reset(game, point);
 	}
 
 	@Override
@@ -77,11 +79,14 @@ public class CAbilityCarrionSwarmDummy extends AbstractGenericSingleIconNoSmartA
 	@Override
 	protected void innerCheckCanTarget(final CSimulation game, final CUnit unit, final int orderId,
 			final CWidget target, final AbilityTargetCheckReceiver<CWidget> receiver) {
-		if (unit.canReach(target, this.castRange) && target.canBeTargetedBy(game, unit, this.targetsAllowed)) {
-			receiver.targetOk(target);
+		if (unit.canReach(target, this.castRange)) {
+			if(target.canBeTargetedBy(game, unit, this.targetsAllowed, receiver)) {
+				receiver.targetOk(target);
+			}
+			// else receiver called automatically
 		}
 		else {
-			receiver.targetOutsideRange();
+			receiver.targetCheckFailed(CommandStringErrorKeys.TARGET_IS_OUTSIDE_RANGE);
 		}
 	}
 
@@ -92,7 +97,7 @@ public class CAbilityCarrionSwarmDummy extends AbstractGenericSingleIconNoSmartA
 			receiver.targetOk(target);
 		}
 		else {
-			receiver.targetOutsideRange();
+			receiver.targetCheckFailed(CommandStringErrorKeys.TARGET_IS_OUTSIDE_RANGE);
 		}
 	}
 
@@ -122,5 +127,20 @@ public class CAbilityCarrionSwarmDummy extends AbstractGenericSingleIconNoSmartA
 
 	public void setTargetsAllowed(final EnumSet<CTargetType> targetsAllowed) {
 		this.targetsAllowed = targetsAllowed;
+	}
+
+	@Override
+	public boolean isPhysical() {
+		return false;
+	}
+
+	@Override
+	public boolean isUniversal() {
+		return false;
+	}
+
+	@Override
+	public CAbilityCategory getAbilityCategory() {
+		return CAbilityCategory.SPELL;
 	}
 }

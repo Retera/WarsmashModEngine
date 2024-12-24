@@ -17,6 +17,7 @@ public class FontGeneratorHolder {
 	public BitmapFont generateFont(final FreeTypeFontParameter parameter) {
 		BitmapFont font = this.sizeToFont.get(parameter.size);
 		if (font == null) {
+			parameter.incremental = true; //enable incremental to support non-ascii characters like chinese when free-type fonts contains the char.
 			font = this.generator.generateFont(parameter);
 			this.sizeToFont.put(parameter.size, font);
 		}

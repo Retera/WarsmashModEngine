@@ -101,7 +101,7 @@ public class CBehaviorMove implements CBehavior {
 	@Override
 	public CBehavior update(final CSimulation simulation) {
 		if ((this.rangedBehavior != null) && this.rangedBehavior.isWithinRange(simulation)) {
-			return this.rangedBehavior.update(simulation);
+			return this.unit.finishMoveBehavior(simulation, this.rangedBehavior);
 		}
 		if (this.firstUpdate) {
 			// when units start moving, if they're on top of other units, maybe push them to
@@ -184,8 +184,8 @@ public class CBehaviorMove implements CBehavior {
 		}
 		float facing = this.unit.getFacing();
 		float delta = goalAngle - facing;
-		final float propulsionWindow = this.unit.getUnitType().getPropWindow();
-		final float turnRate = this.unit.getUnitType().getTurnRate();
+		final float propulsionWindow = this.unit.getPropWindow();
+		final float turnRate = this.unit.getTurnRate();
 		final int speed = this.unit.getSpeed();
 
 		if (delta < -180) {
@@ -239,7 +239,7 @@ public class CBehaviorMove implements CBehavior {
 						// collisionSize
 						// / 16)
 						// * 16
-						&& !worldCollision.intersectsAnythingOtherThan(tempRect, this.unit, movementType))) {
+						&& !worldCollision.intersectsAnythingOtherThan(tempRect, this.unit, movementType, false))) {
 					this.unit.setPoint(nextX, nextY, worldCollision, simulation.getRegionManager());
 					if (done) {
 						// if we're making headway along the path then it's OK to start thinking fast
@@ -384,11 +384,16 @@ public class CBehaviorMove implements CBehavior {
 
 	@Override
 	public void begin(final CSimulation game) {
-
+		if (this.disableCollision) {
+			this.unit.setNoCollisionMovementType(true);
+		}
 	}
 
 	@Override
 	public void end(final CSimulation game, final boolean interrupted) {
+		if (this.disableCollision) {
+			this.unit.setNoCollisionMovementType(false);
+		}
 		if (ALWAYS_INTERRUPT_MOVE) {
 			game.removeFromPathfindingQueue(this);
 			this.pathfindingActive = false;
@@ -479,5 +484,20 @@ public class CBehaviorMove implements CBehavior {
 						+ (int) (5 / WarsmashConstants.SIMULATION_STEP_TIME);
 			}
 		}
+	}
+
+	@Override
+	public boolean interruptable() {
+		return true;
+	}
+
+	@Override
+	public <T> T visit(final CBehaviorVisitor<T> visitor) {
+		return visitor.accept(this);
+	}
+
+	@Override
+	public CBehaviorCategory getBehaviorCategory() {
+		return CBehaviorCategory.MOVEMENT;
 	}
 }

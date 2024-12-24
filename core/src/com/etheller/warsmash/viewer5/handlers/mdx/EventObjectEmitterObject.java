@@ -20,6 +20,7 @@ import com.etheller.warsmash.viewer5.ModelViewer;
 import com.etheller.warsmash.viewer5.PathSolver;
 import com.etheller.warsmash.viewer5.Texture;
 import com.etheller.warsmash.viewer5.handlers.EmitterObject;
+import com.etheller.warsmash.viewer5.handlers.w3x.War3MapViewer;
 import com.hiveworkshop.rms.parsers.mdlx.MdlxEventObject;
 import com.hiveworkshop.rms.parsers.mdlx.MdlxParticleEmitter2;
 
@@ -99,6 +100,7 @@ public class EventObjectEmitterObject extends GenericObject implements EmitterOb
 	public float pitch;
 	public float pitchVariance;
 	public float volume;
+	public boolean footprint;
 	public List<Sound> decodedBuffers = new ArrayList<>();
 	/**
 	 * If this is an SPL/UBR emitter object, ok will be set to true if the tables
@@ -116,15 +118,14 @@ public class EventObjectEmitterObject extends GenericObject implements EmitterOb
 
 		final ModelViewer viewer = model.viewer;
 		final String name = eventObject.getName();
-		String type = name.substring(0, 3);
+		final String type = name.substring(0, 3);
 		final String id = name.substring(4);
 
 		// Same thing
 		if ("FPT".equals(type)) {
-			type = "SPL";
+			this.geometryEmitterType = GeometryEmitterFuncs.EMITTER_SPLAT;
 		}
-
-		if ("SPL".equals(type)) {
+		else if ("SPL".equals(type)) {
 			this.geometryEmitterType = GeometryEmitterFuncs.EMITTER_SPLAT;
 		}
 		else if ("UBR".equals(type)) {
@@ -152,6 +153,10 @@ public class EventObjectEmitterObject extends GenericObject implements EmitterOb
 					FetchDataTypeName.SLK, mappedDataCallback));
 		}
 		else if ("SPL".equals(type)) {
+			tables.add(viewer.loadGeneric(pathSolver.solve("Splats\\SplatData.slk", solverParams).finalSrc,
+					FetchDataTypeName.SLK, mappedDataCallback));
+		}
+		else if ("FPT".equals(type)) {
 			tables.add(viewer.loadGeneric(pathSolver.solve("Splats\\SplatData.slk", solverParams).finalSrc,
 					FetchDataTypeName.SLK, mappedDataCallback));
 		}
@@ -219,7 +224,7 @@ public class EventObjectEmitterObject extends GenericObject implements EmitterOb
 			final PathSolver pathSolver = model.pathSolver;
 
 			if ("SPN".equals(this.type)) {
-				this.internalModel = (MdxModel) viewer.load(((String) row.get("Model")).replace(".mdl", ".mdx"),
+				this.internalModel = War3MapViewer.loadModelMdx(viewer.dataSource, viewer, (String) row.get("Model"),
 						pathSolver, model.solverParams);
 
 				if (this.internalModel != null) {
@@ -228,12 +233,11 @@ public class EventObjectEmitterObject extends GenericObject implements EmitterOb
 					this.ok = this.internalModel.ok;
 				}
 			}
-			else if ("SPL".equals(this.type) || "UBR".equals(this.type)) {
-				final String texturesExt = model.reforged ? ".dds" : ".blp";
+			else if ("SPL".equals(this.type) || "FPT".equals(this.type) || "UBR".equals(this.type)) {
+				final String texturesExt = (model.reforged && false) ? ".dds" : ".blp";
 
-				this.internalTexture = (Texture) viewer.load(
-						"ReplaceableTextures\\Splats\\" + row.get("file") + texturesExt, pathSolver,
-						model.solverParams);
+				this.internalTexture = (Texture) viewer.load(row.get("Dir") + "\\" + row.get("file") + texturesExt,
+						pathSolver, model.solverParams);
 
 				this.scale = getFloat(row, "Scale");
 				this.colors = new float[][] {
@@ -244,7 +248,8 @@ public class EventObjectEmitterObject extends GenericObject implements EmitterOb
 						{ getFloat(row, "EndR"), getFloat(row, "EndG"), getFloat(row, "EndB"),
 								getFloat(row, "EndA") } };
 
-				if ("SPL".equals(this.type)) {
+				if ("SPL".equals(this.type) || "FPT".equals(this.type)) {
+					this.footprint = "FPT".equals(this.type);
 					this.columns = getInt(row, "Columns");
 					this.rows = getInt(row, "Rows");
 					this.lifeSpan = getFloat(row, "Lifespan") + getFloat(row, "Decay");

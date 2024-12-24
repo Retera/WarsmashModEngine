@@ -33,7 +33,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.thirdperson.CAbilityPlayerPawn;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.thirdperson.CBehaviorPlayerPawn;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.OrderIds;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CFogModifier;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.vision.CFogModifier;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayer;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayerUnitOrderListener;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CFogState;
@@ -48,7 +48,6 @@ public class ThirdPersonUI implements WarsmashToggleableUI {
 	private static final Vector2 screenCoordsVector = new Vector2();
 	private ThirdPersonCameraManager cameraManager;
 	private final War3MapViewer war3MapViewer;
-	private CFogModifier myFogModifier;
 	private final Scene uiScene;
 	private final Viewport uiViewport;
 	private final Scene portraitScene;
@@ -122,8 +121,6 @@ public class ThirdPersonUI implements WarsmashToggleableUI {
 		this.cameraManager.setupCamera(this.war3MapViewer.worldScene);
 
 		final CPlayer localPlayer = this.war3MapViewer.simulation.getPlayer(this.war3MapViewer.getLocalPlayerIndex());
-		this.myFogModifier = new CFogModifier(CFogState.VISIBLE, this.war3MapViewer.terrain.getEntireMap());
-		localPlayer.addFogModifer(this.myFogModifier);
 
 		final WorldEditStrings worldEditStrings = new WorldEditStrings(this.war3MapViewer.mapMpq);
 		final DataTable uiSoundsTable = new DataTable(worldEditStrings);
@@ -386,8 +383,8 @@ public class ThirdPersonUI implements WarsmashToggleableUI {
 	}
 
 	@Override
-	public boolean scrolled(final int amount) {
-		this.cameraManager.distance += amount * 10;
+	public boolean scrolled(float amountX, float amountY) {
+		this.cameraManager.distance += amountY * 10;
 		return false;
 	}
 
@@ -398,7 +395,8 @@ public class ThirdPersonUI implements WarsmashToggleableUI {
 
 	@Override
 	public void onHide() {
-		this.myFogModifier.setEnabled(true);
+		this.war3MapViewer.simulation.setFogEnabled(true);
+		this.war3MapViewer.simulation.setFogMaskEnabled(true);
 		this.war3MapViewer.removeScene(this.uiScene);
 		this.war3MapViewer.addScene(this.portraitScene);
 		this.war3MapViewer.addScene(this.uiScene);
@@ -410,7 +408,8 @@ public class ThirdPersonUI implements WarsmashToggleableUI {
 
 	@Override
 	public void onShow() {
-		this.myFogModifier.setEnabled(true);
+		this.war3MapViewer.simulation.setFogEnabled(false);
+		this.war3MapViewer.simulation.setFogMaskEnabled(false);
 		this.war3MapViewer.removeScene(this.portraitScene);
 //		this.war3MapViewer.removeScene(this.uiScene);
 		this.showing = true;

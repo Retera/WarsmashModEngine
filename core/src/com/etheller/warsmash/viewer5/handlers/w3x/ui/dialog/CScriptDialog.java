@@ -59,7 +59,7 @@ public class CScriptDialog {
 
 	public RemovableTriggerEvent addEvent(final Trigger trigger) {
 		this.eventTriggers.add(trigger);
-		return new RemovableTriggerEvent() {
+		return new RemovableTriggerEvent(trigger) {
 			@Override
 			public void remove() {
 				CScriptDialog.this.eventTriggers.remove(trigger);

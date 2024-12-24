@@ -1,5 +1,8 @@
 package com.etheller.warsmash.viewer5;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector3;
 import com.etheller.warsmash.util.RenderMathUtils;
@@ -22,6 +25,8 @@ public abstract class ModelInstance extends Node {
 
 	public Scene scene;
 
+	public List<ModelInstance> childrenInstances;
+
 	public ModelInstance(final Model model) {
 		this.scene = null;
 		this.left = -1;
@@ -36,6 +41,7 @@ public abstract class ModelInstance extends Node {
 		this.textureMapper = model.viewer.baseTextureMapper(this);
 		this.paused = false;
 		this.rendered = true;
+		this.childrenInstances = new ArrayList<>();
 	}
 
 	public void setTexture(final int index, final Texture texture) {
@@ -145,6 +151,33 @@ public abstract class ModelInstance extends Node {
 			}
 			this.scene.instanceMoved(this, x, y);
 		}
+	}
+
+	private static GenericNode getRoot(final GenericNode node) {
+		if (node == null) {
+			return null;
+		}
+		GenericNode root = node;
+		while (root.parent != null) {
+			root = root.parent;
+		}
+		return root;
+	}
+
+	@Override
+	public Node setParent(final GenericNode parent) {
+		final GenericNode previousParentRoot = getRoot(this.parent);
+		if (previousParentRoot instanceof ModelInstance) {
+			((ModelInstance) previousParentRoot).childrenInstances.remove(this);
+		}
+
+		final Node returnValue = super.setParent(parent);
+
+		final GenericNode newParentRoot = getRoot(parent);
+		if (newParentRoot instanceof ModelInstance) {
+			((ModelInstance) newParentRoot).childrenInstances.add(this);
+		}
+		return returnValue;
 	}
 
 	@Override

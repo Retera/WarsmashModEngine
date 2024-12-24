@@ -1,0 +1,124 @@
+{
+	"abilityList": [{
+		"ids": [{"id":"AIct", "castId": "itemchangetimeofday"}],
+		"type": "NORMAL_NOTARGET",
+		"onEndCasting": [{
+			"type": "setFalseTimeOfDay",
+			"hour": {
+				"type": "getAbilityDataAsInteger",
+				"dataField": "A"
+			},
+			"minute": {
+				"type": "getAbilityDataAsInteger",
+				"dataField": "B"
+			},
+			"duration": {
+				"type": "getAbilityDuration"
+			}
+		}]
+	},{
+		"ids": [{"id":"AItb", "castId": "itemdustofappearance"}],
+		"type": "NORMAL_NOTARGET",
+		"onEndCasting": [{
+				"type": "createTemporarySpellEffectOnUnit",
+				"target": {
+					"type": "getCastingUnit"
+				},
+				"id": {
+					"type": "getAlias"
+				},
+				"effectType": "CASTER"
+			},{
+				"type": "createStateModBuff",
+				"buffType": "DETECTED",
+				"value": {
+					"type": "createDetectedData",
+					"detectionLevel": {
+						"type": "detectionDropdownConversion",
+						"value": {
+							"type": "getAbilityDataAsInteger",
+							"dataField": "A"
+						}
+					},
+					"player": {
+						"type": "playerToStateModValue",
+						"player": {
+							"type": "getOwnerOfUnit",
+							"unit": {
+								"type": "getCastingUnit"
+							}
+						}
+					}
+				}
+			},{
+				"type": "storeValueLocally",
+				"key": {
+					"type": "rawString",
+					"value": "detected"
+				},
+				"valueToStore": {
+					"type": "getLastCreatedStateModBuff"
+				}
+			},{
+				"type": "iterateUnitsInRangeOfUnitMatchingCondition",
+				"originUnit": {
+					"type": "getCastingUnit"
+				},
+				"range": {
+					"type": "getAbilityArea"
+				},
+				"condition": {
+					"type": "isUnitValidTarget",
+					"target": {
+						"type": "getMatchingUnit"
+					}
+				},
+				"iterationActions": [{
+						"type": "createTimedBuff",
+						"buffId": {
+							"type": "getFirstBuffId"
+						},
+						"duration": {
+							"type": "getAbilityDuration",
+							"target": {
+								"type": "getEnumUnit"
+							}
+						},
+						"onAddActions": [{
+								"type": "addStateModBuff",
+								"targetUnit": {
+									"type": "getBuffedUnit"
+								},
+								"buff": {
+									"type": "getStoredStateModBuffByKey",
+									"key": {
+										"type": "rawString",
+										"value": "detected"
+									}
+								}
+							}],
+						"onRemoveActions": [{
+								"type": "removeStateModBuff",
+								"targetUnit": {
+									"type": "getBuffedUnit"
+								},
+								"buff": {
+									"type": "getStoredStateModBuffByKey",
+									"key": {
+										"type": "rawString",
+										"value": "detected"
+									}
+								}
+						}]
+					},{
+						"type": "addBuff",
+						"target": {
+							"type": "getEnumUnit"
+						},
+						"buff": {
+							"type": "getLastCreatedBuff"
+						}
+				}]
+		}]
+	}]
+}

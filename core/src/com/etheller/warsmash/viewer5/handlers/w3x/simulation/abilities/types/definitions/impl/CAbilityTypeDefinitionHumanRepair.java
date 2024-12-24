@@ -1,37 +1,33 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.definitions.impl;
 
-import com.etheller.warsmash.units.manager.MutableObjectData.MutableGameObject;
+import java.util.List;
+
+import com.etheller.warsmash.units.GameObject;
 import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.CAbilityType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.definitions.CAbilityTypeDefinition;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.impl.CAbilityTypeHumanRepair;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.impl.CAbilityTypeHumanRepairLevelData;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CTargetType;
-
-import java.util.EnumSet;
-import java.util.List;
 
 public class CAbilityTypeDefinitionHumanRepair extends AbstractCAbilityTypeDefinition<CAbilityTypeHumanRepairLevelData>
 		implements CAbilityTypeDefinition {
-	protected static final War3ID COST_RATIO = War3ID.fromString("Rep1");
-	protected static final War3ID TIME_RATIO = War3ID.fromString("Rep2");
-	protected static final War3ID NAVAL_RANGE_BONUS = War3ID.fromString("Rep5");
 
 	@Override
-	protected CAbilityTypeHumanRepairLevelData createLevelData(final MutableGameObject abilityEditorData, final int level) {
-		final String targetsAllowedAtLevelString = abilityEditorData.getFieldAsString(TARGETS_ALLOWED, level);
-		final EnumSet<CTargetType> targetsAllowedAtLevel = CTargetType.parseTargetTypeSet(targetsAllowedAtLevelString);
-		final float costRatio = abilityEditorData.getFieldAsFloat(COST_RATIO, level);
-		final float timeRatio = abilityEditorData.getFieldAsFloat(TIME_RATIO, level);
-		final float navalRangeBonus = abilityEditorData.getFieldAsFloat(NAVAL_RANGE_BONUS, level);
-		final float castRange = abilityEditorData.getFieldAsFloat(CAST_RANGE, level);
-		return new CAbilityTypeHumanRepairLevelData(targetsAllowedAtLevel, navalRangeBonus, costRatio, timeRatio, castRange);
+	protected CAbilityTypeHumanRepairLevelData createLevelData(final GameObject abilityEditorData, final int level) {
+		final float costRatio = abilityEditorData.getFieldAsFloat(DATA_A + level, 0);
+		final float timeRatio = abilityEditorData.getFieldAsFloat(DATA_B + level, 0);
+		final float powerBuildCostRatio = abilityEditorData.getFieldAsFloat(DATA_C + level, 0);
+		final float powerBuildTimeRatio = abilityEditorData.getFieldAsFloat(DATA_D + level, 0);
+		final float navalRangeBonus = abilityEditorData.getFieldAsFloat(DATA_E + level, 0);
+		final float castRange = abilityEditorData.getFieldAsFloat(CAST_RANGE + level, 0);
+		return new CAbilityTypeHumanRepairLevelData(getTargetsAllowed(abilityEditorData, level), navalRangeBonus,
+				powerBuildCostRatio, powerBuildTimeRatio, costRatio, timeRatio, castRange);
 	}
 
 	@Override
-	protected CAbilityType<?> innerCreateAbilityType(final War3ID alias, final MutableGameObject abilityEditorData,
+	protected CAbilityType<?> innerCreateAbilityType(final War3ID alias, final GameObject abilityEditorData,
 			final List<CAbilityTypeHumanRepairLevelData> levelData) {
-		return new CAbilityTypeHumanRepair(alias, abilityEditorData.getCode(), levelData);
+		return new CAbilityTypeHumanRepair(alias, abilityEditorData.getFieldAsWar3ID(CODE, -1), levelData);
 	}
 
 }

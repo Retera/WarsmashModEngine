@@ -16,8 +16,8 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetC
  */
 public class CAbilityGenericDoNothing extends AbstractGenericAliasedAbility {
 
-	public CAbilityGenericDoNothing(final War3ID rawcode, final int handleId) {
-		super(handleId, rawcode);
+	public CAbilityGenericDoNothing(final War3ID code, final War3ID alias, final int handleId) {
+		super(handleId, code, alias);
 	}
 
 	@Override
@@ -89,6 +89,21 @@ public class CAbilityGenericDoNothing extends AbstractGenericAliasedAbility {
 
 	@Override
 	public void onDeath(final CSimulation game, final CUnit cUnit) {
+	}
+
+	@Override
+	public boolean isPhysical() {
+		return true;
+	}
+
+	@Override
+	public boolean isUniversal() {
+		return false;
+	}
+
+	@Override
+	public CAbilityCategory getAbilityCategory() {
+		return CAbilityCategory.CORE;
 	}
 
 }

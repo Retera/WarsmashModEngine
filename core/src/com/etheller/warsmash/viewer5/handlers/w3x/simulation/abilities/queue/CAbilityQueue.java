@@ -13,6 +13,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUpgradeType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUpgradeType.UpgradeLevel;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.AbstractCAbility;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityCategory;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityVisitor;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityPointTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTarget;
@@ -21,14 +22,14 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.OrderIds;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayer;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityActivationReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetCheckReceiver;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.ResourceType;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.CommandStringErrorKeys;
 
 public final class CAbilityQueue extends AbstractCAbility {
 	private final Set<War3ID> unitsTrained;
 	private final Set<War3ID> researchesAvailable;
 
 	public CAbilityQueue(final int handleId, final List<War3ID> unitsTrained, final List<War3ID> researchesAvailable) {
-		super(handleId);
+		super(handleId, War3ID.fromString("Aque"));
 		this.unitsTrained = new LinkedHashSet<>(unitsTrained);
 		this.researchesAvailable = new LinkedHashSet<>(researchesAvailable);
 	}
@@ -76,15 +77,15 @@ public final class CAbilityQueue extends AbstractCAbility {
 								receiver.useOk();
 							}
 							else {
-								receiver.notEnoughResources(ResourceType.FOOD);
+								receiver.activationCheckFailed(CommandStringErrorKeys.NOT_ENOUGH_FOOD);
 							}
 						}
 						else {
-							receiver.notEnoughResources(ResourceType.LUMBER);
+							receiver.activationCheckFailed(CommandStringErrorKeys.NOT_ENOUGH_LUMBER);
 						}
 					}
 					else {
-						receiver.notEnoughResources(ResourceType.GOLD);
+						receiver.activationCheckFailed(CommandStringErrorKeys.NOT_ENOUGH_GOLD);
 					}
 				}
 				else {
@@ -136,11 +137,11 @@ public final class CAbilityQueue extends AbstractCAbility {
 										receiver.useOk();
 									}
 									else {
-										receiver.notEnoughResources(ResourceType.LUMBER);
+										receiver.activationCheckFailed(CommandStringErrorKeys.NOT_ENOUGH_LUMBER);
 									}
 								}
 								else {
-									receiver.notEnoughResources(ResourceType.GOLD);
+									receiver.activationCheckFailed(CommandStringErrorKeys.NOT_ENOUGH_GOLD);
 								}
 							}
 							else {
@@ -270,5 +271,20 @@ public final class CAbilityQueue extends AbstractCAbility {
 		while (cUnit.getBuildQueueTypes()[0] != null) {
 			cUnit.cancelBuildQueueItem(game, 0);
 		}
+	}
+
+	@Override
+	public boolean isPhysical() {
+		return false;
+	}
+
+	@Override
+	public boolean isUniversal() {
+		return false;
+	}
+
+	@Override
+	public CAbilityCategory getAbilityCategory() {
+		return CAbilityCategory.CORE;
 	}
 }

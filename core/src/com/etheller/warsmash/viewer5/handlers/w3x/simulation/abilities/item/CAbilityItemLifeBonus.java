@@ -13,19 +13,14 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetC
 public class CAbilityItemLifeBonus extends AbstractGenericNoIconAbility {
 	private final int lifeBonus;
 
-	public CAbilityItemLifeBonus(final int handleId, final War3ID alias, final int lifeBonus) {
-		super(handleId, alias);
+	public CAbilityItemLifeBonus(final int handleId, final War3ID code, final War3ID alias, final int lifeBonus) {
+		super(handleId, code, alias);
 		this.lifeBonus = lifeBonus;
 	}
 
 	@Override
 	public void onAdd(final CSimulation game, final CUnit unit) {
-		final int oldMaximumLife = unit.getMaximumLife();
-		final float oldLife = unit.getLife();
-		final int newMaximumLife = StrictMath.round(oldMaximumLife + this.lifeBonus);
-		final float newLife = (oldLife * (newMaximumLife)) / oldMaximumLife;
-		unit.setMaximumLife(newMaximumLife);
-		unit.setLife(game, newLife);
+		unit.addMaxLifeRelative(game, this.lifeBonus);
 	}
 
 	@Override

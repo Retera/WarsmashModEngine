@@ -21,7 +21,7 @@ public class CBehaviorStop implements CBehavior {
 
 	@Override
 	public CBehavior update(final CSimulation game) {
-		if (this.unit.autoAcquireAttackTargets(game, false)) {
+		if (this.unit.autoAcquireTargets(game, false)) {
 			return this.unit.getCurrentBehavior();
 		}
 		return this.unit.pollNextOrderBehavior(game);
@@ -38,6 +38,21 @@ public class CBehaviorStop implements CBehavior {
 	@Override
 	public void end(final CSimulation game, final boolean interrupted) {
 
+	}
+
+	@Override
+	public boolean interruptable() {
+		return true;
+	}
+
+	@Override
+	public <T> T visit(final CBehaviorVisitor<T> visitor) {
+		return visitor.accept(this);
+	}
+
+	@Override
+	public CBehaviorCategory getBehaviorCategory() {
+		return CBehaviorCategory.IDLE;
 	}
 
 }

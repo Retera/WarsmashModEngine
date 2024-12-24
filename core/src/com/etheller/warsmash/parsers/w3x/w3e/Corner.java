@@ -72,9 +72,14 @@ public class Corner {
 
 	public void save(final LittleEndianDataOutputStream stream) throws IOException {
 		stream.writeShort((short) ((this.groundHeight * 512f) + 8192f));
-		stream.writeShort((short) ((this.waterHeight * 512f) + 8192f + (this.mapEdge << 14)));
-		ParseUtils.writeUInt8(stream, (short) ((this.ramp << 4) | (this.blight << 5) | (this.water << 6)
-				| (this.boundary << 7) | this.groundTexture));
+		final int mapEdgeWrite = (this.mapEdge != 0) ? 0x4000 : 0;
+		stream.writeShort((short) ((int) ((this.waterHeight * 512f) + 8192f) | (mapEdgeWrite)));
+		final int rampWrite = (this.ramp != 0) ? 0b00010000 : 0;
+		final int blightWrite = (this.blight != 0) ? 0b00100000 : 0;
+		final int waterWrite = (this.water != 0) ? 0b01000000 : 0;
+		final int boundaryWrite = (this.boundary != 0) ? 0b10000000 : 0;
+		ParseUtils.writeUInt8(stream,
+				(short) ((rampWrite) | (blightWrite) | (waterWrite) | (boundaryWrite) | this.groundTexture));
 		ParseUtils.writeUInt8(stream, (short) ((this.cliffVariation << 5) | this.groundVariation));
 		ParseUtils.writeUInt8(stream, (short) ((this.cliffTexture << 4) + this.layerHeight));
 	}
@@ -107,8 +112,13 @@ public class Corner {
 		return this.blight;
 	}
 
-	public void setBlight(final boolean flag) {
-		this.blight = flag ? 0b00100000 : 0;
+	public boolean setBlight(final boolean flag) {
+		final int newBlightValue = flag ? 0b00100000 : 0;
+		if (this.blight != newBlightValue) {
+			this.blight = newBlightValue;
+			return true;
+		}
+		return false;
 	}
 
 	public int getWater() {
@@ -149,5 +159,9 @@ public class Corner {
 
 	public float computeFinalWaterHeight(final float waterOffset) {
 		return this.waterHeight + waterOffset;
+	}
+
+	public void setWaterHeight(final float waterHeight) {
+		this.waterHeight = waterHeight;
 	}
 }

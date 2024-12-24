@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.etheller.interpreter.ast.util.CHandle;
 import com.etheller.warsmash.units.GameObject;
 import com.etheller.warsmash.units.ObjectData;
 import com.etheller.warsmash.units.custom.Change;
@@ -83,10 +84,10 @@ public final class MutableObjectData {
 				if (name.startsWith("\"") && name.endsWith("\"")) {
 					name = name.substring(1, name.length() - 1);
 				}
-				gameObject.setField("Name", name);
+				gameObject.setField("Profile", "Name", name);
 			}
 			if (suffix.startsWith("WESTRING")) {
-				gameObject.setField("EditorSuffix", this.worldEditStrings.getString(suffix));
+				gameObject.setField("Profile", "EditorSuffix", this.worldEditStrings.getString(suffix));
 			}
 		}
 	}
@@ -249,9 +250,11 @@ public final class MutableObjectData {
 			final Set<War3ID> customUnitKeys = this.editorData.getCustom().keySet();
 			final Set<War3ID> customKeys = new HashSet<>(customUnitKeys);
 			for (final String standardUnitKey : this.sourceSLKData.keySet()) {
-				if (standardUnitKey.length() == 4) {
-					customKeys.add(War3ID.fromString(standardUnitKey));
+				if (standardUnitKey.length() > 4) {
+					System.err.println("Omitting object data key because it is too long: " + standardUnitKey);
+					continue;
 				}
+				customKeys.add(War3ID.fromString(standardUnitKey));
 			}
 			this.cachedKeySet = customKeys;
 		}
@@ -602,11 +605,7 @@ public final class MutableObjectData {
 				return matchingChange.getStrval();
 			}
 			// no luck with custom data, look at the standard data
-			int slkLevel = level;
-			if ((MutableObjectData.this.worldEditorDataType == WorldEditorDataType.UPGRADES) && false) {
-				slkLevel -= 1;
-			}
-			return getFieldStringFromSLKs(field, slkLevel);
+			return getFieldStringFromSLKs(field, level);
 		}
 
 		private Change getMatchingChange(final War3ID field, final int level) {
@@ -857,17 +856,10 @@ public final class MutableObjectData {
 				throw new IllegalStateException("corrupted unit, no parent unit id");
 			}
 			int index = metaData.getFieldValue("index");
-			final String upgradeHack = metaData.getField("appendIndex");
-			if ("0".equals(upgradeHack)) {
-				// Engage magic upgrade hack to replace index with level
-				if (!field.toString().equals("gbpx") && !field.toString().equals("gbpy")) {
-					index = level;
-				}
-			}
-			else if ((index != -1) && (level > 0)) {
-				index = level - 1;
-			}
 			if (index != -1) {
+				if (level > 0) {
+					index = level - 1;
+				}
 				final String fieldStringValue = this.parentWC3Object
 						.getField(getEditorMetaDataDisplayKey(level, metaData), index);
 				return fieldStringValue;
@@ -989,8 +981,13 @@ public final class MutableObjectData {
 				: "".equals(text) ? 0 : "-".equals(text) ? 0 : "_".equals(text) ? 0 : Float.parseFloat(text);
 	}
 
-	public enum WorldEditorDataType {
-		UNITS("w3u"), ITEM("w3t"), DESTRUCTIBLES("w3b"), DOODADS("w3d"), ABILITIES("w3a"), BUFFS_EFFECTS("w3h"),
+	public enum WorldEditorDataType implements CHandle {
+		UNITS("w3u"),
+		ITEM("w3t"),
+		DESTRUCTIBLES("w3b"),
+		DOODADS("w3d"),
+		ABILITIES("w3a"),
+		BUFFS_EFFECTS("w3h"),
 		UPGRADES("w3q");
 
 		private String extension;
@@ -1001,6 +998,13 @@ public final class MutableObjectData {
 
 		public String getExtension() {
 			return this.extension;
+		}
+
+		public static final WorldEditorDataType[] VALUES = values();
+
+		@Override
+		public int getHandleId() {
+			return ordinal();
 		}
 	}
 

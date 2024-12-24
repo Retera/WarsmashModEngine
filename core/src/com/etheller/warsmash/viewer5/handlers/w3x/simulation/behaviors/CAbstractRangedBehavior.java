@@ -17,11 +17,11 @@ public abstract class CAbstractRangedBehavior implements CRangedBehavior {
 	private boolean disableMove = false;
 	private CBehaviorMove moveBehavior;
 
-	protected final CAbstractRangedBehavior innerReset(final AbilityTarget target) {
-		return innerReset(target, false);
+	protected final CBehavior innerReset(CSimulation game, final AbilityTarget target) {
+		return innerReset(game, target, false);
 	}
 
-	protected final CAbstractRangedBehavior innerReset(final AbilityTarget target, final boolean disableCollision) {
+	protected final CBehavior innerReset(CSimulation game, final AbilityTarget target, final boolean disableCollision) {
 		this.target = target;
 		this.wasWithinPropWindow = false;
 		this.wasInRange = false;
@@ -33,6 +33,14 @@ public abstract class CAbstractRangedBehavior implements CRangedBehavior {
 			moveBehavior = null;
 		}
 		this.moveBehavior = moveBehavior;
+		if (!isWithinRange(game)) {
+			if ((this.moveBehavior == null) || this.disableMove) {
+				return this.unit.pollNextOrderBehavior(game);
+			}
+			this.wasInRange = false;
+			resetBeforeMoving(game);
+			return this.unit.getMoveBehavior();
+		}
 		return this;
 	}
 
@@ -110,6 +118,16 @@ public abstract class CAbstractRangedBehavior implements CRangedBehavior {
 
 	public void setDisableMove(final boolean disableMove) {
 		this.disableMove = disableMove;
+	}
+
+	@Override
+	public AbilityTarget getTarget() {
+		return this.target;
+	}
+
+	@Override
+	public <T> T visit(final CBehaviorVisitor<T> visitor) {
+		return visitor.accept(this);
 	}
 
 }

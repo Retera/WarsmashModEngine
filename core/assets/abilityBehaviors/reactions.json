@@ -1,0 +1,2065 @@
+{
+	"abilityList": [{
+		"ids": [{"id":"ANss"}],
+		"type": "PASSIVE",
+		"onAddAbility": [{
+				"type": "createAbilityEffectReactionListener",
+				"actions": [{
+					"type": "if",
+					"condition": {
+						"type": "and",
+						"condition1": {
+							"type": "not",
+							"condition": {
+								"type": "isOnCooldown"
+							}
+						},
+						"condition2": {
+							"type": "isUnitEnemy",
+							"unit": {
+								"type": "getReactionAbilityCastingUnit"
+							}
+						}
+					},
+					"thenActions": [{
+							"type": "reactionPreventHit"
+						},{
+							"type": "startCooldown"
+						},{
+							"type": "createTemporarySpellEffectOnUnit",
+							"target": {
+								"type": "getListenerUnit"
+							},
+							"id": {
+								"type": "getAlias"
+							},
+							"effectType": "CASTER"
+					}],
+					"elseActions": []
+				}]
+			},{
+				"type": "addAbilityEffectReactionListener",
+				"targetUnit": {
+					"type": "getCastingUnit"
+				},
+				"listener": {
+					"type": "getLastCreatedAbilityEffectReactionListener"
+				}
+			},{
+				"type": "createAbilityProjReactionListener",
+				"actions": [{
+					"type": "if",
+					"condition": {
+						"type": "and",
+						"condition1": {
+							"type": "not",
+							"condition": {
+								"type": "isOnCooldown"
+							}
+						},
+						"condition2": {
+							"type": "isUnitEnemy",
+							"unit": {
+								"type": "getReactionAbilityCastingUnit"
+							}
+						}
+					},
+					"thenActions": [{
+							"type": "reactionPreventHit"
+						},{
+							"type": "startCooldown"
+						},{
+							"type": "createTemporarySpellEffectOnUnit",
+							"target": {
+								"type": "getListenerUnit"
+							},
+							"id": {
+								"type": "getAlias"
+							},
+							"effectType": "CASTER"
+					}],
+					"elseActions": []
+				}]
+			},{
+				"type": "addAbilityProjReactionListener",
+				"targetUnit": {
+					"type": "getCastingUnit"
+				},
+				"listener": {
+					"type": "getLastCreatedAbilityProjReactionListener"
+				}
+		}],
+		"onRemoveAbility": [{
+				"type": "removeAbilityEffectReactionListener",
+				"targetUnit": {
+					"type": "getCastingUnit"
+				},
+				"listener": {
+					"type": "getLastCreatedAbilityEffectReactionListener"
+				}
+			},{
+				"type": "removeAbilityProjReactionListener",
+				"targetUnit": {
+					"type": "getCastingUnit"
+				},
+				"listener": {
+					"type": "getLastCreatedAbilityProjReactionListener"
+				}
+		}]
+	},{
+		"ids": [{"id":"ANse", "castId": "spellshieldaoe"}],
+		"type": "NORMAL_POINTTARGET",
+		"onEndCasting": [{
+				"type": "createAbilityEffectReactionListener",
+				"actions": [{
+					"type": "if",
+					"condition": {
+						"type": "isUnitEnemy",
+						"unit": {
+							"type": "getReactionAbilityCastingUnit"
+						}
+					},
+					"thenActions": [{
+							"type": "reactionPreventHit"
+						},{
+							"type": "removeBuff",
+							"target": {
+								"type": "getListenerUnit"
+							},
+							"buff": {
+								"type": "getStoredBuffByKey",
+								"key": {
+									"type": "getUnitHandleAsString",
+									"unit": {
+										"type": "getListenerUnit"
+									}
+								}
+							}
+						},{
+							"type": "createTemporarySpellEffectOnUnit",
+							"target": {
+								"type": "getListenerUnit"
+							},
+							"id": {
+								"type": "getFirstBuffId"
+							},
+							"effectType": "TARGET"
+					}],
+					"elseActions": []
+				}]
+			},{
+				"type": "storeValueLocally",
+				"key": {
+					"type": "rawString",
+					"value": "efReac"
+				},
+				"valueToStore": {
+					"type": "getLastCreatedAbilityEffectReactionListener"
+				}
+			},{
+				"type": "createAbilityProjReactionListener",
+				"actions": [{
+					"type": "if",
+					"condition": {
+						"type": "isUnitEnemy",
+						"unit": {
+							"type": "getReactionAbilityCastingUnit"
+						}
+					},
+					"thenActions": [{
+							"type": "reactionPreventHit"
+						},{
+							"type": "removeBuff",
+							"target": {
+								"type": "getListenerUnit"
+							},
+							"buff": {
+								"type": "getStoredBuffByKey",
+								"key": {
+									"type": "getUnitHandleAsString",
+									"unit": {
+										"type": "getListenerUnit"
+									}
+								}
+							}
+						},{
+							"type": "createTemporarySpellEffectOnUnit",
+							"target": {
+								"type": "getListenerUnit"
+							},
+							"id": {
+								"type": "getFirstBuffId"
+							},
+							"effectType": "TARGET"
+					}],
+					"elseActions": []
+				}]
+			},{
+				"type": "storeValueLocally",
+				"key": {
+					"type": "rawString",
+					"value": "projReac"
+				},
+				"valueToStore": {
+					"type": "getLastCreatedAbilityProjReactionListener"
+				}
+			},{
+				"type": "iterateUnitsInRangeOfLocationMatchingCondition",
+				"location": {
+					"type": "getTargetedLocation"
+				},
+				"range": {
+					"type": "getAbilityArea"
+				},
+				"condition": {
+					"type": "isUnitValidTarget",
+					"target": {
+						"type": "getMatchingUnit"
+					}
+				},
+				"iterationActions": [{
+					"type": "createTimedBuff",
+					"buffId": {
+						"type": "getFirstBuffId"
+					},
+					"duration": {
+						"type": "getAbilityDuration",
+						"target": {
+							"type": "getEnumUnit"
+						}
+					},
+					"hideArt": {
+						"type": "rawBoolean",
+						"value": "true"
+					},
+					"onAddActions": [{
+							"type": "addAbilityEffectReactionListener",
+							"targetUnit": {
+								"type": "getBuffedUnit"
+							},
+							"listener": {
+								"type": "getStoredAbilityEffectReactionListenerByKey",
+								"key": {
+									"type": "rawString",
+									"value": "efReac"
+								}
+							}
+						},{
+							"type": "addAbilityProjReactionListener",
+							"targetUnit": {
+								"type": "getBuffedUnit"
+							},
+							"listener": {
+								"type": "getStoredAbilityProjReactionListenerByKey",
+								"key": {
+									"type": "rawString",
+									"value": "projReac"
+								}
+							}
+					}],
+					"onRemoveActions": [{
+							"type": "removeAbilityEffectReactionListener",
+							"targetUnit": {
+								"type": "getBuffedUnit"
+							},
+							"listener": {
+								"type": "getStoredAbilityEffectReactionListenerByKey",
+								"key": {
+									"type": "rawString",
+									"value": "efReac"
+								}
+							}
+						},{
+							"type": "removeAbilityProjReactionListener",
+							"targetUnit": {
+								"type": "getBuffedUnit"
+							},
+							"listener": {
+								"type": "getStoredAbilityProjReactionListenerByKey",
+								"key": {
+									"type": "rawString",
+									"value": "projReac"
+								}
+							}
+					}]
+				},{
+					"type": "storeValueLocally",
+					"key": {
+						"type": "getUnitHandleAsString",
+						"unit": {
+							"type": "getEnumUnit"
+						}
+					},
+					"valueToStore": {
+						"type": "getLastCreatedBuff"
+					}
+				},{
+					"type": "addBuff",
+					"target": {
+						"type": "getEnumUnit"
+					},
+					"buff": {
+						"type": "getLastCreatedBuff"
+					}
+			}]
+		}]
+	},{
+		"ids": [{"id":"AIdd"}],
+		"type": "PASSIVE",
+		"onAddAbility": [{
+				"type": "createAttackPreDamageListener",
+				"actions": [{
+					"type": "addDamageDealtMultiplier",
+					"value": {
+						"type": "getAbilityDataAsFloat",
+						"dataField": "B"
+					}
+				}]
+			},{
+				"type": "addAttackPreDamageListener",
+				"targetUnit": {
+					"type": "getCastingUnit"
+				},
+				"priority": {
+					"type": "rawPriority",
+					"priority": "STACKING"
+				},
+				"listener": {
+					"type": "getLastCreatedAttackPreDamageListener"
+				}
+			},{
+				"type": "createDamageTakenModificationListener",
+				"actions": [{
+					"type": "if",
+					"condition": {
+						"type": "or",
+						"condition1": {
+							"type": "isAttackTypeEqual",
+							"attackType1": {
+								"type": "getTriggeringAttackType"
+							},
+							"attackType2": {
+								"type": "getAttackTypeFromString",
+								"id": {
+									"type": "rawString",
+									"value": "MAGIC"
+								}
+							}
+						},
+						"condition2": {
+							"type": "isAttackTypeEqual",
+							"attackType1": {
+								"type": "getTriggeringAttackType"
+							},
+							"attackType2": {
+								"type": "getAttackTypeFromString",
+								"id": {
+									"type": "rawString",
+									"value": "SPELLS"
+								}
+							}
+						}
+					},
+					"thenActions": [{
+						"type": "multiplyDamageTakenMultiplier",
+						"multiplier": {
+							"type": "getAbilityDataAsFloat",
+							"dataField": "E"
+						}
+					}],
+					"elseActions": []
+				}]
+			},{
+				"type": "storeValueLocally",
+				"key": {
+					"type": "rawString",
+					"value": "sMod"
+				},
+				"instanceValue": {
+					"type": "rawBoolean",
+					"value": "false"
+				},
+				"valueToStore": {
+					"type": "getLastCreatedDamageTakenModificationListener"
+				}
+			},{
+				"type": "addDamageTakenModificationListener",
+				"targetUnit": {
+					"type": "getCastingUnit"
+				},
+				"listener": {
+					"type": "getLastCreatedDamageTakenModificationListener"
+				}
+			},{
+				"type": "createDamageTakenModificationListener",
+				"actions": [{
+					"type": "if",
+					"condition": {
+						"type": "isAttackTypeEqual",
+						"attackType1": {
+							"type": "getTriggeringAttackType"
+						},
+						"attackType2": {
+							"type": "getAttackTypeFromString",
+							"id": {
+								"type": "rawString",
+								"value": "PIERCE"
+							}
+						}
+					},
+					"thenActions": [{
+						"type": "multiplyDamageTakenMultiplier",
+						"multiplier": {
+							"type": "getAbilityDataAsFloat",
+							"dataField": "A"
+						}
+					}],
+					"elseActions": []
+				}]
+			},{
+				"type": "storeValueLocally",
+				"key": {
+					"type": "rawString",
+					"value": "pMod"
+				},
+				"instanceValue": {
+					"type": "rawBoolean",
+					"value": "false"
+				},
+				"valueToStore": {
+					"type": "getLastCreatedDamageTakenModificationListener"
+				}
+			},{
+				"type": "addDamageTakenModificationListener",
+				"targetUnit": {
+					"type": "getCastingUnit"
+				},
+				"listener": {
+					"type": "getLastCreatedDamageTakenModificationListener"
+				}
+			},{
+				"type": "createAttackProjReactionListener",
+				"actions": [{
+					"type": "if",
+					"condition": {
+						"type": "isAttackTypeEqual",
+						"attackType1": {
+							"type": "getReactionAttackProjectileAttackType"
+						},
+						"attackType2": {
+							"type": "getAttackTypeFromString",
+							"id": {
+								"type": "rawString",
+								"value": "PIERCE"
+							}
+						}
+					},
+					"thenActions": [{
+						"type": "if",
+						"condition": {
+							"type": "and",
+							"condition1": {
+								"type": "gameplayConstantIsDefendCanDeflect"
+							},
+							"condition2": {
+								"type": "and",
+								"condition1": {
+									"type": "not",
+									"condition": {
+										"type": "bool",
+										"bool": {
+											"type": "isProjectileReflected",
+											"projectile": {
+												"type": "getReactionAttackProjectile"
+											}
+										}
+									}
+								},
+								"condition2": {
+									"type": "and",
+									"condition1": {
+										"type": "f<",
+										"value1": {
+											"type": "getAbilityDataAsFloat",
+											"dataField": "G"
+										},
+										"value2": {
+											"type": "rawFloat",
+											"value": 1
+										}
+									},
+									"condition2": {
+										"type": "f<",
+										"value1": {
+											"type": "randomBoundedFloat",
+											"bound": {
+												"type": "rawFloat",
+												"value": 100
+											}
+										},
+										"value2": {
+											"type": "getAbilityDataAsFloat",
+											"dataField": "F"
+										}
+									}
+								}
+							}
+						},
+						"thenActions": [{
+								"type": "reactionPreventHit"
+							},{
+								"type": "setProjectileDone",
+								"projectile": {
+									"type": "getReactionAttackProjectile"
+								},
+								"done": {
+									"type": "rawBoolean",
+									"value": "false"
+								}
+							},{
+								"type": "setProjectileReflected",
+								"projectile": {
+									"type": "getReactionAttackProjectile"
+								}
+							},{
+								"type": "setProjectileTarget",
+								"projectile": {
+									"type": "getReactionAttackProjectile"
+								},
+								"target": {
+									"type": "getAttackingUnit"
+								}
+							},{
+								"type": "damageTarget",
+								"source": {
+									"type": "getAttackingUnit"
+								},
+								"target": {
+									"type": "getListenerUnit"
+								},
+								"damageType": {
+									"type": "getDamageTypeFromString",
+									"id": {
+										"type": "rawString",
+										"value": "NORMAL"
+									}
+								},
+								"attackType": {
+									"type": "getAttackTypeFromString",
+									"id": {
+										"type": "rawString",
+										"value": "PIERCE"
+									}
+								},
+								"damage": {
+									"type": "f*",
+									"value1": {
+										"type": "getReactionAttackProjectileDamage"
+									},
+									"value2": {
+										"type": "getAbilityDataAsFloat",
+										"dataField": "G"
+									}
+								}
+						}],
+						"elseActions": []
+					}],
+					"elseActions": []
+				},{
+					"type": "if",
+					"condition": {
+						"type": "or",
+						"condition1": {
+							"type": "isAttackTypeEqual",
+							"attackType1": {
+								"type": "getReactionAttackProjectileAttackType"
+							},
+							"attackType2": {
+								"type": "getAttackTypeFromString",
+								"id": {
+									"type": "rawString",
+									"value": "MAGIC"
+								}
+							}
+						},
+						"condition2": {
+							"type": "isAttackTypeEqual",
+							"attackType1": {
+								"type": "getReactionAttackProjectileAttackType"
+							},
+							"attackType2": {
+								"type": "getAttackTypeFromString",
+								"id": {
+									"type": "rawString",
+									"value": "SPELLS"
+								}
+							}
+						}
+					},
+					"thenActions": [{
+						"type": "if",
+						"condition": {
+							"type": "and",
+							"condition1": {
+								"type": "gameplayConstantIsDefendCanDeflect"
+							},
+							"condition2": {
+								"type": "and",
+								"condition1": {
+									"type": "not",
+									"condition": {
+										"type": "bool",
+										"bool": {
+											"type": "isProjectileReflected",
+											"projectile": {
+												"type": "getReactionAttackProjectile"
+											}
+										}
+									}
+								},
+								"condition2": {
+									"type": "and",
+									"condition1": {
+										"type": "f<",
+										"value1": {
+											"type": "getAbilityDataAsFloat",
+											"dataField": "H"
+										},
+										"value2": {
+											"type": "rawFloat",
+											"value": 1
+										}
+									},
+									"condition2": {
+										"type": "f<",
+										"value1": {
+											"type": "randomBoundedFloat",
+											"bound": {
+												"type": "rawFloat",
+												"value": 100
+											}
+										},
+										"value2": {
+											"type": "getAbilityDataAsFloat",
+											"dataField": "F"
+										}
+									}
+								}
+							}
+						},
+						"thenActions": [{
+								"type": "reactionPreventHit"
+							},{
+								"type": "setProjectileDone",
+								"projectile": {
+									"type": "getReactionAttackProjectile"
+								},
+								"done": {
+									"type": "rawBoolean",
+									"value": "false"
+								}
+							},{
+								"type": "setProjectileReflected",
+								"projectile": {
+									"type": "getReactionAttackProjectile"
+								}
+							},{
+								"type": "setProjectileTarget",
+								"projectile": {
+									"type": "getReactionAttackProjectile"
+								},
+								"target": {
+									"type": "getAttackingUnit"
+								}
+							},{
+								"type": "damageTarget",
+								"source": {
+									"type": "getAttackingUnit"
+								},
+								"target": {
+									"type": "getListenerUnit"
+								},
+								"damageType": {
+									"type": "getDamageTypeFromString",
+									"id": {
+										"type": "rawString",
+										"value": "NORMAL"
+									}
+								},
+								"attackType": {
+									"type": "getReactionAttackProjectileAttackType"
+								},
+								"damage": {
+									"type": "f*",
+									"value1": {
+										"type": "getReactionAttackProjectileDamage"
+									},
+									"value2": {
+										"type": "getAbilityDataAsFloat",
+										"dataField": "H"
+									}
+								}
+						}],
+						"elseActions": []
+					}],
+					"elseActions": []
+				}]
+			},{
+				"type": "addAttackProjReactionListener",
+				"targetUnit": {
+					"type": "getCastingUnit"
+				},
+				"listener": {
+					"type": "getLastCreatedAttackProjReactionListener"
+				}
+		}],
+		"onRemoveAbility": [{
+				"type": "removeAttackPreDamageListener",
+				"targetUnit": {
+					"type": "getCastingUnit"
+				},
+				"priority": {
+					"type": "rawPriority",
+					"priority": "STACKING"
+				},
+				"listener": {
+					"type": "getLastCreatedAttackPreDamageListener"
+				}
+			},{
+				"type": "removeDamageTakenModificationListener",
+				"targetUnit": {
+					"type": "getCastingUnit"
+				},
+				"listener": {
+					"type": "getStoredDamageTakenModificationListenerByKey",
+					"instanceValue": {
+						"type": "rawBoolean",
+						"value": "false"
+					},
+					"key": {
+						"type": "rawString",
+						"value": "pMod"
+					}
+				}
+			},{
+				"type": "removeDamageTakenModificationListener",
+				"targetUnit": {
+					"type": "getCastingUnit"
+				},
+				"listener": {
+					"type": "getStoredDamageTakenModificationListenerByKey",
+					"instanceValue": {
+						"type": "rawBoolean",
+						"value": "false"
+					},
+					"key": {
+						"type": "rawString",
+						"value": "sMod"
+					}
+				}
+			},{
+				"type": "removeAttackProjReactionListener",
+				"targetUnit": {
+					"type": "getCastingUnit"
+				},
+				"listener": {
+					"type": "getLastCreatedAttackProjReactionListener"
+				}
+		}]
+	},{
+		"ids": [{"id":"Adef", "castId": "defend", "uncastId": "undefend"}],
+		"type": "NORMAL_NOTARGET",
+		"displayFields": {
+			"toggleable": {
+				"type": "rawBoolean",
+				"value": "true"
+			},
+			"castlessNoTarget": {
+				"type": "rawBoolean",
+				"value": "true"
+			}
+		},
+		"onAddAbility": [{
+				"type": "createNonStackingStatBuff",
+				"buffType": {
+					"type": "getNonStackingStatBuffTypeFromString",
+					"id": {
+						"type": "rawString",
+						"value": "ATKSPD"
+					}
+				},
+				"stackingKey": {
+					"type": "rawString",
+					"value": "defend"
+				},
+				"value": {
+					"type": "negativeFloat",
+					"value": {
+						"type": "getAbilityDataAsFloat",
+						"dataField": "D"
+					}
+				}
+			},{
+				"type": "storeValueLocally",
+				"key": {
+					"type": "rawString",
+					"value": "asbuff"
+				},
+				"instanceValue": {
+					"type": "rawBoolean",
+					"value": "false"
+				},
+				"valueToStore": {
+					"type": "getLastCreatedNonStackingStatBuff"
+				}
+			},{
+				"type": "createNonStackingStatBuff",
+				"buffType": {
+					"type": "getNonStackingStatBuffTypeFromString",
+					"id": {
+						"type": "rawString",
+						"value": "MVSPDPCT"
+					}
+				},
+				"stackingKey": {
+					"type": "rawString",
+					"value": "defend"
+				},
+				"value": {
+					"type": "negativeFloat",
+					"value": {
+						"type": "getAbilityDataAsFloat",
+						"dataField": "C"
+					}
+				}
+			},{
+				"type": "storeValueLocally",
+				"key": {
+					"type": "rawString",
+					"value": "mvbuff"
+				},
+				"instanceValue": {
+					"type": "rawBoolean",
+					"value": "false"
+				},
+				"valueToStore": {
+					"type": "getLastCreatedNonStackingStatBuff"
+				}
+			},{
+				"type": "createAttackPreDamageListener",
+				"actions": [{
+					"type": "addDamageDealtMultiplier",
+					"value": {
+						"type": "getAbilityDataAsFloat",
+						"dataField": "B"
+					}
+				}]
+			},{
+				"type": "createDamageTakenModificationListener",
+				"actions": [{
+					"type": "if",
+					"condition": {
+						"type": "or",
+						"condition1": {
+							"type": "isAttackTypeEqual",
+							"attackType1": {
+								"type": "getTriggeringAttackType"
+							},
+							"attackType2": {
+								"type": "getAttackTypeFromString",
+								"id": {
+									"type": "rawString",
+									"value": "MAGIC"
+								}
+							}
+						},
+						"condition2": {
+							"type": "isAttackTypeEqual",
+							"attackType1": {
+								"type": "getTriggeringAttackType"
+							},
+							"attackType2": {
+								"type": "getAttackTypeFromString",
+								"id": {
+									"type": "rawString",
+									"value": "SPELLS"
+								}
+							}
+						}
+					},
+					"thenActions": [{
+						"type": "multiplyDamageTakenMultiplier",
+						"multiplier": {
+							"type": "getAbilityDataAsFloat",
+							"dataField": "E"
+						}
+					}],
+					"elseActions": []
+				}]
+			},{
+				"type": "storeValueLocally",
+				"key": {
+					"type": "rawString",
+					"value": "sMod"
+				},
+				"instanceValue": {
+					"type": "rawBoolean",
+					"value": "false"
+				},
+				"valueToStore": {
+					"type": "getLastCreatedDamageTakenModificationListener"
+				}
+			},{
+				"type": "createDamageTakenModificationListener",
+				"actions": [{
+					"type": "if",
+					"condition": {
+						"type": "isAttackTypeEqual",
+						"attackType1": {
+							"type": "getTriggeringAttackType"
+						},
+						"attackType2": {
+							"type": "getAttackTypeFromString",
+							"id": {
+								"type": "rawString",
+								"value": "PIERCE"
+							}
+						}
+					},
+					"thenActions": [{
+						"type": "multiplyDamageTakenMultiplier",
+						"multiplier": {
+							"type": "getAbilityDataAsFloat",
+							"dataField": "A"
+						}
+					}],
+					"elseActions": []
+				}]
+			},{
+				"type": "storeValueLocally",
+				"key": {
+					"type": "rawString",
+					"value": "pMod"
+				},
+				"instanceValue": {
+					"type": "rawBoolean",
+					"value": "false"
+				},
+				"valueToStore": {
+					"type": "getLastCreatedDamageTakenModificationListener"
+				}
+			},{
+				"type": "createAttackProjReactionListener",
+				"actions": [{
+					"type": "if",
+					"condition": {
+						"type": "isAttackTypeEqual",
+						"attackType1": {
+							"type": "getReactionAttackProjectileAttackType"
+						},
+						"attackType2": {
+							"type": "getAttackTypeFromString",
+							"id": {
+								"type": "rawString",
+								"value": "PIERCE"
+							}
+						}
+					},
+					"thenActions": [{
+						"type": "if",
+						"condition": {
+							"type": "and",
+							"condition1": {
+								"type": "gameplayConstantIsDefendCanDeflect"
+							},
+							"condition2": {
+								"type": "and",
+								"condition1": {
+									"type": "not",
+									"condition": {
+										"type": "bool",
+										"bool": {
+											"type": "isProjectileReflected",
+											"projectile": {
+												"type": "getReactionAttackProjectile"
+											}
+										}
+									}
+								},
+								"condition2": {
+									"type": "and",
+									"condition1": {
+										"type": "f<",
+										"value1": {
+											"type": "getAbilityDataAsFloat",
+											"dataField": "G"
+										},
+										"value2": {
+											"type": "rawFloat",
+											"value": 1
+										}
+									},
+									"condition2": {
+										"type": "f<",
+										"value1": {
+											"type": "randomBoundedFloat",
+											"bound": {
+												"type": "rawFloat",
+												"value": 100
+											}
+										},
+										"value2": {
+											"type": "getAbilityDataAsFloat",
+											"dataField": "F"
+										}
+									}
+								}
+							}
+						},
+						"thenActions": [{
+								"type": "reactionPreventHit"
+							},{
+								"type": "setProjectileDone",
+								"projectile": {
+									"type": "getReactionAttackProjectile"
+								},
+								"done": {
+									"type": "rawBoolean",
+									"value": "false"
+								}
+							},{
+								"type": "setProjectileReflected",
+								"projectile": {
+									"type": "getReactionAttackProjectile"
+								}
+							},{
+								"type": "setProjectileTarget",
+								"projectile": {
+									"type": "getReactionAttackProjectile"
+								},
+								"target": {
+									"type": "getAttackingUnit"
+								}
+							},{
+								"type": "damageTarget",
+								"source": {
+									"type": "getAttackingUnit"
+								},
+								"target": {
+									"type": "getListenerUnit"
+								},
+								"damageType": {
+									"type": "getDamageTypeFromString",
+									"id": {
+										"type": "rawString",
+										"value": "NORMAL"
+									}
+								},
+								"attackType": {
+									"type": "getAttackTypeFromString",
+									"id": {
+										"type": "rawString",
+										"value": "PIERCE"
+									}
+								},
+								"damage": {
+									"type": "f*",
+									"value1": {
+										"type": "getReactionAttackProjectileDamage"
+									},
+									"value2": {
+										"type": "getAbilityDataAsFloat",
+										"dataField": "G"
+									}
+								}
+						}],
+						"elseActions": []
+					}],
+					"elseActions": []
+				},{
+					"type": "if",
+					"condition": {
+						"type": "or",
+						"condition1": {
+							"type": "isAttackTypeEqual",
+							"attackType1": {
+								"type": "getReactionAttackProjectileAttackType"
+							},
+							"attackType2": {
+								"type": "getAttackTypeFromString",
+								"id": {
+									"type": "rawString",
+									"value": "MAGIC"
+								}
+							}
+						},
+						"condition2": {
+							"type": "isAttackTypeEqual",
+							"attackType1": {
+								"type": "getReactionAttackProjectileAttackType"
+							},
+							"attackType2": {
+								"type": "getAttackTypeFromString",
+								"id": {
+									"type": "rawString",
+									"value": "SPELLS"
+								}
+							}
+						}
+					},
+					"thenActions": [{
+						"type": "if",
+						"condition": {
+							"type": "and",
+							"condition1": {
+								"type": "gameplayConstantIsDefendCanDeflect"
+							},
+							"condition2": {
+								"type": "and",
+								"condition1": {
+									"type": "not",
+									"condition": {
+										"type": "bool",
+										"bool": {
+											"type": "isProjectileReflected",
+											"projectile": {
+												"type": "getReactionAttackProjectile"
+											}
+										}
+									}
+								},
+								"condition2": {
+									"type": "and",
+									"condition1": {
+										"type": "f<",
+										"value1": {
+											"type": "getAbilityDataAsFloat",
+											"dataField": "H"
+										},
+										"value2": {
+											"type": "rawFloat",
+											"value": 1
+										}
+									},
+									"condition2": {
+										"type": "f<",
+										"value1": {
+											"type": "randomBoundedFloat",
+											"bound": {
+												"type": "rawFloat",
+												"value": 100
+											}
+										},
+										"value2": {
+											"type": "getAbilityDataAsFloat",
+											"dataField": "F"
+										}
+									}
+								}
+							}
+						},
+						"thenActions": [{
+								"type": "reactionPreventHit"
+							},{
+								"type": "setProjectileDone",
+								"projectile": {
+									"type": "getReactionAttackProjectile"
+								},
+								"done": {
+									"type": "rawBoolean",
+									"value": "false"
+								}
+							},{
+								"type": "setProjectileReflected",
+								"projectile": {
+									"type": "getReactionAttackProjectile"
+								}
+							},{
+								"type": "setProjectileTarget",
+								"projectile": {
+									"type": "getReactionAttackProjectile"
+								},
+								"target": {
+									"type": "getAttackingUnit"
+								}
+							},{
+								"type": "damageTarget",
+								"source": {
+									"type": "getAttackingUnit"
+								},
+								"target": {
+									"type": "getListenerUnit"
+								},
+								"damageType": {
+									"type": "getDamageTypeFromString",
+									"id": {
+										"type": "rawString",
+										"value": "NORMAL"
+									}
+								},
+								"attackType": {
+									"type": "getReactionAttackProjectileAttackType"
+								},
+								"damage": {
+									"type": "f*",
+									"value1": {
+										"type": "getReactionAttackProjectileDamage"
+									},
+									"value2": {
+										"type": "getAbilityDataAsFloat",
+										"dataField": "H"
+									}
+								}
+						}],
+						"elseActions": []
+					}],
+					"elseActions": []
+				}]
+		}],
+		"onActivate": [{
+				"type": "addSecondaryAnimationTag",
+				"unit": {
+					"type": "getCastingUnit"
+				},
+				"tag": {
+					"type": "rawString",
+					"value": "DEFEND"
+				}
+			},{
+				"type": "addNonStackingStatBuff",
+				"targetUnit": {
+					"type": "getCastingUnit"
+				},
+				"buff": {
+					"type": "getStoredNonStackingStatBuffByKey",
+					"instanceValue": {
+						"type": "rawBoolean",
+						"value": "false"
+					},
+					"key": {
+						"type": "rawString",
+						"value": "mvbuff"
+					}
+				}
+			},{
+				"type": "addNonStackingStatBuff",
+				"targetUnit": {
+					"type": "getCastingUnit"
+				},
+				"buff": {
+					"type": "getStoredNonStackingStatBuffByKey",
+					"instanceValue": {
+						"type": "rawBoolean",
+						"value": "false"
+					},
+					"key": {
+						"type": "rawString",
+						"value": "asbuff"
+					}
+				}
+			},{
+				"type": "addAttackPreDamageListener",
+				"targetUnit": {
+					"type": "getCastingUnit"
+				},
+				"priority": {
+					"type": "rawPriority",
+					"priority": "STACKING"
+				},
+				"listener": {
+					"type": "getLastCreatedAttackPreDamageListener"
+				}
+			},{
+				"type": "addDamageTakenModificationListener",
+				"targetUnit": {
+					"type": "getCastingUnit"
+				},
+				"listener": {
+					"type": "getStoredDamageTakenModificationListenerByKey",
+					"instanceValue": {
+						"type": "rawBoolean",
+						"value": "false"
+					},
+					"key": {
+						"type": "rawString",
+						"value": "pMod"
+					}
+				}
+			},{
+				"type": "addDamageTakenModificationListener",
+				"targetUnit": {
+					"type": "getCastingUnit"
+				},
+				"listener": {
+					"type": "getStoredDamageTakenModificationListenerByKey",
+					"instanceValue": {
+						"type": "rawBoolean",
+						"value": "false"
+					},
+					"key": {
+						"type": "rawString",
+						"value": "sMod"
+					}
+				}
+			},{
+				"type": "addAttackProjReactionListener",
+				"targetUnit": {
+					"type": "getCastingUnit"
+				},
+				"listener": {
+					"type": "getLastCreatedAttackProjReactionListener"
+				}
+		}],
+		"onDeactivate": [{
+				"type": "removeSecondaryAnimationTag",
+				"unit": {
+					"type": "getCastingUnit"
+				},
+				"tag": {
+					"type": "rawString",
+					"value": "DEFEND"
+				}
+			},{
+				"type": "removeNonStackingStatBuff",
+				"targetUnit": {
+					"type": "getCastingUnit"
+				},
+				"buff": {
+					"type": "getStoredNonStackingStatBuffByKey",
+					"instanceValue": {
+						"type": "rawBoolean",
+						"value": "false"
+					},
+					"key": {
+						"type": "rawString",
+						"value": "mvbuff"
+					}
+				}
+			},{
+				"type": "removeNonStackingStatBuff",
+				"targetUnit": {
+					"type": "getCastingUnit"
+				},
+				"buff": {
+					"type": "getStoredNonStackingStatBuffByKey",
+					"instanceValue": {
+						"type": "rawBoolean",
+						"value": "false"
+					},
+					"key": {
+						"type": "rawString",
+						"value": "asbuff"
+					}
+				}
+			},{
+				"type": "removeAttackPreDamageListener",
+				"targetUnit": {
+					"type": "getCastingUnit"
+				},
+				"priority": {
+					"type": "rawPriority",
+					"priority": "STACKING"
+				},
+				"listener": {
+					"type": "getLastCreatedAttackPreDamageListener"
+				}
+			},{
+				"type": "removeDamageTakenModificationListener",
+				"targetUnit": {
+					"type": "getCastingUnit"
+				},
+				"listener": {
+					"type": "getStoredDamageTakenModificationListenerByKey",
+					"instanceValue": {
+						"type": "rawBoolean",
+						"value": "false"
+					},
+					"key": {
+						"type": "rawString",
+						"value": "pMod"
+					}
+				}
+			},{
+				"type": "removeDamageTakenModificationListener",
+				"targetUnit": {
+					"type": "getCastingUnit"
+				},
+				"listener": {
+					"type": "getStoredDamageTakenModificationListenerByKey",
+					"instanceValue": {
+						"type": "rawBoolean",
+						"value": "false"
+					},
+					"key": {
+						"type": "rawString",
+						"value": "sMod"
+					}
+				}
+			},{
+				"type": "removeAttackProjReactionListener",
+				"targetUnit": {
+					"type": "getCastingUnit"
+				},
+				"listener": {
+					"type": "getLastCreatedAttackProjReactionListener"
+				}
+		}]
+	},{
+		"ids": [{"id":"Amdf", "castId": "magicdefense", "uncastId": "magicundefense"}],
+		"type": "NORMAL_NOTARGET",
+		"displayFields": {
+			"toggleable": {
+				"type": "rawBoolean",
+				"value": "true"
+			},
+			"castlessNoTarget": {
+				"type": "rawBoolean",
+				"value": "true"
+			}
+		},
+		"onAddAbility": [{
+				"type": "createStateModBuff",
+				"buffType": "MAGIC_IMMUNE"
+			},{
+				"type": "createNonStackingStatBuff",
+				"buffType": {
+					"type": "getNonStackingStatBuffTypeFromString",
+					"id": {
+						"type": "rawString",
+						"value": "ATKSPD"
+					}
+				},
+				"stackingKey": {
+					"type": "rawString",
+					"value": "defend"
+				},
+				"value": {
+					"type": "negativeFloat",
+					"value": {
+						"type": "getAbilityDataAsFloat",
+						"dataField": "D"
+					}
+				}
+			},{
+				"type": "storeValueLocally",
+				"key": {
+					"type": "rawString",
+					"value": "asbuff"
+				},
+				"instanceValue": {
+					"type": "rawBoolean",
+					"value": "false"
+				},
+				"valueToStore": {
+					"type": "getLastCreatedNonStackingStatBuff"
+				}
+			},{
+				"type": "createNonStackingStatBuff",
+				"buffType": {
+					"type": "getNonStackingStatBuffTypeFromString",
+					"id": {
+						"type": "rawString",
+						"value": "MVSPDPCT"
+					}
+				},
+				"stackingKey": {
+					"type": "rawString",
+					"value": "defend"
+				},
+				"value": {
+					"type": "negativeFloat",
+					"value": {
+						"type": "getAbilityDataAsFloat",
+						"dataField": "C"
+					}
+				}
+			},{
+				"type": "storeValueLocally",
+				"key": {
+					"type": "rawString",
+					"value": "mvbuff"
+				},
+				"instanceValue": {
+					"type": "rawBoolean",
+					"value": "false"
+				},
+				"valueToStore": {
+					"type": "getLastCreatedNonStackingStatBuff"
+				}
+			},{
+				"type": "createAttackPreDamageListener",
+				"actions": [{
+					"type": "addDamageDealtMultiplier",
+					"value": {
+						"type": "getAbilityDataAsFloat",
+						"dataField": "B"
+					}
+				}]
+			},{
+				"type": "createDamageTakenModificationListener",
+				"actions": [{
+					"type": "if",
+					"condition": {
+						"type": "or",
+						"condition1": {
+							"type": "isAttackTypeEqual",
+							"attackType1": {
+								"type": "getTriggeringAttackType"
+							},
+							"attackType2": {
+								"type": "getAttackTypeFromString",
+								"id": {
+									"type": "rawString",
+									"value": "MAGIC"
+								}
+							}
+						},
+						"condition2": {
+							"type": "isAttackTypeEqual",
+							"attackType1": {
+								"type": "getTriggeringAttackType"
+							},
+							"attackType2": {
+								"type": "getAttackTypeFromString",
+								"id": {
+									"type": "rawString",
+									"value": "SPELLS"
+								}
+							}
+						}
+					},
+					"thenActions": [{
+						"type": "multiplyDamageTakenMultiplier",
+						"multiplier": {
+							"type": "getAbilityDataAsFloat",
+							"dataField": "E"
+						}
+					}],
+					"elseActions": []
+				}]
+			},{
+				"type": "storeValueLocally",
+				"key": {
+					"type": "rawString",
+					"value": "sMod"
+				},
+				"instanceValue": {
+					"type": "rawBoolean",
+					"value": "false"
+				},
+				"valueToStore": {
+					"type": "getLastCreatedDamageTakenModificationListener"
+				}
+			},{
+				"type": "createDamageTakenModificationListener",
+				"actions": [{
+					"type": "if",
+					"condition": {
+						"type": "isAttackTypeEqual",
+						"attackType1": {
+							"type": "getTriggeringAttackType"
+						},
+						"attackType2": {
+							"type": "getAttackTypeFromString",
+							"id": {
+								"type": "rawString",
+								"value": "PIERCE"
+							}
+						}
+					},
+					"thenActions": [{
+						"type": "multiplyDamageTakenMultiplier",
+						"multiplier": {
+							"type": "getAbilityDataAsFloat",
+							"dataField": "A"
+						}
+					}],
+					"elseActions": []
+				}]
+			},{
+				"type": "storeValueLocally",
+				"key": {
+					"type": "rawString",
+					"value": "pMod"
+				},
+				"instanceValue": {
+					"type": "rawBoolean",
+					"value": "false"
+				},
+				"valueToStore": {
+					"type": "getLastCreatedDamageTakenModificationListener"
+				}
+			},{
+				"type": "createAttackProjReactionListener",
+				"actions": [{
+					"type": "if",
+					"condition": {
+						"type": "isAttackTypeEqual",
+						"attackType1": {
+							"type": "getReactionAttackProjectileAttackType"
+						},
+						"attackType2": {
+							"type": "getAttackTypeFromString",
+							"id": {
+								"type": "rawString",
+								"value": "PIERCE"
+							}
+						}
+					},
+					"thenActions": [{
+						"type": "if",
+						"condition": {
+							"type": "and",
+							"condition1": {
+								"type": "gameplayConstantIsDefendCanDeflect"
+							},
+							"condition2": {
+								"type": "and",
+								"condition1": {
+									"type": "not",
+									"condition": {
+										"type": "bool",
+										"bool": {
+											"type": "isProjectileReflected",
+											"projectile": {
+												"type": "getReactionAttackProjectile"
+											}
+										}
+									}
+								},
+								"condition2": {
+									"type": "and",
+									"condition1": {
+										"type": "f<",
+										"value1": {
+											"type": "getAbilityDataAsFloat",
+											"dataField": "G"
+										},
+										"value2": {
+											"type": "rawFloat",
+											"value": 1
+										}
+									},
+									"condition2": {
+										"type": "f<",
+										"value1": {
+											"type": "randomBoundedFloat",
+											"bound": {
+												"type": "rawFloat",
+												"value": 100
+											}
+										},
+										"value2": {
+											"type": "getAbilityDataAsFloat",
+											"dataField": "F"
+										}
+									}
+								}
+							}
+						},
+						"thenActions": [{
+								"type": "reactionPreventHit"
+							},{
+								"type": "setProjectileDone",
+								"projectile": {
+									"type": "getReactionAttackProjectile"
+								},
+								"done": {
+									"type": "rawBoolean",
+									"value": "false"
+								}
+							},{
+								"type": "setProjectileReflected",
+								"projectile": {
+									"type": "getReactionAttackProjectile"
+								}
+							},{
+								"type": "setProjectileTarget",
+								"projectile": {
+									"type": "getReactionAttackProjectile"
+								},
+								"target": {
+									"type": "getAttackingUnit"
+								}
+							},{
+								"type": "damageTarget",
+								"source": {
+									"type": "getAttackingUnit"
+								},
+								"target": {
+									"type": "getListenerUnit"
+								},
+								"damageType": {
+									"type": "getDamageTypeFromString",
+									"id": {
+										"type": "rawString",
+										"value": "NORMAL"
+									}
+								},
+								"attackType": {
+									"type": "getAttackTypeFromString",
+									"id": {
+										"type": "rawString",
+										"value": "PIERCE"
+									}
+								},
+								"damage": {
+									"type": "f*",
+									"value1": {
+										"type": "getReactionAttackProjectileDamage"
+									},
+									"value2": {
+										"type": "getAbilityDataAsFloat",
+										"dataField": "G"
+									}
+								}
+						}],
+						"elseActions": []
+					}],
+					"elseActions": []
+				},{
+					"type": "if",
+					"condition": {
+						"type": "or",
+						"condition1": {
+							"type": "isAttackTypeEqual",
+							"attackType1": {
+								"type": "getReactionAttackProjectileAttackType"
+							},
+							"attackType2": {
+								"type": "getAttackTypeFromString",
+								"id": {
+									"type": "rawString",
+									"value": "MAGIC"
+								}
+							}
+						},
+						"condition2": {
+							"type": "isAttackTypeEqual",
+							"attackType1": {
+								"type": "getReactionAttackProjectileAttackType"
+							},
+							"attackType2": {
+								"type": "getAttackTypeFromString",
+								"id": {
+									"type": "rawString",
+									"value": "SPELLS"
+								}
+							}
+						}
+					},
+					"thenActions": [{
+						"type": "if",
+						"condition": {
+							"type": "and",
+							"condition1": {
+								"type": "gameplayConstantIsDefendCanDeflect"
+							},
+							"condition2": {
+								"type": "and",
+								"condition1": {
+									"type": "not",
+									"condition": {
+										"type": "bool",
+										"bool": {
+											"type": "isProjectileReflected",
+											"projectile": {
+												"type": "getReactionAttackProjectile"
+											}
+										}
+									}
+								},
+								"condition2": {
+									"type": "and",
+									"condition1": {
+										"type": "f<",
+										"value1": {
+											"type": "getAbilityDataAsFloat",
+											"dataField": "H"
+										},
+										"value2": {
+											"type": "rawFloat",
+											"value": 1
+										}
+									},
+									"condition2": {
+										"type": "f<",
+										"value1": {
+											"type": "randomBoundedFloat",
+											"bound": {
+												"type": "rawFloat",
+												"value": 100
+											}
+										},
+										"value2": {
+											"type": "getAbilityDataAsFloat",
+											"dataField": "F"
+										}
+									}
+								}
+							}
+						},
+						"thenActions": [{
+								"type": "reactionPreventHit"
+							},{
+								"type": "setProjectileDone",
+								"projectile": {
+									"type": "getReactionAttackProjectile"
+								},
+								"done": {
+									"type": "rawBoolean",
+									"value": "false"
+								}
+							},{
+								"type": "setProjectileReflected",
+								"projectile": {
+									"type": "getReactionAttackProjectile"
+								}
+							},{
+								"type": "setProjectileTarget",
+								"projectile": {
+									"type": "getReactionAttackProjectile"
+								},
+								"target": {
+									"type": "getAttackingUnit"
+								}
+							},{
+								"type": "damageTarget",
+								"source": {
+									"type": "getAttackingUnit"
+								},
+								"target": {
+									"type": "getListenerUnit"
+								},
+								"damageType": {
+									"type": "getDamageTypeFromString",
+									"id": {
+										"type": "rawString",
+										"value": "NORMAL"
+									}
+								},
+								"attackType": {
+									"type": "getReactionAttackProjectileAttackType"
+								},
+								"damage": {
+									"type": "f*",
+									"value1": {
+										"type": "getReactionAttackProjectileDamage"
+									},
+									"value2": {
+										"type": "getAbilityDataAsFloat",
+										"dataField": "H"
+									}
+								}
+						}],
+						"elseActions": []
+					}],
+					"elseActions": []
+				}]
+		}],
+		"onActivate": [{
+				"type": "addSecondaryAnimationTag",
+				"unit": {
+					"type": "getCastingUnit"
+				},
+				"tag": {
+					"type": "rawString",
+					"value": "DEFEND"
+				}
+			},{
+				"type": "addStateModBuff",
+				"targetUnit": {
+					"type": "getCastingUnit"
+				},
+				"buff": {
+					"type": "getLastCreatedStateModBuff"
+				}
+			},{
+				"type": "addNonStackingStatBuff",
+				"targetUnit": {
+					"type": "getCastingUnit"
+				},
+				"buff": {
+					"type": "getStoredNonStackingStatBuffByKey",
+					"instanceValue": {
+						"type": "rawBoolean",
+						"value": "false"
+					},
+					"key": {
+						"type": "rawString",
+						"value": "mvbuff"
+					}
+				}
+			},{
+				"type": "addNonStackingStatBuff",
+				"targetUnit": {
+					"type": "getCastingUnit"
+				},
+				"buff": {
+					"type": "getStoredNonStackingStatBuffByKey",
+					"instanceValue": {
+						"type": "rawBoolean",
+						"value": "false"
+					},
+					"key": {
+						"type": "rawString",
+						"value": "asbuff"
+					}
+				}
+			},{
+				"type": "addAttackPreDamageListener",
+				"targetUnit": {
+					"type": "getCastingUnit"
+				},
+				"priority": {
+					"type": "rawPriority",
+					"priority": "STACKING"
+				},
+				"listener": {
+					"type": "getLastCreatedAttackPreDamageListener"
+				}
+			},{
+				"type": "addDamageTakenModificationListener",
+				"targetUnit": {
+					"type": "getCastingUnit"
+				},
+				"listener": {
+					"type": "getStoredDamageTakenModificationListenerByKey",
+					"instanceValue": {
+						"type": "rawBoolean",
+						"value": "false"
+					},
+					"key": {
+						"type": "rawString",
+						"value": "pMod"
+					}
+				}
+			},{
+				"type": "addDamageTakenModificationListener",
+				"targetUnit": {
+					"type": "getCastingUnit"
+				},
+				"listener": {
+					"type": "getStoredDamageTakenModificationListenerByKey",
+					"instanceValue": {
+						"type": "rawBoolean",
+						"value": "false"
+					},
+					"key": {
+						"type": "rawString",
+						"value": "sMod"
+					}
+				}
+			},{
+				"type": "addAttackProjReactionListener",
+				"targetUnit": {
+					"type": "getCastingUnit"
+				},
+				"listener": {
+					"type": "getLastCreatedAttackProjReactionListener"
+				}
+		}],
+		"onDeactivate": [{
+				"type": "removeSecondaryAnimationTag",
+				"unit": {
+					"type": "getCastingUnit"
+				},
+				"tag": {
+					"type": "rawString",
+					"value": "DEFEND"
+				}
+			},{
+				"type": "removeStateModBuff",
+				"targetUnit": {
+					"type": "getCastingUnit"
+				},
+				"buff": {
+					"type": "getLastCreatedStateModBuff"
+				}
+			},{
+				"type": "removeNonStackingStatBuff",
+				"targetUnit": {
+					"type": "getCastingUnit"
+				},
+				"buff": {
+					"type": "getStoredNonStackingStatBuffByKey",
+					"instanceValue": {
+						"type": "rawBoolean",
+						"value": "false"
+					},
+					"key": {
+						"type": "rawString",
+						"value": "mvbuff"
+					}
+				}
+			},{
+				"type": "removeNonStackingStatBuff",
+				"targetUnit": {
+					"type": "getCastingUnit"
+				},
+				"buff": {
+					"type": "getStoredNonStackingStatBuffByKey",
+					"instanceValue": {
+						"type": "rawBoolean",
+						"value": "false"
+					},
+					"key": {
+						"type": "rawString",
+						"value": "asbuff"
+					}
+				}
+			},{
+				"type": "removeAttackPreDamageListener",
+				"targetUnit": {
+					"type": "getCastingUnit"
+				},
+				"priority": {
+					"type": "rawPriority",
+					"priority": "STACKING"
+				},
+				"listener": {
+					"type": "getLastCreatedAttackPreDamageListener"
+				}
+			},{
+				"type": "removeDamageTakenModificationListener",
+				"targetUnit": {
+					"type": "getCastingUnit"
+				},
+				"listener": {
+					"type": "getStoredDamageTakenModificationListenerByKey",
+					"instanceValue": {
+						"type": "rawBoolean",
+						"value": "false"
+					},
+					"key": {
+						"type": "rawString",
+						"value": "pMod"
+					}
+				}
+			},{
+				"type": "removeDamageTakenModificationListener",
+				"targetUnit": {
+					"type": "getCastingUnit"
+				},
+				"listener": {
+					"type": "getStoredDamageTakenModificationListenerByKey",
+					"instanceValue": {
+						"type": "rawBoolean",
+						"value": "false"
+					},
+					"key": {
+						"type": "rawString",
+						"value": "sMod"
+					}
+				}
+			},{
+				"type": "removeAttackProjReactionListener",
+				"targetUnit": {
+					"type": "getCastingUnit"
+				},
+				"listener": {
+					"type": "getLastCreatedAttackProjReactionListener"
+				}
+		}]
+	}]
+}

@@ -27,7 +27,7 @@ public class CUpgradeEffectSpellLevel implements CUpgradeEffect {
 				CLevelingAbility abilityByRawcode = ability
 						.visit(GetAbilityByRawcodeVisitor.getInstance().reset(rawcode));
 				if (abilityByRawcode != null) {
-					abilityType.setLevel(simulation, abilityByRawcode, level + 1);
+					abilityType.setLevel(simulation, unit, abilityByRawcode, level + 1);
 				}
 			}
 		}
@@ -41,7 +41,7 @@ public class CUpgradeEffectSpellLevel implements CUpgradeEffect {
 				CLevelingAbility abilityByRawcode = ability
 						.visit(GetAbilityByRawcodeVisitor.getInstance().reset(rawcode));
 				if (abilityByRawcode != null) {
-					abilityType.setLevel(simulation, abilityByRawcode, level);
+					abilityType.setLevel(simulation, unit, abilityByRawcode, level);
 				}
 			}
 		}

@@ -21,22 +21,39 @@ public class CBehaviorHoldPosition implements CBehavior {
 
 	@Override
 	public CBehavior update(final CSimulation game) {
-		if (this.unit.autoAcquireAttackTargets(game, true)) {
+		if (this.unit.autoAcquireTargets(game, true)) {
 			// kind of a hack
 			return this.unit.getCurrentBehavior();
 		}
-		this.unit.getUnitAnimationListener().playAnimation(false, PrimaryTag.STAND, SequenceUtils.EMPTY, 1.0f, true);
 		return this.unit.pollNextOrderBehavior(game);
 	}
 
 	@Override
 	public void begin(final CSimulation game) {
-
+		if (!this.unit.isConstructingOrUpgrading()) {
+			this.unit.getUnitAnimationListener().playAnimation(false, PrimaryTag.STAND, SequenceUtils.EMPTY, 1.0f,
+					true);
+		}
 	}
 
 	@Override
 	public void end(final CSimulation game, boolean interrupted) {
 
+	}
+
+	@Override
+	public boolean interruptable() {
+		return true;
+	}
+
+	@Override
+	public <T> T visit(final CBehaviorVisitor<T> visitor) {
+		return visitor.accept(this);
+	}
+
+	@Override
+	public CBehaviorCategory getBehaviorCategory() {
+		return CBehaviorCategory.IDLE;
 	}
 
 }

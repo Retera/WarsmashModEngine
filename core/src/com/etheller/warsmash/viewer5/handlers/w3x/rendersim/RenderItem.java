@@ -1,30 +1,25 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.rendersim;
 
 import com.badlogic.gdx.math.Quaternion;
-import com.etheller.warsmash.units.manager.MutableObjectData.MutableGameObject;
+import com.badlogic.gdx.math.Vector3;
 import com.etheller.warsmash.util.RenderMathUtils;
-import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.viewer5.handlers.mdx.MdxComplexInstance;
 import com.etheller.warsmash.viewer5.handlers.mdx.MdxModel;
 import com.etheller.warsmash.viewer5.handlers.w3x.CollidableDoodadComponent;
 import com.etheller.warsmash.viewer5.handlers.w3x.SequenceUtils;
 import com.etheller.warsmash.viewer5.handlers.w3x.SplatModel.SplatMover;
-import com.etheller.warsmash.viewer5.handlers.w3x.UnitSoundset;
 import com.etheller.warsmash.viewer5.handlers.w3x.War3MapViewer;
+import com.etheller.warsmash.viewer5.handlers.w3x.environment.PathingGrid;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CItem;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.vision.CPlayerFogOfWar;
 
 public class RenderItem implements RenderWidget {
-	private static final War3ID ITEM_MODEL_SCALE = War3ID.fromString("isca");
-	private static final War3ID ITEM_RED = War3ID.fromString("iclr");
-	private static final War3ID ITEM_GREEN = War3ID.fromString("iclg");
-	private static final War3ID ITEM_BLUE = War3ID.fromString("iclb");
 	private final CItem simulationItem;
 	public final MdxComplexInstance instance;
-	public final MutableGameObject row;
 	public final float[] location = new float[3];
 	public float radius;
-	public UnitSoundset soundset;
 	public final MdxModel portraitModel;
 	public SplatMover shadow;
 	public SplatMover selectionCircle;
@@ -32,12 +27,11 @@ public class RenderItem implements RenderWidget {
 	private boolean hidden;
 	private boolean dead;
 
-	public RenderItem(final War3MapViewer map, final MdxModel model, final MutableGameObject row, final float x,
-			final float y, final float z, final float angle, final UnitSoundset soundset, final MdxModel portraitModel,
-			final CItem simulationItem) {
-		this.portraitModel = portraitModel;
+	public RenderItem(final War3MapViewer map, RenderItemType itemType, final float x, final float y, final float z,
+			final float angle, final CItem simulationItem) {
+		this.portraitModel = itemType.getPortraitModel();
 		this.simulationItem = simulationItem;
-		final MdxComplexInstance instance = (MdxComplexInstance) model.addInstance();
+		final MdxComplexInstance instance = (MdxComplexInstance) itemType.getModel().addInstance();
 
 		this.location[0] = x;
 		this.location[1] = y;
@@ -47,25 +41,15 @@ public class RenderItem implements RenderWidget {
 		instance.rotate(new Quaternion().setFromAxisRad(RenderMathUtils.VEC3_UNIT_Z, angle));
 		instance.setScene(map.worldScene);
 
-		if (row != null) {
-			War3ID red;
-			War3ID green;
-			War3ID blue;
-			War3ID scale;
-			scale = ITEM_MODEL_SCALE;
-			red = ITEM_RED;
-			green = ITEM_GREEN;
-			blue = ITEM_BLUE;
-			instance.setVertexColor(new float[] { (row.getFieldAsInteger(red, 0)) / 255f,
-					(row.getFieldAsInteger(green, 0)) / 255f, (row.getFieldAsInteger(blue, 0)) / 255f });
-			instance.uniformScale(row.getFieldAsFloat(scale, 0));
+		if (itemType != null) {
+			final Vector3 tintingColor = itemType.getTintingColor();
+			instance.setVertexColor(new float[] { tintingColor.x, tintingColor.y, tintingColor.z });
+			instance.uniformScale(itemType.getModelScale());
 
 			this.radius = 1 * 36;
 		}
 
 		this.instance = instance;
-		this.row = row;
-		this.soundset = soundset;
 	}
 
 	@Override
@@ -80,10 +64,15 @@ public class RenderItem implements RenderWidget {
 
 	@Override
 	public void updateAnimations(final War3MapViewer map) {
+		final CPlayerFogOfWar fogOfWar = map.getFogOfWar();
+		final PathingGrid pathingGrid = map.simulation.getPathingGrid();
+		final int fogOfWarIndexX = pathingGrid.getFogOfWarIndexX(this.location[0]);
+		final int fogOfWarIndexY = pathingGrid.getFogOfWarIndexY(this.location[1]);
+		final boolean fogHidden = !fogOfWar.isVisible(map.simulation, fogOfWarIndexX, fogOfWarIndexY);
 		final boolean hidden = this.simulationItem.isHidden();
-		if (hidden != this.hidden) {
-			this.hidden = hidden;
-			if (hidden) {
+		if ((hidden || fogHidden) != this.hidden) {
+			this.hidden = hidden || fogHidden;
+			if (this.hidden) {
 				this.instance.hide();
 				if (this.shadow != null) {
 					this.shadow.hide();
@@ -188,7 +177,7 @@ public class RenderItem implements RenderWidget {
 	}
 
 	@Override
-	public boolean isSelectable() {
+	public boolean isSelectable(final CSimulation simulation, final int byPlayer) {
 		return true;
 	}
 

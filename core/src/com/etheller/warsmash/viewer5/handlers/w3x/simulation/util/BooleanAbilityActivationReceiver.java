@@ -17,11 +17,6 @@ public class BooleanAbilityActivationReceiver implements AbilityActivationReceiv
 	}
 
 	@Override
-	public void notEnoughResources(final ResourceType resource) {
-		this.ok = false;
-	}
-
-	@Override
 	public void notAnActiveAbility() {
 		this.ok = false;
 	}
@@ -52,16 +47,6 @@ public class BooleanAbilityActivationReceiver implements AbilityActivationReceiv
 	}
 
 	@Override
-	public void casterMovementDisabled() {
-		this.ok = false;
-	}
-
-	@Override
-	public void cargoCapacityUnavailable() {
-		this.ok = false;
-	}
-
-	@Override
 	public void disabled() {
 		this.ok = false;
 	}
@@ -73,6 +58,11 @@ public class BooleanAbilityActivationReceiver implements AbilityActivationReceiv
 
 	@Override
 	public void noChargesRemaining() {
+		this.ok = false;
+	}
+
+	@Override
+	public void activationCheckFailed(String commandStringErrorKey) {
 		this.ok = false;
 	}
 

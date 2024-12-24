@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.GL30;
 import com.badlogic.gdx.math.Matrix4;
@@ -59,7 +60,10 @@ public abstract class Scene {
 	 * If true, alpha works as usual.
 	 */
 	public boolean alpha = false;
+	public Color backgroundColor = Color.BLACK;
 	private final SceneLightManager lightManager;
+	public FogSettings fogSettings = new FogSettings();
+	public boolean show = true;
 
 	public Scene(final ModelViewer viewer, final SceneLightManager lightManager) {
 		final CanvasProvider canvas = viewer.canvas;
@@ -149,6 +153,9 @@ public abstract class Scene {
 	public boolean removeInstance(final ModelInstance instance) {
 		if (instance.scene == this) {
 			instance.removeLights(this);
+			for (int i = 0, l = instance.childrenInstances.size(); i < l; i++) {
+				instance.childrenInstances.get(i).detach();
+			}
 			innerRemove(instance);
 
 			instance.scene = null;
@@ -238,6 +245,8 @@ public abstract class Scene {
 		// If this scene doesn't want alpha, clear it.
 		gl.glDepthMask(true);
 		if (!this.alpha) {
+			gl.glClearColor(this.backgroundColor.r, this.backgroundColor.g, this.backgroundColor.b,
+					this.backgroundColor.a);
 			gl.glClear(GL20.GL_DEPTH_BUFFER_BIT | GL20.GL_COLOR_BUFFER_BIT);
 		}
 		else {
@@ -247,6 +256,9 @@ public abstract class Scene {
 	}
 
 	public void renderOpaque() {
+		if (!this.show) {
+			return;
+		}
 		final Rectangle viewport = this.camera.rect;
 		this.viewer.gl.glViewport((int) viewport.x, (int) viewport.y, (int) viewport.width, (int) viewport.height);
 
@@ -257,12 +269,12 @@ public abstract class Scene {
 
 		// Add all of the batched instances to batches.
 		for (final ModelInstance instance : this.batchedInstances) {
-			this.addToBatch(instance);
+			addToBatch(instance);
 		}
 
 		// Render all of the batches.
 		for (final RenderBatch batch : this.batches.values()) {
-			batch.render();
+			batch.renderOpaque();
 		}
 
 		// Render all of the opaque things of non-batched instances.
@@ -272,6 +284,9 @@ public abstract class Scene {
 	}
 
 	public void renderOpaque(final DynamicShadowManager dynamicShadowManager, final WebGL webGL) {
+		if (!this.show) {
+			return;
+		}
 		final Matrix4 depthMatrix = dynamicShadowManager.prepareShadowMatrix();
 		dynamicShadowManager.beginShadowMap(webGL);
 		Gdx.gl30.glDepthMask(true);
@@ -294,9 +309,17 @@ public abstract class Scene {
 	 * camera's viewport.
 	 */
 	public void renderTranslucent() {
+		if (!this.show) {
+			return;
+		}
 		final Rectangle viewport = this.camera.rect;
 
 		this.viewer.gl.glViewport((int) viewport.x, (int) viewport.y, (int) viewport.width, (int) viewport.height);
+
+		// Render all of the batches.
+		for (final RenderBatch batch : this.batches.values()) {
+			batch.renderTranslucent();
+		}
 
 		for (final ModelInstance instance : this.instances) {
 			instance.renderTranslucent();

@@ -1,13 +1,15 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.nightelf.moonwell;
 
 import com.badlogic.gdx.math.Rectangle;
-import com.etheller.warsmash.units.manager.MutableObjectData.MutableGameObject;
+import com.etheller.warsmash.units.GameObject;
 import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.util.WarsmashConstants;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnitEnumFunction;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.autocast.AutocastType;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.autocast.CAutocastAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.skills.CAbilitySpellBase;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityPointTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTarget;
@@ -18,13 +20,13 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.data.CUnitRace;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.OrderIds;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CEffectType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetCheckReceiver;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetCheckReceiver.TargetType;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.SimulationRenderComponent;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.CommandStringErrorKeys;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.SimulationRenderComponentModel;
 
-public class CAbilityMoonWell extends CAbilitySpellBase {
+public class CAbilityMoonWell extends CAbilitySpellBase implements CAutocastAbility {
 	private boolean autoCastActive = false;
 
-	private SimulationRenderComponent waterRenderComponent;
+	private SimulationRenderComponentModel waterRenderComponent;
 
 	private float manaGained;
 	private float hitPointsGained;
@@ -52,8 +54,13 @@ public class CAbilityMoonWell extends CAbilitySpellBase {
 
 	@Override
 	public void onRemove(final CSimulation game, final CUnit unit) {
-		this.waterRenderComponent.remove();
+		removeWaterRenderComponent();
 		enableManaRegen(unit);
+	}
+
+	@Override
+	public void onDeath(final CSimulation game, final CUnit cUnit) {
+		removeWaterRenderComponent();
 	}
 
 	private void disableManaRegen(final CUnit unit) {
@@ -81,7 +88,7 @@ public class CAbilityMoonWell extends CAbilitySpellBase {
 		}
 		else {
 			if (isDisabled()) {
-				this.waterRenderComponent.remove();
+				removeWaterRenderComponent();
 			}
 			else {
 				this.waterRenderComponent.setHeight(this.waterHeight * (unit.getMana() / unit.getMaximumMana()));
@@ -97,12 +104,19 @@ public class CAbilityMoonWell extends CAbilitySpellBase {
 		}
 		if (this.autoCastActive) {
 			final int gameTurnTick = game.getGameTurnTick();
-			if ((gameTurnTick >= this.lastAutoCastCheckTick) && (unit.getMana() > this.autocastRequirement)) {
+			if (gameTurnTick >= this.lastAutoCastCheckTick && unit.getMana() > this.autocastRequirement) {
 				checkAutoCast(game, unit);
 				this.lastAutoCastCheckTick = gameTurnTick + (int) (2.0f / WarsmashConstants.SIMULATION_STEP_TIME);
 			}
 		}
 		super.onTick(game, unit);
+	}
+
+	private void removeWaterRenderComponent() {
+		if (this.waterRenderComponent != null) {
+			this.waterRenderComponent.remove();
+			this.waterRenderComponent = null;
+		}
 	}
 
 	private void checkAutoCast(final CSimulation game, final CUnit unit) {
@@ -132,13 +146,13 @@ public class CAbilityMoonWell extends CAbilitySpellBase {
 			final float lifeWanted = life > maximumLife ? 0 : maximumLife - life;
 			final float manaWanted = mana > maximumMana ? 0 : maximumMana - mana;
 			float availableCasterMana = caster.getMana();
-			if ((lifeWanted > 0) && (availableCasterMana > 0)) {
+			if (lifeWanted > 0 && availableCasterMana > 0) {
 				final float availableLifeOffered = availableCasterMana / this.hitPointsGained;
 				final float lifeGained = Math.min(availableLifeOffered, lifeWanted);
 				unitTarget.heal(game, lifeGained);
 				availableCasterMana -= lifeGained * this.hitPointsGained;
 			}
-			if ((manaWanted > 0) && (availableCasterMana > 0)) {
+			if (manaWanted > 0 && availableCasterMana > 0) {
 				final float availableManaOffered = availableCasterMana / this.manaGained;
 				final float manaGained = Math.min(availableManaOffered, manaWanted);
 				unitTarget.setMana(mana + manaGained);
@@ -146,8 +160,8 @@ public class CAbilityMoonWell extends CAbilitySpellBase {
 			}
 			if (availableCasterMana != caster.getMana()) {
 				caster.setMana(availableCasterMana);
-				game.createSpellEffectOnUnit(caster, getAlias(), CEffectType.CASTER);
-				game.createSpellEffectOnUnit(unitTarget, getAlias(), CEffectType.SPECIAL);
+				game.createTemporarySpellEffectOnUnit(caster, getAlias(), CEffectType.CASTER);
+				game.createTemporarySpellEffectOnUnit(unitTarget, getAlias(), CEffectType.SPECIAL);
 			}
 		}
 		return caster.pollNextOrderBehavior(game);
@@ -165,15 +179,13 @@ public class CAbilityMoonWell extends CAbilitySpellBase {
 	}
 
 	@Override
-	public void populateData(final MutableGameObject worldEditorAbility, final int level) {
-		this.manaGained = worldEditorAbility.getFieldAsFloat(AbilityFields.MOON_WELL_MANA_GAINED, level);
-		this.hitPointsGained = worldEditorAbility.getFieldAsFloat(AbilityFields.MOON_WELL_HIT_POINTS_GAINED, level);
-		this.autocastRequirement = worldEditorAbility.getFieldAsFloat(AbilityFields.MOON_WELL_AUTOCAST_REQUIREMENT,
-				level);
-		this.waterHeight = worldEditorAbility.getFieldAsFloat(AbilityFields.MOON_WELL_WATER_HEIGHT, level);
-		this.regenerateOnlyAtNight = worldEditorAbility
-				.getFieldAsBoolean(AbilityFields.MOON_WELL_REGENERATE_ONLY_AT_NIGHT, level);
-		this.areaOfEffect = worldEditorAbility.getFieldAsFloat(AbilityFields.AREA_OF_EFFECT, level);
+	public void populateData(final GameObject worldEditorAbility, final int level) {
+		this.manaGained = worldEditorAbility.getFieldAsFloat(AbilityFields.DATA_A + level, 0);
+		this.hitPointsGained = worldEditorAbility.getFieldAsFloat(AbilityFields.DATA_B + level, 0);
+		this.autocastRequirement = worldEditorAbility.getFieldAsFloat(AbilityFields.DATA_C + level, 0);
+		this.waterHeight = worldEditorAbility.getFieldAsFloat(AbilityFields.DATA_D + level, 0);
+		this.regenerateOnlyAtNight = worldEditorAbility.getFieldAsBoolean(AbilityFields.DATA_E + level, 0);
+		this.areaOfEffect = worldEditorAbility.getFieldAsFloat(AbilityFields.AREA_OF_EFFECT + level, 0);
 		setCastRange(this.areaOfEffect); // TODO use cast range as a smart right click interact radius
 	}
 
@@ -185,16 +197,13 @@ public class CAbilityMoonWell extends CAbilitySpellBase {
 	@Override
 	protected void innerCheckCanTarget(final CSimulation game, final CUnit unit, final int orderId,
 			final CWidget target, final AbilityTargetCheckReceiver<CWidget> receiver) {
-		if (target.canBeTargetedBy(game, unit, getTargetsAllowed())) {
+		if (target.canBeTargetedBy(game, unit, getTargetsAllowed(), receiver)) {
 			if (!unit.isMovementDisabled() || unit.canReach(target, getCastRange())) {
 				receiver.targetOk(target);
 			}
 			else {
-				receiver.targetOutsideRange();
+				receiver.targetCheckFailed(CommandStringErrorKeys.TARGET_IS_OUTSIDE_RANGE);
 			}
-		}
-		else {
-			receiver.mustTargetType(TargetType.UNIT);
 		}
 	}
 
@@ -211,13 +220,19 @@ public class CAbilityMoonWell extends CAbilitySpellBase {
 	}
 
 	@Override
+	public AutocastType getAutocastType() {
+		return AutocastType.NEARESTVALID;
+	}
+
+	@Override
 	public boolean isAutoCastOn() {
 		return this.autoCastActive;
 	}
 
 	@Override
-	public void setAutoCastOn(final boolean autoCastOn) {
+	public void setAutoCastOn(final CUnit caster, final boolean autoCastOn) {
 		this.autoCastActive = autoCastOn;
+		caster.setAutocastAbility(autoCastOn ? this : null);
 	}
 
 	@Override
@@ -233,6 +248,29 @@ public class CAbilityMoonWell extends CAbilitySpellBase {
 	@Override
 	public int getAutoCastOffOrderId() {
 		return OrderIds.replenishoff;
+	}
+
+	@Override
+	public void setAutoCastOff() {
+		this.autoCastActive = false;
+	}
+
+	@Override
+	public void checkCanAutoTarget(CSimulation game, CUnit unit, int orderId, CWidget target,
+			AbilityTargetCheckReceiver<CWidget> receiver) {
+		this.checkCanTarget(game, unit, orderId, target, receiver);
+	}
+
+	@Override
+	public void checkCanAutoTarget(CSimulation game, CUnit unit, int orderId, AbilityPointTarget target,
+			AbilityTargetCheckReceiver<AbilityPointTarget> receiver) {
+		receiver.orderIdNotAccepted();
+	}
+
+	@Override
+	public void checkCanAutoTargetNoTarget(CSimulation game, CUnit unit, int orderId,
+			AbilityTargetCheckReceiver<Void> receiver) {
+		receiver.orderIdNotAccepted();
 	}
 
 }

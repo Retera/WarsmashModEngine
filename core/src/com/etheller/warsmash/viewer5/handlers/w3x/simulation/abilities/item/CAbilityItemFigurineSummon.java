@@ -1,6 +1,6 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.item;
 
-import com.etheller.warsmash.units.manager.MutableObjectData.MutableGameObject;
+import com.etheller.warsmash.units.GameObject;
 import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
@@ -19,7 +19,6 @@ public class CAbilityItemFigurineSummon extends CAbilityNoTargetSpellBase {
 	private War3ID summonUnit2Id;
 	private int summonUnit2Count;
 	private War3ID buffId;
-	private float duration;
 	private float areaOfEffect;
 
 	public CAbilityItemFigurineSummon(final int handleId, final War3ID alias) {
@@ -27,20 +26,15 @@ public class CAbilityItemFigurineSummon extends CAbilityNoTargetSpellBase {
 	}
 
 	@Override
-	public void populateData(final MutableGameObject worldEditorAbility, final int level) {
-		final String unitTypeOne = worldEditorAbility.getFieldAsString(AbilityFields.ITEM_FIGURINE_SUMMON_UNIT_TYPE_1,
-				level);
+	public void populateData(final GameObject worldEditorAbility, final int level) {
+		final String unitTypeOne = worldEditorAbility.getFieldAsString(AbilityFields.DATA_C + level, 0);
 		this.summonUnitId = unitTypeOne.length() == 4 ? War3ID.fromString(unitTypeOne) : War3ID.NONE;
-		this.summonUnitCount = worldEditorAbility.getFieldAsInteger(AbilityFields.ITEM_FIGURINE_SUMMON_UNIT_COUNT_1,
-				level);
-		final String unitTypeTwo = worldEditorAbility.getFieldAsString(AbilityFields.ITEM_FIGURINE_SUMMON_UNIT_TYPE_2,
-				level);
+		this.summonUnitCount = worldEditorAbility.getFieldAsInteger(AbilityFields.DATA_A + level, 0);
+		final String unitTypeTwo = worldEditorAbility.getFieldAsString(AbilityFields.DATA_D + level, 0);
 		this.summonUnit2Id = unitTypeTwo.length() == 4 ? War3ID.fromString(unitTypeTwo) : War3ID.NONE;
-		this.summonUnit2Count = worldEditorAbility.getFieldAsInteger(AbilityFields.ITEM_FIGURINE_SUMMON_UNIT_COUNT_2,
-				level);
+		this.summonUnit2Count = worldEditorAbility.getFieldAsInteger(AbilityFields.DATA_B + level, 0);
 		this.buffId = AbstractCAbilityTypeDefinition.getBuffId(worldEditorAbility, level);
-		this.duration = worldEditorAbility.getFieldAsFloat(AbilityFields.DURATION, level);
-		this.areaOfEffect = worldEditorAbility.getFieldAsFloat(AbilityFields.AREA_OF_EFFECT, level);
+		this.areaOfEffect = worldEditorAbility.getFieldAsFloat(AbilityFields.AREA_OF_EFFECT + level, 0);
 	}
 
 	@Override
@@ -59,16 +53,16 @@ public class CAbilityItemFigurineSummon extends CAbilityNoTargetSpellBase {
 					facing);
 			summonedUnit.addClassification(CUnitClassification.SUMMONED);
 			summonedUnit.add(simulation,
-					new CBuffTimedLife(simulation.getHandleIdAllocator().createId(), this.buffId, this.duration));
-			simulation.createSpellEffectOnUnit(summonedUnit, getAlias(), CEffectType.TARGET);
+					new CBuffTimedLife(simulation.getHandleIdAllocator().createId(), this.buffId, getDuration(), true));
+			simulation.createTemporarySpellEffectOnUnit(summonedUnit, getAlias(), CEffectType.TARGET);
 		}
 		for (int i = 0; i < this.summonUnit2Count; i++) {
 			final CUnit summonedUnit = simulation.createUnitSimple(this.summonUnit2Id, unit.getPlayerIndex(), x, y,
 					facing);
 			summonedUnit.addClassification(CUnitClassification.SUMMONED);
 			summonedUnit.add(simulation,
-					new CBuffTimedLife(simulation.getHandleIdAllocator().createId(), this.buffId, this.duration));
-			simulation.createSpellEffectOnUnit(summonedUnit, getAlias(), CEffectType.TARGET);
+					new CBuffTimedLife(simulation.getHandleIdAllocator().createId(), this.buffId, getDuration(), true));
+			simulation.createTemporarySpellEffectOnUnit(summonedUnit, getAlias(), CEffectType.TARGET);
 		}
 		return false;
 	}
@@ -93,10 +87,6 @@ public class CAbilityItemFigurineSummon extends CAbilityNoTargetSpellBase {
 		return this.buffId;
 	}
 
-	public float getDuration() {
-		return this.duration;
-	}
-
 	public float getAreaOfEffect() {
 		return this.areaOfEffect;
 	}
@@ -119,10 +109,6 @@ public class CAbilityItemFigurineSummon extends CAbilityNoTargetSpellBase {
 
 	public void setBuffId(final War3ID buffId) {
 		this.buffId = buffId;
-	}
-
-	public void setDuration(final float duration) {
-		this.duration = duration;
 	}
 
 	public void setAreaOfEffect(final float areaOfEffect) {

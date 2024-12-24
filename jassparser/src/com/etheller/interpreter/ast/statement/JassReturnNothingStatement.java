@@ -1,18 +1,13 @@
 package com.etheller.interpreter.ast.statement;
 
-import com.etheller.interpreter.ast.scope.GlobalScope;
-import com.etheller.interpreter.ast.scope.LocalScope;
-import com.etheller.interpreter.ast.scope.TriggerExecutionScope;
-import com.etheller.interpreter.ast.value.JassValue;
-import com.etheller.interpreter.ast.value.StringJassValue;
+import com.etheller.interpreter.ast.value.DummyJassValue;
 
 public class JassReturnNothingStatement implements JassStatement {
-	public static final StringJassValue RETURN_NOTHING_NOTICE = new StringJassValue("nothing");
+	public static final DummyJassValue RETURN_NOTHING_NOTICE = new DummyJassValue();
 
 	@Override
-	public JassValue execute(final GlobalScope globalScope, final LocalScope localScope,
-			final TriggerExecutionScope triggerScope) {
-		return RETURN_NOTHING_NOTICE;
+	public <T> T accept(final JassStatementVisitor<T> visitor) {
+		return visitor.visit(this);
 	}
 
 }

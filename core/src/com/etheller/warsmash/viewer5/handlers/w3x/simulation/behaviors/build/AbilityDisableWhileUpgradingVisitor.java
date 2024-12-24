@@ -1,6 +1,7 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.build;
 
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityAttack;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityDisableType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityGenericDoNothing;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityMove;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityVisitor;
@@ -15,6 +16,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.combat.CA
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.CBuff;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.GenericNoIconAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.GenericSingleIconActiveAbility;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.GenericSingleIconPassiveAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.harvest.CAbilityReturnResources;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.hero.CAbilityHero;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.item.shop.CAbilityNeutralBuilding;
@@ -25,139 +27,156 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.queue.CAb
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.queue.CAbilityRally;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.queue.CAbilityReviveHero;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.upgrade.CAbilityUpgrade;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.ability.AbilityBuilderActiveAbility;
 
 public class AbilityDisableWhileUpgradingVisitor implements CAbilityVisitor<Void> {
 	public static final AbilityDisableWhileUpgradingVisitor INSTANCE = new AbilityDisableWhileUpgradingVisitor();
 
 	@Override
 	public Void accept(final CAbilityAttack ability) {
-		ability.setDisabled(true);
+		ability.setDisabled(true, CAbilityDisableType.CONSTRUCTION);
 		ability.setIconShowing(false);
 		return null;
 	}
 
 	@Override
 	public Void accept(final CAbilityMove ability) {
-		ability.setDisabled(true);
+		ability.setDisabled(true, CAbilityDisableType.CONSTRUCTION);
 		ability.setIconShowing(false);
 		return null;
 	}
 
 	@Override
 	public Void accept(final CAbilityOrcBuild ability) {
-		ability.setDisabled(true);
+		ability.setDisabled(true, CAbilityDisableType.CONSTRUCTION);
 		ability.setIconShowing(false);
 		return null;
 	}
 
 	@Override
 	public Void accept(final CAbilityHumanBuild ability) {
-		ability.setDisabled(true);
+		ability.setDisabled(true, CAbilityDisableType.CONSTRUCTION);
 		ability.setIconShowing(false);
 		return null;
 	}
 
 	@Override
 	public Void accept(final CAbilityUndeadBuild ability) {
-		ability.setDisabled(true);
+		ability.setDisabled(true, CAbilityDisableType.CONSTRUCTION);
 		ability.setIconShowing(false);
 		return null;
 	}
 
 	@Override
 	public Void accept(final CAbilityNightElfBuild ability) {
-		ability.setDisabled(true);
+		ability.setDisabled(true, CAbilityDisableType.CONSTRUCTION);
 		ability.setIconShowing(false);
 		return null;
 	}
 
 	@Override
 	public Void accept(final CAbilityGenericDoNothing ability) {
-		ability.setDisabled(true);
+		ability.setDisabled(true, CAbilityDisableType.CONSTRUCTION);
 		ability.setIconShowing(false);
 		return null;
 	}
 
 	@Override
 	public Void accept(final CAbilityColdArrows ability) {
-		ability.setDisabled(true);
+		ability.setDisabled(true, CAbilityDisableType.CONSTRUCTION);
 		ability.setIconShowing(false);
 		return null;
 	}
 
 	@Override
 	public Void accept(final CAbilityNagaBuild ability) {
-		ability.setDisabled(true);
+		ability.setDisabled(true, CAbilityDisableType.CONSTRUCTION);
 		ability.setIconShowing(false);
 		return null;
 	}
 
 	@Override
 	public Void accept(final CAbilityNeutralBuild ability) {
-		ability.setDisabled(true);
+		ability.setDisabled(true, CAbilityDisableType.CONSTRUCTION);
 		ability.setIconShowing(false);
 		return null;
 	}
 
 	@Override
 	public Void accept(final CAbilityBuildInProgress ability) {
-		ability.setDisabled(false);
+		ability.setDisabled(false, CAbilityDisableType.CONSTRUCTION);
 		ability.setIconShowing(false);
 		return null;
 	}
 
 	@Override
 	public Void accept(final CAbilityQueue ability) {
-		ability.setDisabled(true);
+		ability.setDisabled(true, CAbilityDisableType.CONSTRUCTION);
 		ability.setIconShowing(false);
 		return null;
 	}
 
 	@Override
 	public Void accept(final CAbilitySellItems ability) {
-		ability.setDisabled(true);
+		ability.setDisabled(true, CAbilityDisableType.CONSTRUCTION);
 		ability.setIconShowing(false);
 		return null;
 	}
 
 	@Override
 	public Void accept(final CAbilityUpgrade ability) {
-		ability.setDisabled(true);
+		ability.setDisabled(true, CAbilityDisableType.CONSTRUCTION);
 		ability.setIconShowing(false);
 		return null;
 	}
 
 	@Override
 	public Void accept(final CAbilityReviveHero ability) {
-		ability.setDisabled(true);
+		ability.setDisabled(true, CAbilityDisableType.CONSTRUCTION);
+		ability.setIconShowing(false);
+		return null;
+	}
+
+	@Override
+	public Void accept(final AbilityBuilderActiveAbility ability) {
+		ability.setDisabled(true, CAbilityDisableType.CONSTRUCTION);
 		ability.setIconShowing(false);
 		return null;
 	}
 
 	@Override
 	public Void accept(final GenericSingleIconActiveAbility ability) {
-		ability.setDisabled(true);
+		ability.setDisabled(true, CAbilityDisableType.CONSTRUCTION);
 		ability.setIconShowing(false);
 		return null;
 	}
 
 	@Override
+	public Void accept(final GenericSingleIconPassiveAbility ability) {
+		if (!ability.isUniversal()) {
+			ability.setDisabled(true, CAbilityDisableType.CONSTRUCTION);
+			ability.setIconShowing(false);
+		}
+		return null;
+	}
+
+	@Override
 	public Void accept(final CAbilityRoot ability) {
-		ability.setDisabled(true);
+		ability.setDisabled(true, CAbilityDisableType.CONSTRUCTION);
 		ability.setIconShowing(false);
 		return null;
 	}
 
 	@Override
 	public Void accept(final CAbilityRally ability) {
-		ability.setDisabled(false);
+		ability.setDisabled(false, CAbilityDisableType.CONSTRUCTION);
 		ability.setIconShowing(false);
 		return null;
 	}
 
 	@Override
 	public Void accept(final GenericNoIconAbility ability) {
-		ability.setDisabled(true);
+		ability.setDisabled(true, CAbilityDisableType.CONSTRUCTION);
 		ability.setIconShowing(false);
 		return null;
 	}
@@ -176,22 +195,22 @@ public class AbilityDisableWhileUpgradingVisitor implements CAbilityVisitor<Void
 
 	@Override
 	public Void accept(final CAbilityNeutralBuilding ability) {
-		ability.setDisabled(true);
+		ability.setDisabled(true, CAbilityDisableType.CONSTRUCTION);
 		ability.setIconShowing(false);
 		return null;
 	}
 
 	@Override
 	public Void accept(final CAbilityHero ability) {
-		ability.setDisabled(true);
+		ability.setDisabled(true, CAbilityDisableType.CONSTRUCTION);
 		ability.setIconShowing(false);
 		return null;
 	}
 
 	@Override
 	public Void accept(final CAbilityJass ability) {
-		final boolean enabledWhileUpgrading = ability.getType().isEnabledWhileUpgrading();
-		ability.setDisabled(!enabledWhileUpgrading);
+		final boolean enabledWhileUpgrading = ability.isEnabledWhileUpgrading();
+		ability.setDisabled(!enabledWhileUpgrading, CAbilityDisableType.CONSTRUCTION);
 		ability.setIconShowing(enabledWhileUpgrading);
 		return null;
 	}

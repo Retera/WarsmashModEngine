@@ -34,6 +34,10 @@ public abstract class AbstractUIFrame extends AbstractRenderableFrame implements
 		this.childFrames.remove(childFrame);
 	}
 
+	public ListIterator<UIFrame> getChildIterator() {
+		return this.childFrames.listIterator(this.childFrames.size());
+	}
+
 	public AbstractUIFrame(final String name, final UIFrame parent) {
 		super(name, parent);
 	}
@@ -52,8 +56,8 @@ public abstract class AbstractUIFrame extends AbstractRenderableFrame implements
 
 	@Override
 	protected void innerPositionBounds(final GameUI gameUI, final Viewport viewport) {
-		for (final UIFrame childFrame : this.childFrames) {
-			childFrame.positionBounds(gameUI, viewport);
+		for (int i = 0; i < this.childFrames.size(); i++) {
+			this.childFrames.get(i).positionBounds(gameUI, viewport);
 		}
 	}
 

@@ -135,6 +135,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTargetVisitor;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTargetVisitorJass;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.thirdperson.CAbilityPlayerPawn;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.CAbilityType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.jass.CAbilityTypeJassDefinition;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.jass.CodeJassValueBehaviorExpr;
@@ -3018,6 +3019,24 @@ public class Jass2 {
 						}
 						return new HandleJassValue(unitType, newUnit);
 					});
+			jassProgramVisitor.getJassNativeManager().createNative("BlzShowTerrain", new JassFunction() {
+				@Override
+				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+						final TriggerExecutionScope triggerScope) {
+					final boolean show = arguments.get(0).visit(BooleanJassValueVisitor.getInstance());
+					war3MapViewer.setTerrainVisible(show);
+					return null;
+				}
+			});
+			jassProgramVisitor.getJassNativeManager().createNative("SetSkyModel", new JassFunction() {
+				@Override
+				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+						final TriggerExecutionScope triggerScope) {
+					final String modelPath = arguments.get(0).visit(StringJassValueVisitor.getInstance());
+					war3MapViewer.setSkyModel(modelPath);
+					return null;
+				}
+			});
 
 			jassProgramVisitor.getJassNativeManager().createNative("KillUnit",
 					(arguments, globalScope, triggerScope) -> {
@@ -3073,6 +3092,20 @@ public class Jass2 {
 						if (whichUnit != null) {
 							whichUnit.setY(positionX, this.simulation.getWorldCollision(),
 									this.simulation.getRegionManager());
+						}
+						return null;
+					});
+			jassProgramVisitor.getJassNativeManager().createNative("SetPlayerPawnZ",
+					(arguments, globalScope, triggerScope) -> {
+						final CUnit whichUnit = nullable(arguments, 0, ObjectJassValueVisitor.getInstance());
+						final float positionX = arguments.get(1).visit(RealJassValueVisitor.getInstance()).floatValue();
+						if (whichUnit != null) {
+							CAbilityPlayerPawn playerPawn = whichUnit.getFirstAbilityOfType(CAbilityPlayerPawn.class);
+							if (playerPawn != null) {
+								playerPawn.setZ(positionX * 2);
+								RenderUnit renderPeer = war3MapViewer.getRenderPeer(whichUnit);
+								renderPeer.location[2] = positionX * 2;
+							}
 						}
 						return null;
 					});

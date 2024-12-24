@@ -84,6 +84,7 @@ public class CAbilityPlayerPawn extends AbstractGenericNoIconAbility implements 
 	public void onAdd(final CSimulation game, final CUnit unit) {
 		this.behaviorPlayerPawn = new CBehaviorPlayerPawn(unit, this);
 		unit.setDefaultBehavior(this.behaviorPlayerPawn);
+		game.setupPlayerPawn(unit, this, behaviorPlayerPawn);
 	}
 
 	@Override

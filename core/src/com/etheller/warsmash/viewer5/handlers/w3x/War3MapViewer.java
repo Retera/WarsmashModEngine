@@ -83,6 +83,8 @@ import com.etheller.warsmash.viewer5.gl.WebGL;
 import com.etheller.warsmash.viewer5.handlers.AbstractMdxModelViewer;
 import com.etheller.warsmash.viewer5.handlers.mdx.Attachment;
 import com.etheller.warsmash.viewer5.handlers.mdx.Geoset;
+import com.etheller.warsmash.viewer5.handlers.mdx.Layer;
+import com.etheller.warsmash.viewer5.handlers.mdx.Material;
 import com.etheller.warsmash.viewer5.handlers.mdx.MdxComplexInstance;
 import com.etheller.warsmash.viewer5.handlers.mdx.MdxHandler;
 import com.etheller.warsmash.viewer5.handlers.mdx.MdxHandler.ShaderEnvironmentType;
@@ -115,7 +117,6 @@ import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.RenderProjectile;
 import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.RenderShadowType;
 import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.RenderSpellEffect;
 import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.RenderUnit;
-import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.RenderUnitReplaceableTex;
 import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.RenderUnitType;
 import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.RenderUnitTypeData;
 import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.RenderWidget;
@@ -134,6 +135,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidgetFilterFunction;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.thirdperson.CAbilityPlayerPawn;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.thirdperson.CBehaviorPlayerPawn;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.CUnitAttackInstant;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.CUnitAttackListener;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.CUnitAttackMissile;
@@ -152,7 +154,6 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.vision.CPla
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.timers.CTimer;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CEffectType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.unit.CUnitTypeJass;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.ResourceType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.SimulationRenderComponent;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.SimulationRenderComponentLightning;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.SimulationRenderComponentLightningMovable;
@@ -795,6 +796,36 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 		final RenderDoodad renderDoodad = new RenderDoodad(this, model, row, location, scale, facingRadians, maxPitch,
 				maxRoll, defScale, doodadVariation);
 		renderDoodad.instance.uniformScale(defScale);
+		if ((model.name != null && (model.name.toLowerCase().contains("deathknightnecropolis")||model.name.toLowerCase().contains("pirateship")))) {
+			// Third person
+			for (final Geoset geoset : model.getGeosets()) {
+				final MdlxExtent extent = geoset.mdlxGeoset.extent;
+				final Bounds bounds = new Bounds();
+				float[] customMin = new float[3];
+				Arrays.fill(customMin, Float.MAX_VALUE);
+				float[] customMax = new float[3];
+				Arrays.fill(customMax, -Float.MAX_VALUE);
+				float[] vertices = geoset.mdlxGeoset.getVertices();
+				for(int i = 0; i < vertices.length; i+=3) {
+					for(int j = 0; j < 3; j++) {
+						customMin[j] = Math.min(customMin[j], vertices[i + j]);
+						customMax[j] = Math.max(customMax[j], vertices[i + j]);
+					}
+				}
+//				bounds.fromExtents(extent.getMin(), extent.getMax(), extent.getBoundsRadius());
+				bounds.fromExtents(customMin, customMax, 0);
+				final BoundingBox geosetBoundingBox = bounds.getBoundingBox();
+				final Rectangle geosetRotatedBounds = getRotatedBoundingBox(location[0], location[1], scale,
+						facingRadians, geosetBoundingBox);
+				geosetRotatedBounds.x -= geosetRotatedBounds.width * 1;
+				geosetRotatedBounds.y -= geosetRotatedBounds.height * 1;
+				geosetRotatedBounds.width *= 3;
+				geosetRotatedBounds.height *= 3;
+				final CollidableDoodadComponent collidableComponent = new CollidableDoodadComponent(
+						(MdxComplexInstance) renderDoodad.instance, geoset, geosetRotatedBounds, geosetBoundingBox);
+				this.walkableComponentTree.add(collidableComponent, geosetRotatedBounds);
+			}
+		}
 		this.doodads.add(renderDoodad);
 		this.decals.add(renderDoodad);
 	}
@@ -1119,10 +1150,6 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 				if (buildingUberSplatDynamicIngame != null) {
 					renderUnit.uberSplat = buildingUberSplatDynamicIngame;
 				}
-				if (renderUnit.isPlayerPawn()) {
-					simulationUnit.getFirstAbilityOfType(CAbilityPlayerPawn.class).getBehaviorPlayerPawn()
-							.setViewerWorldAccess(this);
-				}
 				return simulationUnit;
 
 			}
@@ -1264,6 +1291,18 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 			worldScene.startFrame();
 			if (DEBUG_DEPTH > 0) {
 				worldScene.renderOpaque(this.dynamicShadowManager, this.webGL);
+			}
+			if (skyInstance != null) {
+				skyInstance.setLocation(worldScene.camera.location);
+				if(skyInstance.dirty) {
+					skyInstance.wasDirty = true;
+					skyInstance.updateAnimations(Gdx.graphics.getDeltaTime());
+					skyInstance.recalculateTransformation();
+				}
+				skyInstance.scene = worldScene;
+				skyInstance.renderOpaque(worldScene.camera.viewProjectionMatrix);
+				skyInstance.renderTranslucent();
+				skyInstance.scene = null;
 			}
 			if(terrainVisible) {
 				if (DEBUG_DEPTH > 1) {
@@ -1736,6 +1775,8 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 
 	private RenderUnitTypeData renderUnitTypeData;
 	private RenderItemTypeData renderItemTypeData;
+
+	public ModelInstance skyInstance;
 
 	/**
 	 * Returns a power of two size for the given target capacity.
@@ -2217,7 +2258,7 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 
 		private QuadtreeIntersectorFindsHighestWalkableComponent reset(final float x, final float y) {
 			this.z = -Float.MAX_VALUE;
-			this.ray.set(x, y, 40960, 0, 0, -81920);
+			this.ray.set(x, y, 2180, 0, 0, -81920);
 			this.highestInstance = null;
 			return this;
 		}
@@ -3795,6 +3836,12 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 								}
 
 							}
+							
+							public void setupPlayerPawn(CUnit unit, CAbilityPlayerPawn abilityPlayerPawn, CBehaviorPlayerPawn behaviorPlayerPawn) {
+								RenderUnit renderUnit = getRenderPeer(unit);
+								behaviorPlayerPawn.setViewerWorldAccess(War3MapViewer.this);
+								renderUnit.setupPlayerPawn(abilityPlayerPawn);
+							}
 						}, War3MapViewer.this.terrain.pathingGrid, War3MapViewer.this.terrain.getEntireMap(),
 						War3MapViewer.this.seededRandom, War3MapViewer.this.commandErrorListener);
 			});
@@ -3864,5 +3911,20 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 			this.worldScene.fogSettings.start = this.defaultFogSettings.start;
 			this.worldScene.fogSettings.end = this.defaultFogSettings.end;
 		}
+	}
+
+	public void setSkyModel(String modelPath) {
+		MdxModel loadModelMdx = loadModelMdx(modelPath);
+		loadModelMdx.lights.clear();
+		for(Material material: loadModelMdx.materials) {
+			for(Layer layer: material.layers) {
+				layer.unshaded = 1;
+			}
+		}
+		skyInstance = loadModelMdx.addInstance();
+		skyInstance.setScene(worldScene);
+		((MdxComplexInstance)skyInstance).setSequence(0);
+		((MdxComplexInstance)skyInstance).updateAnimations(0.5f);
+		skyInstance.detach();
 	}
 }

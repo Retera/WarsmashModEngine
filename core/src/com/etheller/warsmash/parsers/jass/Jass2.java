@@ -702,6 +702,15 @@ public class Jass2 {
 					}
 				}
 			});
+			jassProgramVisitor.getJassNativeManager().createNative("BlzShowTerrain", new JassFunction() {
+				@Override
+				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+						final TriggerExecutionScope triggerScope) {
+					final boolean show = arguments.get(0).visit(BooleanJassValueVisitor.getInstance());
+					war3MapViewer.setTerrainVisible(show);
+					return null;
+				}
+			});
 			jassProgramVisitor.getJassNativeManager().createNative("WarsmashGetAbilityTypeId", new JassFunction() {
 
 				@Override
@@ -1650,13 +1659,12 @@ public class Jass2 {
 						final TriggerExecutionScope triggerScope) {
 					final List<CPlayerJass> force = arguments.get(0)
 							.visit(ObjectJassValueVisitor.<List<CPlayerJass>>getInstance());
-					final CPlayerJass player = arguments.get(1)
-							.visit(ObjectJassValueVisitor.<CPlayerJass>getInstance());
+					final CPlayerJass player = nullable(arguments,1,ObjectJassValueVisitor.<CPlayerJass>getInstance());
 					final TriggerBooleanExpression filter = nullable(arguments, 2,
 							ObjectJassValueVisitor.<TriggerBooleanExpression>getInstance());
 					for (int i = 0; i < WarsmashConstants.MAX_PLAYERS; i++) {
 						final CPlayerJass jassPlayer = CommonEnvironment.this.simulation.getPlayer(i);
-						if (player.hasAlliance(i, CAllianceType.PASSIVE)) {
+						if (player != null && player.hasAlliance(i, CAllianceType.PASSIVE)) {
 							if ((filter == null) || filter.evaluate(globalScope,
 									CommonTriggerExecutionScope.filterScope(triggerScope, jassPlayer))) {
 								force.add(jassPlayer);
@@ -2237,7 +2245,9 @@ public class Jass2 {
 						final TriggerExecutionScope triggerScope) {
 					final CUnit unit = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());
 					final double range = arguments.get(1).visit(RealJassValueVisitor.getInstance());
-					unit.setAcquisitionRange((float) range);
+					if(unit!=null) {
+						unit.setAcquisitionRange((float) range);
+					}
 					return null;
 				}
 			});
@@ -2913,6 +2923,9 @@ public class Jass2 {
 						final TriggerExecutionScope triggerScope) {
 					final CUnit whichUnit = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());
 					final CUnitTypeJass whichUnitType = arguments.get(1).visit(ObjectJassValueVisitor.getInstance());
+					if(whichUnit==null) {
+						return BooleanJassValue.FALSE;
+					}
 					return BooleanJassValue.of(whichUnit.isUnitType(whichUnitType));
 				}
 			});
@@ -3232,6 +3245,9 @@ public class Jass2 {
 						final TriggerExecutionScope triggerScope) {
 					final Trigger whichTrigger = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());
 					final CUnit whichWidget = arguments.get(1).visit(ObjectJassValueVisitor.getInstance());
+					if(whichWidget==null) {
+						return new HandleJassValue(eventType,RemovableTriggerEvent.DO_NOTHING);
+					}
 					final JassGameEventsWar3 whichPlayerEvent = arguments.get(2)
 							.visit(ObjectJassValueVisitor.getInstance());
 					return new HandleJassValue(eventType,
@@ -3255,6 +3271,7 @@ public class Jass2 {
 						final TriggerExecutionScope triggerScope) {
 					final CUnit unit = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());
 					final boolean flag = arguments.get(1).visit(BooleanJassValueVisitor.getInstance());
+					if(unit!=null)
 					unit.setPaused(flag);
 					return null;
 				}
@@ -3467,7 +3484,7 @@ public class Jass2 {
 						final TriggerExecutionScope triggerScope) {
 					final double time = arguments.get(0).visit(RealJassValueVisitor.getInstance());
 					if (time != 0) {
-						throw new JassException(globalScope, "Needs to sleep " + time, null);
+//						throw new JassException(globalScope, "Needs to sleep " + time, null);
 					}
 					return null;
 				}
@@ -3570,11 +3587,13 @@ public class Jass2 {
 						final TriggerExecutionScope triggerScope) {
 					final CUnit whichUnit = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());
 					final CItem whichItem = arguments.get(1).visit(ObjectJassValueVisitor.getInstance());
-					final CAbilityInventory inventoryData = whichUnit.getInventoryData();
-					if (inventoryData != null) {
-						inventoryData.giveItem(CommonEnvironment.this.simulation, whichUnit, whichItem, false);
+					if (whichUnit!=null) {
+						final CAbilityInventory inventoryData = whichUnit.getInventoryData();
+						if (inventoryData != null) {
+							BooleanJassValue.of(inventoryData.giveItem(CommonEnvironment.this.simulation, whichUnit, whichItem, false) != -1);
+						}
 					}
-					return null;
+					return BooleanJassValue.FALSE;
 				}
 			});
 			jassProgramVisitor.getJassNativeManager().createNative("UnitAddAbility", new JassFunction() {
@@ -3712,6 +3731,7 @@ public class Jass2 {
 						final TriggerExecutionScope triggerScope) {
 					final CUnit whichUnit = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());
 					final boolean show = arguments.get(1).visit(BooleanJassValueVisitor.getInstance());
+					if(whichUnit!=null)
 					whichUnit.setHidden(!show);
 					return null;
 				}
@@ -3730,8 +3750,10 @@ public class Jass2 {
 				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
 						final TriggerExecutionScope triggerScope) {
 					final CUnit whichUnit = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());
-					CommonEnvironment.this.simulation.removeUnit(whichUnit);
-					meleeUI.removedUnit(whichUnit);
+					if (whichUnit!=null) {
+						CommonEnvironment.this.simulation.removeUnit(whichUnit);
+						meleeUI.removedUnit(whichUnit);
+					}
 					return null;
 				}
 			});
@@ -6197,6 +6219,9 @@ public class Jass2 {
 			public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
 					final TriggerExecutionScope triggerScope) {
 				final int playerIndex = arguments.get(0).visit(IntegerJassValueVisitor.getInstance());
+				if(playerIndex < 0 || playerIndex >= WarsmashConstants.MAX_PLAYERS) {
+					return new HandleJassValue(playerType, playerAPI.getPlayer(WarsmashConstants.MAX_PLAYERS-2));
+				}
 				return new HandleJassValue(playerType, playerAPI.getPlayer(playerIndex));
 			}
 		});

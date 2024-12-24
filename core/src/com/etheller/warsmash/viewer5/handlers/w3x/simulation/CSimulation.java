@@ -282,6 +282,9 @@ public class CSimulation implements CPlayerAPI {
 	public CUnit createUnit(final War3ID typeId, final int playerIndex, final float x, final float y,
 			final float facing) {
 		final CUnit createdUnit = this.simulationRenderController.createUnit(this, typeId, playerIndex, x, y, facing);
+		if(createdUnit==null) {
+			return null;
+		}
 		createdUnit.performDefaultBehavior(this);
 		setupCreatedUnit(createdUnit);
 		return createdUnit;
@@ -290,6 +293,9 @@ public class CSimulation implements CPlayerAPI {
 	public CUnit createUnitSimple(final War3ID typeId, final int playerIndex, final float x, final float y,
 			final float facing) {
 		final CUnit newUnit = createUnit(typeId, playerIndex, x, y, facing);
+		if(newUnit==null) {
+			return null;
+		}
 		final CPlayer player = getPlayer(playerIndex);
 		final CUnitType newUnitType = newUnit.getUnitType();
 		final int foodUsed = newUnitType.getFoodUsed();

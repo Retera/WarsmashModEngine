@@ -1525,7 +1525,7 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 	}
 
 	private MdxModel getDoodadModel(final int doodadVariation, final MutableGameObject row) {
-		String file = row.readSLKTag("file");
+		String file = row.readSLKTag("file").replace("/", "\\");
 		final int numVar = row.readSLKTagInt("numVar");
 
 		if (file.endsWith(".mdx") || file.endsWith(".mdl")) {
@@ -1534,30 +1534,36 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 
 		String fileVar = file;
 
-		file += ".mdx";
+		String fileMdx =  file + ".mdx";
+		String fileMdl =  file + ".mdl";
 
 		if (numVar > 1) {
 			fileVar += Math.min(doodadVariation, numVar - 1);
 		}
 
-		fileVar += ".mdx";
+		String fileVarMdx = fileVar + ".mdx";
+		String fileVarMdl = fileVar + ".mdl";
 		// First see if the model is local.
 		// Doodads referring to local models may have invalid variations, so if the
 		// variation doesn't exist, try without a variation.
 
 		String path;
-		if (this.mapMpq.has(fileVar)) {
-			path = fileVar;
+		if (this.mapMpq.has(fileVarMdx)) {
+			path = fileVarMdx;
+		} else if (this.mapMpq.has(fileVarMdl)) {
+			path = fileVarMdl;
+		} else if (this.mapMpq.has(fileMdx)) {
+			path = fileMdx;
 		}
 		else {
-			path = file;
+			path = fileMdl;
 		}
 		MdxModel model;
 		if (this.mapMpq.has(path)) {
 			model = (MdxModel) load(path, this.mapPathSolver, this.solverParams);
 		}
 		else {
-			model = (MdxModel) load(fileVar, this.mapPathSolver, this.solverParams);
+			model = (MdxModel) load(fileVarMdx, this.mapPathSolver, this.solverParams);
 		}
 		return model;
 	}
@@ -2090,11 +2096,13 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 			if (DEBUG_DEPTH > 0) {
 				worldScene.renderOpaque(this.dynamicShadowManager, this.webGL);
 			}
-			if (DEBUG_DEPTH > 1) {
-				this.terrain.renderGround(this.dynamicShadowManager);
-			}
-			if (DEBUG_DEPTH > 2) {
-				this.terrain.renderCliffs();
+			if(terrainVisible) {
+				if (DEBUG_DEPTH > 1) {
+					this.terrain.renderGround(this.dynamicShadowManager);
+				}
+				if (DEBUG_DEPTH > 2) {
+					this.terrain.renderCliffs();
+				}
 			}
 			if (DEBUG_DEPTH > 3) {
 				worldScene.renderOpaque();
@@ -2554,6 +2562,8 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 	private Color selectionCircleColorEnemy;
 
 	private int localPlayerServerSlot;
+
+	private boolean terrainVisible = true;
 
 	/**
 	 * Returns a power of two size for the given target capacity.
@@ -3288,8 +3298,9 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 		return loadModelMdx(this.dataSource, this, path, this.mapPathSolver, this.solverParams);
 	}
 
-	public static MdxModel loadModelMdx(final DataSource dataSource, final ModelViewer modelViewer, final String path,
+	public static MdxModel loadModelMdx(final DataSource dataSource, final ModelViewer modelViewer, String path,
 			final PathSolver pathSolver, final Object solverParams) {
+		path = path.replace("/", "\\");
 		final String mdxPath = mdx(path);
 		if (dataSource.has(mdxPath)) {
 			return (MdxModel) modelViewer.load(mdxPath, pathSolver, solverParams);
@@ -3361,5 +3372,10 @@ public class War3MapViewer extends AbstractMdxModelViewer {
 
 	public CPlayerFogOfWar getFogOfWar() {
 		return this.simulation.getPlayer(this.localPlayerIndex).getFogOfWar();
+	}
+
+	public void setTerrainVisible(boolean show) {
+		this.terrainVisible = show;
+		
 	}
 }

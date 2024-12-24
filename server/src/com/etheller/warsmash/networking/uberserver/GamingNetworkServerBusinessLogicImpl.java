@@ -289,7 +289,7 @@ public class GamingNetworkServerBusinessLogicImpl {
 	}
 
 	private void sendSessionToDefaultChannel(final long sessionToken,
-			final GamingNetworkServerToClientListener connectionContext, final SessionImpl session) {
+			final GamingNetworkClientConnectionContext connectionContext, final SessionImpl session) {
 		if (session.lastActiveChatChannel != null) {
 			joinChannel(sessionToken, session.lastActiveChatChannel, connectionContext);
 		}

@@ -321,7 +321,13 @@ public class CAbilityData {
 			if (gameObject == null) {
 				return null;
 			}
-			final War3ID code = War3ID.fromString(gameObject.readSLKTag("code"));
+			String readSLKTag = gameObject.readSLKTag("code");
+			final War3ID code;
+			if (readSLKTag.length() == 4) {
+				code = War3ID.fromString(readSLKTag);
+			} else {
+				code = War3ID.fromString(gameObject.getId());
+			}
 			final CAbilityTypeDefinition abilityTypeDefinition = this.codeToAbilityTypeDefinition.get(code);
 			if (abilityTypeDefinition != null) {
 				abilityType = abilityTypeDefinition.createAbilityType(alias, gameObject);

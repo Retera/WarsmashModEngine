@@ -210,7 +210,8 @@ public class WarsmashGdxMapScreen implements InputProcessor, Screen {
 //		pawnComplexInstance.setReplaceableTexture(6, "Creature\\HighElf\\BloodElfMaleHair.blp");
 //		pawnComplexInstance.setReplaceableTexture(11, "Creature\\HighElf\\BloodElfFemaleWarrior.blp");
 //		pawnComplexInstance.setUniformScale(50.0f);
-		this.meleeUI = new MeleeToggleUI(baseMeleeUI, Arrays.asList(baseMeleeUI, thirdPersonUI));
+		MeleeToggleUI toggleUI = new MeleeToggleUI(baseMeleeUI, Arrays.asList(baseMeleeUI, thirdPersonUI));
+		this.meleeUI = toggleUI;
 		this.viewer.getCommandErrorListener().setDelegate(this.meleeUI);
 		final ModelInstance libgdxContentInstance = new LibGDXContentLayerModel(null, this.viewer, "",
 				this.viewer.mapPathSolver, "").addInstance();

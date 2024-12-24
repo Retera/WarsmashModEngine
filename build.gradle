@@ -75,7 +75,7 @@ project(":core") {
         api "com.google.guava:guava:23.5-jre"
         api "org.apache.commons:commons-compress:1.20"
         api "net.nikr:dds:1.0.0"
-        api files(fileTree(dir:'../jars', includes: ['blp-iio-plugin.jar','luaj-jse-3.0.2-repackaged-source.jar']))
+        api files(fileTree(dir:'../jars', includes: ['blp-iio-plugin.jar','luaj-jse-3.0.2-repackaged-source.jar', 'gson-2.10.jar']))
     }
 }
 

@@ -162,7 +162,7 @@ public interface RenderWidget {
 		}
 
 		@Override
-		public void playAnimation(final boolean force, final PrimaryTag animationName,
+		public boolean playAnimation(final boolean force, final PrimaryTag animationName,
 				final EnumSet<SecondaryTag> secondaryAnimationTags, final float speedRatio,
 				final boolean allowRarityVariations) {
 			this.animationQueue.clear();

@@ -14,6 +14,8 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.thirdperson.CAbilityPlayerPawn;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehavior;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehaviorCategory;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehaviorVisitor;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.OrderIds;
 
 public class CBehaviorPlayerPawn implements CBehavior {
@@ -267,4 +269,19 @@ public class CBehaviorPlayerPawn implements CBehavior {
 	}
 
 	public static boolean HACKON = false;
+
+	@Override
+	public boolean interruptable() {
+		return true;
+	}
+
+	@Override
+	public CBehaviorCategory getBehaviorCategory() {
+		return CBehaviorCategory.MOVEMENT;
+	}
+
+	@Override
+	public <T> T visit(CBehaviorVisitor<T> visitor) {
+		return visitor.accept(this);
+	}
 }

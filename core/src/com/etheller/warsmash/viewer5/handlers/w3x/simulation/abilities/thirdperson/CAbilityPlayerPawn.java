@@ -1,6 +1,7 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.thirdperson;
 
 import com.badlogic.gdx.math.Vector3;
+import com.etheller.warsmash.units.GameObject;
 import com.etheller.warsmash.units.manager.MutableObjectData.MutableGameObject;
 import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.util.WarsmashConstants;
@@ -23,7 +24,7 @@ public class CAbilityPlayerPawn extends AbstractGenericNoIconAbility implements 
 	private static final Vector3 tempVec = new Vector3();
 
 	public CAbilityPlayerPawn(final int handleId, final War3ID alias) {
-		super(handleId, alias);
+		super(handleId, alias, alias);
 	}
 
 	@Override
@@ -167,9 +168,9 @@ public class CAbilityPlayerPawn extends AbstractGenericNoIconAbility implements 
 	public CBehaviorPlayerPawn getBehaviorPlayerPawn() {
 		return this.behaviorPlayerPawn;
 	}
-
+	
 	@Override
-	public void populate(final MutableGameObject worldEditorAbility, final int level) {
+	public void populate(GameObject worldEditorAbility, int level) {
 	}
 
 	public float getRenderMoveSpeed() {

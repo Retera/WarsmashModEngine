@@ -669,7 +669,6 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 	 */
 	public void loadAfterUI() throws IOException {
 		if (this.unitsAndItemsLoaded) {
-			loadUnitsAndItems(this.allObjectData, this.lastLoadedMapInformation);
 		}
 		else {
 			throw new IllegalStateException("transcription of JS has not loaded a map and has no JS async promises");
@@ -3225,6 +3224,11 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 									War3MapViewer.this.walkableObjectsTree.remove(
 											(MdxComplexInstance) renderPeer.instance, renderPeer.walkableBounds);
 								}
+								for (final CollidableDoodadComponent component : renderPeer.getCollidableComponents()) {
+									War3MapViewer.this.walkableComponentTree.remove(component,
+											component.getGeosetRotatedBounds());
+								}
+
 							}
 
 							@Override
@@ -3796,7 +3800,12 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 			});
 
 			this.loadMapTasks.add(() -> {
+				Rectangle entireMap = terrain.getEntireMap();
 				War3MapViewer.this.walkableObjectsTree = new Quadtree<>(War3MapViewer.this.terrain.getEntireMap());
+				final Vector2 center = entireMap.getCenter(mousePosHeap);
+				walkableComponentTree = new Quadtree<>(new Rectangle(center.x - (entireMap.getWidth()),
+						center.y - (entireMap.getHeight()), (entireMap.getWidth() * 2), (entireMap.getHeight() * 2)));
+
 				if (War3MapViewer.this.doodadsAndDestructiblesLoaded) {
 					loadDoodadsAndDestructibles(War3MapViewer.this.allObjectData, w3iFile);
 				}
@@ -3812,6 +3821,9 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 
 			this.loadMapTasks.add(() -> {
 				War3MapViewer.this.terrain.createWaves();
+			});
+			this.loadMapTasks.add(() -> {
+				loadUnitsAndItems(allObjectData, lastLoadedMapInformation);
 			});
 
 			this.startingTaskCount = this.loadMapTasks.size();

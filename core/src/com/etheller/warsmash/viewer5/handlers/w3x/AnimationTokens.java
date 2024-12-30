@@ -72,9 +72,7 @@ public class AnimationTokens {
 		VICTORY,
 		WORK,
 		WOUNDED,
-		UPGRADE,
-		ATTACKUNARMED,
-		READYUNARMED;
+		UPGRADE;
 
 		public static SecondaryTag fromCount(final int count) {
 			switch (count) {

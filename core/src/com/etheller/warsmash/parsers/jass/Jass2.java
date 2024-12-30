@@ -3102,9 +3102,9 @@ public class Jass2 {
 						if (whichUnit != null) {
 							CAbilityPlayerPawn playerPawn = whichUnit.getFirstAbilityOfType(CAbilityPlayerPawn.class);
 							if (playerPawn != null) {
-								playerPawn.setZ(positionX * 2);
+								playerPawn.setZ(positionX);
 								RenderUnit renderPeer = war3MapViewer.getRenderPeer(whichUnit);
-								renderPeer.location[2] = positionX * 2;
+								renderPeer.location[2] = positionX;
 							}
 						}
 						return null;
@@ -4059,7 +4059,7 @@ public class Jass2 {
 						final int fadeInRate = arguments.get(4).visit(IntegerJassValueVisitor.getInstance());
 						final int fadeOutRate = arguments.get(5).visit(IntegerJassValueVisitor.getInstance());
 						final String eaxSetting = arguments.get(6).visit(StringJassValueVisitor.getInstance());
-						final Sound newSound = UnitSound.createSound(war3MapViewer.mapMpq, fileName);
+						final Sound newSound = UnitSound.createSound(war3MapViewer.mapMpq, fileName.replace("/", "\\"));
 						return new HandleJassValue(soundType,
 								new CSoundFilename(newSound,
 										is3D ? war3MapViewer.worldScene.audioContext
@@ -5364,6 +5364,14 @@ public class Jass2 {
 						war3MapViewer.setBlight(whichLocationX, whichLocationY, radius, addBlight);
 						return null;
 					});
+			jassProgramVisitor.getJassNativeManager().createNative("SetDoodadAnimationRect", (arguments, globalScope, triggerScope) -> {
+				Rectangle rect = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());
+				int typeId = arguments.get(1).visit(IntegerJassValueVisitor.getInstance());
+				String animName = arguments.get(2).visit(StringJassValueVisitor.getInstance());
+				war3MapViewer.setDoodadAnimationRect(rect, typeId, animName);
+				
+				return null;
+			});
 			jassProgramVisitor.getJassNativeManager().createNative("GetLocalPlayer",
 					(arguments, globalScope, triggerScope) -> {
 						return new HandleJassValue(playerType,

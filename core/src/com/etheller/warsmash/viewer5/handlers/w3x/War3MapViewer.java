@@ -208,8 +208,6 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 	public List<TerrainDoodad> terrainDoodads = new ArrayList<>();
 	public boolean doodadsReady;
 	public boolean unitsAndItemsLoaded;
-	public MappedData unitsData = new MappedData();
-	public MappedData unitMetaData = new MappedData();
 	public List<RenderWidget> widgets = new ArrayList<>();
 	public List<RenderUnit> units = new ArrayList<>();
 	public List<RenderEffect> projectiles = new ArrayList<>();
@@ -354,10 +352,6 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 
 		// == when loaded, which is always in our system ==
 		this.unitsAndItemsLoaded = true;
-		this.unitsData.load(unitData.data.toString());
-		this.unitsData.load(unitUi.data.toString());
-		this.unitsData.load(itemData.data.toString());
-		this.unitMetaData.load(unitMetaData.data.toString());
 		// emit loaded
 
 		this.unitAckSoundsTable = new DataTable(worldEditStrings);
@@ -478,7 +472,7 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 		final LightningEffectModelHandler lightningEffectModelHandler = new LightningEffectModelHandler();
 		lightningEffectModelHandler.load(this);
 		for (final String key : this.lightningDataTable.keySet()) {
-			final War3ID typeId = War3ID.fromString(key);
+			final War3ID typeId = War3ID.fromString(key.substring(0, 4));
 			final Element element = this.lightningDataTable.get(key);
 			final String textureFilePath = element.getField("Dir") + "\\" + element.getField("file");
 			final float avgSegLen = element.getFieldFloatValue("AvgSegLen");
@@ -511,8 +505,7 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 			final LoadGenericCallback callback) {
 		if (this.mapMpq == null) {
 			return this.loadGeneric(path, dataType, callback);
-		}
-		else {
+		} else {
 			return this.loadGeneric(path, dataType, callback, this.dataSource);
 		}
 	}
@@ -523,8 +516,7 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 			final File mapFile = new File(mapFilePath);
 			if (mapFile.exists()) {
 				return new War3Map(gameDataSource, mapFile);
-			}
-			else {
+			} else {
 				throw new IllegalArgumentException("No such map file: " + mapFilePath);
 			}
 		}
@@ -541,8 +533,7 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 		try {
 			this.preloadedWTS = Warcraft3MapObjectData.loadWTS(map);
 			return this.preloadedWTS;
-		}
-		catch (final IOException e) {
+		} catch (final IOException e) {
 			throw new RuntimeException(e);
 		}
 	}
@@ -579,8 +570,7 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 					source.setLifeSpanRemaining(duration);
 					target.setLifeSpanRemaining(duration);
 				}
-			}
-			else {
+			} else {
 				source.setLifeSpanRemaining(lightningEffectModel.getDuration());
 				target.setLifeSpanRemaining(lightningEffectModel.getDuration());
 			}
@@ -635,8 +625,7 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 			if ((index != -1) && false) {
 				final MdxNode attachment = renderUnit.instance.getAttachment(index);
 				modelInstance.setParent(attachment);
-			}
-			else {
+			} else {
 				modelInstance.setLocation(renderUnit.location);
 			}
 
@@ -670,8 +659,7 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 	 */
 	public void loadAfterUI() throws IOException {
 		if (this.unitsAndItemsLoaded) {
-		}
-		else {
+		} else {
 			throw new IllegalStateException("transcription of JS has not loaded a map and has no JS async promises");
 		}
 
@@ -751,14 +739,12 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 							pathingTextureImage = TgaFile.readTGA(pathingTexture,
 									this.mapMpq.getResourceAsStream(pathingTexture));
 							this.filePathToPathingMap.put(pathingTexture.toLowerCase(), pathingTextureImage);
-						}
-						catch (final Exception exc) {
+						} catch (final Exception exc) {
 							exc.printStackTrace();
 						}
 					}
 				}
-			}
-			else {
+			} else {
 				pathingTextureImage = null;
 			}
 			if (pathingTextureImage != null) {
@@ -796,31 +782,16 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 		final RenderDoodad renderDoodad = new RenderDoodad(this, model, row, location, scale, facingRadians, maxPitch,
 				maxRoll, defScale, doodadVariation);
 		renderDoodad.instance.uniformScale(defScale);
-		if ((model.name != null && (model.name.toLowerCase().contains("deathknightnecropolis")||model.name.toLowerCase().contains("pirateship")))) {
+		if ((model.name != null && (model.name.toLowerCase().contains("deathknightnecropolis")
+				|| model.name.toLowerCase().contains("pirateship")))) {
 			// Third person
 			for (final Geoset geoset : model.getGeosets()) {
 				final MdlxExtent extent = geoset.mdlxGeoset.extent;
 				final Bounds bounds = new Bounds();
-				float[] customMin = new float[3];
-				Arrays.fill(customMin, Float.MAX_VALUE);
-				float[] customMax = new float[3];
-				Arrays.fill(customMax, -Float.MAX_VALUE);
-				float[] vertices = geoset.mdlxGeoset.getVertices();
-				for(int i = 0; i < vertices.length; i+=3) {
-					for(int j = 0; j < 3; j++) {
-						customMin[j] = Math.min(customMin[j], vertices[i + j]);
-						customMax[j] = Math.max(customMax[j], vertices[i + j]);
-					}
-				}
-//				bounds.fromExtents(extent.getMin(), extent.getMax(), extent.getBoundsRadius());
-				bounds.fromExtents(customMin, customMax, 0);
+				bounds.fromExtents(extent.getMin(), extent.getMax(), extent.getBoundsRadius());
 				final BoundingBox geosetBoundingBox = bounds.getBoundingBox();
 				final Rectangle geosetRotatedBounds = getRotatedBoundingBox(location[0], location[1], scale,
 						facingRadians, geosetBoundingBox);
-				geosetRotatedBounds.x -= geosetRotatedBounds.width * 1;
-				geosetRotatedBounds.y -= geosetRotatedBounds.height * 1;
-				geosetRotatedBounds.width *= 3;
-				geosetRotatedBounds.height *= 3;
 				final CollidableDoodadComponent collidableComponent = new CollidableDoodadComponent(
 						(MdxComplexInstance) renderDoodad.instance, geoset, geosetRotatedBounds, geosetBoundingBox);
 				this.walkableComponentTree.add(collidableComponent, geosetRotatedBounds);
@@ -916,8 +887,7 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 			if (row != null) {
 				createNewDestructable(doodadId, row, doodadVariation, location, facingRadians, lifePercent, scale);
 			}
-		}
-		else {
+		} else {
 			createDoodad(row, doodadVariation, location, facingRadians, scale);
 		}
 	}
@@ -932,8 +902,8 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 
 		String fileVar = file;
 
-		String fileMdx =  file + ".mdx";
-		String fileMdl =  file + ".mdl";
+		String fileMdx = file + ".mdx";
+		String fileMdl = file + ".mdl";
 
 		if (numVar > 1) {
 			fileVar += Math.min(doodadVariation, numVar - 1);
@@ -952,15 +922,13 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 			path = fileVarMdl;
 		} else if (this.mapMpq.has(fileMdx)) {
 			path = fileMdx;
-		}
-		else {
+		} else {
 			path = fileMdl;
 		}
 		MdxModel model;
 		if (this.mapMpq.has(path)) {
 			model = (MdxModel) load(path, this.mapPathSolver, this.solverParams);
-		}
-		else {
+		} else {
 			model = (MdxModel) load(fileVarMdx, this.mapPathSolver, this.solverParams);
 		}
 		return model;
@@ -1066,8 +1034,7 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 		if (sloc.equals(unitId)) {
 			// path = "Objects\\StartLocation\\StartLocation.mdx";
 			this.startLocations[playerIndex] = new Vector2(unitX, unitY);
-		}
-		else {
+		} else {
 			final RenderUnitType renderUnitType = this.renderUnitTypeData.get(unitId);
 			if (renderUnitType == null) {
 				final RenderItemType renderItemType = this.renderItemTypeData.get(unitId);
@@ -1084,12 +1051,10 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 					renderItem.shadow = createUnitShadow(renderItemType.getRenderShadowType(), unitX, unitY);
 					return simulationItem;
 
-				}
-				else {
+				} else {
 					System.err.println("Unknown unit ID: " + unitId);
 				}
-			}
-			else {
+			} else {
 				buildingPathingPixelMap = renderUnitType.getBuildingPathingPixelMap();
 
 				final float angle = (float) Math.toDegrees(unitAngle);
@@ -1100,8 +1065,7 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 				if (!renderUnitType.isAllowCustomTeamColor() || (customTeamColor == -1)) {
 					if (renderUnitType.getTeamColor() != -1) {
 						customTeamColor = renderUnitType.getTeamColor();
-					}
-					else {
+					} else {
 						customTeamColor = this.simulation.getPlayer(playerIndex).getColor();
 					}
 				}
@@ -1113,8 +1077,7 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 				if (texturePath != null) {
 					if (this.unitsReady) {
 						buildingUberSplatDynamicIngame = addUberSplatIngame(unitX, unitY, texturePath, s);
-					}
-					else {
+					} else {
 						if (!this.terrain.splats.containsKey(texturePath)) {
 							this.terrain.splats.put(texturePath, new Splat());
 						}
@@ -1185,16 +1148,14 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 					if (pathingTexture.toLowerCase().endsWith(".tga")) {
 						buildingPathingPixelMap = TgaFile.readTGA(pathingTexture,
 								this.mapMpq.getResourceAsStream(pathingTexture));
-					}
-					else {
+					} else {
 						try (InputStream stream = this.mapMpq.getResourceAsStream(pathingTexture)) {
 							buildingPathingPixelMap = ImageIO.read(stream);
 							System.out.println("LOADING BLP PATHING: " + pathingTexture);
 						}
 					}
 					this.filePathToPathingMap.put(pathingTexture.toLowerCase(), buildingPathingPixelMap);
-				}
-				catch (final Exception exc) {
+				} catch (final Exception exc) {
 					System.err.println("Failure to get pathing: " + exc.getClass() + ":" + exc.getMessage());
 				}
 			}
@@ -1254,8 +1215,7 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 					this.updateTime -= WarsmashConstants.SIMULATION_STEP_TIME;
 					this.simulation.update();
 					this.gameTurnManager.turnCompleted(this.simulation.getGameTurnTick());
-				}
-				else {
+				} else {
 					if (this.updateTime > (WarsmashConstants.SIMULATION_STEP_TIME * 3)) {
 						this.gameTurnManager.framesSkipped(this.updateTime / WarsmashConstants.SIMULATION_STEP_TIME);
 						this.updateTime = 0;
@@ -1294,7 +1254,7 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 			}
 			if (skyInstance != null) {
 				skyInstance.setLocation(worldScene.camera.location);
-				if(skyInstance.dirty) {
+				if (skyInstance.dirty) {
 					skyInstance.wasDirty = true;
 					skyInstance.updateAnimations(Gdx.graphics.getDeltaTime());
 					skyInstance.recalculateTransformation();
@@ -1304,7 +1264,7 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 				skyInstance.renderTranslucent();
 				skyInstance.scene = null;
 			}
-			if(terrainVisible) {
+			if (terrainVisible) {
 				if (DEBUG_DEPTH > 1) {
 					this.terrain.renderGround(this.dynamicShadowManager);
 				}
@@ -1392,8 +1352,7 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 					final CPlayer localPlayer = this.simulation.getPlayer(this.localPlayerIndex);
 					if (!localPlayer.hasAlliance(selectedUnitPlayerIndex, CAllianceType.PASSIVE)) {
 						allyKey = "e:";
-					}
-					else if (localPlayer.hasAlliance(selectedUnitPlayerIndex, CAllianceType.SHARED_CONTROL)) {
+					} else if (localPlayer.hasAlliance(selectedUnitPlayerIndex, CAllianceType.SHARED_CONTROL)) {
 						allyKey = "f:";
 					}
 				}
@@ -1411,8 +1370,7 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 					if (unit.getInstance().hidden()) {
 						splatInstance.hide();
 					}
-				}
-				else {
+				} else {
 					if (!splats.containsKey(path)) {
 						splats.put(path, new Splat());
 					}
@@ -1512,8 +1470,7 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 				final CPlayer localPlayer = this.simulation.getPlayer(this.localPlayerIndex);
 				if (!localPlayer.hasAlliance(selectedUnitPlayerIndex, CAllianceType.PASSIVE)) {
 					allyKey = "e:";
-				}
-				else if (localPlayer.hasAlliance(selectedUnitPlayerIndex, CAllianceType.SHARED_CONTROL)) {
+				} else if (localPlayer.hasAlliance(selectedUnitPlayerIndex, CAllianceType.SHARED_CONTROL)) {
 					allyKey = "f:";
 				}
 			}
@@ -1531,8 +1488,7 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 				if (unit.getInstance().hidden()) {
 					splatInstance.hide();
 				}
-			}
-			else {
+			} else {
 				if (!splats.containsKey(path)) {
 					splats.put(path, new Splat());
 				}
@@ -1601,8 +1557,7 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 		if (intersectWithWater) {
 			RenderMathUtils.intersectRayTriangles(gdxRayHeap, this.terrain.softwareWaterAndGroundMesh.vertices,
 					this.terrain.softwareWaterAndGroundMesh.indices, 3, out);
-		}
-		else {
+		} else {
 			RenderMathUtils.intersectRayTriangles(gdxRayHeap, this.terrain.softwareGroundMesh.vertices,
 					this.terrain.softwareGroundMesh.indices, 3, out);
 		}
@@ -1612,8 +1567,7 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 				this.walkableComponentsIntersectionFinder.reset(gdxRayHeap));
 		if (this.walkableComponentsIntersectionFinder.found) {
 			out.set(this.walkableComponentsIntersectionFinder.intersection);
-		}
-		else {
+		} else {
 			final float oldZ = out.z;
 			out.z = Math.max(getWalkableRenderHeight(out.x, out.y), this.terrain.getGroundHeight(out.x, out.y));
 
@@ -1670,8 +1624,7 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 					if (intersectionHeap.z > groundHeight) {
 						if ((entity == null) && !unit.isIntersectedOnMeshAlways()) {
 							entity = unit;
-						}
-						else {
+						} else {
 							if (instance.intersectRayWithMeshSlow(gdxRayHeap, intersectionHeap)) {
 								if (intersectionHeap.z > this.terrain.getGroundHeight(intersectionHeap.x,
 										intersectionHeap.y)) {
@@ -1700,11 +1653,9 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 					stringBuilder.append(line);
 					stringBuilder.append("\n");
 				}
-			}
-			catch (final UnsupportedEncodingException e) {
+			} catch (final UnsupportedEncodingException e) {
 				throw new RuntimeException(e);
-			}
-			catch (final IOException e) {
+			} catch (final IOException e) {
 				throw new RuntimeException(e);
 			}
 			return new MappedData(stringBuilder.toString());
@@ -1724,11 +1675,9 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 					stringBuilder.append(line);
 					stringBuilder.append("\n");
 				}
-			}
-			catch (final UnsupportedEncodingException e) {
+			} catch (final UnsupportedEncodingException e) {
 				throw new RuntimeException(e);
-			}
-			catch (final IOException e) {
+			} catch (final IOException e) {
 				throw new RuntimeException(e);
 			}
 			return stringBuilder.toString();
@@ -1859,8 +1808,7 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 	public SceneLightManager createLightManager(final boolean simple) {
 		if (simple) {
 			return new W3xScenePortraitLightManager(this, this.lightDirection);
-		}
-		else {
+		} else {
 			return new W3xSceneWorldLightManager(this);
 		}
 	}
@@ -1923,7 +1871,8 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 			final float pawnHeight, final Vector3 bestClosestAvailableLocationIfFailed) {
 		final float prevGroundHeight = this.terrain.getGroundHeight(prevLocation.x, prevLocation.y);
 		final float newGroundHeight = this.terrain.getGroundHeight(newLocation.x, newLocation.y);
-		if ((newGroundHeight - prevGroundHeight) > stairsHeight) {
+		if ((prevLocation.z - prevGroundHeight) <= pawnHeight && newLocation.z - newGroundHeight <= pawnHeight
+				&& (newGroundHeight - prevGroundHeight) > stairsHeight) {
 			bestClosestAvailableLocationIfFailed.set(prevLocation);
 			return true;
 		}
@@ -2175,7 +2124,7 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 				final float dx, final float dy, final float dz) {
 			this.intersected = false;
 			this.ray.set(x, y, z, dx, dy, dz);
-			this.lastDist2 = this.ray.direction.len2();
+			this.lastDist2 = dx * dx + dy * dy + dz * dz;
 			return this;
 		}
 
@@ -2424,8 +2373,7 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 			default:
 				throw new IllegalArgumentException("Unsupported effect type: " + effectType);
 			}
-		}
-		else {
+		} else {
 			final BuffUI buffUI = War3MapViewer.this.abilityDataUI.getBuffUI(alias);
 			if (buffUI != null) {
 				switch (effectType) {
@@ -2444,8 +2392,7 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 				default:
 					throw new IllegalArgumentException("Unsupported effect type: " + effectType);
 				}
-			}
-			else {
+			} else {
 				return null;
 			}
 		}
@@ -2478,8 +2425,7 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 			default:
 				throw new IllegalArgumentException("Unsupported effect type: " + effectType);
 			}
-		}
-		else {
+		} else {
 			final BuffUI buffUI = War3MapViewer.this.abilityDataUI.getBuffUI(alias);
 			if (buffUI != null) {
 				switch (effectType) {
@@ -2498,8 +2444,7 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 				default:
 					throw new IllegalArgumentException("Unsupported effect type: " + effectType);
 				}
-			}
-			else {
+			} else {
 				return null;
 			}
 		}
@@ -2529,8 +2474,7 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 								+ "\", attachPointName=\"" + attachPointNames + "\"");
 				if (WarsmashConstants.ENABLE_DEBUG) {
 					throw nullPointerException;
-				}
-				else {
+				} else {
 					nullPointerException.printStackTrace();
 				}
 			}
@@ -2563,15 +2507,13 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 							final MdxNode attachment = renderUnit.instance.getAttachment(index);
 							modelInstance.setParent(attachment);
 							modelInstance.setLocation(0, 0, 0);
-						}
-						else {
+						} else {
 							// TODO This is not consistent with War3, is it? Should look nice though.
 							modelInstance.setLocation(renderUnit.location);
 							yaw = (float) Math.toRadians(renderUnit.getSimulationUnit().getFacing());
 						}
 					}
-				}
-				else {
+				} else {
 					modelInstance.setLocation(0, 0, 0);
 				}
 				modelInstance.setScene(War3MapViewer.this.worldScene);
@@ -2583,12 +2525,10 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 				War3MapViewer.this.projectiles.add(renderAttackInstant);
 				return renderAttackInstant;
 			}
-		}
-		else if (targetWidget instanceof CItem) {
+		} else if (targetWidget instanceof CItem) {
 			// TODO this is stupid api, who would do this?
 			throw new UnsupportedOperationException("API for addSpecialEffectTarget() on item is NYI");
-		}
-		else if (targetWidget instanceof CDestructable) {
+		} else if (targetWidget instanceof CDestructable) {
 			// TODO this is stupid api, who would do this?
 			throw new UnsupportedOperationException("API for addSpecialEffectTarget() on destructable is NYI");
 		}
@@ -2626,8 +2566,7 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 		final String mdxPath = mdx(path);
 		if (dataSource.has(mdxPath)) {
 			return (MdxModel) modelViewer.load(mdxPath, pathSolver, solverParams);
-		}
-		else {
+		} else {
 			final String mdlPath = mdl(mdxPath);
 			if (dataSource.has(mdlPath)) {
 				return (MdxModel) modelViewer.load(mdlPath, pathSolver, solverParams);
@@ -2660,8 +2599,7 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 					final GroundTexture currentTex = this.terrain.groundTextures.get(corner.getGroundTexture());
 					if (currentTex.isBuildable()) {
 						changedData |= corner.setBlight(blighted);
-					}
-					else {
+					} else {
 						continue;
 					}
 
@@ -2700,7 +2638,7 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 	public void setTerrainVisible(boolean show) {
 		this.terrainVisible = show;
 	}
-		
+
 	public static byte fadeLineOfSightColor(final byte lastFogStateColor, final byte state) {
 		final short prevValue = (short) (lastFogStateColor & 0xFF);
 		final short newValue = (short) (state & 0xFF);
@@ -2740,23 +2678,20 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 					dataSources.add(compoundDataSource);
 					if (WarsmashConstants.FIX_FLAT_FILES_TILESET_LOADING) {
 						dataSources.add(new SubdirDataSource(compoundDataSource, this.tileset + ".mpq/"));
-					}
-					else {
+					} else {
 						try (InputStream mapStream = compoundDataSource.getResourceAsStream(this.tileset + ".mpq")) {
 							if (mapStream == null) {
 								dataSources.add(new SubdirDataSource(compoundDataSource, this.tileset + ".mpq/"));
 								dataSources.add(new SubdirDataSource(compoundDataSource,
 										"_tilesets/" + this.tileset + ".w3mod/"));
-							}
-							else {
+							} else {
 								final byte[] mapData = IOUtils.toByteArray(mapStream);
 								sbc = new SeekableInMemoryByteChannel(mapData);
 								final DataSource internalMpqContentsDataSource = new MpqDataSource(new MPQArchive(sbc),
 										sbc);
 								dataSources.add(internalMpqContentsDataSource);
 							}
-						}
-						catch (final IOException exc) {
+						} catch (final IOException exc) {
 							dataSources.add(new SubdirDataSource(compoundDataSource, this.tileset + ".mpq/"));
 							dataSources.add(
 									new SubdirDataSource(compoundDataSource, "_tilesets/" + this.tileset + ".w3mod/"));
@@ -2765,19 +2700,19 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 					if (gameDataSet <= 0) {
 						gameDataSet = w3iFile.hasFlag(War3MapW3iFlags.MELEE_MAP) ? 2 : 1;
 					}
-					if (gameDataSet == 1) {
-						// Custom data
-						dataSources.add(new SubdirDataSource(compoundDataSource,
-								"Custom_V" + WarsmashConstants.GAME_VERSION + "\\"));
-					}
-					else {
-						// Melee data
-						dataSources.add(new SubdirDataSource(compoundDataSource,
-								"Melee_V" + WarsmashConstants.GAME_VERSION + "\\"));
+					if (false) {
+						if (gameDataSet == 1) {
+							// Custom data
+							dataSources.add(new SubdirDataSource(compoundDataSource,
+									"Custom_V" + WarsmashConstants.GAME_VERSION + "\\"));
+						} else {
+							// Melee data
+							dataSources.add(new SubdirDataSource(compoundDataSource,
+									"Melee_V" + WarsmashConstants.GAME_VERSION + "\\"));
+						}
 					}
 					this.tilesetSource = new CompoundDataSource(dataSources);
-				}
-				catch (final MPQException e) {
+				} catch (final MPQException e) {
 					throw new RuntimeException(e);
 				}
 			});
@@ -2838,8 +2773,7 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 				if (War3MapViewer.this.preloadedWTS != null) {
 					War3MapViewer.this.allObjectData = War3MapViewer.this.mapMpq
 							.readModifications(War3MapViewer.this.preloadedWTS);
-				}
-				else {
+				} else {
 					War3MapViewer.this.allObjectData = War3MapViewer.this.mapMpq.readModifications();
 				}
 			});
@@ -2888,8 +2822,7 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 									modelInstance.setScene(War3MapViewer.this.worldScene);
 									if (bounceIndex == 0) {
 										SequenceUtils.randomBirthSequence(modelInstance);
-									}
-									else {
+									} else {
 										SequenceUtils.randomStandSequence(modelInstance);
 									}
 									modelInstance.setLocation(x, y, height);
@@ -3674,13 +3607,11 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 								final Vector3 unitPosition;
 								if (renderPeer != null) {
 									unitPosition = new Vector3(renderPeer.location);
-								}
-								else if (unit != null) {
+								} else if (unit != null) {
 									// try to fudge it and spawn in place of stale unit
 									unitPosition = new Vector3(unit.getX(), unit.getY(),
 											War3MapViewer.this.terrain.getGroundHeight(unit.getX(), unit.getY()));
-								}
-								else {
+								} else {
 									unitPosition = new Vector3(0, 0, 0);
 								}
 								final TextTag textTag = new TextTag(unitPosition, new Vector2(0, 60f), message,
@@ -3836,8 +3767,9 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 								}
 
 							}
-							
-							public void setupPlayerPawn(CUnit unit, CAbilityPlayerPawn abilityPlayerPawn, CBehaviorPlayerPawn behaviorPlayerPawn) {
+
+							public void setupPlayerPawn(CUnit unit, CAbilityPlayerPawn abilityPlayerPawn,
+									CBehaviorPlayerPawn behaviorPlayerPawn) {
 								RenderUnit renderUnit = getRenderPeer(unit);
 								behaviorPlayerPawn.setViewerWorldAccess(War3MapViewer.this);
 								renderUnit.setupPlayerPawn(abilityPlayerPawn);
@@ -3855,8 +3787,7 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 
 				if (War3MapViewer.this.doodadsAndDestructiblesLoaded) {
 					loadDoodadsAndDestructibles(War3MapViewer.this.allObjectData, w3iFile);
-				}
-				else {
+				} else {
 					throw new IllegalStateException(
 							"transcription of JS has not loaded a map and has no JS async promises");
 				}
@@ -3916,15 +3847,30 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 	public void setSkyModel(String modelPath) {
 		MdxModel loadModelMdx = loadModelMdx(modelPath);
 		loadModelMdx.lights.clear();
-		for(Material material: loadModelMdx.materials) {
-			for(Layer layer: material.layers) {
+		for (Material material : loadModelMdx.materials) {
+			for (Layer layer : material.layers) {
 				layer.unshaded = 1;
 			}
 		}
 		skyInstance = loadModelMdx.addInstance();
 		skyInstance.setScene(worldScene);
-		((MdxComplexInstance)skyInstance).setSequence(0);
-		((MdxComplexInstance)skyInstance).updateAnimations(0.5f);
+		((MdxComplexInstance) skyInstance).setSequence(0);
+		((MdxComplexInstance) skyInstance).updateAnimations(0.5f);
 		skyInstance.detach();
+	}
+
+	public void setDoodadAnimationRect(Rectangle rect, int typeId, String animName) {
+		for (RenderDoodad doodad : doodads) {
+			if (doodad.getTypeId().getValue() == typeId) {
+				if (rect.contains(doodad.getX(), doodad.getY())) {
+					MdxComplexInstance mdxInstance = (MdxComplexInstance) doodad.instance;
+					MdxModel model = (MdxModel) doodad.instance.model;
+					IndexedSequence sequence = SequenceUtils.selectSequence(animName, model.sequences);
+					if (sequence.index != -1) {
+						mdxInstance.setSequence(sequence.index);
+					}
+				}
+			}
+		}
 	}
 }

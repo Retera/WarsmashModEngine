@@ -124,7 +124,7 @@ public class MeleeToggleUI implements WarsmashUI {
 
 	@Override
 	public boolean keyDown(final int keycode) {
-		if (keycode == Input.Keys.ESCAPE) {
+		if (keycode == Input.Keys.Z && Gdx.input.isKeyPressed(Input.Keys.ALT_LEFT)) {
 			setCurrentUI((this.allUIs.indexOf(this.currentUI) + 1) % this.allUIs.size());
 			return true;
 		}

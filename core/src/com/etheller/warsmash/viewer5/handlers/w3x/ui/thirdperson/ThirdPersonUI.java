@@ -136,19 +136,22 @@ public class ThirdPersonUI implements WarsmashToggleableUI {
 				this.uiViewport, this.uiScene, this.war3MapViewer, 0, this.war3MapViewer.getAllObjectData().getWts(),
 				new KeyedSounds(uiSoundsTable, this.war3MapViewer.mapMpq));
 
-		try {
-			this.rootFrame.loadTOCFile("Interface\\FrameXML\\FrameXML.toc");
-		}
-		catch (final IOException e) {
-			throw new IllegalStateException(e);
-		}
-
-		final UIFrame mainMenuBarFixed = this.rootFrame.getFrameByName("MainMenuBar", 0);
-		mainMenuBarFixed.setVisible(true);
-
-		this.tooltipFrame = this.rootFrame.createFrame("GameTooltip", this.rootFrame, 0, 0);
+		if(false) {
+			try {
+				this.rootFrame.loadTOCFile("Interface\\FrameXML\\FrameXML.toc");
+			}
+			catch (final IOException e) {
+				throw new IllegalStateException(e);
+			}
+			
+			final UIFrame mainMenuBarFixed = this.rootFrame.getFrameByName("MainMenuBar", 0);
+			mainMenuBarFixed.setVisible(true);
+			
+			this.tooltipFrame = this.rootFrame.createFrame("GameTooltip", this.rootFrame, 0, 0);
 //		this.uiParent.add(this.tooltipFrame);
-		this.tooltipFrame1 = (StringFrame) this.rootFrame.getFrameByName("$parentTextLeft1", 0);
+			this.tooltipFrame1 = (StringFrame) this.rootFrame.getFrameByName("$parentTextLeft1", 0);
+		}
+
 
 		this.cursorFrame = (SpriteFrame) this.rootFrame.createFrameByType("SPRITE", "SmashTPCursorFrame",
 				this.rootFrame, "", 0);
@@ -363,6 +366,7 @@ public class ThirdPersonUI implements WarsmashToggleableUI {
 			}
 			else {
 				this.mouseOverUIFrame = null;
+				if(tooltipFrame!=null)
 				this.tooltipFrame.setVisible(false);
 			}
 		}
@@ -375,9 +379,11 @@ public class ThirdPersonUI implements WarsmashToggleableUI {
 		final String toolTip = mousedUIFrame.getToolTip();
 		final String uberTip = mousedUIFrame.getUberTip();
 		if ((toolTip == null) || (uberTip == null)) {
+			if(tooltipFrame!=null)
 			this.tooltipFrame.setVisible(false);
 		}
 		else {
+			if(tooltipFrame1!=null)
 			this.rootFrame.setText(this.tooltipFrame1, uberTip);
 		}
 	}

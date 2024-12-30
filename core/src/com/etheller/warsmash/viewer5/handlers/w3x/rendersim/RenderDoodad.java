@@ -3,6 +3,7 @@ package com.etheller.warsmash.viewer5.handlers.w3x.rendersim;
 import com.badlogic.gdx.math.Quaternion;
 import com.etheller.warsmash.units.GameObject;
 import com.etheller.warsmash.util.RenderMathUtils;
+import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.viewer5.ModelInstance;
 import com.etheller.warsmash.viewer5.handlers.mdx.MdxComplexInstance;
 import com.etheller.warsmash.viewer5.handlers.mdx.MdxModel;
@@ -33,6 +34,8 @@ public class RenderDoodad {
 	private CFogState fogState;
 	private final float[] vertexColorBase;
 	private final float[] vertexColorFogged;
+	
+	private War3ID typeId;
 
 	public RenderDoodad(final War3MapViewer map, final MdxModel model, final GameObject row, final float[] location3D,
 			final float[] scale3D, final float facingRadians, final float maxPitch, final float maxRoll,
@@ -103,6 +106,8 @@ public class RenderDoodad {
 
 		this.fogState = CFogState.MASKED;
 		((MdxComplexInstance) instance).setVertexColor(VERTEX_COLOR_BLACK);
+		
+		typeId = War3ID.fromString( row.getId());
 
 	}
 
@@ -143,5 +148,17 @@ public class RenderDoodad {
 
 	public float[] getVertexColor() {
 		return ((MdxComplexInstance) this.instance).vertexColor;
+	}
+	
+	public float getX() {
+		return x;
+	}
+	
+	public float getY() {
+		return y;
+	}
+	
+	public War3ID getTypeId() {
+		return typeId;
 	}
 }

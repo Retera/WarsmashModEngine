@@ -39,6 +39,7 @@ public class CUnitType {
 	private final boolean building;
 	private final PathingGrid.MovementType movementType;
 	private final float defaultFlyingHeight;
+	private final float defaultSelectionHeight;
 	private final float collisionSize;
 	private final EnumSet<CUnitClassification> classifications;
 	private final List<CUnitAttack> attacks;
@@ -115,7 +116,7 @@ public class CUnitType {
 			final float lifeRegen, final float manaRegen, final CRegenType lifeRegenType, final int manaInitial,
 			final int manaMaximum, final int speed, final int defense, final War3ID defaultAutocastAbility,
 			final List<War3ID> abilityList, final boolean isBldg, final MovementType movementType,
-			final float defaultFlyingHeight, final float collisionSize,
+			final float defaultFlyingHeight, float defaultSelectHeight, final float collisionSize,
 			final EnumSet<CUnitClassification> classifications, final List<CUnitAttack> attacks,
 			final int attacksEnabled, final String armorType, final boolean raise, final boolean decay,
 			final CDefenseType defenseType, final float impactZ, final BufferedImage buildingPathingPixelMap,
@@ -154,6 +155,7 @@ public class CUnitType {
 		this.building = isBldg;
 		this.movementType = movementType;
 		this.defaultFlyingHeight = defaultFlyingHeight;
+		this.defaultSelectionHeight = defaultSelectHeight;
 		this.collisionSize = collisionSize;
 		this.classifications = classifications;
 		this.attacks = attacks;
@@ -281,6 +283,10 @@ public class CUnitType {
 
 	public float getDefaultFlyingHeight() {
 		return this.defaultFlyingHeight;
+	}
+
+	public float getDefaultSelectionHeight() {
+		return this.defaultSelectionHeight;
 	}
 
 	public PathingGrid.MovementType getMovementType() {
@@ -439,7 +445,8 @@ public class CUnitType {
 		final int index = tier - 1;
 		if ((index >= 0) && (index < this.requirementTiers.size())) {
 			return this.requirementTiers.get(index);
-		} else {
+		}
+		else {
 			return Collections.emptyList();
 		}
 	}

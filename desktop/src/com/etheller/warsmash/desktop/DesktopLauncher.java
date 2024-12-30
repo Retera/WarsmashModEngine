@@ -56,8 +56,8 @@ public class DesktopLauncher {
 		config.addIcon("resources/Icon32.png", Files.FileType.Internal);
 		config.addIcon("resources/Icon64.png", Files.FileType.Internal);
 		config.addIcon("resources/Icon128.png", Files.FileType.Internal);
-//		config.foregroundFPS = 0;
-//		config.backgroundFPS = 0;
+		config.foregroundFPS = 0;
+		config.backgroundFPS = 0;
 		final DisplayMode desktopDisplayMode = LwjglApplicationConfiguration.getDesktopDisplayMode();
 		config.width = desktopDisplayMode.width;
 		config.height = desktopDisplayMode.height;
@@ -200,7 +200,8 @@ public class DesktopLauncher {
 			public long play(final Sound buffer, final float volume, final float pitch, final float x, final float y,
 					final float z, final boolean is3dSound, final float maxDistance, final float refDistance,
 					final boolean looping) {
-				return ((OpenALSound) buffer).play(volume, pitch, x, y, z, is3dSound, maxDistance, refDistance, looping);
+				return ((OpenALSound) buffer).play(volume, pitch, x, y, z, is3dSound, maxDistance, refDistance,
+						looping);
 			}
 
 			@Override

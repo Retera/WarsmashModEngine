@@ -245,7 +245,7 @@ public final class GlobalScope {
 		this.instructions.add(new BeginFunctionInstruction(lineNo, sourceFile, name));
 		final InstructionAppendingJassStatementVisitor visitor = new InstructionAppendingJassStatementVisitor(
 				this.instructions, scope, function.getParameters());
-		for (final JassStatement statement : statements) {
+		for (final JassStatement statement : visitor.cleanStatements(statements)) {
 			statement.accept(visitor);
 		}
 		this.instructions.add(new PushLiteralInstruction(JassType.NOTHING.getNullValue()));
@@ -267,7 +267,7 @@ public final class GlobalScope {
 		this.instructions.add(new BeginFunctionInstruction(lineNo, sourceFile, name));
 		final InstructionAppendingJassStatementVisitor visitor = new InstructionAppendingJassStatementVisitor(
 				this.instructions, scope, function.getParameters());
-		for (final JassStatement statement : statements) {
+		for (final JassStatement statement : visitor.cleanStatements(statements)) {
 			statement.accept(visitor);
 		}
 		this.instructions.add(new PushLiteralInstruction(JassType.NOTHING.getNullValue()));

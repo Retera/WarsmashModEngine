@@ -42,11 +42,6 @@ public class CItem extends CWidget {
 	}
 
 	@Override
-	public float getFlyHeight() {
-		return 0;
-	}
-
-	@Override
 	public float getImpactZ() {
 		return 0; // TODO probably from ItemType
 	}
@@ -87,6 +82,9 @@ public class CItem extends CWidget {
 	@Override
 	public boolean canBeTargetedBy(final CSimulation simulation, final CUnit source,
 			final EnumSet<CTargetType> targetsAllowed, final AbilityTargetCheckReceiver<CWidget> receiver) {
+		if (isHidden()) {
+			return false;
+		}
 		if (targetsAllowed.contains(CTargetType.ITEM)) {
 			return true;
 		}

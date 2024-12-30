@@ -19,8 +19,6 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.buff
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.buff.ABTimedTransformationBuff;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABAction;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABLocalStoreKeys;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.timer.AltitudeAdjustmentTimer;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.timer.DelayTimerTimer;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.timer.TransformationMorphAnimationTimer;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayer;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.timers.CTimer;
@@ -50,7 +48,7 @@ public class TransformationHandler {
 			}
 		}
 
-		unit.setTypeId(game, newType.getTypeId(), updateArt);
+		unit.setTypeId(game, newType.getTypeId());
 		pl.setUnitFoodUsed(unit, newType.getFoodUsed());
 		pl.setUnitFoodMade(unit, newType.getFoodMade());
 		if (addAlternateTagAfter) {
@@ -112,9 +110,15 @@ public class TransformationHandler {
 		if (timer != null) {
 			game.unregisterTimer(timer);
 		}
-		timer = (new DelayTimerTimer(
-				new AltitudeAdjustmentTimer(game, unit, newType.getDefaultFlyingHeight(), altitudeAdjustmentDuration),
-				localStore, altitudeAdjustmentDelay));
+		timer = new CTimer() {
+			@Override
+			public void onFire(final CSimulation simulation) {
+				game.setUnitFlyHeight(unit, newType.getDefaultFlyingHeight(), altitudeAdjustmentDuration);
+				game.setUnitSelectionHeight(unit, newType.getDefaultSelectionHeight(), altitudeAdjustmentDuration);
+			}
+		};
+		timer.setRepeats(false);
+		timer.setTimeoutTime(altitudeAdjustmentDelay);
 		timer.start(game);
 		localStore.put(ABLocalStoreKeys.ACTIVE_ALTITUDE_ADJUSTMENT, timer);
 		TransformationHandler.setUnitID(game, localStore, unit, newType, addAlternateTagAfter, actions, ability);
@@ -141,13 +145,8 @@ public class TransformationHandler {
 			timer.start(game);
 			localStore.put(ABLocalStoreKeys.WAITING_ANIMATION, timer);
 		}
-		CTimer timer = (CTimer) localStore.get(ABLocalStoreKeys.ACTIVE_ALTITUDE_ADJUSTMENT);
-		if (timer != null) {
-			game.unregisterTimer(timer);
-		}
-		timer = new AltitudeAdjustmentTimer(game, unit, newType.getDefaultFlyingHeight(), altitudeAdjustmentDuration);
-		timer.start(game);
-		localStore.put(ABLocalStoreKeys.ACTIVE_ALTITUDE_ADJUSTMENT, timer);
+		game.setUnitFlyHeight(unit, newType.getDefaultFlyingHeight(), altitudeAdjustmentDuration);
+		game.setUnitSelectionHeight(unit, newType.getDefaultSelectionHeight(), altitudeAdjustmentDuration);
 	}
 
 	public static void startSlowTransformation(final CSimulation game, final Map<String, Object> localStore,

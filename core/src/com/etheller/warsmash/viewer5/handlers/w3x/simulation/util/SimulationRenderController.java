@@ -164,4 +164,8 @@ public interface SimulationRenderController {
 
 	boolean isTerrainWater(float x, float y);
 
+	void setFlyHeight(CUnit unit, float height, float duration);
+
+	void setSelectionHeight(CUnit unit, float height, float duration);
+
 }

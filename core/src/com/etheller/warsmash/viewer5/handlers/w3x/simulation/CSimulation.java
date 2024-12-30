@@ -1130,6 +1130,14 @@ public class CSimulation implements CPlayerAPI, CFogMaskSettings {
 		this.simulationRenderController.changeUnitVertexColor(unit, r, g, b, a);
 	}
 
+	public void setUnitFlyHeight(CUnit unit, float height, float duration) {
+		this.simulationRenderController.setFlyHeight(unit, height, duration);
+	}
+
+	public void setUnitSelectionHeight(CUnit unit, float height, float duration) {
+		this.simulationRenderController.setSelectionHeight(unit, height, duration);
+	}
+
 	public float[] getUnitVertexColor(final CUnit unit) {
 		return this.simulationRenderController.getUnitVertexColor(unit);
 	}

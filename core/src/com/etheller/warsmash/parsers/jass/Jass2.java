@@ -2467,12 +2467,12 @@ public class Jass2 {
 						if ((textTag != null) && (whichUnit != null)) {
 							final float x = whichUnit.getX();
 							final float y = whichUnit.getY();
-							final float flyHeight = whichUnit.getFlyHeight();
+							final RenderUnit renderPeer = war3MapViewer.getRenderPeer(whichUnit);
+							final float flyHeight = renderPeer.getFlyHeight();
 							// NOTE: lep jassdoc on github says that the below sum also adds max Z extent of
 							// whichUnit model, but according to their notes that value changes from
 							// bloodlust but not SetUnitScale, some crazy bugs, we are not reproducing those
 							// at the moment
-							final RenderUnit renderPeer = war3MapViewer.getRenderPeer(whichUnit);
 							final Bounds bounds = renderPeer.instance.getBounds();
 							float estimatedBoundsMaxZ = 0;
 							if (bounds != null) {
@@ -3038,6 +3038,13 @@ public class Jass2 {
 						whichUnit.setHidden(!show);
 						return null;
 					});
+			jassProgramVisitor.getJassNativeManager().createNative("ShowDestructable",
+					(arguments, globalScope, triggerScope) -> {
+						final CDestructable whichUnit = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());
+						final boolean show = arguments.get(1).visit(BooleanJassValueVisitor.getInstance());
+						whichUnit.setHidden(!show);
+						return null;
+					});
 
 			jassProgramVisitor.getJassNativeManager().createNative("SetUnitState",
 					(arguments, globalScope, triggerScope) -> {
@@ -3138,9 +3145,8 @@ public class Jass2 {
 					(arguments, globalScope, triggerScope) -> {
 						final CUnit whichUnit = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());
 						final float newHeight = arguments.get(1).visit(RealJassValueVisitor.getInstance()).floatValue();
-						// TODO rate
-						final double rate = arguments.get(2).visit(RealJassValueVisitor.getInstance());
-						whichUnit.setFlyHeight(newHeight);
+						final float rate = arguments.get(2).visit(RealJassValueVisitor.getInstance()).floatValue();
+						this.simulation.setUnitFlyHeight(whichUnit, newHeight, rate);
 						return null;
 					});
 			jassProgramVisitor.getJassNativeManager().createNative("SetUnitTurnSpeed",
@@ -3159,9 +3165,11 @@ public class Jass2 {
 					});
 			jassProgramVisitor.getJassNativeManager().createNative("SetUnitAcquireRange",
 					(arguments, globalScope, triggerScope) -> {
-						final CUnit unit = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());
+						final CUnit unit = nullable(arguments, 0, ObjectJassValueVisitor.getInstance());
 						final double range = arguments.get(1).visit(RealJassValueVisitor.getInstance());
-						unit.setAcquisitionRange((float) range);
+						if (unit != null) {
+							unit.setAcquisitionRange((float) range);
+						}
 						return null;
 					});
 			jassProgramVisitor.getJassNativeManager().createNative("GetUnitAcquireRange",
@@ -3192,7 +3200,10 @@ public class Jass2 {
 					(arguments, globalScope, triggerScope) -> {
 						final CUnit unit = nullable(arguments, 0, ObjectJassValueVisitor.getInstance());
 						if (unit != null) {
-							return RealJassValue.of(unit.getFlyHeight());
+							final RenderUnit renderPeer = war3MapViewer.getRenderPeer(unit);
+							if (renderPeer != null) {
+								return RealJassValue.of(renderPeer.getFlyHeight());
+							}
 						}
 						return RealJassValue.ZERO;
 					});
@@ -4082,7 +4093,7 @@ public class Jass2 {
 					});
 			jassProgramVisitor.getJassNativeManager().createNative("TriggerEvaluate",
 					(arguments, globalScope, triggerScope) -> {
-						final Trigger whichTrigger = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());
+						final Trigger whichTrigger = nullable(arguments, 0, ObjectJassValueVisitor.getInstance());
 						if (whichTrigger == null) {
 							return BooleanJassValue.FALSE;
 						}
@@ -4199,11 +4210,14 @@ public class Jass2 {
 			jassProgramVisitor.getJassNativeManager().createNative("TriggerRegisterUnitEvent",
 					(arguments, globalScope, triggerScope) -> {
 						final Trigger whichTrigger = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());
-						final CUnit whichWidget = arguments.get(1).visit(ObjectJassValueVisitor.getInstance());
+						final CUnit whichWidget = nullable(arguments, 1, ObjectJassValueVisitor.getInstance());
 						final JassGameEventsWar3 whichPlayerEvent = arguments.get(2)
 								.visit(ObjectJassValueVisitor.getInstance());
-						return new HandleJassValue(eventType,
-								whichWidget.addEvent(globalScope, whichTrigger, whichPlayerEvent));
+						if (whichWidget != null) {
+							return new HandleJassValue(eventType,
+									whichWidget.addEvent(globalScope, whichTrigger, whichPlayerEvent));
+						}
+						return new HandleJassValue(eventType, RemovableTriggerEvent.doNothing(whichTrigger));
 					});
 			jassProgramVisitor.getJassNativeManager().createNative("IsUnitHidden",
 					(arguments, globalScope, triggerScope) -> {
@@ -9488,7 +9502,7 @@ public class Jass2 {
 					System.out.println("ExecuteFunc (\"" + funcName + "\")");
 					if (functionByName != null) {
 						// TODO below TriggerExecutionScope.EMPTY is probably not correct
-						globalScope.queueThread(globalScope.createThread(functionByName, TriggerExecutionScope.EMPTY));
+						globalScope.queueThread(globalScope.createThread(functionByName, triggerScope));
 					}
 					return null;
 				});
@@ -10031,8 +10045,10 @@ public class Jass2 {
 				});
 		jassProgramVisitor.getJassNativeManager().createNative("GetPlayerController",
 				(arguments, globalScope, triggerScope) -> {
-					final CPlayerJass player = arguments.get(0)
-							.visit(ObjectJassValueVisitor.<CPlayerJass>getInstance());
+					final CPlayerJass player = nullable(arguments, 0, ObjectJassValueVisitor.getInstance());
+					if (player == null) {
+						return mapcontrolType.getNullValue();
+					}
 					return new HandleJassValue(mapcontrolType, player.getController());
 				});
 		jassProgramVisitor.getJassNativeManager().createNative("GetPlayerSlotState",
@@ -10068,6 +10084,9 @@ public class Jass2 {
 
 		jassProgramVisitor.getJassNativeManager().createNative("Player", (arguments, globalScope, triggerScope) -> {
 			final int playerIndex = arguments.get(0).visit(IntegerJassValueVisitor.getInstance());
+			if (playerIndex >= WarsmashConstants.MAX_PLAYERS) {
+				return playerType.getNullValue();
+			}
 			return new HandleJassValue(playerType, playerAPI.getPlayer(playerIndex));
 		});
 		jassProgramVisitor.getJassNativeManager().createNative("GetPlayerId",

@@ -27,12 +27,12 @@ public class CBehaviorAttack extends CAbstractRangedBehavior {
 	private int thisOrderCooldownEndTime;
 	private CBehaviorAttackListener attackListener;
 
-	public CBehavior reset(final CSimulation game, final int highlightOrderId, final CUnitAttack unitAttack,
-			final AbilityTarget target, final boolean disableMove, final CBehaviorAttackListener attackListener) {
+	public CBehavior reset(final CSimulation game, final int highlightOrderId, final AbilityTarget target,
+			final boolean disableMove, final CBehaviorAttackListener attackListener) {
 		this.highlightOrderId = highlightOrderId;
 		this.attackListener = attackListener;
 
-		this.unitAttack = unitAttack;
+		this.unitAttack = pickAttack(target);
 		this.damagePointLaunchTime = 0;
 		this.backSwingTime = 0;
 		this.thisOrderCooldownEndTime = 0;
@@ -57,8 +57,19 @@ public class CBehaviorAttack extends CAbstractRangedBehavior {
 
 	@Override
 	protected boolean checkTargetStillValid(final CSimulation simulation) {
-		return !this.unit.isDisableAttacks() && this.target.visit(
+		if (this.unit.isDisableAttacks()) {
+			return false;
+		}
+
+		final Boolean stillTargetable = this.target.visit(
 				this.abilityTargetStillAliveVisitor.reset(simulation, this.unit, this.unitAttack.getTargetsAllowed()));
+		if (!stillTargetable) {
+			this.unitAttack = pickAttack(this.target);
+			if (this.unitAttack == null) {
+				return false;
+			}
+			return true;
+		}
 	}
 
 	@Override

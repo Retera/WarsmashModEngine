@@ -166,6 +166,11 @@ public class RenderDestructable extends RenderDoodad implements RenderWidget {
 	}
 
 	@Override
+	public float getFlyHeight() {
+		return 0;
+	}
+
+	@Override
 	public void unassignSelectionCircle() {
 		this.selectionCircle = null;
 	}

@@ -17,7 +17,7 @@ public class ABActionSetUnitFlyHeight implements ABSingleAction {
 	@Override
 	public void runAction(CSimulation game, CUnit caster, Map<String, Object> localStore, final int castId) {
 		final CUnit targetUnit = this.unit.callback(game, caster, localStore, castId);
-		targetUnit.setFlyHeight(this.height.callback(game, caster, localStore, castId));
+		game.setUnitFlyHeight(targetUnit, this.height.callback(game, caster, localStore, castId), 0);
 	}
 
 	@Override

@@ -135,6 +135,8 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.ResourceType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.SimulationRenderComponent;
 
 public class CUnit extends CWidget {
+	private static final float SNARE_HEIGHT_ADJUST_RATE = 1.0f; // TODO almost certainly 1.0f is incorrect, I made it up
+
 	private static final int CHEESY_UNIQUE_NUMBER = 1337;
 
 	private static RegionCheckerImpl regionCheckerImpl = new RegionCheckerImpl();
@@ -178,7 +180,6 @@ public class CUnit extends CWidget {
 	private CDefenseType defenseType;
 
 	private int cooldownEndTime = 0;
-	private float flyHeight;
 	private float turnRate;
 	private float propWindow;
 	private int playerIndex;
@@ -308,7 +309,6 @@ public class CUnit extends CWidget {
 		this.baseMaximumMana = maximumMana;
 		this.maximumMana = maximumMana;
 		this.speed = speed;
-		this.flyHeight = unitType.getDefaultFlyingHeight();
 		this.turnRate = unitType.getTurnRate();
 		this.propWindow = unitType.getPropWindow();
 		this.unitType = unitType;
@@ -788,12 +788,12 @@ public class CUnit extends CWidget {
 				}
 			}
 			if (isSnared) {
-				setFlyHeight(0);
+				game.setUnitFlyHeight(this, 0, SNARE_HEIGHT_ADJUST_RATE);
 				this.moveDisabled = true;
 			}
 			else {
 				if (this.moveDisabled) {
-					setFlyHeight(this.unitType.getDefaultFlyingHeight());
+					game.setUnitFlyHeight(this, this.unitType.getDefaultFlyingHeight(), SNARE_HEIGHT_ADJUST_RATE);
 					this.moveDisabled = false;
 				}
 			}
@@ -1750,10 +1750,6 @@ public class CUnit extends CWidget {
 	}
 
 	public void setTypeId(final CSimulation game, final War3ID typeId) {
-		setTypeId(game, typeId, true);
-	}
-
-	public void setTypeId(final CSimulation game, final War3ID typeId, final boolean updateArt) {
 		game.getWorldCollision().removeUnit(this);
 		final CPlayer player = game.getPlayer(this.playerIndex);
 		player.removeTechtreeUnlocked(game, this.typeId);
@@ -1768,9 +1764,6 @@ public class CUnit extends CWidget {
 		this.life = lifeRatio * this.maximumLife;
 		this.lifeRegen = this.unitType.getLifeRegen();
 		this.manaRegen = this.unitType.getManaRegen();
-		if (updateArt) {
-			this.flyHeight = this.unitType.getDefaultFlyingHeight();
-		}
 		this.turnRate = this.unitType.getTurnRate();
 		this.propWindow = this.unitType.getPropWindow();
 		this.speed = this.unitType.getSpeed();
@@ -2625,15 +2618,6 @@ public class CUnit extends CWidget {
 		return this.cooldownEndTime;
 	}
 
-	@Override
-	public float getFlyHeight() {
-		return this.flyHeight;
-	}
-
-	public void setFlyHeight(final float flyHeight) {
-		this.flyHeight = flyHeight;
-	}
-
 	public float getTurnRate() {
 		return this.turnRate;
 	}
@@ -3276,6 +3260,9 @@ public class CUnit extends CWidget {
 
 	public boolean canBeTargetedBy(final CSimulation simulation, final CUnit source, final boolean targeted,
 			final EnumSet<CTargetType> targetsAllowed, final AbilityTargetCheckReceiver<CWidget> receiver) {
+		if (isHidden()) {
+			return false;
+		}
 		if ((this == source) && targetsAllowed.contains(CTargetType.NOTSELF)
 				&& !targetsAllowed.contains(CTargetType.SELF)) {
 			receiver.targetCheckFailed(CommandStringErrorKeys.UNABLE_TO_TARGET_SELF);

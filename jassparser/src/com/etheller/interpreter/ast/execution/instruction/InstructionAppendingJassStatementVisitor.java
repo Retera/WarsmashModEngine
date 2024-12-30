@@ -400,11 +400,14 @@ public class InstructionAppendingJassStatementVisitor
 	@Override
 	public Void visit(final DebuggingJassStatement statement) {
 		this.instructions.add(new SetDebugLineNoInstruction(statement.getLineNo()));
-		try {
-			statement.getDelegate().accept(this);
-		}
-		catch (final Exception exc) {
-			throw new IllegalStateException("pseudocompile fail beneath line no: " + statement.getLineNo(), exc);
+		final JassStatement delegate = statement.getDelegate();
+		if (delegate != null) {
+			try {
+				delegate.accept(this);
+			}
+			catch (final Exception exc) {
+				throw new IllegalStateException("pseudocompile fail beneath line no: " + statement.getLineNo(), exc);
+			}
 		}
 		return null;
 	}
@@ -876,5 +879,15 @@ public class InstructionAppendingJassStatementVisitor
 			this.nameToLocalType = new HashMap<String, JassType>(nameToLocalType);
 			this.nextLocalId = nextLocalId;
 		}
+	}
+
+	public List<JassStatement> cleanStatements(List<JassStatement> statements) {
+		final LocalExtractingJassStatementVisitor localExtractingJassStatementVisitor = new LocalExtractingJassStatementVisitor();
+
+		final List<JassStatement> actionStatements = localExtractingJassStatementVisitor.visitAll(statements);
+		final List<JassStatement> localStatements = localExtractingJassStatementVisitor.getExtractedLocals();
+		localStatements.addAll(actionStatements);
+
+		return localStatements;
 	}
 }

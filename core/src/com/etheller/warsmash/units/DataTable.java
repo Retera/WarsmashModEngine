@@ -295,12 +295,13 @@ public class DataTable implements ObjectData {
 			}
 			else if (kInput.contains("K")) {
 				final int subXIndex = input.indexOf("X");
-				int eIndex = kInput.indexOf("K");
+				final int eIndex = kInput.indexOf("K");
+				int eIndexCutoff = eIndex;
 				if (flipMode && kInput.contains("Y")) {
-					eIndex = Math.min(kInput.indexOf("Y"), eIndex);
+					eIndexCutoff = Math.min(kInput.indexOf("Y"), eIndexCutoff);
 				}
 				final int nIndex = kInput.indexOf("N");
-				final int eIndexCutoff = ((nIndex != -1) && (nIndex < eIndex)) ? nIndex : eIndex;
+				eIndexCutoff = ((nIndex != -1) && (nIndex < eIndexCutoff)) ? nIndex : eIndexCutoff;
 				final int fieldIdEndIndex = kInput != input ? input.length() : eIndexCutoff - 1;
 				final int fieldId = (subXIndex == -1) || (subXIndex > fieldIdEndIndex) ? 1
 						: Integer.parseInt(input.substring(subXIndex + 1, fieldIdEndIndex));

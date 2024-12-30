@@ -78,8 +78,6 @@ public abstract class CWidget extends CExtensibleHandleAbstract implements Abili
 			final boolean isRanged, final CAttackType attackType, final CDamageType damageType,
 			final String weaponSoundType, final float damage, final float bonusDamage);
 
-	public abstract float getFlyHeight();
-
 	public abstract float getImpactZ();
 
 	public abstract <T> T visit(CWidgetVisitor<T> visitor);

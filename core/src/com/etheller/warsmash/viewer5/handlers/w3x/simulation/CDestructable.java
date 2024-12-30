@@ -29,6 +29,7 @@ public class CDestructable extends CWidget {
 	private Rectangle registeredEnumRectangle;
 
 	private List<CDestructableBuff> buffs;
+	private boolean hidden;
 
 	public CDestructable(final int handleId, final float x, final float y, final float life,
 			final CDestructableType destTypeInstance, final RemovablePathingMapInstance pathingInstance,
@@ -40,11 +41,6 @@ public class CDestructable extends CWidget {
 		if ((this.destType.getOcclusionHeight() > 0) && (pathingInstance != null)) {
 			this.pathingInstance.setBlocksVision(true);
 		}
-	}
-
-	@Override
-	public float getFlyHeight() {
-		return 0;
 	}
 
 	@Override
@@ -243,5 +239,9 @@ public class CDestructable extends CWidget {
 		if (this.pathingInstanceDeath != null) {
 			this.pathingInstanceDeath.remove();
 		}
+	}
+
+	public void setHidden(boolean b) {
+		this.hidden = b;
 	}
 }

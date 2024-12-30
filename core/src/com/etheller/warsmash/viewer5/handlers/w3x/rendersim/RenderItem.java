@@ -121,7 +121,7 @@ public class RenderItem implements RenderWidget {
 			groundHeight = groundHeightTerrainAndWater;
 			currentWalkableUnder = null;
 		}
-		this.location[2] = this.simulationItem.getFlyHeight() + groundHeight;
+		this.location[2] = groundHeight;
 
 		this.instance.moveTo(this.location);
 		if (this.shadow != null) {
@@ -153,6 +153,11 @@ public class RenderItem implements RenderWidget {
 	@Override
 	public float getZ() {
 		return this.location[2];
+	}
+
+	@Override
+	public float getFlyHeight() {
+		return 0;
 	}
 
 	@Override

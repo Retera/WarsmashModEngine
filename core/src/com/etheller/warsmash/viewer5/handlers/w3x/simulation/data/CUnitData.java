@@ -153,6 +153,7 @@ public class CUnitData {
 	private static final String DEFENSE_TYPE = "defType"; // replaced from 'udty'
 	private static final String DEFENSE_UPGRADE_BONUS = "defUp"; // replaced from 'udup'
 	private static final String MOVE_HEIGHT = "moveHeight"; // replaced from 'umvh'
+	private static final String SELECT_HEIGHT = "selZ"; // replaced from 'uslz'
 	private static final String MOVE_TYPE = "movetp"; // replaced from 'umvt'
 	private static final String COLLISION_SIZE = "collision"; // replaced from 'ucol'
 	private static final String CLASSIFICATION = "type"; // replaced from 'utyp'
@@ -520,6 +521,7 @@ public class CUnitData {
 			final int defenseUpgradeBonus = unitType.getFieldAsInteger(DEFENSE_UPGRADE_BONUS, 0);
 
 			final float moveHeight = unitType.getFieldAsFloat(MOVE_HEIGHT, 0);
+			final float selectHeight = unitType.getFieldAsFloat(SELECT_HEIGHT, 0);
 			final String movetp = unitType.getFieldAsString(MOVE_TYPE, 0);
 			final float collisionSize = unitType.getFieldAsFloat(COLLISION_SIZE, 0);
 			final float propWindow = unitType.getFieldAsFloat(PROPULSION_WINDOW, 0);
@@ -781,11 +783,11 @@ public class CUnitData {
 
 			unitTypeInstance = new CUnitType(unitName, legacyName, typeId, life, lifeRegen, manaRegen, lifeRegenType,
 					manaInitial, manaMaximum, speed, defense, defaultAutocastAbilityId, abilityList, isBldg,
-					movementType, moveHeight, collisionSize, classifications, attacks, attacksEnabled, armorType, raise,
-					decay, defenseType, impactZ, buildingPathingPixelMap, deathTime, targetedAs, acquisitionRange,
-					minimumAttackRange, structuresBuilt, unitsTrained, researchesAvailable, upgradesUsed,
-					upgradeClassToType, upgradesTo, itemsSold, itemsMade, unitRace, goldCost, lumberCost, foodUsed,
-					foodMade, buildTime, goldRepairCost, lumberRepairCost, repairTime, preventedPathingTypes,
+					movementType, moveHeight, selectHeight, collisionSize, classifications, attacks, attacksEnabled,
+					armorType, raise, decay, defenseType, impactZ, buildingPathingPixelMap, deathTime, targetedAs,
+					acquisitionRange, minimumAttackRange, structuresBuilt, unitsTrained, researchesAvailable,
+					upgradesUsed, upgradeClassToType, upgradesTo, itemsSold, itemsMade, unitRace, goldCost, lumberCost,
+					foodUsed, foodMade, buildTime, goldRepairCost, lumberRepairCost, repairTime, preventedPathingTypes,
 					requiredPathingTypes, propWindow, turnRate, requirements, requirementTiers, unitLevel, hero,
 					strength, strPlus, agility, agiPlus, intelligence, intPlus, primaryAttribute, heroAbilityList,
 					heroProperNames, properNamesCount, canFlee, priority, revivesHeroes, pointValue, castBackswingPoint,

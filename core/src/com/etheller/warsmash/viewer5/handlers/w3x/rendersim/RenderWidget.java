@@ -39,6 +39,8 @@ public interface RenderWidget {
 
 	float getZ();
 
+	float getFlyHeight();
+
 	void unassignSelectionCircle();
 
 	void assignSelectionCircle(SplatMover t);

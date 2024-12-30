@@ -13,8 +13,6 @@ import com.etheller.warsmash.viewer5.handlers.w3x.SequenceUtils;
 import com.etheller.warsmash.viewer5.handlers.w3x.War3MapViewer;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTargetWidgetVisitor;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CWeaponType;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.projectile.CAttackProjectile;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.projectile.CProjectile;
 
 public class RenderProjectile implements RenderEffect {
@@ -56,11 +54,16 @@ public class RenderProjectile implements RenderEffect {
 		float flyHeight;
 		if (widgetTarget == null) {
 			impactZ = 0;
-			flyHeight = 0;
 		}
 		else {
 			impactZ = widgetTarget.getImpactZ();
-			flyHeight = widgetTarget.getFlyHeight();
+		}
+		final RenderWidget renderPeer = war3MapViewer.getRenderPeer(widgetTarget);
+		if (renderPeer != null) {
+			flyHeight = renderPeer.getFlyHeight();
+		}
+		else {
+			flyHeight = 0;
 		}
 		this.targetHeight = (war3MapViewer.terrain.getGroundHeight(targetX, targetY) + flyHeight + impactZ);
 		this.arcPeakHeight = arc * startingDistance;

@@ -69,23 +69,29 @@ public class RenderUnit implements RenderWidget {
 	public MdxModel specialArtModel;
 	public SplatMover uberSplat;
 	private float selectionHeight;
+	private FlyHeightAnimation selectionHeightAnimation;
 	private RenderUnit preferredSelectionReplacement;
 	private float[] currentColor = { 1, 1, 1, 1 };
+	private float flyHeight;
+	private FlyHeightAnimation flyHeightAnimation;
 
 	public RenderUnit(final War3MapViewer map, final float x, final float y, final float z, final int playerIndex,
 			final CUnit simulationUnit, final RenderUnitType typeData, final BuildingShadow buildingShadow,
 			final float selectionCircleScaleFactor, final float animationWalkSpeed, final float animationRunSpeed,
 			final float scalingValue) {
 		this.simulationUnit = simulationUnit;
-		resetRenderUnit(map, x, y, z, playerIndex, simulationUnit, typeData, buildingShadow, selectionCircleScaleFactor,
+		this.location[2] = z;
+		resetRenderUnit(map, x, y, playerIndex, simulationUnit, typeData, buildingShadow, selectionCircleScaleFactor,
 				animationWalkSpeed, animationRunSpeed, scalingValue);
+		this.flyHeight = simulationUnit.getUnitType().getDefaultFlyingHeight();
+		this.selectionHeight = simulationUnit.getUnitType().getDefaultSelectionHeight();
 
 	}
 
-	public void resetRenderUnit(final War3MapViewer map, final float x, final float y, final float z,
-			final int playerIndex, final CUnit simulationUnit, final RenderUnitType typeData,
-			final BuildingShadow buildingShadow, final float selectionCircleScaleFactor, final float animationWalkSpeed,
-			final float animationRunSpeed, final float scalingValue) {
+	public void resetRenderUnit(final War3MapViewer map, final float x, final float y, final int playerIndex,
+			final CUnit simulationUnit, final RenderUnitType typeData, final BuildingShadow buildingShadow,
+			final float selectionCircleScaleFactor, final float animationWalkSpeed, final float animationRunSpeed,
+			final float scalingValue) {
 		this.portraitModel = typeData.getPortraitModel();
 		this.typeData = typeData;
 		this.specialArtModel = typeData.getSpecialArtModel();
@@ -100,7 +106,6 @@ public class RenderUnit implements RenderWidget {
 
 		this.location[0] = x;
 		this.location[1] = y;
-		this.location[2] = z;
 		instance.move(this.location);
 		this.facing = simulationUnit.getFacing();
 		final float angle = (float) Math.toRadians(this.facing);
@@ -123,16 +128,12 @@ public class RenderUnit implements RenderWidget {
 				this.unitAnimationListenerImpl.forceResetCurrentAnimation();
 			}
 
-			heapZ[2] = simulationUnit.getFlyHeight();
-			this.location[2] += heapZ[2];
-
 			instance.move(heapZ);
 			final Vector3 tintingColor = typeData.getTintingColor();
 			this.currentColor = new float[] { tintingColor.x, tintingColor.y, tintingColor.z, 1.0f };
 			instance.uniformScale(scalingValue);
 
 			this.selectionScale = typeData.getSelectScale() * selectionCircleScaleFactor;
-			this.selectionHeight = typeData.getSelectHeight();
 			int orientationInterpolationOrdinal = typeData.getOrientationInterpolation();
 			if ((orientationInterpolationOrdinal < 0)
 					|| (orientationInterpolationOrdinal >= OrientationInterpolation.VALUES.length)) {
@@ -347,7 +348,29 @@ public class RenderUnit implements RenderWidget {
 		this.dead = dead;
 		this.corpse = corpse;
 		this.boneCorpse = boneCorpse;
-		this.location[2] = this.simulationUnit.getFlyHeight() + groundHeight;
+		if (this.flyHeightAnimation != null) {
+			final float deltaHeight = this.flyHeightAnimation.target - this.flyHeight;
+			final float rate = this.flyHeightAnimation.rate * deltaTime;
+			if (Math.abs(deltaHeight) < rate) {
+				this.flyHeight = this.flyHeightAnimation.target;
+				this.flyHeightAnimation = null;
+			}
+			else {
+				this.flyHeight = this.flyHeight + (Math.signum(deltaHeight) * rate);
+			}
+		}
+		this.location[2] = this.flyHeight + groundHeight;
+		if (this.selectionHeightAnimation != null) {
+			final float deltaHeight = this.selectionHeightAnimation.target - this.selectionHeight;
+			final float rate = this.selectionHeightAnimation.rate * deltaTime;
+			if (Math.abs(deltaHeight) < rate) {
+				this.selectionHeight = this.selectionHeightAnimation.target;
+				this.selectionHeightAnimation = null;
+			}
+			else {
+				this.selectionHeight = this.selectionHeight + (Math.signum(deltaHeight) * rate);
+			}
+		}
 		final float selectionCircleHeight = this.selectionHeight + groundHeight;
 		this.instance.moveTo(this.location);
 		float simulationFacing = this.simulationUnit.getFacing();
@@ -601,6 +624,11 @@ public class RenderUnit implements RenderWidget {
 	}
 
 	@Override
+	public float getFlyHeight() {
+		return this.flyHeight;
+	}
+
+	@Override
 	public void unassignSelectionCircle() {
 		this.selectionCircle = null;
 	}
@@ -783,5 +811,37 @@ public class RenderUnit implements RenderWidget {
 	public void resetLookAt() {
 		this.unitAnimationListenerImpl.clearHeadFacing();
 		this.unitAnimationListenerImpl.clearTurretFacing();
+	}
+
+	public void setFlyHeight(float newValue, float duration) {
+		if (duration == 0) {
+			this.flyHeight = newValue;
+			this.flyHeightAnimation = null;
+		}
+		else {
+			final float rate = Math.abs((newValue - this.flyHeight) / duration);
+			this.flyHeightAnimation = new FlyHeightAnimation(newValue, rate);
+		}
+	}
+
+	public void setSelectionHeight(float newValue, float duration) {
+		if (duration == 0) {
+			this.selectionHeight = newValue;
+			this.selectionHeightAnimation = null;
+		}
+		else {
+			final float rate = Math.abs((newValue - this.selectionHeight) / duration);
+			this.selectionHeightAnimation = new FlyHeightAnimation(newValue, rate);
+		}
+	}
+
+	private static final class FlyHeightAnimation {
+		private final float rate;
+		private final float target;
+
+		public FlyHeightAnimation(float flyHeightRate, float flyHeightTarget) {
+			this.rate = flyHeightRate;
+			this.target = flyHeightTarget;
+		}
 	}
 }

@@ -135,6 +135,8 @@ public abstract class AbilityBuilderGsonBuilder {
 
 				.registerSubtype(ABCallbackIsProjectileReflected.class, "isProjectileReflected")
 				
+				.registerSubtype(ABCallbackEvaluateCondition.class, "evaluateCondition")
+				
 				.registerSubtype(ABCallbackIntegerToBoolean.class, "i2b")
 				;
 	}
@@ -533,6 +535,7 @@ public abstract class AbilityBuilderGsonBuilder {
 				.registerSubtype(ABConditionIsUnitEnemy.class, "isUnitEnemy")
 				.registerSubtype(ABConditionIsUnitDead.class, "isUnitDead")
 				.registerSubtype(ABConditionIsUnitTraining.class, "isUnitTraining")
+				.registerSubtype(ABConditionIsUnitShareSpells.class, "isUnitShareSpells")
 
 				.registerSubtype(ABConditionIsItemAbility.class, "isItemAbility")
 				.registerSubtype(ABConditionItemHasCharges.class, "itemHasCharges")

@@ -110,7 +110,7 @@ public class CAbilityAbilityBuilderActivePairing extends CAbilityAbilityBuilderG
 
 	@Override
 	public void onAdd(CSimulation game, CUnit unit) {
-		localStore.put(ABLocalStoreKeys.PAIRABILITY, this);
+		localStore.put(ABLocalStoreKeys.ISPAIRABILITY, this);
 		this.behavior = this.createRangedBehavior(unit);
 		this.behavior.setInstant(true);
 		super.onAdd(game, unit);

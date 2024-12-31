@@ -24,6 +24,8 @@ public interface AbilityBuilderAbility extends CLevelingAbility, Aliased {
 
 	public float getCastRange();
 
+	public float getCastTime();
+
 	public void startCooldown(CSimulation game, CUnit unit);
 
 	public void resetCooldown(CSimulation game, CUnit unit);

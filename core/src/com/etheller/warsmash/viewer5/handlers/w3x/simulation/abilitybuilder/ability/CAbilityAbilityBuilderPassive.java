@@ -12,6 +12,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnitTypeRequirement;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityVisitor;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.AbilityGenericSingleIconPassiveAbility;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.definitions.impl.AbilityFields;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABAction;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABLocalStoreKeys;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.parser.AbilityBuilderConfiguration;
@@ -30,6 +31,7 @@ public class CAbilityAbilityBuilderPassive extends AbilityGenericSingleIconPassi
 	protected float cooldown = 0;
 	protected float area = 0;
 	protected float range = 0;
+	private float castTime = 0;
 
 	private War3ID onTooltipOverride = null;
 
@@ -41,6 +43,10 @@ public class CAbilityAbilityBuilderPassive extends AbilityGenericSingleIconPassi
 		this.config = config;
 		this.localStore = localStore;
 		localStore.put(ABLocalStoreKeys.ABILITY, this);
+		GameObject editorData = (GameObject) localStore.get(ABLocalStoreKeys.ABILITYEDITORDATA);
+		final int levels = editorData.getFieldAsInteger(AbilityFields.LEVELS, 0);
+		localStore.put(ABLocalStoreKeys.ISABILITYLEVELED, levels > 1);
+		localStore.put(ABLocalStoreKeys.ISABILITYPHYSICAL, true);
 	}
 
 	protected void setSpellFields(CSimulation game, CUnit unit) {
@@ -56,6 +62,10 @@ public class CAbilityAbilityBuilderPassive extends AbilityGenericSingleIconPassi
 			}
 			if (this.config.getOverrideFields().getRangeOverride() != null) {
 				this.range = this.config.getOverrideFields().getRangeOverride().callback(game, unit, localStore,
+						0);
+			}
+			if (this.config.getOverrideFields().getCastTimeOverride() != null) {
+				this.castTime = this.config.getOverrideFields().getCastTimeOverride().callback(game, unit, localStore,
 						0);
 			}
 			if (this.config.getOverrideFields().getCooldownOverride() != null) {
@@ -98,6 +108,10 @@ public class CAbilityAbilityBuilderPassive extends AbilityGenericSingleIconPassi
 	@Override
 	public float getCastRange() {
 		return range;
+	}
+
+	public float getCastTime() {
+		return castTime;
 	}
 
 	@Override

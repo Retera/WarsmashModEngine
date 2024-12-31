@@ -24,9 +24,11 @@ public class ABDestructableBuff implements CDestructableBuff {
 	private List<ABAction> onAddActions;
 	private List<ABAction> onRemoveActions;
 	private List<ABAction> onDeathActions;
+	
+	private boolean dispellable;
 
 	public ABDestructableBuff(int handleId, War3ID alias, int level, Map<String, Object> localStore, List<ABAction> onAddActions,
-			List<ABAction> onRemoveActions, List<ABAction> onDeathActions, final int castId, CUnit caster) {
+			List<ABAction> onRemoveActions, List<ABAction> onDeathActions, final int castId, CUnit caster, boolean dispellable) {
 		this.handleId = handleId;
 		this.alias = alias;
 		this.level = level;
@@ -36,6 +38,7 @@ public class ABDestructableBuff implements CDestructableBuff {
 		this.onRemoveActions = onRemoveActions;
 		this.onDeathActions = onDeathActions;
 		this.caster = caster;
+		this.dispellable = dispellable;
 	}
 
 	@Override
@@ -89,6 +92,11 @@ public class ABDestructableBuff implements CDestructableBuff {
 	@Override
 	public void setLevel(int level) {
 		this.level = level;
+	}
+
+	@Override
+	public boolean isDispellable() {
+		return this.dispellable;
 	}
 
 }

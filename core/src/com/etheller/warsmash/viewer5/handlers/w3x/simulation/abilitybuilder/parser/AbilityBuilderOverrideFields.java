@@ -10,6 +10,7 @@ public class AbilityBuilderOverrideFields {
 	
 	private ABFloatCallback areaOverride;
 	private ABFloatCallback rangeOverride;
+	private ABFloatCallback castTimeOverride;
 	private ABFloatCallback cooldownOverride;
 	private ABIntegerCallback manaCostOverride;
 	
@@ -32,6 +33,12 @@ public class AbilityBuilderOverrideFields {
 	}
 	public void setRangeOverride(ABFloatCallback rangeOverride) {
 		this.rangeOverride = rangeOverride;
+	}
+	public ABFloatCallback getCastTimeOverride() {
+		return castTimeOverride;
+	}
+	public void setCastTimeOverride(ABFloatCallback castTimeOverride) {
+		this.castTimeOverride = castTimeOverride;
 	}
 	public ABFloatCallback getCooldownOverride() {
 		return cooldownOverride;

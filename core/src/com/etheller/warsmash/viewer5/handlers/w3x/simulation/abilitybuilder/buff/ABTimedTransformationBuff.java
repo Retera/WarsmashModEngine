@@ -30,11 +30,12 @@ public class ABTimedTransformationBuff extends ABGenericTimedBuff {
 	private boolean imTakeOff;
 	private boolean instantTransformation;
 
-	public ABTimedTransformationBuff(int handleId, Map<String, Object> localStore, OnTransformationActions actions, War3ID alias, float duration, AbilityBuilderActiveAbility ability,
-			CUnitType newType, boolean addAlternateTagAfter, boolean permanent, float transformationDuration,
-			float transformationTime, float landingDelay, float altitudeAdjustmentDelay,
-			float altitudeAdjustmentDuration, boolean immediateLanding, boolean immediateTakeoff) {
-		super(handleId, alias, duration, true);
+	public ABTimedTransformationBuff(int handleId, Map<String, Object> localStore, OnTransformationActions actions,
+			War3ID alias, float duration, AbilityBuilderActiveAbility ability, CUnitType newType,
+			boolean addAlternateTagAfter, boolean permanent, float transformationDuration, float transformationTime,
+			float landingDelay, float altitudeAdjustmentDelay, float altitudeAdjustmentDuration,
+			boolean immediateLanding, boolean immediateTakeoff) {
+		super(handleId, alias, duration, true, false, true, false);
 		this.setIconShowing(false);
 		this.localStore = localStore;
 		this.actions = actions;
@@ -52,9 +53,10 @@ public class ABTimedTransformationBuff extends ABGenericTimedBuff {
 		this.instantTransformation = false;
 	}
 
-	public ABTimedTransformationBuff(int handleId, Map<String, Object> localStore, OnTransformationActions actions, War3ID alias, float duration, AbilityBuilderActiveAbility ability, 
-			CUnitType newType, boolean addAlternateTagAfter, boolean permanent, float transformationDuration) {
-		super(handleId, alias, duration, true);
+	public ABTimedTransformationBuff(int handleId, Map<String, Object> localStore, OnTransformationActions actions,
+			War3ID alias, float duration, AbilityBuilderActiveAbility ability, CUnitType newType,
+			boolean addAlternateTagAfter, boolean permanent, float transformationDuration) {
+		super(handleId, alias, duration, true, false, true, false);
 		this.setIconShowing(false);
 		this.localStore = localStore;
 		this.actions = actions;
@@ -82,17 +84,20 @@ public class ABTimedTransformationBuff extends ABGenericTimedBuff {
 		if (instantTransformation) {
 			if (dur > 0) {
 				TransformationHandler.playMorphAnimation(unit, addAlternateTagAfter);
-				new DelayInstantTransformationTimer(game, localStore, unit, actions, addAlternateTagAfter, transTime, null, targetType, abil,
-						null, transTime, 0).start(game);
+				new DelayInstantTransformationTimer(game, localStore, unit, actions, addAlternateTagAfter, transTime,
+						null, targetType, abil, null, transTime, 0).start(game);
 			} else {
-				TransformationHandler.instantTransformation(game, localStore, unit, targetType, actions, abil, addAlternateTagAfter, perm, true);
+				TransformationHandler.instantTransformation(game, localStore, unit, targetType, actions, abil,
+						addAlternateTagAfter, perm, true);
 			}
 		} else {
-			unit.order(game, new COrderStartTransformation(
-					new CBehaviorFinishTransformation(localStore, unit, abil, targetType, actions, addAlternateTagAfter,
+			unit.order(game,
+					new COrderStartTransformation(new CBehaviorFinishTransformation(localStore, unit, abil, targetType,
+							actions, addAlternateTagAfter,
 							addAlternateTagAfter ? abil.getBaseOrderId() : abil.getOffOrderId(), perm, dur, transTime,
-							landTime, atlAdDelay, altAdTime, imLand, imTakeOff, this.getAlias(), targetType, instantTransformation),
-					abil.getBaseOrderId()), false);
+							landTime, atlAdDelay, altAdTime, imLand, imTakeOff, this.getAlias(), targetType,
+							instantTransformation), abil.getBaseOrderId()),
+					false);
 		}
 	}
 

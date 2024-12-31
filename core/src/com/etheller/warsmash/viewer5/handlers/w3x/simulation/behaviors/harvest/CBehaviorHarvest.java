@@ -77,6 +77,7 @@ public class CBehaviorHarvest extends CAbstractRangedBehavior
 					final CAbilityGoldMinable abilityGoldMine = (CAbilityGoldMinable) ability;
 					final int activeMiners = abilityGoldMine.getActiveMinerCount();
 					if (activeMiners < abilityGoldMine.getMiningCapacity()) {
+						this.unit.fireBehaviorChangeEvent(simulation, this, true);
 						abilityGoldMine.addMiner(this);
 						this.unit.setHidden(true);
 						this.unit.setInvulnerable(true);

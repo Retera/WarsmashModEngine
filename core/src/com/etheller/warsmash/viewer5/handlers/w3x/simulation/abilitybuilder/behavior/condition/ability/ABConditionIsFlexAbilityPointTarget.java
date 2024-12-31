@@ -13,7 +13,7 @@ public class ABConditionIsFlexAbilityPointTarget implements ABCondition {
 
 	@Override
 	public boolean evaluate(CSimulation game, CUnit caster, Map<String, Object> localStore, final int castId) {
-		CAbilityAbilityBuilderActiveFlexTarget ability = (CAbilityAbilityBuilderActiveFlexTarget) localStore.get(ABLocalStoreKeys.FLEXABILITY);
+		CAbilityAbilityBuilderActiveFlexTarget ability = (CAbilityAbilityBuilderActiveFlexTarget) localStore.get(ABLocalStoreKeys.ISFLEXABILITY);
 
 		return ability.isPointTarget();
 	}

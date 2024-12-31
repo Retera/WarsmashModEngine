@@ -19,20 +19,37 @@ public class ABActionCreatePassiveBuff implements ABAction {
 	private List<ABAction> onAddActions;
 	private List<ABAction> onRemoveActions;
 	private CEffectType artType;
-	
+
 	private ABBooleanCallback showFx;
 	private ABBooleanCallback playSfx;
 
-	public void runAction(final CSimulation game, final CUnit caster, final Map<String, Object> localStore, final int castId) {
+	private ABBooleanCallback leveled;
+	private ABBooleanCallback positive;
+
+	public void runAction(final CSimulation game, final CUnit caster, final Map<String, Object> localStore,
+			final int castId) {
 		ABPermanentPassiveBuff ability = null;
+		boolean isLeveled = false;
+		if (leveled != null) {
+			isLeveled = leveled.callback(game, caster, localStore, castId);
+		} else {
+			isLeveled = (boolean) localStore.getOrDefault(ABLocalStoreKeys.ISABILITYLEVELED, false);
+		}
+		boolean isPositive = true;
+		if (positive != null) {
+			isPositive = positive.callback(game, caster, localStore, castId);
+		}
+
 		if (showIcon != null) {
 			ability = new ABPermanentPassiveBuff(game.getHandleIdAllocator().createId(),
-					buffId.callback(game, caster, localStore, castId), localStore, onAddActions, onRemoveActions, showIcon.callback(game, caster, localStore, castId), castId);
+					buffId.callback(game, caster, localStore, castId), localStore, onAddActions, onRemoveActions,
+					showIcon.callback(game, caster, localStore, castId), castId, isLeveled, isPositive);
 			localStore.put(ABLocalStoreKeys.LASTCREATEDBUFF, ability);
 		} else {
 			ability = new ABPermanentPassiveBuff(game.getHandleIdAllocator().createId(),
-					buffId.callback(game, caster, localStore, castId), localStore, onAddActions, onRemoveActions, true, castId);
-			
+					buffId.callback(game, caster, localStore, castId), localStore, onAddActions, onRemoveActions, true,
+					castId, isLeveled, isPositive);
+
 			localStore.put(ABLocalStoreKeys.LASTCREATEDBUFF, ability);
 		}
 		if (artType != null) {

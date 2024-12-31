@@ -39,7 +39,7 @@ public interface CommandButtonListener {
 			char hotkey, int goldCost, int lumberCost, int foodCost, int manaCost, float cooldownRemaining,
 			float cooldownMax, int numberOverlay);
 
-	void buff(Texture icon, int level, String tip, String uberTip);
+	void buff(Texture icon, int level, String tip, String uberTip, boolean positive, boolean leveled);
 
 	void timedLifeBar(int level, String toolTip, float durationRemaining, float durationMax);
 }

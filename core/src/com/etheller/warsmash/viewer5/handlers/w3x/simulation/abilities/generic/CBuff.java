@@ -9,4 +9,10 @@ public interface CBuff extends CAliasedLevelingAbility {
 	float getDurationMax();
 
 	boolean isTimedLifeBar();
+	
+	boolean isLeveled();
+	
+	boolean isPositive();
+	
+	boolean isDispellable();
 }

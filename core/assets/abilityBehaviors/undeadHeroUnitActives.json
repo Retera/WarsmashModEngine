@@ -58,6 +58,10 @@
 						"type": "getAbilityDataAsFloat",
 						"dataField": "A"
 					},
+					"dispellable": {
+						"type": "rawBoolean",
+						"value": "false"
+					},
 					"showIcon": {
 						"type": "rawBoolean",
 						"value": "false"
@@ -114,6 +118,10 @@
 						"target": {
 							"type": "getAbilityTargetedUnit"
 						}
+					},
+					"positive": {
+						"type": "rawBoolean",
+						"value": "false"
 					},
 					"onAddActions": [{
 							"type": "addStateModBuff",
@@ -633,6 +641,14 @@
 						"buffId": {
 							"type": "getFirstBuffId"
 						},
+						"positive": {
+							"type": "rawBoolean",
+							"value": "false"
+						},
+						"dispellable": {
+							"type": "rawBoolean",
+							"value": "false"
+						},
 						"artType": "EFFECT",
 						"duration": {
 							"type": "getAbilityDataAsFloat",
@@ -818,6 +834,14 @@
 										"type": "createTimedBuff",
 										"buffId": {
 											"type": "getFirstBuffId"
+										},
+										"positive": {
+											"type": "rawBoolean",
+											"value": "false"
+										},
+										"dispellable": {
+											"type": "rawBoolean",
+											"value": "false"
 										},
 										"duration": {
 											"type": "getAbilityDuration",

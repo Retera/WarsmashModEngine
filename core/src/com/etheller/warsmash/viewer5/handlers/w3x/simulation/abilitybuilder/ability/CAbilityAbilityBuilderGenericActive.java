@@ -68,6 +68,7 @@ public abstract class CAbilityAbilityBuilderGenericActive extends AbstractGeneri
 	protected int manaCost = 0;
 	protected float area = 0;
 	protected float range = 0;
+	protected float castTime = 0;
 
 	protected boolean hideAreaCursor = false;
 
@@ -118,6 +119,8 @@ public abstract class CAbilityAbilityBuilderGenericActive extends AbstractGeneri
 		if (this.castingSecondaryTags.isEmpty()) {
 			this.castingSecondaryTags = SequenceUtils.SPELL;
 		}
+		final int levels = editorData.getFieldAsInteger(AbilityFields.LEVELS, 0);
+		localStore.put(ABLocalStoreKeys.ISABILITYLEVELED, levels > 1);
 	}
 	
 	@Override
@@ -199,7 +202,7 @@ public abstract class CAbilityAbilityBuilderGenericActive extends AbstractGeneri
 					castId);
 		}
 		if (this.toggleable) {
-			localStore.put(ABLocalStoreKeys.TOGGLEDABILITY, this);
+			localStore.put(ABLocalStoreKeys.ISTOGGLEDABILITY, this);
 			int manaPerSec = 0;
 			if (config.getSpecialFields() != null && config.getSpecialFields().getManaDrainedPerSecond() != null) {
 				manaPerSec = config.getSpecialFields().getManaDrainedPerSecond().callback(game, unit, localStore,
@@ -235,12 +238,17 @@ public abstract class CAbilityAbilityBuilderGenericActive extends AbstractGeneri
 		this.cooldown = levelDataLevel.getCooldown();
 		this.range = levelDataLevel.getCastRange();
 		this.area = levelDataLevel.getArea();
+		this.castTime = levelDataLevel.getCastTime();
 		if (this.config.getOverrideFields() != null) {
 			if (this.config.getOverrideFields().getAreaOverride() != null) {
 				this.area = this.config.getOverrideFields().getAreaOverride().callback(game, unit, localStore, castId);
 			}
 			if (this.config.getOverrideFields().getRangeOverride() != null) {
 				this.range = this.config.getOverrideFields().getRangeOverride().callback(game, unit, localStore,
+						castId);
+			}
+			if (this.config.getOverrideFields().getCastTimeOverride() != null) {
+				this.castTime = this.config.getOverrideFields().getCastTimeOverride().callback(game, unit, localStore,
 						castId);
 			}
 			if (this.config.getOverrideFields().getCooldownOverride() != null) {
@@ -288,6 +296,7 @@ public abstract class CAbilityAbilityBuilderGenericActive extends AbstractGeneri
 			this.hideAreaCursor = this.config.getDisplayFields().getHideAreaCursor().callback(game, unit, localStore,
 					this.getLevel());
 		}
+		localStore.put(ABLocalStoreKeys.ISABILITYPHYSICAL, this.physical);
 	}
 
 	@Override
@@ -409,6 +418,14 @@ public abstract class CAbilityAbilityBuilderGenericActive extends AbstractGeneri
 
 	public void setCastRange(float range) {
 		this.range = range;
+	}
+
+	public float getCastTime() {
+		return castTime;
+	}
+
+	public void setCastTime(float castTime) {
+		this.castTime = castTime;
 	}
 
 	@Override

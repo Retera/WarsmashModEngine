@@ -1,6 +1,7 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.data;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.util.HashMap;
 import java.util.Map;
@@ -297,6 +298,9 @@ public class CAbilityData {
 			File[] abilityBehaviorFiles = abilityBehaviorsDir.listFiles();
 			if (abilityBehaviorFiles != null) {
 				for (File abilityBehaviorFile : abilityBehaviorFiles) {
+					if (abilityBehaviorFile == null || abilityBehaviorFile.isDirectory()) {
+						continue;
+					}
 					try {
 						behaviors = gson.fromJson(new FileReader(abilityBehaviorFile), AbilityBuilderFile.class);
 						for (AbilityBuilderParser behavior : behaviors.getAbilityList()) {
@@ -318,6 +322,9 @@ public class CAbilityData {
 						e.printStackTrace();
 					} catch (IllegalArgumentException e) {
 						System.err.println("Failed to load Ability Builder config file: " + abilityBehaviorFile.getName());
+						e.printStackTrace();
+					} catch (FileNotFoundException e) {
+						System.err.println("Failed to find Ability Builder config file: " + abilityBehaviorFile.getName());
 						e.printStackTrace();
 					}
 				}

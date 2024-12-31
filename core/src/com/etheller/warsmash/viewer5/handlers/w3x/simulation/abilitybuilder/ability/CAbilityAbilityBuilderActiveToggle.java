@@ -83,7 +83,7 @@ public class CAbilityAbilityBuilderActiveToggle extends CAbilityAbilityBuilderGe
 	@Override
 	public void onAdd(CSimulation game, CUnit unit) {
 		timer = new ManaDepletedCheckTimer(unit, this);
-		localStore.put(ABLocalStoreKeys.TOGGLEDABILITY, this);
+		localStore.put(ABLocalStoreKeys.ISTOGGLEDABILITY, this);
 		if (config.getSpecialFields() != null) {
 			if (config.getSpecialFields().getBufferManaRequired() != null) {
 				this.bufferMana = config.getSpecialFields().getBufferManaRequired().callback(game, unit, localStore, castId);

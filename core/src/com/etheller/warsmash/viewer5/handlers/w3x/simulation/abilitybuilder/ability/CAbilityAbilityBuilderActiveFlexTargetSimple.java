@@ -141,7 +141,7 @@ public class CAbilityAbilityBuilderActiveFlexTargetSimple extends CAbilitySpellB
 
 	@Override
 	public void onAdd(CSimulation game, CUnit unit) {
-		localStore.put(ABLocalStoreKeys.FLEXABILITY, this);
+		localStore.put(ABLocalStoreKeys.ISFLEXABILITY, this);
 		this.setTargeted(game, unit);
 		this.setPointTarget(game, unit);
 		this.setBehavior(unit);

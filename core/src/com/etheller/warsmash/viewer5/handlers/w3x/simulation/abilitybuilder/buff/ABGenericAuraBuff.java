@@ -14,10 +14,17 @@ public class ABGenericAuraBuff extends ABBuff {
 	
 	private CUnit caster;
 
-	public ABGenericAuraBuff(int handleId, War3ID alias, CUnit caster) {
+	private boolean positive;
+	private boolean leveled;
+
+	public ABGenericAuraBuff(int handleId, War3ID alias, CUnit caster, boolean leveled,
+			boolean positive) {
 		super(handleId, alias, alias);
 		this.caster = caster;
 		this.fx = new HashMap<>();
+		this.positive = positive;
+		this.leveled = leveled;
+		this.setLevel(null, null, 1);
 	}
 
 	@Override
@@ -57,6 +64,16 @@ public class ABGenericAuraBuff extends ABBuff {
 
 	@Override
 	public void onDeath(CSimulation game, CUnit cUnit) {
+	}
+
+	@Override
+	public boolean isPositive() {
+		return this.positive;
+	}
+
+	@Override
+	public boolean isLeveled() {
+		return this.leveled;
 	}
 
 }

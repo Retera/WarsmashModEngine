@@ -29,5 +29,20 @@ public abstract class AbstractCBuff extends AbstractGenericAliasedAbility implem
 	public CAbilityCategory getAbilityCategory() {
 		return CAbilityCategory.BUFF;
 	}
+	
+	@Override
+	public boolean isPositive() {
+		return true;
+	}
+	
+	@Override
+	public boolean isLeveled() {
+		return false;
+	}
+	
+	@Override
+	public boolean isDispellable() {
+		return false;
+	}
 
 }

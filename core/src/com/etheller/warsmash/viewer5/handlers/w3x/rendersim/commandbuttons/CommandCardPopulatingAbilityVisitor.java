@@ -417,7 +417,7 @@ public class CommandCardPopulatingAbilityVisitor implements CAbilityVisitor<Void
 			} else {
 				if (buff.isIconShowing()) {
 					this.commandButtonListener.buff(iconUI.getIcon(), buff.getLevel(), iconUI.getToolTip(),
-							iconUI.getUberTip());
+							iconUI.getUberTip(), buff.isPositive(), buff.isLeveled());
 				}
 			}
 		}

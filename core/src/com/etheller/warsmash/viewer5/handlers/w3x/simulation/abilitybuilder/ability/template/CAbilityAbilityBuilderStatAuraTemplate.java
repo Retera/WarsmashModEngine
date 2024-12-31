@@ -55,6 +55,7 @@ public class CAbilityAbilityBuilderStatAuraTemplate extends AbilityGenericSingle
 	private final int LEAVE_GROUP_TICKS = (int) (3 / WarsmashConstants.SIMULATION_STEP_TIME);
 	private final int ENTER_GROUP_TICKS = (int) (0.4 / WarsmashConstants.SIMULATION_STEP_TIME);
 	private final int RESET_GROUP_TICKS = LEAVE_GROUP_TICKS * 2;
+	private boolean leveled;
 
 	public CAbilityAbilityBuilderStatAuraTemplate(int handleId, War3ID code, War3ID alias,
 			List<CAbilityTypeAbilityBuilderLevelData> levelData, Map<String, Object> localStore,
@@ -85,6 +86,8 @@ public class CAbilityAbilityBuilderStatAuraTemplate extends AbilityGenericSingle
 			this.targetMelee = this.rangeOverride.isTargetMelee();
 			this.targetRange = this.rangeOverride.isTargetRange();
 		}
+
+		this.leveled = levelData.size() > 1;
 	}
 
 	private void removeExistingBuffs(StatBuffFromDataField statBuff) {
@@ -95,7 +98,7 @@ public class CAbilityAbilityBuilderStatAuraTemplate extends AbilityGenericSingle
 			}
 		}
 	}
-	
+
 	private void addNewBuffs(StatBuffFromDataField statBuff) {
 		for (CUnit unit : auraGroup) {
 			unit.addNonStackingStatBuff(statBuff.getBuff());
@@ -156,6 +159,7 @@ public class CAbilityAbilityBuilderStatAuraTemplate extends AbilityGenericSingle
 	public void setLevel(CSimulation game, CUnit unit, int level) {
 		super.setLevel(game, unit, level);
 		localStore.put(ABLocalStoreKeys.CURRENTLEVEL, level);
+		this.buff.setLevel(game, unit, level);
 		targetsAllowed = levelData.get(getLevel() - 1).getTargetsAllowed();
 		range = levelData.get(getLevel() - 1).getArea();
 		this.targetMelee = false;
@@ -233,7 +237,8 @@ public class CAbilityAbilityBuilderStatAuraTemplate extends AbilityGenericSingle
 	@Override
 	public void onAdd(CSimulation game, CUnit unit) {
 		if (this.buffId != null) {
-			this.buff = new ABGenericAuraBuff(game.getHandleIdAllocator().createId(), this.buffId, unit);
+			this.buff = new ABGenericAuraBuff(game.getHandleIdAllocator().createId(), this.buffId, unit, this.leveled,
+					true);
 		}
 		game.getAbilityData().createAbility(getAlias(), game.getHandleIdAllocator().createId());
 		auraGroup = new HashSet<>();

@@ -1,0 +1,262 @@
+{
+	"abilityList": [{
+		"ids": [{"id":"Arej", "castId": "rejuvination"}],
+		"type": "NORMAL_UNITTARGET",
+		"extraTargetConditions": [{
+			"type": "not",
+			"condition": {
+				"type": "and",
+				"condition1": {
+					"type": "not",
+					"condition": {
+						"type": "or",
+						"condition1": {
+							"type": "f=0",
+							"value": {
+								"type": "getAbilityDataAsFloat",
+								"dataField": "B"
+							}
+						},
+						"condition2": {
+							"type": "or",
+							"condition1": {
+								"type": "not",
+								"condition": {
+									"type": "isUnitMaxMp",
+									"unit": {
+										"type": "getAbilityTargetedUnit"
+									}
+								}
+							},
+							"condition2": {
+								"type": "setCantUseReasonOnFailure",
+								"condition": {
+									"type": "i>",
+									"value1": {
+										"type": "getAbilityDataAsInteger",
+										"dataField": "C"
+									},
+									"value2": {
+										"type": "rawInteger",
+										"value": 1
+									}
+								},
+								"reason": "ALREADY_AT_FULL_MANA"
+							}
+						}
+					}
+				},
+				"condition2": {
+					"type": "not",
+					"condition": {
+						"type": "or",
+						"condition1": {
+							"type": "f=0",
+							"value": {
+								"type": "getAbilityDataAsFloat",
+								"dataField": "A"
+							}
+						},
+						"condition2": {
+							"type": "or",
+							"condition1": {
+								"type": "not",
+								"condition": {
+									"type": "isUnitMaxHp",
+									"unit": {
+										"type": "getAbilityTargetedUnit"
+									}
+								}
+							},
+							"condition2": {
+								"type": "setCantUseReasonOnFailure",
+								"condition": {
+									"type": "iOdd",
+									"value": {
+										"type": "getAbilityDataAsInteger",
+										"dataField": "C"
+									}
+								},
+								"reason": "ALREADY_AT_FULL_HEALTH"
+							}
+						}
+					}
+				}
+			}
+		}],
+		"onEndCasting": [{
+			"type": "checkAbilityEffectReaction",
+			"target": {
+				"type": "getAbilityTargetedUnit"
+			},
+			"onHitActions": [{
+					"type": "createTimedTickingPausedBuff",
+					"buffId": {
+						"type": "getFirstBuffId"
+					},
+					"duration": {
+						"type": "getAbilityDuration",
+						"target": {
+							"type": "getAbilityTargetedUnit"
+						}
+					},
+					"onAddActions": [{
+							"type": "storeValueLocally",
+							"key": {
+								"type": "rawString",
+								"value": "hpPerSec"
+							},
+							"valueToStore": {
+								"type": "f/",
+								"value1": {
+									"type": "getAbilityDataAsFloat",
+									"dataField": "A"
+								},
+								"value2": {
+									"type": "getAbilityDuration",
+									"target": {
+										"type": "getBuffedUnit"
+									}
+								}
+							}
+						},{
+							"type": "storeValueLocally",
+							"key": {
+								"type": "rawString",
+								"value": "mpPerSec"
+							},
+							"valueToStore": {
+								"type": "f/",
+								"value1": {
+									"type": "getAbilityDataAsFloat",
+									"dataField": "B"
+								},
+								"value2": {
+									"type": "getAbilityDuration",
+									"target": {
+										"type": "getBuffedUnit"
+									}
+								}
+							}
+					}],
+					"onTickActions": [{
+							"type": "periodicExecute",
+							"periodicActions": [{
+									"type": "heal",
+									"target": {
+										"type": "getBuffedUnit"
+									},
+									"amount": {
+										"type": "getStoredFloatByKey",
+										"key": {
+											"type": "rawString",
+											"value": "hpPerSec"
+										}
+									}
+								},{
+									"type": "addMp",
+									"target": {
+										"type": "getBuffedUnit"
+									},
+									"amount": {
+										"type": "getStoredFloatByKey",
+										"key": {
+											"type": "rawString",
+											"value": "mpPerSec"
+										}
+									}
+							}],
+							"delaySeconds": {
+								"type": "rawFloat",
+								"value": 1
+							},
+							"unique": {
+								"type": "getUnitHandleAsString",
+								"unit": {
+									"type": "getBuffedUnit"
+								}
+							}
+					}],
+					"onRemoveActions": [{
+						"type": "cleanUpCastInstance"
+					}]
+				},{
+					"type": "addNonStackingDisplayBuff",
+					"target": {
+						"type": "getAbilityTargetedUnit"
+					},
+					"buff": {
+						"type": "getLastCreatedBuff"
+					},
+					"key": {
+						"type": "getCodeAsString"
+					}
+				},{
+					"type": "storeValueLocally",
+					"key": {
+						"type": "rawString",
+						"value": "regenBuff"
+					},
+					"valueToStore": {
+						"type": "getLastCreatedBuff"
+					}
+				},{
+					"type": "if",
+					"condition": {
+						"type": "bool",
+						"bool": {
+							"type": "getAbilityDataAsBoolean",
+							"dataField": "E"
+						}
+					},
+					"thenActions": [{
+							"type": "createDamageTakenListener",
+							"actions": [{
+									"type": "removeDamageTakenListener",
+									"targetUnit": {
+										"type": "getListenerUnit"
+									},
+									"listener": {
+										"type": "getStoredDamageTakenListenerByKey",
+										"key": {
+											"type": "rawString",
+											"value": "breakHeal"
+										}
+									}
+								
+								},{
+									"type": "removeBuff",
+									"target": {
+										"type": "getListenerUnit"
+									},
+									"buff": {
+										"type": "getStoredBuffByKey",
+										"key": {
+											"type": "rawString",
+											"value": "regenBuff"
+										}
+									}
+							}]
+						},{
+							"type": "addDamageTakenListener",
+							"targetUnit": {
+								"type": "getAbilityTargetedUnit"
+							},
+							"listener": {
+								"type": "getLastCreatedDamageTakenListener"
+							}
+						},{
+							"type": "storeValueLocally",
+							"key": {
+								"type": "rawString",
+								"value": "breakHeal"
+							},
+							"valueToStore": {
+								"type": "getLastCreatedDamageTakenListener"
+							}
+					}]
+			}],
+			"elseActions": []
+		}]
+	}]
+}

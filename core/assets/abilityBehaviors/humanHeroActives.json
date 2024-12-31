@@ -693,6 +693,15 @@
 							"type": "getAbilityTargetedUnit"
 						}
 					},
+					"positive": {
+						"type": "evaluateCondition",
+						"condition": {
+							"type": "isUnitShareSpells",
+							"unit": {
+								"type": "getAbilityTargetedUnit"
+							}
+						}
+					},
 					"onAddActions": [{
 							"type": "addStateModBuff",
 							"targetUnit": {

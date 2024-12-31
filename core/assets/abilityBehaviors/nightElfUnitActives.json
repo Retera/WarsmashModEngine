@@ -379,8 +379,14 @@
 				}
 		}]
 	},{
-		"ids": [{"id":"Arej", "castId": "rejuvination"},{"id":"AIrg", "castId": "itemregeneration"}],
+		"ids": [{"id":"Arej", "castId": "rejuvination"}],
 		"type": "NORMAL_FLEXTARGET",
+		"overrideFields": {
+			"universalSpell": {
+				"type": "rawBoolean",
+				"value": "true"
+			}
+		},
 		"specialFields": {
 			"targetedSpell": [{
 				"type": "not",
@@ -1588,6 +1594,10 @@
 						"target": {
 							"type": "getAbilityTargetedUnit"
 						}
+					},
+					"positive": {
+						"type": "rawBoolean",
+						"value": "false"
 					},
 					"onAddActions": [{
 							"type": "addNonStackingStatBuff",

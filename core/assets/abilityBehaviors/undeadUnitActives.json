@@ -478,6 +478,10 @@
 							"buffId": {
 								"type": "getFirstBuffId"
 							},
+							"dispellable": {
+								"type": "rawBoolean",
+								"value": "false"
+							},
 							"duration": {
 								"type": "getAbilityDuration"
 							}
@@ -696,6 +700,10 @@
 							"buffId": {
 								"type": "getFirstBuffId"
 							},
+							"dispellable": {
+								"type": "rawBoolean",
+								"value": "false"
+							},
 							"duration": {
 								"type": "getAbilityDuration"
 							}
@@ -785,6 +793,10 @@
 					"type": "createTimedBuff",
 					"buffId": {
 						"type": "getFirstBuffId"
+					},
+					"positive": {
+						"type": "rawBoolean",
+						"value": "false"
 					},
 					"duration": {
 						"type": "getAbilityDuration",

@@ -21,6 +21,8 @@ public class CBehaviorAbilityBuilderNoTarget implements ABBehavior {
 	private AbilityBuilderActiveAbility ability;
 	
 	private int castStartTick = 0;
+	private int castPointTicks = 0;
+	private int backswingTicks = 0;
 	private boolean doneEffect = false;
 	private boolean channeling = false;
 	
@@ -69,6 +71,10 @@ public class CBehaviorAbilityBuilderNoTarget implements ABBehavior {
 	public ABBehavior reset() {
 		this.doneEffect = false;
 		this.castStartTick = 0;
+		this.castPointTicks = (int) ((this.unit.getUnitType().getCastPoint() + this.ability.getCastTime())
+				/ WarsmashConstants.SIMULATION_STEP_TIME);
+		this.backswingTicks = (int) ((this.unit.getUnitType().getCastBackswingPoint() + this.ability.getCastTime())
+				/ WarsmashConstants.SIMULATION_STEP_TIME);
 		this.localStore.put(ABLocalStoreKeys.CHANNELING, false);
 		this.orderId = this.ability.getBaseOrderId();
 		return this;
@@ -78,6 +84,10 @@ public class CBehaviorAbilityBuilderNoTarget implements ABBehavior {
 	public ABBehavior reset(int orderId) {
 		this.doneEffect = false;
 		this.castStartTick = 0;
+		this.castPointTicks = (int) ((this.unit.getUnitType().getCastPoint() + this.ability.getCastTime())
+				/ WarsmashConstants.SIMULATION_STEP_TIME);
+		this.backswingTicks = (int) ((this.unit.getUnitType().getCastBackswingPoint() + this.ability.getCastTime())
+				/ WarsmashConstants.SIMULATION_STEP_TIME);
 		this.localStore.put(ABLocalStoreKeys.CHANNELING, false);
 		this.orderId = orderId;
 		return this;
@@ -87,12 +97,6 @@ public class CBehaviorAbilityBuilderNoTarget implements ABBehavior {
 	public CBehavior update(final CSimulation game) {
 		boolean wasChanneling = this.channeling;
 		if (this.castStartTick == 0) {
-			this.unit.fireSpellEvents(game, JassGameEventsWar3.EVENT_UNIT_SPELL_CAST, this.ability, null);
-			if (this.unit.getCurrentBehavior() != this) {
-				return this.unit.getCurrentBehavior();
-			} else if (this.unit.isPaused()) {
-				return this;
-			}
 			this.castStartTick = game.getGameTurnTick();
 			
 			if (!this.unit.chargeMana(this.ability.getChargedManaCost())) {
@@ -113,6 +117,13 @@ public class CBehaviorAbilityBuilderNoTarget implements ABBehavior {
 						this.ability.getCastingSecondaryTags(), 1.0f, true);
 			}
 			this.channeling = (boolean) localStore.get(ABLocalStoreKeys.CHANNELING);
+
+			this.unit.fireSpellEvents(game, JassGameEventsWar3.EVENT_UNIT_SPELL_CHANNEL, this.ability, null);
+			if (this.unit.getCurrentBehavior() != this) {
+				return this.unit.getCurrentBehavior();
+			} else if (this.unit.isPaused()) {
+				return this;
+			}
 		}
 		
 		if (instant) {
@@ -130,10 +141,6 @@ public class CBehaviorAbilityBuilderNoTarget implements ABBehavior {
 			}
 		} else {
 			final int ticksSinceCast = game.getGameTurnTick() - this.castStartTick;
-			final int castPointTicks = (int) (this.unit.getUnitType().getCastPoint()
-					/ WarsmashConstants.SIMULATION_STEP_TIME);
-			final int backswingTicks = (int) (this.unit.getUnitType().getCastBackswingPoint()
-					/ WarsmashConstants.SIMULATION_STEP_TIME);
 			if ((ticksSinceCast >= castPointTicks) || (ticksSinceCast >= backswingTicks)) {
 				CBehavior beh = tryDoEffect(game, wasChanneling);
 				if (beh != null) {
@@ -155,19 +162,7 @@ public class CBehaviorAbilityBuilderNoTarget implements ABBehavior {
 	private CBehavior tryDoEffect(CSimulation game, boolean wasChanneling) {
 		boolean wasEffectDone = this.doneEffect;
 		if (!wasEffectDone) {
-			this.unit.fireSpellEvents(game, JassGameEventsWar3.EVENT_UNIT_SPELL_EFFECT, this.ability, null);
-			if (this.unit.getCurrentBehavior() != this) {
-				return this.unit.getCurrentBehavior();
-			} else if (this.unit.isPaused()) {
-				return this;
-			}
 			if (this.channeling) {
-				this.unit.fireSpellEvents(game, JassGameEventsWar3.EVENT_UNIT_SPELL_CHANNEL, this.ability, null);
-				if (this.unit.getCurrentBehavior() != this) {
-					return this.unit.getCurrentBehavior();
-				} else if (this.unit.isPaused()) {
-					return this;
-				}
 				game.unitLoopSoundEffectEvent(this.unit, this.ability.getAlias());
 			}
 			else {
@@ -177,6 +172,13 @@ public class CBehaviorAbilityBuilderNoTarget implements ABBehavior {
 			
 			this.ability.runEndCastingActions(game, unit, orderId);
 			this.channeling = (boolean) localStore.get(ABLocalStoreKeys.CHANNELING);
+			this.unit.fireSpellEvents(game, JassGameEventsWar3.EVENT_UNIT_SPELL_CAST, this.ability, null);
+			this.unit.fireSpellEvents(game, JassGameEventsWar3.EVENT_UNIT_SPELL_EFFECT, this.ability, null);
+			if (this.unit.getCurrentBehavior() != this) {
+				return this.unit.getCurrentBehavior();
+			} else if (this.unit.isPaused()) {
+				return this;
+			}
 			
 		}
 		this.channeling = this.channeling && this.doChannelTick(game, this.unit);
@@ -198,8 +200,10 @@ public class CBehaviorAbilityBuilderNoTarget implements ABBehavior {
 	@Override
 	public void end(final CSimulation game, boolean interrupted) {
 		checkEndChannel(game, interrupted);
+		if (!interrupted) {
+			this.unit.fireSpellEvents(game, JassGameEventsWar3.EVENT_UNIT_SPELL_FINISH, this.ability, null);
+		}
 		this.unit.fireSpellEvents(game, JassGameEventsWar3.EVENT_UNIT_SPELL_ENDCAST, this.ability, null);
-		this.unit.fireSpellEvents(game, JassGameEventsWar3.EVENT_UNIT_SPELL_FINISH, this.ability, null);
 	}
 
 	private void checkEndChannel(final CSimulation game, final boolean interrupted) {

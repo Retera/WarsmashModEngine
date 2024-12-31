@@ -3362,10 +3362,10 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 	}
 
 	@Override
-	public void buff(final Texture icon, final int level, final String tip, final String uberTip) {
+	public void buff(final Texture icon, final int level, final String tip, final String uberTip, final boolean positive, final boolean leveled) {
 		if ((this.selectedUnit == null) || !this.selectedUnit.getSimulationUnit().isBuilding()) {
 			if (this.currentBuffBarIconIndex < this.buffBarIcons.length) {
-				this.buffBarIcons[this.currentBuffBarIconIndex++].set(icon, tip, uberTip);
+				this.buffBarIcons[this.currentBuffBarIconIndex++].set(icon, tip, uberTip, positive, leveled, level);
 			}
 		}
 	}

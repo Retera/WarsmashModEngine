@@ -93,7 +93,7 @@ public class CAbilityAbilityBuilderActiveFlexTarget extends CAbilityAbilityBuild
 
 	@Override
 	public void onAddDisabled(CSimulation game, CUnit unit) {
-		localStore.put(ABLocalStoreKeys.FLEXABILITY, this);
+		localStore.put(ABLocalStoreKeys.ISFLEXABILITY, this);
 		super.onAddDisabled(game, unit);
 	}
 

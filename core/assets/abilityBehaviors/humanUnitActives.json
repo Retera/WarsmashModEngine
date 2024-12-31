@@ -106,6 +106,10 @@
 							"type": "getAbilityTargetedUnit"
 						}
 					},
+					"positive": {
+						"type": "rawBoolean",
+						"value": "false"
+					},
 					"onAddActions": [{
 							"type": "addNonStackingStatBuff",
 							"targetUnit": {
@@ -671,18 +675,39 @@
 	},{
 		"ids": [{"id":"Ahea", "castId": "heal", "autoCastOnId": "healon", "autoCastOffId": "healoff", "autoCastType": "NEARESTVALID"}],
 		"type": "NORMAL_UNITTARGET",
+		"overrideFields": {
+			"universalSpell": {
+				"type": "rawBoolean",
+				"value": "true"
+			}
+		},
 		"extraTargetConditions": [{
-			"type": "setCantUseReasonOnFailure",
-			"condition": {
-				"type": "not",
+				"type": "setCantUseReasonOnFailure",
 				"condition": {
-					"type": "isUnitMaxHp",
-					"unit": {
-						"type": "getAbilityTargetedUnit"
+					"type": "not",
+					"condition": {
+						"type": "isUnitMaxHp",
+						"unit": {
+							"type": "getAbilityTargetedUnit"
+						}
 					}
-				}
-			},
-			"reason": "ALREADY_AT_FULL_HEALTH"
+				},
+				"reason": "ALREADY_AT_FULL_HEALTH"
+			},{
+				"type": "setCantUseReasonOnFailure",
+				"condition": {
+					"type": "not",
+					"condition": {
+						"type": "doesUnitHaveBuff",
+						"unit": {
+							"type": "getAbilityTargetedUnit"
+						},
+						"id": {
+							"type": "getFirstBuffId"
+						}
+					}
+				},
+				"reason": "TARGET_IS_ALREADY_BEING_HEALED"
 		}],
 		"onEndCasting": [{
 			"type": "checkAbilityEffectReaction",
@@ -714,6 +739,10 @@
 					},
 					"duration": {
 						"type": "getAbilityCooldown"
+					},
+					"dispellable": {
+						"type": "rawBoolean",
+						"value": "false"
 					}
 				},{
 					"type": "addBuff",

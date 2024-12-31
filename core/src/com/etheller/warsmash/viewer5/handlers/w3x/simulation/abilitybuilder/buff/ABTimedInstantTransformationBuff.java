@@ -22,9 +22,10 @@ public class ABTimedInstantTransformationBuff extends ABGenericTimedBuff {
 	private float dur;
 	private float transTime;
 
-	public ABTimedInstantTransformationBuff(int handleId, Map<String, Object> localStore, OnTransformationActions actions, War3ID alias, float duration, AbilityBuilderPassiveAbility ability, 
+	public ABTimedInstantTransformationBuff(int handleId, Map<String, Object> localStore,
+			OnTransformationActions actions, War3ID alias, float duration, AbilityBuilderPassiveAbility ability,
 			CUnitType newType, boolean addAlternateTagAfter, boolean permanent, float transformationDuration) {
-		super(handleId, alias, duration, true);
+		super(handleId, alias, duration, true, false, true, false);
 		this.setIconShowing(false);
 		this.localStore = localStore;
 		this.actions = actions;
@@ -47,10 +48,11 @@ public class ABTimedInstantTransformationBuff extends ABGenericTimedBuff {
 	protected void onBuffExpire(CSimulation game, CUnit unit) {
 		if (dur > 0) {
 			TransformationHandler.playMorphAnimation(unit, addAlternateTagAfter);
-			new DelayInstantTransformationTimer(game, localStore, unit, actions, addAlternateTagAfter, transTime, null, targetType, abil,
-					null, transTime, 0).start(game);
+			new DelayInstantTransformationTimer(game, localStore, unit, actions, addAlternateTagAfter, transTime, null,
+					targetType, abil, null, transTime, 0).start(game);
 		} else {
-			TransformationHandler.instantTransformation(game, localStore, unit, targetType, actions, abil, addAlternateTagAfter, perm, true);
+			TransformationHandler.instantTransformation(game, localStore, unit, targetType, actions, abil,
+					addAlternateTagAfter, perm, true);
 		}
 	}
 

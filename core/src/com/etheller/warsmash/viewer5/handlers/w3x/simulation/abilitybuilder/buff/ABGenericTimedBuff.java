@@ -10,11 +10,18 @@ public abstract class ABGenericTimedBuff extends ABBuff {
 	private final float duration;
 	private int currentTick = 0;
 	private int expireTick;
-	
-	public ABGenericTimedBuff(int handleId, War3ID alias, float duration, boolean showTimedLifeBar) {
+	private boolean leveled;
+	private boolean positive;
+	private boolean dispellable;
+
+	public ABGenericTimedBuff(int handleId, War3ID alias, float duration, boolean showTimedLifeBar, boolean leveled,
+			boolean positive, boolean dispellable) {
 		super(handleId, alias, alias);
 		this.showTimedLifeBar = showTimedLifeBar;
 		this.duration = duration;
+		this.leveled = leveled;
+		this.positive = positive;
+		this.dispellable = dispellable;
 	}
 
 	@Override
@@ -39,7 +46,7 @@ public abstract class ABGenericTimedBuff extends ABBuff {
 	public void onRemove(CSimulation game, CUnit unit) {
 		this.onBuffRemove(game, unit);
 	}
-	
+
 	protected abstract void onBuffRemove(CSimulation game, CUnit unit);
 
 	protected abstract void onBuffExpire(CSimulation game, CUnit unit);
@@ -68,9 +75,24 @@ public abstract class ABGenericTimedBuff extends ABBuff {
 	public void onDeath(final CSimulation game, final CUnit cUnit) {
 		cUnit.remove(game, this);
 	}
-	
+
 	public void updateExpiration(final CSimulation game, final CUnit unit) {
 		final int durationTicks = (int) (this.duration / WarsmashConstants.SIMULATION_STEP_TIME);
 		expireTick = game.getGameTurnTick() + durationTicks;
+	}
+
+	@Override
+	public boolean isPositive() {
+		return this.positive;
+	}
+
+	@Override
+	public boolean isLeveled() {
+		return this.leveled;
+	}
+
+	@Override
+	public boolean isDispellable() {
+		return this.dispellable;
 	}
 }

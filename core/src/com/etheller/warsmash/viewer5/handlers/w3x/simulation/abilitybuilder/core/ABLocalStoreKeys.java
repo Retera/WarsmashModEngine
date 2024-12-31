@@ -28,9 +28,12 @@ public class ABLocalStoreKeys {
 
 	public static final String CANTUSEREASON = "_cantUseReason";
 
-	public static final String TOGGLEDABILITY = "_toggledAbility";
-	public static final String FLEXABILITY = "_flexAbility";
-	public static final String PAIRABILITY = "_pairAbility";
+	public static final String ISTOGGLEDABILITY = "_toggledAbility";
+	public static final String ISFLEXABILITY = "_flexAbility";
+	public static final String ISPAIRABILITY = "_pairAbility";
+	public static final String ISABILITYLEVELED = "_isAbilityLeveld";
+	public static final String ISABILITYPHYSICAL = "_isAbilityPhysical";
+	
 	
 	// Aura Template
 	public static final String AURAGROUP = "_auraGroup";

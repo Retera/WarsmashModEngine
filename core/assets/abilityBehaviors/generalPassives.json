@@ -91,7 +91,7 @@
 					"type": "if",
 					"condition": {
 						"type": "and",
-						"condition1": {
+						"conditions": [{
 							"type": "isDamageTypeEqual",
 							"damageType1": {
 								"type": "getTriggeringDamageType"
@@ -103,8 +103,7 @@
 									"value": "NORMAL"
 								}
 							}
-						},
-						"condition2": {
+						},{
 							"type": "not",
 							"condition": {
 								"type": "bool",
@@ -112,7 +111,7 @@
 									"type": "isTriggeringDamageRanged"
 								}
 							}
-						}
+						}]
 					},
 					"thenActions": [{
 						"type": "multiplyDamageTakenMultiplier",
@@ -233,13 +232,12 @@
 					"type": "if",
 					"condition": {
 						"type": "and",
-						"condition1": {
+						"conditions": [{
 							"type": "isUnitValidTarget",
 							"target": {
 								"type": "getAttackedUnit"
 							}
-						},
-						"condition2": {
+						},{
 							"type": "f<",
 							"value1": {
 								"type": "randomBoundedFloat",
@@ -252,7 +250,7 @@
 								"type": "getAbilityDataAsFloat",
 								"dataField": "A"
 							}
-						}
+						}]
 					},
 					"thenActions": [{
 							"type": "if",
@@ -576,12 +574,11 @@
 					"type": "if",
 					"condition": {
 						"type": "and",
-						"condition1": {
+						"conditions": [{
 							"type": "isItemAbility"
-						},
-						"condition2": {
+						},{
 							"type": "itemHasCharges"
-						}
+						}]
 					},
 					"thenActions": [{
 							"type": "setReincarnating"

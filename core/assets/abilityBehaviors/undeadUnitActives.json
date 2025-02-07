@@ -43,13 +43,12 @@
 			"type": "setCantUseReasonOnFailure",
 			"condition": {
 				"type": "and",
-				"condition1": {
+				"conditions": [{
 					"type": "isUnitValidTarget",
 					"target": {
 						"type": "getAbilityTargetedUnit"
 					}
-				},
-				"condition2": {
+				},{
 					"type": "not",
 					"condition": {
 						"type": "doesUnitHaveBuff",
@@ -60,7 +59,7 @@
 							"type": "getAlias"
 						}
 					}
-				}
+				}]
 			},
 			"reason": "THERE_ARE_NO_USABLE_CORPSES_NEARBY"
 		}],
@@ -327,13 +326,12 @@
 			},
 			"conditions": [{
 				"type": "and",
-				"condition1": {
+				"conditions": [{
 					"type": "isUnitValidTarget",
 					"target": {
 						"type": "getMatchingUnit"
 					}
-				},
-				"condition2": {
+				},{
 					"type": "not",
 					"condition": {
 						"type": "isUnitMaxHp",
@@ -341,7 +339,7 @@
 							"type": "getMatchingUnit"
 						}
 					}
-				}
+				}]
 			}]
 		}],
 		"onEndCasting": [{
@@ -382,13 +380,12 @@
 				},
 				"condition": {
 					"type": "and",
-					"condition1": {
+					"conditions": [{
 						"type": "isUnitValidTarget",
 						"target": {
 							"type": "getMatchingUnit"
 						}
-					},
-					"condition2": {
+					},{
 						"type": "not",
 						"condition": {
 							"type": "isUnitMaxHp",
@@ -396,7 +393,7 @@
 								"type": "getMatchingUnit"
 							}
 						}
-					}
+					}]
 				},
 				"iterationActions": [{
 					"type": "if",
@@ -417,7 +414,7 @@
 							"type": "if",
 							"condition": {
 								"type": "and",
-								"condition1": {
+								"conditions": [{
 									"type": "i!=0",
 									"value": {
 										"type": "getStoredIntegerByKey",
@@ -426,8 +423,7 @@
 											"value": "cnt"
 										}
 									}
-								},
-								"condition2": {
+								},{
 									"type": "i<",
 									"value1": {
 										"type": "getStoredIntegerByKey",
@@ -440,7 +436,7 @@
 										"type": "getAbilityDataAsInteger",
 										"dataField": "E"
 									}
-								}
+								}]
 							},
 							"thenActions": [{
 								"type": "subtractMp",
@@ -549,13 +545,12 @@
 			},
 			"conditions": [{
 				"type": "and",
-				"condition1": {
+				"conditions": [{
 					"type": "isUnitValidTarget",
 					"target": {
 						"type": "getMatchingUnit"
 					}
-				},
-				"condition2": {
+				},{
 					"type": "not",
 					"condition": {
 						"type": "isUnitMaxMp",
@@ -563,7 +558,7 @@
 							"type": "getMatchingUnit"
 						}
 					}
-				}
+				}]
 			}]
 		}],
 		"onEndCasting": [{
@@ -604,13 +599,12 @@
 				},
 				"condition": {
 					"type": "and",
-					"condition1": {
+					"conditions": [{
 						"type": "isUnitValidTarget",
 						"target": {
 							"type": "getMatchingUnit"
 						}
-					},
-					"condition2": {
+					},{
 						"type": "not",
 						"condition": {
 							"type": "isUnitMaxMp",
@@ -618,7 +612,7 @@
 								"type": "getMatchingUnit"
 							}
 						}
-					}
+					}]
 				},
 				"iterationActions": [{
 					"type": "if",
@@ -639,7 +633,7 @@
 							"type": "if",
 							"condition": {
 								"type": "and",
-								"condition1": {
+								"conditions": [{
 									"type": "i!=0",
 									"value": {
 										"type": "getStoredIntegerByKey",
@@ -648,8 +642,7 @@
 											"value": "cnt"
 										}
 									}
-								},
-								"condition2": {
+								},{
 									"type": "i<",
 									"value1": {
 										"type": "getStoredIntegerByKey",
@@ -662,7 +655,7 @@
 										"type": "getAbilityDataAsInteger",
 										"dataField": "E"
 									}
-								}
+								}]
 							},
 							"thenActions": [{
 								"type": "subtractMp",

@@ -8,18 +8,17 @@
 					"type": "if",
 					"condition": {
 						"type": "and",
-						"condition1": {
+						"conditions": [{
 							"type": "not",
 							"condition": {
 								"type": "isOnCooldown"
 							}
-						},
-						"condition2": {
+						},{
 							"type": "isUnitEnemy",
 							"unit": {
 								"type": "getReactionAbilityCastingUnit"
 							}
-						}
+						}]
 					},
 					"thenActions": [{
 							"type": "reactionPreventHit"
@@ -51,18 +50,17 @@
 					"type": "if",
 					"condition": {
 						"type": "and",
-						"condition1": {
+						"conditions": [{
 							"type": "not",
 							"condition": {
 								"type": "isOnCooldown"
 							}
-						},
-						"condition2": {
+						},{
 							"type": "isUnitEnemy",
 							"unit": {
 								"type": "getReactionAbilityCastingUnit"
 							}
-						}
+						}]
 					},
 					"thenActions": [{
 							"type": "reactionPreventHit"
@@ -333,7 +331,7 @@
 					"type": "if",
 					"condition": {
 						"type": "or",
-						"condition1": {
+						"conditions": [{
 							"type": "isAttackTypeEqual",
 							"attackType1": {
 								"type": "getTriggeringAttackType"
@@ -345,8 +343,7 @@
 									"value": "MAGIC"
 								}
 							}
-						},
-						"condition2": {
+						},{
 							"type": "isAttackTypeEqual",
 							"attackType1": {
 								"type": "getTriggeringAttackType"
@@ -358,7 +355,7 @@
 									"value": "SPELLS"
 								}
 							}
-						}
+						}]
 					},
 					"thenActions": [{
 						"type": "multiplyDamageTakenMultiplier",
@@ -458,52 +455,43 @@
 						"type": "if",
 						"condition": {
 							"type": "and",
-							"condition1": {
+							"conditions": [{
 								"type": "gameplayConstantIsDefendCanDeflect"
-							},
-							"condition2": {
-								"type": "and",
-								"condition1": {
-									"type": "not",
-									"condition": {
-										"type": "bool",
-										"bool": {
-											"type": "isProjectileReflected",
-											"projectile": {
-												"type": "getReactionAttackProjectile"
-											}
-										}
-									}
-								},
-								"condition2": {
-									"type": "and",
-									"condition1": {
-										"type": "f<",
-										"value1": {
-											"type": "getAbilityDataAsFloat",
-											"dataField": "G"
-										},
-										"value2": {
-											"type": "rawFloat",
-											"value": 1
-										}
-									},
-									"condition2": {
-										"type": "f<",
-										"value1": {
-											"type": "randomBoundedFloat",
-											"bound": {
-												"type": "rawFloat",
-												"value": 100
-											}
-										},
-										"value2": {
-											"type": "getAbilityDataAsFloat",
-											"dataField": "F"
+							},{
+								"type": "not",
+								"condition": {
+									"type": "bool",
+									"bool": {
+										"type": "isProjectileReflected",
+										"projectile": {
+											"type": "getReactionAttackProjectile"
 										}
 									}
 								}
-							}
+							},{
+								"type": "f<",
+								"value1": {
+									"type": "getAbilityDataAsFloat",
+									"dataField": "G"
+								},
+								"value2": {
+									"type": "rawFloat",
+									"value": 1
+								}
+							},{
+								"type": "f<",
+								"value1": {
+									"type": "randomBoundedFloat",
+									"bound": {
+										"type": "rawFloat",
+										"value": 100
+									}
+								},
+								"value2": {
+									"type": "getAbilityDataAsFloat",
+									"dataField": "F"
+								}
+							}]
 						},
 						"thenActions": [{
 								"type": "reactionPreventHit"
@@ -569,7 +557,7 @@
 					"type": "if",
 					"condition": {
 						"type": "or",
-						"condition1": {
+						"conditions": [{
 							"type": "isAttackTypeEqual",
 							"attackType1": {
 								"type": "getReactionAttackProjectileAttackType"
@@ -581,8 +569,7 @@
 									"value": "MAGIC"
 								}
 							}
-						},
-						"condition2": {
+						},{
 							"type": "isAttackTypeEqual",
 							"attackType1": {
 								"type": "getReactionAttackProjectileAttackType"
@@ -594,58 +581,49 @@
 									"value": "SPELLS"
 								}
 							}
-						}
+						}]
 					},
 					"thenActions": [{
 						"type": "if",
 						"condition": {
 							"type": "and",
-							"condition1": {
+							"conditions": [{
 								"type": "gameplayConstantIsDefendCanDeflect"
-							},
-							"condition2": {
-								"type": "and",
-								"condition1": {
-									"type": "not",
-									"condition": {
-										"type": "bool",
-										"bool": {
-											"type": "isProjectileReflected",
-											"projectile": {
-												"type": "getReactionAttackProjectile"
-											}
-										}
-									}
-								},
-								"condition2": {
-									"type": "and",
-									"condition1": {
-										"type": "f<",
-										"value1": {
-											"type": "getAbilityDataAsFloat",
-											"dataField": "H"
-										},
-										"value2": {
-											"type": "rawFloat",
-											"value": 1
-										}
-									},
-									"condition2": {
-										"type": "f<",
-										"value1": {
-											"type": "randomBoundedFloat",
-											"bound": {
-												"type": "rawFloat",
-												"value": 100
-											}
-										},
-										"value2": {
-											"type": "getAbilityDataAsFloat",
-											"dataField": "F"
+							},{
+								"type": "not",
+								"condition": {
+									"type": "bool",
+									"bool": {
+										"type": "isProjectileReflected",
+										"projectile": {
+											"type": "getReactionAttackProjectile"
 										}
 									}
 								}
-							}
+							},{
+								"type": "f<",
+								"value1": {
+									"type": "getAbilityDataAsFloat",
+									"dataField": "H"
+								},
+								"value2": {
+									"type": "rawFloat",
+									"value": 1
+								}
+							},{
+								"type": "f<",
+								"value1": {
+									"type": "randomBoundedFloat",
+									"bound": {
+										"type": "rawFloat",
+										"value": 100
+									}
+								},
+								"value2": {
+									"type": "getAbilityDataAsFloat",
+									"dataField": "F"
+								}
+							}]
 						},
 						"thenActions": [{
 								"type": "reactionPreventHit"
@@ -860,7 +838,7 @@
 					"type": "if",
 					"condition": {
 						"type": "or",
-						"condition1": {
+						"conditions": [{
 							"type": "isAttackTypeEqual",
 							"attackType1": {
 								"type": "getTriggeringAttackType"
@@ -872,8 +850,7 @@
 									"value": "MAGIC"
 								}
 							}
-						},
-						"condition2": {
+						},{
 							"type": "isAttackTypeEqual",
 							"attackType1": {
 								"type": "getTriggeringAttackType"
@@ -885,7 +862,7 @@
 									"value": "SPELLS"
 								}
 							}
-						}
+						}]
 					},
 					"thenActions": [{
 						"type": "multiplyDamageTakenMultiplier",
@@ -969,52 +946,43 @@
 						"type": "if",
 						"condition": {
 							"type": "and",
-							"condition1": {
+							"conditions": [{
 								"type": "gameplayConstantIsDefendCanDeflect"
-							},
-							"condition2": {
-								"type": "and",
-								"condition1": {
-									"type": "not",
-									"condition": {
-										"type": "bool",
-										"bool": {
-											"type": "isProjectileReflected",
-											"projectile": {
-												"type": "getReactionAttackProjectile"
-											}
-										}
-									}
-								},
-								"condition2": {
-									"type": "and",
-									"condition1": {
-										"type": "f<",
-										"value1": {
-											"type": "getAbilityDataAsFloat",
-											"dataField": "G"
-										},
-										"value2": {
-											"type": "rawFloat",
-											"value": 1
-										}
-									},
-									"condition2": {
-										"type": "f<",
-										"value1": {
-											"type": "randomBoundedFloat",
-											"bound": {
-												"type": "rawFloat",
-												"value": 100
-											}
-										},
-										"value2": {
-											"type": "getAbilityDataAsFloat",
-											"dataField": "F"
+							},{
+								"type": "not",
+								"condition": {
+									"type": "bool",
+									"bool": {
+										"type": "isProjectileReflected",
+										"projectile": {
+											"type": "getReactionAttackProjectile"
 										}
 									}
 								}
-							}
+							},{
+								"type": "f<",
+								"value1": {
+									"type": "getAbilityDataAsFloat",
+									"dataField": "G"
+								},
+								"value2": {
+									"type": "rawFloat",
+									"value": 1
+								}
+							},{
+								"type": "f<",
+								"value1": {
+									"type": "randomBoundedFloat",
+									"bound": {
+										"type": "rawFloat",
+										"value": 100
+									}
+								},
+								"value2": {
+									"type": "getAbilityDataAsFloat",
+									"dataField": "F"
+								}
+							}]
 						},
 						"thenActions": [{
 								"type": "reactionPreventHit"
@@ -1080,7 +1048,7 @@
 					"type": "if",
 					"condition": {
 						"type": "or",
-						"condition1": {
+						"conditions": [{
 							"type": "isAttackTypeEqual",
 							"attackType1": {
 								"type": "getReactionAttackProjectileAttackType"
@@ -1092,8 +1060,7 @@
 									"value": "MAGIC"
 								}
 							}
-						},
-						"condition2": {
+						},{
 							"type": "isAttackTypeEqual",
 							"attackType1": {
 								"type": "getReactionAttackProjectileAttackType"
@@ -1105,58 +1072,49 @@
 									"value": "SPELLS"
 								}
 							}
-						}
+						}]
 					},
 					"thenActions": [{
 						"type": "if",
 						"condition": {
 							"type": "and",
-							"condition1": {
+							"conditions": [{
 								"type": "gameplayConstantIsDefendCanDeflect"
-							},
-							"condition2": {
-								"type": "and",
-								"condition1": {
-									"type": "not",
-									"condition": {
-										"type": "bool",
-										"bool": {
-											"type": "isProjectileReflected",
-											"projectile": {
-												"type": "getReactionAttackProjectile"
-											}
-										}
-									}
-								},
-								"condition2": {
-									"type": "and",
-									"condition1": {
-										"type": "f<",
-										"value1": {
-											"type": "getAbilityDataAsFloat",
-											"dataField": "H"
-										},
-										"value2": {
-											"type": "rawFloat",
-											"value": 1
-										}
-									},
-									"condition2": {
-										"type": "f<",
-										"value1": {
-											"type": "randomBoundedFloat",
-											"bound": {
-												"type": "rawFloat",
-												"value": 100
-											}
-										},
-										"value2": {
-											"type": "getAbilityDataAsFloat",
-											"dataField": "F"
+							},{
+								"type": "not",
+								"condition": {
+									"type": "bool",
+									"bool": {
+										"type": "isProjectileReflected",
+										"projectile": {
+											"type": "getReactionAttackProjectile"
 										}
 									}
 								}
-							}
+							},{
+								"type": "f<",
+								"value1": {
+									"type": "getAbilityDataAsFloat",
+									"dataField": "H"
+								},
+								"value2": {
+									"type": "rawFloat",
+									"value": 1
+								}
+							},{
+								"type": "f<",
+								"value1": {
+									"type": "randomBoundedFloat",
+									"bound": {
+										"type": "rawFloat",
+										"value": 100
+									}
+								},
+								"value2": {
+									"type": "getAbilityDataAsFloat",
+									"dataField": "F"
+								}
+							}]
 						},
 						"thenActions": [{
 								"type": "reactionPreventHit"
@@ -1501,7 +1459,7 @@
 					"type": "if",
 					"condition": {
 						"type": "or",
-						"condition1": {
+						"conditions": [{
 							"type": "isAttackTypeEqual",
 							"attackType1": {
 								"type": "getTriggeringAttackType"
@@ -1513,8 +1471,7 @@
 									"value": "MAGIC"
 								}
 							}
-						},
-						"condition2": {
+						},{
 							"type": "isAttackTypeEqual",
 							"attackType1": {
 								"type": "getTriggeringAttackType"
@@ -1526,7 +1483,7 @@
 									"value": "SPELLS"
 								}
 							}
-						}
+						}]
 					},
 					"thenActions": [{
 						"type": "multiplyDamageTakenMultiplier",
@@ -1610,52 +1567,43 @@
 						"type": "if",
 						"condition": {
 							"type": "and",
-							"condition1": {
+							"conditions": [{
 								"type": "gameplayConstantIsDefendCanDeflect"
-							},
-							"condition2": {
-								"type": "and",
-								"condition1": {
-									"type": "not",
-									"condition": {
-										"type": "bool",
-										"bool": {
-											"type": "isProjectileReflected",
-											"projectile": {
-												"type": "getReactionAttackProjectile"
-											}
-										}
-									}
-								},
-								"condition2": {
-									"type": "and",
-									"condition1": {
-										"type": "f<",
-										"value1": {
-											"type": "getAbilityDataAsFloat",
-											"dataField": "G"
-										},
-										"value2": {
-											"type": "rawFloat",
-											"value": 1
-										}
-									},
-									"condition2": {
-										"type": "f<",
-										"value1": {
-											"type": "randomBoundedFloat",
-											"bound": {
-												"type": "rawFloat",
-												"value": 100
-											}
-										},
-										"value2": {
-											"type": "getAbilityDataAsFloat",
-											"dataField": "F"
+							},{
+								"type": "not",
+								"condition": {
+									"type": "bool",
+									"bool": {
+										"type": "isProjectileReflected",
+										"projectile": {
+											"type": "getReactionAttackProjectile"
 										}
 									}
 								}
-							}
+							},{
+								"type": "f<",
+								"value1": {
+									"type": "getAbilityDataAsFloat",
+									"dataField": "G"
+								},
+								"value2": {
+									"type": "rawFloat",
+									"value": 1
+								}
+							},{
+								"type": "f<",
+								"value1": {
+									"type": "randomBoundedFloat",
+									"bound": {
+										"type": "rawFloat",
+										"value": 100
+									}
+								},
+								"value2": {
+									"type": "getAbilityDataAsFloat",
+									"dataField": "F"
+								}
+							}]
 						},
 						"thenActions": [{
 								"type": "reactionPreventHit"
@@ -1721,7 +1669,7 @@
 					"type": "if",
 					"condition": {
 						"type": "or",
-						"condition1": {
+						"conditions": [{
 							"type": "isAttackTypeEqual",
 							"attackType1": {
 								"type": "getReactionAttackProjectileAttackType"
@@ -1733,8 +1681,7 @@
 									"value": "MAGIC"
 								}
 							}
-						},
-						"condition2": {
+						},{
 							"type": "isAttackTypeEqual",
 							"attackType1": {
 								"type": "getReactionAttackProjectileAttackType"
@@ -1746,58 +1693,49 @@
 									"value": "SPELLS"
 								}
 							}
-						}
+						}]
 					},
 					"thenActions": [{
 						"type": "if",
 						"condition": {
 							"type": "and",
-							"condition1": {
+							"conditions": [{
 								"type": "gameplayConstantIsDefendCanDeflect"
-							},
-							"condition2": {
-								"type": "and",
-								"condition1": {
-									"type": "not",
-									"condition": {
-										"type": "bool",
-										"bool": {
-											"type": "isProjectileReflected",
-											"projectile": {
-												"type": "getReactionAttackProjectile"
-											}
-										}
-									}
-								},
-								"condition2": {
-									"type": "and",
-									"condition1": {
-										"type": "f<",
-										"value1": {
-											"type": "getAbilityDataAsFloat",
-											"dataField": "H"
-										},
-										"value2": {
-											"type": "rawFloat",
-											"value": 1
-										}
-									},
-									"condition2": {
-										"type": "f<",
-										"value1": {
-											"type": "randomBoundedFloat",
-											"bound": {
-												"type": "rawFloat",
-												"value": 100
-											}
-										},
-										"value2": {
-											"type": "getAbilityDataAsFloat",
-											"dataField": "F"
+							},{
+								"type": "not",
+								"condition": {
+									"type": "bool",
+									"bool": {
+										"type": "isProjectileReflected",
+										"projectile": {
+											"type": "getReactionAttackProjectile"
 										}
 									}
 								}
-							}
+							},{
+								"type": "f<",
+								"value1": {
+									"type": "getAbilityDataAsFloat",
+									"dataField": "H"
+								},
+								"value2": {
+									"type": "rawFloat",
+									"value": 1
+								}
+							},{
+								"type": "f<",
+								"value1": {
+									"type": "randomBoundedFloat",
+									"bound": {
+										"type": "rawFloat",
+										"value": 100
+									}
+								},
+								"value2": {
+									"type": "getAbilityDataAsFloat",
+									"dataField": "F"
+								}
+							}]
 						},
 						"thenActions": [{
 								"type": "reactionPreventHit"

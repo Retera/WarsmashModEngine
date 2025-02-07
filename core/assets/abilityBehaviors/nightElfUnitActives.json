@@ -401,128 +401,36 @@
 		},
 		"extraCastConditions": [{
 			"type": "or",
-			"condition1": {
+			"conditions": [{
 				"type": "isFlexAbilityTargeted"
-			},
-			"condition2": {
-				"type": "or",
-				"condition1": {
-					"type": "f!=0",
-					"value": {
-						"type": "getAbilityArea"
-					}
-				},
-				"condition2": {
-					"type": "not",
-					"condition": {
-						"type": "and",
-						"condition1": {
-							"type": "not",
-							"condition": {
-								"type": "or",
-								"condition1": {
-									"type": "f=0",
-									"value": {
-										"type": "getAbilityDataAsFloat",
-										"dataField": "B"
-									}
-								},
-								"condition2": {
-									"type": "or",
-									"condition1": {
-										"type": "not",
-										"condition": {
-											"type": "isUnitMaxMp",
-											"unit": {
-												"type": "getCastingUnit"
-											}
-										}
-									},
-									"condition2": {
-										"type": "setCantUseReasonOnFailure",
-										"condition": {
-											"type": "i>",
-											"value1": {
-												"type": "getAbilityDataAsInteger",
-												"dataField": "C"
-											},
-											"value2": {
-												"type": "rawInteger",
-												"value": 1
-											}
-										},
-										"reason": "ALREADY_AT_FULL_MANA"
-									}
-								}
-							}
-						},
-						"condition2": {
-							"type": "not",
-							"condition": {
-								"type": "or",
-								"condition1": {
-									"type": "f=0",
-									"value": {
-										"type": "getAbilityDataAsFloat",
-										"dataField": "A"
-									}
-								},
-								"condition2": {
-									"type": "or",
-									"condition1": {
-										"type": "not",
-										"condition": {
-											"type": "isUnitMaxHp",
-											"unit": {
-												"type": "getCastingUnit"
-											}
-										}
-									},
-									"condition2": {
-										"type": "setCantUseReasonOnFailure",
-										"condition": {
-											"type": "iOdd",
-											"value": {
-												"type": "getAbilityDataAsInteger",
-												"dataField": "C"
-											}
-										},
-										"reason": "ALREADY_AT_FULL_HEALTH"
-									}
-								}
-							}
-						}
-					}
+			},{
+				"type": "f!=0",
+				"value": {
+					"type": "getAbilityArea"
 				}
-			}
-		}],
-		"extraTargetConditions": [{
-			"type": "not",
-			"condition": {
-				"type": "and",
-				"condition1": {
-					"type": "not",
-					"condition": {
-						"type": "or",
-						"condition1": {
-							"type": "f=0",
-							"value": {
-								"type": "getAbilityDataAsFloat",
-								"dataField": "B"
-							}
-						},
-						"condition2": {
+			},{
+				"type": "not",
+				"condition": {
+					"type": "and",
+					"conditions": [{
+						"type": "not",
+						"condition": {
 							"type": "or",
-							"condition1": {
+							"conditions": [{
+								"type": "f=0",
+								"value": {
+									"type": "getAbilityDataAsFloat",
+									"dataField": "B"
+								}
+							},{
 								"type": "not",
 								"condition": {
 									"type": "isUnitMaxMp",
 									"unit": {
-										"type": "getAbilityTargetedUnit"
+										"type": "getCastingUnit"
 									}
 								}
-							},
-							"condition2": {
+							},{
 								"type": "setCantUseReasonOnFailure",
 								"condition": {
 									"type": "i>",
@@ -536,33 +444,27 @@
 									}
 								},
 								"reason": "ALREADY_AT_FULL_MANA"
-							}
+							}]
 						}
-					}
-				},
-				"condition2": {
-					"type": "not",
-					"condition": {
-						"type": "or",
-						"condition1": {
-							"type": "f=0",
-							"value": {
-								"type": "getAbilityDataAsFloat",
-								"dataField": "A"
-							}
-						},
-						"condition2": {
+					},{
+						"type": "not",
+						"condition": {
 							"type": "or",
-							"condition1": {
+							"conditions": [{
+								"type": "f=0",
+								"value": {
+									"type": "getAbilityDataAsFloat",
+									"dataField": "A"
+								}
+							},{
 								"type": "not",
 								"condition": {
 									"type": "isUnitMaxHp",
 									"unit": {
-										"type": "getAbilityTargetedUnit"
+										"type": "getCastingUnit"
 									}
 								}
-							},
-							"condition2": {
+							},{
 								"type": "setCantUseReasonOnFailure",
 								"condition": {
 									"type": "iOdd",
@@ -572,10 +474,81 @@
 									}
 								},
 								"reason": "ALREADY_AT_FULL_HEALTH"
-							}
+							}]
 						}
-					}
+					}]
 				}
+			}]
+		}],
+		"extraTargetConditions": [{
+			"type": "not",
+			"condition": {
+				"type": "and",
+				"conditions": [{
+					"type": "not",
+					"condition": {
+						"type": "or",
+						"conditions": [{
+							"type": "f=0",
+							"value": {
+								"type": "getAbilityDataAsFloat",
+								"dataField": "B"
+							}
+						},{
+							"type": "not",
+							"condition": {
+								"type": "isUnitMaxMp",
+								"unit": {
+									"type": "getAbilityTargetedUnit"
+								}
+							}
+						},{
+							"type": "setCantUseReasonOnFailure",
+							"condition": {
+								"type": "i>",
+								"value1": {
+									"type": "getAbilityDataAsInteger",
+									"dataField": "C"
+								},
+								"value2": {
+									"type": "rawInteger",
+									"value": 1
+								}
+							},
+							"reason": "ALREADY_AT_FULL_MANA"
+						}]
+					}
+				},{
+					"type": "not",
+					"condition": {
+						"type": "or",
+						"conditions": [{
+							"type": "f=0",
+							"value": {
+								"type": "getAbilityDataAsFloat",
+								"dataField": "A"
+							}
+						},{
+							"type": "not",
+							"condition": {
+								"type": "isUnitMaxHp",
+								"unit": {
+									"type": "getAbilityTargetedUnit"
+								}
+							}
+						},{
+							"type": "setCantUseReasonOnFailure",
+							"condition": {
+								"type": "iOdd",
+								"value": {
+									"type": "getAbilityDataAsInteger",
+									"dataField": "C"
+								}
+							},
+							"reason": "ALREADY_AT_FULL_HEALTH"
+						}]
+					}
+				}]
 			}
 		}],
 		"onEndCasting": [{
@@ -783,82 +756,71 @@
 								"type": "not",
 								"condition": {
 									"type": "and",
-									"condition1": {
+									"conditions": [{
 										"type": "not",
 										"condition": {
 											"type": "or",
-											"condition1": {
+											"conditions": [{
 												"type": "f=0",
 												"value": {
 													"type": "getAbilityDataAsFloat",
 													"dataField": "B"
 												}
-											},
-											"condition2": {
-												"type": "or",
-												"condition1": {
-													"type": "not",
-													"condition": {
-														"type": "isUnitMaxMp",
-														"unit": {
-															"type": "getEnumUnit"
-														}
+											},{
+												"type": "not",
+												"condition": {
+													"type": "isUnitMaxMp",
+													"unit": {
+														"type": "getEnumUnit"
+													}
+												}
+											},{
+												"type": "setCantUseReasonOnFailure",
+												"condition": {
+													"type": "i>",
+													"value1": {
+														"type": "getAbilityDataAsInteger",
+														"dataField": "C"
+													},
+													"value2": {
+														"type": "rawInteger",
+														"value": 1
 													}
 												},
-												"condition2": {
-													"type": "setCantUseReasonOnFailure",
-													"condition": {
-														"type": "i>",
-														"value1": {
-															"type": "getAbilityDataAsInteger",
-															"dataField": "C"
-														},
-														"value2": {
-															"type": "rawInteger",
-															"value": 1
-														}
-													},
-													"reason": "ALREADY_AT_FULL_MANA"
-												}
-											}
+												"reason": "ALREADY_AT_FULL_MANA"
+											}]
 										}
-									},
-									"condition2": {
+									},{
 										"type": "not",
 										"condition": {
 											"type": "or",
-											"condition1": {
+											"conditions": [{
 												"type": "f=0",
 												"value": {
 													"type": "getAbilityDataAsFloat",
 													"dataField": "A"
 												}
-											},
-											"condition2": {
-												"type": "or",
-												"condition1": {
-													"type": "not",
-													"condition": {
-														"type": "isUnitMaxHp",
-														"unit": {
-															"type": "getEnumUnit"
-														}
+											},{
+												"type": "not",
+												"condition": {
+													"type": "isUnitMaxHp",
+													"unit": {
+														"type": "getEnumUnit"
+													}
+												}
+											},{
+												"type": "setCantUseReasonOnFailure",
+												"condition": {
+													"type": "iOdd",
+													"value": {
+														"type": "getAbilityDataAsInteger",
+														"dataField": "C"
 													}
 												},
-												"condition2": {
-													"type": "setCantUseReasonOnFailure",
-													"condition": {
-														"type": "iOdd",
-														"value": {
-															"type": "getAbilityDataAsInteger",
-															"dataField": "C"
-														}
-													},
-													"reason": "ALREADY_AT_FULL_HEALTH"
-												}
-											}
+												"reason": "ALREADY_AT_FULL_HEALTH"
+											}]
 										}
-									}
+									}]
 								}
 							},
 							"thenActions": [{

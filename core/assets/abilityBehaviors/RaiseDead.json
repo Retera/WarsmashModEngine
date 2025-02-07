@@ -1037,7 +1037,7 @@
 						"type": "while",
 						"condition": {
 							"type": "and",
-							"condition1": {
+							"conditions": [{
 								"type": "i>",
 								"value1": {
 									"type": "i+",
@@ -1060,8 +1060,7 @@
 									"type": "getAbilityDataAsInteger",
 									"dataField": "E"
 								}
-							},
-							"condition2": {
+							},{
 								"type": "i!=0",
 								"value": {
 									"type": "getUnitQueueSize",
@@ -1070,7 +1069,7 @@
 										"name": "summons2"
 									}
 								}
-							}
+							}]
 						},
 						"loopActions": [{
 							"type": "killUnit",

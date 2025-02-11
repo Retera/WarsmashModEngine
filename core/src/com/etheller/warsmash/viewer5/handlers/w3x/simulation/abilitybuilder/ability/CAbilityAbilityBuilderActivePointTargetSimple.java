@@ -97,7 +97,7 @@ public class CAbilityAbilityBuilderActivePointTargetSimple extends CAbilityPoint
 		if (config.getExtraCastConditions() != null) {
 			boolean result = true;
 			for (ABCondition condition : config.getExtraCastConditions()) {
-				result = result && condition.evaluate(game, unit, localStore, castId);
+				result = result && condition.callback(game, unit, localStore, castId);
 			}
 			if (result) {
 				receiver.useOk();
@@ -121,7 +121,7 @@ public class CAbilityAbilityBuilderActivePointTargetSimple extends CAbilityPoint
 			localStore.put(ABLocalStoreKeys.ABILITYTARGETEDLOCATION+this.castId, target);
 			boolean result = true;
 			for (ABCondition condition : config.getExtraTargetConditions()) {
-				result = result && condition.evaluate(game, unit, localStore, castId);
+				result = result && condition.callback(game, unit, localStore, castId);
 			}
 			if (result) {
 				receiver.targetOk(target);

@@ -65,7 +65,7 @@ public class CAbilityAbilityBuilderActiveFlexTargetSimple extends CAbilitySpellB
 		if (config.getSpecialFields() != null && config.getSpecialFields().getTargetedSpell() != null) {
 			boolean result = true;
 			for (ABCondition condition : config.getSpecialFields().getTargetedSpell()) {
-				result = result && condition.evaluate(game, unit, localStore, castId);
+				result = result && condition.callback(game, unit, localStore, castId);
 			}
 			this.targetedSpell = result;
 		}
@@ -74,7 +74,7 @@ public class CAbilityAbilityBuilderActiveFlexTargetSimple extends CAbilitySpellB
 		if (config.getSpecialFields() != null && config.getSpecialFields().getPointTargeted() != null) {
 			boolean result = true;
 			for (ABCondition condition : config.getSpecialFields().getPointTargeted()) {
-				result = result && condition.evaluate(game, unit, localStore, castId);
+				result = result && condition.callback(game, unit, localStore, castId);
 			}
 			this.pointTarget = result;
 		}
@@ -194,7 +194,7 @@ public class CAbilityAbilityBuilderActiveFlexTargetSimple extends CAbilitySpellB
 		if (config.getExtraCastConditions() != null) {
 			boolean result = true;
 			for (ABCondition condition : config.getExtraCastConditions()) {
-				result = result && condition.evaluate(game, unit, localStore, castId);
+				result = result && condition.callback(game, unit, localStore, castId);
 			}
 			if (result) {
 				receiver.useOk();
@@ -222,7 +222,7 @@ public class CAbilityAbilityBuilderActiveFlexTargetSimple extends CAbilitySpellB
 			this.localStore.put(ABLocalStoreKeys.ABILITYTARGETEDITEM + castId, targetItem);
 			boolean result = true;
 			for (ABCondition condition : config.getExtraTargetConditions()) {
-				result = result && condition.evaluate(game, unit, localStore, castId);
+				result = result && condition.callback(game, unit, localStore, castId);
 			}
 			if (result) {
 				receiver.targetOk(targetUnit);
@@ -245,7 +245,7 @@ public class CAbilityAbilityBuilderActiveFlexTargetSimple extends CAbilitySpellB
 			localStore.put(ABLocalStoreKeys.ABILITYTARGETEDLOCATION + this.castId, target);
 			boolean result = true;
 			for (ABCondition condition : config.getExtraTargetConditions()) {
-				result = result && condition.evaluate(game, unit, localStore, castId);
+				result = result && condition.callback(game, unit, localStore, castId);
 			}
 			if (result) {
 				receiver.targetOk(target);

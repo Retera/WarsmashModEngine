@@ -544,7 +544,7 @@ public abstract class CAbilityAbilityBuilderGenericActive extends AbstractGeneri
 			if (config.getExtraCastConditions() != null) {
 				boolean result = true;
 				for (ABCondition condition : config.getExtraCastConditions()) {
-					result = result && condition.evaluate(game, unit, localStore, -1);
+					result = result && condition.callback(game, unit, localStore, -1);
 				}
 				if (result) {
 					receiver.useOk();
@@ -765,7 +765,7 @@ public abstract class CAbilityAbilityBuilderGenericActive extends AbstractGeneri
 		if (config.getExtraTargetConditions() != null) {
 			boolean result = true;
 			for (ABCondition condition : config.getExtraTargetConditions()) {
-				result = result && condition.evaluate(game, unit, localStore, -1);
+				result = result && condition.callback(game, unit, localStore, -1);
 			}
 			if (result) {
 				return null;
@@ -787,12 +787,12 @@ public abstract class CAbilityAbilityBuilderGenericActive extends AbstractGeneri
 			boolean result = true;
 			if (config.getExtraTargetConditions() != null) {
 				for (ABCondition condition : config.getExtraTargetConditions()) {
-					result = result && condition.evaluate(game, unit, localStore, -1);
+					result = result && condition.callback(game, unit, localStore, -1);
 				}
 			}
 			if (config.getExtraAutoTargetConditions() != null) {
 				for (ABCondition condition : config.getExtraAutoTargetConditions()) {
-					result = result && condition.evaluate(game, unit, localStore, -1);
+					result = result && condition.callback(game, unit, localStore, -1);
 				}
 			}
 			if (result) {
@@ -816,7 +816,7 @@ public abstract class CAbilityAbilityBuilderGenericActive extends AbstractGeneri
 			boolean result = true;
 			if (config.getExtraAutoNoTargetConditions() != null) {
 				for (ABCondition condition : config.getExtraAutoNoTargetConditions()) {
-					result = result && condition.evaluate(game, unit, localStore, -1);
+					result = result && condition.callback(game, unit, localStore, -1);
 				}
 			}
 			if (result) {

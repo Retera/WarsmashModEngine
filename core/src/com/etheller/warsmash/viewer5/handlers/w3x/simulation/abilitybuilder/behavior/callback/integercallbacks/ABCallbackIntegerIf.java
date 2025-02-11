@@ -14,7 +14,7 @@ public class ABCallbackIntegerIf extends ABIntegerCallback {
 	
 	@Override
 	public Integer callback(CSimulation game, CUnit caster, Map<String, Object> localStore, final int castId) {
-		if (condition == null || !condition.evaluate(game, caster, localStore, castId)) {
+		if (condition == null || !condition.callback(game, caster, localStore, castId)) {
 			return value2.callback(game, caster, localStore, castId);
 		}
 		return value1.callback(game, caster, localStore, castId);

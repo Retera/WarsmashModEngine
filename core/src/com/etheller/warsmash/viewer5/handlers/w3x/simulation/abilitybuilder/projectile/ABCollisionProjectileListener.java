@@ -70,7 +70,7 @@ public class ABCollisionProjectileListener implements CAbilityCollisionProjectil
 			localStore.put(ABLocalStoreKeys.PROJECTILEHITUNIT+castId, targetUnit);
 			localStore.put(ABLocalStoreKeys.PROJECTILEHITDEST+castId, targetDest);
 			for (ABCondition condition : canHitTarget) {
-				result = result && condition.evaluate(game, caster, localStore, castId);
+				result = result && condition.callback(game, caster, localStore, castId);
 			}
 			localStore.remove(ABLocalStoreKeys.PROJECTILEHITUNIT+castId);
 			localStore.remove(ABLocalStoreKeys.PROJECTILEHITDEST+castId);

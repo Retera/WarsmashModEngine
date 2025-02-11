@@ -15,7 +15,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.type
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CTargetType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.BooleanAbilityTargetCheckReceiver;
 
-public class ABConditionIsUnitValidTarget implements ABCondition {
+public class ABConditionIsUnitValidTarget extends ABCondition {
 
 	private ABUnitCallback caster;
 	private ABUnitCallback target;
@@ -23,7 +23,7 @@ public class ABConditionIsUnitValidTarget implements ABCondition {
 
 	@SuppressWarnings("unchecked")
 	@Override
-	public boolean evaluate(CSimulation game, CUnit casterUnit, Map<String, Object> localStore, final int castId) {
+	public Boolean callback(CSimulation game, CUnit casterUnit, Map<String, Object> localStore, final int castId) {
 		CUnit theCaster = casterUnit;
 
 		List<CAbilityTypeAbilityBuilderLevelData> levelData = (List<CAbilityTypeAbilityBuilderLevelData>) localStore

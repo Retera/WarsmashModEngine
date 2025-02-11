@@ -100,7 +100,7 @@ public class CAbilityAbilityBuilderActiveNoTargetSimple extends CAbilityNoTarget
 		if (config.getExtraCastConditions() != null) {
 			boolean result = true;
 			for (ABCondition condition : config.getExtraCastConditions()) {
-				result = result && condition.evaluate(game, unit, localStore, castId);
+				result = result && condition.callback(game, unit, localStore, castId);
 			}
 			if (result) {
 				receiver.useOk();

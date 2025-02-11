@@ -694,12 +694,9 @@
 						}
 					},
 					"positive": {
-						"type": "evaluateCondition",
-						"condition": {
-							"type": "isUnitShareSpells",
-							"unit": {
-								"type": "getAbilityTargetedUnit"
-							}
+						"type": "isUnitShareSpells",
+						"unit": {
+							"type": "getAbilityTargetedUnit"
 						}
 					},
 					"onAddActions": [{

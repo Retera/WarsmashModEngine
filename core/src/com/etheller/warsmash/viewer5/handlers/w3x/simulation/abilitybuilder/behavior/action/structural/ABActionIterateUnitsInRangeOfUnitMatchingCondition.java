@@ -33,7 +33,7 @@ public class ABActionIterateUnitsInRangeOfUnitMatchingCondition implements ABAct
 			public boolean call(final CUnit enumUnit) {
 				if (originUnitTarget.canReach(enumUnit, rangeVal)) {
 					localStore.put(ABLocalStoreKeys.MATCHINGUNIT+castId, enumUnit);
-					if (condition == null || condition.evaluate(game, caster, localStore, castId)) {
+					if (condition == null || condition.callback(game, caster, localStore, castId)) {
 						localStore.put(ABLocalStoreKeys.ENUMUNIT+castId, enumUnit);
 						for (ABAction iterationAction : iterationActions) {
 							iterationAction.runAction(game, caster, localStore, castId);

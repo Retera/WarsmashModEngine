@@ -15,7 +15,7 @@ public class ABActionWhile implements ABAction {
 	private List<ABAction> loopActions;
 
 	public void runAction(final CSimulation game, final CUnit caster, final Map<String, Object> localStore, final int castId) {
-		while(condition.evaluate(game, caster, localStore, castId)) {
+		while(condition.callback(game, caster, localStore, castId)) {
 			for (ABAction periodicAction : loopActions) {
 				periodicAction.runAction(game, caster, localStore, castId);
 			}

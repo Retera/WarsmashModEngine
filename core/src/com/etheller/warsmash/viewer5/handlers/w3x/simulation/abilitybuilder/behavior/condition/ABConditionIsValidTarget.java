@@ -13,14 +13,14 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.types.impl.CAbilityTypeAbilityBuilderLevelData;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CTargetType;
 
-public class ABConditionIsValidTarget implements ABCondition {
+public class ABConditionIsValidTarget extends ABCondition {
 
 	private ABUnitCallback caster;
 	private ABWidgetCallback target;
 
 	@SuppressWarnings("unchecked")
 	@Override
-	public boolean evaluate(CSimulation game, CUnit casterUnit, Map<String, Object> localStore, final int castId) {
+	public Boolean callback(CSimulation game, CUnit casterUnit, Map<String, Object> localStore, final int castId) {
 		CUnit theCaster = casterUnit;
 		
 		List<CAbilityTypeAbilityBuilderLevelData> levelData = (List<CAbilityTypeAbilityBuilderLevelData>) localStore

@@ -7,13 +7,13 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.beha
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABCondition;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CAllianceType;
 
-public class ABConditionIsUnitShareSpells implements ABCondition {
+public class ABConditionIsUnitShareSpells extends ABCondition {
 
 	private ABUnitCallback caster;
 	private ABUnitCallback unit;
 
 	@Override
-	public boolean evaluate(CSimulation game, CUnit casterUnit, Map<String, Object> localStore, final int castId) {
+	public Boolean callback(CSimulation game, CUnit casterUnit, Map<String, Object> localStore, final int castId) {
 		CUnit theUnit = unit.callback(game, casterUnit, localStore, castId);
 		CUnit theCaster = casterUnit;
 		if (caster != null) {

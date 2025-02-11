@@ -38,7 +38,7 @@ public class ABCallbackGetNearestUnitInRangeOfUnit extends ABUnitCallback {
 							boolean result = true;
 							localStore.put(ABLocalStoreKeys.MATCHINGUNIT+castId, enumUnit);
 							for (ABCondition condition : conditions) {
-								result = result && condition.evaluate(game, caster, localStore, castId);
+								result = result && condition.callback(game, caster, localStore, castId);
 							}
 							localStore.remove(ABLocalStoreKeys.MATCHINGUNIT+castId);
 							if (result) {

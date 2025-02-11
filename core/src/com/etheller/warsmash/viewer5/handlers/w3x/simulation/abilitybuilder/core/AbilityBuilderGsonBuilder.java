@@ -135,8 +135,6 @@ public abstract class AbilityBuilderGsonBuilder {
 
 				.registerSubtype(ABCallbackIsProjectileReflected.class, "isProjectileReflected")
 				
-				.registerSubtype(ABCallbackEvaluateCondition.class, "evaluateCondition")
-				
 				.registerSubtype(ABCallbackIntegerToBoolean.class, "i2b")
 				;
 	}
@@ -477,7 +475,7 @@ public abstract class AbilityBuilderGsonBuilder {
 						;
 	}
 
-	private static void registerConditions(RuntimeTypeAdapterFactory<ABCondition> conditionTypeFactory) {
+	private static void registerConditions(RuntimeTypeAdapterFactory conditionTypeFactory) {
 		conditionTypeFactory.registerSubtype(ABConditionAnd.class, "and").registerSubtype(ABConditionOr.class, "or")
 				.registerSubtype(ABConditionNot.class, "not").registerSubtype(ABConditionBool.class, "bool")
 				.registerSubtype(ABConditionNotNull.class, "notNull")
@@ -808,6 +806,7 @@ public abstract class AbilityBuilderGsonBuilder {
 		registerAttackPreDamageListenerCallbacks(callbackTypeFactory);
 		registerBehaviorChangeListenerCallbacks(callbackTypeFactory);
 		registerBooleanCallbacks(callbackTypeFactory);
+		registerConditions(callbackTypeFactory); // conditions are boolean callbacks now
 		registerBuffCallbacks(callbackTypeFactory);
 		registerDamageTakenListenerCallbacks(callbackTypeFactory);
 		registerDamageTakenModificationListenerCallbacks(callbackTypeFactory);
@@ -878,6 +877,7 @@ public abstract class AbilityBuilderGsonBuilder {
 		final RuntimeTypeAdapterFactory<ABBooleanCallback> booleanCallbackTypeFactory = RuntimeTypeAdapterFactory
 				.of(ABBooleanCallback.class, "type");
 		registerBooleanCallbacks(booleanCallbackTypeFactory);
+		registerConditions(booleanCallbackTypeFactory); // conditions are boolean callbacks now
 		gsonBuilder.registerTypeAdapterFactory(booleanCallbackTypeFactory);
 
 		final RuntimeTypeAdapterFactory<ABBuffCallback> buffCallbackTypeFactory = RuntimeTypeAdapterFactory

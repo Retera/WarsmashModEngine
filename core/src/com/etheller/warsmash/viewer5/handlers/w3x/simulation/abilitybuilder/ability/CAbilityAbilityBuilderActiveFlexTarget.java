@@ -38,7 +38,7 @@ public class CAbilityAbilityBuilderActiveFlexTarget extends CAbilityAbilityBuild
 		if (config.getSpecialFields() != null && config.getSpecialFields().getTargetedSpell() != null) {
 			boolean result = true;
 			for (ABCondition condition : config.getSpecialFields().getTargetedSpell()) {
-				result = result && condition.evaluate(game, unit, localStore, castId);
+				result = result && condition.callback(game, unit, localStore, castId);
 			}
 			this.targetedSpell = result;
 		}
@@ -47,7 +47,7 @@ public class CAbilityAbilityBuilderActiveFlexTarget extends CAbilityAbilityBuild
 		if (config.getSpecialFields() != null && config.getSpecialFields().getPointTargeted() != null) {
 			boolean result = true;
 			for (ABCondition condition : config.getSpecialFields().getPointTargeted()) {
-				result = result && condition.evaluate(game, unit, localStore, castId);
+				result = result && condition.callback(game, unit, localStore, castId);
 			}
 			this.pointTarget = result;
 		}

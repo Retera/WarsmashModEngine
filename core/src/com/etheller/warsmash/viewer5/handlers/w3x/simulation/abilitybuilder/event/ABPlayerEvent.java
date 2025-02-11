@@ -38,7 +38,7 @@ public class ABPlayerEvent extends CPlayerEvent {
 	}
 
 	public void fire(final CUnit hero, final TriggerExecutionScope scope) {
-		if (condition == null || condition.evaluate(game, caster, localStore, castId)) {
+		if (condition == null || condition.callback(game, caster, localStore, castId)) {
 			if (scope instanceof CommonTriggerExecutionScope) {
 				this.localStore.put(ABLocalStoreKeys.EVENTTARGETEDUNIT + castId,
 						((CommonTriggerExecutionScope) scope).getSpellTargetUnit());
@@ -71,7 +71,7 @@ public class ABPlayerEvent extends CPlayerEvent {
 	}
 
 	public void fire(final CPlayer player, final TriggerExecutionScope scope) {
-		if (condition == null || condition.evaluate(game, caster, localStore, castId)) {
+		if (condition == null || condition.callback(game, caster, localStore, castId)) {
 			if (actions != null) {
 				for (ABAction action : actions) {
 					action.runAction(game, caster, localStore, castId);

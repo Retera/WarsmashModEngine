@@ -12,13 +12,13 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABLocalStoreKeys;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.BooleanAbilityTargetCheckReceiver;
 
-public class ABConditionIsPassAllAbilityTargetChecks implements ABCondition {
+public class ABConditionIsPassAllAbilityTargetChecks extends ABCondition {
 
 	private ABUnitCallback caster;
 	private ABWidgetCallback target;
 
 	@Override
-	public boolean evaluate(CSimulation game, CUnit casterUnit, Map<String, Object> localStore, final int castId) {
+	public Boolean callback(CSimulation game, CUnit casterUnit, Map<String, Object> localStore, final int castId) {
 		CUnit theCaster = casterUnit;
 		
 		if (caster != null) {

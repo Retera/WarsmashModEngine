@@ -7,6 +7,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTargetWidgetVisitor;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CAttackDamageFlags;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CAttackType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CTargetType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CWeaponType;
@@ -14,6 +15,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.list
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.projectile.CAttackProjectileInstant;
 
 public class CUnitAttackInstant extends CUnitAttack {
+	private static CAttackDamageFlags ATTACK_FLAGS = new CAttackDamageFlags(true);
 	private String projectileArt;
 
 	public CUnitAttackInstant(final float animationBackswingPoint, final float animationDamagePoint,
@@ -66,7 +68,7 @@ public class CUnitAttackInstant extends CUnitAttack {
 		final CWidget widget = target.visit(AbilityTargetWidgetVisitor.INSTANCE);
 		if (widget != null) {
 			CUnitAttackPreDamageListenerDamageModResult modDamage = runPreDamageListeners(cSimulation, source, target, damage);
-			float damageDealt = widget.damage(cSimulation, source, true, true, getAttackType(), getWeaponType().getDamageType(), getWeaponSound(), modDamage.computeFinalDamage(), modDamage.getBonusDamage());
+			float damageDealt = widget.damage(cSimulation, source, ATTACK_FLAGS, getAttackType(), getWeaponType().getDamageType(), getWeaponSound(), modDamage.computeFinalDamage(), modDamage.getBonusDamage());
 			runPostDamageListeners(cSimulation, source, target, damageDealt);
 			attackListener.onHit(target, damage);
 		}

@@ -9,6 +9,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.environment.PathingGrid.Moveme
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.inventory.CAbilityInventory;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTargetVisitor;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CAttackType;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CDamageFlags;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CTargetType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CDamageType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetCheckReceiver;
@@ -44,9 +45,10 @@ public class CItem extends CWidget {
 	}
 
 	@Override
-	public float damage(final CSimulation simulation, final CUnit source, final boolean isAttack, final boolean isRanged, final CAttackType attackType, final CDamageType damageType,
-			final String weaponSoundType, final float damage) {
-		if (this.invulnerable) {
+	public float damage(final CSimulation simulation, final CUnit source, final CDamageFlags flags,
+			final CAttackType attackType, final CDamageType damageType, final String weaponSoundType,
+			final float damage) {
+		if (this.invulnerable && !flags.isIgnoreInvulnerable()) {
 			return 0;
 		}
 		final boolean wasDead = isDead();
@@ -61,9 +63,10 @@ public class CItem extends CWidget {
 	}
 
 	@Override
-	public float damage(final CSimulation simulation, final CUnit source, final boolean isAttack, final boolean isRanged, final CAttackType attackType, final CDamageType damageType,
-			final String weaponSoundType, final float damage, final float bonusDamage) {
-		return this.damage(simulation, source, isAttack, isRanged, attackType, damageType, weaponSoundType, damage + bonusDamage);
+	public float damage(final CSimulation simulation, final CUnit source, final CDamageFlags flags,
+			final CAttackType attackType, final CDamageType damageType, final String weaponSoundType,
+			final float damage, final float bonusDamage) {
+		return this.damage(simulation, source, flags, attackType, damageType, weaponSoundType, damage + bonusDamage);
 	}
 
 	public void forceDropIfHeld(final CSimulation simulation) {
@@ -75,7 +78,7 @@ public class CItem extends CWidget {
 
 	@Override
 	public boolean canBeTargetedBy(final CSimulation simulation, final CUnit source,
-								   final EnumSet<CTargetType> targetsAllowed, AbilityTargetCheckReceiver<CWidget> receiver) {
+			final EnumSet<CTargetType> targetsAllowed, AbilityTargetCheckReceiver<CWidget> receiver) {
 		if (targetsAllowed.contains(CTargetType.ITEM)) {
 			return true;
 		}
@@ -190,8 +193,8 @@ public class CItem extends CWidget {
 
 	public Rectangle getOrCreateRegisteredEnumRectangle() {
 		if (this.registeredEnumRectangle == null) {
-			this.registeredEnumRectangle = new Rectangle(getX() - COLLISION_SIZE, getY() - COLLISION_SIZE, COLLISION_SIZE * 2,
-					COLLISION_SIZE * 2);
+			this.registeredEnumRectangle = new Rectangle(getX() - COLLISION_SIZE, getY() - COLLISION_SIZE,
+					COLLISION_SIZE * 2, COLLISION_SIZE * 2);
 		}
 		return this.registeredEnumRectangle;
 	}

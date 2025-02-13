@@ -11,6 +11,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnitEnumFunction;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTargetWidgetVisitor;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CAttackDamageFlags;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CAttackType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CTargetType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CWeaponType;
@@ -23,6 +24,7 @@ public class CUnitAttackMissileSplash extends CUnitAttackMissile {
 	private EnumSet<CTargetType> areaOfEffectTargets;
 	private float damageFactorMedium;
 	private float damageFactorSmall;
+	private boolean artillery;
 
 	public CUnitAttackMissileSplash(final float animationBackswingPoint, final float animationDamagePoint,
 			final CAttackType attackType, final float cooldownTime, final int damageBase, final int damageDice,
@@ -32,7 +34,7 @@ public class CUnitAttackMissileSplash extends CUnitAttackMissile {
 			final boolean projectileHomingEnabled, final int projectileSpeed, final int areaOfEffectFullDamage,
 			final int areaOfEffectMediumDamage, final int areaOfEffectSmallDamage,
 			final EnumSet<CTargetType> areaOfEffectTargets, final float damageFactorMedium,
-			final float damageFactorSmall) {
+			final float damageFactorSmall, final boolean isArtillery) {
 		super(animationBackswingPoint, animationDamagePoint, attackType, cooldownTime, damageBase, damageDice,
 				damageSidesPerDie, damageUpgradeAmount, range, rangeMotionBuffer, showUI, targetsAllowed, weaponSound,
 				weaponType, projectileArc, projectileArt, projectileHomingEnabled, projectileSpeed);
@@ -42,6 +44,11 @@ public class CUnitAttackMissileSplash extends CUnitAttackMissile {
 		this.areaOfEffectTargets = areaOfEffectTargets;
 		this.damageFactorMedium = damageFactorMedium;
 		this.damageFactorSmall = damageFactorSmall;
+		this.artillery = isArtillery;
+		if (isArtillery) {
+			this.damageFlags = new CAttackDamageFlags(true);
+			this.damageFlags.setExplode(true);
+		}
 	}
 
 	@Override
@@ -51,7 +58,7 @@ public class CUnitAttackMissileSplash extends CUnitAttackMissile {
 				getRange(), getRangeMotionBuffer(), isShowUI(), getTargetsAllowed(), getWeaponSound(), getWeaponType(),
 				getProjectileArc(), getProjectileArt(), isProjectileHomingEnabled(), getProjectileSpeed(),
 				this.areaOfEffectFullDamage, this.areaOfEffectMediumDamage, this.areaOfEffectSmallDamage,
-				this.areaOfEffectTargets, this.damageFactorMedium, this.damageFactorSmall);
+				this.areaOfEffectTargets, this.damageFactorMedium, this.damageFactorSmall, this.artillery);
 	}
 
 	@Override
@@ -184,16 +191,16 @@ public class CUnitAttackMissileSplash extends CUnitAttackMissile {
 			float damageDealt = this.damage;
 			final double distance = enumUnit.distance(this.x, this.y);
 			if (distance <= (this.attack.areaOfEffectFullDamage)) {
-				damageDealt = enumUnit.damage(this.simulation, this.source, true, true, this.attack.getAttackType(),
+				damageDealt = enumUnit.damage(this.simulation, this.source, this.attack.damageFlags, this.attack.getAttackType(),
 						this.attack.getWeaponType().getDamageType(), this.attack.getWeaponSound(), this.damage, this.bonusDamage);
 				this.attackListener.onHit(enumUnit, this.damage + this.bonusDamage);
 			} else if (distance <= (this.attack.areaOfEffectMediumDamage)) {
-				damageDealt = enumUnit.damage(this.simulation, this.source, true, true, this.attack.getAttackType(),
+				damageDealt = enumUnit.damage(this.simulation, this.source, this.attack.damageFlags, this.attack.getAttackType(),
 						this.attack.getWeaponType().getDamageType(), this.attack.getWeaponSound(),
 						this.damage * this.attack.damageFactorMedium, this.bonusDamage * this.attack.damageFactorMedium);
 				this.attackListener.onHit(enumUnit, this.damage + this.bonusDamage);
 			} else if (distance <= (this.attack.areaOfEffectSmallDamage)) {
-				damageDealt = enumUnit.damage(this.simulation, this.source, true, true, this.attack.getAttackType(),
+				damageDealt = enumUnit.damage(this.simulation, this.source, this.attack.damageFlags, this.attack.getAttackType(),
 						this.attack.getWeaponType().getDamageType(), this.attack.getWeaponSound(),
 						this.damage * this.attack.damageFactorSmall, this.bonusDamage * this.attack.damageFactorSmall);
 				this.attackListener.onHit(enumUnit, this.damage + this.bonusDamage);

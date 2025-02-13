@@ -3,6 +3,7 @@ package com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.lis
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CAttackType;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CDamageFlags;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CAllianceType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CDamageType;
 
@@ -11,7 +12,7 @@ public class CUnitDefaultEtherealDamageModListener implements CUnitAttackDamageT
 
 	@Override
 	public CUnitAttackDamageTakenModificationListenerDamageModResult onDamage(CSimulation game, CUnit attacker,
-			CUnit target, boolean isAttack, boolean isRanged, CAttackType attackType, CDamageType damageType,
+			CUnit target, final CDamageFlags flags, CAttackType attackType, CDamageType damageType,
 			CUnitAttackDamageTakenModificationListenerDamageModResult previousDamage) {
 		boolean allied = game.getPlayer(attacker.getPlayerIndex()).hasAlliance(target.getPlayerIndex(), CAllianceType.PASSIVE);
 		if (!allied || (allied && game.getGameplayConstants().isEtherealDamageBonusAlly())) {

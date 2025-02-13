@@ -371,8 +371,7 @@ public class CUnitData {
 						&& (createAbility instanceof CAutocastAbility)) {
 					((CAutocastAbility) createAbility).setAutoCastOn(unit, true);
 				}
-			}
-			else {
+			} else {
 				if (ability.equals(unitTypeInstance.getDefaultAutocastAbility())
 						&& (existingAbility instanceof CAutocastAbility)) {
 					((CAutocastAbility) existingAbility).setAutoCastOn(unit, true);
@@ -462,8 +461,7 @@ public class CUnitData {
 				final CAbilityHero abil = unit.getFirstAbilityOfType(CAbilityHero.class);
 				abil.setSkillsAvailable(heroAbilityList);
 				abil.recalculateAllStats(simulation, unit);
-			}
-			else {
+			} else {
 				unit.add(simulation, new CAbilityHero(handleIdAllocator.createId(), heroAbilityList));
 				// reset initial mana after the value is adjusted for hero data
 				unit.setMana(manaInitial);
@@ -481,8 +479,7 @@ public class CUnitData {
 						&& (createAbility instanceof CAutocastAbility)) {
 					((CAutocastAbility) createAbility).setAutoCastOn(unit, true);
 				}
-			}
-			else {
+			} else {
 				if (ability.equals(unitTypeInstance.getDefaultAutocastAbility())
 						&& (existingAbility instanceof CAutocastAbility)) {
 					((CAutocastAbility) existingAbility).setAutoCastOn(unit, true);
@@ -611,8 +608,7 @@ public class CUnitData {
 						damageSidesPerDie, damageSpillDistance, damageSpillRadius, damageUpgradeAmount,
 						maximumNumberOfTargets, projectileArc, projectileArt, projectileHomingEnabled, projectileSpeed,
 						range, rangeMotionBuffer, showUI, targetsAllowed, weaponSound, weaponType));
-			}
-			catch (final Exception exc) {
+			} catch (final Exception exc) {
 				System.err.println("Attack 1 failed to parse with: " + exc.getClass() + ":" + exc.getMessage());
 			}
 			try {
@@ -675,8 +671,7 @@ public class CUnitData {
 						damageSidesPerDie, damageSpillDistance, damageSpillRadius, damageUpgradeAmount,
 						maximumNumberOfTargets, projectileArc, projectileArt, projectileHomingEnabled, projectileSpeed,
 						range, rangeMotionBuffer, showUI, targetsAllowed, weaponSound, weaponType));
-			}
-			catch (final Exception exc) {
+			} catch (final Exception exc) {
 				System.err.println("Attack 2 failed to parse with: " + exc.getClass() + ":" + exc.getMessage());
 			}
 			final List<CUnitAttack> enabledAttacks = getEnabledAttacks(attacks, attacksEnabled);
@@ -744,8 +739,7 @@ public class CUnitData {
 			if ((defaultAutocastAbility != null) && !defaultAutocastAbility.isEmpty()
 					&& !defaultAutocastAbility.equals("_")) {
 				defaultAutocastAbilityId = War3ID.fromString(defaultAutocastAbility);
-			}
-			else {
+			} else {
 				defaultAutocastAbilityId = null;
 			}
 			final List<War3ID> heroAbilityList = parseIDList(heroAbilityListString);
@@ -784,13 +778,14 @@ public class CUnitData {
 					decay, defenseType, impactZ, buildingPathingPixelMap, deathTime, targetedAs, acquisitionRange,
 					minimumAttackRange, structuresBuilt, unitsTrained, researchesAvailable, upgradesUsed,
 					upgradeClassToType, upgradesTo, itemsSold, itemsMade, unitRace, goldCost, lumberCost, foodUsed,
-					foodMade, buildTime, goldRepairCost, lumberRepairCost, repairTime, preventedPathingTypes, requiredPathingTypes, propWindow, turnRate,
-					requirements, requirementTiers, unitLevel, hero, strength, strPlus, agility, agiPlus, intelligence,
-					intPlus, primaryAttribute, heroAbilityList, heroProperNames, properNamesCount, canFlee, priority,
-					revivesHeroes, pointValue, castBackswingPoint, castPoint, canBeBuiltOnThem, canBuildOnMe,
-					defenseUpgradeBonus, sightRadiusDay, sightRadiusNight, extendedLineOfSight, goldBountyAwardedBase,
-					goldBountyAwardedDice, goldBountyAwardedSides, lumberBountyAwardedBase, lumberBountyAwardedDice,
-					lumberBountyAwardedSides, neutralBuildingShowMinimapIcon);
+					foodMade, buildTime, goldRepairCost, lumberRepairCost, repairTime, preventedPathingTypes,
+					requiredPathingTypes, propWindow, turnRate, requirements, requirementTiers, unitLevel, hero,
+					strength, strPlus, agility, agiPlus, intelligence, intPlus, primaryAttribute, heroAbilityList,
+					heroProperNames, properNamesCount, canFlee, priority, revivesHeroes, pointValue, castBackswingPoint,
+					castPoint, canBeBuiltOnThem, canBuildOnMe, defenseUpgradeBonus, sightRadiusDay, sightRadiusNight,
+					extendedLineOfSight, goldBountyAwardedBase, goldBountyAwardedDice, goldBountyAwardedSides,
+					lumberBountyAwardedBase, lumberBountyAwardedDice, lumberBountyAwardedSides,
+					neutralBuildingShowMinimapIcon);
 			this.unitIdToUnitType.put(typeId, unitTypeInstance);
 			this.jassLegacyNameToUnitId.put(legacyName, typeId);
 		}
@@ -842,31 +837,25 @@ public class CUnitData {
 				if (i < requirementsLevelsString.size()) {
 					if (requirementsLevelsString.get(i).isEmpty()) {
 						level = 1;
-					}
-					else {
+					} else {
 						try {
 							level = Integer.parseInt(requirementsLevelsString.get(i));
-						}
-						catch (final NumberFormatException exc) {
+						} catch (final NumberFormatException exc) {
 							level = 1;
 						}
 					}
-				}
-				else if (requirementsLevelsString.size() > 0) {
+				} else if (requirementsLevelsString.size() > 0) {
 					final String requirementLevel = requirementsLevelsString.get(requirementsLevelsString.size() - 1);
 					if (requirementLevel.isEmpty()) {
 						level = 1;
-					}
-					else {
+					} else {
 						try {
 							level = Integer.parseInt(requirementLevel);
-						}
-						catch (final NumberFormatException exc) {
+						} catch (final NumberFormatException exc) {
 							level = 1;
 						}
 					}
-				}
-				else {
+				} else {
 					level = 1;
 				}
 				requirements.add(new CUnitTypeRequirement(War3ID.fromString(item), level));
@@ -886,8 +875,7 @@ public class CUnitData {
 			final float newSumBonusAtLevel = sumBonusAtLevel + statPerLevel;
 			if (i == 0) {
 				table[i] = (int) newSumBonusAtLevel;
-			}
-			else {
+			} else {
 				table[i] = (int) newSumBonusAtLevel - table[i - 1];
 			}
 			sumBonusAtLevel = newSumBonusAtLevel;
@@ -926,14 +914,15 @@ public class CUnitData {
 					cooldownTime, damageBase, damageDice, damageSidesPerDie, damageUpgradeAmount, range,
 					rangeMotionBuffer, showUI, targetsAllowed, weaponSound, weaponType, projectileArc, projectileArt,
 					projectileHomingEnabled, projectileSpeed, areaOfEffectFullDamage, areaOfEffectMediumDamage,
-					areaOfEffectSmallDamage, areaOfEffectTargets, damageFactorMedium, damageFactorSmall);
+					areaOfEffectSmallDamage, areaOfEffectTargets, damageFactorMedium, damageFactorSmall,
+					weaponType == CWeaponType.ARTILLERY);
 			break;
 		case MLINE:
 		case ALINE:
 			attack = new CUnitAttackMissileLine(animationBackswingPoint, animationDamagePoint, attackType, cooldownTime,
 					damageBase, damageDice, damageSidesPerDie, damageUpgradeAmount, range, rangeMotionBuffer, showUI,
 					targetsAllowed, weaponSound, weaponType, projectileArc, projectileArt, projectileHomingEnabled,
-					projectileSpeed, damageSpillDistance, damageSpillRadius);
+					projectileSpeed, damageSpillDistance, damageSpillRadius, weaponType == CWeaponType.ALINE);
 			break;
 		case INSTANT:
 			attack = new CUnitAttackInstant(animationBackswingPoint, animationDamagePoint, attackType, cooldownTime,

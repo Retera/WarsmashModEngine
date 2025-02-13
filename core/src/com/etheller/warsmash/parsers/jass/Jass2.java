@@ -110,6 +110,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.ai.AIDifficulty;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehaviorAttackListener;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.jass.CBehaviorJass;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CAttackType;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CGenericDamageFlags;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.config.CPlayerAPI;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.config.War3MapConfig;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.item.CItemTypeJass;
@@ -1057,7 +1058,7 @@ public class Jass2 {
 								if (damageType == null) {
 									damageType = CDamageType.UNKNOWN;
 								}
-								target.damage(CommonEnvironment.this.simulation, whichUnit, attack, ranged, attackType,
+								target.damage(CommonEnvironment.this.simulation, whichUnit, new CGenericDamageFlags(attack, ranged), attackType,
 										damageType, weaponType.name(), (float) amount);
 							}
 						}

@@ -7,6 +7,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABAction;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABLocalStoreKeys;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CDamageFlags;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.listeners.CUnitAttackDamageTakenListener;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CDamageType;
 
@@ -28,12 +29,12 @@ public class ABDamageTakenListener implements CUnitAttackDamageTakenListener {
 	}
 	
 	@Override
-	public void onDamage(CSimulation simulation, CUnit attacker, CUnit target, boolean isAttack, boolean isRanged,
+	public void onDamage(CSimulation simulation, CUnit attacker, CUnit target, final CDamageFlags flags,
 			CDamageType damageType, float damage, float bonusDamage, float trueDamage) {
 		localStore.put(ABLocalStoreKeys.ATTACKINGUNIT+triggerId, attacker);
 		localStore.put(ABLocalStoreKeys.ATTACKEDUNIT+triggerId, target);
-		localStore.put(ABLocalStoreKeys.DAMAGEISATTACK+triggerId, isAttack);
-		localStore.put(ABLocalStoreKeys.DAMAGEISRANGED+triggerId, isRanged);
+		localStore.put(ABLocalStoreKeys.DAMAGEISATTACK+triggerId, flags.isAttack());
+		localStore.put(ABLocalStoreKeys.DAMAGEISRANGED+triggerId, flags.isRanged());
 		localStore.put(ABLocalStoreKeys.DAMAGETYPE+triggerId, damageType);
 		localStore.put(ABLocalStoreKeys.BASEDAMAGEDEALT+triggerId, damage);
 		localStore.put(ABLocalStoreKeys.BONUSDAMAGEDEALT+triggerId, bonusDamage);

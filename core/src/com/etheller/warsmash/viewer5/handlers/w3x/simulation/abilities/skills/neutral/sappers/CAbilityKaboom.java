@@ -12,6 +12,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.definitions.impl.AbilityFields;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CAttackType;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CSpellDamageFlags;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.OrderIds;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CDamageType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CWeaponSoundTypeJass;
@@ -101,7 +102,7 @@ public class CAbilityKaboom extends CAbilityUnitOrPointTargetSpellBase implement
 				if (enumUnit.isBuilding()) {
 					damageAmount *= buildingDamageFactor;
 				}
-				enumUnit.damage(simulation, caster, false, true, CAttackType.SPELLS, CDamageType.DEMOLITION,
+				enumUnit.damage(simulation, caster, DAMAGE_FLAGS, CAttackType.SPELLS, CDamageType.DEMOLITION,
 						CWeaponSoundTypeJass.WHOKNOWS.name(), damageAmount);
 			}
 			return false;

@@ -11,6 +11,8 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.beha
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.unitcallbacks.ABUnitCallback;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABAction;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CAttackType;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CDamageFlags;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CGenericDamageFlags;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CDamageType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CWeaponSoundTypeJass;
 
@@ -23,23 +25,26 @@ public class ABActionDamageTarget implements ABAction {
 	private ABAttackTypeCallback attackType;
 	private ABDamageTypeCallback damageType;
 	private ABFloatCallback damage;
-	
+
 	private ABBooleanCallback ignoreLTEZero;
+	private ABBooleanCallback damageInvulnerable;
 
 	@Override
 	public void runAction(CSimulation game, CUnit caster, Map<String, Object> localStore, final int castId) {
-		boolean isItAttack = false;
-		boolean isItRanged = true;
 		CAttackType theAttackType = CAttackType.SPELLS;
 		CDamageType theDamageType = CDamageType.MAGIC;
-		
+		CDamageFlags flags = new CGenericDamageFlags(false, true);
+
 		float theDamage = damage.callback(game, caster, localStore, castId);
 
 		if (isAttack != null) {
-			isItAttack = isAttack.callback(game, caster, localStore, castId);
+			flags.setAttack(isAttack.callback(game, caster, localStore, castId));
 		}
 		if (isRanged != null) {
-			isItRanged = isRanged.callback(game, caster, localStore, castId);
+			flags.setRanged(isRanged.callback(game, caster, localStore, castId));
+		}
+		if (damageInvulnerable != null) {
+			flags.setRanged(damageInvulnerable.callback(game, caster, localStore, castId));
 		}
 		if (attackType != null) {
 			theAttackType = attackType.callback(game, caster, localStore, castId);
@@ -48,9 +53,9 @@ public class ABActionDamageTarget implements ABAction {
 			theDamageType = damageType.callback(game, caster, localStore, castId);
 		}
 		if (ignoreLTEZero == null || !ignoreLTEZero.callback(game, caster, localStore, castId) || theDamage > 0) {
-			target.callback(game, caster, localStore, castId).damage(game, source.callback(game, caster, localStore, castId), isItAttack,
-					isItRanged, theAttackType, theDamageType, CWeaponSoundTypeJass.WHOKNOWS.name(),
-					damage.callback(game, caster, localStore, castId));
+			target.callback(game, caster, localStore, castId).damage(game,
+					source.callback(game, caster, localStore, castId), flags, theAttackType, theDamageType,
+					CWeaponSoundTypeJass.WHOKNOWS.name(), damage.callback(game, caster, localStore, castId));
 		}
 	}
 

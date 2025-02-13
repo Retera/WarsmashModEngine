@@ -12,6 +12,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.beha
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.unitcallbacks.ABUnitCallback;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABAction;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CAttackType;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CGenericDamageFlags;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CDamageType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CWeaponSoundTypeJass;
 
@@ -45,8 +46,8 @@ public class ABActionDamageDestructable implements ABAction {
 			theDamageType = damageType.callback(game, caster, localStore, castId);
 		}
 
-		target.callback(game, caster, localStore, castId).damage(game, source.callback(game, caster, localStore, castId), isItAttack,
-				isItRanged, theAttackType, theDamageType, CWeaponSoundTypeJass.WHOKNOWS.name(),
+		target.callback(game, caster, localStore, castId).damage(game, source.callback(game, caster, localStore, castId), new CGenericDamageFlags(isItAttack,
+				isItRanged), theAttackType, theDamageType, CWeaponSoundTypeJass.WHOKNOWS.name(),
 				damage.callback(game, caster, localStore, castId));
 	}
 

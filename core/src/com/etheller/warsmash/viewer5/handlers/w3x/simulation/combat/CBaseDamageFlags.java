@@ -5,6 +5,7 @@ public abstract class CBaseDamageFlags implements CDamageFlags {
 	private static int RANGED = 0b10;
 	private static int IGNOREINVUL = 0b100;
 	private static int EXPLODE = 0b1000;
+	private static int SUMMON = 0b10000;
 
 	private int flags = 0;
 
@@ -49,5 +50,15 @@ public abstract class CBaseDamageFlags implements CDamageFlags {
 	@Override
 	public void setExplode(boolean explode) {
 		this.flags = explode ? this.flags | EXPLODE : this.flags & ~EXPLODE;
+	}
+
+	@Override
+	public boolean isOnlyDamageSummons() {
+		return (this.flags & SUMMON) != 0;
+	}
+
+	@Override
+	public void setOnlyDamageSummons(boolean summon) {
+		this.flags = summon ? this.flags | SUMMON : this.flags & ~SUMMON;
 	}
 }

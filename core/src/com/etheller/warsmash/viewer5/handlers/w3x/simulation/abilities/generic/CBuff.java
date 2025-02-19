@@ -15,4 +15,13 @@ public interface CBuff extends CAliasedLevelingAbility {
 	boolean isPositive();
 	
 	boolean isDispellable();
+
+	boolean isHero();
+
+	boolean isPhysical();
+
+	boolean isMagic();
+
+	boolean isAura();
+	
 }

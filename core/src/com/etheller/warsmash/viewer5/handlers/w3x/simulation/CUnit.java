@@ -2678,6 +2678,9 @@ public class CUnit extends CWidget {
 
 	public boolean isImmuneToDamage(final CSimulation simulation, final CDamageFlags flags,
 			final CAttackType attackType, final CDamageType damageType) {
+		if (flags.isOnlyDamageSummons() && !this.isUnitType(CUnitTypeJass.SUMMONED)) {
+			return true;
+		}
 		if (simulation.getGameplayConstants().isMagicImmuneResistsDamage()) {
 			if (attackType.isMagic() || damageType.isMagic()) {
 				if (this.isMagicImmune()) {

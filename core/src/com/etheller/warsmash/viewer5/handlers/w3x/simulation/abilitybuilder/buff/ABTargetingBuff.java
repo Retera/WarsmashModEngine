@@ -21,11 +21,6 @@ public class ABTargetingBuff extends ABBuff {
 	}
 
 	@Override
-	public boolean isTimedLifeBar() {
-		return false;
-	}
-
-	@Override
 	public void onAdd(CSimulation game, CUnit unit) {
 	}
 

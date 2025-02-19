@@ -12,6 +12,14 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABLocalStoreKeys;
 
 public class ABDestructableBuff implements CDestructableBuff {
+	
+	protected static int TIMEDLIFE = 0b1;
+	protected static int NEGATIVE = 0b10;
+	protected static int DISPELLABLE = 0b100;
+	protected static int HERO = 0b1000;
+	protected static int PHYSICAL = 0b10000;
+	protected static int AURA = 0b100000;
+	protected int flags = 0b0;
 
 	private int handleId;
 	private War3ID alias;
@@ -24,8 +32,6 @@ public class ABDestructableBuff implements CDestructableBuff {
 	private List<ABAction> onAddActions;
 	private List<ABAction> onRemoveActions;
 	private List<ABAction> onDeathActions;
-	
-	private boolean dispellable;
 
 	public ABDestructableBuff(int handleId, War3ID alias, int level, Map<String, Object> localStore, List<ABAction> onAddActions,
 			List<ABAction> onRemoveActions, List<ABAction> onDeathActions, final int castId, CUnit caster, boolean dispellable) {
@@ -38,7 +44,8 @@ public class ABDestructableBuff implements CDestructableBuff {
 		this.onRemoveActions = onRemoveActions;
 		this.onDeathActions = onDeathActions;
 		this.caster = caster;
-		this.dispellable = dispellable;
+		this.setDispellable(dispellable);
+		this.setHero(caster.isHero());
 	}
 
 	@Override
@@ -93,10 +100,59 @@ public class ABDestructableBuff implements CDestructableBuff {
 	public void setLevel(int level) {
 		this.level = level;
 	}
+	
+	public void setTimedLife(boolean timedLife) {
+		this.flags = timedLife ? this.flags | TIMEDLIFE : this.flags & ~TIMEDLIFE;
+	}
+
+	@Override
+	public boolean isTimedLife() {
+		return ((this.flags & TIMEDLIFE) != 0);
+	}
+	
+	public void setPositive(boolean positive) {
+		this.flags = positive ? this.flags & ~NEGATIVE : this.flags | NEGATIVE;
+	}
+
+	@Override
+	public boolean isPositive() {
+		return ((this.flags & NEGATIVE) == 0);
+	}
+	
+	public void setDispellable(boolean dispellable) {
+		this.flags = dispellable ? this.flags | DISPELLABLE : this.flags & ~DISPELLABLE;
+	}
 
 	@Override
 	public boolean isDispellable() {
-		return this.dispellable;
+		return  ((this.flags & DISPELLABLE) != 0);
+	}
+	
+	public void setHero(boolean hero) {
+		this.flags = hero ? this.flags | HERO : this.flags & ~HERO;
+	}
+
+	@Override
+	public boolean isHero() {
+		return ((this.flags & HERO) != 0);
+	}
+	
+	public void setPhysical(boolean physical) {
+		this.flags = physical ? this.flags | PHYSICAL : this.flags & ~PHYSICAL;
+	}
+
+	@Override
+	public boolean isPhysical() {
+		return  ((this.flags & PHYSICAL) != 0);
+	}
+	
+	public void setAura(boolean aura) {
+		this.flags = aura ? this.flags | AURA : this.flags & ~AURA;
+	}
+
+	@Override
+	public boolean isAura() {
+		return  ((this.flags & AURA) != 0);
 	}
 
 }

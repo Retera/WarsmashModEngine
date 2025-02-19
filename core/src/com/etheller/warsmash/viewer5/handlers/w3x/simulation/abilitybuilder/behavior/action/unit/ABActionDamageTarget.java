@@ -28,6 +28,8 @@ public class ABActionDamageTarget implements ABAction {
 
 	private ABBooleanCallback ignoreLTEZero;
 	private ABBooleanCallback damageInvulnerable;
+	private ABBooleanCallback explodeOnDeath;
+	private ABBooleanCallback onlyDamageSummons;
 
 	@Override
 	public void runAction(CSimulation game, CUnit caster, Map<String, Object> localStore, final int castId) {
@@ -44,7 +46,13 @@ public class ABActionDamageTarget implements ABAction {
 			flags.setRanged(isRanged.callback(game, caster, localStore, castId));
 		}
 		if (damageInvulnerable != null) {
-			flags.setRanged(damageInvulnerable.callback(game, caster, localStore, castId));
+			flags.setIgnoreInvulnerable(damageInvulnerable.callback(game, caster, localStore, castId));
+		}
+		if (explodeOnDeath != null) {
+			flags.setExplode(explodeOnDeath.callback(game, caster, localStore, castId));
+		}
+		if (onlyDamageSummons != null) {
+			flags.setOnlyDamageSummons(onlyDamageSummons.callback(game, caster, localStore, castId));
 		}
 		if (attackType != null) {
 			theAttackType = attackType.callback(game, caster, localStore, castId);

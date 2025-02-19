@@ -4,18 +4,22 @@ public interface CDamageFlags {
 
 	boolean isAttack();
 
-	boolean isRanged();
-
-	boolean isIgnoreInvulnerable();
-
 	void setAttack(boolean attack);
 
+	boolean isRanged();
+
 	void setRanged(boolean ranged);
+
+	boolean isIgnoreInvulnerable();
 
 	void setIgnoreInvulnerable(boolean ignoreInvulnerable);
 
 	boolean isExplode();
 
 	void setExplode(boolean explode);
+
+	boolean isOnlyDamageSummons();
+
+	void setOnlyDamageSummons(boolean callback);
 
 }

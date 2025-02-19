@@ -14,16 +14,15 @@ public class ABGenericAuraBuff extends ABBuff {
 	
 	private CUnit caster;
 
-	private boolean positive;
-	private boolean leveled;
-
 	public ABGenericAuraBuff(int handleId, War3ID alias, CUnit caster, boolean leveled,
 			boolean positive) {
 		super(handleId, alias, alias);
 		this.caster = caster;
 		this.fx = new HashMap<>();
-		this.positive = positive;
-		this.leveled = leveled;
+		this.setHero(caster.isHero());
+		this.setLeveled(leveled);
+		this.setPositive(positive);
+		this.setAura(true);
 		this.setLevel(null, null, 1);
 	}
 
@@ -54,26 +53,11 @@ public class ABGenericAuraBuff extends ABBuff {
 	}
 
 	@Override
-	public boolean isTimedLifeBar() {
-		return false;
-	}
-
-	@Override
 	public void onTick(CSimulation game, CUnit unit) {
 	}
 
 	@Override
 	public void onDeath(CSimulation game, CUnit cUnit) {
-	}
-
-	@Override
-	public boolean isPositive() {
-		return this.positive;
-	}
-
-	@Override
-	public boolean isLeveled() {
-		return this.leveled;
 	}
 
 }

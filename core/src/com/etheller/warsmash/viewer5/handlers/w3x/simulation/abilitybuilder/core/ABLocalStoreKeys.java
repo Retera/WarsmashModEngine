@@ -55,6 +55,8 @@ public class ABLocalStoreKeys {
 	public static final String LASTADDEDABILITY = "_lastAddedAbility";
 	public static final String LASTADDEDBUFF = "_lastAddedBuff";
 	public static final String CURRENTLEVEL = "_currentLevel";
+
+	public static final String ENUMBUFF = "_enumBuff";
 	
 	public static final String LASTCREATEDUNITGROUP = "_lastCreatedUnitGroup";
 	public static final String LASTCREATEDUNITQUEUE = "_lastCreatedUnitQueue";

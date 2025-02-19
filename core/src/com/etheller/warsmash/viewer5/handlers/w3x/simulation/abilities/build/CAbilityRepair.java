@@ -239,6 +239,11 @@ public class CAbilityRepair extends AbstractGenericSingleIconActiveAbility imple
 	}
 
 	@Override
+	public boolean isMagic() {
+		return false;
+	}
+
+	@Override
 	public boolean isUniversal() {
 		return false;
 	}

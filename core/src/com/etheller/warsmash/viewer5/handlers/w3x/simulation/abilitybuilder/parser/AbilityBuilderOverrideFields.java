@@ -5,6 +5,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.beha
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.floatcallbacks.ABFloatCallback;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.idcallbacks.ABIDCallback;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.integercallbacks.ABIntegerCallback;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABCondition;
 
 public class AbilityBuilderOverrideFields {
 	
@@ -20,6 +21,7 @@ public class AbilityBuilderOverrideFields {
 	private ABIDCallback offTooltipOverride;
 	
 	private ABBooleanCallback physicalSpell;
+	private ABBooleanCallback magicSpell;
 	private ABBooleanCallback universalSpell;
 	
 	public ABFloatCallback getAreaOverride() {
@@ -75,6 +77,12 @@ public class AbilityBuilderOverrideFields {
 	}
 	public void setPhysicalSpell(ABBooleanCallback physicalSpell) {
 		this.physicalSpell = physicalSpell;
+	}
+	public ABBooleanCallback getMagicSpell() {
+		return magicSpell;
+	}
+	public void setMagicSpell(ABBooleanCallback magicSpell) {
+		this.magicSpell = magicSpell;
 	}
 	public ABBooleanCallback getUniversalSpell() {
 		return universalSpell;

@@ -141,6 +141,11 @@ public class CAbilityColdArrows extends AbstractGenericAliasedAbility {
 	}
 
 	@Override
+	public boolean isMagic() {
+		return true;
+	}
+
+	@Override
 	public boolean isUniversal() {
 		return false;
 	}

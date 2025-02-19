@@ -38,6 +38,8 @@ public interface CAbilityView extends CHandle {
 	boolean isPermanent();
 	
 	boolean isPhysical();
+
+	boolean isMagic();
 	
 	boolean isUniversal();
 	

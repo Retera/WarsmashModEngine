@@ -235,6 +235,11 @@ public abstract class CAbilitySpellBase extends AbstractGenericSingleIconNoSmart
 	}
 
 	@Override
+	public boolean isMagic() {
+		return true;
+	}
+
+	@Override
 	public CAbilityCategory getAbilityCategory() {
 		return CAbilityCategory.SPELL;
 	}

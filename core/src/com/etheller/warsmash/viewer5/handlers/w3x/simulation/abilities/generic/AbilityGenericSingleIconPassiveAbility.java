@@ -94,7 +94,12 @@ public class AbilityGenericSingleIconPassiveAbility extends AbstractGenericAlias
 
 	@Override
 	public boolean isPhysical() {
-		return true;
+		return false;
+	}
+
+	@Override
+	public boolean isMagic() {
+		return false;
 	}
 
 	@Override

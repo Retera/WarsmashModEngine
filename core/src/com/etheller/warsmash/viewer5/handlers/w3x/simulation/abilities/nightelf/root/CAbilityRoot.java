@@ -329,6 +329,11 @@ public class CAbilityRoot extends AbstractGenericSingleIconNoSmartActiveAbility 
 	}
 
 	@Override
+	public boolean isMagic() {
+		return false;
+	}
+
+	@Override
 	public boolean isUniversal() {
 		return false;
 	}

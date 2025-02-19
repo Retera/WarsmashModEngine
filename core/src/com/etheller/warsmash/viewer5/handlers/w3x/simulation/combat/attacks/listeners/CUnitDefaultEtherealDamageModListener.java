@@ -14,8 +14,8 @@ public class CUnitDefaultEtherealDamageModListener implements CUnitAttackDamageT
 	public CUnitAttackDamageTakenModificationListenerDamageModResult onDamage(CSimulation game, CUnit attacker,
 			CUnit target, final CDamageFlags flags, CAttackType attackType, CDamageType damageType,
 			CUnitAttackDamageTakenModificationListenerDamageModResult previousDamage) {
-		boolean allied = game.getPlayer(attacker.getPlayerIndex()).hasAlliance(target.getPlayerIndex(), CAllianceType.PASSIVE);
-		if (!allied || (allied && game.getGameplayConstants().isEtherealDamageBonusAlly())) {
+		if (attacker == null || game.getGameplayConstants().isEtherealDamageBonusAlly() || !game
+				.getPlayer(attacker.getPlayerIndex()).hasAlliance(target.getPlayerIndex(), CAllianceType.PASSIVE)) {
 			if (attackType == CAttackType.MAGIC) {
 				previousDamage.addDamageMultiplier(game.getGameplayConstants().getEtherealDamageBonusMagic());
 			}
@@ -23,12 +23,12 @@ public class CUnitDefaultEtherealDamageModListener implements CUnitAttackDamageT
 				previousDamage.addDamageMultiplier(game.getGameplayConstants().getEtherealDamageBonusSpells());
 			}
 		}
-		if (damageType == CDamageType.NORMAL && attackType != CAttackType.MAGIC) {
-			previousDamage.setBaseDamage(0);
-			previousDamage.setBonusDamage(0);
-			previousDamage.setDamageMultiplier(0);
-		}
-		
+//		if (damageType == CDamageType.NORMAL && attackType != CAttackType.MAGIC) {
+//			previousDamage.setBaseDamage(0);
+//			previousDamage.setBonusDamage(0);
+//			previousDamage.setDamageMultiplier(0);
+//		}
+
 		return previousDamage;
 	}
 }

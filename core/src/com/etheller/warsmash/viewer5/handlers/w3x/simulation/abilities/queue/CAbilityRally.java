@@ -131,6 +131,11 @@ public class CAbilityRally extends AbstractCAbility implements CLevelingAbility 
 	}
 
 	@Override
+	public boolean isMagic() {
+		return false;
+	}
+
+	@Override
 	public boolean isUniversal() {
 		return true;
 	}

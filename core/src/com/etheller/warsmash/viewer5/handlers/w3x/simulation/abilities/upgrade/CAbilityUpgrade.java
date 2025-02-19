@@ -203,6 +203,11 @@ public final class CAbilityUpgrade extends AbstractCAbility {
 	}
 
 	@Override
+	public boolean isMagic() {
+		return false;
+	}
+
+	@Override
 	public boolean isUniversal() {
 		return true;
 	}

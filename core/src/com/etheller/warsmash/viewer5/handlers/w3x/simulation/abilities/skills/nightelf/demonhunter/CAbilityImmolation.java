@@ -251,6 +251,11 @@ public class CAbilityImmolation extends AbstractGenericSingleIconNoSmartActiveAb
 	}
 
 	@Override
+	public boolean isMagic() {
+		return true;
+	}
+
+	@Override
 	public boolean isUniversal() {
 		return false;
 	}

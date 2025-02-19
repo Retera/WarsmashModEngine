@@ -115,6 +115,11 @@ public class CAbilityStandDown extends AbstractGenericSingleIconNoSmartActiveAbi
 	}
 
 	@Override
+	public boolean isMagic() {
+		return false;
+	}
+
+	@Override
 	public boolean isUniversal() {
 		return false;
 	}

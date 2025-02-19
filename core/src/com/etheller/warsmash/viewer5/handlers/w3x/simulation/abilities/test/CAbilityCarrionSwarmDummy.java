@@ -135,6 +135,11 @@ public class CAbilityCarrionSwarmDummy extends AbstractGenericSingleIconNoSmartA
 	}
 
 	@Override
+	public boolean isMagic() {
+		return true;
+	}
+
+	@Override
 	public boolean isUniversal() {
 		return false;
 	}

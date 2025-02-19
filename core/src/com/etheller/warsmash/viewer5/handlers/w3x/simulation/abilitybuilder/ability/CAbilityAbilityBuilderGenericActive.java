@@ -81,6 +81,7 @@ public abstract class CAbilityAbilityBuilderGenericActive extends AbstractGeneri
 	private War3ID offTooltipOverride = null;
 	private EnumSet<CTargetType> targetsAllowed;
 	private boolean physical = false;
+	private boolean magic = true;
 	private boolean universal = false;
 
 	public CAbilityAbilityBuilderGenericActive(int handleId, War3ID code, War3ID alias,
@@ -274,6 +275,11 @@ public abstract class CAbilityAbilityBuilderGenericActive extends AbstractGeneri
 			}
 			if (this.config.getOverrideFields().getPhysicalSpell() != null) {
 				this.physical = this.config.getOverrideFields().getPhysicalSpell().callback(game,
+						unit, localStore, castId);
+				this.magic = this.physical ? false : this.magic; // Spells that just declare physical:true default to magic:false
+			}
+			if (this.config.getOverrideFields().getMagicSpell() != null) {
+				this.magic = this.config.getOverrideFields().getMagicSpell().callback(game,
 						unit, localStore, castId);
 			}
 			if (this.config.getOverrideFields().getUniversalSpell() != null) {
@@ -1072,6 +1078,11 @@ public abstract class CAbilityAbilityBuilderGenericActive extends AbstractGeneri
 	@Override
 	public boolean isPhysical() {
 		return physical;
+	}
+
+	@Override
+	public boolean isMagic() {
+		return magic;
 	}
 
 	@Override

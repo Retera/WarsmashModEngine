@@ -132,6 +132,11 @@ public class CAbilityItemHeal extends AbstractGenericSingleIconNoSmartActiveAbil
 	}
 
 	@Override
+	public boolean isMagic() {
+		return false;
+	}
+
+	@Override
 	public boolean isUniversal() {
 		return false;
 	}

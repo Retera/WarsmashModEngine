@@ -553,7 +553,7 @@ public class CUnit extends CWidget {
 			for (final CAbility ability : this.abilities) {
 				if (((isDisableAttack || isEthereal) && (ability.getAbilityCategory() == CAbilityCategory.ATTACK))
 						|| (isDisableSpells && (ability.getAbilityCategory() == CAbilityCategory.SPELL)
-								&& !ability.isPhysical())
+								&& ability.isMagic())
 						|| (isEthereal && ability.isPhysical()
 								&& ((ability.getAbilityCategory() == CAbilityCategory.SPELL)
 										|| (ability.getAbilityCategory() == CAbilityCategory.CORE)))) {
@@ -2676,6 +2676,26 @@ public class CUnit extends CWidget {
 		return allow;
 	}
 
+	public boolean isImmuneToDamage(final CSimulation simulation, final CDamageFlags flags,
+			final CAttackType attackType, final CDamageType damageType) {
+		if (simulation.getGameplayConstants().isMagicImmuneResistsDamage()) {
+			if (attackType.isMagic() || damageType.isMagic()) {
+				if (this.isMagicImmune()) {
+					return true;
+				}
+			} else if (attackType.isPhysical() || damageType.isPhysical()) {
+				if (this.isUnitType(CUnitTypeJass.ETHEREAL)) {
+					return true;
+				}
+			}
+		} else {
+			if (damageType.isOldMagic() && this.isMagicImmune()) {
+				return true;
+			}
+		}
+		return false;
+	}
+
 	@Override
 	public float damage(final CSimulation simulation, final CUnit source, final CDamageFlags flags,
 			final CAttackType attackType, final CDamageType damageType, final String weaponSoundType,
@@ -2689,6 +2709,9 @@ public class CUnit extends CWidget {
 			final float damage, final float bonusDamage) {
 		final boolean wasDead = isDead();
 		if (wasDead) {
+			return 0;
+		}
+		if (this.isImmuneToDamage(simulation, flags, attackType, damageType)) {
 			return 0;
 		}
 		float trueDamage = 0;

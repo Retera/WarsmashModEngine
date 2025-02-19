@@ -71,6 +71,11 @@ public class CAbilityOrcBuild extends AbstractCAbilityBuild {
 	}
 
 	@Override
+	public boolean isMagic() {
+		return false;
+	}
+
+	@Override
 	public boolean isUniversal() {
 		return false;
 	}

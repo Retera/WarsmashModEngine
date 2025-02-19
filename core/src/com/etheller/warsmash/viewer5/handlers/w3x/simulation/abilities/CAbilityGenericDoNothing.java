@@ -93,7 +93,12 @@ public class CAbilityGenericDoNothing extends AbstractGenericAliasedAbility {
 
 	@Override
 	public boolean isPhysical() {
-		return true;
+		return false;
+	}
+
+	@Override
+	public boolean isMagic() {
+		return false;
 	}
 
 	@Override

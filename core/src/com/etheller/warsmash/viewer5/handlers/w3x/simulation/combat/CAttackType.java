@@ -14,11 +14,11 @@ public enum CAttackType implements CodeKeyType, CHandle {
 
 	public static CAttackType[] VALUES = values();
 
-	private String codeKey;
-	private String damageKey;
-	private boolean universal;
-	private boolean magic;
-	private boolean physical;
+	private final String codeKey;
+	private final String damageKey;
+	private final boolean universal;
+	private final boolean magic;
+	private final boolean physical;
 
 	private CAttackType(boolean universal, boolean magic, boolean physical) {
 		final String name = name();
@@ -44,6 +44,16 @@ public enum CAttackType implements CodeKeyType, CHandle {
 			return SIEGE;
 		}
 		return valueOf(upperCaseAttackType);
+	}
+
+	public String nameForJass() {
+		if (this == SPELLS) {
+			return "NORMAL";
+		}
+		if (this == NORMAL) {
+			return "MELEE";
+		}
+		return name();
 	}
 
 	@Override

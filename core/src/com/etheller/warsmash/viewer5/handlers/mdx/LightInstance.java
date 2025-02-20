@@ -25,6 +25,7 @@ public class LightInstance implements UpdatableObject, SceneLightInstance {
 		this.light = light;
 	}
 
+	@Override
 	public void bind(final int offset, final FloatBuffer floatBuffer) {
 		final int sequence = this.instance.sequence;
 		final int frame = this.instance.frame;

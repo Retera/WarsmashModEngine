@@ -23,7 +23,7 @@ public class CBehaviorRoot extends CAbstractRangedBehavior {
 		this.abilityRoot = abilityRoot;
 	}
 
-	public CBehavior reset(CSimulation game, final AbilityPointTarget pointTarget) {
+	public CBehavior reset(final CSimulation game, final AbilityPointTarget pointTarget) {
 		this.rootStartTick = -1;
 		this.rootFinishTick = -1;
 		return this.innerReset(game, pointTarget);
@@ -73,9 +73,9 @@ public class CBehaviorRoot extends CAbstractRangedBehavior {
 						SequenceUtils.EMPTY, duration, true);
 			}
 			else if (simulation.getGameTurnTick() >= this.rootFinishTick) {
+				this.unit.getUnitAnimationListener().addSecondaryTag(SecondaryTag.ALTERNATE);
 				this.unit.getUnitAnimationListener().playAnimation(false, PrimaryTag.STAND, SequenceUtils.EMPTY, 1.0f,
 						true);
-				this.unit.getUnitAnimationListener().addSecondaryTag(SecondaryTag.ALTERNATE);
 				this.unit.setAcceptingOrders(true);
 				return this.unit.pollNextOrderBehavior(simulation);
 			}

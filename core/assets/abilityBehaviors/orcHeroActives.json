@@ -83,16 +83,7 @@
 										"buff": {
 											"type": "getLastCreatedStateModBuff"
 										}
-									},{
-										"type": "multiplyUnitAlpha",
-										"unit": {
-											"type": "getBuffedUnit"
-										},
-										"value": {
-											"type": "rawFloat",
-											"value": 0.5
-										}
-								}]
+									}]
 							},{
 								"type": "storeValueLocally",
 								"key": {
@@ -102,6 +93,14 @@
 								"valueToStore": {
 									"type": "getLastCreatedTimer"
 								}
+						},{
+							"type": "setUnitFadeTimer",
+							"targetUnit": {
+								"type": "getBuffedUnit"
+							},
+							"timer": {
+								"type": "getLastCreatedTimer"
+							}
 						}],
 						"elseActions": [{
 								"type": "setUnitMovementTypeNoCollision",
@@ -124,16 +123,7 @@
 								"buff": {
 									"type": "getLastCreatedStateModBuff"
 								}
-							},{
-								"type": "multiplyUnitAlpha",
-								"unit": {
-									"type": "getBuffedUnit"
-								},
-								"value": {
-									"type": "rawFloat",
-									"value": 0.5
-								}
-						}]
+							}]
 					}],
 					"onRemoveActions": [{
 							"type": "if",
@@ -191,16 +181,7 @@
 										"buff": {
 											"type": "getLastCreatedStateModBuff"
 										}
-									},{
-										"type": "divideUnitAlpha",
-										"unit": {
-											"type": "getBuffedUnit"
-										},
-										"value": {
-											"type": "rawFloat",
-											"value": 0.5
-										}
-								}]
+									}]
 							}],
 							"elseActions": [{
 									"type": "setUnitMovementTypeNoCollision",
@@ -227,16 +208,7 @@
 									"buff": {
 										"type": "getLastCreatedStateModBuff"
 									}
-								},{
-									"type": "divideUnitAlpha",
-									"unit": {
-										"type": "getBuffedUnit"
-									},
-									"value": {
-										"type": "rawFloat",
-										"value": 0.5
-									}
-							}]
+								}]
 					}]
 				},{
 					"type": "addBuff",

@@ -5,25 +5,28 @@ import java.util.Collections;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.etheller.interpreter.ast.debug.JassException;
-import com.etheller.interpreter.ast.function.JassFunction;
+import com.etheller.interpreter.ast.execution.JassThread;
 import com.etheller.interpreter.ast.scope.GlobalScope;
+import com.etheller.interpreter.ast.scope.TriggerExecutionScope;
+import com.etheller.interpreter.ast.util.JassProgram;
+import com.etheller.interpreter.ast.value.CodeJassValue;
 import com.etheller.interpreter.ast.value.HandleJassType;
-import com.etheller.interpreter.ast.value.visitor.JassFunctionJassValueVisitor;
+import com.etheller.interpreter.ast.value.visitor.CodeJassValueVisitor;
 import com.etheller.interpreter.ast.value.visitor.RealJassValueVisitor;
-import com.etheller.interpreter.ast.visitors.JassProgramVisitor;
 import com.etheller.warsmash.datasources.DataSource;
 import com.etheller.warsmash.parsers.fdf.GameUI;
 import com.etheller.warsmash.units.Element;
 import com.etheller.warsmash.viewer5.Scene;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.HandleIdAllocator;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.config.War3MapConfig;
 
 public class JassAIEnvironment {
 	private final GameUI gameUI;
 	private Element skin;
-	private final JassProgramVisitor jassProgramVisitor;
+	private final JassProgram jassProgramVisitor;
 
-	private JassAIEnvironment(final JassProgramVisitor jassProgramVisitor, final DataSource dataSource,
+	private JassAIEnvironment(final JassProgram jassProgramVisitor, final DataSource dataSource,
 			final Viewport uiViewport, final Scene uiScene, final GameUI gameUI, final War3MapConfig mapConfig,
 			final CSimulation simulation) {
 		this.jassProgramVisitor = jassProgramVisitor;
@@ -142,12 +145,12 @@ public class JassAIEnvironment {
 		Jass2.registerConversionAndStringNatives(jassProgramVisitor, gameUI);
 		Jass2.registerConfigNatives(jassProgramVisitor, mapConfig, startlocprioType, gametypeType, placementType,
 				gamespeedType, gamedifficultyType, mapdensityType, locationType, playerType, playercolorType,
-				mapcontrolType, playerslotstateType, mapConfig);
+				mapcontrolType, playerslotstateType, mapConfig, new HandleIdAllocator());
 		Jass2.registerRandomNatives(jassProgramVisitor, simulation);
 
 		jassProgramVisitor.getJassNativeManager().createNative("StartThread",
 				(arguments, globalScope, triggerScope) -> {
-					final JassFunction threadFunc = arguments.get(0).visit(JassFunctionJassValueVisitor.getInstance());
+					final CodeJassValue threadFunc = arguments.get(0).visit(CodeJassValueVisitor.getInstance());
 					return null;
 				});
 		jassProgramVisitor.getJassNativeManager().createNative("Sleep", (arguments, globalScope, triggerScope) -> {
@@ -159,12 +162,14 @@ public class JassAIEnvironment {
 
 	public void main() {
 		try {
-			this.jassProgramVisitor.getGlobals().getFunctionByName("main").call(Collections.emptyList(),
-					this.jassProgramVisitor.getGlobals(), JassProgramVisitor.EMPTY_TRIGGER_SCOPE);
+			final JassThread mainThread = this.jassProgramVisitor.getGlobals().createThread("main",
+					Collections.emptyList(), TriggerExecutionScope.EMPTY);
+			this.jassProgramVisitor.getGlobals().queueThread(mainThread);
 		}
 		catch (final Exception exc) {
 			throw new JassException(this.jassProgramVisitor.getGlobals(),
 					"Exception on Line " + this.jassProgramVisitor.getGlobals().getLineNumber(), exc);
 		}
 	}
+
 }

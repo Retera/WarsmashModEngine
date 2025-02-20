@@ -403,7 +403,8 @@ public class CUnitData {
 		unit.setUnitSpecificAttacks(unitSpecificAttacks);
 		unit.setUnitSpecificCurrentAttacks(
 				getEnabledAttacks(unitSpecificAttacks, unitTypeInstance.getAttacksEnabled()));
-		if (!unit.getCurrentAttacks().isEmpty()) {
+		final CAbilityAttack preAttack = unit.getFirstAbilityOfType(CAbilityAttack.class);
+		if (!unit.getCurrentAttacks().isEmpty() && (preAttack == null)) {
 			unit.add(simulation, new CAbilityAttack(handleIdAllocator.createId()));
 		}
 		final List<War3ID> structuresBuilt = unitTypeInstance.getStructuresBuilt();

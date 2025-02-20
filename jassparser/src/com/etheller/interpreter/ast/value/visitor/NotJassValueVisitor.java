@@ -9,7 +9,9 @@ import com.etheller.interpreter.ast.value.IntegerJassValue;
 import com.etheller.interpreter.ast.value.JassValue;
 import com.etheller.interpreter.ast.value.JassValueVisitor;
 import com.etheller.interpreter.ast.value.RealJassValue;
+import com.etheller.interpreter.ast.value.StaticStructTypeJassValue;
 import com.etheller.interpreter.ast.value.StringJassValue;
+import com.etheller.interpreter.ast.value.StructJassValue;
 
 public class NotJassValueVisitor implements JassValueVisitor<JassValue> {
 	private static final NotJassValueVisitor INSTANCE = new NotJassValueVisitor();
@@ -57,6 +59,21 @@ public class NotJassValueVisitor implements JassValueVisitor<JassValue> {
 	@Override
 	public JassValue accept(final DummyJassValue value) {
 		return value;
+	}
+
+	@Override
+	public JassValue accept(final StructJassValue value) {
+		final JassValue superValue = value.getSuperValue();
+		if (superValue != null) {
+			return superValue.visit(this);
+		}
+		throw new IllegalStateException(
+				"Unable to apply not keyword to a variable of type " + value.getType().getName());
+	}
+
+	@Override
+	public JassValue accept(final StaticStructTypeJassValue value) {
+		throw new IllegalStateException("Unable to apply not keyword to struct type");
 	}
 
 }

@@ -44,10 +44,14 @@ public class CAbilityOverlayedMinableMine extends CAbilityOverlayedMine implemen
 		final boolean empty = this.activeMiners.isEmpty();
 		if (empty != this.wasEmpty) {
 			if (empty) {
-				unit.getUnitAnimationListener().removeSecondaryTag(SecondaryTag.WORK);
+				if (unit.getUnitAnimationListener().removeSecondaryTag(SecondaryTag.WORK)) {
+					unit.getUnitAnimationListener().forceResetCurrentAnimation();
+				}
 			}
 			else {
-				unit.getUnitAnimationListener().addSecondaryTag(SecondaryTag.WORK);
+				if (unit.getUnitAnimationListener().addSecondaryTag(SecondaryTag.WORK)) {
+					unit.getUnitAnimationListener().forceResetCurrentAnimation();
+				}
 			}
 			this.wasEmpty = empty;
 		}

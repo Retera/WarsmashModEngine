@@ -733,15 +733,7 @@ public class MdxShaders {
 			"      if (u_filterMode >= 5.0 && color.a < 0.02) {\r\n" + //
 			"        discard;\r\n" + //
 			"      }\r\n" + //
-			"      if(!u_unfogged && u_fogParams.x > 0.5) {\r\n" + //
-			"        float fogAmount = clamp(((1.0 / gl_FragCoord.w) - u_fogParams.y) / (u_fogParams.z - u_fogParams.y), 0.0, 1.0);\r\n"
-			+ //
-			"        if (u_filterMode < 3.0 || u_filterMode > 4.0) {\r\n" + //
-			"          color.rgb = color.rgb * (1.0 - fogAmount) + u_fogColor.rgb * fogAmount;\r\n" + //
-			"        } else {\r\n" + //
-			"          color.rgb = color.rgb * (vec3(1.0 - fogAmount) + u_fogColor.rgb * fogAmount);\r\n" + //
-			"        }\r\n" + //
-			"      }\r\n" + //
+			Shaders.fogSystem(true, "u_filterMode < 3.0 || u_filterMode > 4.0") + //
 			"      gl_FragColor = color;\r\n" + //
 			"    }";
 
@@ -891,10 +883,10 @@ public class MdxShaders {
 				"          vy[0] = -vx[1];\r\n" + //
 				"          vy[1] = vx[0];\r\n" + //
 				"          vy[2] = 0.0;\r\n" + //
-				"          vertices[2] = - vx - vy;\r\n" + //
-				"          vertices[1] = vx - vy;\r\n" + //
-				"          vertices[0] = -vertices[2];\r\n" + //
-				"          vertices[3] = -vertices[1];\r\n" + //
+				"          vertices[3] = - vx - vy;\r\n" + //
+				"          vertices[0] = vx - vy;\r\n" + //
+				"          vertices[1] = -vertices[3];\r\n" + //
+				"          vertices[2] = -vertices[0];\r\n" + //
 				"        } else {\r\n" + //
 				"          lightingNormal = normalize(u_cameraZ);\r\n" + //
 				"          vertices[0] = u_vertices[0];\r\n" + //
@@ -1051,15 +1043,9 @@ public class MdxShaders {
 			"      if (u_emitter == EMITTER_RIBBON && u_filterMode == 1.0 && color.a < 0.75) {\r\n" + //
 			"        discard;\r\n" + //
 			"      }\r\n" + //
-			"      if(!u_unfogged && u_fogParams.x > 0.5) {\r\n" + //
-			"        float fogAmount = clamp(((1.0 / gl_FragCoord.w) - u_fogParams.y) / (u_fogParams.z - u_fogParams.y), 0.0, 1.0);\r\n"
+			Shaders.fogSystem(true,
+					"(u_filterMode != 1.0 && u_filterMode != 4.0 && u_emitter != EMITTER_RIBBON) || ((u_filterMode < 3.0 || u_filterMode > 4.0) && u_emitter == EMITTER_RIBBON)")
 			+ //
-			"        if (u_filterMode != 1.0 && u_filterMode != 4.0) {\r\n" + //
-			"          color.rgb = color.rgb * (1.0 - fogAmount) + u_fogColor.rgb * fogAmount;\r\n" + //
-			"        } else {\r\n" + //
-			"          color.rgb = color.rgb * (vec3(1.0 - fogAmount) + u_fogColor.rgb * fogAmount);\r\n" + //
-			"        }\r\n" + //
-			"      }\r\n" + //
 			"      gl_FragColor = color;\r\n" + //
 			"    }";
 

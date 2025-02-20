@@ -18,12 +18,17 @@ public class Trigger implements CHandle {
 	private final int handleId = STUPID_STATIC_TRIGGER_COUNT_DELETE_THIS_LATER++;
 	private final List<TriggerBooleanExpression> conditions = new ArrayList<>();
 	private final List<JassFunction> actions = new ArrayList<>();
+	private final List<RemovableTriggerEvent> events = new ArrayList<>();
 	private int evalCount;
 	private int execCount;
 	private boolean enabled = true;
 	// used for eval
 	private transient final TriggerExecutionScope triggerExecutionScope = new TriggerExecutionScope(this);
 	private boolean waitOnSleeps = true;
+
+	public void addEvent(final RemovableTriggerEvent event) {
+		this.events.add(event);
+	}
 
 	public int addAction(final JassFunction function) {
 		final int index = this.actions.size();
@@ -95,16 +100,19 @@ public class Trigger implements CHandle {
 	}
 
 	public void destroy() {
-
+		for (final RemovableTriggerEvent event : this.events) {
+			event.remove();
+		}
+		this.events.clear();
 	}
 
 	public void reset() {
-		this.actions.clear();
-		this.conditions.clear();
+//		this.actions.clear();
+//		this.conditions.clear();
+//		this.enabled = true;
+//		this.waitOnSleeps = true;
 		this.evalCount = 0;
 		this.execCount = 0;
-		this.enabled = true;
-		this.waitOnSleeps = true;
 	}
 
 	public void setWaitOnSleeps(final boolean waitOnSleeps) {
@@ -131,12 +139,20 @@ public class Trigger implements CHandle {
 		public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
 				final TriggerExecutionScope triggerScope) {
 			final JassThread triggerThread = globalScope.createThread(this.codeJassValue, triggerScope);
-			globalScope.runThreadUntilCompletion(triggerThread);
-			if (isWaitOnSleeps() && (triggerThread.instructionPtr != -1)) {
-				globalScope.queueThread(triggerThread);
-			}
+			globalScope.queueThread(triggerThread);
 			return null;
 		}
 
+	}
+
+	public TriggerExecutionScope getTriggerExecutionScope() {
+		return this.triggerExecutionScope;
+	}
+
+	public void removeEvent(final RemovableTriggerEvent evt) {
+		if (evt != null) {
+			evt.remove();
+			this.events.remove(evt);
+		}
 	}
 }

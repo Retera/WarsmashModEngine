@@ -108,14 +108,12 @@ public class OpenALAudio implements Audio {
 		this.soundIdToSource = new LongMap<Integer>();
 		this.sourceToSoundId = new IntMap<Long>();
 
-		final FloatBuffer orientation = (FloatBuffer) BufferUtils.createFloatBuffer(6)
+		final FloatBuffer orientation = BufferUtils.createFloatBuffer(6)
 				.put(new float[] { 0.0f, 0.0f, -1.0f, 0.0f, 1.0f, 0.0f }).flip();
 		alListener(AL_ORIENTATION, orientation);
-		final FloatBuffer velocity = (FloatBuffer) BufferUtils.createFloatBuffer(3)
-				.put(new float[] { 0.0f, 0.0f, 0.0f }).flip();
+		final FloatBuffer velocity = BufferUtils.createFloatBuffer(3).put(new float[] { 0.0f, 0.0f, 0.0f }).flip();
 		alListener(AL_VELOCITY, velocity);
-		final FloatBuffer position = (FloatBuffer) BufferUtils.createFloatBuffer(3)
-				.put(new float[] { 0.0f, 0.0f, 0.0f }).flip();
+		final FloatBuffer position = BufferUtils.createFloatBuffer(3).put(new float[] { 0.0f, 0.0f, 0.0f }).flip();
 		alListener(AL_POSITION, position);
 
 		this.recentSounds = new OpenALSound[simultaneousSources];
@@ -400,6 +398,16 @@ public class OpenALAudio implements Audio {
 	}
 
 	@Override
+	public boolean switchOutputDevice(final String deviceIdentifier) {
+		return true;
+	}
+
+	@Override
+	public String[] getAvailableOutputDevices() {
+		return new String[0];
+	}
+
+	@Override
 	public AudioDevice newAudioDevice(final int sampleRate, final boolean isMono) {
 		if (this.noDevice) {
 			return new AudioDevice() {
@@ -427,6 +435,14 @@ public class OpenALAudio implements Audio {
 
 				@Override
 				public void dispose() {
+				}
+
+				@Override
+				public void pause() {
+				}
+
+				@Override
+				public void resume() {
 				}
 			};
 		}

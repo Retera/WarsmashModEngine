@@ -47,6 +47,7 @@ public abstract class CBasePlayer implements CPlayerJass {
 
 	public CBasePlayer(final int id) {
 		this.id = id;
+		this.color = id;
 		this.name = "null";
 		this.alliances = new EnumSet[WarsmashConstants.MAX_PLAYERS];
 		this.taxRates = new EnumMap[WarsmashConstants.MAX_PLAYERS];

@@ -48,6 +48,7 @@ public class CPlayer extends CBasePlayer {
 	private final Map<War3ID, Integer> rawcodeToTechtreeMaxAllowed = new HashMap<>();
 	private final List<CUnit> heroes = new ArrayList<>();
 	private final List<CFogModifier> fogModifiers = new ArrayList<>();
+	private final List<CFogModifier> fogModifiersAfterUnits = new ArrayList<>();
 	private final EnumMap<JassGameEventsWar3, List<CPlayerEvent>> eventTypeToEvents = new EnumMap<>(
 			JassGameEventsWar3.class);
 
@@ -65,7 +66,7 @@ public class CPlayer extends CBasePlayer {
 	private int lumberGathered;
 	private boolean noCreepSleep;
 
-	private Set<War3ID> disabledAbilities = new HashSet<>();
+	private final Set<War3ID> disabledAbilities = new HashSet<>();
 
 	// if you use triggers for this then the transient tag here becomes really
 	// questionable -- it already was -- but I meant for those to inform us
@@ -186,14 +187,15 @@ public class CPlayer extends CBasePlayer {
 		final Integer techtreeUnlocked = this.rawcodeToTechtreeUnlocked.get(rawcode);
 		if (techtreeUnlocked == null) {
 			this.rawcodeToTechtreeUnlocked.put(rawcode, 1);
-		} else {
+		}
+		else {
 			this.rawcodeToTechtreeUnlocked.put(rawcode, techtreeUnlocked + 1);
 		}
 		fireRequirementUpdateForAbilities(simulation, false);
 	}
 
 	public void setTechtreeUnlocked(CSimulation simulation, final War3ID rawcode, final int setToLevel) {
-		int prev = this.getTechtreeUnlocked(rawcode);
+		final int prev = getTechtreeUnlocked(rawcode);
 		this.rawcodeToTechtreeUnlocked.put(rawcode, setToLevel);
 		fireRequirementUpdateForAbilities(simulation, prev > setToLevel);
 	}
@@ -202,7 +204,8 @@ public class CPlayer extends CBasePlayer {
 		final Integer techtreeUnlocked = this.rawcodeToTechtreeUnlocked.get(rawcode);
 		if (techtreeUnlocked == null) {
 			this.rawcodeToTechtreeUnlocked.put(rawcode, -1);
-		} else {
+		}
+		else {
 			this.rawcodeToTechtreeUnlocked.put(rawcode, techtreeUnlocked - 1);
 		}
 		fireRequirementUpdateForAbilities(simulation, true);
@@ -212,7 +215,8 @@ public class CPlayer extends CBasePlayer {
 		final Integer techtreeUnlocked = this.rawcodeToTechtreeInProgress.get(rawcode);
 		if (techtreeUnlocked == null) {
 			this.rawcodeToTechtreeInProgress.put(rawcode, 1);
-		} else {
+		}
+		else {
 			this.rawcodeToTechtreeInProgress.put(rawcode, techtreeUnlocked + 1);
 		}
 	}
@@ -221,7 +225,8 @@ public class CPlayer extends CBasePlayer {
 		final Integer techtreeUnlocked = this.rawcodeToTechtreeInProgress.get(rawcode);
 		if (techtreeUnlocked == null) {
 			this.rawcodeToTechtreeInProgress.put(rawcode, -1);
-		} else {
+		}
+		else {
 			this.rawcodeToTechtreeInProgress.put(rawcode, techtreeUnlocked - 1);
 		}
 	}
@@ -338,7 +343,8 @@ public class CPlayer extends CBasePlayer {
 	public int getHeroCount(final CSimulation game, final boolean includeInProgress) {
 		if (!includeInProgress) {
 			return this.heroes.size();
-		} else {
+		}
+		else {
 			int heroInProgressCount = 0;
 			for (final Map.Entry<War3ID, Integer> entry : this.rawcodeToTechtreeInProgress.entrySet()) {
 				final CUnitType unitType = game.getUnitData().getUnitType(entry.getKey());
@@ -656,8 +662,9 @@ public class CPlayer extends CBasePlayer {
 		final List<CPlayerEvent> eventList = getEventList(eventId);
 		if (eventList != null) {
 			for (final CPlayerEvent event : eventList) {
-				event.fire(spellAbilityUnit, CommonTriggerExecutionScope.unitSpellPointScope(eventId,
-						event.getTrigger(), spellAbility, spellAbilityUnit, abilityPointTarget, spellAbility.getAlias()));
+				event.fire(spellAbilityUnit,
+						CommonTriggerExecutionScope.unitSpellPointScope(eventId, event.getTrigger(), spellAbility,
+								spellAbilityUnit, abilityPointTarget, spellAbility.getAlias()));
 			}
 		}
 	}
@@ -743,13 +750,19 @@ public class CPlayer extends CBasePlayer {
 		}
 	}
 
-	public void addFogModifer(final CSimulation game, final CFogModifier fogModifier) {
-		this.fogModifiers.add(fogModifier);
+	public void addFogModifer(final CSimulation game, final CFogModifier fogModifier, boolean afterUnits) {
+		if (afterUnits) {
+			this.fogModifiersAfterUnits.add(fogModifier);
+		}
+		else {
+			this.fogModifiers.add(fogModifier);
+		}
 		fogModifier.onAdd(game, this);
 	}
 
 	public void removeFogModifer(final CSimulation game, final CFogModifier fogModifier) {
 		this.fogModifiers.remove(fogModifier);
+		this.fogModifiersAfterUnits.remove(fogModifier);
 		fogModifier.onRemove(game, this);
 	}
 
@@ -758,25 +771,28 @@ public class CPlayer extends CBasePlayer {
 			this.fogModifiers.get(i).update(game, this, game.getPathingGrid(), this.fogOfWar);
 		}
 	}
-	
+
+	public void updateFogModifiersAfterUnits(final CSimulation game) {
+		for (int i = this.fogModifiersAfterUnits.size() - 1; i >= 0; i--) {
+			this.fogModifiersAfterUnits.get(i).update(game, this, game.getPathingGrid(), this.fogOfWar);
+		}
+	}
+
 	public void setAbilityEnabled(final CSimulation simulation, War3ID ability, boolean enabled) {
 		if (enabled) {
 			this.disabledAbilities.remove(ability);
-		} else {
+		}
+		else {
 			this.disabledAbilities.add(ability);
 		}
 		fireRequirementUpdateForAbilities(simulation, !enabled);
 	}
-	
+
 	public boolean isAbilityDisabled(War3ID abilityId) {
 		return this.disabledAbilities.contains(abilityId);
 	}
 
 	public void fireRequirementUpdateForAbilities(final CSimulation simulation, final boolean disable) {
-		for (CUnit unit : simulation.getUnits()) {
-			if (unit.getPlayerIndex() == this.getId()) {
-				unit.checkDisabledAbilities(simulation, disable);
-			}
-		}
+		simulation.fireRequirementUpdateForAbilities(this, disable);
 	}
 }

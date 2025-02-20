@@ -6,7 +6,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import com.etheller.interpreter.ast.scope.GlobalScope;
+import com.etheller.interpreter.ast.definition.JassParameterDefinition;
+import com.etheller.interpreter.ast.scope.Scope;
+import com.etheller.interpreter.ast.type.JassTypeToken;
 import com.etheller.interpreter.ast.value.JassType;
 
 public class JassNativeManager {
@@ -22,11 +24,16 @@ public class JassNativeManager {
 	}
 
 	public void registerNativeCode(final int lineNo, final String sourceFile, final String name,
-			final List<JassParameter> parameters, final JassType returnType, final GlobalScope globals) {
+			final List<JassParameterDefinition> parameterDefinitions, final JassTypeToken returnTypeToken,
+			final Scope globals) {
 		if (this.registeredNativeNames.contains(name)) {
-			throw new RuntimeException("Native already registered: " + name);
+			System.err.println("Native already registered: " + name);
+			return;
+//			throw new RuntimeException("Native already registered: " + name);
 		}
 		final JassFunction nativeCode = this.nameToNativeCode.remove(name);
+		final List<JassParameter> parameters = JassParameterDefinition.resolve(parameterDefinitions, globals);
+		final JassType returnType = returnTypeToken.resolve(globals);
 		globals.defineFunction(lineNo, sourceFile, name,
 				new NativeJassFunction(parameters, returnType, name, nativeCode));
 		this.registeredNativeNames.add(name);

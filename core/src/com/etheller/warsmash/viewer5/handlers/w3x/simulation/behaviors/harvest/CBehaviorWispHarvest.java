@@ -12,7 +12,6 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehavior
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehaviorCategory;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.OrderIds;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayer;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.BooleanAbilityTargetCheckReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.ResourceType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.SimulationRenderComponent;
 
@@ -27,51 +26,55 @@ public class CBehaviorWispHarvest extends CAbstractRangedBehavior {
 		this.abilityWispHarvest = abilityWispHarvest;
 	}
 
-	public CBehavior reset(CSimulation game, final CWidget target) {
+	public CBehavior reset(final CSimulation game, final CWidget target) {
 		return innerReset(game, target, false);
 	}
 
 	@Override
 	protected CBehavior update(final CSimulation simulation, final boolean withinFacingWindow) {
-		if ((target.getX() != unit.getX()) || (target.getY() != unit.getY())) {
-			unit.setX(target.getX(), simulation.getWorldCollision(), simulation.getRegionManager());
-			unit.setY(target.getY(), simulation.getWorldCollision(), simulation.getRegionManager());
-			simulation.unitRepositioned(unit); // dont interpolate, instant jump
+		if ((this.target.getX() != this.unit.getX()) || (this.target.getY() != this.unit.getY())) {
+			this.unit.setX(this.target.getX(), simulation.getWorldCollision(), simulation.getRegionManager());
+			this.unit.setY(this.target.getY(), simulation.getWorldCollision(), simulation.getRegionManager());
+			simulation.unitRepositioned(this.unit); // dont interpolate, instant jump
 		}
 		final int gameTurnTick = simulation.getGameTurnTick();
-		if ((gameTurnTick - lastIncomeTick) >= abilityWispHarvest.getPeriodicIntervalLengthTicks()) {
-			lastIncomeTick = gameTurnTick;
+		if ((gameTurnTick - this.lastIncomeTick) >= this.abilityWispHarvest.getPeriodicIntervalLengthTicks()) {
+			this.lastIncomeTick = gameTurnTick;
 			final CPlayer player = simulation.getPlayer(this.unit.getPlayerIndex());
 			player.setLumber(player.getLumber() + this.abilityWispHarvest.getLumberPerInterval());
 			simulation.unitGainResourceEvent(this.unit, player.getId(), ResourceType.LUMBER,
 					abilityWispHarvest.getLumberPerInterval());
 			this.unit.fireBehaviorChangeEvent(simulation, this, true);
 		}
-		if (!harvesting) {
+		if (!this.harvesting) {
 			onStartHarvesting(simulation);
-			harvesting = true;
+			this.harvesting = true;
 		}
 		return this;
 	}
 
 	private void onStartHarvesting(final CSimulation simulation) {
-		unit.getUnitAnimationListener().addSecondaryTag(AnimationTokens.SecondaryTag.LUMBER);
-		simulation.unitLoopSoundEffectEvent(unit, abilityWispHarvest.getAlias());
+		if (this.unit.getUnitAnimationListener().addSecondaryTag(AnimationTokens.SecondaryTag.LUMBER)) {
+			this.unit.getUnitAnimationListener().forceResetCurrentAnimation();
+		}
+		simulation.unitLoopSoundEffectEvent(this.unit, this.abilityWispHarvest.getAlias());
 		// TODO maybe use visitor instead of cast
-		spellEffectOverDestructable = simulation.createSpellEffectOverDestructable(this.unit,
-				(CDestructable) this.target, abilityWispHarvest.getAlias(),
-				abilityWispHarvest.getArtAttachmentHeight());
-		simulation.tagTreeOwned((CDestructable) target);
+		this.spellEffectOverDestructable = simulation.createSpellEffectOverDestructable(this.unit,
+				(CDestructable) this.target, this.abilityWispHarvest.getAlias(),
+				this.abilityWispHarvest.getArtAttachmentHeight());
+		simulation.tagTreeOwned((CDestructable) this.target);
 	}
 
 	private void onStopHarvesting(final CSimulation simulation) {
-		unit.getUnitAnimationListener().removeSecondaryTag(AnimationTokens.SecondaryTag.LUMBER);
-		simulation.unitStopSoundEffectEvent(unit, abilityWispHarvest.getAlias());
-		simulation.untagTreeOwned((CDestructable) target);
+		if (this.unit.getUnitAnimationListener().removeSecondaryTag(AnimationTokens.SecondaryTag.LUMBER)) {
+			this.unit.getUnitAnimationListener().forceResetCurrentAnimation();
+		}
+		simulation.unitStopSoundEffectEvent(this.unit, this.abilityWispHarvest.getAlias());
+		simulation.untagTreeOwned((CDestructable) this.target);
 		// TODO maybe use visitor instead of cast
-		if (spellEffectOverDestructable != null) {
-			spellEffectOverDestructable.remove();
-			spellEffectOverDestructable = null;
+		if (this.spellEffectOverDestructable != null) {
+			this.spellEffectOverDestructable.remove();
+			this.spellEffectOverDestructable = null;
 		}
 	}
 
@@ -79,9 +82,9 @@ public class CBehaviorWispHarvest extends CAbstractRangedBehavior {
 	protected CBehavior updateOnInvalidTarget(final CSimulation simulation) {
 		if (this.target instanceof CDestructable) {
 			// wood
-			if (harvesting) {
+			if (this.harvesting) {
 				onStopHarvesting(simulation);
-				harvesting = false;
+				this.harvesting = false;
 			}
 			final CDestructable nearestTree = findNearestTree(this.unit, this.abilityWispHarvest, simulation,
 					this.unit);
@@ -95,7 +98,7 @@ public class CBehaviorWispHarvest extends CAbstractRangedBehavior {
 	@Override
 	protected boolean checkTargetStillValid(final CSimulation simulation) {
 		if (this.target instanceof CDestructable) {
-			if (!harvesting && simulation.isTreeOwned((CDestructable) this.target)) {
+			if (!this.harvesting && simulation.isTreeOwned((CDestructable) this.target)) {
 				return false;
 			}
 		}
@@ -104,9 +107,9 @@ public class CBehaviorWispHarvest extends CAbstractRangedBehavior {
 
 	@Override
 	protected void resetBeforeMoving(final CSimulation simulation) {
-		if (harvesting) {
+		if (this.harvesting) {
 			onStopHarvesting(simulation);
-			harvesting = false;
+			this.harvesting = false;
 		}
 	}
 
@@ -127,9 +130,9 @@ public class CBehaviorWispHarvest extends CAbstractRangedBehavior {
 
 	@Override
 	public void end(final CSimulation game, final boolean interrupted) {
-		if (harvesting) {
+		if (this.harvesting) {
 			onStopHarvesting(game);
-			harvesting = false;
+			this.harvesting = false;
 		}
 	}
 

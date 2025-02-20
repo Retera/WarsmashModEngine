@@ -1,8 +1,5 @@
 package com.etheller.warsmash.viewer5;
 
-import com.etheller.warsmash.viewer5.handlers.mdx.MdxHandler;
-import com.etheller.warsmash.viewer5.handlers.mdx.MdxHandler.ShaderEnvironmentType;
-
 public class Shaders {
 	public static final String boneTexture = ""//
 			+ "    uniform sampler2D u_boneMap;\r\n" + //
@@ -163,14 +160,43 @@ public class Shaders {
 				"            lightFactor += lightFactorContribution + (lightAmbColor.a/(pow(dist, 2.0))) * lightAmbColor.rgb;\r\n"
 				+ //
 				"          }\r\n" + //
-				"        }\r\n" + //
-				(MdxHandler.CURRENT_SHADER_TYPE == ShaderEnvironmentType.MENU
-						? "        vec4 sRGB = vec4(lightFactor, 1.0);" + //
-								"        bvec4 cutoff = lessThan(sRGB, vec4(0.04045));" + //
-								"        vec4 higher = pow((sRGB + vec4(0.055))/vec4(1.055), vec4(2.4));" + //
-								"        vec4 lower = sRGB/vec4(12.92);" + //
-								"" + //
-								"        lightFactor = (higher * (vec4(1.0) - vec4(cutoff)) + lower * vec4(cutoff)).xyz;"
-						: "");
+				"        }\r\n";
+	}
+
+	public static String fogSystem(final boolean supportsUnfoggedMaterial,
+			final String fogIncreasesPixelColorBranchCondition) {
+		String firstLine;
+		if (supportsUnfoggedMaterial) {
+			firstLine = "      if(!u_unfogged && u_fogParams.x > 0.5) {\r\n";
+		}
+		else {
+			firstLine = "      if(u_fogParams.x > 0.5) {\r\n";
+		}
+		String rgbModification;
+		if (fogIncreasesPixelColorBranchCondition != null) {
+			// additive particles and geoset materials would become giant white squares
+			// if we allowed fog to increase their pixel color like how it does to solid
+			// objects, so for those cases we introduce a branch
+			rgbModification = //
+					"        if (" + fogIncreasesPixelColorBranchCondition + ") {\r\n" + //
+							"          color.rgb = color.rgb * (1.0 - fogAmount) + u_fogColor.rgb * fogAmount;\r\n" + //
+							"        } else {\r\n" + //
+							"          color.rgb = color.rgb * (vec3(1.0 - fogAmount) + u_fogColor.rgb * fogAmount);\r\n"
+							+ //
+							"        }\r\n" //
+			;
+		}
+		else {
+			// if no additive support, we do the simple equation for adding to the pixel
+			// color proportionally
+			rgbModification = //
+					"        color.rgb = color.rgb * (1.0 - fogAmount) + u_fogColor.rgb * fogAmount;\r\n" //
+			;
+		}
+		return firstLine + //
+				"        float fogAmount = clamp(((1.0 / gl_FragCoord.w) - u_fogParams.y) / (u_fogParams.z - u_fogParams.y), 0.0, 1.0);\r\n"
+				+ //
+				rgbModification + //
+				"      }\r\n";
 	}
 }

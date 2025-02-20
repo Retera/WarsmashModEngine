@@ -33,7 +33,7 @@ public class War3MapW3i {
 	private String loadingScreenText;
 	private String loadingScreenTitle;
 	private String loadingScreenSubtitle;
-	private int loadingScreen;
+	private int gameDataSet;
 	private String prologueScreenModel;
 	private String prologueScreenText;
 	private String prologueScreenTitle;
@@ -47,6 +47,8 @@ public class War3MapW3i {
 	private char lightEnvironmentTileset;
 	private final short[] waterVertexColor = new short[4];
 	private final short[] unknown2ProbablyLua = new short[4];
+	private long supportedModes;
+	private long gameDataVersion;
 	private final List<Player> players = new ArrayList<>();
 	private final List<Force> forces = new ArrayList<>();
 	private final List<UpgradeAvailabilityChange> upgradeAvailabilityChanges = new ArrayList<>();
@@ -90,7 +92,7 @@ public class War3MapW3i {
 		this.loadingScreenText = ParseUtils.readUntilNull(stream);
 		this.loadingScreenTitle = ParseUtils.readUntilNull(stream);
 		this.loadingScreenSubtitle = ParseUtils.readUntilNull(stream);
-		this.loadingScreen = stream.readInt();
+		this.gameDataSet = stream.readInt();
 
 		if (this.version > 24) {
 			this.prologueScreenModel = ParseUtils.readUntilNull(stream);
@@ -115,8 +117,11 @@ public class War3MapW3i {
 			ParseUtils.readUInt8Array(stream, this.unknown2ProbablyLua);
 		}
 		if (this.version > 30) {
-			final long supportedModes = ParseUtils.readUInt32(stream);
-			final long gameDataVersion = ParseUtils.readUInt32(stream);
+			this.supportedModes = ParseUtils.readUInt32(stream);
+			this.gameDataVersion = ParseUtils.readUInt32(stream);
+		}
+		else {
+			this.gameDataVersion = -1; // indicate to the outside that this was unspecified
 		}
 
 		for (int i = 0, l = stream.readInt(); i < l; i++) {
@@ -212,7 +217,7 @@ public class War3MapW3i {
 		ParseUtils.writeWithNullTerminator(stream, this.loadingScreenText);
 		ParseUtils.writeWithNullTerminator(stream, this.loadingScreenTitle);
 		ParseUtils.writeWithNullTerminator(stream, this.loadingScreenSubtitle);
-		stream.writeInt(this.loadingScreen);
+		stream.writeInt(this.gameDataSet);
 
 		if (this.version > 24) {
 			ParseUtils.writeWithNullTerminator(stream, this.prologueScreenModel);
@@ -235,6 +240,11 @@ public class War3MapW3i {
 
 		if (this.version > 27) {
 			ParseUtils.writeUInt8Array(stream, this.unknown2ProbablyLua);
+		}
+
+		if (this.version > 30) {
+			ParseUtils.writeUInt32(stream, this.supportedModes);
+			ParseUtils.writeUInt32(stream, this.gameDataVersion);
 		}
 
 		ParseUtils.writeUInt32(stream, this.players.size());
@@ -379,8 +389,12 @@ public class War3MapW3i {
 		return this.loadingScreenSubtitle;
 	}
 
-	public int getLoadingScreen() {
-		return this.loadingScreen;
+	public int getGameDataSet() {
+		return this.gameDataSet;
+	}
+
+	public void setGameDataSet(int gameDataSet) {
+		this.gameDataSet = gameDataSet;
 	}
 
 	public String getPrologueScreenModel() {
@@ -433,6 +447,22 @@ public class War3MapW3i {
 
 	public short[] getUnknown2() {
 		return this.unknown2ProbablyLua;
+	}
+
+	public long getSupportedModes() {
+		return this.supportedModes;
+	}
+
+	public long getGameDataVersion() {
+		return this.gameDataVersion;
+	}
+
+	public void setSupportedModes(long supportedModes) {
+		this.supportedModes = supportedModes;
+	}
+
+	public void setGameDataVersion(long gameDataVersion) {
+		this.gameDataVersion = gameDataVersion;
 	}
 
 	public List<Player> getPlayers() {

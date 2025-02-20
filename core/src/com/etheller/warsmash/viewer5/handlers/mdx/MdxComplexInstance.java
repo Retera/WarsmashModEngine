@@ -323,7 +323,7 @@ public class MdxComplexInstance extends ModelInstance {
 			genericObject.getVisibility(visibilityHeap, sequence, frame, counter);
 
 			final boolean objectVisible = visibilityHeap[0] > 0;
-			final boolean nodeVisible = forced || parent.visible && objectVisible;
+			final boolean nodeVisible = forced || (parent.visible && objectVisible);
 
 			node.visible = nodeVisible;
 
@@ -382,7 +382,7 @@ public class MdxComplexInstance extends ModelInstance {
 				}
 
 				final boolean wasReallyDirty = forced || wasDirty || parent.wasDirty || genericObject.anyBillboarding
-						|| overrideWorldRotation != null;
+						|| (overrideWorldRotation != null);
 
 				node.wasDirty = wasReallyDirty;
 
@@ -435,7 +435,7 @@ public class MdxComplexInstance extends ModelInstance {
 
 			if (geosetAnimation != null) {
 				// Color
-				if (forced || geosetAnimation.variants.get("color")[sequence] != 0) {
+				if (forced || (geosetAnimation.variants.get("color")[sequence] != 0)) {
 					geosetAnimation.getColor(colorHeap, sequence, frame, counter);
 
 					geosetColor[0] = colorHeap[0];
@@ -444,7 +444,7 @@ public class MdxComplexInstance extends ModelInstance {
 				}
 
 				// Alpha
-				if (forced || geosetAnimation.variants.get("alpha")[sequence] != 0) {
+				if (forced || (geosetAnimation.variants.get("alpha")[sequence] != 0)) {
 					geosetAnimation.getAlpha(alphaHeap, sequence, frame, counter);
 
 					geosetColor[3] = alphaHeap[0];
@@ -465,14 +465,14 @@ public class MdxComplexInstance extends ModelInstance {
 			final float[] uvAnim = uvAnims[i];
 
 			// Alpha
-			if (forced || layer.variants.get("alpha")[sequence] != 0) {
+			if (forced || (layer.variants.get("alpha")[sequence] != 0)) {
 				layer.getAlpha(alphaHeap, sequence, frame, counter);
 
 				layerAlphas[i] = alphaHeap[0];
 			}
 
 			// Sprite animation
-			if (forced || layer.variants.get("textureId")[sequence] != 0) {
+			if (forced || (layer.variants.get("textureId")[sequence] != 0)) {
 				layer.getTextureId(textureIdHeap, sequence, frame, counter);
 
 				layerTextures[i] = (int) textureIdHeap[0];
@@ -480,7 +480,7 @@ public class MdxComplexInstance extends ModelInstance {
 
 			if (textureAnimation != null) {
 				// UV translation animation
-				if (forced || textureAnimation.variants.get("translation")[sequence] != 0) {
+				if (forced || (textureAnimation.variants.get("translation")[sequence] != 0)) {
 					textureAnimation.getTranslation(translationHeap, sequence, frame, counter);
 
 					uvAnim[0] = translationHeap[0];
@@ -488,7 +488,7 @@ public class MdxComplexInstance extends ModelInstance {
 				}
 
 				// UV rotation animation
-				if (forced || textureAnimation.variants.get("rotation")[sequence] != 0) {
+				if (forced || (textureAnimation.variants.get("rotation")[sequence] != 0)) {
 					textureAnimation.getRotation(rotationHeap, sequence, frame, counter);
 
 					uvAnim[2] = rotationHeap[2];
@@ -496,7 +496,7 @@ public class MdxComplexInstance extends ModelInstance {
 				}
 
 				// UV scale animation
-				if (forced || textureAnimation.variants.get("scale")[sequence] != 0) {
+				if (forced || (textureAnimation.variants.get("scale")[sequence] != 0)) {
 					textureAnimation.getScale(scaleHeap, sequence, frame, counter);
 
 					uvAnim[4] = scaleHeap[0];
@@ -517,22 +517,22 @@ public class MdxComplexInstance extends ModelInstance {
 			this.worldMatricesCopyHeap.clear();
 			for (int i = 0, l = this.worldMatrices.length; i < l; i++) {
 				final Matrix4 worldMatrix = this.worldMatrices[i];
-				this.worldMatricesCopyHeap.put(i * 16 + 0, worldMatrix.val[Matrix4.M00]);
-				this.worldMatricesCopyHeap.put(i * 16 + 1, worldMatrix.val[Matrix4.M10]);
-				this.worldMatricesCopyHeap.put(i * 16 + 2, worldMatrix.val[Matrix4.M20]);
-				this.worldMatricesCopyHeap.put(i * 16 + 3, worldMatrix.val[Matrix4.M30]);
-				this.worldMatricesCopyHeap.put(i * 16 + 4, worldMatrix.val[Matrix4.M01]);
-				this.worldMatricesCopyHeap.put(i * 16 + 5, worldMatrix.val[Matrix4.M11]);
-				this.worldMatricesCopyHeap.put(i * 16 + 6, worldMatrix.val[Matrix4.M21]);
-				this.worldMatricesCopyHeap.put(i * 16 + 7, worldMatrix.val[Matrix4.M31]);
-				this.worldMatricesCopyHeap.put(i * 16 + 8, worldMatrix.val[Matrix4.M02]);
-				this.worldMatricesCopyHeap.put(i * 16 + 9, worldMatrix.val[Matrix4.M12]);
-				this.worldMatricesCopyHeap.put(i * 16 + 10, worldMatrix.val[Matrix4.M22]);
-				this.worldMatricesCopyHeap.put(i * 16 + 11, worldMatrix.val[Matrix4.M32]);
-				this.worldMatricesCopyHeap.put(i * 16 + 12, worldMatrix.val[Matrix4.M03]);
-				this.worldMatricesCopyHeap.put(i * 16 + 13, worldMatrix.val[Matrix4.M13]);
-				this.worldMatricesCopyHeap.put(i * 16 + 14, worldMatrix.val[Matrix4.M23]);
-				this.worldMatricesCopyHeap.put(i * 16 + 15, worldMatrix.val[Matrix4.M33]);
+				this.worldMatricesCopyHeap.put((i * 16) + 0, worldMatrix.val[Matrix4.M00]);
+				this.worldMatricesCopyHeap.put((i * 16) + 1, worldMatrix.val[Matrix4.M10]);
+				this.worldMatricesCopyHeap.put((i * 16) + 2, worldMatrix.val[Matrix4.M20]);
+				this.worldMatricesCopyHeap.put((i * 16) + 3, worldMatrix.val[Matrix4.M30]);
+				this.worldMatricesCopyHeap.put((i * 16) + 4, worldMatrix.val[Matrix4.M01]);
+				this.worldMatricesCopyHeap.put((i * 16) + 5, worldMatrix.val[Matrix4.M11]);
+				this.worldMatricesCopyHeap.put((i * 16) + 6, worldMatrix.val[Matrix4.M21]);
+				this.worldMatricesCopyHeap.put((i * 16) + 7, worldMatrix.val[Matrix4.M31]);
+				this.worldMatricesCopyHeap.put((i * 16) + 8, worldMatrix.val[Matrix4.M02]);
+				this.worldMatricesCopyHeap.put((i * 16) + 9, worldMatrix.val[Matrix4.M12]);
+				this.worldMatricesCopyHeap.put((i * 16) + 10, worldMatrix.val[Matrix4.M22]);
+				this.worldMatricesCopyHeap.put((i * 16) + 11, worldMatrix.val[Matrix4.M32]);
+				this.worldMatricesCopyHeap.put((i * 16) + 12, worldMatrix.val[Matrix4.M03]);
+				this.worldMatricesCopyHeap.put((i * 16) + 13, worldMatrix.val[Matrix4.M13]);
+				this.worldMatricesCopyHeap.put((i * 16) + 14, worldMatrix.val[Matrix4.M23]);
+				this.worldMatricesCopyHeap.put((i * 16) + 15, worldMatrix.val[Matrix4.M33]);
 			}
 			this.boneTexture.bindAndUpdate(this.worldMatricesCopyHeap);
 		}
@@ -549,7 +549,7 @@ public class MdxComplexInstance extends ModelInstance {
 		}
 
 		final int glGetError = Gdx.gl.glGetError();
-		if (glGetError != GL20.GL_NO_ERROR && WarsmashConstants.ENABLE_DEBUG) {
+		if ((glGetError != GL20.GL_NO_ERROR) && WarsmashConstants.ENABLE_DEBUG) {
 			throw new IllegalStateException("GL ERROR: " + glGetError + " ON " + model.name + " (Opaque)");
 		}
 	}
@@ -570,7 +570,7 @@ public class MdxComplexInstance extends ModelInstance {
 			group.render(this, this.scene.camera.viewProjectionMatrix);
 
 			final int glGetError = Gdx.gl.glGetError();
-			if (glGetError != GL20.GL_NO_ERROR && WarsmashConstants.ENABLE_DEBUG) {
+			if ((glGetError != GL20.GL_NO_ERROR) && WarsmashConstants.ENABLE_DEBUG) {
 				throw new IllegalStateException("GL ERROR: " + glGetError + " ON " + model.name + " (Translucent)");
 			}
 		}
@@ -581,7 +581,7 @@ public class MdxComplexInstance extends ModelInstance {
 		final MdxModel model = (MdxModel) this.model;
 		final int sequenceId = this.sequence;
 
-		if (sequenceId != -1 && model.sequences.size() != 0) {
+		if ((sequenceId != -1) && (model.sequences.size() != 0)) {
 			final Sequence sequence = model.sequences.get(sequenceId);
 			final long[] interval = sequence.getInterval();
 			final float frameTime = dt * 1000 * this.animationSpeed;
@@ -595,14 +595,14 @@ public class MdxComplexInstance extends ModelInstance {
 			this.allowParticleSpawn = true;
 			if (this.additiveOverrideMeshMode) {
 				this.vertexColor[3] = Math.max(0,
-						this.vertexColor[3] - integerFrameTime / (float) (interval[1] - interval[0]));
+						this.vertexColor[3] - (integerFrameTime / (float) (interval[1] - interval[0])));
 			}
 
 			final long animEnd = interval[1] - 1;
 			if (this.floatingFrame >= animEnd) {
 				boolean sequenceRestarted = false;
-				if (this.sequenceLoopMode == SequenceLoopMode.ALWAYS_LOOP
-						|| this.sequenceLoopMode == SequenceLoopMode.MODEL_LOOP && sequence.getFlags() == 0) {
+				if ((this.sequenceLoopMode == SequenceLoopMode.ALWAYS_LOOP)
+						|| ((this.sequenceLoopMode == SequenceLoopMode.MODEL_LOOP) && (sequence.getFlags() == 0))) {
 					this.floatingFrame = this.frame = (int) interval[0]; // TODO not cast
 
 					resetEventEmitters();
@@ -741,6 +741,14 @@ public class MdxComplexInstance extends ModelInstance {
 		return this;
 	}
 
+	public MdxComplexInstance setVertexColor(final float r, final float g, final float b, final float a) {
+		this.vertexColor[0] = r;
+		this.vertexColor[1] = g;
+		this.vertexColor[2] = b;
+		this.vertexColor[3] = a;
+		return this;
+	}
+
 	public MdxComplexInstance setVertexAlpha(final float alpha) {
 		this.vertexColor[3] = alpha;
 
@@ -760,15 +768,15 @@ public class MdxComplexInstance extends ModelInstance {
 
 			final List<Sequence> sequences = model.sequences;
 
-			if (id < 0 || id > sequences.size() - 1) {
+			if ((id < 0) || (id > (sequences.size() - 1))) {
 				this.sequence = -1;
 				this.frame = 0;
 				this.floatingFrame = 0;
 				this.allowParticleSpawn = false;
 			}
 			else {
-				if (this.blendTime > 0 && lastSequence != -1) {
-					if (this.blendTimeRemaining <= 0 && this.counter > 0) {
+				if ((this.blendTime > 0) && (lastSequence != -1)) {
+					if ((this.blendTimeRemaining <= 0) && (this.counter > 0)) {
 						this.blendTimeRemaining = this.blendTime;
 						for (int i = 0, l = this.sortedNodes.length; i < l; i++) {
 							final SkeletalNode node = this.sortedNodes[i];
@@ -877,7 +885,7 @@ public class MdxComplexInstance extends ModelInstance {
 				intersected = true;
 			}
 		}
-		return intersected || collisionShapes.isEmpty() && intersectRayBounds(ray, intersection);
+		return intersected || (collisionShapes.isEmpty() && intersectRayBounds(ray, intersection));
 	}
 
 	/**
@@ -974,7 +982,7 @@ public class MdxComplexInstance extends ModelInstance {
 			final int lastIntegerFrame = this.frame;
 			final float lastFloatingFrame = this.floatingFrame;
 			final long sequenceLength = currentlyPlayingSequence.getInterval()[1] - start;
-			final float newFloatingFrame = start + sequenceLength * ratioOfAnimationCompleted;
+			final float newFloatingFrame = start + (sequenceLength * ratioOfAnimationCompleted);
 			float frameTime = newFloatingFrame - lastFloatingFrame;
 			if (frameTime < 0) {
 				frameTime += sequenceLength;
@@ -998,7 +1006,7 @@ public class MdxComplexInstance extends ModelInstance {
 	public int clampFrame(final int frameToClamp) {
 		final MdxModel model = (MdxModel) this.model;
 		final int sequenceId = this.sequence;
-		if (sequenceId >= 0 && sequenceId < model.sequences.size()) {
+		if ((sequenceId >= 0) && (sequenceId < model.sequences.size())) {
 			final Sequence sequence = model.sequences.get(sequenceId);
 			final long[] interval = sequence.getInterval();
 			return (int) Math.max(interval[0], Math.min(interval[1], frameToClamp));
@@ -1009,7 +1017,7 @@ public class MdxComplexInstance extends ModelInstance {
 	public MdxNode inefficientlyGetNodeByNameSearch(final String name) {
 		if (this.model.ok) {
 			for (final MdxNode node : this.nodes) {
-				if (node.name != null && node.name.equalsIgnoreCase(name)) {
+				if ((node.name != null) && node.name.equalsIgnoreCase(name)) {
 					return node;
 				}
 			}

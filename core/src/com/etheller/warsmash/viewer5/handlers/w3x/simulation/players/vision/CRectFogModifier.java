@@ -22,18 +22,11 @@ public class CRectFogModifier extends CFogModifier {
 	}
 
 	@Override
-	public void update(final CSimulation game, final CPlayer player, final PathingGrid pathingGrid, final CPlayerFogOfWar fogOfWar) {
+	public void update(final CSimulation game, final CPlayer player, final PathingGrid pathingGrid,
+			final CPlayerFogOfWar fogOfWar) {
 		if (!this.enabled) {
 			return;
 		}
-		final int xMin = pathingGrid.getFogOfWarIndexX((float) Math.floor(this.area.x));
-		final int yMin = pathingGrid.getFogOfWarIndexY((float) Math.floor(this.area.y));
-		final int xMax = pathingGrid.getFogOfWarIndexX((float) Math.ceil(this.area.x + this.area.width));
-		final int yMax = pathingGrid.getFogOfWarIndexY((float) Math.ceil(this.area.y + this.area.height));
-		for (int i = xMin; i <= xMax; i += 1) {
-			for (int j = yMin; j <= yMax; j += 1) {
-				fogOfWar.setVisible(i, j, state);
-			}
-		}
+		fogOfWar.setFogStateRect(pathingGrid, this.area, this.state);
 	}
 }

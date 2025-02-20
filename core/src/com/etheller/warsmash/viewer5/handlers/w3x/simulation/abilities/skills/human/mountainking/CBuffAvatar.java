@@ -12,8 +12,8 @@ public class CBuffAvatar extends CBuffTimed {
 	private final int damageBonus;
 	private final float defenseBonus;
 
-	public CBuffAvatar(int handleId, War3ID alias, float duration, int hitPointBonus, int damageBonus,
-					   float defenseBonus) {
+	public CBuffAvatar(final int handleId, final War3ID alias, final float duration, final int hitPointBonus,
+			final int damageBonus, final float defenseBonus) {
 		super(handleId, alias, alias, duration);
 		this.hitPointBonus = hitPointBonus;
 		this.damageBonus = damageBonus;
@@ -26,24 +26,28 @@ public class CBuffAvatar extends CBuffTimed {
 	}
 
 	@Override
-	protected void onBuffAdd(CSimulation game, CUnit unit) {
-		unit.addMaxLifeRelative(game, hitPointBonus);
+	protected void onBuffAdd(final CSimulation game, final CUnit unit) {
+		unit.addMaxLifeRelative(game, this.hitPointBonus);
 		unit.setTemporaryDefenseBonus(unit.getTemporaryDefenseBonus() + this.defenseBonus);
-		for(CUnitAttack attack: unit.getUnitSpecificAttacks()) {
+		for (final CUnitAttack attack : unit.getUnitSpecificAttacks()) {
 			attack.setTemporaryDamageBonus(attack.getTemporaryDamageBonus() + this.damageBonus);
 		}
 		unit.setMagicImmune(true);
-		unit.getUnitAnimationListener().addSecondaryTag(AnimationTokens.SecondaryTag.ALTERNATE);
+		if (unit.getUnitAnimationListener().addSecondaryTag(AnimationTokens.SecondaryTag.ALTERNATE)) {
+			unit.getUnitAnimationListener().forceResetCurrentAnimation();
+		}
 	}
 
 	@Override
-	protected void onBuffRemove(CSimulation game, CUnit unit) {
-		unit.addMaxLifeRelative(game, -hitPointBonus);
+	protected void onBuffRemove(final CSimulation game, final CUnit unit) {
+		unit.addMaxLifeRelative(game, -this.hitPointBonus);
 		unit.setTemporaryDefenseBonus(unit.getTemporaryDefenseBonus() - this.defenseBonus);
-		for(CUnitAttack attack: unit.getUnitSpecificAttacks()) {
+		for (final CUnitAttack attack : unit.getUnitSpecificAttacks()) {
 			attack.setTemporaryDamageBonus(attack.getTemporaryDamageBonus() - this.damageBonus);
 		}
 		unit.setMagicImmune(false);
-		unit.getUnitAnimationListener().removeSecondaryTag(AnimationTokens.SecondaryTag.ALTERNATE);
+		if (unit.getUnitAnimationListener().removeSecondaryTag(AnimationTokens.SecondaryTag.ALTERNATE)) {
+			unit.getUnitAnimationListener().forceResetCurrentAnimation();
+		}
 	}
 }

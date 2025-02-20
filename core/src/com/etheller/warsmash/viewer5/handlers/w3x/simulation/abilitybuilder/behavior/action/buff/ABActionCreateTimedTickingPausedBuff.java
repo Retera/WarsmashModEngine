@@ -3,6 +3,7 @@ package com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.beh
 import java.util.List;
 import java.util.Map;
 
+import com.etheller.warsmash.parsers.jass.JassTextGenerator;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.booleancallbacks.ABBooleanCallback;
@@ -11,9 +12,10 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.beha
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.buff.ABTimedTickingPausedBuff;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABAction;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABLocalStoreKeys;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABSingleAction;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CEffectType;
 
-public class ABActionCreateTimedTickingPausedBuff implements ABAction {
+public class ABActionCreateTimedTickingPausedBuff implements ABSingleAction {
 
 	private ABIDCallback buffId;
 	private ABFloatCallback duration;
@@ -29,11 +31,12 @@ public class ABActionCreateTimedTickingPausedBuff implements ABAction {
 	private ABBooleanCallback positive;
 	private ABBooleanCallback dispellable;
 
+	@Override
 	public void runAction(final CSimulation game, final CUnit caster, final Map<String, Object> localStore,
 			final int castId) {
 		boolean showTimedLife = false;
-		if (showTimedLifeBar != null) {
-			showTimedLife = showTimedLifeBar.callback(game, caster, localStore, castId);
+		if (this.showTimedLifeBar != null) {
+			showTimedLife = this.showTimedLifeBar.callback(game, caster, localStore, castId);
 		}
 		boolean isLeveled = false;
 		if (leveled != null) {
@@ -76,5 +79,46 @@ public class ABActionCreateTimedTickingPausedBuff implements ABAction {
 			localStore.put(ABLocalStoreKeys.BUFFCASTINGUNIT, caster);
 		}
 
+	}
+
+	@Override
+	public String generateJassEquivalent(final JassTextGenerator jassTextGenerator) {
+		final String addFunctionName = jassTextGenerator.createAnonymousFunction(this.onAddActions,
+				"CreateTimedTickingPausedBuffAU_OnAddActions");
+		final String removeFunctionName = jassTextGenerator.createAnonymousFunction(this.onRemoveActions,
+				"CreateTimedTickingPausedBuffAU_OnRemoveActions");
+		final String expireFunctionName = jassTextGenerator.createAnonymousFunction(this.onExpireActions,
+				"CreateTimedTickingPausedBuffAU_OnExpireActions");
+		final String tickFunctionName = jassTextGenerator.createAnonymousFunction(this.onTickActions,
+				"CreateTimedTickingPausedBuffAU_OnTickActions");
+
+		String showTimedLife = "false";
+		if (this.showTimedLifeBar != null) {
+			showTimedLife = this.showTimedLifeBar.generateJassEquivalent(jassTextGenerator);
+		}
+
+		String showIconExpression;
+		if (this.showIcon != null) {
+			showIconExpression = this.showIcon.generateJassEquivalent(jassTextGenerator);
+		} else {
+			showIconExpression = "true";
+		}
+
+		CEffectType artTypeUsed = CEffectType.TARGET;
+		if (this.artType != null) {
+			artTypeUsed = this.artType;
+		}
+		String artTypeExpression;
+		artTypeExpression = "EFFECT_TYPE_" + artTypeUsed.name();
+
+		return "CreateTimedTickingPausedBuffAU(" + jassTextGenerator.getCaster() + ", "
+				+ jassTextGenerator.getTriggerLocalStore() + ", "
+				+ this.buffId.generateJassEquivalent(jassTextGenerator) + ", "
+				+ this.duration.generateJassEquivalent(jassTextGenerator) + ", " + showTimedLife + ", "
+				+ jassTextGenerator.functionPointerByName(addFunctionName) + ", "
+				+ jassTextGenerator.functionPointerByName(removeFunctionName) + ", "
+				+ jassTextGenerator.functionPointerByName(expireFunctionName) + ", "
+				+ jassTextGenerator.functionPointerByName(tickFunctionName) + ", " + showIconExpression + ", "
+				+ artTypeExpression + ", " + jassTextGenerator.getCastId() + ")";
 	}
 }

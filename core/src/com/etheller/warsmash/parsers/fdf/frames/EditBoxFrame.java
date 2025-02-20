@@ -46,7 +46,9 @@ public class EditBoxFrame extends AbstractRenderableFrame implements FocusableFr
 		this.gameUI = gameUI;
 		this.viewport = viewport;
 		this.controlBackdrop.positionBounds(gameUI, viewport);
-		this.editTextFrame.positionBounds(gameUI, viewport);
+		if (this.editTextFrame != null) {
+			this.editTextFrame.positionBounds(gameUI, viewport);
+		}
 	}
 
 	@Override

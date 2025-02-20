@@ -3,7 +3,7 @@ package com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes;
 import com.etheller.interpreter.ast.util.CHandle;
 
 public enum CFogState implements CHandle {
-	MASKED((byte) -128),
+	MASKED((byte) -1),
 	FOGGED((byte) 127),
 	VISIBLE((byte) 0);
 	

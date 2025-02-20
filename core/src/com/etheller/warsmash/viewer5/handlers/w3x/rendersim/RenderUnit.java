@@ -5,11 +5,12 @@ import java.util.EnumSet;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.math.Quaternion;
+import com.badlogic.gdx.math.Vector3;
 import com.etheller.warsmash.parsers.fdf.GameUI;
-import com.etheller.warsmash.units.GameObject;
 import com.etheller.warsmash.util.RenderMathUtils;
 import com.etheller.warsmash.viewer5.handlers.mdx.MdxComplexInstance;
 import com.etheller.warsmash.viewer5.handlers.mdx.MdxModel;
+import com.etheller.warsmash.viewer5.handlers.mdx.Sequence;
 import com.etheller.warsmash.viewer5.handlers.w3x.AnimationTokens;
 import com.etheller.warsmash.viewer5.handlers.w3x.AnimationTokens.PrimaryTag;
 import com.etheller.warsmash.viewer5.handlers.w3x.AnimationTokens.SecondaryTag;
@@ -29,24 +30,15 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.AbilityGenericSingleIconPassiveAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.CBuff;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.timers.CTimer;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CRarityControl;
 
 public class RenderUnit implements RenderWidget {
 	public static final Color ETHEREAL = new Color(0.75f, 1, 0.5f, 0.5f);
 	public static final Color DEFAULT = new Color(1, 1, 1, 1);
 	public static final Quaternion tempQuat = new Quaternion();
-	private static final String RED = "red"; // replaced from 'uclr'
-	private static final String GREEN = "green"; // replaced from 'uclg'
-	private static final String BLUE = "blue"; // replaced from 'uclb'
-	private static final String MOVE_HEIGHT = "moveHeight"; // replaced from 'umvh'
-	private static final String ORIENTATION_INTERPOLATION = "orientInterp"; // replaced from 'uori'
-	public static final String ANIM_PROPS = "animProps"; // replaced from 'uani'
-	public static final String ATTACHMENT_ANIM_PROPS = "Attachmentanimprops"; // replaced from 'uaap'
-	private static final String BLEND_TIME = "blend"; // replaced from 'uble'
-	private static final String BUILD_SOUND_LABEL = "BuildingSoundLabel"; // replaced from 'ubsl'
-	private static final String UNIT_SELECT_HEIGHT = "selZ"; // replaced from 'uslz'
 	private static final float[] heapZ = new float[3];
 	public MdxComplexInstance instance;
-	public GameObject row;
 	public final float[] location = new float[3];
 	public float selectionScale;
 	public UnitSoundset soundset;
@@ -54,7 +46,7 @@ public class RenderUnit implements RenderWidget {
 	public int playerIndex;
 	private final CUnit simulationUnit;
 	public SplatMover shadow;
-	private BuildingShadow buildingShadowInstance;
+	public BuildingShadow buildingShadowInstance;
 	public SplatMover selectionCircle;
 	public SplatMover selectionPreviewHighlight;
 
@@ -62,6 +54,7 @@ public class RenderUnit implements RenderWidget {
 
 	private boolean swimming;
 	private boolean working;
+	private boolean invisible;
 
 	private boolean dead = false;
 
@@ -72,33 +65,30 @@ public class RenderUnit implements RenderWidget {
 	private boolean corpse;
 	private boolean boneCorpse;
 	private boolean building;
-	private RenderUnitTypeData typeData;
+	private RenderUnitType typeData;
 	public MdxModel specialArtModel;
 	public SplatMover uberSplat;
 	private float selectionHeight;
 	private RenderUnit preferredSelectionReplacement;
-	private float[] currentColor = {1,1,1,1};
+	private float[] currentColor = { 1, 1, 1, 1 };
 
-	public RenderUnit(final War3MapViewer map, final MdxModel model, final GameObject row, final float x, final float y,
-			final float z, final int playerIndex, final UnitSoundset soundset, final MdxModel portraitModel,
-			final CUnit simulationUnit, final RenderUnitTypeData typeData, final MdxModel specialArtModel,
-			final BuildingShadow buildingShadow, final float selectionCircleScaleFactor, final float animationWalkSpeed,
-			final float animationRunSpeed, final float scalingValue) {
+	public RenderUnit(final War3MapViewer map, final float x, final float y, final float z, final int playerIndex,
+			final CUnit simulationUnit, final RenderUnitType typeData, final BuildingShadow buildingShadow,
+			final float selectionCircleScaleFactor, final float animationWalkSpeed, final float animationRunSpeed,
+			final float scalingValue) {
 		this.simulationUnit = simulationUnit;
-		resetRenderUnit(map, model, row, x, y, z, playerIndex, soundset, portraitModel, simulationUnit, typeData,
-				specialArtModel, buildingShadow, selectionCircleScaleFactor, animationWalkSpeed, animationRunSpeed,
-				scalingValue);
+		resetRenderUnit(map, x, y, z, playerIndex, simulationUnit, typeData, buildingShadow, selectionCircleScaleFactor,
+				animationWalkSpeed, animationRunSpeed, scalingValue);
 
 	}
 
-	public void resetRenderUnit(final War3MapViewer map, final MdxModel model, final GameObject row, final float x,
-			final float y, final float z, final int playerIndex, final UnitSoundset soundset,
-			final MdxModel portraitModel, final CUnit simulationUnit, final RenderUnitTypeData typeData,
-			final MdxModel specialArtModel, final BuildingShadow buildingShadow, final float selectionCircleScaleFactor,
-			final float animationWalkSpeed, final float animationRunSpeed, final float scalingValue) {
-		this.portraitModel = portraitModel;
+	public void resetRenderUnit(final War3MapViewer map, final float x, final float y, final float z,
+			final int playerIndex, final CUnit simulationUnit, final RenderUnitType typeData,
+			final BuildingShadow buildingShadow, final float selectionCircleScaleFactor, final float animationWalkSpeed,
+			final float animationRunSpeed, final float scalingValue) {
+		this.portraitModel = typeData.getPortraitModel();
 		this.typeData = typeData;
-		this.specialArtModel = specialArtModel;
+		this.specialArtModel = typeData.getSpecialArtModel();
 		if (this.buildingShadowInstance != null) {
 			this.buildingShadowInstance.remove();
 		}
@@ -106,7 +96,7 @@ public class RenderUnit implements RenderWidget {
 		if (this.instance != null) {
 			this.instance.detach();
 		}
-		final MdxComplexInstance instance = (MdxComplexInstance) model.addInstance();
+		final MdxComplexInstance instance = (MdxComplexInstance) typeData.getModel().addInstance();
 
 		this.location[0] = x;
 		this.location[1] = y;
@@ -121,48 +111,44 @@ public class RenderUnit implements RenderWidget {
 		instance.setScene(map.worldScene);
 		this.unitAnimationListenerImpl = new UnitAnimationListenerImpl(instance, animationWalkSpeed, animationRunSpeed);
 		simulationUnit.setUnitAnimationListener(this.unitAnimationListenerImpl);
-		final String requiredAnimationNames = row.getFieldAsString(ANIM_PROPS, 0);
-		TokenLoop: for (final String animationName : requiredAnimationNames.split(",")) {
-			final String upperCaseToken = animationName.toUpperCase();
-			for (final SecondaryTag secondaryTag : SecondaryTag.values()) {
-				if (upperCaseToken.equals(secondaryTag.name())) {
-					this.unitAnimationListenerImpl.addSecondaryTag(secondaryTag);
-					continue TokenLoop;
+
+		if (typeData != null) {
+			boolean changedAnimProps = false;
+			for (final SecondaryTag secondaryTag : typeData.getRequiredAnimationNames()) {
+				if (this.unitAnimationListenerImpl.addSecondaryTag(secondaryTag)) {
+					changedAnimProps = true;
 				}
 			}
-		}
+			if (changedAnimProps) {
+				this.unitAnimationListenerImpl.forceResetCurrentAnimation();
+			}
 
-		if (row != null) {
 			heapZ[2] = simulationUnit.getFlyHeight();
 			this.location[2] += heapZ[2];
 
 			instance.move(heapZ);
-			String red;
-			String green;
-			String blue;
-			red = RED;
-			green = GREEN;
-			blue = BLUE;
-			instance.setVertexColor(new float[] { (row.getFieldAsInteger(red, 0)) / 255f,
-					(row.getFieldAsInteger(green, 0)) / 255f, (row.getFieldAsInteger(blue, 0)) / 255f });
+			final Vector3 tintingColor = typeData.getTintingColor();
+			this.currentColor = new float[] { tintingColor.x, tintingColor.y, tintingColor.z, 1.0f };
 			instance.uniformScale(scalingValue);
 
-			this.selectionScale = row.getFieldAsFloat(War3MapViewer.UNIT_SELECT_SCALE, 0) * selectionCircleScaleFactor;
-			this.selectionHeight = row.getFieldAsFloat(UNIT_SELECT_HEIGHT, 0);
-			int orientationInterpolationOrdinal = row.getFieldAsInteger(ORIENTATION_INTERPOLATION, 0);
+			this.selectionScale = typeData.getSelectScale() * selectionCircleScaleFactor;
+			this.selectionHeight = typeData.getSelectHeight();
+			int orientationInterpolationOrdinal = typeData.getOrientationInterpolation();
 			if ((orientationInterpolationOrdinal < 0)
 					|| (orientationInterpolationOrdinal >= OrientationInterpolation.VALUES.length)) {
 				orientationInterpolationOrdinal = 0;
 			}
 			this.orientationInterpolation = OrientationInterpolation.VALUES[orientationInterpolationOrdinal];
 
-			final float blendTime = row.getFieldAsFloat(BLEND_TIME, 0);
+			final float blendTime = typeData.getBlendTime();
 			instance.setBlendTime(blendTime * 1000.0f);
 		}
 
 		this.instance = instance;
-		this.row = row;
-		this.soundset = soundset;
+		if (typeData != null) {
+			updateColor(map);
+		}
+		this.soundset = typeData.getSoundset();
 		this.building = simulationUnit.isBuilding();
 	}
 
@@ -242,6 +228,7 @@ public class RenderUnit implements RenderWidget {
 		boolean swimming = (movementType == MovementType.AMPHIBIOUS)
 				&& PathingGrid.isPathingFlag(terrainPathing, PathingGrid.PathingType.SWIMMABLE)
 				&& !PathingGrid.isPathingFlag(terrainPathing, PathingGrid.PathingType.WALKABLE);
+		final boolean invisible = this.simulationUnit.getInvisLevels() > 0;
 		final boolean working = this.simulationUnit.getBuildQueueTypes()[0] != null;
 		final float groundHeightTerrain = map.terrain.getGroundHeight(this.location[0], this.location[1]);
 		float groundHeightTerrainAndWater;
@@ -276,20 +263,48 @@ public class RenderUnit implements RenderWidget {
 				currentWalkableUnder = null;
 			}
 		}
+		boolean changedAnimationProperties = false;
 		if (swimming && !this.swimming) {
-			this.unitAnimationListenerImpl.addSecondaryTag(AnimationTokens.SecondaryTag.SWIM);
+			if (this.unitAnimationListenerImpl.addSecondaryTag(AnimationTokens.SecondaryTag.SWIM)) {
+				changedAnimationProperties = true;
+			}
 		}
 		else if (!swimming && this.swimming) {
-			this.unitAnimationListenerImpl.removeSecondaryTag(AnimationTokens.SecondaryTag.SWIM);
+			if (this.unitAnimationListenerImpl.removeSecondaryTag(AnimationTokens.SecondaryTag.SWIM)) {
+				changedAnimationProperties = true;
+			}
 		}
 		if (working && !this.working) {
-			this.unitAnimationListenerImpl.addSecondaryTag(AnimationTokens.SecondaryTag.WORK);
+			if (this.unitAnimationListenerImpl.addSecondaryTag(AnimationTokens.SecondaryTag.WORK)) {
+				changedAnimationProperties = true;
+			}
 		}
 		else if (!working && this.working) {
-			this.unitAnimationListenerImpl.removeSecondaryTag(AnimationTokens.SecondaryTag.WORK);
+			if (this.unitAnimationListenerImpl.removeSecondaryTag(AnimationTokens.SecondaryTag.WORK)) {
+				changedAnimationProperties = true;
+			}
 		}
+		if (changedAnimationProperties) {
+			this.unitAnimationListenerImpl.forceResetCurrentAnimation();
+		}
+		boolean colorNeedsUpdate = false;
+		if (invisible && !this.invisible) {
+			// turn invisible instantly
+			colorNeedsUpdate = true;
+		}
+		else if (!invisible && this.invisible) {
+			// show instantly
+			colorNeedsUpdate = true;
+		}
+		else if ((this.simulationUnit.getFadeTimer() != null) && this.simulationUnit.getFadeTimer().isRunning()) {
+			colorNeedsUpdate = true;
+		}
+		this.invisible = invisible;
 		this.swimming = swimming;
 		this.working = working;
+		if (colorNeedsUpdate) {
+			updateColor(map);
+		}
 		final boolean dead = this.simulationUnit.isDead();
 		final boolean corpse = this.simulationUnit.isCorpse();
 		final boolean boneCorpse = this.simulationUnit.isBoneCorpse();
@@ -656,28 +671,117 @@ public class RenderUnit implements RenderWidget {
 				|| (this.simulationUnit.getMovementType() == MovementType.FLY);
 	}
 
-	public RenderUnitTypeData getTypeData() {
+	public RenderUnitType getTypeData() {
 		return this.typeData;
 	}
 
-	public void setVertexColoring(Color color) {
-		this.instance.setVertexColor(color);
-		this.currentColor = new float[]{color.r, color.g, color.b, color.a};
+	public void setVertexColoring(final War3MapViewer map, final Color color) {
+		this.currentColor = new float[] { color.r, color.g, color.b, color.a };
+		updateColor(map);
 	}
 
-	public void setVertexColoring(float r, float g, float b) {
-		final float[] color = new float[] { r, g, b };
-		this.instance.setVertexColor(color);
-		this.currentColor = new float[]{r, g, b, 1};
+	public void setVertexColoring(final War3MapViewer map, final float r, final float g, final float b) {
+		this.currentColor = new float[] { r, g, b, 1 };
+		updateColor(map);
 	}
 
-	public void setVertexColoring(float r, float g, float b, float a) {
+	public void setVertexColoring(final War3MapViewer map, final float r, final float g, final float b, final float a) {
 		final float[] color = new float[] { r, g, b, a };
-		this.instance.setVertexColor(color);
 		this.currentColor = color;
+		updateColor(map);
 	}
-	
+
+	private void updateColor(final War3MapViewer map) {
+		float finalAlpha = this.currentColor[3];
+		if (this.invisible) {
+			finalAlpha *= 0.5f;
+		}
+		else {
+			final CTimer fadeTimer = this.simulationUnit.getFadeTimer();
+			if ((fadeTimer != null) && fadeTimer.isRunning()) {
+				final float fadeAmount = map.getRemainingSecondsForRender(fadeTimer) / fadeTimer.getTimeoutTime();
+				finalAlpha *= (fadeAmount * 0.5f) + 0.5f;
+			}
+		}
+		this.instance.setVertexColor(this.currentColor[0], this.currentColor[1], this.currentColor[2], finalAlpha);
+	}
+
 	public float[] getVertexColoring() {
-		return currentColor;
+		return this.currentColor;
+	}
+
+	public void queueAnimation(final String whichAnimation) {
+		final EnumSet<AnimationTokens.PrimaryTag> primaryTags = EnumSet.noneOf(AnimationTokens.PrimaryTag.class);
+		final EnumSet<AnimationTokens.SecondaryTag> secondaryTag = EnumSet.noneOf(AnimationTokens.SecondaryTag.class);
+		Sequence.populateTags(primaryTags, secondaryTag, whichAnimation);
+		final AnimationTokens.PrimaryTag primaryTag = Sequence.any(primaryTags);
+		this.unitAnimationListenerImpl.queueAnimation(primaryTag, secondaryTag, true);
+	}
+
+	public void playAnimation(final String whichAnimation) {
+		final EnumSet<AnimationTokens.PrimaryTag> primaryTags = EnumSet.noneOf(AnimationTokens.PrimaryTag.class);
+		final EnumSet<AnimationTokens.SecondaryTag> secondaryTag = EnumSet.noneOf(AnimationTokens.SecondaryTag.class);
+		Sequence.populateTags(primaryTags, secondaryTag, whichAnimation);
+		final AnimationTokens.PrimaryTag primaryTag = Sequence.any(primaryTags);
+		this.unitAnimationListenerImpl.playAnimation(true, primaryTag, secondaryTag, 1.0f, true);
+	}
+
+	public void playAnimation(final int index) {
+		this.unitAnimationListenerImpl.playAnimation(true, index, 1.0f, true);
+	}
+
+	public void playAnimationWithRarity(final String whichAnimation, final CRarityControl control) {
+		final EnumSet<AnimationTokens.PrimaryTag> primaryTags = EnumSet.noneOf(AnimationTokens.PrimaryTag.class);
+		final EnumSet<AnimationTokens.SecondaryTag> secondaryTag = EnumSet.noneOf(AnimationTokens.SecondaryTag.class);
+		Sequence.populateTags(primaryTags, secondaryTag, whichAnimation);
+		final AnimationTokens.PrimaryTag primaryTag = Sequence.any(primaryTags);
+		// TODO: below is not doing probably what it should.... We can assume "control
+		// == RARE" means to INTENTIONALLY PLAY THE RARE ONES but at the moment, this
+		// flag we are passing means to ALLOW SOMETIMES playing the rare ones
+		this.unitAnimationListenerImpl.playAnimation(true, primaryTag, secondaryTag, 1.0f,
+				control == CRarityControl.RARE);
+	}
+
+	public void addAnimationProperties(final String properties, final boolean add) {
+		final EnumSet<AnimationTokens.PrimaryTag> primaryTags = EnumSet.noneOf(AnimationTokens.PrimaryTag.class);
+		final EnumSet<AnimationTokens.SecondaryTag> secondaryTags = EnumSet.noneOf(AnimationTokens.SecondaryTag.class);
+		Sequence.populateTags(primaryTags, secondaryTags, properties);
+		boolean changedAnimProps = false;
+		if (add) {
+			for (final AnimationTokens.SecondaryTag tag : secondaryTags) {
+				if (this.unitAnimationListenerImpl.addSecondaryTag(tag)) {
+					changedAnimProps = true;
+				}
+			}
+		}
+		else {
+			for (final AnimationTokens.SecondaryTag tag : secondaryTags) {
+				if (this.unitAnimationListenerImpl.removeSecondaryTag(tag)) {
+					changedAnimProps = true;
+				}
+			}
+		}
+		if (changedAnimProps) {
+			this.unitAnimationListenerImpl.forceResetCurrentAnimation();
+		}
+	}
+
+	public void lockTargetFacing(final String boneNameString, final RenderUnit renderPeerTarget, final float offsetX,
+			final float offsetY, final float offsetZ) {
+		if (boneNameString != null) {
+			if ("head".equals(boneNameString.toLowerCase())) {
+				this.unitAnimationListenerImpl.lockHeadFacing(renderPeerTarget.instance,
+						new Vector3(offsetX, offsetY, offsetZ));
+			}
+			else if ("turret".equals(boneNameString.toLowerCase())) {
+				this.unitAnimationListenerImpl.lockTurretFacing(renderPeerTarget.instance,
+						new Vector3(offsetX, offsetY, offsetZ));
+			}
+		}
+	}
+
+	public void resetLookAt() {
+		this.unitAnimationListenerImpl.clearHeadFacing();
+		this.unitAnimationListenerImpl.clearTurretFacing();
 	}
 }

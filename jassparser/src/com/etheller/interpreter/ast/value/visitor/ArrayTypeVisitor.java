@@ -4,6 +4,8 @@ import com.etheller.interpreter.ast.value.ArrayJassType;
 import com.etheller.interpreter.ast.value.HandleJassType;
 import com.etheller.interpreter.ast.value.JassTypeVisitor;
 import com.etheller.interpreter.ast.value.PrimitiveJassType;
+import com.etheller.interpreter.ast.value.StaticStructTypeJassValue;
+import com.etheller.interpreter.ast.value.StructJassType;
 
 public class ArrayTypeVisitor implements JassTypeVisitor<ArrayJassType> {
 	private static final ArrayTypeVisitor INSTANCE = new ArrayTypeVisitor();
@@ -24,6 +26,16 @@ public class ArrayTypeVisitor implements JassTypeVisitor<ArrayJassType> {
 
 	@Override
 	public ArrayJassType accept(final HandleJassType type) {
+		return null;
+	}
+
+	@Override
+	public ArrayJassType accept(final StructJassType value) {
+		return null;
+	}
+
+	@Override
+	public ArrayJassType accept(final StaticStructTypeJassValue staticType) {
 		return null;
 	}
 

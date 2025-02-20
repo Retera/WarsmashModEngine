@@ -5,6 +5,8 @@ import com.etheller.interpreter.ast.debug.DebuggingJassStatement;
 public interface JassStatementVisitor<TYPE> {
 	TYPE visit(JassArrayedAssignmentStatement statement);
 
+	TYPE visit(JassCallExpressionStatement statement);
+
 	TYPE visit(JassCallStatement statement);
 
 	TYPE visit(JassDoNothingStatement statement);
@@ -29,5 +31,13 @@ public interface JassStatementVisitor<TYPE> {
 
 	TYPE visit(JassSetStatement statement);
 
+	TYPE visit(JassSetMemberStatement statement);
+
 	TYPE visit(DebuggingJassStatement statement);
+
+	TYPE visit(JassGlobalDefinitionStatement statement);
+
+	TYPE visit(JassGlobalStatement statement);
+
+	TYPE visit(JassThrowStatement statement);
 }

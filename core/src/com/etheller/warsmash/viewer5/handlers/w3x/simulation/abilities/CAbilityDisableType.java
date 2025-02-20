@@ -1,6 +1,8 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities;
 
-public enum CAbilityDisableType {
+import com.etheller.interpreter.ast.util.CHandle;
+
+public enum CAbilityDisableType implements CHandle {
 	REQUIREMENTS((byte) 1),
 	CONSTRUCTION((byte) 2),
 	TRANSFORMATION((byte) 4),
@@ -9,13 +11,19 @@ public enum CAbilityDisableType {
 	PLAYER((byte) 32);
 
 	private byte mask;
-	
+
 	CAbilityDisableType(byte i) {
 		this.mask = i;
 	}
-	
+
 	public byte getMask() {
-		return mask;
+		return this.mask;
 	}
 
+	@Override
+	public int getHandleId() {
+		return ordinal();
+	}
+
+	public static final CAbilityDisableType[] VALUES = values();
 }

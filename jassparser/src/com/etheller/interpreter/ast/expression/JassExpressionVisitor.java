@@ -7,7 +7,13 @@ public interface JassExpressionVisitor<TYPE> {
 
 	TYPE visit(FunctionCallJassExpression expression);
 
+	TYPE visit(MethodCallJassExpression expression);
+
+	TYPE visit(ParentlessMethodCallJassExpression expression);
+
 	TYPE visit(FunctionReferenceJassExpression expression);
+
+	TYPE visit(MethodReferenceJassExpression expression);
 
 	TYPE visit(LiteralJassExpression expression);
 
@@ -16,5 +22,15 @@ public interface JassExpressionVisitor<TYPE> {
 	TYPE visit(NotJassExpression expression);
 
 	TYPE visit(ReferenceJassExpression expression);
+
+	TYPE visit(MemberJassExpression expression);
+
+	TYPE visit(JassNewExpression expression);
+
+	TYPE visit(AllocateAsNewTypeExpression expression);
+
+	TYPE visit(ExtendHandleExpression expression);
+
+	TYPE visit(TypeCastJassExpression expression);
 
 }

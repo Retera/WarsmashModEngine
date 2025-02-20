@@ -22,11 +22,7 @@ public class JassStackFrame {
 	}
 
 	public JassValue getLast(final int offset) {
-		final int index = this.contents.size() - 1 - offset;
-		if ((index >= this.contents.size()) || (index < 0)) {
-			System.err.println("bad");
-		}
-		return this.contents.get(index);
+		return this.contents.get(this.contents.size() - 1 - offset);
 	}
 
 	public void push(final JassValue value) {
@@ -34,12 +30,12 @@ public class JassStackFrame {
 	}
 
 	public JassValue pop() {
-		final int lastIndex = this.contents.size() - 1;
-		if (lastIndex == -1) {
-			System.err.println("bad");
-		}
-		final JassValue jassValue = this.contents.get(lastIndex);
-		this.contents.remove(lastIndex);
+		final JassValue jassValue = this.contents.get(this.contents.size() - 1);
+		this.contents.remove(this.contents.size() - 1);
 		return jassValue;
+	}
+
+	public JassValue peek() {
+		return getLast(0);
 	}
 }

@@ -9,9 +9,9 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTargetVisitor;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.JassGameEventsWar3;
 
-public class CGlobalWidgetEvent implements CGlobalEvent {
+public class CGlobalWidgetEvent extends CGlobalEvent {
 	private final CSimulation game;
-	
+
 	private final GlobalScope globalScope;
 	private final Trigger trigger;
 	private final JassGameEventsWar3 eventType;
@@ -19,6 +19,7 @@ public class CGlobalWidgetEvent implements CGlobalEvent {
 
 	public CGlobalWidgetEvent(final CSimulation game, final GlobalScope globalScope, final Trigger trigger,
 			final JassGameEventsWar3 eventType, final TriggerBooleanExpression filter) {
+		super(trigger);
 		this.game = game;
 		this.globalScope = globalScope;
 		this.trigger = trigger;
@@ -26,6 +27,7 @@ public class CGlobalWidgetEvent implements CGlobalEvent {
 		this.filter = filter;
 	}
 
+	@Override
 	public Trigger getTrigger() {
 		return this.trigger;
 	}
@@ -37,10 +39,10 @@ public class CGlobalWidgetEvent implements CGlobalEvent {
 
 	@Override
 	public void remove() {
-		game.removeGlobalEvent(this);
+		this.game.removeGlobalEvent(this);
 	}
 
-
+	@Override
 	public void fire(final CWidget triggerWidget, final TriggerExecutionScope scope) {
 		this.globalScope.queueTrigger(this.filter, triggerWidget.visit(ScopeBuilder.INSTANCE.reset(scope)),
 				this.trigger, scope, scope);

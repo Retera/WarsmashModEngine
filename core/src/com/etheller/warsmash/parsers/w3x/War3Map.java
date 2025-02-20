@@ -22,6 +22,7 @@ import com.etheller.warsmash.parsers.w3x.objectdata.Warcraft3MapRuntimeObjectDat
 import com.etheller.warsmash.parsers.w3x.unitsdoo.War3MapUnitsDoo;
 import com.etheller.warsmash.parsers.w3x.w3e.War3MapW3e;
 import com.etheller.warsmash.parsers.w3x.w3i.War3MapW3i;
+import com.etheller.warsmash.parsers.w3x.w3r.War3MapW3r;
 import com.etheller.warsmash.parsers.w3x.wpm.War3MapWpm;
 import com.etheller.warsmash.units.custom.WTS;
 import com.google.common.io.LittleEndianDataInputStream;
@@ -34,7 +35,8 @@ import mpq.MPQException;
  */
 public class War3Map implements DataSource {
 
-	private CompoundDataSource dataSource;
+	private CompoundDataSource baseDataSource;
+	private DataSource dataSource;
 	private DataSource internalMpqContentsDataSource;
 
 	public War3Map(final DataSource dataSource, final String mapFileName) {
@@ -47,7 +49,8 @@ public class War3Map implements DataSource {
 			SeekableByteChannel sbc;
 			sbc = new SeekableInMemoryByteChannel(dataSource.read(mapFileName).array());
 			this.internalMpqContentsDataSource = new MpqDataSource(new MPQArchive(sbc), sbc);
-			this.dataSource = new CompoundDataSource(Arrays.asList(dataSource, this.internalMpqContentsDataSource));
+			this.baseDataSource = new CompoundDataSource(Arrays.asList(dataSource, this.internalMpqContentsDataSource));
+			this.dataSource = this.baseDataSource;
 		}
 		catch (final IOException e) {
 			throw new RuntimeException(e);
@@ -74,7 +77,8 @@ public class War3Map implements DataSource {
 					this.internalMpqContentsDataSource = new MpqDataSource(new MPQArchive(sbc), sbc);
 				}
 			}
-			this.dataSource = new CompoundDataSource(Arrays.asList(dataSource, this.internalMpqContentsDataSource));
+			this.baseDataSource = new CompoundDataSource(Arrays.asList(dataSource, this.internalMpqContentsDataSource));
+			this.dataSource = this.baseDataSource;
 		}
 		catch (final IOException e) {
 			throw new RuntimeException(e);
@@ -134,6 +138,15 @@ public class War3Map implements DataSource {
 		return unitsFile;
 	}
 
+	public War3MapW3r readRegions() throws IOException {
+		War3MapW3r unitsFile;
+		try (LittleEndianDataInputStream stream = new LittleEndianDataInputStream(
+				this.dataSource.getResourceAsStream("war3map.w3r"))) {
+			unitsFile = new War3MapW3r(stream);
+		}
+		return unitsFile;
+	}
+
 	public Warcraft3MapRuntimeObjectData readModifications() throws IOException {
 		final Warcraft3MapRuntimeObjectData changes = Warcraft3MapRuntimeObjectData.load(this.dataSource, true);
 		return changes;
@@ -172,7 +185,7 @@ public class War3Map implements DataSource {
 
 	@Override
 	public Collection<String> getListfile() {
-		return this.internalMpqContentsDataSource.getListfile();
+		return this.dataSource.getListfile();
 	}
 
 	@Override
@@ -180,8 +193,12 @@ public class War3Map implements DataSource {
 		this.dataSource.close();
 	}
 
-	public CompoundDataSource getCompoundDataSource() {
-		return this.dataSource;
+	public DataSource getCompoundDataSource() {
+		return this.baseDataSource;
+	}
+
+	public void setDataSource(DataSource tilesetSource) {
+		this.dataSource = tilesetSource;
 	}
 
 	public long computeChecksum(final Checksum checksum) {

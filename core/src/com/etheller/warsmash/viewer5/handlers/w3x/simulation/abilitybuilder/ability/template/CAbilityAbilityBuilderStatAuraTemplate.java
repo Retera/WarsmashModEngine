@@ -212,8 +212,14 @@ public class CAbilityAbilityBuilderStatAuraTemplate extends AbilityGenericSingle
 					createNewBuffs(statBuff);
 					addNewBuffs(statBuff);
 				} else {
-					statBuff.getBuff().setValue(Float.parseFloat(
-							levelData.get(getLevel() - 1).getData().get(statBuff.getDataField().getIndex())));
+					float parsedFloat;
+					try {
+						parsedFloat = Float.parseFloat(
+								levelData.get(getLevel() - 1).getData().get(statBuff.getDataField().getIndex()));
+					} catch (NumberFormatException exc) {
+						parsedFloat = 0;
+					}
+					statBuff.getBuff().setValue(parsedFloat);
 					if (type == NonStackingStatBuffType.MELEEATK || type == NonStackingStatBuffType.MELEEATKPCT) {
 						targetMelee = true;
 					} else if (type == NonStackingStatBuffType.RNGDATK || type == NonStackingStatBuffType.RNGDATKPCT) {

@@ -184,8 +184,8 @@ public class CBehaviorMove implements CBehavior {
 		}
 		float facing = this.unit.getFacing();
 		float delta = goalAngle - facing;
-		final float propulsionWindow = this.unit.getUnitType().getPropWindow();
-		final float turnRate = this.unit.getUnitType().getTurnRate();
+		final float propulsionWindow = this.unit.getPropWindow();
+		final float turnRate = this.unit.getTurnRate();
 		final int speed = this.unit.getSpeed();
 
 		if (delta < -180) {

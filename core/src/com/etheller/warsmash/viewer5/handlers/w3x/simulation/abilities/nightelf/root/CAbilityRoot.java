@@ -102,7 +102,9 @@ public class CAbilityRoot extends AbstractGenericSingleIconNoSmartActiveAbility 
 		}
 		unit.setFacing(game.getGameplayConstants().getRootAngle());
 		unit.setUnitSpecificCurrentAttacks(this.rootedAttacks);
-		unit.getUnitAnimationListener().addSecondaryTag(SecondaryTag.ALTERNATE);
+		if (unit.getUnitAnimationListener().addSecondaryTag(SecondaryTag.ALTERNATE)) {
+			unit.getUnitAnimationListener().forceResetCurrentAnimation();
+		}
 	}
 
 	@Override
@@ -133,7 +135,9 @@ public class CAbilityRoot extends AbstractGenericSingleIconNoSmartActiveAbility 
 			unit.setAttackMoveBehavior(null);
 			unit.setFacing(game.getGameplayConstants().getRootAngle());
 			unit.setUnitSpecificCurrentAttacks(this.rootedAttacks);
-			unit.getUnitAnimationListener().addSecondaryTag(SecondaryTag.ALTERNATE);
+			if (unit.getUnitAnimationListener().addSecondaryTag(SecondaryTag.ALTERNATE)) {
+				unit.getUnitAnimationListener().forceResetCurrentAnimation();
+			}
 		}
 		else {
 			for (final CAbility ability : this.rootedAbilities) {

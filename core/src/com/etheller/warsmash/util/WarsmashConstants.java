@@ -1,5 +1,7 @@
 package com.etheller.warsmash.util;
 
+import java.util.List;
+
 import com.etheller.warsmash.units.DataTable;
 import com.etheller.warsmash.units.Element;
 import com.etheller.warsmash.units.GameObject;
@@ -19,7 +21,7 @@ public class WarsmashConstants {
 	public static final int PORT_NUMBER = GamingNetwork.UDP_SINGLE_GAME_PORT;
 	public static final float BUILDING_CONSTRUCT_START_LIFE = 0.1f;
 	public static final int BUILD_QUEUE_SIZE = 7;
-	public static final int MAX_SELECTION_SIZE = 12;
+	public static final int MAX_SELECTION_SIZE = 18;
 	// It looks like in Patch 1.22, "Particle" in video settings will change this
 	// factor:
 	// Low - unknown ?
@@ -55,9 +57,11 @@ public class WarsmashConstants {
 
 	public static CRaceManager RACE_MANAGER;
 
-	public static final String[] JASS_FILE_LIST = { "Scripts\\common.j", "Scripts\\Blizzard.j", "Scripts\\war3map.j" };
+	public static String[] JASS_FILE_LIST = { "Scripts\\common.j", "Scripts\\Blizzard.j", "Scripts\\war3map.j" };
 	public static final float GAME_SPEED_TIME_FACTOR = 0.5f;
 	public static final int ONGOING_BEHAVIOR_NOTIFICATION_TICKS = (int) (0.5f / SIMULATION_STEP_TIME);
+
+	public static final boolean SHOW_FPS = true;
 
 	public static void loadConstants(final GameObject emulatorConstants, final DataTable warsmashIni) {
 		MAX_PLAYERS = emulatorConstants.getFieldValue("MaxPlayers");
@@ -65,6 +69,12 @@ public class WarsmashConstants {
 		CATCH_CURSOR = emulatorConstants.getFieldValue("CatchCursor") == 1;
 		if (emulatorConstants.getField("FullScreenMenuBackdrop") != null) {
 			FULL_SCREEN_MENU_BACKDROP = emulatorConstants.getFieldValue("FullScreenMenuBackdrop") == 1;
+		}
+		final List<String> jassFileList = emulatorConstants.getFieldAsList("JassFileList");
+		if ((jassFileList != null) && !jassFileList.isEmpty()
+				&& !((jassFileList.size() == 1) && jassFileList.get(0).isEmpty())) {
+			final String[] jassFileArray = jassFileList.toArray(new String[0]);
+			JASS_FILE_LIST = jassFileArray;
 		}
 		FIX_FLAT_FILES_TILESET_LOADING = emulatorConstants.getFieldValue("FixFlatFilesTilesetLoading") == 1;
 		ENABLE_MUSIC = emulatorConstants.getFieldValue("EnableMusic") == 1;

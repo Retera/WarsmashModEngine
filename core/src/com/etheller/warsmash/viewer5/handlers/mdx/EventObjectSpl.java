@@ -4,7 +4,6 @@ import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Quaternion;
 import com.badlogic.gdx.math.Vector3;
 import com.etheller.warsmash.viewer5.EmittedObject;
-import com.etheller.warsmash.viewer5.handlers.w3x.War3MapViewer;
 import com.etheller.warsmash.viewer5.handlers.w3x.environment.IVec3;
 
 public class EventObjectSpl
@@ -30,7 +29,6 @@ public class EventObjectSpl
 		final Vector3 pivot = node.pivot;
 		final Quaternion worldRotation = node.worldRotation;
 		final Vector3 worldScale = node.worldScale;
-		final War3MapViewer viewer = (War3MapViewer) instance.model.viewer;
 
 		this.health = emitterObject.lifeSpan;
 

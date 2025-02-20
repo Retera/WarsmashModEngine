@@ -11,7 +11,10 @@ import com.etheller.interpreter.ast.value.IntegerJassValue;
 import com.etheller.interpreter.ast.value.JassValue;
 import com.etheller.interpreter.ast.value.JassValueVisitor;
 import com.etheller.interpreter.ast.value.RealJassValue;
+import com.etheller.interpreter.ast.value.StaticStructTypeJassValue;
 import com.etheller.interpreter.ast.value.StringJassValue;
+import com.etheller.interpreter.ast.value.StructJassType;
+import com.etheller.interpreter.ast.value.StructJassValue;
 
 public class ArithmeticJassValueVisitor implements JassValueVisitor<JassValue> {
 	public static final ArithmeticJassValueVisitor INSTANCE = new ArithmeticJassValueVisitor();
@@ -26,7 +29,14 @@ public class ArithmeticJassValueVisitor implements JassValueVisitor<JassValue> {
 
 	@Override
 	public JassValue accept(final BooleanJassValue value) {
-		return this.rightHand.visit(ArithmeticLeftHandBooleanJassValueVisitor.INSTANCE.reset(value, this.sign));
+		JassValue rightHandValue;
+		if (this.rightHand != null) {
+			rightHandValue = this.rightHand;
+		}
+		else {
+			rightHandValue = BooleanJassValue.FALSE;
+		}
+		return rightHandValue.visit(ArithmeticLeftHandBooleanJassValueVisitor.INSTANCE.reset(value, this.sign));
 	}
 
 	@Override
@@ -79,6 +89,24 @@ public class ArithmeticJassValueVisitor implements JassValueVisitor<JassValue> {
 			return this.sign.apply(value, leftHandType.getNullValue());
 		}
 		return this.rightHand.visit(ArithmeticLeftHandHandleJassValueVisitor.INSTANCE.reset(value, this.sign));
+	}
+
+	@Override
+	public JassValue accept(final StructJassValue value) {
+		final StructJassType leftHandType = value.getType();
+		if (!leftHandType.isNullable()) {
+			throw new UnsupportedOperationException("Cannot operate on null for type: " + leftHandType.getName());
+		}
+		// TODO would be nice not to have to call getNullValue here...
+		if (this.rightHand == null) {
+			return this.sign.apply(value, leftHandType.getNullValue());
+		}
+		return this.rightHand.visit(ArithmeticLeftHandStructJassValueVisitor.INSTANCE.reset(value, this.sign));
+	}
+
+	@Override
+	public JassValue accept(final StaticStructTypeJassValue value) {
+		throw new UnsupportedOperationException("Cannot perform arithmetic on struct type");
 	}
 
 }

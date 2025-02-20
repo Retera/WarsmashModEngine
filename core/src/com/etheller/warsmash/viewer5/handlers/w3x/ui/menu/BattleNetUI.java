@@ -506,10 +506,10 @@ public class BattleNetUI {
 			@Override
 			public void onSelectionChanged(final int newSelectedIndex, final String newSelectedItem) {
 				if (newSelectedItem != null) {
-					if (newSelectedItem.compareTo(prevSelectedItem) == 0) {
+					if (newSelectedItem.compareTo(this.prevSelectedItem) == 0) {
 						return;
 					}
-					prevSelectedItem = newSelectedItem;
+					this.prevSelectedItem = newSelectedItem;
 
 					BattleNetUI.this.customCreateCurrentMapConfig = null;
 					BattleNetUI.this.customCreateCurrentMapInfo = null;

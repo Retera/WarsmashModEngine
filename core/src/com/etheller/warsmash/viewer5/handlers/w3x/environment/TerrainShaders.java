@@ -90,6 +90,8 @@ public class TerrainShaders {
 				"uniform sampler2D fogOfWarMap;\r\n" + //
 				"\r\n" + //
 				"uniform bool show_lighting;\r\n" + //
+				"    uniform vec4 u_fogColor;\r\n" + //
+				"    uniform vec4 u_fogParams;\r\n" + //
 				"\r\n" + //
 				"in vec3 UV;\r\n" + //
 				"in vec3 Normal;\r\n" + //
@@ -110,6 +112,7 @@ public class TerrainShaders {
 				"	if (show_lighting) {\r\n" + //
 				"		color.rgb *=  shadeColor;\r\n" + //
 				"	}\r\n" + //
+				Shaders.fogSystem(false, null) + //
 				"\r\n" + //
 				"}";
 	}
@@ -206,6 +209,8 @@ public class TerrainShaders {
 //				"layout (binding = 21) uniform usampler2D pathing_map_dynamic;\r\n" + //
 				"uniform sampler2D shadowMap;\r\n" + //
 				"uniform sampler2D fogOfWarMap;\r\n" + //
+				"    uniform vec4 u_fogColor;\r\n" + //
+				"    uniform vec4 u_fogParams;\r\n" + //
 				"\r\n" + //
 				"in vec2 UV;\r\n" + //
 				"flat in uvec4 texture_indices;\r\n" + //
@@ -284,6 +289,7 @@ public class TerrainShaders {
 				"	} else {\r\n" + //
 				"     color = vec4(color.xyz * (1.0 - shadow), 1.0);\r\n" + //
 				"	}\r\n" + //
+				Shaders.fogSystem(false, null) + //
 //				"\r\n" + //
 //				"	if (show_pathing_map) {\r\n" + //
 //				"		uint byte_static = texelFetch(pathing_map_static, ivec2(pathing_map_uv), 0).r;\r\n" + //
@@ -325,7 +331,7 @@ public class TerrainShaders {
 					"uniform float lightTextureHeight;\r\n" + //
 					"\r\n" + //
 					"out vec2 UV;\r\n" + //
-					"out vec4 Color;\r\n" + //
+					"out vec4 vertexColor;\r\n" + //
 					"out vec2 position;\r\n" + //
 					"out vec3 shadeColor;\r\n" + //
 					"out vec2 v_suv;\r\n" + //
@@ -357,10 +363,10 @@ public class TerrainShaders {
 					"	float value = clamp(water_height - ground_height, 0.f, 1.f);\r\n" + //
 					"	if (value <= deeplevel) {\r\n" + //
 					"		value = max(0.f, value - min_depth) / (deeplevel - min_depth);\r\n" + //
-					"		Color = shallow_color_min * (1.f - value) + shallow_color_max * value;\r\n" + //
+					"		vertexColor = shallow_color_min * (1.f - value) + shallow_color_max * value;\r\n" + //
 					"	} else {\r\n" + //
 					"		value = clamp(value - deeplevel, 0.f, maxdepth - deeplevel) / (maxdepth - deeplevel);\r\n" + //
-					"		Color = deep_color_min * (1.f - value) + deep_color_max * value;\r\n" + //
+					"		vertexColor = deep_color_min * (1.f - value) + deep_color_max * value;\r\n" + //
 					"	}\r\n" + //
 					Shaders.lightSystem("Normal", "myposition.xyz", "lightTexture", "lightTextureHeight", "lightCount",
 							true)
@@ -379,21 +385,24 @@ public class TerrainShaders {
 				"\r\n" + //
 				"uniform int current_texture;\r\n" + //
 				"uniform vec4 mapBounds;\r\n" + //
+				"    uniform vec4 u_fogColor;\r\n" + //
+				"    uniform vec4 u_fogParams;\r\n" + //
 				"\r\n" + //
 				"in vec2 UV;\r\n" + //
-				"in vec4 Color;\r\n" + //
+				"in vec4 vertexColor;\r\n" + //
 				"in vec2 position;\r\n" + //
 				"in vec3 shadeColor;\r\n" + //
 				"in vec2 v_suv;\r\n" + //
 				"\r\n" + //
-				"out vec4 outColor;\r\n" + //
+				"out vec4 color;\r\n" + //
 				"\r\n" + //
 				"void main() {\r\n" + //
 				"   vec2 d2 = min(position - mapBounds.xy, mapBounds.zw - position);\r\n" + //
 				"   float d1 = clamp(min(d2.x, d2.y) / 64.0 + 1.0, 0.0, 1.0) * 0.8 + 0.2;;\r\n" + //
 				"   float fogOfWarData = texture2D(fogOfWarMap, v_suv).r;\r\n" + //
-				"	outColor = texture(water_textures, vec3(UV, current_texture)) * vec4(Color.rgb * d1 * shadeColor * (1.0 - fogOfWarData), Color.a);\r\n"
+				"	color = texture(water_textures, vec3(UV, current_texture)) * vec4(vertexColor.rgb * d1 * shadeColor * (1.0 - fogOfWarData), vertexColor.a);\r\n"
 				+ //
+				Shaders.fogSystem(false, null) + //
 				"}";
 	}
 }

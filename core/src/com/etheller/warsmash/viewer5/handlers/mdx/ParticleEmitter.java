@@ -22,6 +22,12 @@ public class ParticleEmitter extends MdxEmitter<MdxComplexInstance, ParticleEmit
 	}
 
 	@Override
+	public void kill(final Particle object) {
+		super.kill(object);
+		object.onRemove();
+	}
+
+	@Override
 	protected void emit() {
 		emitObject(0);
 	}

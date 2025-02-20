@@ -85,7 +85,8 @@ public class PathingGrid {
 					data |= PathingFlags.UNFLYABLE;
 				}
 				if (((rgb & 0xFF0000) >>> 16) > 127) {
-					data |= PathingFlags.UNWALKABLE | PathingFlags.UNSWIMABLE | (blocksVision ? PathingFlags.BLOCKVISION : 0);
+					data |= PathingFlags.UNWALKABLE | PathingFlags.UNSWIMABLE
+							| (blocksVision ? PathingFlags.BLOCKVISION : 0);
 				}
 				this.dynamicPathingOverlay[(yy * this.pathingGridSizes[0]) + xx] |= data;
 			}
@@ -360,33 +361,37 @@ public class PathingGrid {
 	}
 
 	public int getFogOfWarIndexX(final float x) {
-		final float userCellSpaceX = ((x + (16f * CPlayerFogOfWar.PATHING_RATIO)) - this.centerOffset[0]) / (32f * CPlayerFogOfWar.PATHING_RATIO);
+		final float userCellSpaceX = ((x + (16f * CPlayerFogOfWar.PATHING_RATIO)) - this.centerOffset[0])
+				/ (32f * CPlayerFogOfWar.PATHING_RATIO);
 		final int cellX = (int) userCellSpaceX;
 		return cellX;
 	}
 
 	public int getFogOfWarIndexY(final float y) {
-		final float userCellSpaceY = ((y + (16f * CPlayerFogOfWar.PATHING_RATIO)) - this.centerOffset[1]) / (32f * CPlayerFogOfWar.PATHING_RATIO);
+		final float userCellSpaceY = ((y + (16f * CPlayerFogOfWar.PATHING_RATIO)) - this.centerOffset[1])
+				/ (32f * CPlayerFogOfWar.PATHING_RATIO);
 		final int cellY = (int) userCellSpaceY;
 		return cellY;
 	}
-	
+
 	public static int getFogOfWarDistance(final float d) {
-		return getFogOfWarDistance(d,false);
+		return getFogOfWarDistance(d, false);
 	}
-	
+
 	public static int getFogOfWarDistance(final float d, boolean roundUp) {
-		final float userCellSpace = ((d + (16f * CPlayerFogOfWar.PATHING_RATIO))) / (32f * CPlayerFogOfWar.PATHING_RATIO);
+		final float userCellSpace = ((d + (16f * CPlayerFogOfWar.PATHING_RATIO)))
+				/ (32f * CPlayerFogOfWar.PATHING_RATIO);
 		if (roundUp) {
-			return (int) (Math.ceil(userCellSpace)+0.1);
-		} else {
-			return (int)userCellSpace;
+			return (int) (Math.ceil(userCellSpace) + 0.1);
+		}
+		else {
+			return (int) userCellSpace;
 		}
 	}
 
 	public boolean isCellBlockVision(final int cellX, final int cellY) {
 		final int index = (cellY * this.pathingGridSizes[0]) + cellX;
-		if (index < 0 || index >= this.pathingGrid.length) {
+		if ((index < 0) || (index >= this.pathingGrid.length)) {
 			return false;
 		}
 		return PathingFlags.isPathingFlag(this.dynamicPathingOverlay[index], PathingFlags.BLOCKVISION);
@@ -498,7 +503,9 @@ public class PathingGrid {
 	}
 
 	public static enum PathingType {
-		WALKABLE(PathingFlags.UNWALKABLE), FLYABLE(PathingFlags.UNFLYABLE), BUILDABLE(PathingFlags.UNBUILDABLE),
+		WALKABLE(PathingFlags.UNWALKABLE),
+		FLYABLE(PathingFlags.UNFLYABLE),
+		BUILDABLE(PathingFlags.UNBUILDABLE),
 		SWIMMABLE(PathingFlags.UNSWIMABLE);
 
 		private final int preventionFlag;
@@ -524,7 +531,8 @@ public class PathingGrid {
 		}
 
 		private void blit() {
-			blitPathingOverlayTexture(this.positionX, this.positionY, this.rotationInput, this.pathingTextureTga, this.blocksVision);
+			blitPathingOverlayTexture(this.positionX, this.positionY, this.rotationInput, this.pathingTextureTga,
+					this.blocksVision);
 		}
 
 		public void remove() {
@@ -540,8 +548,8 @@ public class PathingGrid {
 			blit();
 		}
 
-		public void setBlocksVision() {
-			this.blocksVision = true;
+		public void setBlocksVision(boolean flag) {
+			this.blocksVision = flag;
 			blit();
 		}
 	}

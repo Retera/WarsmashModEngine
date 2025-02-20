@@ -21,7 +21,9 @@ public class WTSFile implements WTS {
 	private final Map<Integer, String> trigStrings = new Hashtable<>();
 
 	private static enum ParseState {
-		NEXT_TRIGSTR, START_OF_DATA, END_OF_DATA;
+		NEXT_TRIGSTR,
+		START_OF_DATA,
+		END_OF_DATA;
 	}
 
 	private void parse() throws IOException {
@@ -62,6 +64,9 @@ public class WTSFile implements WTS {
 					state = ParseState.NEXT_TRIGSTR;
 				}
 				else {
+					if (!data.isEmpty()) {
+						data.append('\n');
+					}
 					data.append(currentLine);
 				}
 				break;

@@ -2,10 +2,11 @@ package com.etheller.interpreter.ast.function;
 
 import java.util.List;
 
+import com.etheller.interpreter.ast.debug.JassException;
 import com.etheller.interpreter.ast.scope.GlobalScope;
 import com.etheller.interpreter.ast.scope.LocalScope;
 import com.etheller.interpreter.ast.scope.TriggerExecutionScope;
-import com.etheller.interpreter.ast.value.JassType;
+import com.etheller.interpreter.ast.type.JassTypeToken;
 import com.etheller.interpreter.ast.value.JassValue;
 import com.etheller.interpreter.ast.value.visitor.JassTypeGettingValueVisitor;
 
@@ -17,9 +18,9 @@ import com.etheller.interpreter.ast.value.visitor.JassTypeGettingValueVisitor;
  */
 public abstract class AbstractJassFunction implements JassFunction {
 	protected final List<JassParameter> parameters;
-	protected final JassType returnType;
+	protected final JassTypeToken returnType;
 
-	public AbstractJassFunction(final List<JassParameter> parameters, final JassType returnType) {
+	public AbstractJassFunction(final List<JassParameter> parameters, final JassTypeToken returnType) {
 		this.parameters = parameters;
 		this.returnType = returnType;
 	}
@@ -28,7 +29,8 @@ public abstract class AbstractJassFunction implements JassFunction {
 	public final JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
 			final TriggerExecutionScope triggerScope) {
 		if (arguments.size() != this.parameters.size()) {
-			throw new RuntimeException("Invalid number of arguments passed to function");
+			throw new JassException(globalScope, "Invalid number of arguments passed to function: " + arguments.size()
+					+ " != " + this.parameters.size(), null);
 		}
 		final LocalScope localScope = new LocalScope();
 		for (int i = 0; i < this.parameters.size(); i++) {
@@ -43,9 +45,10 @@ public abstract class AbstractJassFunction implements JassFunction {
 				}
 				System.err.println(
 						parameter.getType() + " != " + argument.visit(JassTypeGettingValueVisitor.getInstance()));
-				throw new RuntimeException(
+				throw new JassException(globalScope,
 						"Invalid type " + argument.visit(JassTypeGettingValueVisitor.getInstance()).getName()
-								+ " for specified argument " + parameter.getType().getName());
+								+ " for specified argument " + parameter.getType().getName(),
+						null);
 			}
 			localScope.createLocal(parameter.getIdentifier(), parameter.getType(), argument);
 		}
@@ -59,7 +62,7 @@ public abstract class AbstractJassFunction implements JassFunction {
 		return this.parameters;
 	}
 
-	public JassType getReturnType() {
+	public JassTypeToken getReturnType() {
 		return this.returnType;
 	}
 }

@@ -27,4 +27,8 @@ public class CRegionTriggerLeave {
 				CommonTriggerExecutionScope.filterScope(TriggerExecutionScope.EMPTY, unit), this.trigger, eventScope,
 				eventScope);
 	}
+
+	public Trigger getTrigger() {
+		return this.trigger;
+	}
 }

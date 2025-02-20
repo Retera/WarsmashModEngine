@@ -6,9 +6,12 @@ import com.etheller.interpreter.ast.value.CodeJassValue;
 import com.etheller.interpreter.ast.value.DummyJassValue;
 import com.etheller.interpreter.ast.value.HandleJassValue;
 import com.etheller.interpreter.ast.value.IntegerJassValue;
+import com.etheller.interpreter.ast.value.JassValue;
 import com.etheller.interpreter.ast.value.JassValueVisitor;
 import com.etheller.interpreter.ast.value.RealJassValue;
+import com.etheller.interpreter.ast.value.StaticStructTypeJassValue;
 import com.etheller.interpreter.ast.value.StringJassValue;
+import com.etheller.interpreter.ast.value.StructJassValue;
 
 public class ObjectJassValueVisitor<T> implements JassValueVisitor<T> {
 	private static final ObjectJassValueVisitor<?> INSTANCE = new ObjectJassValueVisitor();
@@ -54,6 +57,20 @@ public class ObjectJassValueVisitor<T> implements JassValueVisitor<T> {
 
 	@Override
 	public T accept(final DummyJassValue value) {
+		return null;
+	}
+
+	@Override
+	public T accept(final StructJassValue value) {
+		final JassValue superValue = value.getSuperValue();
+		if (superValue != null) {
+			return superValue.visit(this);
+		}
+		return null;
+	}
+
+	@Override
+	public T accept(final StaticStructTypeJassValue value) {
 		return null;
 	}
 }

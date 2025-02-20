@@ -2,17 +2,18 @@ package com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.beh
 
 import java.util.Map;
 
+import com.etheller.warsmash.parsers.jass.JassTextGenerator;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.booleancallbacks.ABBooleanCallback;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.floatcallbacks.ABFloatCallback;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.idcallbacks.ABIDCallback;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.buff.ABTimedArtBuff;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABAction;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABLocalStoreKeys;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABSingleAction;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CEffectType;
 
-public class ABActionCreateTimedArtBuff implements ABAction {
+public class ABActionCreateTimedArtBuff implements ABSingleAction {
 
 	private ABIDCallback buffId;
 	private ABFloatCallback duration;
@@ -64,5 +65,26 @@ public class ABActionCreateTimedArtBuff implements ABAction {
 			localStore.put(ABLocalStoreKeys.BUFFCASTINGUNIT, caster);
 		}
 
+	}
+
+	@Override
+	public String generateJassEquivalent(final JassTextGenerator jassTextGenerator) {
+		CEffectType artTypeUsed;
+		if (this.artType != null) {
+			artTypeUsed = this.artType;
+		} else {
+			artTypeUsed = CEffectType.TARGET;
+		}
+		final String artTypeJass = "EFFECT_TYPE_" + artTypeUsed.name();
+		String showIconJass;
+		if (this.showIcon != null) {
+			showIconJass = this.showIcon.generateJassEquivalent(jassTextGenerator);
+		} else {
+			showIconJass = "true";
+		}
+		return "CreateTimedArtBuffAU(" + jassTextGenerator.getCaster() + ", " + jassTextGenerator.getTriggerLocalStore()
+				+ ", " + this.buffId.generateJassEquivalent(jassTextGenerator) + ", "
+				+ this.duration.generateJassEquivalent(jassTextGenerator) + ", " + showIconJass + ", " + artTypeJass
+				+ ")";
 	}
 }

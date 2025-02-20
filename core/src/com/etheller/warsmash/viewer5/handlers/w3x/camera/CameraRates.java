@@ -17,4 +17,7 @@ public class CameraRates {
 		this.forward = forward;
 		this.strafe = strafe;
 	}
+
+	public static final CameraRates INFINITY = new CameraRates(Float.POSITIVE_INFINITY, Float.POSITIVE_INFINITY,
+			Float.POSITIVE_INFINITY, Float.POSITIVE_INFINITY, Float.POSITIVE_INFINITY, Float.POSITIVE_INFINITY);
 }

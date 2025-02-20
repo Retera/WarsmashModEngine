@@ -70,6 +70,7 @@ public class Doodad {
 			if (skinToWrite == null) {
 				skinToWrite = this.id;
 			}
+			ParseUtils.writeWar3ID(stream, skinToWrite);
 		}
 		ParseUtils.writeUInt8(stream, this.flags);
 		ParseUtils.writeUInt8(stream, this.life);

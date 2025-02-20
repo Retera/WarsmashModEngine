@@ -1,7 +1,9 @@
 package com.etheller.warsmash.viewer5.handlers.w3x;
 
+import com.etheller.interpreter.ast.util.CHandle;
+
 public class AnimationTokens {
-	public static enum PrimaryTag {
+	public static enum PrimaryTag implements CHandle {
 		ATTACK,
 		BIRTH,
 //		CINEMATIC,
@@ -14,9 +16,16 @@ public class AnimationTokens {
 //		SPELL,
 		STAND,
 		WALK;
+
+		@Override
+		public int getHandleId() {
+			return ordinal();
+		}
+
+		public static final PrimaryTag[] VALUES = values();
 	}
 
-	public static enum SecondaryTag {
+	public static enum SecondaryTag implements CHandle {
 		ALTERNATE,
 		ALTERNATEEX,
 		BONE,
@@ -70,9 +79,9 @@ public class AnimationTokens {
 		WORK,
 		WOUNDED,
 		UPGRADE;
-		
-		public static SecondaryTag fromCount(int count) {
-			switch(count) {
+
+		public static SecondaryTag fromCount(final int count) {
+			switch (count) {
 			case 1:
 				return SecondaryTag.FIRST;
 			case 2:
@@ -86,5 +95,12 @@ public class AnimationTokens {
 			}
 			return null;
 		}
+
+		@Override
+		public int getHandleId() {
+			return ordinal();
+		}
+
+		public static final SecondaryTag[] VALUES = values();
 	}
 }

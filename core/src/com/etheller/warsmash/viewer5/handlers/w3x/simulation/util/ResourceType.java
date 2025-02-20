@@ -1,10 +1,14 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.util;
 
-public enum ResourceType {
-	GOLD,
-	LUMBER,
-	FOOD,
-	MANA;
+import com.etheller.interpreter.ast.util.CHandle;
+
+public enum ResourceType implements CHandle {
+	GOLD, LUMBER, FOOD, MANA;
 
 	public static final ResourceType[] VALUES = values();
+
+	@Override
+	public int getHandleId() {
+		return ordinal();
+	}
 }

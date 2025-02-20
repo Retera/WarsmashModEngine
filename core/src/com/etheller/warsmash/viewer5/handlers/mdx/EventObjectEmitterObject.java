@@ -234,7 +234,7 @@ public class EventObjectEmitterObject extends GenericObject implements EmitterOb
 				}
 			}
 			else if ("SPL".equals(this.type) || "FPT".equals(this.type) || "UBR".equals(this.type)) {
-				final String texturesExt = model.reforged ? ".dds" : ".blp";
+				final String texturesExt = (model.reforged && false) ? ".dds" : ".blp";
 
 				this.internalTexture = (Texture) viewer.load(row.get("Dir") + "\\" + row.get("file") + texturesExt,
 						pathSolver, model.solverParams);

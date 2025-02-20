@@ -1,16 +1,11 @@
 package com.etheller.interpreter.ast.function;
 
+import java.util.EnumSet;
 import java.util.List;
 
-import com.etheller.interpreter.ast.debug.JassException;
-import com.etheller.interpreter.ast.scope.GlobalScope;
-import com.etheller.interpreter.ast.scope.LocalScope;
-import com.etheller.interpreter.ast.scope.TriggerExecutionScope;
-import com.etheller.interpreter.ast.statement.JassReturnNothingStatement;
+import com.etheller.interpreter.ast.qualifier.JassQualifier;
 import com.etheller.interpreter.ast.statement.JassStatement;
 import com.etheller.interpreter.ast.value.JassType;
-import com.etheller.interpreter.ast.value.JassValue;
-import com.etheller.interpreter.ast.value.visitor.JassTypeGettingValueVisitor;
 
 /**
  * Not a native
@@ -18,48 +13,33 @@ import com.etheller.interpreter.ast.value.visitor.JassTypeGettingValueVisitor;
  * @author Retera
  *
  */
-public final class UserJassFunction extends AbstractJassFunction {
+public final class UserJassFunction {
+	private final EnumSet<JassQualifier> qualifiers;
 	private final List<JassStatement> statements;
+	private final List<JassParameter> parameters;
+	private final JassType returnType;
 
-	public UserJassFunction(final List<JassStatement> statements, final List<JassParameter> parameters,
-			final JassType returnType) {
-		super(parameters, returnType);
+	public UserJassFunction(final EnumSet<JassQualifier> qualifiers, final List<JassStatement> statements,
+			final List<JassParameter> parameters, final JassType returnType) {
+		this.qualifiers = qualifiers;
 		this.statements = statements;
+		this.parameters = parameters;
+		this.returnType = returnType;
 	}
 
-	@Override
-	public JassValue innerCall(final List<JassValue> arguments, final GlobalScope globalScope,
-			final TriggerExecutionScope triggerScope, final LocalScope localScope) {
-		for (final JassStatement statement : this.statements) {
-			final JassValue returnValue = statement.execute(globalScope, localScope, triggerScope);
-			if (returnValue != null) {
-				return returnByValue(globalScope, returnValue);
-			}
-		}
-		if (JassType.NOTHING != this.returnType) {
-			throw new JassException(globalScope, "Invalid return type", null);
-		}
-		return null;
-	}
-
-	private JassValue returnByValue(final GlobalScope globalScope, final JassValue returnValue) {
-		if (!this.returnType.isAssignableFrom(returnValue.visit(JassTypeGettingValueVisitor.getInstance()))) {
-			if ((this.returnType == JassType.NOTHING)
-					&& (returnValue == JassReturnNothingStatement.RETURN_NOTHING_NOTICE)) {
-				return null;
-			}
-			else if ((this.returnType.isNullable())
-					&& (returnValue == JassReturnNothingStatement.RETURN_NOTHING_NOTICE)) {
-				return this.returnType.getNullValue();
-			}
-			else {
-				throw new JassException(globalScope, "Invalid return type", null);
-			}
-		}
-		return returnValue;
+	public EnumSet<JassQualifier> getQualifiers() {
+		return this.qualifiers;
 	}
 
 	public List<JassStatement> getStatements() {
 		return this.statements;
+	}
+
+	public List<JassParameter> getParameters() {
+		return this.parameters;
+	}
+
+	public JassType getReturnType() {
+		return this.returnType;
 	}
 }

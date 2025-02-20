@@ -25,6 +25,11 @@ public class CItem extends CWidget {
 	private CAbilityInventory containedInventory;
 	private CUnit containedUnit;
 	private Rectangle registeredEnumRectangle;
+	private boolean dropOnDeath;
+	private boolean droppable;
+	private boolean pawnable;
+	private int userData;
+	private War3ID dropId;
 
 	public CItem(final int handleId, final float x, final float y, final float life, final War3ID typeId,
 			final CItemType itemTypeInstance) {
@@ -32,6 +37,9 @@ public class CItem extends CWidget {
 		this.typeId = typeId;
 		this.itemType = itemTypeInstance;
 		this.charges = itemTypeInstance.getNumberOfCharges();
+		this.dropOnDeath = itemTypeInstance.isDroppedWhenCarrierDies();
+		this.droppable = itemTypeInstance.isCanBeDropped();
+		this.pawnable = itemTypeInstance.isPawnable();
 	}
 
 	@Override
@@ -78,7 +86,7 @@ public class CItem extends CWidget {
 
 	@Override
 	public boolean canBeTargetedBy(final CSimulation simulation, final CUnit source,
-			final EnumSet<CTargetType> targetsAllowed, AbilityTargetCheckReceiver<CWidget> receiver) {
+			final EnumSet<CTargetType> targetsAllowed, final AbilityTargetCheckReceiver<CWidget> receiver) {
 		if (targetsAllowed.contains(CTargetType.ITEM)) {
 			return true;
 		}
@@ -87,13 +95,13 @@ public class CItem extends CWidget {
 	}
 
 	public void setX(final float x, final CWorldCollision collision) {
-		float oldX = this.getX();
+		final float oldX = getX();
 		super.setX(x);
 		collision.translate(this, x - oldX, 0);
 	}
 
 	public void setY(final float y, final CWorldCollision collision) {
-		float oldY = this.getY();
+		final float oldY = getY();
 		super.setY(y);
 		collision.translate(this, 0, y - oldY);
 	}
@@ -149,8 +157,8 @@ public class CItem extends CWidget {
 			checkX -= (int) Math.cos(angle);
 			checkY -= (int) Math.sin(angle);
 		}
-		float oldX = this.getX();
-		float oldY = this.getY();
+		final float oldX = getX();
+		final float oldY = getY();
 		setX(outputX);
 		setY(outputY);
 		game.getWorldCollision().translate(this, outputX - oldX, outputY - oldY);
@@ -197,6 +205,46 @@ public class CItem extends CWidget {
 					COLLISION_SIZE * 2, COLLISION_SIZE * 2);
 		}
 		return this.registeredEnumRectangle;
+	}
+
+	public boolean isDropOnDeath() {
+		return this.dropOnDeath;
+	}
+
+	public void setDropOnDeath(final boolean dropOnDeath) {
+		this.dropOnDeath = dropOnDeath;
+	}
+
+	public boolean isDroppable() {
+		return this.droppable;
+	}
+
+	public void setDroppable(final boolean droppable) {
+		this.droppable = droppable;
+	}
+
+	public boolean isPawnable() {
+		return this.pawnable;
+	}
+
+	public void setPawnable(final boolean pawnable) {
+		this.pawnable = pawnable;
+	}
+
+	public int getUserData() {
+		return this.userData;
+	}
+
+	public void setUserData(final int userData) {
+		this.userData = userData;
+	}
+
+	public War3ID getDropId() {
+		return this.dropId;
+	}
+
+	public void setDropId(final War3ID unitId) {
+		this.dropId = unitId;
 	}
 
 }

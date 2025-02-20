@@ -22,8 +22,8 @@ public class CAbilityGoldMine extends AbstractGenericNoIconAbility implements CA
 	private final List<CBehaviorHarvest> activeMiners;
 	private boolean wasEmpty;
 
-	public CAbilityGoldMine(final int handleId, final War3ID code, final War3ID alias, final int maxGold, final float miningDuration,
-			final int miningCapacity) {
+	public CAbilityGoldMine(final int handleId, final War3ID code, final War3ID alias, final int maxGold,
+			final float miningDuration, final int miningCapacity) {
 		super(handleId, code, alias);
 		this.gold = maxGold;
 		this.miningDuration = miningDuration;
@@ -47,10 +47,14 @@ public class CAbilityGoldMine extends AbstractGenericNoIconAbility implements CA
 		final boolean empty = this.activeMiners.isEmpty();
 		if (empty != this.wasEmpty) {
 			if (empty) {
-				unit.getUnitAnimationListener().removeSecondaryTag(SecondaryTag.WORK);
+				if (unit.getUnitAnimationListener().removeSecondaryTag(SecondaryTag.WORK)) {
+					unit.getUnitAnimationListener().forceResetCurrentAnimation();
+				}
 			}
 			else {
-				unit.getUnitAnimationListener().addSecondaryTag(SecondaryTag.WORK);
+				if (unit.getUnitAnimationListener().addSecondaryTag(SecondaryTag.WORK)) {
+					unit.getUnitAnimationListener().forceResetCurrentAnimation();
+				}
 			}
 			this.wasEmpty = empty;
 		}

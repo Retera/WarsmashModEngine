@@ -17,6 +17,7 @@ import com.etheller.warsmash.units.ObjectData;
 import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.util.WarsmashConstants;
 import com.etheller.warsmash.viewer5.handlers.w3x.War3MapViewer;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.COrderButton;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.definitions.impl.AbilityFields;
 
 public class AbilityDataUI {
@@ -122,6 +123,7 @@ public class AbilityDataUI {
 	private final IconUI selectSkillUI;
 	private final IconUI neutralInteractUI;
 	private final String disabledPrefix;
+	private final Map<COrderButton, OrderButtonUI> buttonToRenderPeer = new HashMap<>();
 
 	public AbilityDataUI(final Warcraft3MapRuntimeObjectData allObjectData, final GameUI gameUI,
 			final War3MapViewer viewer) {
@@ -173,20 +175,19 @@ public class AbilityDataUI {
 			}
 
 			final List<EffectAttachmentUI> casterArt = new ArrayList<>();
-			final List<String> casterArtPaths = Arrays
-					.asList(abilityTypeData.getFieldAsString(CASTER_ART, 0).split(","));
+			final List<String> casterArtPaths = abilityTypeData.getFieldAsList(CASTER_ART);
 			final int casterAttachmentCount = abilityTypeData.getFieldAsInteger(CASTER_ART_ATTACHMENT_COUNT, 0);
 			final int casterAttachmentIndexMax = Math.min(casterAttachmentCount - 1, casterArtPaths.size() - 1);
 			final int casterIteratorCount = Math.max(casterAttachmentCount, casterArtPaths.size());
 			for (int i = 0; i < casterIteratorCount; i++) {
-				final String modelPath = casterArtPaths.get(Math.max(0, Math.min(i, casterAttachmentIndexMax)));
+				final String modelPath = casterArtPaths.isEmpty() ? ""
+						: casterArtPaths.get(Math.max(0, Math.min(i, casterAttachmentIndexMax)));
 				final String attachmentPointKey = tryGet(CASTER_ART_ATTACHMENT_POINT, i);
 				final List<String> attachmentPoints = abilityTypeData.getFieldAsList(attachmentPointKey);
 				casterArt.add(new EffectAttachmentUI(modelPath, attachmentPoints));
 			}
 			final List<EffectAttachmentUI> targetArt = new ArrayList<>();
-			final List<String> targetArtPaths = Arrays
-					.asList(abilityTypeData.getFieldAsString(TARGET_ART, 0).split(","));
+			final List<String> targetArtPaths = abilityTypeData.getFieldAsList(TARGET_ART);
 			final int targetAttachmentCount = abilityTypeData.getFieldAsInteger(TARGET_ART_ATTACHMENT_COUNT, 0);
 			final int targetAttachmentIndexMax = Math.min(targetAttachmentCount - 1, targetArtPaths.size() - 1);
 			final int targetIteratorCount = Math.max(targetAttachmentCount, targetArtPaths.size());
@@ -238,7 +239,7 @@ public class AbilityDataUI {
 			final List<War3ID> LightningEffects = new ArrayList<>();
 
 			for (final String lightning : LightningEffectList) {
-				if (lightning != null && !lightning.isBlank()) {
+				if ((lightning != null) && !lightning.isBlank()) {
 					LightningEffects.add(War3ID.fromString(lightning));
 				}
 			}
@@ -246,11 +247,12 @@ public class AbilityDataUI {
 			final String effectSound = abilityTypeData.getFieldAsString(ABILITY_EFFECT_SOUND, 0);
 			final String effectSoundLooped = abilityTypeData.getFieldAsString(ABILITY_EFFECT_SOUND_LOOPED, 0);
 
-			this.rawcodeToUI.put(War3ID.fromString(alias), new AbilityUI(
-					new IconUI(iconResearch, iconResearchDisabled, iconResearchX, iconResearchY, iconResearchTip,
-							iconResearchUberTip, iconResearchHotkey),
-					normalIconUIs, turnOffIconUIs, casterArt, targetArt, specialArt, effectArt, areaEffectArt,
-					missileArt, LightningEffects, effectSound, effectSoundLooped));
+			this.rawcodeToUI.put(War3ID.fromString(alias),
+					new AbilityUI(
+							new IconUI(iconResearch, iconResearchDisabled, iconResearchX, iconResearchY,
+									iconResearchTip, iconResearchUberTip, iconResearchHotkey),
+							normalIconUIs, turnOffIconUIs, casterArt, targetArt, specialArt, effectArt, areaEffectArt,
+							missileArt, LightningEffects, effectSound, effectSoundLooped));
 		}
 		for (final String alias : buffData.keySet()) {
 			// TODO pretty sure that in WC3 the buffs and abilities are stored in the same
@@ -270,7 +272,8 @@ public class AbilityDataUI {
 			final int targetAttachmentIndexMax = Math.min(targetAttachmentCount - 1, targetArtPaths.size() - 1);
 			final int targetIteratorCount = Math.max(targetAttachmentCount, targetArtPaths.size());
 			for (int i = 0; i < targetIteratorCount; i++) {
-				final String modelPath = targetArtPaths.isEmpty() ? "" : targetArtPaths.get(Math.max(0, Math.min(i, targetAttachmentIndexMax)));
+				final String modelPath = targetArtPaths.isEmpty() ? ""
+						: targetArtPaths.get(Math.max(0, Math.min(i, targetAttachmentIndexMax)));
 				final String attachmentPointKey = tryGet(BUFF_TARGET_ART_ATTACHMENT_POINT, i);
 				final List<String> attachmentPoints = abilityTypeData.getFieldAsList(attachmentPointKey);
 				targetArt.add(new EffectAttachmentUI(modelPath, attachmentPoints));
@@ -624,5 +627,17 @@ public class AbilityDataUI {
 			return ids[index];
 		}
 		return ids[ids.length - 1];
+	}
+
+	public OrderButtonUI getRenderPeer(final COrderButton orderButton) {
+		return this.buttonToRenderPeer.get(orderButton);
+	}
+
+	public void createRenderPeer(final COrderButton orderButton) {
+		this.buttonToRenderPeer.put(orderButton, new OrderButtonUI());
+	}
+
+	public void removeRenderPeer(final COrderButton orderButton) {
+		this.buttonToRenderPeer.remove(orderButton);
 	}
 }

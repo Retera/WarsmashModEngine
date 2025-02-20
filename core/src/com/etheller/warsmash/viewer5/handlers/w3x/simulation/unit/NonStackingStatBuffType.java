@@ -1,6 +1,8 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.unit;
 
-public enum NonStackingStatBuffType {
+import com.etheller.interpreter.ast.util.CHandle;
+
+public enum NonStackingStatBuffType implements CHandle {
 	MELEEATK,
 	MELEEATKPCT,
 	RNGDATK,
@@ -19,12 +21,19 @@ public enum NonStackingStatBuffType {
 	HPSTEAL,
 	THORNS,
 	THORNSPCT,
-	
+
 	MAXHP,
 	MAXHPPCT,
 	MAXMP,
 	MAXMPPCT,
-	
+
 	ALLATK, // These are for parsing
 	ALLATKPCT;
+
+	@Override
+	public int getHandleId() {
+		return ordinal();
+	}
+
+	public static final NonStackingStatBuffType[] VALUES = values();
 }

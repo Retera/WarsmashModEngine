@@ -29,6 +29,7 @@ import com.etheller.warsmash.viewer5.Scene;
 import com.etheller.warsmash.viewer5.handlers.w3x.War3MapViewer;
 import com.etheller.warsmash.viewer5.handlers.w3x.camera.CameraPreset;
 import com.etheller.warsmash.viewer5.handlers.w3x.camera.CameraRates;
+import com.etheller.warsmash.viewer5.handlers.w3x.camera.GameCameraManager;
 
 public class WarsmashGdxTerrainEditor extends ApplicationAdapter implements InputProcessor {
 	public static final boolean ENABLE_AUDIO = true;
@@ -47,11 +48,13 @@ public class WarsmashGdxTerrainEditor extends ApplicationAdapter implements Inpu
 	private Scene previewScene;
 	private final List<Message> errorMessages = new LinkedList<>();
 	private BitmapFont defaultFont;
+	private GameCameraManager cameraManager;
 
 	public WarsmashGdxTerrainEditor() {
 	}
 
 	public void loadViewer(final War3MapViewer mapViewer) {
+		this.viewer = mapViewer;
 
 		final Element cameraData = this.viewer.miscData.get("Camera");
 		Element cameraListenerData = this.viewer.miscData.get("Listener");
@@ -77,8 +80,12 @@ public class WarsmashGdxTerrainEditor extends ApplicationAdapter implements Inpu
 		this.solidGreenTexture = ImageUtils.getAnyExtensionTexture(this.viewer.dataSource,
 				"ReplaceableTextures\\TeamColor\\TeamColor06.blp");
 
+		this.cameraManager = new GameCameraManager(cameraPresets, cameraRates);
+
+		this.cameraManager.setupCamera(this.viewer.worldScene);
+
 		System.out.println("Loaded");
-		previewScene = this.viewer.addSimpleScene();
+		this.previewScene = this.viewer.addSimpleScene();
 
 		try {
 			this.viewer.loadAfterUI();
@@ -132,7 +139,7 @@ public class WarsmashGdxTerrainEditor extends ApplicationAdapter implements Inpu
 		this.uiCamera.update();
 
 		this.batch = new SpriteBatch();
-		defaultFont = new BitmapFont();
+		this.defaultFont = new BitmapFont();
 
 //		this.consoleUITexture = new Texture(new DataSourceFileHandle(this.viewer.dataSource, "AlphaUi.png"));
 
@@ -145,8 +152,17 @@ public class WarsmashGdxTerrainEditor extends ApplicationAdapter implements Inpu
 
 	@Override
 	public void render() {
+		if (this.viewer == null) {
+			return;
+		}
 		Gdx.gl30.glEnable(GL30.GL_SCISSOR_TEST);
 		Gdx.gl30.glBindVertexArray(WarsmashGdxGame.VAO);
+		this.cameraManager.applyVelocity(Gdx.graphics.getDeltaTime(), false, false, false, false);
+		final float groundHeight = Math.max(
+				this.viewer.terrain.getGroundHeight(this.cameraManager.target.x, this.cameraManager.target.y),
+				this.viewer.terrain.getWaterHeight(this.cameraManager.target.x, this.cameraManager.target.y));
+		this.cameraManager.updateTargetZ(groundHeight);
+		this.cameraManager.updateCamera();
 		this.viewer.updateAndRender();
 
 		Gdx.gl30.glDisable(GL30.GL_SCISSOR_TEST);
@@ -173,7 +189,7 @@ public class WarsmashGdxTerrainEditor extends ApplicationAdapter implements Inpu
 		this.uiViewport.apply();
 		this.batch.setProjectionMatrix(this.uiCamera.combined);
 		this.batch.begin();
-		final Iterator<Message> errorMessageIterator = errorMessages.iterator();
+		final Iterator<Message> errorMessageIterator = this.errorMessages.iterator();
 		final long nowTime = TimeUtils.millis();
 		int messageIndex = 0;
 		while (errorMessageIterator.hasNext()) {
@@ -182,7 +198,8 @@ public class WarsmashGdxTerrainEditor extends ApplicationAdapter implements Inpu
 				errorMessageIterator.remove();
 			}
 			else {
-				defaultFont.draw(batch, errorMessage.text, 0, ((++messageIndex) * defaultFont.getLineHeight()));
+				this.defaultFont.draw(this.batch, errorMessage.text, 0,
+						((++messageIndex) * this.defaultFont.getLineHeight()));
 			}
 		}
 		this.batch.end();
@@ -193,12 +210,17 @@ public class WarsmashGdxTerrainEditor extends ApplicationAdapter implements Inpu
 
 	@Override
 	public void dispose() {
-		batch.dispose();
+		this.batch.dispose();
 	}
 
 	@Override
 	public void resize(final int width, final int height) {
 //		super.resize(width, height);
+		if (this.viewer == null) {
+			return;
+		}
+		this.cameraManager.resize(setupWorldFrameViewport(width, height));
+		this.previewScene.camera.viewport(this.tempRect.set(0, 0, 200, height));
 
 		this.uiViewport.update(width, height);
 		this.uiCamera.position.set(this.uiViewport.getMinWorldWidth() / 2, this.uiViewport.getMinWorldHeight() / 2, 0);
@@ -208,21 +230,25 @@ public class WarsmashGdxTerrainEditor extends ApplicationAdapter implements Inpu
 	private Rectangle setupWorldFrameViewport(final int width, final int height) {
 		this.tempRect.x = 0;
 		this.tempRect.width = width;
-		final float topHeight = 0.02666f * height;
-		final float bottomHeight = 0.21333f * height;
-		this.tempRect.y = (int) bottomHeight;
-		this.tempRect.height = height - (int) (topHeight + bottomHeight);
+		this.tempRect.y = 0;
+		this.tempRect.height = height;
 		return this.tempRect;
 	}
 
 	@Override
 	public boolean keyDown(final int keycode) {
-		return true;
+		if (this.viewer == null) {
+			return false;
+		}
+		return this.cameraManager.keyDown(keycode);
 	}
 
 	@Override
 	public boolean keyUp(final int keycode) {
-		return true;
+		if (this.viewer == null) {
+			return false;
+		}
+		return this.cameraManager.keyUp(keycode);
 	}
 
 	@Override
@@ -232,6 +258,9 @@ public class WarsmashGdxTerrainEditor extends ApplicationAdapter implements Inpu
 
 	@Override
 	public boolean touchDown(final int screenX, final int screenY, final int pointer, final int button) {
+		if (this.viewer == null) {
+			return false;
+		}
 		final float worldScreenY = this.viewer.canvas.getHeight() - screenY;
 
 		return false;
@@ -239,6 +268,9 @@ public class WarsmashGdxTerrainEditor extends ApplicationAdapter implements Inpu
 
 	@Override
 	public boolean touchUp(final int screenX, final int screenY, final int pointer, final int button) {
+		if (this.viewer == null) {
+			return false;
+		}
 		final float worldScreenY = this.viewer.canvas.getHeight() - screenY;
 
 		return false;
@@ -246,6 +278,9 @@ public class WarsmashGdxTerrainEditor extends ApplicationAdapter implements Inpu
 
 	@Override
 	public boolean touchDragged(final int screenX, final int screenY, final int pointer) {
+		if (this.viewer == null) {
+			return false;
+		}
 		final float worldScreenY = this.viewer.canvas.getHeight() - screenY;
 
 		return false;
@@ -253,14 +288,26 @@ public class WarsmashGdxTerrainEditor extends ApplicationAdapter implements Inpu
 
 	@Override
 	public boolean mouseMoved(final int screenX, final int screenY) {
+		if (this.viewer == null) {
+			return false;
+		}
 		final float worldScreenY = this.viewer.canvas.getHeight() - screenY;
 
 		return false;
 	}
 
 	@Override
-	public boolean scrolled(final int amount) {
+	public boolean scrolled(final float amountX, final float amountY) {
+		if (this.viewer == null) {
+			return false;
+		}
+		this.cameraManager.scrolled((int) amountY);
 		return true;
+	}
+
+	@Override
+	public boolean touchCancelled(final int screenX, final int screenY, final int pointer, final int button) {
+		return false;
 	}
 
 	private static class Message {

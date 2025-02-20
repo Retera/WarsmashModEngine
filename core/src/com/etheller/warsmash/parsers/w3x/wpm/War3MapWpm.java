@@ -2,9 +2,11 @@ package com.etheller.warsmash.parsers.w3x.wpm;
 
 import java.io.IOException;
 
+import com.etheller.warsmash.parsers.w3x.w3i.War3MapW3i;
 import com.etheller.warsmash.util.ParseUtils;
 import com.etheller.warsmash.util.War3ID;
 import com.google.common.io.LittleEndianDataInputStream;
+import com.google.common.io.LittleEndianDataOutputStream;
 
 public class War3MapWpm {
 	private static final War3ID MAGIC_NUMBER = War3ID.fromString("MP3W");
@@ -29,6 +31,13 @@ public class War3MapWpm {
 		this.pathing = ParseUtils.readUInt8Array(stream, this.size[0] * this.size[1]);
 
 		return true;
+	}
+
+	public void save(final LittleEndianDataOutputStream stream, final War3MapW3i mapInformation) throws IOException {
+		ParseUtils.writeWar3ID(stream, MAGIC_NUMBER);
+		stream.writeInt(this.version);
+		ParseUtils.writeInt32Array(stream, this.size);
+		ParseUtils.writeUInt8Array(stream, this.pathing);
 	}
 
 	public int getVersion() {

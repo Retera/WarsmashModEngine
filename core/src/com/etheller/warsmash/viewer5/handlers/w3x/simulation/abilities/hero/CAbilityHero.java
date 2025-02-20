@@ -43,6 +43,7 @@ public class CAbilityHero extends AbstractCAbility {
 	public CAbilityHero(final int handleId, final List<War3ID> skillsAvailable) {
 		super(handleId, War3ID.fromString("AHer"));
 		this.skillsAvailable = new LinkedHashSet<>(skillsAvailable);
+		setPermanent(true);
 	}
 
 	@Override
@@ -254,29 +255,30 @@ public class CAbilityHero extends AbstractCAbility {
 		return this.reviving;
 	}
 
-	private void levelUpHero(final CSimulation simulation, final CUnit unit) {
+	private void levelUpHero(final CSimulation simulation, final CUnit unit, boolean showEffect) {
 		final CGameplayConstants gameplayConstants = simulation.getGameplayConstants();
 		while ((this.heroLevel < gameplayConstants.getMaxHeroLevel())
-			&& (this.xp >= gameplayConstants.getNeedHeroXPSum(this.heroLevel))) {
+				&& (this.xp >= gameplayConstants.getNeedHeroXPSum(this.heroLevel))) {
 			this.heroLevel++;
 			this.skillPoints++;
 			calculateDerivatedFields(simulation, unit);
-			simulation.unitGainLevelEvent(unit);
+			simulation.unitGainLevelEvent(unit, showEffect);
 		}
 	}
 
-	public void addXp(final CSimulation simulation, final CUnit unit, final int xp) {
+	public void addXp(final CSimulation simulation, final CUnit unit, final int xp, boolean showEffect) {
 		this.xp += xp * simulation.getPlayer(unit.getPlayerIndex()).getHandicapXP();
-		levelUpHero(simulation, unit);
+		levelUpHero(simulation, unit, showEffect);
 		unit.internalPublishHeroStatsChanged();
 	}
 
-	// In the original engine setXp is only called if the passed xp value > the hero's current xp.
+	// In the original engine setXp is only called if the passed xp value > the
+	// hero's current xp.
 	// setXp cannot be used to decrease the hero's xp or level.
-	public void setXp(final CSimulation simulation, final CUnit unit, final int xp) {
+	public void setXp(final CSimulation simulation, final CUnit unit, final int xp, boolean showEyeCandy) {
 		final int newXpVal = xp * Math.round(simulation.getPlayer(unit.getPlayerIndex()).getHandicapXP());
 		if (newXpVal > this.xp) {
-			addXp(simulation, unit, newXpVal - this.xp);
+			addXp(simulation, unit, newXpVal - this.xp, showEyeCandy);
 		}
 	}
 
@@ -285,8 +287,10 @@ public class CAbilityHero extends AbstractCAbility {
 		final CGameplayConstants gameplayConstants = simulation.getGameplayConstants();
 		final int neededTotalXp = gameplayConstants.getNeedHeroXPSum(level - 1);
 		if (this.xp < neededTotalXp) {
-			addXp(simulation, unit, (int) Math
-					.ceil((neededTotalXp - this.xp) / simulation.getPlayer(unit.getPlayerIndex()).getHandicapXP()));
+			addXp(simulation, unit,
+					(int) Math.ceil(
+							(neededTotalXp - this.xp) / simulation.getPlayer(unit.getPlayerIndex()).getHandicapXP()),
+					showEffect);
 		}
 		else {
 			// remove xp TODO
@@ -514,11 +518,6 @@ public class CAbilityHero extends AbstractCAbility {
 
 	@Override
 	public void onDeath(final CSimulation game, final CUnit cUnit) {
-	}
-
-	@Override
-	public boolean isPermanent() {
-		return true;
 	}
 
 	@Override

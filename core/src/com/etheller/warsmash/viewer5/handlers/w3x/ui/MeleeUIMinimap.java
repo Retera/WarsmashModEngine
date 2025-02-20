@@ -26,6 +26,7 @@ public class MeleeUIMinimap {
 	private final Texture[] specialIcons;
 	private float heroAlpha = 0.90f;
 	private byte polarity = -1;
+	private boolean visible = true;
 
 	public MeleeUIMinimap(final Rectangle displayArea, final Rectangle playableMapArea, final Texture minimapTexture,
 			final Texture[] teamColors, final Texture[] specialIcons) {
@@ -47,6 +48,9 @@ public class MeleeUIMinimap {
 
 	public void render(final CSimulation game, final SpriteBatch batch, final Iterable<RenderUnit> units,
 			final PathingGrid pathingGrid, final CPlayerFogOfWar fogOfWar, final CPlayer player) {
+		if (!this.visible) {
+			return;
+		}
 		batch.draw(this.minimapTexture, this.minimap.x, this.minimap.y, this.minimap.width, this.minimap.height);
 		final Color og = batch.getColor();
 
@@ -58,20 +62,17 @@ public class MeleeUIMinimap {
 		final float mapYMod = this.minimapFilledArea.height / (maxY - minY);
 
 		for (int y = 0; y < (maxY - minY); y++) {
-			for (int x =  0; x < (maxX - minX); x++) {
-				CFogState state = fogOfWar.getFogState(x+minX, y+minY);
+			for (int x = 0; x < (maxX - minX); x++) {
+				final CFogState state = fogOfWar.getFogState(game, x + minX, y + minY);
 				if (CFogState.FOGGED.equals(state)) {
-					batch.setColor(0f,0f,0f,0.5f);
-					batch.draw(this.teamColors[0],
-							this.minimapFilledArea.x + x * mapXMod,
-							this.minimapFilledArea.y + y * mapYMod,
-							mapXMod, mapYMod);
-				} else if (CFogState.MASKED.equals(state)) {
-					batch.setColor(0f,0f,0f,1f);
-					batch.draw(this.teamColors[0],
-							this.minimapFilledArea.x + x * mapXMod,
-							this.minimapFilledArea.y + y * mapYMod,
-							mapXMod, mapYMod);
+					batch.setColor(0f, 0f, 0f, 0.5f);
+					batch.draw(this.teamColors[0], this.minimapFilledArea.x + (x * mapXMod),
+							this.minimapFilledArea.y + (y * mapYMod), mapXMod, mapYMod);
+				}
+				else if (CFogState.MASKED.equals(state)) {
+					batch.setColor(0f, 0f, 0f, 1f);
+					batch.draw(this.teamColors[0], this.minimapFilledArea.x + (x * mapXMod),
+							this.minimapFilledArea.y + (y * mapYMod), mapXMod, mapYMod);
 				}
 			}
 		}
@@ -129,7 +130,7 @@ public class MeleeUIMinimap {
 						(this.minimapFilledArea.y + (((unit.location[1] - this.playableMapArea.getY())
 								/ (this.playableMapArea.getHeight())) * this.minimapFilledArea.height)) - offset,
 						dimensions, dimensions);
-				batch.setColor(og);
+				batch.setColor(1, 1, 1, 1);
 			}
 		}
 	}
@@ -146,5 +147,9 @@ public class MeleeUIMinimap {
 
 	public boolean containsMouse(final float x, final float y) {
 		return this.minimapFilledArea.contains(x, y);
+	}
+
+	public void setVisible(boolean visible) {
+		this.visible = visible;
 	}
 }

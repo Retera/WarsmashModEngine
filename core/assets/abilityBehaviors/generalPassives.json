@@ -952,15 +952,6 @@
 					"value": "false"
 				},
 				"onAddActions": [{
-						"type": "setUnitAlpha",
-						"unit": {
-							"type": "getBuffedUnit"
-						},
-						"value": {
-							"type": "rawFloat",
-							"value": 0.5
-						}
-					},{
 						"type": "addStateModBuff",
 						"targetUnit": {
 							"type": "getBuffedUnit"
@@ -1022,15 +1013,6 @@
 								"type": "rawString",
 								"value": "invisBuff"
 							}
-						}
-					},{
-						"type": "setUnitAlpha",
-						"unit": {
-							"type": "getBuffedUnit"
-						},
-						"value": {
-							"type": "rawFloat",
-							"value": 1
 						}
 					},{
 						"type": "removeStateModBuff",
@@ -1101,6 +1083,14 @@
 							}
 						},{
 							"type": "startTimer",
+							"timer": {
+								"type": "getLastCreatedTimer"
+							}
+					}, {
+							"type": "setUnitFadeTimer",
+							"targetUnit": {
+								"type": "getCastingUnit"
+							},
 							"timer": {
 								"type": "getLastCreatedTimer"
 							}
@@ -1222,15 +1212,6 @@
 				},
 				"valueToStore": {
 					"type": "getLastCreatedStateModBuff"
-				}
-			},{
-				"type": "multiplyUnitAlpha",
-				"unit": {
-					"type": "getCastingUnit"
-				},
-				"value": {
-					"type": "rawFloat",
-					"value": 0.5
 				}
 			},{
 				"type": "createStateModBuff",
@@ -1554,16 +1535,7 @@
 					}
 
 				}
-			},{
-				"type": "divideUnitAlpha",
-				"unit": {
-					"type": "getCastingUnit"
-				},
-				"value": {
-					"type": "rawFloat",
-					"value": 0.5
-				}
-		}]
+			}]
 	},{
 		"ids": [{"id":"Aeth"}],
 		"type": "HIDDEN",

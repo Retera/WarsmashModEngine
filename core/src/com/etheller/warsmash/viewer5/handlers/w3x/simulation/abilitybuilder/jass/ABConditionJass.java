@@ -11,7 +11,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABCondition;
 
-public class ABConditionJass implements ABCondition {
+public class ABConditionJass extends ABCondition {
 	private final TriggerBooleanExpression boolExpr;
 
 	public ABConditionJass(final TriggerBooleanExpression boolExpr) {
@@ -19,7 +19,7 @@ public class ABConditionJass implements ABCondition {
 	}
 
 	@Override
-	public boolean evaluate(final CSimulation game, final CUnit caster, final Map<String, Object> localStore,
+	public Boolean callback(final CSimulation game, final CUnit caster, final Map<String, Object> localStore,
 			final int castId) {
 		return this.boolExpr.evaluate(game.getGlobalScope(),
 				CommonTriggerExecutionScope.abilityBuilder(caster, localStore, castId));

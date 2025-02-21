@@ -12,6 +12,8 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.skills.ut
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityPointTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehavior;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CAttackType;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CDamageFlags;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CSpellDamageFlags;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CDamageType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CWeaponSoundTypeJass;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.unit.CUnitTypeJass;
@@ -21,6 +23,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityActivat
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetCheckReceiver;
 
 public class CBuffWhirlWindCaster extends CBuffTimed {
+	private final static CDamageFlags DAMAGE_FLAGS = new CSpellDamageFlags();
 	private final CAbilityWhirlWind abilityImmolation;
 	private int nextDamageTick;
 	private final Rectangle recycleRect = new Rectangle();
@@ -65,7 +68,7 @@ public class CBuffWhirlWindCaster extends CBuffTimed {
 				public boolean call(final CUnit enumUnit) {
 					if (caster.canReach(enumUnit, areaOfEffect) && enumUnit.canBeTargetedBy(game, caster,
 							CBuffWhirlWindCaster.this.abilityImmolation.getTargetsAllowed())) {
-						enumUnit.damage(game, caster, false, true, CAttackType.SPELLS, CDamageType.NORMAL,
+						enumUnit.damage(game, caster, DAMAGE_FLAGS, CAttackType.SPELLS, CDamageType.NORMAL,
 								CWeaponSoundTypeJass.WHOKNOWS.name(),
 								CBuffWhirlWindCaster.this.abilityImmolation.getDamagePerSecond());
 					}

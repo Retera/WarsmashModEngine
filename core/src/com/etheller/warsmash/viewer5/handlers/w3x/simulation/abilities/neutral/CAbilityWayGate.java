@@ -154,6 +154,11 @@ public class CAbilityWayGate extends AbstractGenericAliasedAbility
 	}
 
 	@Override
+	public boolean isMagic() {
+		return false;
+	}
+
+	@Override
 	public boolean isUniversal() {
 		return true;
 	}

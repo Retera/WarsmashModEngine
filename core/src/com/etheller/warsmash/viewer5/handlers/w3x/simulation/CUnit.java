@@ -2829,10 +2829,10 @@ public class CUnit extends CWidget {
 			}
 
 			final float damageRatioFromArmorClass = simulation.getGameplayConstants().getDamageRatioAgainst(attackType,
-					getDefenseType());
+					(this.isBuilding() && this.isConstructing()) ? CDefenseType.NORMAL : getDefenseType());
 			final float damageRatioFromDefense;
 			final float defense = this.currentDefense;
-			if (damageType != CDamageType.NORMAL) {
+			if (damageType != CDamageType.NORMAL || (this.isBuilding() && this.isConstructing())) {
 				damageRatioFromDefense = 1.0f;
 			} else if (defense >= 0) {
 				damageRatioFromDefense = 1f - ((defense * simulation.getGameplayConstants().getDefenseArmor())

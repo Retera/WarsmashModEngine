@@ -677,7 +677,11 @@
 		},
 		"onAddDisabledAbility": [{
 				"type": "createStateModBuff",
-				"buffType": "INVISIBLE"
+				"buffType": "INVISIBLE",
+				"value": {
+					"type": "rawLong",
+					"value": 2
+				}
 			},{
 				"type": "if",
 				"condition": {

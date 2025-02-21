@@ -297,6 +297,12 @@
 	},{
 		"ids": [{"id":"Arpl", "castId": "replenishlife", "autoCastOnId": "replenishlifeon", "autoCastOffId": "replenishlifeoff", "autoCastType": "NOTARGET"}],
 		"type": "NORMAL_NOTARGET",
+		"overrideFields": {
+			"castTimeOverride": {
+				"type": "rawFloat",
+				"value": 0.0
+			}
+		},
 		"specialFields": {
 			"bufferManaRequired": {
 				"type": "i*",
@@ -516,6 +522,12 @@
 	},{
 		"ids": [{"id":"Arpm", "castId": "replenishmana", "autoCastOnId": "replenishmanaon", "autoCastOffId": "replenishmanaoff", "autoCastType": "NOTARGET"}],
 		"type": "NORMAL_NOTARGET",
+		"overrideFields": {
+			"castTimeOverride": {
+				"type": "rawFloat",
+				"value": 0.0
+			}
+		},
 		"specialFields": {
 			"bufferManaRequired": {
 				"type": "i*",

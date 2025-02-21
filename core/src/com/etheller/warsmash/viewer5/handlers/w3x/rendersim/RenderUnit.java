@@ -228,7 +228,7 @@ public class RenderUnit implements RenderWidget {
 		boolean swimming = (movementType == MovementType.AMPHIBIOUS)
 				&& PathingGrid.isPathingFlag(terrainPathing, PathingGrid.PathingType.SWIMMABLE)
 				&& !PathingGrid.isPathingFlag(terrainPathing, PathingGrid.PathingType.WALKABLE);
-		final boolean invisible = this.simulationUnit.getInvisLevels() > 0;
+		final boolean invisible = (this.simulationUnit.getInvisLevels() & 1) > 0;
 		final boolean working = this.simulationUnit.getBuildQueueTypes()[0] != null;
 		final float groundHeightTerrain = map.terrain.getGroundHeight(this.location[0], this.location[1]);
 		float groundHeightTerrainAndWater;

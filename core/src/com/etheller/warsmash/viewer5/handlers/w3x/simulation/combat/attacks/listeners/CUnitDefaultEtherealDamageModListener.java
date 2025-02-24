@@ -16,12 +16,7 @@ public class CUnitDefaultEtherealDamageModListener implements CUnitAttackDamageT
 			CUnitAttackDamageTakenModificationListenerDamageModResult previousDamage) {
 		if (attacker == null || game.getGameplayConstants().isEtherealDamageBonusAlly() || !game
 				.getPlayer(attacker.getPlayerIndex()).hasAlliance(target.getPlayerIndex(), CAllianceType.PASSIVE)) {
-			if (attackType == CAttackType.MAGIC) {
-				previousDamage.addDamageMultiplier(game.getGameplayConstants().getEtherealDamageBonusMagic());
-			}
-			if (attackType == CAttackType.SPELLS) {
-				previousDamage.addDamageMultiplier(game.getGameplayConstants().getEtherealDamageBonusSpells());
-			}
+			previousDamage.addDamageMultiplier(game.getGameplayConstants().getEtherealDamageBonus()[attackType.ordinal()]);
 		}
 //		if (damageType == CDamageType.NORMAL && attackType != CAttackType.MAGIC) {
 //			previousDamage.setBaseDamage(0);

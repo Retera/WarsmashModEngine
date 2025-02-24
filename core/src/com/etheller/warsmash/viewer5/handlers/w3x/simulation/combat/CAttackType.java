@@ -3,14 +3,14 @@ package com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat;
 import com.etheller.interpreter.ast.util.CHandle;
 
 public enum CAttackType implements CodeKeyType, CHandle {
-	UNKNOWN(false, false, false),
+	SPELLS(true, false, false),
 	NORMAL(false, false, true),
 	PIERCE(false, false, true),
 	SIEGE(false, false, true),
-	SPELLS(true, false, false),
-	CHAOS(false, false, true),
 	MAGIC(false, true, false),
-	HERO(false, false, true);
+	CHAOS(false, false, true),
+	HERO(false, false, true),
+	UNKNOWN(false, false, false);
 
 	public static CAttackType[] VALUES = values();
 

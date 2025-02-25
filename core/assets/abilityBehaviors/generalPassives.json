@@ -1836,7 +1836,7 @@
 				}]
 			},{
 				"type": "createSubroutine",
-				"key": {
+				"name": {
 					"type": "rawString",
 					"value": "removeOrb"
 				},
@@ -2112,7 +2112,7 @@
 						},
 						"thenActions": [{
 							"type": "runSubroutine",
-							"key": {
+							"name": {
 								"type": "rawString",
 								"value": "removeOrb"
 							},
@@ -2130,7 +2130,7 @@
 						},
 						"thenActions": [{
 								"type": "runSubroutine",
-								"key": {
+								"name": {
 									"type": "rawString",
 									"value": "removeOrb"
 								},

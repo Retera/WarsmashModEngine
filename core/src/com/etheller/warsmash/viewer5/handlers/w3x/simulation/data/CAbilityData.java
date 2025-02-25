@@ -3,7 +3,9 @@ package com.etheller.warsmash.viewer5.handlers.w3x.simulation.data;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import com.etheller.warsmash.units.GameObject;
@@ -291,6 +293,9 @@ public class CAbilityData {
 
 		AbilityBuilderFile behaviors = null;
 		try {
+			List<AbilityBuilderParser> inheritingAbilities = new ArrayList<>();
+			Map<String, AbilityBuilderParser> previousAbilityParsers = new HashMap<>();
+			
 			File abilityBehaviorsDir = new File("abilityBehaviors");
 			File[] abilityBehaviorFiles = abilityBehaviorsDir.listFiles();
 			if (abilityBehaviorFiles != null) {
@@ -301,13 +306,17 @@ public class CAbilityData {
 					try {
 						behaviors = gson.fromJson(new FileReader(abilityBehaviorFile), AbilityBuilderFile.class);
 						for (AbilityBuilderParser behavior : behaviors.getAbilityList()) {
-							if (behavior.getType().equals(AbilityBuilderType.TEMPLATE)) {
+							if (behavior.getType().equals(AbilityBuilderType.INHERIT)) {
+								inheritingAbilities.add(behavior);
+							} else if (behavior.getType().equals(AbilityBuilderType.TEMPLATE)) {
 								for (AbilityBuilderDupe dupe : behavior.getIds()) {
+									previousAbilityParsers.put(dupe.getId(), behavior);
 									this.codeToAbilityTypeDefinition.put(War3ID.fromString(dupe.getId()),
 											new CAbilityTypeDefinitionAbilityTemplateBuilder(behavior));
 								}
 							} else {
 								for (AbilityBuilderDupe dupe : behavior.getIds()) {
+									previousAbilityParsers.put(dupe.getId(), behavior);
 									AbilityBuilderConfiguration config = new AbilityBuilderConfiguration(behavior, dupe);
 									this.codeToAbilityTypeDefinition.put(War3ID.fromString(config.getId()),
 											config.createDefinition());
@@ -323,6 +332,40 @@ public class CAbilityData {
 					} catch (FileNotFoundException e) {
 						System.err.println("Failed to find Ability Builder config file: " + abilityBehaviorFile.getName());
 						e.printStackTrace();
+					}
+				}
+			}
+			
+			int prevIter = 1;
+			while (inheritingAbilities.size() > 0) {
+				List<AbilityBuilderParser> iter = inheritingAbilities;
+				inheritingAbilities = new ArrayList<>();
+				
+				if (prevIter == 0) {
+					for (AbilityBuilderParser parser : iter) {
+						System.err.println("Couldn't parse INHERIT ability due to no parent ability definition: " + parser.getIds().get(0).getId());
+					}
+					break;
+				}
+				prevIter = 0;
+				
+				for (AbilityBuilderParser parser : iter) {
+					if (parser.getParentId() == null) {
+						System.err.println("Couldn't parse INHERIT ability due to missing parent ID: " + parser.getIds().get(0).getId());
+						continue;
+					}
+					AbilityBuilderParser parent = previousAbilityParsers.get(parser.getParentId());
+					if (parent != null) {
+						parser.updateFromParent(parent);
+						for (AbilityBuilderDupe dupe : parser.getIds()) {
+							previousAbilityParsers.put(dupe.getId(), parser);
+							AbilityBuilderConfiguration config = new AbilityBuilderConfiguration(parser, dupe);
+							this.codeToAbilityTypeDefinition.put(War3ID.fromString(config.getId()),
+									config.createDefinition());
+							prevIter++;
+						}
+					} else {
+						inheritingAbilities.add(parser);
 					}
 				}
 			}

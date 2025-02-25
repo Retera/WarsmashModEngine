@@ -196,4 +196,8 @@ public class ABLocalStoreKeys {
 	public static String combineSubroutineInstanceKey(String key, int castId) {
 		return "_!" + key + "#" + castId;
 	}
+	
+	public static String combineArgumentKey(String key) {
+		return "_$" + key;
+	}
 }

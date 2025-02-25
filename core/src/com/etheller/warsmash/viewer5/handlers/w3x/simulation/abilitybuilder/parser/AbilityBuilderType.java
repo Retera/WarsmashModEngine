@@ -17,6 +17,7 @@ public enum AbilityBuilderType implements CHandle {
 	SMART,
 	PASSIVE,
 	TEMPLATE,
+	INHERIT,
 	HIDDEN;
 
 	@Override

@@ -14,7 +14,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core
 
 public class ABActionRunSubroutine implements ABSingleAction {
 
-	private ABStringCallback key;
+	private ABStringCallback name;
 	private ABBooleanCallback instanceValue;
 
 	@Override
@@ -24,13 +24,12 @@ public class ABActionRunSubroutine implements ABSingleAction {
 		List<ABAction> actions;
 		if ((this.instanceValue == null) || this.instanceValue.callback(game, caster, localStore, castId)) {
 			actions = (List<ABAction>) localStore.get(ABLocalStoreKeys
-					.combineSubroutineInstanceKey(this.key.callback(game, caster, localStore, castId), castId));
+					.combineSubroutineInstanceKey(this.name.callback(game, caster, localStore, castId), castId));
 		}
 		else {
 			actions = (List<ABAction>) localStore.get(
-					ABLocalStoreKeys.combineSubroutineKey(this.key.callback(game, caster, localStore, castId), castId));
+					ABLocalStoreKeys.combineSubroutineKey(this.name.callback(game, caster, localStore, castId), castId));
 		}
-		System.err.println("RUNNING SUBROUTINE: " + this.key.callback(game, caster, localStore, castId));
 		if (actions != null) {
 			for (final ABAction action : actions) {
 				action.runAction(game, caster, localStore, castId);
@@ -46,7 +45,7 @@ public class ABActionRunSubroutine implements ABSingleAction {
 		}
 
 		return "RunSubroutineAU(" + jassTextGenerator.getCaster() + ", " + jassTextGenerator.getTriggerLocalStore()
-				+ ", " + jassTextGenerator.getCastId() + ", " + this.key.generateJassEquivalent(jassTextGenerator)
+				+ ", " + jassTextGenerator.getCastId() + ", " + this.name.generateJassEquivalent(jassTextGenerator)
 				+ ", " + instanceValueExpression + ")";
 	}
 

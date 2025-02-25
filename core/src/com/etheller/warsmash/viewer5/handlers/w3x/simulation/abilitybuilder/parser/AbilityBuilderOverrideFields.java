@@ -5,7 +5,6 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.beha
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.floatcallbacks.ABFloatCallback;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.idcallbacks.ABIDCallback;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.integercallbacks.ABIntegerCallback;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABCondition;
 
 public class AbilityBuilderOverrideFields {
 	
@@ -23,6 +22,34 @@ public class AbilityBuilderOverrideFields {
 	private ABBooleanCallback physicalSpell;
 	private ABBooleanCallback magicSpell;
 	private ABBooleanCallback universalSpell;
+
+	public void updateFromParent(AbilityBuilderOverrideFields parent) {
+		if (this.areaOverride == null)
+			this.areaOverride = parent.areaOverride;
+		if (this.rangeOverride == null)
+			this.rangeOverride = parent.rangeOverride;
+		if (this.castTimeOverride == null)
+			this.castTimeOverride = parent.castTimeOverride;
+		if (this.cooldownOverride == null)
+			this.cooldownOverride = parent.cooldownOverride;
+		if (this.manaCostOverride == null)
+			this.manaCostOverride = parent.manaCostOverride;
+
+		if (this.autocastTypeOverride == null)
+			this.autocastTypeOverride = parent.autocastTypeOverride;
+
+		if (this.onTooltipOverride == null)
+			this.onTooltipOverride = parent.onTooltipOverride;
+		if (this.offTooltipOverride == null)
+			this.offTooltipOverride = parent.offTooltipOverride;
+
+		if (this.physicalSpell == null)
+			this.physicalSpell = parent.physicalSpell;
+		if (this.magicSpell == null)
+			this.magicSpell = parent.magicSpell;
+		if (this.universalSpell == null)
+			this.universalSpell = parent.universalSpell;
+	}
 	
 	public ABFloatCallback getAreaOverride() {
 		return areaOverride;
@@ -90,7 +117,5 @@ public class AbilityBuilderOverrideFields {
 	public void setUniversalSpell(ABBooleanCallback universalSpell) {
 		this.universalSpell = universalSpell;
 	}
-	
-	
 
 }

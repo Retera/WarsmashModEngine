@@ -28,6 +28,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUpgradeType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.HandleIdAllocator;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityAttack;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityDisableType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityMove;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.GetAbilityByRawcodeVisitor;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.autocast.CAutocastAbility;
@@ -244,19 +245,20 @@ public class CUnitData {
 
 	public CUnit create(final CSimulation simulation, final int playerIndex, final War3ID typeId, final float x,
 			final float y, final float facing, final BufferedImage buildingPathingPixelMap,
-			final HandleIdAllocator handleIdAllocator) {
+			final HandleIdAllocator handleIdAllocator, int editorConfigHitPointPercent, int editorConfigManaAmount) {
 		final GameObject unitType = this.unitData.get(typeId.asStringValue());
 		final int handleId = handleIdAllocator.createId();
 
 		final CUnitType unitTypeInstance = getUnitTypeInstance(typeId, buildingPathingPixelMap, unitType);
-		final int life = unitTypeInstance.getMaxLife();
+		final float life = editorConfigHitPointPercent > 0 ? unitTypeInstance.getMaxLife()* (editorConfigHitPointPercent / 100f) : unitTypeInstance.getMaxLife();
 		final float lifeRegen = unitTypeInstance.getLifeRegen();
 		final int manaInitial = unitTypeInstance.getManaInitial();
 		final int manaMaximum = unitTypeInstance.getManaMaximum();
 		final int speed = unitTypeInstance.getSpeed();
 
-		final CUnit unit = new CUnit(handleId, playerIndex, x, y, life, typeId, facing, manaInitial, life, lifeRegen,
-				manaMaximum, speed, unitTypeInstance);
+		final CUnit unit = new CUnit(handleId, playerIndex, x, y, life, typeId, facing,
+				editorConfigManaAmount >= 0 ? editorConfigManaAmount : manaInitial, unitTypeInstance.getMaxLife(),
+				lifeRegen, manaMaximum, speed, unitTypeInstance);
 		return unit;
 	}
 
@@ -457,15 +459,36 @@ public class CUnitData {
 			unit.add(simulation, new CAbilityRally(handleIdAllocator.createId()));
 		}
 		if (unitTypeInstance.isHero()) {
-			final List<War3ID> heroAbilityList = unitTypeInstance.getHeroAbilityList();
 			if (unit.getFirstAbilityOfType(CAbilityHero.class) != null) {
 				final CAbilityHero abil = unit.getFirstAbilityOfType(CAbilityHero.class);
-				abil.setSkillsAvailable(heroAbilityList);
-				abil.recalculateAllStats(simulation, unit);
+				if (abil.isDisabled()) {
+					abil.setDisabled(false, CAbilityDisableType.TRANSFORMATION);
+					abil.setIconShowing(true);
+					for (CAbility habl : abil.getLearnedHeroAbilities()) {
+						unit.add(simulation, habl);
+					}
+				}
+				abil.setHeroName(unitTypeInstance);
+//				abil.setSkillsAvailable(heroAbilityList);
+				abil.calculateDerivatedFields(simulation, unit);
 			} else {
-				unit.add(simulation, new CAbilityHero(handleIdAllocator.createId(), heroAbilityList));
+				final List<War3ID> heroAbilityList = unitTypeInstance.getHeroAbilityList();
+				final CAbilityHero abil = new CAbilityHero(handleIdAllocator.createId(), heroAbilityList);
+				unit.add(simulation, abil);
 				// reset initial mana after the value is adjusted for hero data
 				unit.setMana(manaInitial);
+				abil.recalculateAllStats(simulation, unit);
+			}
+		} else {
+			if (unit.getFirstAbilityOfType(CAbilityHero.class) != null) {
+				final CAbilityHero abil = unit.getFirstAbilityOfType(CAbilityHero.class);
+//				abil.setSkillsAvailable(heroAbilityList);
+				abil.calculateDerivatedFields(simulation, unit);
+				abil.setDisabled(true, CAbilityDisableType.TRANSFORMATION);
+				abil.setIconShowing(false);
+				for (CAbility habl : abil.getLearnedHeroAbilities()) {
+					unit.remove(simulation, habl);
+				}
 			}
 		}
 		for (final War3ID ability : unitTypeInstance.getAbilityList()) {
@@ -537,7 +560,7 @@ public class CUnitData {
 			final CPrimaryAttribute primaryAttribute = CPrimaryAttribute
 					.parsePrimaryAttribute(unitType.getFieldAsString(PRIMARY_ATTRIBUTE, 0));
 
-			final String properNames = unitType.getFieldAsString(PROPER_NAMES, 0);
+			final String properNames = unitType.getField(PROPER_NAMES);
 			final int properNamesCount = unitType.getFieldAsInteger(PROPER_NAMES_COUNT, 0);
 
 			final boolean isBldg = unitType.getFieldAsBoolean(IS_BLDG, 0);

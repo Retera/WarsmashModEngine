@@ -290,9 +290,9 @@ public class CSimulation implements CPlayerAPI, CFogMaskSettings {
 	}
 
 	public CUnit internalCreateUnit(final War3ID typeId, final int playerIndex, final float x, final float y,
-			final float facing, final BufferedImage buildingPathingPixelMap) {
+			final float facing, final BufferedImage buildingPathingPixelMap, int editorConfigHitPointPercent, int editorConfigManaAmount) {
 		final CUnit unit = this.unitData.create(this, playerIndex, typeId, x, y, facing, buildingPathingPixelMap,
-				this.handleIdAllocator);
+				this.handleIdAllocator, editorConfigHitPointPercent, editorConfigManaAmount);
 		this.newUnits.add(unit);
 		this.handleIdToUnit.put(unit.getHandleId(), unit);
 		return unit;

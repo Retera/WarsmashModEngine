@@ -192,7 +192,7 @@ public abstract class CAbilityAbilityBuilderGenericActive extends AbstractGeneri
 			this.allowCastlessDeactivate = !config.getDisplayFields().getCastToggleOff().callback(game, unit,
 					localStore, castId);
 		}
-		if (toggleable && config.getDisplayFields() != null && config.getDisplayFields().getAlternateUnitId() != null) {
+		if (config.getDisplayFields() != null && config.getDisplayFields().getAlternateUnitId() != null) {
 			if (unit.getTypeId()
 					.equals(config.getDisplayFields().getAlternateUnitId().callback(game, unit, localStore, castId))) {
 				this.active = true;
@@ -445,6 +445,11 @@ public abstract class CAbilityAbilityBuilderGenericActive extends AbstractGeneri
 	}
 
 	@Override
+	public boolean isActive() {
+		return this.active;
+	}
+
+	@Override
 	public int getAutoCastOnOrderId() {
 		return this.autoCastOnId;
 	}
@@ -502,6 +507,26 @@ public abstract class CAbilityAbilityBuilderGenericActive extends AbstractGeneri
 			beh.setBehaviorCategory(this.config.getSpecialFields().getBehaviorCategory());
 		}
 		return beh;
+	}
+
+	protected void innerCheckCooldownDisabled(final CSimulation game, final CUnit unit, final int orderId,
+			final AbilityActivationReceiver receiver) {
+		final int cooldownRemaining = unit.getCooldownRemainingTicks(game, getCooldownId());
+		if (this.toggleable && this.active && this.allowCastlessDeactivate) {
+			if (cooldownRemaining > 0 && !(receiver instanceof MeleeUIAbilityActivationReceiver)) {
+				float cooldownLengthDisplay = unit.getCooldownLengthDisplayTicks(game, getCooldownId())
+						* WarsmashConstants.SIMULATION_STEP_TIME;
+				receiver.cooldownNotYetReady(cooldownRemaining * WarsmashConstants.SIMULATION_STEP_TIME,
+						cooldownLengthDisplay);
+			}
+		} else {
+			if (cooldownRemaining > 0) {
+				float cooldownLengthDisplay = unit.getCooldownLengthDisplayTicks(game, getCooldownId())
+						* WarsmashConstants.SIMULATION_STEP_TIME;
+				receiver.cooldownNotYetReady(cooldownRemaining * WarsmashConstants.SIMULATION_STEP_TIME,
+						cooldownLengthDisplay);
+			}
+		}
 	}
 
 	@Override
@@ -985,7 +1010,7 @@ public abstract class CAbilityAbilityBuilderGenericActive extends AbstractGeneri
 		this.active = true;
 		if (this.manaDrain != null) {
 			this.timer.start(game);
-			caster.addNonStackingStatBuff(manaDrain);
+			caster.addNonStackingStatBuff(game, manaDrain);
 		}
 		if (config.getOnActivate() != null) {
 			for (ABAction action : config.getOnActivate()) {
@@ -1005,7 +1030,7 @@ public abstract class CAbilityAbilityBuilderGenericActive extends AbstractGeneri
 		this.active = false;
 		if (this.manaDrain != null) {
 			timer.pause(game);
-			caster.removeNonStackingStatBuff(manaDrain);
+			caster.removeNonStackingStatBuff(game, manaDrain);
 		}
 		if (config.getOnDeactivate() != null) {
 			for (ABAction action : config.getOnDeactivate()) {

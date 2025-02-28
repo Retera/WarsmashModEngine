@@ -31,6 +31,8 @@ public interface CAbilityView extends CHandle {
 	
 	War3ID getCode();
 
+	boolean isHero();
+
 	boolean isDisabled();
 
 	boolean isIconShowing();

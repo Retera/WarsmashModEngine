@@ -219,6 +219,98 @@
 				}
 			}
 		},
+		"reuseActions": {
+			"storeBaseType": [{
+				"type": "if",
+				"condition": {
+					"type": "isNull",
+					"value": {
+						"type": "getStoredIDByKey",
+						"key": {
+							"type": "rawString",
+							"value": "baseType"
+						},
+						"instanceValue": {
+							"type": "rawBoolean",
+							"value": "false"
+						}
+					}
+				},
+				"thenActions": [{
+					"type": "if",
+					"condition": {
+						"type": "not",
+						"condition": {
+							"type": "or",
+							"conditions": [{
+									"type": "isUnitType",
+									"unit": {
+										"type": "getCastingUnit"
+									},
+									"unitType": {
+										"type": "getAbilityDataAsID",
+										"dataField": "A"
+									}
+								},{
+									"type": "isUnitType",
+									"unit": {
+										"type": "getCastingUnit"
+									},
+									"unitType": {
+										"type": "getAbilityUnitId"
+									}
+							}]
+						}
+					},
+					"thenActions": [{
+						"type": "storeValueLocally",
+						"key": {
+							"type": "rawString",
+							"value": "baseType"
+						},
+						"instanceValue": {
+							"type": "rawBoolean",
+							"value": "false"
+						},
+						"valueToStore": {
+							"type": "getUnitType",
+							"unit": {
+								"type": "getCastingUnit"
+							}
+						}
+					}],
+					"elseActions": [{
+						"type": "storeValueLocally",
+						"key": {
+							"type": "rawString",
+							"value": "baseType"
+						},
+						"instanceValue": {
+							"type": "rawBoolean",
+							"value": "false"
+						},
+						"valueToStore": {
+							"type": "getAbilityDataAsID",
+							"dataField": "A"
+						}
+					}]
+				}]
+			}],
+			"clearBaseType": [{
+				"type": "storeValueLocally",
+				"key": {
+					"type": "rawString",
+					"value": "baseType"
+				},
+				"instanceValue": {
+					"type": "rawBoolean",
+					"value": "false"
+				},
+				"valueToStore": {
+					"type": "null"
+				}
+			}]
+		},
 		"onAddDisabledAbility": [{
 				"type": "runReuseAction",
 				"name": {
@@ -231,109 +323,121 @@
 					"type": "isToggleAbilityActive"
 				},
 				"thenActions": [{
-					"type": "transformedUnitAbilityAdd",
-					"unit": {
-						"type": "getCastingUnit"
-					},
-					"baseUnitId": {
-						"type": "getAbilityDataAsID",
-						"dataField": "A"
-					},
-					"alternateUnitId": {
-						"type": "getAbilityUnitId"
-					},
-					"immediateLanding": {
-						"type": "i2b",
-						"value": {
-							"type": "i&",
-							"value1": {
-								"type": "getAbilityDataAsInteger",
-								"dataField": "B"
-							},
-							"value2": {
-								"type": "rawInteger",
-								"value": 2
-							}
-						}
-					},
-					"immediateTakeOff": {
-						"type": "i2b",
-						"value": {
-							"type": "i&",
-							"value1": {
-								"type": "getAbilityDataAsInteger",
-								"dataField": "B"
-							},
-							"value2": {
-								"type": "rawInteger",
-								"value": 4
-							}
-						}
-					},
-					"permanent": {
-						"type": "i2b",
-						"value": {
-							"type": "i&",
-							"value1": {
-								"type": "getAbilityDataAsInteger",
-								"dataField": "B"
-							},
-							"value2": {
-								"type": "rawInteger",
-								"value": 8
-							}
-						}
-					},
-					"requiresPayment": {
-						"type": "i2b",
-						"value": {
-							"type": "i&",
-							"value1": {
-								"type": "getAbilityDataAsInteger",
-								"dataField": "B"
-							},
-							"value2": {
-								"type": "rawInteger",
-								"value": 16
-							}
-						}
-					},
-					"altitudeAdjustmentDelay": {
-						"type": "getAbilityCastTime"
-					},
-					"altitudeAdjustmentTime": {
-						"type": "getAbilityDataAsFloat",
-						"dataField": "C"
-					},
-					"landingDelayTime": {
-						"type": "getAbilityDataAsFloat",
-						"dataField": "D"
-					},
-					"transformTime": {
-						"type": "getAbilityDuration"
-					},
-					"duration": {
-						"type": "getAbilityHeroDuration"
-					},
-					"buffId": {
-						"type": "getFirstBuffId"
-					},
-					"onTransformActions": [{
 						"type": "runReuseAction",
 						"name": {
 							"type": "rawString",
-							"value": "onTransform"
+							"value": "storeBaseType"
 						}
-					}],
-					"onUntransformActions": [{
-						"type": "runReuseAction",
-						"name": {
-							"type": "rawString",
-							"value": "onUnTransform"
-						}
-					}]
+					},{
+						"type": "transformedUnitAbilityAdd",
+						"unit": {
+							"type": "getCastingUnit"
+						},
+						"baseUnitId": {
+							"type": "getAbilityDataAsID",
+							"dataField": "A"
+						},
+						"alternateUnitId": {
+							"type": "getAbilityUnitId"
+						},
+						"immediateLanding": {
+							"type": "i2b",
+							"value": {
+								"type": "i&",
+								"value1": {
+									"type": "getAbilityDataAsInteger",
+									"dataField": "B"
+								},
+								"value2": {
+									"type": "rawInteger",
+									"value": 2
+								}
+							}
+						},
+						"immediateTakeOff": {
+							"type": "i2b",
+							"value": {
+								"type": "i&",
+								"value1": {
+									"type": "getAbilityDataAsInteger",
+									"dataField": "B"
+								},
+								"value2": {
+									"type": "rawInteger",
+									"value": 4
+								}
+							}
+						},
+						"permanent": {
+							"type": "i2b",
+							"value": {
+								"type": "i&",
+								"value1": {
+									"type": "getAbilityDataAsInteger",
+									"dataField": "B"
+								},
+								"value2": {
+									"type": "rawInteger",
+									"value": 8
+								}
+							}
+						},
+						"requiresPayment": {
+							"type": "i2b",
+							"value": {
+								"type": "i&",
+								"value1": {
+									"type": "getAbilityDataAsInteger",
+									"dataField": "B"
+								},
+								"value2": {
+									"type": "rawInteger",
+									"value": 16
+								}
+							}
+						},
+						"altitudeAdjustmentDelay": {
+							"type": "getAbilityCastTime"
+						},
+						"altitudeAdjustmentTime": {
+							"type": "getAbilityDataAsFloat",
+							"dataField": "C"
+						},
+						"landingDelayTime": {
+							"type": "getAbilityDataAsFloat",
+							"dataField": "D"
+						},
+						"transformTime": {
+							"type": "getAbilityDuration"
+						},
+						"duration": {
+							"type": "getAbilityHeroDuration"
+						},
+						"buffId": {
+							"type": "getFirstBuffId"
+						},
+						"onTransformActions": [{
+							"type": "runReuseAction",
+							"name": {
+								"type": "rawString",
+								"value": "onTransform"
+							}
+						}],
+						"onUntransformActions": [{
+								"type": "runReuseAction",
+								"name": {
+									"type": "rawString",
+									"value": "onUnTransform"
+								}
+							},{
+								"type": "runReuseAction",
+								"name": {
+									"type": "rawString",
+									"value": "clearBaseType"
+								}
+						}]
 				}],
-					"elseActions": []
+				"elseActions": []
 		}],
 		"onRemoveDisabledAbility": [{
 			"type": "transformedUnitAbilityRemove",
@@ -341,8 +445,15 @@
 				"type": "getCastingUnit"
 			},
 			"baseUnitId": {
-				"type": "getAbilityDataAsID",
-				"dataField": "A"
+				"type": "getStoredIDByKey",
+				"key": {
+					"type": "rawString",
+					"value": "baseType"
+				},
+				"instanceValue": {
+					"type": "rawBoolean",
+					"value": "false"
+				}
 			},
 			"alternateUnitId": {
 				"type": "getAbilityUnitId"
@@ -362,14 +473,33 @@
 				}
 			},
 			"onUntransformActions": [{
+					"type": "runReuseAction",
+					"name": {
+						"type": "rawString",
+						"value": "onUnTransform"
+					}
+				},{
+					"type": "runReuseAction",
+					"name": {
+						"type": "rawString",
+						"value": "clearBaseType"
+					}
+			}]
+		}],
+		"onLevelChange": [{
+			"type": "runReuseAction",
+			"name": {
+				"type": "rawString",
+				"value": "onLevelChange"
+			}
+		}],
+		"onBeginCasting": [{
 				"type": "runReuseAction",
 				"name": {
 					"type": "rawString",
-					"value": "onUnTransform"
+					"value": "storeBaseType"
 				}
-			}]
-		}],
-		"onBeginCasting": [{
+			},{
 				"type": "createTemporarySpellEffectOnUnit",
 				"target": {
 					"type": "getCastingUnit"
@@ -384,8 +514,15 @@
 					"type": "getCastingUnit"
 				},
 				"baseUnitId": {
-					"type": "getAbilityDataAsID",
-					"dataField": "A"
+					"type": "getStoredIDByKey",
+					"key": {
+						"type": "rawString",
+						"value": "baseType"
+					},
+					"instanceValue": {
+						"type": "rawBoolean",
+						"value": "false"
+					}
 				},
 				"alternateUnitId": {
 					"type": "getAbilityUnitId"
@@ -474,34 +611,49 @@
 					}
 				}],
 				"onUntransformActions": [{
-					"type": "runReuseAction",
-					"name": {
-						"type": "rawString",
-						"value": "onUnTransform"
-					}
+						"type": "runReuseAction",
+						"name": {
+							"type": "rawString",
+							"value": "onUnTransform"
+						}
+					},{
+						"type": "runReuseAction",
+						"name": {
+							"type": "rawString",
+							"value": "clearBaseType"
+						}
 				}]
 			},{
 				"type": "if",
 				"condition": {
-					"type": "isTransformingToAlternate"
+					"type": "notNull",
+					"value": {
+						"type": "isTransformingToAlternate"
+					}
 				},
 				"thenActions": [{
-						"type": "activateToggledAbility"
-					},{
-						"type": "runReuseAction",
-						"name": {
-							"type": "rawString",
-							"value": "onTransformExtra"
-						}
-				}],
-				"elseActions": [{
-						"type": "deactivateToggledAbility"
-					},{
-						"type": "runReuseAction",
-						"name": {
-							"type": "rawString",
-							"value": "onUnTransformExtra"
-						}
+						"type": "if",
+						"condition": {
+							"type": "isTransformingToAlternate"
+						},
+						"thenActions": [{
+								"type": "activateToggledAbility"
+							},{
+								"type": "runReuseAction",
+								"name": {
+									"type": "rawString",
+									"value": "onTransformExtra"
+								}
+						}],
+						"elseActions": [{
+								"type": "deactivateToggledAbility"
+							},{
+								"type": "runReuseAction",
+								"name": {
+									"type": "rawString",
+									"value": "onUnTransformExtra"
+								}
+						}]
 				}]
 		}]
 	},{
@@ -590,18 +742,18 @@
 				"buff": {
 					"type": "getLastCreatedNonStackingStatBuff"
 				}
+			}],
+			"onLevelChange": [{
+				"type": "updateNonStackingStatBuff",
+				"buff": {
+					"type": "getLastCreatedNonStackingStatBuff"
+				},
+				"value": {
+					"type": "getAbilityDataAsFloat",
+					"dataField": "E"
+				}
 			}]
-		},
-		"onLevelChange": [{
-			"type": "updateNonStackingStatBuff",
-			"buff": {
-				"type": "getLastCreatedNonStackingStatBuff"
-			},
-			"value": {
-				"type": "getAbilityDataAsFloat",
-				"dataField": "E"
-			}
-		}]
+		}
 	},{
 		"ids": [{"id":"Acpf", "castId": "corporealform", "uncastId": "uncorporealform"}],
 		"type": "INHERIT",
@@ -645,6 +797,12 @@
 					"type": "isToggleAbilityActive"
 				},
 				"thenActions": [{
+					"type": "runReuseAction",
+					"name": {
+						"type": "rawString",
+						"value": "storeBaseType"
+					}
+				},{
 					"type": "transformedUnitAbilityAdd",
 					"unit": {
 						"type": "getCastingUnit"
@@ -740,11 +898,17 @@
 						}
 					}],
 					"onUntransformActions": [{
-						"type": "runReuseAction",
-						"name": {
-							"type": "rawString",
-							"value": "onUnTransform"
-						}
+							"type": "runReuseAction",
+							"name": {
+								"type": "rawString",
+								"value": "onUnTransform"
+							}
+						},{
+							"type": "runReuseAction",
+							"name": {
+								"type": "rawString",
+								"value": "clearBaseType"
+							}
 					}]
 				}],
 				"elseActions": [{
@@ -761,8 +925,15 @@
 				"type": "getCastingUnit"
 			},
 			"baseUnitId": {
-				"type": "getAbilityDataAsID",
-				"dataField": "A"
+				"type": "getStoredIDByKey",
+				"key": {
+					"type": "rawString",
+					"value": "baseType"
+				},
+				"instanceValue": {
+					"type": "rawBoolean",
+					"value": "false"
+				}
 			},
 			"alternateUnitId": {
 				"type": "getAbilityUnitId"
@@ -832,20 +1003,188 @@
 			}]
 		}
 	},{
+		"ids": [{"id":"ANcr", "castId": "chemicalrage"}],
+		"type": "INHERIT",
+		"parentId": "Arav",
+		"reuseActions": {
+			"onTransform": [{
+				"type": "disableAbility"
+			}],
+			"onUnTransform": [{
+				"type": "enableAbility"
+			}]
+		},
+		"displayFields": {
+			"alternateUnitId": {
+				"type": "getStoredIDByKey",
+				"key": {
+					"type": "rawString",
+					"value": "null"
+				}
+			}
+		},
+		"onAddDisabledAbility": [],
+		"onBeginCasting": [{
+				"type": "runReuseAction",
+				"name": {
+					"type": "rawString",
+					"value": "storeBaseType"
+				}
+			},{
+				"type": "createTemporarySpellEffectOnUnit",
+				"target": {
+					"type": "getCastingUnit"
+				},
+				"id": {
+					"type": "getAlias"
+				},
+				"effectType": "CASTER"
+			},{
+				"type": "transformUnit",
+				"unit": {
+					"type": "getCastingUnit"
+				},
+				"baseUnitId": {
+					"type": "getStoredIDByKey",
+					"key": {
+						"type": "rawString",
+						"value": "baseType"
+					},
+					"instanceValue": {
+						"type": "rawBoolean",
+						"value": "false"
+					}
+				},
+				"alternateUnitId": {
+					"type": "getAbilityUnitId"
+				},
+				"immediateLanding": {
+					"type": "i2b",
+					"value": {
+						"type": "i&",
+						"value1": {
+							"type": "getAbilityDataAsInteger",
+							"dataField": "B"
+						},
+						"value2": {
+							"type": "rawInteger",
+							"value": 2
+						}
+					}
+				},
+				"immediateTakeOff": {
+					"type": "i2b",
+					"value": {
+						"type": "i&",
+						"value1": {
+							"type": "getAbilityDataAsInteger",
+							"dataField": "B"
+						},
+						"value2": {
+							"type": "rawInteger",
+							"value": 4
+						}
+					}
+				},
+				"permanent": {
+					"type": "i2b",
+					"value": {
+						"type": "i&",
+						"value1": {
+							"type": "getAbilityDataAsInteger",
+							"dataField": "B"
+						},
+						"value2": {
+							"type": "rawInteger",
+							"value": 8
+						}
+					}
+				},
+				"requiresPayment": {
+					"type": "i2b",
+					"value": {
+						"type": "i&",
+						"value1": {
+							"type": "getAbilityDataAsInteger",
+							"dataField": "B"
+						},
+						"value2": {
+							"type": "rawInteger",
+							"value": 16
+						}
+					}
+				},
+				"altitudeAdjustmentDelay": {
+					"type": "getAbilityCastTime"
+				},
+				"altitudeAdjustmentTime": {
+					"type": "getAbilityDataAsFloat",
+					"dataField": "C"
+				},
+				"landingDelayTime": {
+					"type": "getAbilityDataAsFloat",
+					"dataField": "D"
+				},
+				"transformTime": {
+					"type": "getAbilityDuration"
+				},
+				"duration": {
+					"type": "getAbilityHeroDuration"
+				},
+				"buffId": {
+					"type": "getFirstBuffId"
+				},
+				"instantTransformAtDurationEnd": {
+					"type": "rawBoolean",
+					"value": "true"
+				},
+				"onlyTransformToAlternate": {
+					"type": "rawBoolean",
+					"value": "true"
+				},
+				"onTransformActions": [{
+					"type": "runReuseAction",
+					"name": {
+						"type": "rawString",
+						"value": "onTransform"
+					}
+				}],
+				"onUntransformActions": [{
+						"type": "runReuseAction",
+						"name": {
+							"type": "rawString",
+							"value": "onUnTransform"
+						}
+					},{
+						"type": "runReuseAction",
+						"name": {
+							"type": "rawString",
+							"value": "clearBaseType"
+						}
+				}]
+		}]
+	},{
 		"ids": [{"id":"AEme", "castId": "metamorphosis"}],
 		"type": "INHERIT",
 		"parentId": "Arav",
-		"displayFields": {
-			"toggleable": {
-				"type": "rawBoolean",
-				"value": "false"
-			},
-			"castToggleOff": {
-				"type": "rawBoolean",
-				"value": "false"
-			}
-		},
 		"reuseActions": {
+			"setup": [{
+				"type": "createNonStackingStatBuff",
+				"buffType": {
+					"type": "getNonStackingStatBuffTypeFromString",
+					"id": {
+						"type": "rawString",
+						"value": "MAXHP"
+					}
+				},
+				"stackingKey": {
+					"type": "getAllowStackingKey"
+				},
+				"value": {
+					"type": "getAbilityDataAsFloat",
+					"dataField": "E"
+				}
+			}],
 			"onTransform": [{
 				"type": "addNonStackingStatBuff",
 				"targetUnit": {
@@ -863,36 +1202,25 @@
 				"buff": {
 					"type": "getLastCreatedNonStackingStatBuff"
 				}
-			}]
-		},
-		"onAddDisabledAbility": [{
-				"type": "createNonStackingStatBuff",
-				"buffType": {
-					"type": "getNonStackingStatBuffTypeFromString",
-					"id": {
-						"type": "rawString",
-						"value": "MAXHP"
-					}
-				},
-				"stackingKey": {
-					"type": "getAllowStackingKey"
+			}],
+			"onLevelChange": [{
+				"type": "updateNonStackingStatBuff",
+				"buff": {
+					"type": "getLastCreatedNonStackingStatBuff"
 				},
 				"value": {
 					"type": "getAbilityDataAsFloat",
 					"dataField": "E"
 				}
-		}],
-		"onLevelChange": [{
-			"type": "updateNonStackingStatBuff",
-			"buff": {
-				"type": "getLastCreatedNonStackingStatBuff"
-			},
-			"value": {
-				"type": "getAbilityDataAsFloat",
-				"dataField": "E"
-			}
-		}],
+			}]
+		},
 		"onBeginCasting": [{
+				"type": "runReuseAction",
+				"name": {
+					"type": "rawString",
+					"value": "storeBaseType"
+				}
+			},{
 				"type": "createTemporarySpellEffectOnUnit",
 				"target": {
 					"type": "getCastingUnit"
@@ -907,8 +1235,15 @@
 					"type": "getCastingUnit"
 				},
 				"baseUnitId": {
-					"type": "getAbilityDataAsID",
-					"dataField": "A"
+					"type": "getStoredIDByKey",
+					"key": {
+						"type": "rawString",
+						"value": "baseType"
+					},
+					"instanceValue": {
+						"type": "rawBoolean",
+						"value": "false"
+					}
 				},
 				"alternateUnitId": {
 					"type": "getAbilityUnitId"
@@ -1001,13 +1336,153 @@
 					}
 				}],
 				"onUntransformActions": [{
-					"type": "runReuseAction",
-					"name": {
-						"type": "rawString",
-						"value": "onUnTransform"
-					}
+						"type": "runReuseAction",
+						"name": {
+							"type": "rawString",
+							"value": "onUnTransform"
+						}
+					},{
+						"type": "runReuseAction",
+						"name": {
+							"type": "rawString",
+							"value": "clearBaseType"
+						}
 				}]
 		}]
+	},{
+		"ids": [{"id":"ANrg", "castId": "robogoblin", "uncastId": "unrobogoblin"}],
+		"type": "INHERIT",
+		"parentId": "Arav",
+		"reuseActions": {
+			"setup": [{
+					"type": "createNonStackingStatBuff",
+					"buffType": {
+						"type": "getNonStackingStatBuffTypeFromString",
+						"id": {
+							"type": "rawString",
+							"value": "STR"
+						}
+					},
+					"stackingKey": {
+						"type": "getAllowStackingKey"
+					},
+					"value": {
+						"type": "getAbilityDataAsFloat",
+						"dataField": "E"
+					}
+				},{
+					"type": "storeValueLocally",
+					"key": {
+						"type": "rawString",
+						"value": "strbuff"
+					},
+					"valueToStore": {
+						"type": "getLastCreatedNonStackingStatBuff"
+					}
+				},{
+					"type": "createNonStackingStatBuff",
+					"buffType": {
+						"type": "getNonStackingStatBuffTypeFromString",
+						"id": {
+							"type": "rawString",
+							"value": "DEF"
+						}
+					},
+					"stackingKey": {
+						"type": "getAllowStackingKey"
+					},
+					"value": {
+						"type": "getAbilityDataAsFloat",
+						"dataField": "F"
+					}
+				},{
+					"type": "storeValueLocally",
+					"key": {
+						"type": "rawString",
+						"value": "defbuff"
+					},
+					"valueToStore": {
+						"type": "getLastCreatedNonStackingStatBuff"
+					}
+			}],
+			"onTransform": [{
+					"type": "addNonStackingStatBuff",
+					"targetUnit": {
+						"type": "getCastingUnit"
+					},
+					"buff": {
+						"type": "getStoredNonStackingStatBuffByKey",
+						"key": {
+							"type": "rawString",
+							"value": "strbuff"
+						}
+					}
+				},{
+					"type": "addNonStackingStatBuff",
+					"targetUnit": {
+						"type": "getCastingUnit"
+					},
+					"buff": {
+						"type": "getStoredNonStackingStatBuffByKey",
+						"key": {
+							"type": "rawString",
+							"value": "defbuff"
+						}
+					}
+			}],
+			"onUnTransform": [{
+					"type": "removeNonStackingStatBuff",
+					"targetUnit": {
+						"type": "getCastingUnit"
+					},
+					"buff": {
+						"type": "getStoredNonStackingStatBuffByKey",
+						"key": {
+							"type": "rawString",
+							"value": "strbuff"
+						}
+					}
+				},{
+					"type": "removeNonStackingStatBuff",
+					"targetUnit": {
+						"type": "getCastingUnit"
+					},
+					"buff": {
+						"type": "getStoredNonStackingStatBuffByKey",
+						"key": {
+							"type": "rawString",
+							"value": "defbuff"
+						}
+					}
+			}],
+			"onLevelChange": [{
+					"type": "updateNonStackingStatBuff",
+					"buff": {
+						"type": "getStoredNonStackingStatBuffByKey",
+						"key": {
+							"type": "rawString",
+							"value": "strbuff"
+						}
+					},
+					"value": {
+						"type": "getAbilityDataAsFloat",
+						"dataField": "E"
+					}
+				},{
+					"type": "updateNonStackingStatBuff",
+					"buff": {
+						"type": "getStoredNonStackingStatBuffByKey",
+						"key": {
+							"type": "rawString",
+							"value": "defbuff"
+						}
+					},
+					"value": {
+						"type": "getAbilityDataAsFloat",
+						"dataField": "F"
+					}
+			}]
+		}
 	},{
 		"ids": [{"id":"Acha"}],
 		"type": "HIDDEN",
@@ -1022,6 +1497,10 @@
 				"permanent": {
 					"type": "rawBoolean",
 					"value": "true"
+				},
+				"keepRatios": {
+					"type": "rawBoolean",
+					"value": "false"
 				}
 		}]
 	}]

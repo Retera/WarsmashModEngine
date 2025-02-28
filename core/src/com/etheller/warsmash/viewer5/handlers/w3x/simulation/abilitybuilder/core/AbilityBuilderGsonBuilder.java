@@ -26,6 +26,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.beha
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.action.unitqueue.*;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.action.unitstate.*;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.action.vision.*;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.ABCallbackNull;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.abilitycallbacks.*;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.booleancallbacks.*;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.buffcallbacks.*;
@@ -579,6 +580,7 @@ public abstract class AbilityBuilderGsonBuilder {
 		conditionTypeFactory.registerSubtype(ABConditionAnd.class, "and").registerSubtype(ABConditionOr.class, "or")
 				.registerSubtype(ABConditionNot.class, "not").registerSubtype(ABConditionBool.class, "bool")
 				.registerSubtype(ABConditionNotNull.class, "notNull")
+				.registerSubtype(ABConditionIsNull.class, "isNull")
 				
 				.registerSubtype(ABConditionFloatEqual.class, "f=")
 				.registerSubtype(ABConditionFloatEq0.class, "f=0")
@@ -616,6 +618,7 @@ public abstract class AbilityBuilderGsonBuilder {
 				.registerSubtype(ABConditionIsUnitEqual.class, "isUnitEqual")
 				.registerSubtype(ABConditionIsAttackTypeEqual.class, "isAttackTypeEqual")
 				.registerSubtype(ABConditionIsDamageTypeEqual.class, "isDamageTypeEqual")
+				.registerSubtype(ABConditionIsIdEqual.class, "isIdEqual")
 
 				.registerSubtype(ABConditionIsOnCooldown.class, "isOnCooldown")
 				.registerSubtype(ABConditionIsFlexAbilityTargeted.class, "isFlexAbilityTargeted")
@@ -626,6 +629,7 @@ public abstract class AbilityBuilderGsonBuilder {
 				.registerSubtype(ABConditionIsTransformingToAlternate.class, "isTransformingToAlternate")
 				
 
+				.registerSubtype(ABConditionIsUnitType.class, "isUnitType")
 				.registerSubtype(ABConditionDoesUnitHaveBuff.class, "doesUnitHaveBuff")
 				.registerSubtype(ABConditionIsUnitMaxHp.class, "isUnitMaxHp")
 				.registerSubtype(ABConditionIsUnitMaxMp.class, "isUnitMaxMp")
@@ -646,6 +650,8 @@ public abstract class AbilityBuilderGsonBuilder {
 				.registerSubtype(ABConditionGameplayConstantIsDefendCanDeflect.class, "gameplayConstantIsDefendCanDeflect")
 
 				.registerSubtype(ABConditionIsNewBehaviorCategoryInList.class, "isNewBehaviorCategoryInList")
+				
+				
 				;
 	}
 
@@ -755,6 +761,8 @@ public abstract class AbilityBuilderGsonBuilder {
 				.registerSubtype(ABActionResetCooldown.class, "resetCooldown")
 				.registerSubtype(ABActionActivateToggledAbility.class, "activateToggledAbility")
 				.registerSubtype(ABActionDeactivateToggledAbility.class, "deactivateToggledAbility")
+				.registerSubtype(ABActionEnableAbility.class, "enableAbility")
+				.registerSubtype(ABActionDisableAbility.class, "disableAbility")
 				.registerSubtype(ABActionBeginChanneling.class, "beginChanneling")
 				.registerSubtype(ABActionFinishChanneling.class, "finishChanneling")
 				.registerSubtype(ABActionSetAbilityCastRange.class, "setAbilityCastRange")
@@ -940,6 +948,7 @@ public abstract class AbilityBuilderGsonBuilder {
 		registerUnitQueueCallbacks(callbackTypeFactory);
 		registerVisionModifierCallbacks(callbackTypeFactory);
 		registerWidgetCallbacks(callbackTypeFactory);
+		callbackTypeFactory.registerSubtype(ABCallbackNull.class, "null");
 		gsonBuilder.registerTypeAdapterFactory(callbackTypeFactory);
 
 		final RuntimeTypeAdapterFactory<ABAbilityCallback> abilityCallbackTypeFactory = RuntimeTypeAdapterFactory

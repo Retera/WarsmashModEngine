@@ -425,7 +425,7 @@ public class CAbilityJass extends AbstractGenericAliasedAbility implements CExte
 	}
 
 	@Override
-	protected void onSetDisabled(final boolean disabled, final CAbilityDisableType type) {
+	protected void onSetDisabled(final boolean disabled, final boolean wasDisabled, final CAbilityDisableType type) {
 		final List<JassValue> arguments = new ArrayList<>();
 		final StructJassValue structValue = getStructValue();
 		arguments.add(structValue);

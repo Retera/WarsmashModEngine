@@ -19,12 +19,16 @@ public class ABActionIf implements ABAction {
 	public void runAction(final CSimulation game, final CUnit caster, final Map<String, Object> localStore,
 			final int castId) {
 		if (condition.callback(game, caster, localStore, castId)) {
-			for (ABAction periodicAction : thenActions) {
-				periodicAction.runAction(game, caster, localStore, castId);
+			if (this.thenActions != null) {
+				for (ABAction periodicAction : thenActions) {
+					periodicAction.runAction(game, caster, localStore, castId);
+				}
 			}
 		} else {
-			for (final ABAction periodicAction : this.elseActions) {
-				periodicAction.runAction(game, caster, localStore, castId);
+			if (this.elseActions != null) {
+				for (final ABAction periodicAction : this.elseActions) {
+					periodicAction.runAction(game, caster, localStore, castId);
+				}
 			}
 		}
 	}

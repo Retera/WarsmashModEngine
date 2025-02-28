@@ -64,4 +64,6 @@ public interface AbilityBuilderActiveAbility extends AbilityBuilderAbility, CAut
 
 	War3ID getOffTooltipOverride();
 
+	boolean isActive();
+
 }

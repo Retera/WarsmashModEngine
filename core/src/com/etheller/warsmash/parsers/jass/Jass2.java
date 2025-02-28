@@ -8813,14 +8813,14 @@ public class Jass2 {
 					(arguments, globalScope, triggerScope) -> {
 						final CUnit unit = nullable(arguments, 0, ObjectJassValueVisitor.getInstance());
 						final NonStackingStatBuff buff = arguments.get(1).visit(ObjectJassValueVisitor.getInstance());
-						unit.addNonStackingStatBuff(buff);
+						unit.addNonStackingStatBuff(simulation, buff);
 						return null;
 					});
 			jassProgramVisitor.getJassNativeManager().createNative("RemoveUnitNonStackingStatBonus",
 					(arguments, globalScope, triggerScope) -> {
 						final CUnit unit = nullable(arguments, 0, ObjectJassValueVisitor.getInstance());
 						final NonStackingStatBuff buff = arguments.get(1).visit(ObjectJassValueVisitor.getInstance());
-						unit.removeNonStackingStatBuff(buff);
+						unit.removeNonStackingStatBuff(simulation, buff);
 						return null;
 					});
 			jassProgramVisitor.getJassNativeManager().createNative("RecomputeStatBonusesOnUnit",
@@ -8828,7 +8828,11 @@ public class Jass2 {
 						final CUnit unit = nullable(arguments, 0, ObjectJassValueVisitor.getInstance());
 						final NonStackingStatBuffType whichBuffType = arguments.get(1)
 								.visit(ObjectJassValueVisitor.getInstance());
-						unit.computeDerivedFields(whichBuffType);
+						if (whichBuffType.isHeroStat()) {
+							unit.computeDerivedHeroFields(simulation, whichBuffType);
+						} else {
+							unit.computeDerivedFields(whichBuffType);
+						}
 						return null;
 					});
 			jassProgramVisitor.getJassNativeManager().createNative("UpdateNonStackingStatBonus",

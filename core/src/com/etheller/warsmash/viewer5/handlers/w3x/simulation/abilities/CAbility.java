@@ -42,6 +42,8 @@ public interface CAbility extends CAbilityView, CExtensibleHandle {
 
 	CBehavior beginNoTarget(CSimulation game, CUnit caster, int orderId);
 
+	void setHero(boolean isHero);
+
 	void setDisabled(boolean disabled, CAbilityDisableType type);
 
 	void setIconShowing(boolean iconShowing);

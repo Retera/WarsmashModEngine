@@ -3448,7 +3448,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 				}
 
 				final CAbilityHero heroData = simulationUnit.getHeroData();
-				final boolean hero = heroData != null;
+				final boolean hero = heroData != null && !heroData.isDisabled();
 				this.heroInfoPanel.setVisible(hero);
 				if (hero) {
 					final CPrimaryAttribute primaryAttribute = simulationUnit.getUnitType().getPrimaryAttribute();

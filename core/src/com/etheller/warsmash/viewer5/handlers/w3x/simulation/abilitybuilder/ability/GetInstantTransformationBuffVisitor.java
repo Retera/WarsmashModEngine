@@ -43,6 +43,7 @@ public class GetInstantTransformationBuffVisitor implements CAbilityVisitor<ABBu
 	private CSimulation game;
 	private Map<String, Object> localStore;
 	private CUnitType newType;
+	private boolean keepRatios;
 	private OnTransformationActions actions;
 	private War3ID buffId;
 	private boolean addAlternateTagAfter;
@@ -51,11 +52,12 @@ public class GetInstantTransformationBuffVisitor implements CAbilityVisitor<ABBu
 	private boolean permanent;
 
 	public GetInstantTransformationBuffVisitor reset(CSimulation game, Map<String, Object> localStore,
-			CUnitType newType, OnTransformationActions actions, War3ID buffId, boolean addAlternateTagAfter,
-			float transformationTime, float duration, boolean permanent) {
+			CUnitType newType, final boolean keepRatios, OnTransformationActions actions, War3ID buffId,
+			boolean addAlternateTagAfter, float transformationTime, float duration, boolean permanent) {
 		this.game = game;
 		this.localStore = localStore;
 		this.newType = newType;
+		this.keepRatios = keepRatios;
 		this.actions = actions;
 		this.buffId = buffId;
 		this.addAlternateTagAfter = addAlternateTagAfter;
@@ -81,8 +83,8 @@ public class GetInstantTransformationBuffVisitor implements CAbilityVisitor<ABBu
 	public ABBuff accept(GenericSingleIconPassiveAbility ability) {
 		if (ability instanceof AbilityBuilderPassiveAbility) {
 			return new ABTimedInstantTransformationBuff(game.getHandleIdAllocator().createId(), localStore, actions,
-					buffId == null ? ability.getAlias() : buffId, duration, (AbilityBuilderPassiveAbility)ability, newType, !addAlternateTagAfter,
-					permanent, transformationTime);
+					buffId == null ? ability.getAlias() : buffId, duration, (AbilityBuilderPassiveAbility) ability,
+					newType, keepRatios, !addAlternateTagAfter, permanent, transformationTime);
 		}
 		return null;
 	}
@@ -91,8 +93,8 @@ public class GetInstantTransformationBuffVisitor implements CAbilityVisitor<ABBu
 	public ABBuff accept(final GenericNoIconAbility ability) {
 		if (ability instanceof AbilityBuilderPassiveAbility) {
 			return new ABTimedInstantTransformationBuff(game.getHandleIdAllocator().createId(), localStore, actions,
-					buffId == null ? ability.getAlias() : buffId, duration, (AbilityBuilderPassiveAbility)ability, newType, !addAlternateTagAfter,
-					permanent, transformationTime);
+					buffId == null ? ability.getAlias() : buffId, duration, (AbilityBuilderPassiveAbility) ability,
+					newType, keepRatios, !addAlternateTagAfter, permanent, transformationTime);
 		}
 		return null;
 	}

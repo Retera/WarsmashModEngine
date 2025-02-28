@@ -21,6 +21,8 @@ public class ABActionTransformedUnitAbilityRemove implements ABAction {
 	private ABIDCallback baseUnitId;
 	private ABIDCallback alternateUnitId;
 
+	private ABBooleanCallback keepRatios;
+
 	private ABBooleanCallback permanent;
 
 	private List<ABAction> onUntransformActions;
@@ -51,7 +53,10 @@ public class ABActionTransformedUnitAbilityRemove implements ABAction {
 				return;
 			}
 
-
+			boolean isKeepRatios = true;
+			if (keepRatios != null) {
+				isKeepRatios = keepRatios.callback(game, caster, localStore, castId);
+			}
 			CUnitType baseType = game.getUnitData().getUnitType(baseId);
 
 			if (onUntransformActions != null) {
@@ -59,7 +64,7 @@ public class ABActionTransformedUnitAbilityRemove implements ABAction {
 					action.runAction(game, u1, localStore, castId);
 				}
 			}
-			TransformationHandler.setUnitID(game, localStore, u1, baseType, perm, null, abil, true);
+			TransformationHandler.setUnitID(game, localStore, u1, baseType, isKeepRatios, perm, null, abil, true);
 		}
 	}
 

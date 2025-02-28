@@ -136,7 +136,7 @@ public class CAbilityAbilityBuilderActiveToggle extends CAbilityAbilityBuilderGe
 		this.startCooldown(game, caster);
 		if (this.manaDrainedPerSecond > 0) {
 			this.timer.start(game);
-			caster.addNonStackingStatBuff(manaDrain);
+			caster.addNonStackingStatBuff(game, manaDrain);
 		}
 		if (config.getOnBeginCasting() != null) {
 			for (ABAction action : config.getOnBeginCasting()) {
@@ -150,7 +150,7 @@ public class CAbilityAbilityBuilderActiveToggle extends CAbilityAbilityBuilderGe
 		this.active = false;
 		if (this.manaDrainedPerSecond > 0) {
 			timer.pause(game);
-			caster.removeNonStackingStatBuff(manaDrain);
+			caster.removeNonStackingStatBuff(game, manaDrain);
 		}
 		if (config.getOnEndCasting() != null) {
 			for (ABAction action : config.getOnEndCasting()) {

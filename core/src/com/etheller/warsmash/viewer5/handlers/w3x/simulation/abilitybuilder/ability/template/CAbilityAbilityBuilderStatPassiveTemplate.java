@@ -47,10 +47,10 @@ public class CAbilityAbilityBuilderStatPassiveTemplate extends AbilityGenericSin
 		}
 	}
 
-	private void removeExistingBuffs(StatBuffFromDataField statBuff) {
-		this.caster.removeNonStackingStatBuff(statBuff.getBuff());
+	private void removeExistingBuffs(CSimulation game, StatBuffFromDataField statBuff) {
+		this.caster.removeNonStackingStatBuff(game, statBuff.getBuff());
 		if (statBuff.getSecondAtkBuff() != null) {
-			this.caster.removeNonStackingStatBuff(statBuff.getSecondAtkBuff());
+			this.caster.removeNonStackingStatBuff(game, statBuff.getSecondAtkBuff());
 		}
 	}
 
@@ -105,10 +105,10 @@ public class CAbilityAbilityBuilderStatPassiveTemplate extends AbilityGenericSin
 			switch (type) {
 			case ALLATK:
 				if (statBuff.getSecondAtkBuff() == null) {
-					removeExistingBuffs(statBuff);
+					removeExistingBuffs(game, statBuff);
 					createNewBuffs(statBuff);
 				} else if (statBuff.getBuff().getBuffType() != NonStackingStatBuffType.MELEEATK) {
-					removeExistingBuffs(statBuff);
+					removeExistingBuffs(game, statBuff);
 					createNewBuffs(statBuff);
 				} else {
 					statBuff.getBuff().setValue(Float.parseFloat(
@@ -117,10 +117,10 @@ public class CAbilityAbilityBuilderStatPassiveTemplate extends AbilityGenericSin
 				break;
 			case ALLATKPCT:
 				if (statBuff.getSecondAtkBuff() == null) {
-					removeExistingBuffs(statBuff);
+					removeExistingBuffs(game, statBuff);
 					createNewBuffs(statBuff);
 				} else if (statBuff.getBuff().getBuffType() != NonStackingStatBuffType.MELEEATKPCT) {
-					removeExistingBuffs(statBuff);
+					removeExistingBuffs(game, statBuff);
 					createNewBuffs(statBuff);
 				} else {
 					statBuff.getBuff().setValue(Float.parseFloat(
@@ -129,17 +129,21 @@ public class CAbilityAbilityBuilderStatPassiveTemplate extends AbilityGenericSin
 				break;
 			default:
 				if (statBuff.getSecondAtkBuff() != null) {
-					removeExistingBuffs(statBuff);
+					removeExistingBuffs(game, statBuff);
 					createNewBuffs(statBuff);
 				} else if (type != statBuff.getBuff().getBuffType()) {
-					removeExistingBuffs(statBuff);
+					removeExistingBuffs(game, statBuff);
 					createNewBuffs(statBuff);
 				} else {
 					statBuff.getBuff().setValue(Float.parseFloat(
 							levelData.get(getLevel() - 1).getData().get(statBuff.getDataField().getIndex())));
 				}
 			}
-			caster.computeDerivedFields(statBuff.getBuff().getBuffType());
+			if (statBuff.getBuff().getBuffType().isHeroStat()) {
+				caster.computeDerivedHeroFields(game, statBuff.getBuff().getBuffType());
+			} else {
+				caster.computeDerivedFields(statBuff.getBuff().getBuffType());
+			}
 		}
 		if (this.buff != null) {
 			this.buff.setLevel(game, unit, level);
@@ -157,7 +161,7 @@ public class CAbilityAbilityBuilderStatPassiveTemplate extends AbilityGenericSin
 		game.getAbilityData().createAbility(getAlias(), game.getHandleIdAllocator().createId());
 
 		for (StatBuffFromDataField statBuff : this.statBuffDataFields) {
-			unit.addNonStackingStatBuff(statBuff.getBuff());
+			unit.addNonStackingStatBuff(game, statBuff.getBuff());
 		}
 	}
 
@@ -175,7 +179,7 @@ public class CAbilityAbilityBuilderStatPassiveTemplate extends AbilityGenericSin
 			unit.removeNonStackingDisplayBuff(game, auraStackingKey, buff);
 		}
 		for (StatBuffFromDataField statBuff : this.statBuffDataFields) {
-			unit.removeNonStackingStatBuff(statBuff.getBuff());
+			unit.removeNonStackingStatBuff(game, statBuff.getBuff());
 		}
 	}
 

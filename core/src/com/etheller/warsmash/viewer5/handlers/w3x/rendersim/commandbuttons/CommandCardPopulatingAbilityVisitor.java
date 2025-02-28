@@ -679,7 +679,7 @@ public class CommandCardPopulatingAbilityVisitor implements CAbilityVisitor<Void
 			if (this.multiSelect) {
 				return null;
 			}
-			if (this.menuBaseOrderId == 0) {
+			if (this.menuBaseOrderId == 0 && ability.isIconShowing()) {
 				final int skillPoints = ability.getSkillPoints();
 				addCommandButton(ability, this.abilityDataUI.getSelectSkillUI(), ability.getHandleId(),
 						OrderIds.skillmenu, 0, false, true, 0, 0, 0, 0, skillPoints != 0 ? skillPoints : -1);

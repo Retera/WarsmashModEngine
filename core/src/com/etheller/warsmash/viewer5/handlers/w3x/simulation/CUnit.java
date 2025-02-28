@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
@@ -120,6 +121,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.JassGameEve
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CDamageType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CEffectType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CFogState;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.unit.CUnitAppliedUpgrade;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.unit.CUnitBehaviorChangeListener;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.unit.CUnitTypeJass;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.unit.CWidgetEvent;
@@ -128,6 +130,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.unit.NonStackingSta
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.unit.NonStackingStatBuffType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.unit.StateModBuff;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.unit.StateModBuffType;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.upgrade.CUpgradeEffect;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetCheckReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.BooleanAbilityActivationReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.BooleanAbilityTargetCheckReceiver;
@@ -186,6 +189,7 @@ public class CUnit extends CWidget {
 
 	private final List<CAbility> abilities = new ArrayList<>();
 	private final List<CAbility> disabledAbilities = new ArrayList<>();
+	private final Set<CUnitAppliedUpgrade> appliedUpgrades = new HashSet<>();
 	private final List<Trigger> onTickTriggers = new ArrayList<>();
 
 	private CBehavior currentBehavior;
@@ -411,7 +415,7 @@ public class CUnit extends CWidget {
 		return this.invisLevels;
 	}
 
-	public void addNonStackingStatBuff(final NonStackingStatBuff buff) {
+	public void addNonStackingStatBuff(final CSimulation game, final NonStackingStatBuff buff) {
 		if (buff.getBuffType() == NonStackingStatBuffType.ALLATK) {
 			Map<String, List<NonStackingStatBuff>> buffKeyMap = this.nonStackingBuffs
 					.get(NonStackingStatBuffType.MELEEATK);
@@ -475,10 +479,14 @@ public class CUnit extends CWidget {
 			}
 			theList.add(buff);
 		}
-		computeDerivedFields(buff.getBuffType());
+		if (buff.getBuffType().isHeroStat()) {
+			computeDerivedHeroFields(game, buff.getBuffType());
+		} else {
+			computeDerivedFields(buff.getBuffType());
+		}
 	}
 
-	public void removeNonStackingStatBuff(final NonStackingStatBuff buff) {
+	public void removeNonStackingStatBuff(final CSimulation game, final NonStackingStatBuff buff) {
 		if (buff.getBuffType() == NonStackingStatBuffType.ALLATK) {
 			Map<String, List<NonStackingStatBuff>> buffKeyMap = this.nonStackingBuffs
 					.get(NonStackingStatBuffType.MELEEATK);
@@ -527,7 +535,11 @@ public class CUnit extends CWidget {
 				System.err.println("From: " + getTypeId().asStringValue());
 			}
 		}
-		computeDerivedFields(buff.getBuffType());
+		if (buff.getBuffType().isHeroStat()) {
+			computeDerivedHeroFields(game, buff.getBuffType());
+		} else {
+			computeDerivedFields(buff.getBuffType());
+		}
 	}
 
 	public void addStateModBuff(final StateModBuff listener) {
@@ -1350,8 +1362,158 @@ public class CUnit extends CWidget {
 				this.mana = Math.min(this.mana, this.maximumMana);
 			}
 			break;
+		case STR:
+		case STRPCT:
+		case AGI:
+		case AGIPCT:
+		case INT:
+		case INTPCT:
+			throw new RuntimeException("Cannot run method with hero stat type");
 		default:
 			break;
+		}
+	}
+
+	public void computeDerivedHeroFields(final CSimulation game, final NonStackingStatBuffType type) {
+		Map<String, List<NonStackingStatBuff>> buffKeyMap;
+		switch (type) {
+		case STRPCT:
+		case STR:
+			if (this.isHero()) {
+				float totalStrBuff = 0;
+				buffKeyMap = this.nonStackingBuffs.get(NonStackingStatBuffType.STR);
+				for (final String key : buffKeyMap.keySet()) {
+					Float buffForKey = null;
+					for (final NonStackingStatBuff buff : buffKeyMap.get(key)) {
+						if (buffForKey == null) {
+							buffForKey = buff.getValue();
+						} else {
+							if (key.equals(NonStackingStatBuff.ALLOW_STACKING_KEY)) {
+								buffForKey += buff.getValue();
+							} else {
+								buffForKey = Math.max(buffForKey, buff.getValue());
+							}
+						}
+					}
+					if (buffForKey == null) {
+						continue;
+					}
+					totalStrBuff += buffForKey;
+				}
+				buffKeyMap = this.nonStackingBuffs.get(NonStackingStatBuffType.STRPCT);
+				for (final String key : buffKeyMap.keySet()) {
+					Float buffForKey = null;
+					for (final NonStackingStatBuff buff : buffKeyMap.get(key)) {
+						if (buffForKey == null) {
+							buffForKey = buff.getValue();
+						} else {
+							if (key.equals(NonStackingStatBuff.ALLOW_STACKING_KEY)) {
+								buffForKey += buff.getValue();
+							} else {
+								buffForKey = Math.max(buffForKey, buff.getValue());
+							}
+						}
+					}
+					if (buffForKey == null) {
+						continue;
+					}
+					totalStrBuff += buffForKey * this.getHeroData().getStrength().getCurrentBase();
+				}
+				this.getHeroData().setStrengthBuffBonus(game, this, Math.round(totalStrBuff));
+			}
+			break;
+		case AGIPCT:
+		case AGI:
+			if (this.isHero()) {
+				float totalAgiBuff = 0;
+				buffKeyMap = this.nonStackingBuffs.get(NonStackingStatBuffType.AGI);
+				for (final String key : buffKeyMap.keySet()) {
+					Float buffForKey = null;
+					for (final NonStackingStatBuff buff : buffKeyMap.get(key)) {
+						if (buffForKey == null) {
+							buffForKey = buff.getValue();
+						} else {
+							if (key.equals(NonStackingStatBuff.ALLOW_STACKING_KEY)) {
+								buffForKey += buff.getValue();
+							} else {
+								buffForKey = Math.max(buffForKey, buff.getValue());
+							}
+						}
+					}
+					if (buffForKey == null) {
+						continue;
+					}
+					totalAgiBuff += buffForKey;
+				}
+				buffKeyMap = this.nonStackingBuffs.get(NonStackingStatBuffType.AGIPCT);
+				for (final String key : buffKeyMap.keySet()) {
+					Float buffForKey = null;
+					for (final NonStackingStatBuff buff : buffKeyMap.get(key)) {
+						if (buffForKey == null) {
+							buffForKey = buff.getValue();
+						} else {
+							if (key.equals(NonStackingStatBuff.ALLOW_STACKING_KEY)) {
+								buffForKey += buff.getValue();
+							} else {
+								buffForKey = Math.max(buffForKey, buff.getValue());
+							}
+						}
+					}
+					if (buffForKey == null) {
+						continue;
+					}
+					totalAgiBuff += buffForKey * this.getHeroData().getAgility().getCurrentBase();
+				}
+				this.getHeroData().setAgilityBuffBonus(game, this, Math.round(totalAgiBuff));
+			}
+			break;
+		case INTPCT:
+		case INT:
+			if (this.isHero()) {
+				float totalIntBuff = 0;
+				buffKeyMap = this.nonStackingBuffs.get(NonStackingStatBuffType.INT);
+				for (final String key : buffKeyMap.keySet()) {
+					Float buffForKey = null;
+					for (final NonStackingStatBuff buff : buffKeyMap.get(key)) {
+						if (buffForKey == null) {
+							buffForKey = buff.getValue();
+						} else {
+							if (key.equals(NonStackingStatBuff.ALLOW_STACKING_KEY)) {
+								buffForKey += buff.getValue();
+							} else {
+								buffForKey = Math.max(buffForKey, buff.getValue());
+							}
+						}
+					}
+					if (buffForKey == null) {
+						continue;
+					}
+					totalIntBuff += buffForKey;
+				}
+				buffKeyMap = this.nonStackingBuffs.get(NonStackingStatBuffType.INTPCT);
+				for (final String key : buffKeyMap.keySet()) {
+					Float buffForKey = null;
+					for (final NonStackingStatBuff buff : buffKeyMap.get(key)) {
+						if (buffForKey == null) {
+							buffForKey = buff.getValue();
+						} else {
+							if (key.equals(NonStackingStatBuff.ALLOW_STACKING_KEY)) {
+								buffForKey += buff.getValue();
+							} else {
+								buffForKey = Math.max(buffForKey, buff.getValue());
+							}
+						}
+					}
+					if (buffForKey == null) {
+						continue;
+					}
+					totalIntBuff += buffForKey * this.getHeroData().getIntelligence().getCurrentBase();
+				}
+				this.getHeroData().setIntelligenceBuffBonus(game, this, Math.round(totalIntBuff));
+			}
+			break;
+		default:
+			throw new RuntimeException("Cannot run method with non-hero stat type");
 		}
 	}
 
@@ -1450,6 +1612,12 @@ public class CUnit extends CWidget {
 		this.nonStackingBuffs.put(NonStackingStatBuffType.MAXHPPCT, new HashMap<>(1));
 		this.nonStackingBuffs.put(NonStackingStatBuffType.MAXMP, new HashMap<>(1));
 		this.nonStackingBuffs.put(NonStackingStatBuffType.MAXMPPCT, new HashMap<>(1));
+		this.nonStackingBuffs.put(NonStackingStatBuffType.STR, new HashMap<>(1));
+		this.nonStackingBuffs.put(NonStackingStatBuffType.STRPCT, new HashMap<>(1));
+		this.nonStackingBuffs.put(NonStackingStatBuffType.AGI, new HashMap<>(1));
+		this.nonStackingBuffs.put(NonStackingStatBuffType.AGIPCT, new HashMap<>(1));
+		this.nonStackingBuffs.put(NonStackingStatBuffType.INT, new HashMap<>(1));
+		this.nonStackingBuffs.put(NonStackingStatBuffType.INTPCT, new HashMap<>(1));
 	}
 
 	private void initializeListenerLists() {
@@ -1689,25 +1857,29 @@ public class CUnit extends CWidget {
 		return this.maximumLife;
 	}
 
-	public void setTypeId(final CSimulation game, final War3ID typeId) {
-		setTypeId(game, typeId, true);
+	public void setTypeId(final CSimulation game, final War3ID typeId, final boolean keepRatios) {
+		setTypeId(game, typeId, keepRatios, true);
 	}
 
-	public void setTypeId(final CSimulation game, final War3ID typeId, final boolean updateArt) {
+	public void setTypeId(final CSimulation game, final War3ID typeId, final boolean keepRatios, final boolean updateArt) {
 		game.getWorldCollision().removeUnit(this);
 		final CPlayer player = game.getPlayer(this.playerIndex);
 		player.removeTechtreeUnlocked(game, this.typeId);
+		game.getUnitData().unapplyPlayerUpgradesToUnit(game, playerIndex, unitType, this);
 		this.typeId = typeId;
 		player.addTechtreeUnlocked(game, this.typeId);
 		final float lifeRatio = this.maximumLife == 0 ? 1 : this.life / this.maximumLife;
 		final float manaRatio = this.maximumMana == 0 ? Float.NaN : this.mana / this.maximumMana;
 		final CUnitType previousUnitType = getUnitType();
 		this.unitType = game.getUnitData().getUnitType(typeId);
-		this.maximumMana = this.unitType.getManaMaximum();
-		this.maximumLife = this.unitType.getMaxLife();
-		this.life = lifeRatio * this.maximumLife;
+		this.baseMaximumMana += this.unitType.getManaMaximum() - previousUnitType.getManaMaximum();
+		this.baseMaximumLife += this.unitType.getMaxLife() - previousUnitType.getMaxLife();
+		this.maximumMana += this.unitType.getManaMaximum() - previousUnitType.getManaMaximum();
+		this.maximumLife += this.unitType.getMaxLife() - previousUnitType.getMaxLife();
 		this.lifeRegen = this.unitType.getLifeRegen();
 		this.manaRegen = this.unitType.getManaRegen();
+		computeAllDerivedFields();
+		
 		if (updateArt) {
 			this.flyHeight = this.unitType.getDefaultFlyingHeight();
 		}
@@ -1724,15 +1896,16 @@ public class CUnit extends CWidget {
 		this.raisable = this.unitType.isRaise();
 		this.decays = this.unitType.isDecay();
 		final List<War3ID> sharedAbilities = new ArrayList<War3ID>(previousUnitType.getAbilityList());
-		sharedAbilities.addAll(previousUnitType.getHeroAbilityList());
+		//sharedAbilities.addAll(previousUnitType.getHeroAbilityList());
 		final List<War3ID> newIds = new ArrayList<War3ID>(this.unitType.getAbilityList());
-		newIds.addAll(this.unitType.getHeroAbilityList());
+		//newIds.addAll(this.unitType.getHeroAbilityList());
 		sharedAbilities.retainAll(newIds); // TODO Seems wasteful, but need to avoid messing up heros on transform
 		final List<CAbility> persistedAbilities = new ArrayList<>();
 		final List<CAbility> removedAbilities = new ArrayList<>();
 		final List<CAbility> startingAbilities = new ArrayList<>(this.abilities);
 		for (final CAbility ability : startingAbilities) {
 			if (!ability.isPermanent() && !sharedAbilities.contains(ability.getAlias())
+					&& (!ability.isHero() || !this.unitType.isHero())
 					&& !(ability.getAbilityCategory() == CAbilityCategory.BUFF)) {
 				ability.onRemove(game, this);
 				game.onAbilityRemovedFromUnit(this, ability);
@@ -1761,18 +1934,29 @@ public class CUnit extends CWidget {
 				this.abilities.add(persisted);
 			}
 		}
-		if (Float.isNaN(manaRatio)) {
-			this.mana = this.unitType.getManaInitial();
-		} else {
-			this.mana = manaRatio * this.maximumMana;
-		}
 		game.getWorldCollision().addUnit(this);
 		for (final CAbility ability : persistedAbilities) {
 			ability.onSetUnitType(game, this);
 			game.onAbilityAddedToUnit(this, ability);
 		}
+		game.getUnitData().applyPlayerUpgradesToUnit(game, playerIndex, unitType, this);
 		computeAllDerivedFields();
 		computeAllUnitStates(game);
+		if (keepRatios) {
+			this.life = lifeRatio * this.maximumLife;
+			if (Float.isNaN(manaRatio)) {
+				this.mana = this.unitType.getManaInitial();
+			} else {
+				this.mana = manaRatio * this.maximumMana;
+			}
+		} else {
+			this.life += this.unitType.getMaxLife() - previousUnitType.getMaxLife();
+			if (Float.isNaN(manaRatio)) {
+				this.mana = this.unitType.getManaInitial();
+			} else {
+				this.mana += this.unitType.getManaMaximum() - previousUnitType.getManaMaximum();
+			}
+		}
 	}
 
 	public void setFacing(final float facing) {
@@ -1933,7 +2117,7 @@ public class CUnit extends CWidget {
 							if (this.unitType.getFoodMade() != 0) {
 								player.setFoodCap(player.getFoodCap() - this.unitType.getFoodMade());
 							}
-							setTypeId(game, this.upgradeIdType);
+							setTypeId(game, this.upgradeIdType, true);
 							this.upgradeIdType = null;
 						}
 						if (this.unitType.getFoodMade() != 0) {
@@ -4758,6 +4942,55 @@ public class CUnit extends CWidget {
 		}
 		return false;
 	}
+	
+	public Set<CUnitAppliedUpgrade> getAppliedUpgrades() {
+		return this.appliedUpgrades;
+	}
+	
+	public int getLevelOfAppliedUpgrade(War3ID id) {
+		CUnitAppliedUpgrade upgrade = getAppliedUpgrade(id);
+		if (upgrade != null) {
+			return upgrade.getLevel();
+		}
+		return 0;
+	}
+	
+	private CUnitAppliedUpgrade getAppliedUpgrade(War3ID id) {
+		for (CUnitAppliedUpgrade upgrade : this.appliedUpgrades) {
+			if (upgrade.getType().getTypeId().equals(id)) {
+				return upgrade;
+			}
+		}
+		return null;
+	}
+	
+	public void applyUpgrade(CSimulation simulation, CUpgradeType upgradeType, int level) {
+		CUnitAppliedUpgrade upgrade = getAppliedUpgrade(upgradeType.getTypeId());
+		if (upgrade != null) {
+			if (upgrade.getLevel() == level) {
+				return;
+			}
+			unapplyUpgrade(simulation, upgradeType, upgrade);
+		}
+		for (CUpgradeEffect upgradeEffect : upgradeType.getUpgradeEffects()) {
+			upgradeEffect.apply(simulation, this, level);
+		}
+		this.appliedUpgrades.add(new CUnitAppliedUpgrade(upgradeType, level));
+	}
+	
+	public void unapplyUpgrade(CSimulation simulation, CUpgradeType upgradeType) {
+		CUnitAppliedUpgrade upgrade = getAppliedUpgrade(upgradeType.getTypeId());
+		unapplyUpgrade(simulation, upgradeType, upgrade);
+	}
+	
+	public void unapplyUpgrade(CSimulation simulation, CUpgradeType upgradeType, CUnitAppliedUpgrade upgrade) {
+		if (upgrade != null) {
+			for (CUpgradeEffect upgradeEffect : upgradeType.getUpgradeEffects()) {
+				upgradeEffect.unapply(simulation, this, upgrade.getLevel());
+			}
+		}
+		this.appliedUpgrades.remove(upgrade);
+	}
 
 	public int getTriggerEditorCustomValue() {
 		return this.triggerEditorCustomValue;
@@ -5002,7 +5235,8 @@ public class CUnit extends CWidget {
 	}
 
 	public boolean isHero() {
-		return getHeroData() != null; // in future maybe do this with better performance
+		CAbility hdata = getHeroData();
+		return hdata != null && !hdata.isDisabled(); // in future maybe do this with better performance
 	}
 
 	public boolean isUnitAlly(final CPlayer whichPlayer) {

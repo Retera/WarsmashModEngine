@@ -16,7 +16,7 @@ public class ABConditionIsToggleAbilityActive extends ABCondition {
 	public Boolean callback(CSimulation game, CUnit caster, Map<String, Object> localStore, final int castId) {
 		AbilityBuilderActiveAbility ability = (AbilityBuilderActiveAbility) localStore.get(ABLocalStoreKeys.ABILITY);
 
-		return ability.isToggleOn();
+		return ability.isActive();
 	}
 
 	@Override

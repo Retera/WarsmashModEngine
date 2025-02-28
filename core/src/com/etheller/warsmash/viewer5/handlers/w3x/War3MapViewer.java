@@ -944,7 +944,6 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 			throws IOException {
 		final War3Map mpq = this.mapMpq;
 		this.unitsReady = false;
-
 		this.renderUnitTypeData = new RenderUnitTypeData(modifications.getUnits(), mpq, this, this.unitAckSoundsTable,
 				this.terrain.uberSplatTable);
 		this.renderItemTypeData = new RenderItemTypeData(modifications.getItems(), mpq, this, this.miscData);
@@ -962,15 +961,12 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 				final int customTeamColor = unit.getCustomTeamColor();
 				final float unitAngle = unit.getAngle();
 				final int editorConfigHitPointPercent = unit.getHitpoints();
+				final int editorConfigManaAmount = unit.getMana();
 
 				final CWidget widgetCreated = createNewUnit(modifications, unitId, unitX, unitY, playerIndex,
-						customTeamColor, unitAngle);
+						customTeamColor, unitAngle, editorConfigHitPointPercent, editorConfigManaAmount);
 				if (widgetCreated instanceof CUnit) {
 					final CUnit unitCreated = (CUnit) widgetCreated;
-					if (editorConfigHitPointPercent > 0) {
-						unitCreated.setLife(this.simulation,
-								unitCreated.getMaximumLife() * (editorConfigHitPointPercent / 100f));
-					}
 					if (unit.getGoldAmount() != 0) {
 						unitCreated.setGold(unit.getGoldAmount());
 					}
@@ -987,6 +983,11 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 
 	private CWidget createNewUnit(final Warcraft3MapRuntimeObjectData modifications, final War3ID unitId, float unitX,
 			float unitY, final int playerIndex, int customTeamColor, final float unitAngle) {
+		return createNewUnit(modifications, unitId, unitAngle, unitAngle, customTeamColor, customTeamColor, unitAngle, -1, -1);
+	}
+
+	private CWidget createNewUnit(final Warcraft3MapRuntimeObjectData modifications, final War3ID unitId, float unitX,
+			float unitY, final int playerIndex, int customTeamColor, final float unitAngle, int editorConfigHitPointPercent, int editorConfigManaAmount) {
 		Splat buildingUberSplat = null;
 		SplatMover buildingUberSplatDynamicIngame = null;
 		BufferedImage buildingPathingPixelMap = null;
@@ -1024,7 +1025,7 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 
 				final float angle = (float) Math.toDegrees(unitAngle);
 				final CUnit simulationUnit = this.simulation.internalCreateUnit(unitId, playerIndex, unitX, unitY,
-						angle, buildingPathingPixelMap);
+						angle, buildingPathingPixelMap, editorConfigHitPointPercent, editorConfigManaAmount);
 				unitX = simulationUnit.getX();
 				unitY = simulationUnit.getY();
 				if (!renderUnitType.isAllowCustomTeamColor() || (customTeamColor == -1)) {

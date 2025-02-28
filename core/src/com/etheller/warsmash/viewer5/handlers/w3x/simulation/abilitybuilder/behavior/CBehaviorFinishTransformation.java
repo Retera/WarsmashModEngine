@@ -22,6 +22,7 @@ public class CBehaviorFinishTransformation implements CBehavior {
 	private AbilityBuilderActiveAbility ability;
 	private CUnitType baseTypeForDuration;
 	private CUnitType newType;
+	private boolean keepRatios;
 	private int visibleOrderId;
 	private boolean permanent;
 	private float duration;
@@ -45,9 +46,9 @@ public class CBehaviorFinishTransformation implements CBehavior {
 	private int castStartTick = 0;
 
 	public CBehaviorFinishTransformation(Map<String, Object> localStore, final CUnit unit,
-			AbilityBuilderActiveAbility ability, CUnitType newType, OnTransformationActions actions,
-			boolean addAlternateTagAfter, final int visibleOrderId, boolean permanent, float duration,
-			float transformationTime, float landingDelay, float altitudeAdjustmentDelay,
+			AbilityBuilderActiveAbility ability, CUnitType newType, final boolean keepRatios,
+			OnTransformationActions actions, boolean addAlternateTagAfter, final int visibleOrderId, boolean permanent,
+			float duration, float transformationTime, float landingDelay, float altitudeAdjustmentDelay,
 			float altitudeAdjustmentDuration, boolean immediateLanding, boolean immediateTakeoff, War3ID buffId,
 			CUnitType baseTypeForDuration, boolean instantTransformAtDurationEnd) {
 		this.localStore = localStore;
@@ -55,6 +56,7 @@ public class CBehaviorFinishTransformation implements CBehavior {
 		this.unit = unit;
 		this.ability = ability;
 		this.newType = newType;
+		this.keepRatios = keepRatios;
 		this.visibleOrderId = visibleOrderId;
 		this.permanent = permanent;
 		this.duration = duration;
@@ -87,26 +89,25 @@ public class CBehaviorFinishTransformation implements CBehavior {
 	public CBehavior update(CSimulation game) {
 		if (this.castStartTick == 0) {
 			this.castStartTick = game.getGameTurnTick();
-			TransformationHandler.startSlowTransformation(game, localStore, unit, newType, actions, ability,
+			TransformationHandler.startSlowTransformation(game, localStore, unit, newType, keepRatios, actions, ability,
 					addAlternateTagAfter, takingOff, landing, immediateTakeoff, immediateLanding,
 					altitudeAdjustmentDelay, landingDelay, altitudeAdjustmentDuration);
 		}
 
 		final int ticksSinceCast = game.getGameTurnTick() - this.castStartTick;
 		if (ticksSinceCast > this.transformationTickDuration) {
-			TransformationHandler.finishSlowTransformation(game, localStore, unit, newType, actions, ability,
-					addAlternateTagAfter, permanent, takingOff);
+			TransformationHandler.finishSlowTransformation(game, localStore, unit, newType, keepRatios, actions,
+					ability, addAlternateTagAfter, permanent, takingOff);
 
 			if (instantTransformAtDurationEnd) {
 				TransformationHandler.createInstantTransformBackBuff(game, localStore, unit, baseTypeForDuration,
-						actions.createUntransformActions(), ability, buffId,
-						addAlternateTagAfter, transformationTime, duration, permanent);
+						keepRatios, actions.createUntransformActions(), ability, buffId, addAlternateTagAfter,
+						transformationTime, duration, permanent);
 			} else {
 				TransformationHandler.createSlowTransformBackBuff(game, localStore, unit, baseTypeForDuration,
-						actions.createUntransformActions(), ability, buffId,
-						addAlternateTagAfter, transformationTime, duration, permanent, takingOff, landing,
-						immediateTakeoff, immediateLanding, altitudeAdjustmentDelay, landingDelay,
-						altitudeAdjustmentDuration);
+						keepRatios, actions.createUntransformActions(), ability, buffId, addAlternateTagAfter,
+						transformationTime, duration, permanent, takingOff, landing, immediateTakeoff, immediateLanding,
+						altitudeAdjustmentDelay, landingDelay, altitudeAdjustmentDuration);
 			}
 
 			return this.unit.pollNextOrderBehavior(game);

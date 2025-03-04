@@ -37,14 +37,14 @@ public interface AbilityBuilderActiveAbility extends AbilityBuilderAbility, CAut
 	
 	public void deactivate(final CSimulation game, final CUnit caster);
 	
-	public void checkCanTarget(final CSimulation game, final CUnit unit, final int orderId, final CWidget target,
-			final AbilityTargetCheckReceiver<CWidget> receiver);
+	public void checkCanTarget(final CSimulation game, final CUnit unit, final int orderId, boolean autoOrder,
+			final CWidget target, final AbilityTargetCheckReceiver<CWidget> receiver);
 
 	public void checkCanTarget(final CSimulation game, final CUnit unit, final int orderId,
-			final AbilityPointTarget target, final AbilityTargetCheckReceiver<AbilityPointTarget> receiver);
+			boolean autoOrder, final AbilityPointTarget target, final AbilityTargetCheckReceiver<AbilityPointTarget> receiver);
 
 	public void checkCanTargetNoTarget(final CSimulation game, final CUnit unit, final int orderId,
-			final AbilityTargetCheckReceiver<Void> receiver);
+			boolean autoOrder, final AbilityTargetCheckReceiver<Void> receiver);
 
 	public void runOnOrderIssuedActions(CSimulation game, CUnit caster, int orderId);
 

@@ -311,6 +311,57 @@
 				}
 			}]
 		},
+		"extraCastConditions": [{
+			"type": "setCantUseReasonOnFailure",
+			"condition": {
+				"type": "isLocationPathableForUnitType",
+				"location": {
+					"type": "getUnitLocation",
+					"unit": {
+						"type": "getCastingUnit"
+					}
+				},
+				"unitType": {
+					"type": "getNonCurrentTransformType",
+					"baseUnitId": {
+						"type": "inlineConditionID",
+						"condition": {
+							"type": "isNull",
+							"value": {
+								"type": "getStoredIDByKey",
+								"key": {
+									"type": "rawString",
+									"value": "baseType"
+								},
+								"instanceValue": {
+									"type": "rawBoolean",
+									"value": "false"
+								}
+							}
+						},
+						"pass": {
+							"type": "getAbilityDataAsID",
+							"dataField": "A"
+						},
+						"fail": {
+							"type": "getStoredIDByKey",
+							"key": {
+								"type": "rawString",
+								"value": "baseType"
+							},
+							"instanceValue": {
+								"type": "rawBoolean",
+								"value": "false"
+							}
+						}
+					},
+					"alternateUnitId": {
+						"type": "getAbilityUnitId"
+					}
+				}
+			},
+			"reason": "UNABLE_TO_LAND_THERE"
+		}],
 		"onAddDisabledAbility": [{
 				"type": "runReuseAction",
 				"name": {
@@ -1167,6 +1218,12 @@
 		"ids": [{"id":"AEme", "castId": "metamorphosis"}],
 		"type": "INHERIT",
 		"parentId": "Arav",
+		"displayFields": {
+			"toggleable": {
+				"type": "rawBoolean",
+				"value": "false"
+			}
+		},
 		"reuseActions": {
 			"setup": [{
 				"type": "createNonStackingStatBuff",
@@ -1186,13 +1243,15 @@
 				}
 			}],
 			"onTransform": [{
-				"type": "addNonStackingStatBuff",
-				"targetUnit": {
-					"type": "getCastingUnit"
-				},
-				"buff": {
-					"type": "getLastCreatedNonStackingStatBuff"
-				}
+					"type": "addNonStackingStatBuff",
+					"targetUnit": {
+						"type": "getCastingUnit"
+					},
+					"buff": {
+						"type": "getLastCreatedNonStackingStatBuff"
+					}
+				},{
+					"type": "deactivateToggledAbility"
 			}],
 			"onUnTransform": [{
 				"type": "removeNonStackingStatBuff",
@@ -1481,6 +1540,35 @@
 						"type": "getAbilityDataAsFloat",
 						"dataField": "F"
 					}
+			}]
+		}
+	},{
+		"ids": [{"id":"ANsu", "castId": "submerge", "uncastId": "unsubmerge"}],
+		"type": "INHERIT",
+		"parentId": "Abur",
+		"extraCastConditions": [{
+			"type": "setCantUseReasonOnFailure",
+			"condition": {
+				"type": "isLocationDeepWater",
+				"location": {
+					"type": "getUnitLocation",
+					"unit": {
+						"type": "getCastingUnit"
+					}
+				}
+			},
+			"reason": "UNABLE_TO_SUBMERGE_THERE"
+		}],
+		"reuseActions": {
+			"onUnTransform": [{
+				"type": "addSecondaryAnimationTag",
+				"unit": {
+					"type": "getCastingUnit"
+				},
+				"tag": {
+					"type": "rawString",
+					"value": "SWIM"
+				}
 			}]
 		}
 	},{

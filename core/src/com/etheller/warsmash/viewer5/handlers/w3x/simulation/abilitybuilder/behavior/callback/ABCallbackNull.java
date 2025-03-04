@@ -17,7 +17,7 @@ public class ABCallbackNull implements ABCallback {
 
 	@Override
 	public String generateJassEquivalent(final JassTextGenerator jassTextGenerator) {
-		return "JASSTODO";
+		return "TODOJASS";
 	}
 
 }

@@ -52,12 +52,12 @@ public class COrderDropItemAtTargetWidget implements COrder {
 			game.getCommandErrorListener().showInterfaceError(caster.getPlayerIndex(), "NOTEXTERN: No such ability");
 			return caster.pollNextOrderBehavior(game);
 		}
-		ability.checkCanUse(game, caster, this.orderId, this.abilityActivationReceiver.reset());
+		ability.checkCanUse(game, caster, this.orderId, false, this.abilityActivationReceiver.reset());
 		if (this.abilityActivationReceiver.isUseOk()) {
 			final CItem itemToDrop = (CItem) game.getWidget(this.itemHandleId);
 			final CUnit targetHero = (CUnit) game.getWidget(this.targetHeroHandleId);
 			final ExternStringMsgTargetCheckReceiver<CWidget> targetReceiver = (ExternStringMsgTargetCheckReceiver<CWidget>) targetCheckReceiver;
-			ability.checkCanTarget(game, caster, this.orderId, targetHero, targetReceiver.reset());
+			ability.checkCanTarget(game, caster, this.orderId, false, targetHero, targetReceiver.reset());
 			if (targetReceiver.getTarget() != null) {
 				return ability.beginDropItem(game, caster, this.orderId, itemToDrop, targetHero);
 			}

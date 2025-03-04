@@ -27,7 +27,7 @@ public class CBehaviorSendOrder implements CBehavior {
 
 	@Override
 	public CBehavior update(CSimulation game) {
-		return ability.begin(game, unit, orderId, target);
+		return ability.begin(game, unit, orderId, false, target);
 	}
 
 	@Override

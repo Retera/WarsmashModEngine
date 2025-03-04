@@ -192,7 +192,6 @@ public class TransformationHandler {
 		if (newType.getTypeId().equals(unit.getTypeId())) {
 			return;
 		}
-		System.err.println("setting " + newType.getTypeId() + " on " + unit.getTypeId());
 		setUnitID(game, localStore, unit, newType, keepRatios, addAlternateTagAfter, actions, ability, false);
 		if (playMorph) {
 			TransformationHandler.playMorphAnimation(unit, addAlternateTagAfter);

@@ -165,10 +165,6 @@ public abstract class CAbilityAbilityBuilderGenericActive extends AbstractGeneri
 				action.runAction(game, unit, localStore, castId);
 			}
 		}
-		
-		if (this.autocastType == AutocastType.ATTACKREPLACEMENT) {
-			//game.createProjectile(unit, offTooltipOverride, bufferMana, autoCastOnId, autoCastOffId, area, active, unit, null)
-		}
 	}
 
 	@Override
@@ -226,7 +222,7 @@ public abstract class CAbilityAbilityBuilderGenericActive extends AbstractGeneri
 
 			if (config.getDisplayFields() != null && config.getDisplayFields().getAlternateUnitId() != null) {
 				if (unit.getTypeId().equals(
-						config.getDisplayFields().getAlternateUnitId().callback(game, unit, localStore, manaPerSec))) {
+						config.getDisplayFields().getAlternateUnitId().callback(game, unit, localStore, castId))) {
 					this.active = true;
 				}
 			}
@@ -465,17 +461,18 @@ public abstract class CAbilityAbilityBuilderGenericActive extends AbstractGeneri
 	}
 
 	@Override
-	public void setAutoCastOn(final CUnit caster, final boolean autoCastOn) {
+	public void setAutoCastOn(final CSimulation simulation, final CUnit caster, final boolean autoCastOn) {
+		this.localStore.put(ABLocalStoreKeys.WASAUTOCASTON, this.autocasting);
 		this.autocasting = autoCastOn;
-		if (this.autocastType == AutocastType.ATTACKREPLACEMENT) {
-			//caster.addAttackReplacement(null, CUnitAttackReplacementPriority.AUTOCAST);
-		}
 		caster.setAutocastAbility(autoCastOn ? this : null);
-	}
-
-	@Override
-	public void setAutoCastOff() {
-		this.autocasting = false;
+		this.localStore.put(ABLocalStoreKeys.ISAUTOCASTON, autoCastOn);
+		if (this.config.getOnChangeAutoCast() != null) {
+			for (ABAction action : this.config.getOnChangeAutoCast()) {
+				action.runAction(simulation, caster, localStore, -1);
+			}
+		}
+		this.localStore.remove(ABLocalStoreKeys.ISAUTOCASTON);
+		this.localStore.remove(ABLocalStoreKeys.WASAUTOCASTON);
 	}
 
 	@Override
@@ -597,8 +594,9 @@ public abstract class CAbilityAbilityBuilderGenericActive extends AbstractGeneri
 			AbilityActivationReceiver receiver);
 
 	@Override
-	public void checkCanTarget(final CSimulation game, final CUnit unit, final int orderId, final CWidget target,
-			final AbilityTargetCheckReceiver<CWidget> receiver) {
+	public void checkCanTarget(final CSimulation game, final CUnit unit, final int orderId, boolean autoOrder,
+			final CWidget target, final AbilityTargetCheckReceiver<CWidget> receiver) {
+		this.localStore.put(ABLocalStoreKeys.ISAUTOCAST, autoOrder);
 		if (innerCheckCastOrderId(game, unit, orderId)) {
 			innerCheckCanTarget(game, unit, orderId, target, receiver);
 		} else if (orderId == OrderIds.smart) {
@@ -646,7 +644,8 @@ public abstract class CAbilityAbilityBuilderGenericActive extends AbstractGeneri
 
 	@Override
 	public void checkCanTarget(final CSimulation game, final CUnit unit, final int orderId,
-			final AbilityPointTarget target, final AbilityTargetCheckReceiver<AbilityPointTarget> receiver) {
+			boolean autoOrder, final AbilityPointTarget target, final AbilityTargetCheckReceiver<AbilityPointTarget> receiver) {
+		this.localStore.put(ABLocalStoreKeys.ISAUTOCAST, autoOrder);
 		if (innerCheckCastOrderId(game, unit, orderId)) {
 			innerCheckCanTarget(game, unit, orderId, target, receiver);
 		} else if (orderId == OrderIds.smart) {
@@ -685,7 +684,8 @@ public abstract class CAbilityAbilityBuilderGenericActive extends AbstractGeneri
 
 	@Override
 	public void checkCanTargetNoTarget(final CSimulation game, final CUnit unit, final int orderId,
-			final AbilityTargetCheckReceiver<Void> receiver) {
+			boolean autoOrder, final AbilityTargetCheckReceiver<Void> receiver) {
+		this.localStore.put(ABLocalStoreKeys.ISAUTOCAST, autoOrder);
 		if ((orderId != 0) && ((orderId == getAutoCastOffOrderId()) || (orderId == getAutoCastOnOrderId()))) {
 			receiver.targetOk(null);
 		} else if (innerCheckCastOrderId(game, unit, orderId)) {
@@ -780,7 +780,7 @@ public abstract class CAbilityAbilityBuilderGenericActive extends AbstractGeneri
 	}
 
 	protected boolean innerCheckCastOrderId(final CSimulation game, final CUnit unit, final int orderId) {
-		return (!this.active && orderId == getBaseOrderId())
+		return ((!this.active || !this.toggleable) && orderId == getBaseOrderId())
 				|| ((this.active || this.separateOnAndOff) && orderId == getOffOrderId());
 	}
 
@@ -1041,13 +1041,14 @@ public abstract class CAbilityAbilityBuilderGenericActive extends AbstractGeneri
 
 	@Override
 	public boolean checkBeforeQueue(final CSimulation game, final CUnit caster, final int orderId,
-			final AbilityTarget target) {
+			boolean autoOrder, final AbilityTarget target) {
+		this.localStore.put(ABLocalStoreKeys.ISAUTOCAST, autoOrder);
 //		System.err.println("Checking queue top level: " + active + " orderID : " + orderId + " offID: " + this.getOffOrderId());
 		if (this.allowCastlessDeactivate && this.toggleable && this.active && orderId == this.getOffOrderId()) {
 			this.deactivate(game, caster);
 			return false;
 		}
-		return super.checkBeforeQueue(game, caster, orderId, target);
+		return super.checkBeforeQueue(game, caster, orderId, autoOrder, target);
 	}
 
 	@Override

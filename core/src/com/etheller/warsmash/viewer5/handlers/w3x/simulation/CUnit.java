@@ -2472,14 +2472,14 @@ public class CUnit extends CWidget {
 	}
 
 	public boolean autoAcquireAutocastTargets(final CSimulation game, final boolean disableMove) {
-		if ((this.autocastAbility != null) && !this.autocastAbility.isDisabled()) {
+		if ((this.autocastAbility != null) && !this.autocastAbility.isDisabled() && this.autocastAbility.getAutocastType() != AutocastType.NOAUTOCASTBEHAVIOR) {
 			if (this.autocastAbility.getAutocastType() == AutocastType.NOTARGET) {
 				final BooleanAbilityTargetCheckReceiver<Void> booleanTargetReceiver = BooleanAbilityTargetCheckReceiver
 						.<Void>getInstance().reset();
 				this.autocastAbility.checkCanAutoTargetNoTarget(game, this, this.autocastAbility.getBaseOrderId(),
 						booleanTargetReceiver);
 				if (booleanTargetReceiver.isTargetable()) {
-					return this.order(game, this.autocastAbility.getBaseOrderId(), null);
+					return this.order(game, this.autocastAbility.getBaseOrderId(), null, true);
 				}
 			} else if (this.autocastAbility.getAutocastType() != AutocastType.NONE) {
 				if (this.collisionRectangle != null) {
@@ -2495,7 +2495,7 @@ public class CUnit extends CWidget {
 				game.getWorldCollision().enumUnitsInRect(tempRect,
 						autocastTargetFinderEnum.reset(game, this, this.autocastAbility, disableMove));
 				if (autocastTargetFinderEnum.currentUnitTarget != null) {
-					this.order(game, this.autocastAbility.getBaseOrderId(), autocastTargetFinderEnum.currentUnitTarget);
+					this.order(game, this.autocastAbility.getBaseOrderId(), autocastTargetFinderEnum.currentUnitTarget, true);
 					return true;
 				}
 			}
@@ -2533,6 +2533,10 @@ public class CUnit extends CWidget {
 	}
 
 	public void order(final CSimulation game, final COrder order, final boolean queue) {
+		this.order(game, order, queue, false);
+	}
+
+	public void order(final CSimulation game, final COrder order, final boolean queue, final boolean autoOrder) {
 		if (isDead()) {
 			return;
 		}
@@ -2547,7 +2551,7 @@ public class CUnit extends CWidget {
 				}
 				// Allow the ability to response to the order without actually placing itself in
 				// the queue, nor modifying (interrupting) the queue.
-				if (!ability.checkBeforeQueue(game, this, order.getOrderId(), order.getTarget(game))) {
+				if (!ability.checkBeforeQueue(game, this, order.getOrderId(), autoOrder, order.getTarget(game))) {
 					// TODO is this a possible bug vector that the network request doesn't
 					// checkCanUse like the UI before checkBeforeQueue is called??
 					order.fireEvents(game, this);
@@ -2605,20 +2609,24 @@ public class CUnit extends CWidget {
 	}
 
 	public boolean order(final CSimulation simulation, final int orderId, final AbilityTarget target) {
+		return this.order(simulation, orderId, target, false);
+	}
+
+	public boolean order(final CSimulation simulation, final int orderId, final AbilityTarget target, final boolean autoOrder) {
 		if (orderId == OrderIds.stop) {
-			order(simulation, new COrderNoTarget(0, orderId, false), false);
+			order(simulation, new COrderNoTarget(0, orderId, false), false, autoOrder);
 			return true;
 		}
 		for (final CAbility ability : this.abilities) {
 			final BooleanAbilityActivationReceiver activationReceiver = BooleanAbilityActivationReceiver.INSTANCE;
-			ability.checkCanUse(simulation, this, orderId, activationReceiver);
+			ability.checkCanUse(simulation, this, orderId, false, activationReceiver);
 			if (activationReceiver.isOk()) {
 				if (target == null) {
 					final BooleanAbilityTargetCheckReceiver<Void> booleanTargetReceiver = BooleanAbilityTargetCheckReceiver
 							.<Void>getInstance().reset();
-					ability.checkCanTargetNoTarget(simulation, this, orderId, booleanTargetReceiver);
+					ability.checkCanTargetNoTarget(simulation, this, orderId, false, booleanTargetReceiver);
 					if (booleanTargetReceiver.isTargetable()) {
-						order(simulation, new COrderNoTarget(ability.getHandleId(), orderId, false), false);
+						order(simulation, new COrderNoTarget(ability.getHandleId(), orderId, false, autoOrder), false, autoOrder);
 						return true;
 					}
 				} else {
@@ -2627,11 +2635,11 @@ public class CUnit extends CWidget {
 						public Boolean accept(final AbilityPointTarget target) {
 							final BooleanAbilityTargetCheckReceiver<AbilityPointTarget> booleanTargetReceiver = BooleanAbilityTargetCheckReceiver
 									.<AbilityPointTarget>getInstance().reset();
-							ability.checkCanTarget(simulation, CUnit.this, orderId, target, booleanTargetReceiver);
+							ability.checkCanTarget(simulation, CUnit.this, orderId, false, target, booleanTargetReceiver);
 							final boolean pointTargetable = booleanTargetReceiver.isTargetable();
 							if (pointTargetable) {
-								order(simulation, new COrderTargetPoint(ability.getHandleId(), orderId, target, false),
-										false);
+								order(simulation, new COrderTargetPoint(ability.getHandleId(), orderId, target, false, autoOrder),
+										false, autoOrder);
 							}
 							return pointTargetable;
 						}
@@ -2639,11 +2647,11 @@ public class CUnit extends CWidget {
 						public Boolean acceptWidget(final CWidget target) {
 							final BooleanAbilityTargetCheckReceiver<CWidget> booleanTargetReceiver = BooleanAbilityTargetCheckReceiver
 									.<CWidget>getInstance().reset();
-							ability.checkCanTarget(simulation, CUnit.this, orderId, target, booleanTargetReceiver);
+							ability.checkCanTarget(simulation, CUnit.this, orderId, false, target, booleanTargetReceiver);
 							final boolean widgetTargetable = booleanTargetReceiver.isTargetable();
 							if (widgetTargetable) {
 								order(simulation, new COrderTargetWidget(ability.getHandleId(), orderId,
-										target.getHandleId(), false), false);
+										target.getHandleId(), false, autoOrder), false, autoOrder);
 							}
 							return widgetTargetable;
 						}
@@ -4246,11 +4254,11 @@ public class CUnit extends CWidget {
 			CAbility abilityToUse = null;
 			for (final CAbility ability : this.trainedUnit.getAbilities()) {
 				ability.checkCanUse(this.game, this.trainedUnit, this.rallyOrderId,
-						BooleanAbilityActivationReceiver.INSTANCE);
+						false, BooleanAbilityActivationReceiver.INSTANCE);
 				if (BooleanAbilityActivationReceiver.INSTANCE.isOk()) {
 					final BooleanAbilityTargetCheckReceiver<AbilityPointTarget> targetCheckReceiver = BooleanAbilityTargetCheckReceiver
 							.<AbilityPointTarget>getInstance().reset();
-					ability.checkCanTarget(this.game, this.trainedUnit, this.rallyOrderId, target, targetCheckReceiver);
+					ability.checkCanTarget(this.game, this.trainedUnit, this.rallyOrderId, false, target, targetCheckReceiver);
 					if (targetCheckReceiver.isTargetable()) {
 						abilityToUse = ability;
 					}
@@ -4272,11 +4280,11 @@ public class CUnit extends CWidget {
 				final CWidget target) {
 			CAbility abilityToUse = null;
 			for (final CAbility ability : trainedUnit.getAbilities()) {
-				ability.checkCanUse(game, trainedUnit, rallyOrderId, BooleanAbilityActivationReceiver.INSTANCE);
+				ability.checkCanUse(game, trainedUnit, rallyOrderId, false, BooleanAbilityActivationReceiver.INSTANCE);
 				if (BooleanAbilityActivationReceiver.INSTANCE.isOk()) {
 					final BooleanAbilityTargetCheckReceiver<CWidget> targetCheckReceiver = BooleanAbilityTargetCheckReceiver
 							.<CWidget>getInstance().reset();
-					ability.checkCanTarget(game, trainedUnit, rallyOrderId, target, targetCheckReceiver);
+					ability.checkCanTarget(game, trainedUnit, rallyOrderId, false, target, targetCheckReceiver);
 					if (targetCheckReceiver.isTargetable()) {
 						abilityToUse = ability;
 					}
@@ -5616,9 +5624,6 @@ public class CUnit extends CWidget {
 	}
 
 	public void setAutocastAbility(final CAutocastAbility autocastAbility) {
-		if (this.autocastAbility != null) {
-			this.autocastAbility.setAutoCastOff();
-		}
 		this.autocastAbility = autocastAbility;
 	}
 

@@ -491,7 +491,7 @@ public class CommandCardPopulatingAbilityVisitor implements CAbilityVisitor<Void
 				return;
 			}
 		}
-		ability.checkCanUse(this.game, this.unit, orderId, this.previewCallback.reset());
+		ability.checkCanUse(this.game, this.unit, orderId, false, this.previewCallback.reset());
 		if (!this.previewCallback.isOmitIconEntirely()) {
 			if (requiresPatron) {
 				this.previewCallback

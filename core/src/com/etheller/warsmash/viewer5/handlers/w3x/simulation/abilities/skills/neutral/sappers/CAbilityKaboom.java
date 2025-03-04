@@ -110,7 +110,7 @@ public class CAbilityKaboom extends CAbilityUnitOrPointTargetSpellBase implement
 	}
 
 	@Override
-	public void setAutoCastOn(final CUnit caster, final boolean autoCastOn) {
+	public void setAutoCastOn(final CSimulation simulation, final CUnit caster, final boolean autoCastOn) {
 		this.autoCastOn = autoCastOn;
 		caster.setAutocastAbility(autoCastOn ? this : null);
 	}
@@ -118,11 +118,6 @@ public class CAbilityKaboom extends CAbilityUnitOrPointTargetSpellBase implement
 	@Override
 	public boolean isAutoCastOn() {
 		return autoCastOn;
-	}
-
-	@Override
-	public void setAutoCastOff() {
-		this.autoCastOn = false;
 	}
 
 	@Override
@@ -134,7 +129,7 @@ public class CAbilityKaboom extends CAbilityUnitOrPointTargetSpellBase implement
 	@Override
 	public void checkCanAutoTarget(CSimulation game, CUnit unit, int orderId, CWidget target,
 			AbilityTargetCheckReceiver<CWidget> receiver) {
-		this.checkCanTarget(game, unit, orderId, target, receiver);
+		this.checkCanTarget(game, unit, orderId, false, target, receiver);
 	}
 
 	@Override

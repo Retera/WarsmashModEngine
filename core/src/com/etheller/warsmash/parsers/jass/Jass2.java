@@ -1007,11 +1007,11 @@ public class Jass2 {
 						AbilityPointTarget targetAsPoint = new AbilityPointTarget(whichLocation.x, whichLocation.y);
 						for (final CAbility ability : whichUnit.getAbilities()) {
 							ability.checkCanUse(CommonEnvironment.this.simulation, whichUnit, orderId,
-									activationReceiver);
+									false, activationReceiver);
 							if (activationReceiver.isOk()) {
 								final PointAbilityTargetCheckReceiver targetReceiver = PointAbilityTargetCheckReceiver.INSTANCE;
 								ability.checkCanTarget(CommonEnvironment.this.simulation, whichUnit, orderId,
-										targetAsPoint, targetReceiver.reset());
+										false, targetAsPoint, targetReceiver.reset());
 								if (targetReceiver.getTarget() != null) {
 									targetAsPoint = targetReceiver.getTarget();
 									abilityHandleId = ability.getHandleId();
@@ -1039,11 +1039,11 @@ public class Jass2 {
 				AbilityPointTarget targetAsPoint = new AbilityPointTarget((float) whichLocationX,
 						(float) whichLocationY);
 				for (final CAbility ability : whichUnit.getAbilities()) {
-					ability.checkCanUse(CommonEnvironment.this.simulation, whichUnit, orderId, activationReceiver);
+					ability.checkCanUse(CommonEnvironment.this.simulation, whichUnit, orderId, false, activationReceiver);
 					if (activationReceiver.isOk()) {
 						final PointAbilityTargetCheckReceiver targetReceiver = PointAbilityTargetCheckReceiver.INSTANCE;
-						ability.checkCanTarget(CommonEnvironment.this.simulation, whichUnit, orderId, targetAsPoint,
-								targetReceiver.reset());
+						ability.checkCanTarget(CommonEnvironment.this.simulation, whichUnit, orderId, false,
+								targetAsPoint, targetReceiver.reset());
 						if (targetReceiver.getTarget() != null) {
 							targetAsPoint = targetReceiver.getTarget();
 							abilityHandleId = ability.getHandleId();
@@ -1075,11 +1075,11 @@ public class Jass2 {
 						int abilityHandleId = 0;
 						for (final CAbility ability : whichUnit.getAbilities()) {
 							ability.checkCanUse(CommonEnvironment.this.simulation, whichUnit, orderId,
-									activationReceiver);
+									false, activationReceiver);
 							if (activationReceiver.isOk()) {
 								final CWidgetAbilityTargetCheckReceiver targetReceiver = CWidgetAbilityTargetCheckReceiver.INSTANCE;
 								ability.checkCanTarget(CommonEnvironment.this.simulation, whichUnit, orderId,
-										whichTarget, targetReceiver.reset());
+										false, whichTarget, targetReceiver.reset());
 								if (targetReceiver.getTarget() != null) {
 									whichTarget = targetReceiver.getTarget();
 									abilityHandleId = ability.getHandleId();
@@ -1106,11 +1106,11 @@ public class Jass2 {
 						int abilityHandleId = 0;
 						for (final CAbility ability : whichUnit.getAbilities()) {
 							ability.checkCanUse(CommonEnvironment.this.simulation, whichUnit, orderId,
-									activationReceiver);
+									false, activationReceiver);
 							if (activationReceiver.isOk()) {
 								final CWidgetAbilityTargetCheckReceiver targetReceiver = CWidgetAbilityTargetCheckReceiver.INSTANCE;
 								ability.checkCanTarget(CommonEnvironment.this.simulation, whichUnit, orderId,
-										whichTarget, targetReceiver.reset());
+										false, whichTarget, targetReceiver.reset());
 								if (targetReceiver.getTarget() != null) {
 									whichTarget = targetReceiver.getTarget();
 									abilityHandleId = ability.getHandleId();
@@ -1137,12 +1137,12 @@ public class Jass2 {
 						int abilityHandleId = 0;
 						for (final CAbility ability : whichUnit.getAbilities()) {
 							ability.checkCanUse(CommonEnvironment.this.simulation, whichUnit, orderId,
-									activationReceiver);
+									false, activationReceiver);
 							if (activationReceiver.isOk()) {
 								final BooleanAbilityTargetCheckReceiver<Void> targetReceiver = BooleanAbilityTargetCheckReceiver
 										.<Void>getInstance();
 								ability.checkCanTargetNoTarget(CommonEnvironment.this.simulation, whichUnit, orderId,
-										targetReceiver.reset());
+										false, targetReceiver.reset());
 								if (targetReceiver.isTargetable()) {
 									abilityHandleId = ability.getHandleId();
 								}
@@ -1165,12 +1165,12 @@ public class Jass2 {
 						int abilityHandleId = 0;
 						for (final CAbility ability : whichUnit.getAbilities()) {
 							ability.checkCanUse(CommonEnvironment.this.simulation, whichUnit, orderId,
-									activationReceiver);
+									false, activationReceiver);
 							if (activationReceiver.isOk()) {
 								final BooleanAbilityTargetCheckReceiver<Void> targetReceiver = BooleanAbilityTargetCheckReceiver
 										.<Void>getInstance();
 								ability.checkCanTargetNoTarget(CommonEnvironment.this.simulation, whichUnit, orderId,
-										targetReceiver.reset());
+										false, targetReceiver.reset());
 								if (targetReceiver.isTargetable()) {
 									abilityHandleId = ability.getHandleId();
 								}

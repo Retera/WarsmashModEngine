@@ -46,18 +46,18 @@ public class CAbilityChannelTest extends AbstractGenericSingleIconNoSmartActiveA
 	}
 
 	@Override
-	public CBehavior begin(final CSimulation game, final CUnit caster, final int orderId, final CWidget target) {
+	public CBehavior begin(final CSimulation game, final CUnit caster, final int orderId, boolean autoOrder, final CWidget target) {
 		return this.behaviorChannelTest;
 	}
 
 	@Override
 	public CBehavior begin(final CSimulation game, final CUnit caster, final int orderId,
-			final AbilityPointTarget point) {
+			boolean autoOrder, final AbilityPointTarget point) {
 		return this.behaviorChannelTest;
 	}
 
 	@Override
-	public CBehavior beginNoTarget(final CSimulation game, final CUnit caster, final int orderId) {
+	public CBehavior beginNoTarget(final CSimulation game, final CUnit caster, final int orderId, boolean autoOrder) {
 		return this.behaviorChannelTest;
 	}
 

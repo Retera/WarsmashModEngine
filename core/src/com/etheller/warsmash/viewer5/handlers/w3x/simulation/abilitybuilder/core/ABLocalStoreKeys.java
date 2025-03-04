@@ -28,6 +28,8 @@ public class ABLocalStoreKeys {
 
 	public static final String CANTUSEREASON = "_cantUseReason";
 
+	public static final String ISAUTOCAST = "_isAutoCast";
+
 	public static final String ISTOGGLEDABILITY = "_toggledAbility";
 	public static final String ISFLEXABILITY = "_flexAbility";
 	public static final String ISPAIRABILITY = "_pairAbility";
@@ -176,6 +178,10 @@ public class ABLocalStoreKeys {
 	public static final String PRECHANGEBEHAVIOR = "_preChangeBehavior#";
 	public static final String POSTCHANGEBEHAVIOR = "_postChangeBehaviorj#";
 	public static final String BEHAVIORONGOING = "_behaviorOngoing#";
+	
+	// Autocast on/off actions
+	public static final String WASAUTOCASTON = "_wasAutocastOn";
+	public static final String ISAUTOCASTON = "_isAutocastOn";
 	
 	public static String combineKey(String key, int castId) {
 		return key + castId;

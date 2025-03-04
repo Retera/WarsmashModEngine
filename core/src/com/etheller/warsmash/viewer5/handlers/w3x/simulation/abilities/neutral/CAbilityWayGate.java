@@ -72,7 +72,7 @@ public class CAbilityWayGate extends AbstractGenericAliasedAbility
 	}
 
 	@Override
-	public CBehavior begin(CSimulation game, CUnit caster, int orderId, CWidget target) {
+	public CBehavior begin(CSimulation game, CUnit caster, int orderId, boolean autoOrder, CWidget target) {
 		final CUnit unitTarget = target.visit(AbilityTargetVisitor.UNIT);
 		if (unitTarget != null) {
 			if (!unitTarget.isMovementDisabled()) {
@@ -93,18 +93,18 @@ public class CAbilityWayGate extends AbstractGenericAliasedAbility
 	}
 
 	@Override
-	public CBehavior begin(CSimulation game, CUnit caster, int orderId, AbilityPointTarget point) {
+	public CBehavior begin(CSimulation game, CUnit caster, int orderId, boolean autoOrder, AbilityPointTarget point) {
 		return null;
 	}
 
 	@Override
-	public CBehavior beginNoTarget(CSimulation game, CUnit caster, int orderId) {
+	public CBehavior beginNoTarget(CSimulation game, CUnit caster, int orderId, boolean autoOrder) {
 		return null;
 	}
 
 	@Override
-	public void checkCanTarget(CSimulation game, CUnit caster, int orderId, CWidget target,
-			AbilityTargetCheckReceiver<CWidget> receiver) {
+	public void checkCanTarget(CSimulation game, CUnit caster, int orderId, boolean autoOrder,
+			CWidget target, AbilityTargetCheckReceiver<CWidget> receiver) {
 		if (orderId == ORDER_ID) {
 			final CUnit unitTarget = target.visit(AbilityTargetVisitor.UNIT);
 			if (unitTarget != null) {
@@ -137,14 +137,14 @@ public class CAbilityWayGate extends AbstractGenericAliasedAbility
 	}
 
 	@Override
-	public void checkCanTarget(CSimulation game, CUnit unit, int orderId, AbilityPointTarget target,
-			AbilityTargetCheckReceiver<AbilityPointTarget> receiver) {
+	public void checkCanTarget(CSimulation game, CUnit unit, int orderId, boolean autoOrder,
+			AbilityPointTarget target, AbilityTargetCheckReceiver<AbilityPointTarget> receiver) {
 		receiver.orderIdNotAccepted();
 	}
 
 	@Override
 	public void checkCanTargetNoTarget(CSimulation game, CUnit unit, int orderId,
-			AbilityTargetCheckReceiver<Void> receiver) {
+			boolean autoOrder, AbilityTargetCheckReceiver<Void> receiver) {
 		receiver.orderIdNotAccepted();
 	}
 
@@ -210,14 +210,14 @@ public class CAbilityWayGate extends AbstractGenericAliasedAbility
 			if (potentialLoadAbility instanceof CAbilityWayGate) {
 				final CAbilityWayGate abilityLoad = (CAbilityWayGate) potentialLoadAbility;
 				final BooleanAbilityActivationReceiver transportUnitReceiver = BooleanAbilityActivationReceiver.INSTANCE;
-				abilityLoad.checkCanUse(game, transport, ORDER_ID, transportUnitReceiver);
+				abilityLoad.checkCanUse(game, transport, ORDER_ID, false, transportUnitReceiver);
 				// NOTE: disabled load ability should enable later in case of under construction
 				// entangled gold mine
 				if (transportUnitReceiver.isOk() || (ignoreDisabled && abilityLoad.isDisabled())) {
 					final ExternStringMsgTargetCheckReceiver<CWidget> transportUnitTargetCheckReceiver = ExternStringMsgTargetCheckReceiver
 							.getInstance();
-					abilityLoad.checkCanTarget(game, transport, ORDER_ID, caster,
-							transportUnitTargetCheckReceiver.reset());
+					abilityLoad.checkCanTarget(game, transport, ORDER_ID, false,
+							caster, transportUnitTargetCheckReceiver.reset());
 					if ((transportUnitTargetCheckReceiver.getTarget() != null)
 							|| (ignoreRange && (transportUnitTargetCheckReceiver
 									.getExternStringKey() == CommandStringErrorKeys.TARGET_IS_OUTSIDE_RANGE))) {

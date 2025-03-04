@@ -119,18 +119,18 @@ public class CAbilityRepair extends AbstractGenericSingleIconActiveAbility imple
 	}
 
 	@Override
-	public CBehavior begin(final CSimulation game, final CUnit caster, final int orderId, final CWidget target) {
+	public CBehavior begin(final CSimulation game, final CUnit caster, final int orderId, boolean autoOrder, final CWidget target) {
 		return this.behaviorRepair.reset(game, target);
 	}
 
 	@Override
 	public CBehavior begin(final CSimulation game, final CUnit caster, final int orderId,
-			final AbilityPointTarget point) {
+			boolean autoOrder, final AbilityPointTarget point) {
 		return null;
 	}
 
 	@Override
-	public CBehavior beginNoTarget(final CSimulation game, final CUnit caster, final int orderId) {
+	public CBehavior beginNoTarget(final CSimulation game, final CUnit caster, final int orderId, boolean autoOrder) {
 		return null;
 	}
 
@@ -190,7 +190,7 @@ public class CAbilityRepair extends AbstractGenericSingleIconActiveAbility imple
 	}
 
 	@Override
-	public void setAutoCastOn(final CUnit caster, final boolean autoCastOn) {
+	public void setAutoCastOn(final CSimulation simulation, final CUnit caster, final boolean autoCastOn) {
 		this.autocasting = autoCastOn;
 		caster.setAutocastAbility(autoCastOn ? this : null);
 	}
@@ -198,11 +198,6 @@ public class CAbilityRepair extends AbstractGenericSingleIconActiveAbility imple
 	@Override
 	public boolean isAutoCastOn() {
 		return autocasting ;
-	}
-
-	@Override
-	public void setAutoCastOff() {
-		this.autocasting = false;
 	}
 
 	@Override
@@ -218,7 +213,7 @@ public class CAbilityRepair extends AbstractGenericSingleIconActiveAbility imple
 	@Override
 	public void checkCanAutoTarget(CSimulation game, CUnit unit, int orderId, CWidget target,
 			AbilityTargetCheckReceiver<CWidget> receiver) {
-		this.checkCanTarget(game, unit, orderId, target, receiver);
+		this.checkCanTarget(game, unit, orderId, false, target, receiver);
 	}
 
 	@Override

@@ -38,6 +38,7 @@ public class AbilityBuilderConfiguration {
 	private List<ABAction> onOrderIssued;
 	private List<ABAction> onActivate;
 	private List<ABAction> onDeactivate;
+	private List<ABAction> onChangeAutoCast;
 	
 	private List<ABAction> onLevelChange;
 
@@ -75,6 +76,7 @@ public class AbilityBuilderConfiguration {
 		this.onOrderIssued = parser.getOnOrderIssued();
 		this.onActivate = parser.getOnActivate();
 		this.onDeactivate = parser.getOnDeactivate();
+		this.onChangeAutoCast = parser.getOnChangeAutoCast();
 		
 		this.onLevelChange = parser.getOnLevelChange();
 
@@ -297,6 +299,14 @@ public class AbilityBuilderConfiguration {
 
 	public void setOnDeactivate(List<ABAction> onDeactivate) {
 		this.onDeactivate = onDeactivate;
+	}
+
+	public List<ABAction> getOnChangeAutoCast() {
+		return onChangeAutoCast;
+	}
+
+	public void setOnChangeAutoCast(List<ABAction> onChangeAutoCast) {
+		this.onChangeAutoCast = onChangeAutoCast;
 	}
 
 	public List<ABAction> getOnLevelChange() {

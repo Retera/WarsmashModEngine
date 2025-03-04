@@ -39,18 +39,18 @@ public class CAbilityStandDown extends AbstractGenericSingleIconNoSmartActiveAbi
 	}
 
 	@Override
-	public CBehavior begin(final CSimulation game, final CUnit caster, final int orderId, final CWidget target) {
+	public CBehavior begin(final CSimulation game, final CUnit caster, final int orderId, boolean autoOrder, final CWidget target) {
 		return null;
 	}
 
 	@Override
 	public CBehavior begin(final CSimulation game, final CUnit caster, final int orderId,
-			final AbilityPointTarget point) {
+			boolean autoOrder, final AbilityPointTarget point) {
 		return null;
 	}
 
 	@Override
-	public CBehavior beginNoTarget(final CSimulation game, final CUnit caster, final int orderId) {
+	public CBehavior beginNoTarget(final CSimulation game, final CUnit caster, final int orderId, boolean autoOrder) {
 		return null;
 	}
 
@@ -74,7 +74,7 @@ public class CAbilityStandDown extends AbstractGenericSingleIconNoSmartActiveAbi
 	}
 
 	@Override
-	public boolean checkBeforeQueue(CSimulation game, CUnit caster, int orderId, AbilityTarget target) {
+	public boolean checkBeforeQueue(CSimulation game, CUnit caster, int orderId, boolean autoOrder, AbilityTarget target) {
 		CAbilityCargoHold cargoData = caster.getCargoData();
 		game.unitSoundEffectEvent(caster, cargoData.getAlias());
 		int goldWorkers = 0;

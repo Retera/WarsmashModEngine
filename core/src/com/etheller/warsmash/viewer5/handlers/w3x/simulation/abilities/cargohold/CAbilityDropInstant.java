@@ -35,18 +35,18 @@ public class CAbilityDropInstant extends AbstractGenericSingleIconNoSmartActiveA
 	}
 
 	@Override
-	public CBehavior begin(final CSimulation game, final CUnit caster, final int orderId, final CWidget target) {
+	public CBehavior begin(final CSimulation game, final CUnit caster, final int orderId, boolean autoOrder, final CWidget target) {
 		return null;
 	}
 
 	@Override
 	public CBehavior begin(final CSimulation game, final CUnit caster, final int orderId,
-			final AbilityPointTarget point) {
+			boolean autoOrder, final AbilityPointTarget point) {
 		return null;
 	}
 
 	@Override
-	public CBehavior beginNoTarget(final CSimulation game, final CUnit caster, final int orderId) {
+	public CBehavior beginNoTarget(final CSimulation game, final CUnit caster, final int orderId, boolean autoOrder) {
 		final CAbilityCargoHold cargoData = caster.getCargoData();
 		cargoData.unloadAllInstant(game, caster);
 		return caster.pollNextOrderBehavior(game);

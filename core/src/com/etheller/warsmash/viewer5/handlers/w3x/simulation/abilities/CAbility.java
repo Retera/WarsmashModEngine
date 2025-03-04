@@ -34,13 +34,13 @@ public interface CAbility extends CAbilityView, CExtensibleHandle {
 	void onCancelFromQueue(CSimulation game, CUnit unit, int orderId);
 
 	/* return false to not do anything, such as for toggling autocast */
-	boolean checkBeforeQueue(CSimulation game, CUnit caster, int orderId, AbilityTarget target);
+	boolean checkBeforeQueue(CSimulation game, CUnit caster, int orderId, boolean autoOrder, AbilityTarget target);
 
-	CBehavior begin(CSimulation game, CUnit caster, int orderId, CWidget target);
+	CBehavior begin(CSimulation game, CUnit caster, int orderId, boolean autoOrder, CWidget target);
 
-	CBehavior begin(CSimulation game, CUnit caster, int orderId, AbilityPointTarget point);
+	CBehavior begin(CSimulation game, CUnit caster, int orderId, boolean autoOrder, AbilityPointTarget point);
 
-	CBehavior beginNoTarget(CSimulation game, CUnit caster, int orderId);
+	CBehavior beginNoTarget(CSimulation game, CUnit caster, int orderId, boolean autoOrder);
 
 	void setHero(boolean isHero);
 

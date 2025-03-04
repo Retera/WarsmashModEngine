@@ -29,7 +29,7 @@ public class ABConditionIsUnitPassAllAbilityTargetChecks extends ABCondition {
 				.<CWidget>getInstance().reset();
 
 		abil.checkCanTarget(game, theCaster, abil.getBaseOrderId(),
-				target.callback(game, casterUnit, localStore, castId), booleanTargetReceiver);
+				false, target.callback(game, casterUnit, localStore, castId), booleanTargetReceiver);
 
 		if (booleanTargetReceiver.isTargetable()) {
 			return true;

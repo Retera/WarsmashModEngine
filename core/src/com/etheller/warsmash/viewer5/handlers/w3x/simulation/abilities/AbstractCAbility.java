@@ -109,7 +109,7 @@ public abstract class AbstractCAbility extends CExtensibleHandleAbstract impleme
 
 	@Override
 	public final void checkCanUse(final CSimulation game, final CUnit unit, final int orderId,
-			final AbilityActivationReceiver receiver) {
+			boolean autoOrder, final AbilityActivationReceiver receiver) {
 		if (isDisabled()) {
 			receiver.disabled();
 			checkRequirementsMet(game, unit, receiver);

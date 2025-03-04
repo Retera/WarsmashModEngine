@@ -45,8 +45,9 @@ public class CAbilityAbilityBuilderActiveAutoTarget extends CAbilityAbilityBuild
 	}
 
 	@Override
-	public CBehavior beginNoTarget(CSimulation game, CUnit caster, int orderId) {
+	public CBehavior beginNoTarget(CSimulation game, CUnit caster, int orderId, boolean autoOrder) {
 		castId++;
+		this.localStore.put(ABLocalStoreKeys.combineKey(ABLocalStoreKeys.ISAUTOCAST, orderId), autoOrder);
 		CWidget target = autoTarget(game, caster);
 		if (target != null) {
 			this.runOnOrderIssuedActions(game, caster, orderId);
@@ -106,12 +107,12 @@ public class CAbilityAbilityBuilderActiveAutoTarget extends CAbilityAbilityBuild
 	// Unused
 
 	@Override
-	public CBehavior begin(CSimulation game, CUnit caster, int orderId, CWidget target) {
+	public CBehavior begin(CSimulation game, CUnit caster, int orderId, boolean autoOrder, CWidget target) {
 		return null;
 	}
 	
 	@Override
-	public CBehavior begin(CSimulation game, CUnit caster, int orderId, AbilityPointTarget point) {
+	public CBehavior begin(CSimulation game, CUnit caster, int orderId, boolean autoOrder, AbilityPointTarget point) {
 		return null;
 	}
 

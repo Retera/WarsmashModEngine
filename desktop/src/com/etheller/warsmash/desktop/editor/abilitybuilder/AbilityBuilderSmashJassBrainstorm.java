@@ -123,29 +123,19 @@ public class AbilityBuilderSmashJassBrainstorm {
 				break;
 			case NORMAL_FLEXTARGET:
 				break;
-			case NORMAL_FLEXTARGET_SIMPLE:
-				break;
 			case NORMAL_NOTARGET:
-				break;
-			case NORMAL_NOTARGET_SIMPLE:
 				break;
 			case NORMAL_PAIRING:
 				break;
 			case NORMAL_POINTTARGET:
 				break;
-			case NORMAL_POINTTARGET_SIMPLE:
-				break;
 			case NORMAL_UNITTARGET:
-				break;
-			case NORMAL_UNITTARGET_SIMPLE:
 				break;
 			case PASSIVE:
 				break;
-			case SMART:
-				break;
 			case TEMPLATE:
 				break;
-			case TOGGLE:
+			case INHERIT:
 				break;
 			}
 		}

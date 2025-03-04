@@ -29,7 +29,7 @@ public class ABConditionIsPassAllAbilityTargetChecks extends ABCondition {
 		final BooleanAbilityTargetCheckReceiver<CWidget> booleanTargetReceiver = BooleanAbilityTargetCheckReceiver
 				.<CWidget>getInstance().reset();
 		
-		abil.checkCanTarget(game, theCaster, abil.getBaseOrderId(), target.callback(game, casterUnit, localStore, castId), booleanTargetReceiver);
+		abil.checkCanTarget(game, theCaster, abil.getBaseOrderId(), false, target.callback(game, casterUnit, localStore, castId), booleanTargetReceiver);
 
 		if (booleanTargetReceiver.isTargetable()) {
 			return true;

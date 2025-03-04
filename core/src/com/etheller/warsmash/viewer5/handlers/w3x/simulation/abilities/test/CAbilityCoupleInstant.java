@@ -79,7 +79,7 @@ public class CAbilityCoupleInstant extends AbstractGenericSingleIconNoSmartActiv
 	}
 
 	@Override
-	public CBehavior begin(final CSimulation game, final CUnit caster, final int orderId, final CWidget target) {
+	public CBehavior begin(final CSimulation game, final CUnit caster, final int orderId, boolean autoOrder, final CWidget target) {
 		// only from engine, not ever allowed by the checks
 		if (target instanceof CUnit) {
 			return this.behaviorCoupleInstant.reset(game, (CUnit) target);
@@ -89,12 +89,12 @@ public class CAbilityCoupleInstant extends AbstractGenericSingleIconNoSmartActiv
 
 	@Override
 	public CBehavior begin(final CSimulation game, final CUnit caster, final int orderId,
-			final AbilityPointTarget point) {
+			boolean autoOrder, final AbilityPointTarget point) {
 		return caster.pollNextOrderBehavior(game);
 	}
 
 	@Override
-	public CBehavior beginNoTarget(final CSimulation game, final CUnit caster, final int orderId) {
+	public CBehavior beginNoTarget(final CSimulation game, final CUnit caster, final int orderId, boolean autoOrder) {
 		final PossiblePairFinderEnum possiblePairFinder = new PossiblePairFinderEnum(caster);
 		game.getWorldCollision().enumUnitsInRect(
 				new Rectangle(caster.getX() - this.area, caster.getY() - this.area, this.area * 2, this.area * 2),

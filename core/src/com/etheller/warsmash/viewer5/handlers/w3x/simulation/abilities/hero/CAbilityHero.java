@@ -15,7 +15,6 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.AbstractCAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityCategory;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityDisableType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityVisitor;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.GetAbilityByRawcodeVisitor;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.CLevelingAbility;
@@ -59,24 +58,25 @@ public class CAbilityHero extends AbstractCAbility {
 			final CUnitType unitType = unit.getUnitType();
 			this.strength = new HeroStatValue(unitType.getStartingStrength(), unitType.getStrengthPerLevel());
 			this.agility = new HeroStatValue(unitType.getStartingAgility(), unitType.getAgilityPerLevel());
-			this.intelligence = new HeroStatValue(unitType.getStartingIntelligence(), unitType.getIntelligencePerLevel());
+			this.intelligence = new HeroStatValue(unitType.getStartingIntelligence(),
+					unitType.getIntelligencePerLevel());
 			calculateDerivatedFields(game, unit);
-	
+
 			final int properNamesCount = unitType.getProperNamesCount();
 			nameIndex = properNamesCount > 0 ? game.getSeededRandom().nextInt(properNamesCount) : 0;
-	
+
 			setHeroName(unitType);
 		}
 	}
-	
+
 	public void setHeroName(CUnitType unitType) {
 		String properName;
 		final List<String> heroProperNames = unitType.getHeroProperNames();
-		int cnt = unitType.getProperNamesCount() > 0 ? unitType.getProperNamesCount() : heroProperNames.size();
+		int cnt = unitType.getProperNamesCount() > 0 ? Math.min(heroProperNames.size(), unitType.getProperNamesCount())
+				: heroProperNames.size();
 		if (heroProperNames.size() > 0 && cnt > 0) {
 			properName = heroProperNames.get(nameIndex % cnt);
-		}
-		else {
+		} else {
 			properName = WarsmashConstants.DEFAULT_STRING;
 		}
 		this.properName = properName;
@@ -98,7 +98,7 @@ public class CAbilityHero extends AbstractCAbility {
 	}
 
 	@Override
-	public boolean checkBeforeQueue(final CSimulation game, final CUnit caster, final int orderId,
+	public boolean checkBeforeQueue(final CSimulation game, final CUnit caster, final int orderId, boolean autoOrder,
 			final AbilityTarget target) {
 		final War3ID orderIdAsRawtype = new War3ID(orderId);
 		learnSkill(game, caster, orderIdAsRawtype);
@@ -116,65 +116,63 @@ public class CAbilityHero extends AbstractCAbility {
 				newAbility.setHero(true);
 				this.learnedAbilities.add(newAbility);
 				caster.add(game, newAbility);
-			}
-			else {
+			} else {
 				abilityType.setLevel(game, caster, existingAbility, existingAbility.getLevel() + 1);
 			}
-		}
-		else {
+		} else {
 			game.getCommandErrorListener().showInterfaceError(caster.getPlayerIndex(),
 					"NOTEXTERN: Ability is not yet programmed, unable to learn!");
 		}
 	}
-	
+
 	public List<CAbility> getLearnedHeroAbilities() {
 		return this.learnedAbilities;
 	}
 
 	public void selectHeroSkill(final CSimulation game, final CUnit caster, final War3ID skillId) {
 		final BooleanAbilityActivationReceiver activationReceiver = BooleanAbilityActivationReceiver.INSTANCE;
-		checkCanUse(game, caster, skillId.getValue(), activationReceiver);
+		checkCanUse(game, caster, skillId.getValue(), false, activationReceiver);
 		if (activationReceiver.isOk()) {
 			learnSkill(game, caster, skillId);
 		}
 	}
 
 	@Override
-	public CBehavior begin(final CSimulation game, final CUnit caster, final int orderId, final CWidget target) {
+	public CBehavior begin(final CSimulation game, final CUnit caster, final int orderId, boolean autoOrder,
+			final CWidget target) {
 		return null;
 	}
 
 	@Override
-	public CBehavior begin(final CSimulation game, final CUnit caster, final int orderId,
+	public CBehavior begin(final CSimulation game, final CUnit caster, final int orderId, boolean autoOrder,
 			final AbilityPointTarget point) {
 		return null;
 	}
 
 	@Override
-	public CBehavior beginNoTarget(final CSimulation game, final CUnit caster, final int orderId) {
+	public CBehavior beginNoTarget(final CSimulation game, final CUnit caster, final int orderId, boolean autoOrder) {
 		return null;
 	}
 
 	@Override
-	public void checkCanTarget(final CSimulation game, final CUnit unit, final int orderId, final CWidget target,
-			final AbilityTargetCheckReceiver<CWidget> receiver) {
+	public void checkCanTarget(final CSimulation game, final CUnit unit, final int orderId, boolean autoOrder,
+			final CWidget target, final AbilityTargetCheckReceiver<CWidget> receiver) {
 		receiver.orderIdNotAccepted();
 	}
 
 	@Override
-	public void checkCanTarget(final CSimulation game, final CUnit unit, final int orderId,
+	public void checkCanTarget(final CSimulation game, final CUnit unit, final int orderId, boolean autoOrder,
 			final AbilityPointTarget target, final AbilityTargetCheckReceiver<AbilityPointTarget> receiver) {
 		receiver.orderIdNotAccepted();
 	}
 
 	@Override
-	public void checkCanTargetNoTarget(final CSimulation game, final CUnit unit, final int orderId,
+	public void checkCanTargetNoTarget(final CSimulation game, final CUnit unit, final int orderId, boolean autoOrder,
 			final AbilityTargetCheckReceiver<Void> receiver) {
 		final War3ID orderIdAsRawtype = new War3ID(orderId);
 		if (this.skillsAvailable.contains(orderIdAsRawtype)) {
 			receiver.targetOk(null);
-		}
-		else {
+		} else {
 			receiver.orderIdNotAccepted();
 		}
 	}
@@ -198,20 +196,16 @@ public class CAbilityHero extends AbstractCAbility {
 				if ((abilityType == null) || (priorLevel < abilityType.getLevelCount())) {
 					if (this.heroLevel >= heroRequiredLevel) {
 						receiver.useOk();
-					}
-					else {
+					} else {
 						receiver.missingHeroLevelRequirement(heroRequiredLevel);
 					}
-				}
-				else {
+				} else {
 					receiver.techtreeMaximumReached();
 				}
-			}
-			else {
+			} else {
 				receiver.noHeroSkillPointsAvailable();
 			}
-		}
-		else {
+		} else {
 			receiver.useOk();
 		}
 	}
@@ -304,8 +298,7 @@ public class CAbilityHero extends AbstractCAbility {
 					(int) Math.ceil(
 							(neededTotalXp - this.xp) / simulation.getPlayer(unit.getPlayerIndex()).getHandicapXP()),
 					showEffect);
-		}
-		else {
+		} else {
 			// remove xp TODO
 		}
 	}
@@ -536,8 +529,7 @@ public class CAbilityHero extends AbstractCAbility {
 			if ((this.bonus + this.buffbonus) != 0) {
 				if ((this.bonus + this.buffbonus) > 0) {
 					text += "|cFF00FF00 +" + (this.bonus + this.buffbonus) + "";
-				}
-				else {
+				} else {
 					text += "|cFFFF0000 " + (this.bonus + this.buffbonus) + "";
 				}
 			}

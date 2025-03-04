@@ -16,7 +16,7 @@ public class ABActionActivateToggledAbility implements ABSingleAction {
 	public void runAction(final CSimulation game, final CUnit caster, final Map<String, Object> localStore,
 			final int castId) {
 		AbilityBuilderActiveAbility ability = (AbilityBuilderActiveAbility) localStore
-				.get(ABLocalStoreKeys.ISTOGGLEDABILITY);
+				.get(ABLocalStoreKeys.ABILITY);
 		ability.activate(game, caster);
 	}
 

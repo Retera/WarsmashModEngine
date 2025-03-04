@@ -92,7 +92,7 @@ public class CAbilityImmolation extends AbstractGenericSingleIconNoSmartActiveAb
 
 	@Override
 	public boolean checkBeforeQueue(final CSimulation game, final CUnit caster, final int orderId,
-			final AbilityTarget target) {
+			boolean autoOrder, final AbilityTarget target) {
 		if (this.active && (orderId == OrderIds.unimmolation)) {
 			deactivate(game, caster);
 			return false;
@@ -103,7 +103,7 @@ public class CAbilityImmolation extends AbstractGenericSingleIconNoSmartActiveAb
 			}
 			return false;
 		}
-		return super.checkBeforeQueue(game, caster, orderId, target);
+		return super.checkBeforeQueue(game, caster, orderId, autoOrder, target);
 	}
 
 	public void activate(final CSimulation game, final CUnit caster) {
@@ -121,18 +121,18 @@ public class CAbilityImmolation extends AbstractGenericSingleIconNoSmartActiveAb
 	}
 
 	@Override
-	public CBehavior begin(final CSimulation game, final CUnit caster, final int orderId, final CWidget target) {
+	public CBehavior begin(final CSimulation game, final CUnit caster, final int orderId, boolean autoOrder, final CWidget target) {
 		return null;
 	}
 
 	@Override
 	public CBehavior begin(final CSimulation game, final CUnit caster, final int orderId,
-			final AbilityPointTarget point) {
+			boolean autoOrder, final AbilityPointTarget point) {
 		return null;
 	}
 
 	@Override
-	public CBehavior beginNoTarget(final CSimulation game, final CUnit caster, final int orderId) {
+	public CBehavior beginNoTarget(final CSimulation game, final CUnit caster, final int orderId, boolean autoOrder) {
 		return null;
 	}
 

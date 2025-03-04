@@ -50,10 +50,10 @@ public class ABActionEnableAbility implements ABSingleAction {
 			unitExpression = jassTextGenerator.getCaster();
 		}
 		if (this.alias != null) {
-			return "JASSTODO";
+			return "TODOJASS";
 		}
 		else {
-			return "JASSTODO";
+			return "TODOJASS";
 		}
 	}
 }

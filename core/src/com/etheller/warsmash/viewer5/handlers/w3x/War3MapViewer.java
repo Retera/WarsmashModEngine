@@ -983,7 +983,7 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 
 	private CWidget createNewUnit(final Warcraft3MapRuntimeObjectData modifications, final War3ID unitId, float unitX,
 			float unitY, final int playerIndex, int customTeamColor, final float unitAngle) {
-		return createNewUnit(modifications, unitId, unitAngle, unitAngle, customTeamColor, customTeamColor, unitAngle, -1, -1);
+		return createNewUnit(modifications, unitId, unitX, unitY, playerIndex, customTeamColor, unitAngle, -1, -1);
 	}
 
 	private CWidget createNewUnit(final Warcraft3MapRuntimeObjectData modifications, final War3ID unitId, float unitX,

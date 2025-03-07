@@ -24,6 +24,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.CAb
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehavior;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.CUnitAttack;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.data.CAbilityData;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.unit.NonStackingStatBuffType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityActivationReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetCheckReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.BooleanAbilityActivationReceiver;
@@ -389,11 +390,11 @@ public class CAbilityHero extends AbstractCAbility {
 		final int deltaIntelligence = currentIntelligence - prevIntelligence;
 		final int currentAgility = this.agility.getCurrent();
 		final int currentAgilityBase = this.agility.getCurrentBase();
-		final int currentAgilityBonus = this.agility.getBonus();
+		final int currentAgilityBonus = this.agility.getBonus() + this.agility.getBuffBonus();
 
 		final HeroStatValue primaryAttributeStat = getStat(unit.getUnitType().getPrimaryAttribute());
 		final int primaryAttributeBase = primaryAttributeStat.getCurrentBase();
-		final int primaryAttributeBonus = primaryAttributeStat.getBonus();
+		final int primaryAttributeBonus = primaryAttributeStat.getBonus() + primaryAttributeStat.getBuffBonus();
 		final float agiAttackSpeedBonus = gameplayConstants.getAgiAttackSpeedBonus() * currentAgility;
 		for (final CUnitAttack attack : unit.getUnitSpecificAttacks()) {
 			attack.setPrimaryAttributePermanentDamageBonus(
@@ -436,11 +437,11 @@ public class CAbilityHero extends AbstractCAbility {
 		final int currentIntelligence = this.intelligence.getCurrent();
 		final int currentAgility = this.agility.getCurrent();
 		final int currentAgilityBase = this.agility.getCurrentBase();
-		final int currentAgilityBonus = this.agility.getBonus();
+		final int currentAgilityBonus = this.agility.getBonus() + this.agility.getBuffBonus();
 
 		final HeroStatValue primaryAttributeStat = getStat(unit.getUnitType().getPrimaryAttribute());
 		final int primaryAttributeBase = primaryAttributeStat.getCurrentBase();
-		final int primaryAttributeBonus = primaryAttributeStat.getBonus();
+		final int primaryAttributeBonus = primaryAttributeStat.getBonus() + primaryAttributeStat.getBuffBonus();
 		final float agiAttackSpeedBonus = gameplayConstants.getAgiAttackSpeedBonus() * currentAgility;
 		for (final CUnitAttack attack : unit.getUnitSpecificAttacks()) {
 			attack.setPrimaryAttributePermanentDamageBonus(

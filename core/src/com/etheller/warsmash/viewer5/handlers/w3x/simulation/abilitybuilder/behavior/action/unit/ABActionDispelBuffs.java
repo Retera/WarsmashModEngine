@@ -26,7 +26,7 @@ public class ABActionDispelBuffs implements ABAction {
 		if (source != null) {
 			theCaster = source.callback(game, theCaster, localStore, castId);
 		}
-		CUnit theTarget = null;
+		CUnit theTarget = caster;
 		if (target != null) {
 			theTarget = target.callback(game, theCaster, localStore, castId);
 		}

@@ -3178,6 +3178,21 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 							}
 
 							@Override
+							public void changeUnitScale(final CUnit unit, final float scale, final boolean multiplier) {
+								final RenderUnit renderPeer = War3MapViewer.this.unitToRenderPeer.get(unit);
+								if (multiplier) {
+									renderPeer.selectionScale *= scale;
+									Vector3 newScale = new Vector3(renderPeer.instance.localScale);
+									newScale.scl(scale);
+									renderPeer.instance.setScale(new float[]{newScale.x,newScale.y,newScale.z});
+								} else {
+									renderPeer.selectionScale = scale;
+									renderPeer.instance.setScale(new float[]{scale,scale,scale});
+								}
+								
+							}
+
+							@Override
 							public void changeUnitColor(final CUnit unit, final int playerIndex) {
 								final RenderUnit renderPeer = War3MapViewer.this.unitToRenderPeer.get(unit);
 								renderPeer.setPlayerColor(

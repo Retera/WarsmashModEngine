@@ -46,7 +46,8 @@ public class CAbilityAbilityBuilderNoIcon extends AbstractGenericNoIconAbility i
 		GameObject editorData = (GameObject) localStore.get(ABLocalStoreKeys.ABILITYEDITORDATA);
 		final int levels = editorData.getFieldAsInteger(AbilityFields.LEVELS, 0);
 		localStore.put(ABLocalStoreKeys.ISABILITYLEVELED, levels > 1);
-		localStore.put(ABLocalStoreKeys.ISABILITYPHYSICAL, true);
+		localStore.put(ABLocalStoreKeys.ISABILITYMAGIC, false);
+		localStore.put(ABLocalStoreKeys.ISABILITYPHYSICAL, false);
 	}
 
 	protected void setSpellFields(CSimulation game, CUnit unit) {

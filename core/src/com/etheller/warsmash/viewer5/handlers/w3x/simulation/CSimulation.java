@@ -1114,6 +1114,10 @@ public class CSimulation implements CPlayerAPI, CFogMaskSettings {
 		}
 	}
 
+	public void changeUnitScale(final CUnit unit, final float scale, boolean multiplier) {
+		this.simulationRenderController.changeUnitScale(unit, scale, multiplier);
+	}
+
 	public void changeUnitColor(final CUnit unit, final int playerIndex) {
 		this.simulationRenderController.changeUnitColor(unit, playerIndex);
 	}

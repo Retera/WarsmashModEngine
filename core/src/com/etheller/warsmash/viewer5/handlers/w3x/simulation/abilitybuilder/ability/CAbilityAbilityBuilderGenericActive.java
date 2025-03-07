@@ -298,6 +298,7 @@ public abstract class CAbilityAbilityBuilderGenericActive extends AbstractGeneri
 			this.hideAreaCursor = this.config.getDisplayFields().getHideAreaCursor().callback(game, unit, localStore,
 					this.getLevel());
 		}
+		localStore.put(ABLocalStoreKeys.ISABILITYMAGIC, this.magic);
 		localStore.put(ABLocalStoreKeys.ISABILITYPHYSICAL, this.physical);
 	}
 

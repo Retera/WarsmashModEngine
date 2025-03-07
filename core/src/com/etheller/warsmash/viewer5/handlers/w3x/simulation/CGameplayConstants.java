@@ -33,9 +33,14 @@ public class CGameplayConstants {
 	private final float foggedAttackRevealRadius;
 
 	private final float defenseArmor;
+	
+	private final boolean canDisableDivineShield;
 
 	private final float[] etherealDamageBonus;
 	private final boolean etherealDamageBonusAlly;
+	
+	private final float frostAttackSpeedDecrease;
+	private final float frostMoveSpeedDecrease;
 
 	private final boolean magicImmuneResistsDamage;
 	private final boolean magicImmuneResistsLeech;
@@ -151,6 +156,8 @@ public class CGameplayConstants {
 		this.fogFlashTime = miscData.getFieldFloatValue("FogFlashTime");
 		this.dyingRevealRadius = miscData.getFieldFloatValue("DyingRevealRadius");
 		this.foggedAttackRevealRadius = miscData.getFieldFloatValue("FoggedAttackRevealRadius");
+		
+		this.canDisableDivineShield = miscData.getFieldValue("CanDeactivateDivineShield") != 0;
 
 		final CDefenseType[] defenseTypeOrder = { CDefenseType.SMALL, CDefenseType.MEDIUM, CDefenseType.LARGE,
 				CDefenseType.FORT, CDefenseType.NORMAL, CDefenseType.HERO, CDefenseType.DIVINE, CDefenseType.NONE, };
@@ -212,6 +219,9 @@ public class CGameplayConstants {
 			}
 		}
 		this.etherealDamageBonusAlly = miscData.getFieldValue("EtherealDamageBonusAlly") != 0;
+		
+		this.frostAttackSpeedDecrease = miscData.getFieldFloatValue("FrostAttackSpeedDecrease");
+		this.frostMoveSpeedDecrease = miscData.getFieldFloatValue("FrostMoveSpeedDecrease");
 
 		this.magicImmuneResistsDamage = miscData.getFieldValue("MagicImmunesResistDamage") != 0;
 		this.magicImmuneResistsLeech = miscData.getFieldValue("MagicImmunesResistLeech") != 0;
@@ -394,12 +404,24 @@ public class CGameplayConstants {
 		return this.defenseArmor;
 	}
 
+	public boolean isCanDisableDivineShield() {
+		return canDisableDivineShield;
+	}
+
 	public float[] getEtherealDamageBonus() {
 		return etherealDamageBonus;
 	}
 
 	public boolean isEtherealDamageBonusAlly() {
 		return etherealDamageBonusAlly;
+	}
+
+	public float getFrostAttackSpeedDecrease() {
+		return frostAttackSpeedDecrease;
+	}
+
+	public float getFrostMoveSpeedDecrease() {
+		return frostMoveSpeedDecrease;
 	}
 
 	public boolean isMagicImmuneResistsDamage() {

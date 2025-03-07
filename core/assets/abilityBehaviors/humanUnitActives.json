@@ -673,7 +673,7 @@
 				}]
 		}]
 	},{
-		"ids": [{"id":"Ahea", "castId": "heal", "autoCastOnId": "healon", "autoCastOffId": "healoff", "autoCastType": "NEARESTVALID"}],
+		"ids": [{"id":"Ahea", "castId": "heal", "autoCastOnId": "healon", "autoCastOffId": "healoff", "autoCastType": "NEARESTVALID"},{"id":"Anhe", "castId": "heal", "autoCastOnId": "healon", "autoCastOffId": "healoff", "autoCastType": "NEARESTVALID"}],
 		"type": "NORMAL_UNITTARGET",
 		"overrideFields": {
 			"universalSpell": {

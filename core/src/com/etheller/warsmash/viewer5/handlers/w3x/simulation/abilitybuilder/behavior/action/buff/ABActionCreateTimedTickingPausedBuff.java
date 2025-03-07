@@ -30,6 +30,8 @@ public class ABActionCreateTimedTickingPausedBuff implements ABSingleAction {
 	private ABBooleanCallback leveled;
 	private ABBooleanCallback positive;
 	private ABBooleanCallback dispellable;
+	private ABBooleanCallback magic;
+	private ABBooleanCallback physical;
 
 	@Override
 	public void runAction(final CSimulation game, final CUnit caster, final Map<String, Object> localStore,
@@ -52,7 +54,16 @@ public class ABActionCreateTimedTickingPausedBuff implements ABSingleAction {
 		if (dispellable != null) {
 			isDispellable = dispellable.callback(game, caster, localStore, castId);
 		} else {
-			isDispellable = !((boolean) localStore.getOrDefault(ABLocalStoreKeys.ISABILITYPHYSICAL, false));
+			isDispellable = ((boolean) localStore.getOrDefault(ABLocalStoreKeys.ISABILITYMAGIC, true));
+		}
+		
+		boolean isMagic = ((boolean) localStore.getOrDefault(ABLocalStoreKeys.ISABILITYMAGIC, true));
+		boolean isPhysical = ((boolean) localStore.getOrDefault(ABLocalStoreKeys.ISABILITYPHYSICAL, false));
+		if (magic != null) {
+			isMagic = magic.callback(game, caster, localStore, castId);
+		}
+		if (physical != null) {
+			isPhysical = physical.callback(game, caster, localStore, castId);
 		}
 
 		if (showIcon != null) {
@@ -64,6 +75,8 @@ public class ABActionCreateTimedTickingPausedBuff implements ABSingleAction {
 			if (artType != null) {
 				ability.setArtType(artType);
 			}
+			ability.setMagic(isMagic);
+			ability.setPhysical(isPhysical);
 			localStore.put(ABLocalStoreKeys.LASTCREATEDBUFF, ability);
 		} else {
 			ABTimedTickingPausedBuff ability = new ABTimedTickingPausedBuff(game.getHandleIdAllocator().createId(),
@@ -73,6 +86,8 @@ public class ABActionCreateTimedTickingPausedBuff implements ABSingleAction {
 			if (artType != null) {
 				ability.setArtType(artType);
 			}
+			ability.setMagic(isMagic);
+			ability.setPhysical(isPhysical);
 			localStore.put(ABLocalStoreKeys.LASTCREATEDBUFF, ability);
 		}
 		if (!localStore.containsKey(ABLocalStoreKeys.BUFFCASTINGUNIT)) {

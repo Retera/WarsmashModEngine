@@ -1,6 +1,7 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core;
 
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.action.*;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.action.abilities.*;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.action.ability.*;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.action.buff.*;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.action.destructable.*;
@@ -8,8 +9,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.beha
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.action.floatingtext.*;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.action.gamestate.*;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.action.item.*;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.action.player.ABActionGiveResourcesToPlayer;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.action.player.ABActionSetAbilityEnabledForPlayer;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.action.player.*;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.action.projectile.*;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.action.stats.*;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.action.structural.*;
@@ -56,12 +56,14 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.beha
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.widget.*;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.condition.*;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.condition.ability.*;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.condition.buff.*;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.condition.comparison.*;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.condition.game.*;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.condition.item.*;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.condition.location.*;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.condition.logical.*;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.condition.numeric.*;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.condition.projectile.*;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.condition.timer.*;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.condition.unit.*;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.condition.unittype.*;
@@ -78,6 +80,7 @@ public abstract class AbilityBuilderGsonBuilder {
 				.registerSubtype(ABCallbackGetPartnerAbility.class, "getPartnerAbility")
 				.registerSubtype(ABCallbackGetReactionAbility.class, "getReactionAbility")
 				.registerSubtype(ABCallbackGetLastCreatedAbility.class, "getLastCreatedAbility")
+				.registerSubtype(ABCallbackGetThisAbility.class, "getThisAbility")
 
 				.registerSubtype(ABCallbackArgumentAbility.class, "argumentAbility")
 				.registerSubtype(ABCallbackReuseAbility.class, "reuseAbility")
@@ -139,11 +142,6 @@ public abstract class AbilityBuilderGsonBuilder {
 				.registerSubtype(ABCallbackInlineConditionBoolean.class, "inlineConditionBoolean")
 				.registerSubtype(ABCallbackGetAbilityDataAsBoolean.class, "getAbilityDataAsBoolean")
 				.registerSubtype(ABCallbackGetParentAbilityDataAsBoolean.class, "getParentAbilityDataAsBoolean")
-				.registerSubtype(ABCallbackWasCastingInterrupted.class, "wasCastingInterrupted")
-				.registerSubtype(ABCallbackIsTriggeringDamageAnAttack.class, "isTriggeringDamageAnAttack")
-				.registerSubtype(ABCallbackIsTriggeringDamageRanged.class, "isTriggeringDamageRanged")
-
-				.registerSubtype(ABCallbackIsProjectileReflected.class, "isProjectileReflected")
 				
 				.registerSubtype(ABCallbackIntegerToBoolean.class, "i2b")
 
@@ -157,6 +155,7 @@ public abstract class AbilityBuilderGsonBuilder {
 		callbackTypeFactory.registerSubtype(ABCallbackGetStoredBuffByKey.class, "getStoredBuffByKey")
 				.registerSubtype(ABCallbackInlineConditionBuff.class, "inlineConditionBuff")
 				.registerSubtype(ABCallbackGetLastCreatedBuff.class, "getLastCreatedBuff")
+				.registerSubtype(ABCallbackEnumBuff.class, "enumBuff")
 
 				.registerSubtype(ABCallbackArgumentBuff.class, "argumentBuff")
 				.registerSubtype(ABCallbackReuseBuff.class, "reuseBuff")
@@ -670,6 +669,7 @@ public abstract class AbilityBuilderGsonBuilder {
 				.registerSubtype(ABConditionIsUnitEnemy.class, "isUnitEnemy")
 				.registerSubtype(ABConditionIsUnitDead.class, "isUnitDead")
 				.registerSubtype(ABConditionIsUnitTraining.class, "isUnitTraining")
+				.registerSubtype(ABConditionIsUnitMagicImmune.class, "isUnitMagicImmune")
 				.registerSubtype(ABConditionIsUnitShareSpells.class, "isUnitShareSpells")
 
 				.registerSubtype(ABConditionIsItemAbility.class, "isItemAbility")
@@ -684,9 +684,17 @@ public abstract class AbilityBuilderGsonBuilder {
 				.registerSubtype(ABConditionIsLocationFlyingOnly.class, "isLocationFlyingOnly")
 
 				.registerSubtype(ABConditionIsLocationPathableForUnitType.class, "isLocationPathableForUnitType")
+
+				.registerSubtype(ABConditionWasCastingInterrupted.class, "wasCastingInterrupted")
+				.registerSubtype(ABConditionIsTriggeringDamageAnAttack.class, "isTriggeringDamageAnAttack")
+				.registerSubtype(ABConditionIsTriggeringDamageRanged.class, "isTriggeringDamageRanged")
+
+				.registerSubtype(ABConditionIsProjectileReflected.class, "isProjectileReflected")
 				
+				.registerSubtype(ABConditionIsBuffMagic.class, "isBuffMagic")
 				
 
+				.registerSubtype(ABConditionGameplayConstantCanDisableDivineShield.class, "gameplayConstantCanDisableDivineShield")
 				.registerSubtype(ABConditionIsTimeOfDayInRange.class, "isTimeOfDayInRange")
 				.registerSubtype(ABConditionGameplayConstantIsRelativeUpgradeCosts.class, "gameplayConstantIsRelativeUpgradeCosts")
 				.registerSubtype(ABConditionGameplayConstantIsDefendCanDeflect.class, "gameplayConstantIsDefendCanDeflect")
@@ -765,7 +773,9 @@ public abstract class AbilityBuilderGsonBuilder {
 				.registerSubtype(ABActionSetMp.class, "setMp")
 				.registerSubtype(ABActionAddMp.class, "addMp")
 				.registerSubtype(ABActionSubtractMp.class, "subtractMp")
+				.registerSubtype(ABActionMultiplyUnitScale.class, "multiplyUnitScale")
 				.registerSubtype(ABActionAddStunBuff.class, "addStunBuff")
+				.registerSubtype(ABActionAddSlowBuff.class, "addSlowBuff")
 				.registerSubtype(ABActionKillUnit.class, "killUnit")
 				.registerSubtype(ABActionRemoveUnit.class, "removeUnit")
 				.registerSubtype(ABActionHideUnit.class, "hideUnit")
@@ -820,6 +830,7 @@ public abstract class AbilityBuilderGsonBuilder {
 				.registerSubtype(ABActionAddBuff.class, "addBuff")
 				.registerSubtype(ABActionAddNonStackingDisplayBuff.class, "addNonStackingDisplayBuff")
 				.registerSubtype(ABActionRemoveBuff.class, "removeBuff")
+				.registerSubtype(ABActionDispelBuffs.class, "dispelBuffs")
 				.registerSubtype(ABActionRemoveNonStackingDisplayBuff.class, "removeNonStackingDisplayBuff")
 				.registerSubtype(ABActionCreatePassiveBuff.class, "createPassiveBuff")
 				.registerSubtype(ABActionCreateTargetingBuff.class, "createTargetingBuff")
@@ -919,9 +930,9 @@ public abstract class AbilityBuilderGsonBuilder {
 				.registerSubtype(ABActionCreateUnitVisionModifier.class, "createUnitVisionModifier")
 				.registerSubtype(ABActionCreateLocationVisionModifier.class, "createLocationVisionModifier")
 				.registerSubtype(ABActionRemoveVisionModifier.class, "removeVisionModifier")
-				.registerSubtype(ABActionSetBurrowPlaceholder.class, "setBurrowPlaceholder")
 				
 				
+				.registerSubtype(ABActionAbilitySetShowIcon.class, "abilitySetShowIcon")
 
 
 				.registerSubtype(ABActionCreateTimeOfDayEvent.class, "createTimeOfDayEvent")

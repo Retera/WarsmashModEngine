@@ -34,6 +34,7 @@ public class ABLocalStoreKeys {
 	public static final String ISFLEXABILITY = "_flexAbility";
 	public static final String ISPAIRABILITY = "_pairAbility";
 	public static final String ISABILITYLEVELED = "_isAbilityLeveld";
+	public static final String ISABILITYMAGIC = "_isAbilityMagic";
 	public static final String ISABILITYPHYSICAL = "_isAbilityPhysical";
 	
 	

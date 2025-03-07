@@ -1,4 +1,4 @@
-package com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.booleancallbacks;
+package com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.condition.projectile;
 
 import java.util.Map;
 
@@ -9,7 +9,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.beha
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABCondition;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.projectile.CProjectile;
 
-public class ABCallbackIsProjectileReflected extends ABCondition {
+public class ABConditionIsProjectileReflected extends ABCondition {
 
 	private ABProjectileCallback projectile;
 

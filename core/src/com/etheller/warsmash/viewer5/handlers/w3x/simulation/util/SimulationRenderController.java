@@ -164,4 +164,6 @@ public interface SimulationRenderController {
 
 	boolean isTerrainWater(float x, float y);
 
+	void changeUnitScale(CUnit unit, float scale, boolean multiplier);
+
 }

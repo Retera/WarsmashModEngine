@@ -40,7 +40,7 @@ public class ABActionCreateTimedArtBuff implements ABSingleAction {
 		if (dispellable != null) {
 			isDispellable = dispellable.callback(game, caster, localStore, castId);
 		} else {
-			isDispellable = !((boolean) localStore.getOrDefault(ABLocalStoreKeys.ISABILITYPHYSICAL, false));
+			isDispellable = ((boolean) localStore.getOrDefault(ABLocalStoreKeys.ISABILITYMAGIC, true));
 		}
 
 		if (showIcon != null) {

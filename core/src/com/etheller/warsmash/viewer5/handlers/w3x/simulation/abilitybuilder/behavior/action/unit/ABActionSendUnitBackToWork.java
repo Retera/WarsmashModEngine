@@ -2,28 +2,29 @@ package com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.beh
 
 import java.util.Map;
 
+import com.etheller.warsmash.parsers.jass.JassTextGenerator;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.unitcallbacks.ABUnitCallback;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABAction;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABSingleAction;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.timer.ABTimer;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.ResourceType;
 
-public class ABActionSendUnitBackToWork implements ABAction {
+public class ABActionSendUnitBackToWork implements ABSingleAction {
 
 	private ABUnitCallback unit;
 
 	@Override
 	public void runAction(CSimulation game, CUnit caster, Map<String, Object> localStore, final int castId) {
 		final CUnit targetUnit;
-		if (unit != null) {
-			targetUnit = unit.callback(game, caster, localStore, castId);
-		} else {
+		if (this.unit != null) {
+			targetUnit = this.unit.callback(game, caster, localStore, castId);
+		}
+		else {
 			targetUnit = caster;
 		}
-		
-		ABTimer timer = new ABTimer(caster, localStore, null, castId) {
-			@Override 
+
+		final ABTimer timer = new ABTimer(caster, localStore, null, castId) {
+			@Override
 			public void onFire(CSimulation simulation) {
 				targetUnit.backToWork(game, null);
 			}
@@ -33,4 +34,16 @@ public class ABActionSendUnitBackToWork implements ABAction {
 		timer.start(game);
 	}
 
+	@Override
+	public String generateJassEquivalent(JassTextGenerator jassTextGenerator) {
+		String unitExpression;
+		if (this.unit != null) {
+			unitExpression = this.unit.generateJassEquivalent(jassTextGenerator);
+		}
+		else {
+			unitExpression = jassTextGenerator.getCaster();
+		}
+		return "SendUnitBackToWorkAU(" + unitExpression + ", " + jassTextGenerator.getTriggerLocalStore() + ", "
+				+ jassTextGenerator.getCastId() + ")";
+	}
 }

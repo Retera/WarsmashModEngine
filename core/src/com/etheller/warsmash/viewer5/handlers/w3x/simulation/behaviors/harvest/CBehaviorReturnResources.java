@@ -15,9 +15,9 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTargetVisitor;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CAbstractRangedBehavior;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehavior;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehaviorCategory;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.OrderIds;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayer;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.BooleanAbilityTargetCheckReceiver;
 
 public class CBehaviorReturnResources extends CAbstractRangedBehavior implements AbilityTargetVisitor<CBehavior> {
 	private final CAbilityHarvest abilityHarvest;
@@ -34,8 +34,7 @@ public class CBehaviorReturnResources extends CAbstractRangedBehavior implements
 			// TODO it is unconventional not to return self here
 			return this.unit.pollNextOrderBehavior(simulation);
 		}
-		innerReset(nearestDropoffPoint, true);
-		return this;
+		return innerReset(simulation, nearestDropoffPoint, true);
 	}
 
 	@Override
@@ -73,7 +72,9 @@ public class CBehaviorReturnResources extends CAbstractRangedBehavior implements
 						throw new IllegalStateException("Unit used Harvest skill to carry FOOD resource!");
 					case GOLD:
 						player.setGold(player.getGold() + this.abilityHarvest.getCarriedResourceAmount());
-						this.unit.getUnitAnimationListener().removeSecondaryTag(SecondaryTag.GOLD);
+						if (this.unit.getUnitAnimationListener().removeSecondaryTag(SecondaryTag.GOLD)) {
+							this.unit.getUnitAnimationListener().forceResetCurrentAnimation();
+						}
 						if ((this.abilityHarvest.getLastHarvestTarget() != null) && this.abilityHarvest
 								.getLastHarvestTarget().visit(AbilityTargetStillAliveVisitor.INSTANCE)) {
 							nextTarget = this.abilityHarvest.getLastHarvestTarget();
@@ -84,7 +85,9 @@ public class CBehaviorReturnResources extends CAbstractRangedBehavior implements
 						break;
 					case LUMBER:
 						player.setLumber(player.getLumber() + this.abilityHarvest.getCarriedResourceAmount());
-						this.unit.getUnitAnimationListener().removeSecondaryTag(SecondaryTag.LUMBER);
+						if (this.unit.getUnitAnimationListener().removeSecondaryTag(SecondaryTag.LUMBER)) {
+							this.unit.getUnitAnimationListener().forceResetCurrentAnimation();
+						}
 						if (this.abilityHarvest.getLastHarvestTarget() != null) {
 							if (this.abilityHarvest.getLastHarvestTarget()
 									.visit(AbilityTargetStillAliveVisitor.INSTANCE)) {
@@ -105,7 +108,7 @@ public class CBehaviorReturnResources extends CAbstractRangedBehavior implements
 							this.abilityHarvest.getCarriedResourceAmount());
 					this.abilityHarvest.setCarriedResources(this.abilityHarvest.getCarriedResourceType(), 0);
 					if (nextTarget != null) {
-						return this.abilityHarvest.getBehaviorHarvest().reset(nextTarget);
+						return this.abilityHarvest.getBehaviorHarvest().reset(this.simulation, nextTarget);
 					}
 					return this.unit.pollNextOrderBehavior(this.simulation);
 				}
@@ -237,6 +240,11 @@ public class CBehaviorReturnResources extends CAbstractRangedBehavior implements
 	@Override
 	public boolean interruptable() {
 		return true;
+	}
+
+	@Override
+	public CBehaviorCategory getBehaviorCategory() {
+		return CBehaviorCategory.SPELL;
 	}
 
 }

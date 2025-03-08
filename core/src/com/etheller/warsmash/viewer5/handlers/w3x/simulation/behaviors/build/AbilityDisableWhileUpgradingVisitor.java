@@ -152,7 +152,7 @@ public class AbilityDisableWhileUpgradingVisitor implements CAbilityVisitor<Void
 	}
 
 	@Override
-	public Void accept(GenericSingleIconPassiveAbility ability) {
+	public Void accept(final GenericSingleIconPassiveAbility ability) {
 		if (!ability.isUniversal()) {
 			ability.setDisabled(true, CAbilityDisableType.CONSTRUCTION);
 			ability.setIconShowing(false);
@@ -209,7 +209,7 @@ public class AbilityDisableWhileUpgradingVisitor implements CAbilityVisitor<Void
 
 	@Override
 	public Void accept(final CAbilityJass ability) {
-		final boolean enabledWhileUpgrading = ability.getType().isEnabledWhileUpgrading();
+		final boolean enabledWhileUpgrading = ability.isEnabledWhileUpgrading();
 		ability.setDisabled(!enabledWhileUpgrading, CAbilityDisableType.CONSTRUCTION);
 		ability.setIconShowing(enabledWhileUpgrading);
 		return null;

@@ -17,4 +17,16 @@ public interface CDestructableBuff extends CHandle, Aliased {
 	int getLevel();
 
 	void setLevel(int level);
+
+	boolean isDispellable();
+
+	boolean isTimedLife();
+
+	boolean isPositive();
+
+	boolean isHero();
+
+	boolean isPhysical();
+
+	boolean isAura();
 }

@@ -10,6 +10,7 @@ public class AbilityBuilderOverrideFields {
 	
 	private ABFloatCallback areaOverride;
 	private ABFloatCallback rangeOverride;
+	private ABFloatCallback castTimeOverride;
 	private ABFloatCallback cooldownOverride;
 	private ABIntegerCallback manaCostOverride;
 	
@@ -19,7 +20,36 @@ public class AbilityBuilderOverrideFields {
 	private ABIDCallback offTooltipOverride;
 	
 	private ABBooleanCallback physicalSpell;
+	private ABBooleanCallback magicSpell;
 	private ABBooleanCallback universalSpell;
+
+	public void updateFromParent(AbilityBuilderOverrideFields parent) {
+		if (this.areaOverride == null)
+			this.areaOverride = parent.areaOverride;
+		if (this.rangeOverride == null)
+			this.rangeOverride = parent.rangeOverride;
+		if (this.castTimeOverride == null)
+			this.castTimeOverride = parent.castTimeOverride;
+		if (this.cooldownOverride == null)
+			this.cooldownOverride = parent.cooldownOverride;
+		if (this.manaCostOverride == null)
+			this.manaCostOverride = parent.manaCostOverride;
+
+		if (this.autocastTypeOverride == null)
+			this.autocastTypeOverride = parent.autocastTypeOverride;
+
+		if (this.onTooltipOverride == null)
+			this.onTooltipOverride = parent.onTooltipOverride;
+		if (this.offTooltipOverride == null)
+			this.offTooltipOverride = parent.offTooltipOverride;
+
+		if (this.physicalSpell == null)
+			this.physicalSpell = parent.physicalSpell;
+		if (this.magicSpell == null)
+			this.magicSpell = parent.magicSpell;
+		if (this.universalSpell == null)
+			this.universalSpell = parent.universalSpell;
+	}
 	
 	public ABFloatCallback getAreaOverride() {
 		return areaOverride;
@@ -32,6 +62,12 @@ public class AbilityBuilderOverrideFields {
 	}
 	public void setRangeOverride(ABFloatCallback rangeOverride) {
 		this.rangeOverride = rangeOverride;
+	}
+	public ABFloatCallback getCastTimeOverride() {
+		return castTimeOverride;
+	}
+	public void setCastTimeOverride(ABFloatCallback castTimeOverride) {
+		this.castTimeOverride = castTimeOverride;
 	}
 	public ABFloatCallback getCooldownOverride() {
 		return cooldownOverride;
@@ -69,13 +105,17 @@ public class AbilityBuilderOverrideFields {
 	public void setPhysicalSpell(ABBooleanCallback physicalSpell) {
 		this.physicalSpell = physicalSpell;
 	}
+	public ABBooleanCallback getMagicSpell() {
+		return magicSpell;
+	}
+	public void setMagicSpell(ABBooleanCallback magicSpell) {
+		this.magicSpell = magicSpell;
+	}
 	public ABBooleanCallback getUniversalSpell() {
 		return universalSpell;
 	}
 	public void setUniversalSpell(ABBooleanCallback universalSpell) {
 		this.universalSpell = universalSpell;
 	}
-	
-	
 
 }

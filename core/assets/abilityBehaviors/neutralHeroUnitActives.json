@@ -354,6 +354,10 @@
 							"type": "getEnumUnit"
 						}
 					},
+					"positive": {
+						"type": "rawBoolean",
+						"value": "false"
+					},
 					"onAddActions": [{
 							"type": "addAttackPreDamageListener",
 							"targetUnit": {

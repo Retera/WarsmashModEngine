@@ -71,35 +71,35 @@ public abstract class CBuffAuraBase extends AbstractCBuff {
 	}
 
 	@Override
-	public CBehavior begin(CSimulation game, CUnit caster, int orderId, CWidget target) {
+	public CBehavior begin(CSimulation game, CUnit caster, int orderId, boolean autoOrder, CWidget target) {
 		return null;
 	}
 
 	@Override
-	public CBehavior begin(CSimulation game, CUnit caster, int orderId, AbilityPointTarget point) {
+	public CBehavior begin(CSimulation game, CUnit caster, int orderId, boolean autoOrder, AbilityPointTarget point) {
 		return null;
 	}
 
 	@Override
-	public CBehavior beginNoTarget(CSimulation game, CUnit caster, int orderId) {
+	public CBehavior beginNoTarget(CSimulation game, CUnit caster, int orderId, boolean autoOrder) {
 		return null;
 	}
 
 	@Override
-	public void checkCanTarget(CSimulation game, CUnit unit, int orderId, CWidget target,
-							   AbilityTargetCheckReceiver<CWidget> receiver) {
+	public void checkCanTarget(CSimulation game, CUnit unit, int orderId, boolean autoOrder,
+							   CWidget target, AbilityTargetCheckReceiver<CWidget> receiver) {
 		receiver.notAnActiveAbility();
 	}
 
 	@Override
-	public void checkCanTarget(CSimulation game, CUnit unit, int orderId, AbilityPointTarget target,
-							   AbilityTargetCheckReceiver<AbilityPointTarget> receiver) {
+	public void checkCanTarget(CSimulation game, CUnit unit, int orderId, boolean autoOrder,
+							   AbilityPointTarget target, AbilityTargetCheckReceiver<AbilityPointTarget> receiver) {
 		receiver.notAnActiveAbility();
 	}
 
 	@Override
 	public void checkCanTargetNoTarget(CSimulation game, CUnit unit, int orderId,
-									   AbilityTargetCheckReceiver<Void> receiver) {
+									   boolean autoOrder, AbilityTargetCheckReceiver<Void> receiver) {
 		receiver.notAnActiveAbility();
 	}
 	@Override

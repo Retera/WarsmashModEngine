@@ -51,6 +51,28 @@ public class Sequence {
 		}
 	}
 
+	public static AnimationTokens.PrimaryTag any(final EnumSet<AnimationTokens.PrimaryTag> primaryTags) {
+		AnimationTokens.PrimaryTag primaryTag;
+		if (primaryTags.isEmpty()) {
+			primaryTag = null;
+		}
+		else {
+			primaryTag = primaryTags.iterator().next();
+		}
+		return primaryTag;
+	}
+
+	public static AnimationTokens.SecondaryTag anySecondary(final EnumSet<AnimationTokens.SecondaryTag> primaryTags) {
+		AnimationTokens.SecondaryTag primaryTag;
+		if (primaryTags.isEmpty()) {
+			primaryTag = null;
+		}
+		else {
+			primaryTag = primaryTags.iterator().next();
+		}
+		return primaryTag;
+	}
+
 	public String getName() {
 		return this.sequence.getName();
 	}

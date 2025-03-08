@@ -15,6 +15,6 @@ public class CAbilityProjectile extends CProjectile {
 
 	@Override
 	protected void onHitTarget(CSimulation game) {
-		projectileListener.onHit(game, getTarget());
+		projectileListener.onHit(game, this, getTarget());
 	}
 }

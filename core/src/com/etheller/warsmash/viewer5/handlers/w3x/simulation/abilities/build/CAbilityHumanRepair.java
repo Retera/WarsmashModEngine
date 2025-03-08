@@ -11,6 +11,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.autocast.
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.autocast.CAutocastAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.AbstractGenericSingleIconActiveAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityPointTarget;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTargetVisitor;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehavior;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.build.CBehaviorHumanRepair;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CTargetType;
@@ -27,13 +28,18 @@ public class CAbilityHumanRepair extends AbstractGenericSingleIconActiveAbility 
 	private float castRange;
 	private CBehaviorHumanRepair behaviorRepair;
 	private boolean autocasting = false;
+	private float powerBuildCostRatio;
+	private float powerBuildTimeRatio;
 
-	public CAbilityHumanRepair(final int handleId, final War3ID code, final War3ID alias, final EnumSet<CTargetType> targetsAllowed,
-			final float navalRangeBonus, final float repairCostRatio, final float repairTimeRatio,
+	public CAbilityHumanRepair(final int handleId, final War3ID code, final War3ID alias,
+			final EnumSet<CTargetType> targetsAllowed, final float navalRangeBonus, final float powerBuildCostRatio,
+			final float powerBuildTimeRatio, final float repairCostRatio, final float repairTimeRatio,
 			final float castRange) {
 		super(handleId, code, alias);
 		this.targetsAllowed = targetsAllowed;
 		this.navalRangeBonus = navalRangeBonus;
+		this.powerBuildCostRatio = powerBuildCostRatio;
+		this.powerBuildTimeRatio = powerBuildTimeRatio;
 		this.repairCostRatio = repairCostRatio;
 		this.repairTimeRatio = repairTimeRatio;
 		this.castRange = castRange;
@@ -42,20 +48,27 @@ public class CAbilityHumanRepair extends AbstractGenericSingleIconActiveAbility 
 	@Override
 	protected void innerCheckCanTarget(final CSimulation game, final CUnit unit, final int orderId,
 			final CWidget target, final AbilityTargetCheckReceiver<CWidget> receiver) {
-		if(orderId == OrderIds.smart) {
-			if (target.canBeTargetedBy(game, unit, this.targetsAllowed) && (target.getLife() < target.getMaxLife())) {
-				receiver.targetOk(target);
-			}
-			else {
-				receiver.orderIdNotAccepted();
-			}
-		} else {
+		if(target.getLife() < target.getMaxLife()) {
 			if (target.canBeTargetedBy(game, unit, this.targetsAllowed, receiver)) {
-				if(target.getLife() < target.getMaxLife()) {
-					receiver.targetOk(target);
-				} else {
-					receiver.targetCheckFailed(CommandStringErrorKeys.TARGET_IS_NOT_DAMAGED);
+				final CUnit targetUnit = target.visit(AbilityTargetVisitor.UNIT);
+				if ((targetUnit != null) && targetUnit.isConstructing() && (this.powerBuildTimeRatio == 0 || !targetUnit.isConstructingPaused())) {
+					if(orderId == OrderIds.smart) {
+						receiver.orderIdNotAccepted();
+					} else {
+						receiver.targetCheckFailed(CommandStringErrorKeys.THAT_BUILDING_IS_CURRENTLY_UNDER_CONSTRUCTION);
+					}
 				}
+				else {
+					receiver.targetOk(target);
+				}
+			}
+			// else receiver called by canBeTargetedBy
+		}
+		else {
+			if(orderId == OrderIds.smart) {
+				receiver.orderIdNotAccepted();
+			} else {
+				receiver.targetCheckFailed(CommandStringErrorKeys.TARGET_IS_NOT_DAMAGED);
 			}
 		}
 	}
@@ -111,18 +124,18 @@ public class CAbilityHumanRepair extends AbstractGenericSingleIconActiveAbility 
 	}
 
 	@Override
-	public CBehavior begin(final CSimulation game, final CUnit caster, final int orderId, final CWidget target) {
-		return this.behaviorRepair.reset(target);
+	public CBehavior begin(final CSimulation game, final CUnit caster, final int orderId, boolean autoOrder, final CWidget target) {
+		return this.behaviorRepair.reset(game, target);
 	}
 
 	@Override
 	public CBehavior begin(final CSimulation game, final CUnit caster, final int orderId,
-			final AbilityPointTarget point) {
+			boolean autoOrder, final AbilityPointTarget point) {
 		return null;
 	}
 
 	@Override
-	public CBehavior beginNoTarget(final CSimulation game, final CUnit caster, final int orderId) {
+	public CBehavior beginNoTarget(final CSimulation game, final CUnit caster, final int orderId, boolean autoOrder) {
 		return null;
 	}
 
@@ -142,6 +155,14 @@ public class CAbilityHumanRepair extends AbstractGenericSingleIconActiveAbility 
 
 	public float getNavalRangeBonus() {
 		return this.navalRangeBonus;
+	}
+
+	public float getPowerBuildCostRatio() {
+		return this.powerBuildCostRatio;
+	}
+
+	public float getPowerBuildTimeRatio() {
+		return this.powerBuildTimeRatio;
 	}
 
 	public float getRepairCostRatio() {
@@ -182,19 +203,14 @@ public class CAbilityHumanRepair extends AbstractGenericSingleIconActiveAbility 
 	}
 
 	@Override
-	public void setAutoCastOn(final CUnit caster, final boolean autoCastOn) {
+	public void setAutoCastOn(final CSimulation simulation, final CUnit caster, final boolean autoCastOn) {
 		this.autocasting = autoCastOn;
 		caster.setAutocastAbility(autoCastOn ? this : null);
 	}
 
 	@Override
-	public void setAutoCastOff() {
-		this.autocasting = false;
-	}
-
-	@Override
 	public boolean isAutoCastOn() {
-		return autocasting ;
+		return autocasting;
 	}
 
 	@Override
@@ -210,7 +226,7 @@ public class CAbilityHumanRepair extends AbstractGenericSingleIconActiveAbility 
 	@Override
 	public void checkCanAutoTarget(CSimulation game, CUnit unit, int orderId, CWidget target,
 			AbilityTargetCheckReceiver<CWidget> receiver) {
-		this.checkCanTarget(game, unit, orderId, target, receiver);
+		this.checkCanTarget(game, unit, orderId, false, target, receiver);
 	}
 
 	@Override
@@ -228,6 +244,11 @@ public class CAbilityHumanRepair extends AbstractGenericSingleIconActiveAbility 
 	@Override
 	public boolean isPhysical() {
 		return true;
+	}
+
+	@Override
+	public boolean isMagic() {
+		return false;
 	}
 
 	@Override

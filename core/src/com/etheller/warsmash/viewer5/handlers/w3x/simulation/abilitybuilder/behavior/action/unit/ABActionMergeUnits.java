@@ -2,6 +2,7 @@ package com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.beh
 
 import java.util.Map;
 
+import com.etheller.warsmash.parsers.jass.JassTextGenerator;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityPointTarget;
@@ -11,10 +12,10 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.beha
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.integercallbacks.ABIntegerCallback;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.locationcallbacks.ABLocationCallback;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.unitcallbacks.ABUnitCallback;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABAction;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABLocalStoreKeys;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABSingleAction;
 
-public class ABActionMergeUnits implements ABAction {
+public class ABActionMergeUnits implements ABSingleAction {
 
 	private ABUnitCallback unit1;
 	private ABUnitCallback unit2;
@@ -30,29 +31,28 @@ public class ABActionMergeUnits implements ABAction {
 		int thePlayerId = caster.getPlayerIndex();
 		float theFacing = caster.getFacing();
 		AbilityPointTarget loc = null;
-		if (playerIndex != null) {
-			thePlayerId = playerIndex.callback(game, caster, localStore, castId);
+		if (this.playerIndex != null) {
+			thePlayerId = this.playerIndex.callback(game, caster, localStore, castId);
 		}
-		if (facing != null) {
-			theFacing = facing.callback(game, caster, localStore, castId);
+		if (this.facing != null) {
+			theFacing = this.facing.callback(game, caster, localStore, castId);
 		}
-		if (location != null) {
-			loc = location.callback(game, caster, localStore, castId);
-		} else {
+		if (this.location != null) {
+			loc = this.location.callback(game, caster, localStore, castId);
+		}
+		else {
 			loc = new AbilityPointTarget(caster.getX(), caster.getY());
 		}
-		
-		CUnit u1 = unit1.callback(game, caster, localStore, castId);
-		CUnit u2 = unit2.callback(game, caster, localStore, castId);
-		
-		float newHPPcnt = ((u1.getLife() / u1.getMaximumLife()) + (u2.getLife() / u2.getMaximumLife())) / 2;
-		float newMPPcnt = ((u1.getMana() / u1.getMaximumMana()) + (u2.getMana() / u2.getMaximumMana())) / 2;
-		
-		
-		
-		CUnit createdUnit = game.createUnit(newUnitId.callback(game, caster, localStore, castId), thePlayerId,
-				loc.getX(), loc.getY(), theFacing);
-		if (resetHpMp == null || !resetHpMp.callback(game, caster, localStore, castId)) {
+
+		final CUnit u1 = this.unit1.callback(game, caster, localStore, castId);
+		final CUnit u2 = this.unit2.callback(game, caster, localStore, castId);
+
+		final float newHPPcnt = ((u1.getLife() / u1.getMaximumLife()) + (u2.getLife() / u2.getMaximumLife())) / 2;
+		final float newMPPcnt = ((u1.getMana() / u1.getMaximumMana()) + (u2.getMana() / u2.getMaximumMana())) / 2;
+
+		final CUnit createdUnit = game.createUnit(this.newUnitId.callback(game, caster, localStore, castId),
+				thePlayerId, loc.getX(), loc.getY(), theFacing);
+		if ((this.resetHpMp == null) || !this.resetHpMp.callback(game, caster, localStore, castId)) {
 			createdUnit.setLife(game, newHPPcnt * createdUnit.getMaximumLife());
 			createdUnit.setMana(newMPPcnt * createdUnit.getMaximumMana());
 		}
@@ -63,6 +63,42 @@ public class ABActionMergeUnits implements ABAction {
 		game.removeUnit(u2);
 
 		localStore.put(ABLocalStoreKeys.LASTCREATEDUNIT, createdUnit);
+	}
+
+	@Override
+	public String generateJassEquivalent(JassTextGenerator jassTextGenerator) {
+		String playerExpression;
+		if (this.playerIndex != null) {
+			playerExpression = "Player(" + this.playerIndex.generateJassEquivalent(jassTextGenerator) + ")";
+		}
+		else {
+			playerExpression = "GetOwningPlayer(" + jassTextGenerator.getCaster() + ")";
+		}
+		String facingExpression;
+		if (this.facing != null) {
+			facingExpression = this.facing.generateJassEquivalent(jassTextGenerator);
+		}
+		else {
+			facingExpression = "GetUnitFacing(" + jassTextGenerator.getCaster() + ")";
+		}
+		String locExpression;
+		if (this.location != null) {
+			locExpression = this.location.generateJassEquivalent(jassTextGenerator);
+		}
+		else {
+			locExpression = "GetUnitLoc(" + jassTextGenerator.getCaster() + ")";
+		}
+
+		String resetHpMpExpression = "false";
+		if (this.resetHpMp != null) {
+			resetHpMpExpression = this.resetHpMp.generateJassEquivalent(jassTextGenerator);
+		}
+
+		return "MergeUnitsAU(" + jassTextGenerator.getTriggerLocalStore() + ", "
+				+ this.unit1.generateJassEquivalent(jassTextGenerator) + ", "
+				+ this.unit2.generateJassEquivalent(jassTextGenerator) + ", "
+				+ this.newUnitId.generateJassEquivalent(jassTextGenerator) + ", " + locExpression + ", "
+				+ facingExpression + ", " + playerExpression + ", " + resetHpMpExpression + ")";
 	}
 
 }

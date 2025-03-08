@@ -110,7 +110,7 @@ public class CAbilityAbilityBuilderActivePairing extends CAbilityAbilityBuilderG
 
 	@Override
 	public void onAdd(CSimulation game, CUnit unit) {
-		localStore.put(ABLocalStoreKeys.PAIRABILITY, this);
+		localStore.put(ABLocalStoreKeys.ISPAIRABILITY, this);
 		this.behavior = this.createRangedBehavior(unit);
 		this.behavior.setInstant(true);
 		super.onAdd(game, unit);
@@ -182,8 +182,9 @@ public class CAbilityAbilityBuilderActivePairing extends CAbilityAbilityBuilderG
 	// ----
 	// Non-Targeted
 	@Override
-	public CBehavior beginNoTarget(CSimulation game, CUnit caster, int orderId) {
+	public CBehavior beginNoTarget(CSimulation game, CUnit caster, int orderId, boolean autoOrder) {
 		if (checkNoTargetOrderId(game, caster, orderId)) {
+			this.localStore.put(ABLocalStoreKeys.combineKey(ABLocalStoreKeys.ISAUTOCAST, orderId), autoOrder);
 
 //			System.err.println(caster.getUnitType().getName() + " Beginning NoTarget: " + orderId);
 			boolean isOffId = orderId == this.getOffOrderId();
@@ -255,8 +256,9 @@ public class CAbilityAbilityBuilderActivePairing extends CAbilityAbilityBuilderG
 	// ----
 	// Targeted
 	@Override
-	public CBehavior begin(CSimulation game, CUnit caster, int orderId, CWidget target) {
+	public CBehavior begin(CSimulation game, CUnit caster, int orderId, boolean autoOrder, CWidget target) {
 		this.castId++;
+		this.localStore.put(ABLocalStoreKeys.combineKey(ABLocalStoreKeys.ISAUTOCAST, orderId), autoOrder);
 //		System.err.println(caster.getUnitType().getName() + " Received pair target order: " + orderId + " (Base: "
 //				+ this.getBaseOrderId() + ", Internal: " + this.getPairOrderId(game, caster) + ")");
 		if (checkTargetPrimeOrderId(game, caster, orderId)) {
@@ -282,7 +284,7 @@ public class CAbilityAbilityBuilderActivePairing extends CAbilityAbilityBuilderG
 
 			this.runOnOrderIssuedActions(game, caster, orderId);
 			this.behavior.setCastId(castId);
-			return this.behavior.reset(target);
+			return this.behavior.reset(game, target);
 		} else if (checkTargetInternalOrderId(game, caster, orderId)) {
 //			System.err.println(caster.getUnitType().getName() + " Got internal order");
 			final CUnit targetUnit = target.visit(AbilityTargetVisitor.UNIT);
@@ -292,7 +294,7 @@ public class CAbilityAbilityBuilderActivePairing extends CAbilityAbilityBuilderG
 
 			this.runOnOrderIssuedActions(game, caster, orderId);
 			this.behavior.setCastId(castId);
-			return this.behavior.reset(target, orderId);
+			return this.behavior.reset(game, target, orderId);
 		} else {
 			return null;
 		}
@@ -463,7 +465,7 @@ public class CAbilityAbilityBuilderActivePairing extends CAbilityAbilityBuilderG
 
 	// Not Used
 	@Override
-	public CBehavior begin(CSimulation game, CUnit caster, int orderId, AbilityPointTarget point) {
+	public CBehavior begin(CSimulation game, CUnit caster, int orderId, boolean autoOrder, AbilityPointTarget point) {
 		return null;
 	}
 

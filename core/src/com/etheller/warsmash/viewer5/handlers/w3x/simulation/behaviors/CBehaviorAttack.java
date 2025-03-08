@@ -27,17 +27,17 @@ public class CBehaviorAttack extends CAbstractRangedBehavior {
 	private int thisOrderCooldownEndTime;
 	private CBehaviorAttackListener attackListener;
 
-	public CBehaviorAttack reset(final int highlightOrderId, final CUnitAttack unitAttack, final AbilityTarget target,
-			final boolean disableMove, final CBehaviorAttackListener attackListener) {
+	public CBehavior reset(final CSimulation game, final int highlightOrderId, final CUnitAttack unitAttack,
+			final AbilityTarget target, final boolean disableMove, final CBehaviorAttackListener attackListener) {
 		this.highlightOrderId = highlightOrderId;
 		this.attackListener = attackListener;
-		super.innerReset(target);
+
 		this.unitAttack = unitAttack;
 		this.damagePointLaunchTime = 0;
 		this.backSwingTime = 0;
 		this.thisOrderCooldownEndTime = 0;
 		setDisableMove(disableMove);
-		return this;
+		return super.innerReset(game, target);
 	}
 
 	@Override
@@ -69,6 +69,9 @@ public class CBehaviorAttack extends CAbstractRangedBehavior {
 
 	@Override
 	protected CBehavior updateOnInvalidTarget(final CSimulation simulation) {
+		if ((this.backSwingTime != 0) && (simulation.getGameTurnTick() < this.backSwingTime)) {
+			return this;
+		}
 		return this.attackListener.onFinish(simulation, this.unit);
 	}
 
@@ -97,8 +100,7 @@ public class CBehaviorAttack extends CAbstractRangedBehavior {
 				final float animationBackswingPoint = this.unitAttack.getAnimationBackswingPoint();
 				final int a1CooldownSteps = (int) (cooldownTime / WarsmashConstants.SIMULATION_STEP_TIME);
 				final int a1BackswingSteps = (int) (animationBackswingPoint / WarsmashConstants.SIMULATION_STEP_TIME);
-				final int a1DamagePointSteps = (int) (animationDamagePoint
-						/ WarsmashConstants.SIMULATION_STEP_TIME);
+				final int a1DamagePointSteps = (int) (animationDamagePoint / WarsmashConstants.SIMULATION_STEP_TIME);
 				this.unit.setCooldownEndTime(currentTurnTick + a1CooldownSteps);
 				this.thisOrderCooldownEndTime = currentTurnTick + a1CooldownSteps;
 				this.damagePointLaunchTime = currentTurnTick + a1DamagePointSteps;
@@ -116,7 +118,6 @@ public class CBehaviorAttack extends CAbstractRangedBehavior {
 			this.unit.getUnitAnimationListener().playAnimation(false, PrimaryTag.STAND, SequenceUtils.READY, 1.0f,
 					false);
 		}
-
 		if ((this.backSwingTime != 0) && (currentTurnTick >= this.backSwingTime)) {
 			this.backSwingTime = 0;
 			return this.attackListener.onFirstUpdateAfterBackswing(this);
@@ -126,15 +127,15 @@ public class CBehaviorAttack extends CAbstractRangedBehavior {
 
 	@Override
 	public void begin(final CSimulation game) {
-		if (unit.isMovementDisabled()) {
-			unit.getUnitAnimationListener().lockTurrentFacing(this.target);
+		if (this.unit.isMovementDisabled()) {
+			this.unit.getUnitAnimationListener().lockTurretFacing(this.target);
 		}
 	}
 
 	@Override
 	public void end(final CSimulation game, final boolean interrupted) {
-		if (unit.isMovementDisabled()) {
-			unit.getUnitAnimationListener().clearTurrentFacing();
+		if (this.unit.isMovementDisabled()) {
+			this.unit.getUnitAnimationListener().clearTurretFacing();
 		}
 	}
 
@@ -146,6 +147,11 @@ public class CBehaviorAttack extends CAbstractRangedBehavior {
 	@Override
 	public boolean interruptable() {
 		return true;
+	}
+
+	@Override
+	public CBehaviorCategory getBehaviorCategory() {
+		return CBehaviorCategory.ATTACK;
 	}
 
 }

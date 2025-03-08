@@ -24,6 +24,8 @@ public class ABActionTransformUnit implements ABAction {
 	private ABIDCallback baseUnitId;
 	private ABIDCallback alternateUnitId;
 
+	private ABBooleanCallback keepRatios;
+
 	private ABBooleanCallback immediateLanding; // true: play morph immediately, false: play morph after
 	private ABBooleanCallback immediateTakeOff; // true: play morph immediately, false: play morph after
 	private ABBooleanCallback permanent; // remove ability after transform
@@ -41,6 +43,8 @@ public class ABActionTransformUnit implements ABAction {
 	private ABFloatCallback duration; // the time before the unit is forced to change back (doesn't charge for it)
 	private ABIDCallback buffId;
 	private ABBooleanCallback instantTransformAtDurationEnd;
+
+	private ABBooleanCallback onlyTransformToAlternate;
 
 	private List<ABAction> onTransformActions;
 	private List<ABAction> onUntransformActions;
@@ -67,8 +71,13 @@ public class ABActionTransformUnit implements ABAction {
 		}
 
 		CUnitType targetType = null;
+		
+		boolean onlyToAlt = false;
+		if (onlyTransformToAlternate != null) {
+			onlyToAlt = onlyTransformToAlternate.callback(game, caster, localStore, castId);
+		}
 
-		if (u1.getTypeId().equals(altId)) {
+		if (!onlyToAlt && u1.getTypeId().equals(altId)) {
 			// Transforming back
 			targetType = game.getUnitData().getUnitType(baseId);
 			if (targetType.equals(u1.getUnitType())) {
@@ -106,9 +115,11 @@ public class ABActionTransformUnit implements ABAction {
 				return;
 			}
 		}
-		OnTransformationActions actions = new OnTransformationActions(goldCost, lumberCost, foodCost, onTransformActions, onUntransformActions);
+		OnTransformationActions actions = new OnTransformationActions(goldCost, lumberCost, foodCost,
+				onTransformActions, onUntransformActions);
 
 		boolean perm = false;
+		boolean isKeepRatios = true;
 		float dur = 0;
 		float transTime = 0;
 		float landTime = 0;
@@ -120,6 +131,9 @@ public class ABActionTransformUnit implements ABAction {
 		boolean instant = false;
 		if (permanent != null) {
 			perm = permanent.callback(game, caster, localStore, castId);
+		}
+		if (keepRatios != null) {
+			isKeepRatios = keepRatios.callback(game, caster, localStore, castId);
 		}
 		if (duration != null) {
 			dur = duration.callback(game, caster, localStore, castId);
@@ -151,9 +165,9 @@ public class ABActionTransformUnit implements ABAction {
 
 		localStore.put(ABLocalStoreKeys.TRANSFORMINGTOALT + castId, addAlternateTagAfter);
 		localStore.put(ABLocalStoreKeys.NEWBEHAVIOR,
-				new CBehaviorFinishTransformation(localStore, u1, abil, targetType, actions, addAlternateTagAfter,
-						addAlternateTagAfter ? abil.getBaseOrderId() : abil.getOffOrderId(), perm, dur, transTime,
-						landTime, atlAdDelay, altAdTime, imLand, imTakeOff, theBuffId,
+				new CBehaviorFinishTransformation(localStore, u1, abil, targetType, isKeepRatios, actions,
+						addAlternateTagAfter, addAlternateTagAfter ? abil.getBaseOrderId() : abil.getOffOrderId(), perm,
+						dur, transTime, landTime, atlAdDelay, altAdTime, imLand, imTakeOff, theBuffId,
 						game.getUnitData().getUnitType(baseId), instant));
 
 	}

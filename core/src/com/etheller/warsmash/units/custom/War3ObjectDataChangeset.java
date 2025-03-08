@@ -722,6 +722,10 @@ public final class War3ObjectDataChangeset {
 			if ((totalSize > 0) || !isOriginal) {
 				ParseUtils.writeWar3ID(outputStream, cl.getOldId());
 				ParseUtils.writeWar3ID(outputStream, cl.getNewId());
+				if (this.version >= 3) {
+					outputStream.writeInt(1);
+					outputStream.writeInt(0);
+				}
 				count = totalSize;// cl.getChanges().size();
 				outputStream.writeInt(count);
 				for (final Map.Entry<War3ID, List<Change>> changes : entry.getValue().getChanges()) {

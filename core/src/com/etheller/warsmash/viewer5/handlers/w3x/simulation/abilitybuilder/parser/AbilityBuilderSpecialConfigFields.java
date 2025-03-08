@@ -9,6 +9,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.beha
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.orderid.ABOrderIdCallback;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABAction;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABCondition;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehaviorCategory;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.CommandStringErrorKeysEnum;
 
 public class AbilityBuilderSpecialConfigFields {
@@ -34,6 +35,55 @@ public class AbilityBuilderSpecialConfigFields {
 	private ABBooleanCallback orderPairedUnit;
 	private ABOrderIdCallback orderPairedUnitOrderId;
 	private ABOrderIdCallback orderPairedUnitOffOrderId;
+	
+	private CBehaviorCategory behaviorCategory;
+
+	public void updateFromParent(AbilityBuilderSpecialConfigFields parent) {
+		if (this.bufferManaRequired == null)
+			this.bufferManaRequired = parent.bufferManaRequired;
+		if (this.manaDrainedPerSecond == null)
+			this.manaDrainedPerSecond = parent.manaDrainedPerSecond;
+
+		if (this.pointTargeted == null)
+			this.pointTargeted = parent.pointTargeted;
+		if (this.targetedSpell == null)
+			this.targetedSpell = parent.targetedSpell;
+
+		if (this.autoAquireTarget == null)
+			this.autoAquireTarget = parent.autoAquireTarget;
+
+		if (this.pairAbilityId == null)
+			this.pairAbilityId = parent.pairAbilityId;
+		if (this.pairUnitId == null)
+			this.pairUnitId = parent.pairUnitId;
+		if (this.pairUnitTypeError == null)
+			this.pairUnitTypeError = parent.pairUnitTypeError;
+		if (this.cantTargetError == null)
+			this.cantTargetError = parent.cantTargetError;
+		if (this.cantPairError == null)
+			this.cantPairError = parent.cantPairError;
+		if (this.cantPairOffError == null)
+			this.cantPairOffError = parent.cantPairOffError;
+		if (this.pairSearchRadius == null)
+			this.pairSearchRadius = parent.pairSearchRadius;
+		if (this.autoTargetPartner == null)
+			this.autoTargetPartner = parent.autoTargetPartner;
+		if (this.maxPartners == null)
+			this.maxPartners = parent.maxPartners;
+		if (this.pairingOrderId == null)
+			this.pairingOrderId = parent.pairingOrderId;
+		if (this.pairingOffOrderId == null)
+			this.pairingOffOrderId = parent.pairingOffOrderId;
+		if (this.orderPairedUnit == null)
+			this.orderPairedUnit = parent.orderPairedUnit;
+		if (this.orderPairedUnitOrderId == null)
+			this.orderPairedUnitOrderId = parent.orderPairedUnitOrderId;
+		if (this.orderPairedUnitOffOrderId == null)
+			this.orderPairedUnitOffOrderId = parent.orderPairedUnitOffOrderId;
+
+		if (this.behaviorCategory == null)
+			this.behaviorCategory = parent.behaviorCategory;
+	}
 
 	public ABIntegerCallback getBufferManaRequired() {
 		return bufferManaRequired;
@@ -185,5 +235,13 @@ public class AbilityBuilderSpecialConfigFields {
 
 	public void setOrderPairedUnitOffOrderId(ABOrderIdCallback orderPairedUnitOffOrderId) {
 		this.orderPairedUnitOffOrderId = orderPairedUnitOffOrderId;
+	}
+
+	public CBehaviorCategory getBehaviorCategory() {
+		return behaviorCategory;
+	}
+
+	public void setBehaviorCategory(CBehaviorCategory behaviorCategory) {
+		this.behaviorCategory = behaviorCategory;
 	}
 }

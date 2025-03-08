@@ -6,11 +6,14 @@ import com.etheller.warsmash.util.WarsmashConstants;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityPointTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.ability.AbilityBuilderActiveAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABLocalStoreKeys;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehavior;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehaviorCategory;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehaviorVisitor;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.JassGameEventsWar3;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.CommandStringErrorKeys;
 
 public class CBehaviorAbilityBuilderNoTarget implements ABBehavior {
@@ -18,6 +21,8 @@ public class CBehaviorAbilityBuilderNoTarget implements ABBehavior {
 	private AbilityBuilderActiveAbility ability;
 	
 	private int castStartTick = 0;
+	private int castPointTicks = 0;
+	private int backswingTicks = 0;
 	private boolean doneEffect = false;
 	private boolean channeling = false;
 	
@@ -25,6 +30,7 @@ public class CBehaviorAbilityBuilderNoTarget implements ABBehavior {
 	private int orderId;
 	
 	private boolean instant = false;
+	private CBehaviorCategory behaviorCategory = null;
 
 	public CBehaviorAbilityBuilderNoTarget(final CUnit unit,
 			final Map<String, Object> localStore, AbilityBuilderActiveAbility ability) {
@@ -36,24 +42,28 @@ public class CBehaviorAbilityBuilderNoTarget implements ABBehavior {
 	public void setInstant(boolean instant) {
 		this.instant = instant;
 	}
+	
+	public void setBehaviorCategory(CBehaviorCategory behaviorCategory) {
+		this.behaviorCategory  = behaviorCategory;
+	}
 
 	@Override
-	public ABBehavior reset(final CWidget target) {
+	public ABBehavior reset(final CSimulation game, final CWidget target) {
 		return null;
 	}
 
 	@Override
-	public ABBehavior reset(CWidget target, int orderId) {
+	public ABBehavior reset(final CSimulation game, CWidget target, int orderId) {
 		return null;
 	}
 
 	@Override
-	public ABBehavior reset(final AbilityPointTarget target) {
+	public ABBehavior reset(final CSimulation game, final AbilityPointTarget target) {
 		return null;
 	}
 
 	@Override
-	public ABBehavior reset(AbilityPointTarget target, int orderId) {
+	public ABBehavior reset(final CSimulation game, AbilityPointTarget target, int orderId) {
 		return null;
 	}
 
@@ -61,6 +71,10 @@ public class CBehaviorAbilityBuilderNoTarget implements ABBehavior {
 	public ABBehavior reset() {
 		this.doneEffect = false;
 		this.castStartTick = 0;
+		this.castPointTicks = (int) ((this.unit.getUnitType().getCastPoint() + this.ability.getCastTime())
+				/ WarsmashConstants.SIMULATION_STEP_TIME);
+		this.backswingTicks = (int) ((this.unit.getUnitType().getCastBackswingPoint() + this.ability.getCastTime())
+				/ WarsmashConstants.SIMULATION_STEP_TIME);
 		this.localStore.put(ABLocalStoreKeys.CHANNELING, false);
 		this.orderId = this.ability.getBaseOrderId();
 		return this;
@@ -70,6 +84,10 @@ public class CBehaviorAbilityBuilderNoTarget implements ABBehavior {
 	public ABBehavior reset(int orderId) {
 		this.doneEffect = false;
 		this.castStartTick = 0;
+		this.castPointTicks = (int) ((this.unit.getUnitType().getCastPoint() + this.ability.getCastTime())
+				/ WarsmashConstants.SIMULATION_STEP_TIME);
+		this.backswingTicks = (int) ((this.unit.getUnitType().getCastBackswingPoint() + this.ability.getCastTime())
+				/ WarsmashConstants.SIMULATION_STEP_TIME);
 		this.localStore.put(ABLocalStoreKeys.CHANNELING, false);
 		this.orderId = orderId;
 		return this;
@@ -99,10 +117,20 @@ public class CBehaviorAbilityBuilderNoTarget implements ABBehavior {
 						this.ability.getCastingSecondaryTags(), 1.0f, true);
 			}
 			this.channeling = (boolean) localStore.get(ABLocalStoreKeys.CHANNELING);
+
+			this.unit.fireSpellEvents(game, JassGameEventsWar3.EVENT_UNIT_SPELL_CHANNEL, this.ability, null);
+			if (this.unit.getCurrentBehavior() != this) {
+				return this.unit.getCurrentBehavior();
+			} else if (this.unit.isPaused()) {
+				return this;
+			}
 		}
 		
 		if (instant) {
-			tryDoEffect(game, wasChanneling);
+			CBehavior beh = tryDoEffect(game, wasChanneling);
+			if (beh != null) {
+				return beh;
+			}
 			CBehavior newBehavior = (CBehavior) localStore.get(ABLocalStoreKeys.NEWBEHAVIOR);
 			if (newBehavior != null) {
 				localStore.remove(ABLocalStoreKeys.NEWBEHAVIOR);
@@ -113,12 +141,11 @@ public class CBehaviorAbilityBuilderNoTarget implements ABBehavior {
 			}
 		} else {
 			final int ticksSinceCast = game.getGameTurnTick() - this.castStartTick;
-			final int castPointTicks = (int) (this.unit.getUnitType().getCastPoint()
-					/ WarsmashConstants.SIMULATION_STEP_TIME);
-			final int backswingTicks = (int) (this.unit.getUnitType().getCastBackswingPoint()
-					/ WarsmashConstants.SIMULATION_STEP_TIME);
 			if ((ticksSinceCast >= castPointTicks) || (ticksSinceCast >= backswingTicks)) {
-				tryDoEffect(game, wasChanneling);
+				CBehavior beh = tryDoEffect(game, wasChanneling);
+				if (beh != null) {
+					return beh;
+				}
 				CBehavior newBehavior = (CBehavior) localStore.get(ABLocalStoreKeys.NEWBEHAVIOR);
 				if (newBehavior != null) {
 					localStore.remove(ABLocalStoreKeys.NEWBEHAVIOR);
@@ -132,25 +159,33 @@ public class CBehaviorAbilityBuilderNoTarget implements ABBehavior {
 		return this;
 	}
 	
-	private void tryDoEffect(CSimulation game, boolean wasChanneling) {
+	private CBehavior tryDoEffect(CSimulation game, boolean wasChanneling) {
 		boolean wasEffectDone = this.doneEffect;
 		if (!wasEffectDone) {
-			this.doneEffect = true;
 			if (this.channeling) {
 				game.unitLoopSoundEffectEvent(this.unit, this.ability.getAlias());
 			}
 			else {
 				game.unitSoundEffectEvent(this.unit, this.ability.getAlias());
 			}
+			this.doneEffect = true;
 			
 			this.ability.runEndCastingActions(game, unit, orderId);
 			this.channeling = (boolean) localStore.get(ABLocalStoreKeys.CHANNELING);
+			this.unit.fireSpellEvents(game, JassGameEventsWar3.EVENT_UNIT_SPELL_CAST, this.ability, null);
+			this.unit.fireSpellEvents(game, JassGameEventsWar3.EVENT_UNIT_SPELL_EFFECT, this.ability, null);
+			if (this.unit.getCurrentBehavior() != this) {
+				return this.unit.getCurrentBehavior();
+			} else if (this.unit.isPaused()) {
+				return this;
+			}
 			
 		}
 		this.channeling = this.channeling && this.doChannelTick(game, this.unit);
 		if (wasEffectDone && wasChanneling && !this.channeling) {
 			endChannel(game, false);
 		}
+		return null;
 	}
 
 	@Override
@@ -165,6 +200,10 @@ public class CBehaviorAbilityBuilderNoTarget implements ABBehavior {
 	@Override
 	public void end(final CSimulation game, boolean interrupted) {
 		checkEndChannel(game, interrupted);
+		if (!interrupted) {
+			this.unit.fireSpellEvents(game, JassGameEventsWar3.EVENT_UNIT_SPELL_FINISH, this.ability, null);
+		}
+		this.unit.fireSpellEvents(game, JassGameEventsWar3.EVENT_UNIT_SPELL_ENDCAST, this.ability, null);
 	}
 
 	private void checkEndChannel(final CSimulation game, final boolean interrupted) {
@@ -192,6 +231,19 @@ public class CBehaviorAbilityBuilderNoTarget implements ABBehavior {
 	@Override
 	public boolean interruptable() {
 		return true;
+	}
+
+	@Override
+	public CBehaviorCategory getBehaviorCategory() {
+		if (this.behaviorCategory != null) {
+			return this.behaviorCategory ;
+		}
+		return CBehaviorCategory.SPELL;
+	}
+
+	@Override
+	public CAbility getAbility() {
+		return ability;
 	}
 
 	@Override

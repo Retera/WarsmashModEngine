@@ -21,4 +21,8 @@ public class IntegerJassValue implements JassValue {
 	public String toString() {
 		return Integer.toString(this.value);
 	}
+
+	public static IntegerJassValue of(final int value) {
+		return new IntegerJassValue(value);
+	}
 }

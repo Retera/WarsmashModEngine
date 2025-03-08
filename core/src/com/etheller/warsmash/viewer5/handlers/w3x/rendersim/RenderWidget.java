@@ -5,6 +5,8 @@ import java.util.LinkedList;
 import java.util.Queue;
 
 import com.badlogic.gdx.math.Quaternion;
+import com.badlogic.gdx.math.Vector3;
+import com.etheller.warsmash.viewer5.GenericNode;
 import com.etheller.warsmash.viewer5.handlers.mdx.MdxComplexInstance;
 import com.etheller.warsmash.viewer5.handlers.mdx.MdxModel;
 import com.etheller.warsmash.viewer5.handlers.mdx.MdxNode;
@@ -68,9 +70,9 @@ public interface RenderWidget {
 		private final float animationWalkSpeed;
 		private final float animationRunSpeed;
 		private final MdxNode turretBone;
-		private AbilityTarget turretFacingLock;
+		private LockTarget turretFacingLock;
 		private final MdxNode headBone;
-		private AbilityTarget headFacingLock;
+		private LockTarget headFacingLock;
 
 		public UnitAnimationListenerImpl(final MdxComplexInstance instance, final float animationWalkSpeed,
 				final float animationRunSpeed) {
@@ -107,47 +109,56 @@ public interface RenderWidget {
 		}
 
 		@Override
-		public void addSecondaryTag(final AnimationTokens.SecondaryTag tag) {
-			if (!this.secondaryAnimationTags.contains(tag)) {
-				this.secondaryAnimationTags.add(tag);
-				if (!this.animationQueue.isEmpty()) {
-					final QueuedAnimation nextAnimation = this.animationQueue.poll();
-					playAnimation(true, nextAnimation.animationName, nextAnimation.secondaryAnimationTags, 1.0f,
-							nextAnimation.allowRarityVariations);
-				}
-				else {
-					playAnimation(true, this.currentAnimation, this.currentAnimationSecondaryTags,
-							this.currentSpeedRatio, this.currentlyAllowingRarityVariations);
-				}
-			}
+		public boolean addSecondaryTag(final AnimationTokens.SecondaryTag tag) {
+			return this.secondaryAnimationTags.add(tag);
 		}
 
 		@Override
-		public void removeSecondaryTag(final AnimationTokens.SecondaryTag tag) {
-			if (this.secondaryAnimationTags.contains(tag)) {
-				this.secondaryAnimationTags.remove(tag);
+		public boolean removeSecondaryTag(final AnimationTokens.SecondaryTag tag) {
+			return this.secondaryAnimationTags.remove(tag);
+		}
+
+		@Override
+		public void forceResetCurrentAnimation() {
+			if (!this.animationQueue.isEmpty()) {
+				final QueuedAnimation nextAnimation = this.animationQueue.poll();
+				playAnimation(true, nextAnimation.animationName, nextAnimation.secondaryAnimationTags, 1.0f,
+						nextAnimation.allowRarityVariations);
+			}
+			else {
 				playAnimation(true, this.currentAnimation, this.currentAnimationSecondaryTags, this.currentSpeedRatio,
 						this.currentlyAllowingRarityVariations);
 			}
 		}
 
 		@Override
-		public void addSecondaryTagForFutureAnimations(SecondaryTag tag) {
-			if (!this.secondaryAnimationTags.contains(tag)) {
-				this.secondaryAnimationTags.add(tag);
-			}
-		}
-
-		@Override
-		public void removeSecondaryTagForFutureAnimations(SecondaryTag tag) {
-			if (this.secondaryAnimationTags.contains(tag)) {
-				this.secondaryAnimationTags.remove(tag);
-			}
-		}
-
-		@Override
 		public EnumSet<SecondaryTag> getSecondaryTags() {
-			return secondaryAnimationTags;
+			return this.secondaryAnimationTags;
+		}
+
+		@Override
+		public void playAnimation(final boolean force, final int sequenceIndex, final float speedRatio,
+				final boolean allowRarityVariations) {
+			this.animationQueue.clear();
+			if (force || this.instance.sequenceEnded) {
+				this.currentSpeedRatio = speedRatio;
+				this.instance.setAnimationSpeed(speedRatio);
+				final MdxModel model = (MdxModel) this.instance.model;
+				if ((sequenceIndex >= 0) && (sequenceIndex < model.sequences.size())) {
+					final Sequence sequence = model.sequences.get(sequenceIndex);
+					final boolean isWalk = sequence.getPrimaryTags().contains(PrimaryTag.WALK);
+					if (!isWalk && (this.currentAnimation == PrimaryTag.WALK)) {
+						this.lastWalkFrame = this.instance.frame;
+					}
+					this.instance.setSequence(sequenceIndex);
+					if ((this.lastWalkFrame != -1) && (isWalk) && (this.currentAnimation != PrimaryTag.WALK)) {
+						this.instance.setFrame(this.instance.clampFrame(this.lastWalkFrame));
+					}
+					this.currentAnimation = Sequence.any(sequence.getPrimaryTags());
+					this.currentAnimationSecondaryTags = sequence.getSecondaryTags();
+					this.currentlyAllowingRarityVariations = allowRarityVariations;
+				}
+			}
 		}
 
 		@Override
@@ -236,7 +247,7 @@ public interface RenderWidget {
 			applyLock(this.headBone, this.headFacingLock);
 		}
 
-		private static void applyLock(final MdxNode turretBone, final AbilityTarget turretFacingLock) {
+		private static void applyLockAbilityTarget(final MdxNode turretBone, final AbilityTarget turretFacingLock) {
 			if (turretBone != null) {
 				if (turretFacingLock == null) {
 					if (turretBone.overrideWorldRotation != null) {
@@ -254,14 +265,76 @@ public interface RenderWidget {
 			}
 		}
 
-		@Override
-		public void lockTurrentFacing(final AbilityTarget target) {
-			this.turretFacingLock = target;
+		private static void applyLockGenericNode(final MdxNode turretBone, final GenericNode turretFacingLock) {
+			if (turretBone != null) {
+				if (turretFacingLock == null) {
+					if (turretBone.overrideWorldRotation != null) {
+						turretBone.setOverrideWorldRotation(null);
+					}
+				}
+				else {
+					final float dx = turretFacingLock.worldLocation.x - turretBone.worldLocation.x;
+					final float dy = turretFacingLock.worldLocation.y - turretBone.worldLocation.y;
+					final float dz = turretFacingLock.worldLocation.z - turretBone.worldLocation.z;
+					final float ang = (float) Math.atan2(dy, dx);
+					final double groundDistance = Math.sqrt((dx * dx) + (dy * dy));
+					final float angZ = (float) Math.atan2(dz, groundDistance);
+					if (turretBone.overrideWorldRotation == null) {
+						turretBone.setOverrideWorldRotation(new Quaternion());
+					}
+					turretBone.overrideWorldRotation.setFromAxisRad(0, 0, 1, ang);
+					final float x = turretBone.overrideWorldRotation.x;
+					final float y = turretBone.overrideWorldRotation.y;
+					final float z = turretBone.overrideWorldRotation.z;
+					final float w = turretBone.overrideWorldRotation.w;
+					turretBone.overrideWorldRotation.setFromAxisRad(0, 1, 0, angZ);
+					turretBone.overrideWorldRotation.mulLeft(x, y, z, w);
+				}
+			}
+		}
+
+		private static void applyLock(final MdxNode turretBone, final LockTarget turretFacingLock) {
+			if (turretBone != null) {
+				if (turretFacingLock == null) {
+					if (turretBone.overrideWorldRotation != null) {
+						turretBone.setOverrideWorldRotation(null);
+					}
+				}
+				else {
+					if (turretBone.overrideWorldRotation == null) {
+						turretBone.setOverrideWorldRotation(new Quaternion());
+					}
+					turretFacingLock.apply(turretBone, turretBone.overrideWorldRotation);
+				}
+			}
 		}
 
 		@Override
-		public void clearTurrentFacing() {
+		public void lockTurretFacing(final AbilityTarget target) {
+			this.turretFacingLock = new LockTargetGame(target);
+		}
+
+		public void lockTurretFacing(final GenericNode modelComponent, final Vector3 offset) {
+			this.turretFacingLock = new LockTargetRenderGeometry(modelComponent, offset);
+		}
+
+		@Override
+		public void clearTurretFacing() {
 			this.turretFacingLock = null;
+		}
+
+		@Override
+		public void lockHeadFacing(final AbilityTarget target) {
+			this.headFacingLock = new LockTargetGame(target);
+		}
+
+		public void lockHeadFacing(final GenericNode modelComponent, final Vector3 offset) {
+			this.headFacingLock = new LockTargetRenderGeometry(modelComponent, offset);
+		}
+
+		@Override
+		public void clearHeadFacing() {
+			this.headFacingLock = null;
 		}
 	}
 

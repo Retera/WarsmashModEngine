@@ -10,7 +10,15 @@ public enum CSoundVolumeGroup implements CHandle {
 	UI,
 	MUSIC,
 	AMBIENTSOUNDS,
-	FIRE;
+	FIRE,
+	// some reforged related thing below:
+	CINEMATIC_GENERAL,
+	CINEMATIC_AMBIENT,
+	CINEMATIC_MUSIC,
+	CINEMATIC_DIALOGUE,
+	CINEMATIC_SOUND_EFFECTS_1,
+	CINEMATIC_SOUND_EFFECTS_2,
+	CINEMATIC_SOUND_EFFECTS_3;
 
 	public static CSoundVolumeGroup[] VALUES = values();
 

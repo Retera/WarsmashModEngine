@@ -1,6 +1,8 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.autocast;
 
-public enum AutocastType {
+import com.etheller.interpreter.ast.util.CHandle;
+
+public enum AutocastType implements CHandle {
 	NONE,
 	LOWESTHP,
 	HIGESTHP,
@@ -9,5 +11,14 @@ public enum AutocastType {
 	ATTACKINGENEMY,
 	NEARESTVALID,
 	NEARESTENEMY,
-	NOTARGET;
+	NOTARGET,
+
+	NOAUTOCASTBEHAVIOR;
+
+	@Override
+	public int getHandleId() {
+		return ordinal();
+	}
+
+	public static final AutocastType[] VALUES = values();
 }

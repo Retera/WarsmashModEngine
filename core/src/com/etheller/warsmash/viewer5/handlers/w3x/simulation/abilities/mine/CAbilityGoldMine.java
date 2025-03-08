@@ -22,8 +22,8 @@ public class CAbilityGoldMine extends AbstractGenericNoIconAbility implements CA
 	private final List<CBehaviorHarvest> activeMiners;
 	private boolean wasEmpty;
 
-	public CAbilityGoldMine(final int handleId, final War3ID code, final War3ID alias, final int maxGold, final float miningDuration,
-			final int miningCapacity) {
+	public CAbilityGoldMine(final int handleId, final War3ID code, final War3ID alias, final int maxGold,
+			final float miningDuration, final int miningCapacity) {
 		super(handleId, code, alias);
 		this.gold = maxGold;
 		this.miningDuration = miningDuration;
@@ -47,10 +47,14 @@ public class CAbilityGoldMine extends AbstractGenericNoIconAbility implements CA
 		final boolean empty = this.activeMiners.isEmpty();
 		if (empty != this.wasEmpty) {
 			if (empty) {
-				unit.getUnitAnimationListener().removeSecondaryTag(SecondaryTag.WORK);
+				if (unit.getUnitAnimationListener().removeSecondaryTag(SecondaryTag.WORK)) {
+					unit.getUnitAnimationListener().forceResetCurrentAnimation();
+				}
 			}
 			else {
-				unit.getUnitAnimationListener().addSecondaryTag(SecondaryTag.WORK);
+				if (unit.getUnitAnimationListener().addSecondaryTag(SecondaryTag.WORK)) {
+					unit.getUnitAnimationListener().forceResetCurrentAnimation();
+				}
 			}
 			this.wasEmpty = empty;
 		}
@@ -76,36 +80,36 @@ public class CAbilityGoldMine extends AbstractGenericNoIconAbility implements CA
 	}
 
 	@Override
-	public CBehavior begin(final CSimulation game, final CUnit caster, final int orderId, final CWidget target) {
+	public CBehavior begin(final CSimulation game, final CUnit caster, final int orderId, boolean autoOrder, final CWidget target) {
 		return null;
 	}
 
 	@Override
 	public CBehavior begin(final CSimulation game, final CUnit caster, final int orderId,
-			final AbilityPointTarget point) {
+			boolean autoOrder, final AbilityPointTarget point) {
 		return null;
 	}
 
 	@Override
-	public CBehavior beginNoTarget(final CSimulation game, final CUnit caster, final int orderId) {
+	public CBehavior beginNoTarget(final CSimulation game, final CUnit caster, final int orderId, boolean autoOrder) {
 		return null;
 	}
 
 	@Override
-	public void checkCanTarget(final CSimulation game, final CUnit unit, final int orderId, final CWidget target,
-			final AbilityTargetCheckReceiver<CWidget> receiver) {
+	public void checkCanTarget(final CSimulation game, final CUnit unit, final int orderId, boolean autoOrder,
+			final CWidget target, final AbilityTargetCheckReceiver<CWidget> receiver) {
 		receiver.orderIdNotAccepted();
 	}
 
 	@Override
 	public void checkCanTarget(final CSimulation game, final CUnit unit, final int orderId,
-			final AbilityPointTarget target, final AbilityTargetCheckReceiver<AbilityPointTarget> receiver) {
+			boolean autoOrder, final AbilityPointTarget target, final AbilityTargetCheckReceiver<AbilityPointTarget> receiver) {
 		receiver.orderIdNotAccepted();
 	}
 
 	@Override
 	public void checkCanTargetNoTarget(final CSimulation game, final CUnit unit, final int orderId,
-			final AbilityTargetCheckReceiver<Void> receiver) {
+			boolean autoOrder, final AbilityTargetCheckReceiver<Void> receiver) {
 		receiver.orderIdNotAccepted();
 	}
 

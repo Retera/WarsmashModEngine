@@ -10,15 +10,21 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core
 
 public class ABTimedTickingPostDeathBuff extends ABTimedTickingBuff {
 
-	public ABTimedTickingPostDeathBuff(int handleId, War3ID alias, float duration, boolean showTimedLifeBar, Map<String, Object> localStore,
-			List<ABAction> onAddActions, List<ABAction> onRemoveActions, List<ABAction> onExpireActions, List<ABAction> onTickActions, boolean showIcon, final int castId) {
-		this(handleId, alias, duration, showTimedLifeBar, localStore, onAddActions, onRemoveActions, onExpireActions, onTickActions, castId);
+	public ABTimedTickingPostDeathBuff(int handleId, War3ID alias, float duration, boolean showTimedLifeBar,
+			Map<String, Object> localStore, List<ABAction> onAddActions, List<ABAction> onRemoveActions,
+			List<ABAction> onExpireActions, List<ABAction> onTickActions, boolean showIcon, final int castId,
+			final boolean leveled, final boolean positive, final boolean dispellable) {
+		this(handleId, alias, duration, showTimedLifeBar, localStore, onAddActions, onRemoveActions, onExpireActions,
+				onTickActions, castId, leveled, positive, dispellable);
 		this.setIconShowing(showIcon);
 	}
-	
-	public ABTimedTickingPostDeathBuff(int handleId, War3ID alias, float duration, boolean showTimedLifeBar, Map<String, Object> localStore,
-			List<ABAction> onAddActions, List<ABAction> onRemoveActions, List<ABAction> onExpireActions, List<ABAction> onTickActions, final int castId) {
-		super(handleId, alias, duration, showTimedLifeBar, localStore, onAddActions, onRemoveActions, onExpireActions, onTickActions, castId);
+
+	public ABTimedTickingPostDeathBuff(int handleId, War3ID alias, float duration, boolean showTimedLifeBar,
+			Map<String, Object> localStore, List<ABAction> onAddActions, List<ABAction> onRemoveActions,
+			List<ABAction> onExpireActions, List<ABAction> onTickActions, final int castId, final boolean leveled,
+			final boolean positive, final boolean dispellable) {
+		super(handleId, alias, duration, showTimedLifeBar, localStore, onAddActions, onRemoveActions, onExpireActions,
+				onTickActions, castId, leveled, positive, dispellable);
 	}
 
 	@Override

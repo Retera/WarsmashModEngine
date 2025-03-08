@@ -1,8 +1,9 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat;
 
+import com.etheller.interpreter.ast.util.CHandle;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CDamageType;
 
-public enum CWeaponType {
+public enum CWeaponType implements CHandle {
 	NONE(CDamageType.UNKNOWN, false),
 	NORMAL(CDamageType.NORMAL, false),
 	INSTANT(CDamageType.NORMAL, true),
@@ -16,19 +17,19 @@ public enum CWeaponType {
 	private CDamageType damageType;
 	private boolean ranged;
 
-	CWeaponType(CDamageType damageType, boolean ranged) {
+	CWeaponType(final CDamageType damageType, final boolean ranged) {
 		this.damageType = damageType;
 	}
 
 	public CDamageType getDamageType() {
-		return damageType;
+		return this.damageType;
 	}
 
 	public boolean isRanged() {
-		return ranged;
+		return this.ranged;
 	}
 
-	public void setRanged(boolean ranged) {
+	public void setRanged(final boolean ranged) {
 		this.ranged = ranged;
 	}
 
@@ -38,5 +39,10 @@ public enum CWeaponType {
 
 	public boolean isAttackGroundSupported() {
 		return (this == CWeaponType.ARTILLERY) || (this == CWeaponType.ALINE);
+	}
+
+	@Override
+	public int getHandleId() {
+		return ordinal();
 	}
 }

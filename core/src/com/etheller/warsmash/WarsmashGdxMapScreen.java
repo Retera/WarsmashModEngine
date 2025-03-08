@@ -224,10 +224,9 @@ public class WarsmashGdxMapScreen implements InputProcessor, Screen {
 
 	public static DataSource parseDataSources(final DataTable warsmashIni) {
 		final Element dataSourcesConfig = warsmashIni.get("DataSources");
-		final int dataSourcesCount = dataSourcesConfig.getFieldValue("Count");
 		final List<DataSourceDescriptor> dataSourcesList = new ArrayList<>();
 		final List<String> allCascPrefixes = new ArrayList<>();
-		for (int i = 0; i < dataSourcesCount; i++) {
+		for (int i = 0; i < dataSourcesConfig.size(); i++) {
 			final String type = dataSourcesConfig.getField("Type" + (i < 10 ? "0" : "") + i);
 			final String path = dataSourcesConfig.getField("Path" + (i < 10 ? "0" : "") + i);
 			switch (type) {
@@ -246,6 +245,8 @@ public class WarsmashGdxMapScreen implements InputProcessor, Screen {
 				dataSourcesList.add(new CascDataSourceDescriptor(path, parsedPrefixes));
 				break;
 			}
+			case "":
+				continue;
 			default:
 				throw new RuntimeException("Unknown data source type: " + type);
 			}
@@ -298,6 +299,7 @@ public class WarsmashGdxMapScreen implements InputProcessor, Screen {
 
 	private void renderLibGDXContent() {
 
+		Gdx.gl30.glClear(GL30.GL_DEPTH_BUFFER_BIT);
 		Gdx.gl30.glDisable(GL30.GL_SCISSOR_TEST);
 
 		Gdx.gl30.glDisable(GL30.GL_CULL_FACE);
@@ -307,6 +309,7 @@ public class WarsmashGdxMapScreen implements InputProcessor, Screen {
 		Gdx.gl30.glActiveTexture(GL30.GL_TEXTURE0);
 
 		this.uiViewport.apply();
+		this.batch.setColor(1, 1, 1, 1);
 		this.batch.setProjectionMatrix(this.uiCamera.combined);
 		this.batch.begin();
 		this.meleeUI.render(this.batch, this.glyphLayout);
@@ -400,9 +403,14 @@ public class WarsmashGdxMapScreen implements InputProcessor, Screen {
 	}
 
 	@Override
-	public boolean scrolled(final int amount) {
-		this.meleeUI.scrolled(amount);
-		return true;
+	public boolean scrolled(final float amountX, final float amountY) {
+		this.meleeUI.scrolled(amountX, amountY);
+		return false;
+	}
+
+	@Override
+	public boolean touchCancelled(final int screenX, final int screenY, final int pointer, final int button) {
+		return false;
 	}
 
 	private static class Message {

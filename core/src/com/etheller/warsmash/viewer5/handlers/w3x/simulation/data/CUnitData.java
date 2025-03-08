@@ -28,6 +28,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUpgradeType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.HandleIdAllocator;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityAttack;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityDisableType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityMove;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.GetAbilityByRawcodeVisitor;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.autocast.CAutocastAbility;
@@ -39,6 +40,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.build.CAb
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.CLevelingAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.hero.CAbilityHero;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.hero.CPrimaryAttribute;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.inventory.CAbilityInventory;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.item.shop.CAbilitySellItems;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.queue.CAbilityQueue;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.queue.CAbilityRally;
@@ -184,6 +186,9 @@ public class CUnitData {
 	private static final String BUILD_TIME = "bldtm"; // replaced from 'ubld'
 	private static final String FOOD_USED = "fused"; // replaced from 'ufoo'
 	private static final String FOOD_MADE = "fmade"; // replaced from 'ufma'
+	private static final String GOLD_REPAIR_COST = "goldRep";
+	private static final String LUMBER_REPAIR_COST = "lumberRep";
+	private static final String REPAIR_TIME = "reptm";
 
 	private static final String REQUIRE_PLACE = "requirePlace"; // replaced from 'upar'
 	private static final String PREVENT_PLACE = "preventPlace"; // replaced from 'upap'
@@ -218,6 +223,8 @@ public class CUnitData {
 	private static final String LUMBER_BOUNTY_AWARDED_DICE = "lumberbountydice"; // replaced from 'ulbd'
 	private static final String LUMBER_BOUNTY_AWARDED_SIDES = "lumberbountysides"; // replaced from 'ulbs'
 
+	private static final String NEUTRAL_BUILDING_SHOW_ICON = "nbmmIcon";
+
 	private final CGameplayConstants gameplayConstants;
 	private final ObjectData unitData;
 	private final Map<War3ID, CUnitType> unitIdToUnitType = new HashMap<>();
@@ -238,19 +245,20 @@ public class CUnitData {
 
 	public CUnit create(final CSimulation simulation, final int playerIndex, final War3ID typeId, final float x,
 			final float y, final float facing, final BufferedImage buildingPathingPixelMap,
-			final HandleIdAllocator handleIdAllocator) {
+			final HandleIdAllocator handleIdAllocator, int editorConfigHitPointPercent, int editorConfigManaAmount) {
 		final GameObject unitType = this.unitData.get(typeId.asStringValue());
 		final int handleId = handleIdAllocator.createId();
 
 		final CUnitType unitTypeInstance = getUnitTypeInstance(typeId, buildingPathingPixelMap, unitType);
-		final int life = unitTypeInstance.getMaxLife();
+		final float life = editorConfigHitPointPercent > 0 ? unitTypeInstance.getMaxLife()* (editorConfigHitPointPercent / 100f) : unitTypeInstance.getMaxLife();
 		final float lifeRegen = unitTypeInstance.getLifeRegen();
 		final int manaInitial = unitTypeInstance.getManaInitial();
 		final int manaMaximum = unitTypeInstance.getManaMaximum();
 		final int speed = unitTypeInstance.getSpeed();
 
-		final CUnit unit = new CUnit(handleId, playerIndex, x, y, life, typeId, facing, manaInitial, life, lifeRegen,
-				manaMaximum, speed, unitTypeInstance);
+		final CUnit unit = new CUnit(handleId, playerIndex, x, y, life, typeId, facing,
+				editorConfigManaAmount >= 0 ? editorConfigManaAmount : manaInitial, unitTypeInstance.getMaxLife(),
+				lifeRegen, manaMaximum, speed, unitTypeInstance);
 		return unit;
 	}
 
@@ -361,25 +369,33 @@ public class CUnitData {
 				if (createAbility != null) {
 					unit.add(simulation, createAbility);
 				}
-				if (ability.equals(unitTypeInstance.getDefaultAutocastAbility()) && createAbility instanceof CAutocastAbility) {
-					((CAutocastAbility)createAbility).setAutoCastOn(unit, true);
+				if (ability.equals(unitTypeInstance.getDefaultAutocastAbility())
+						&& (createAbility instanceof CAutocastAbility)) {
+					((CAutocastAbility) createAbility).setAutoCastOn(simulation, unit, true);
 				}
 			} else {
-				if (ability.equals(unitTypeInstance.getDefaultAutocastAbility()) && existingAbility instanceof CAutocastAbility) {
-					((CAutocastAbility)existingAbility).setAutoCastOn(unit, true);
+				if (ability.equals(unitTypeInstance.getDefaultAutocastAbility())
+						&& (existingAbility instanceof CAutocastAbility)) {
+					((CAutocastAbility) existingAbility).setAutoCastOn(simulation, unit, true);
 				}
 			}
+		}
+
+		if (unitTypeInstance.isHero() && simulation.isMapReignOfChaos()
+				&& (unit.getFirstAbilityOfType(CAbilityInventory.class) == null)) {
+			unit.add(simulation,
+					simulation.getAbilityData().createAbility(War3ID.fromString("AInv"), handleIdAllocator.createId()));
 		}
 	}
 
 	public void addMissingDefaultAbilitiesToUnit(final CSimulation simulation,
 			final HandleIdAllocator handleIdAllocator, final CUnitType unitTypeInstance, final boolean resetMana,
 			final int manaInitial, final int speed, final CUnit unit) {
-		CAbilityMove preMove = unit.getFirstAbilityOfType(CAbilityMove.class);
-		if (speed > 0 && preMove == null) {
+		final CAbilityMove preMove = unit.getFirstAbilityOfType(CAbilityMove.class);
+		if ((speed > 0) && (preMove == null)) {
 			unit.add(simulation, new CAbilityMove(handleIdAllocator.createId()));
 		}
-		if (speed <= 0 && preMove != null) {
+		if ((speed <= 0) && (preMove != null)) {
 			unit.remove(simulation, preMove);
 		}
 		final List<CUnitAttack> unitSpecificAttacks = new ArrayList<>();
@@ -389,7 +405,8 @@ public class CUnitData {
 		unit.setUnitSpecificAttacks(unitSpecificAttacks);
 		unit.setUnitSpecificCurrentAttacks(
 				getEnabledAttacks(unitSpecificAttacks, unitTypeInstance.getAttacksEnabled()));
-		if (!unit.getCurrentAttacks().isEmpty()) {
+		final CAbilityAttack preAttack = unit.getFirstAbilityOfType(CAbilityAttack.class);
+		if (!unit.getCurrentAttacks().isEmpty() && (preAttack == null)) {
 			unit.add(simulation, new CAbilityAttack(handleIdAllocator.createId()));
 		}
 		final List<War3ID> structuresBuilt = unitTypeInstance.getStructuresBuilt();
@@ -442,15 +459,36 @@ public class CUnitData {
 			unit.add(simulation, new CAbilityRally(handleIdAllocator.createId()));
 		}
 		if (unitTypeInstance.isHero()) {
-			final List<War3ID> heroAbilityList = unitTypeInstance.getHeroAbilityList();
 			if (unit.getFirstAbilityOfType(CAbilityHero.class) != null) {
-				CAbilityHero abil = unit.getFirstAbilityOfType(CAbilityHero.class);
-				abil.setSkillsAvailable(heroAbilityList);
-				abil.recalculateAllStats(simulation, unit);
+				final CAbilityHero abil = unit.getFirstAbilityOfType(CAbilityHero.class);
+				if (abil.isDisabled()) {
+					abil.setDisabled(false, CAbilityDisableType.TRANSFORMATION);
+					abil.setIconShowing(true);
+					for (CAbility habl : abil.getLearnedHeroAbilities()) {
+						unit.add(simulation, habl);
+					}
+				}
+				abil.setHeroName(unitTypeInstance);
+//				abil.setSkillsAvailable(heroAbilityList);
+				abil.calculateDerivatedFields(simulation, unit);
 			} else {
-				unit.add(simulation, new CAbilityHero(handleIdAllocator.createId(), heroAbilityList));
+				final List<War3ID> heroAbilityList = unitTypeInstance.getHeroAbilityList();
+				final CAbilityHero abil = new CAbilityHero(handleIdAllocator.createId(), heroAbilityList);
+				unit.add(simulation, abil);
 				// reset initial mana after the value is adjusted for hero data
 				unit.setMana(manaInitial);
+				abil.recalculateAllStats(simulation, unit);
+			}
+		} else {
+			if (unit.getFirstAbilityOfType(CAbilityHero.class) != null) {
+				final CAbilityHero abil = unit.getFirstAbilityOfType(CAbilityHero.class);
+//				abil.setSkillsAvailable(heroAbilityList);
+				abil.calculateDerivatedFields(simulation, unit);
+				abil.setDisabled(true, CAbilityDisableType.TRANSFORMATION);
+				abil.setIconShowing(false);
+				for (CAbility habl : abil.getLearnedHeroAbilities()) {
+					unit.remove(simulation, habl);
+				}
 			}
 		}
 		for (final War3ID ability : unitTypeInstance.getAbilityList()) {
@@ -461,14 +499,22 @@ public class CUnitData {
 				if (createAbility != null) {
 					unit.add(simulation, createAbility);
 				}
-				if (ability.equals(unitTypeInstance.getDefaultAutocastAbility()) && createAbility instanceof CAutocastAbility) {
-					((CAutocastAbility)createAbility).setAutoCastOn(unit, true);
+				if (ability.equals(unitTypeInstance.getDefaultAutocastAbility())
+						&& (createAbility instanceof CAutocastAbility)) {
+					((CAutocastAbility) createAbility).setAutoCastOn(simulation, unit, true);
 				}
 			} else {
-				if (ability.equals(unitTypeInstance.getDefaultAutocastAbility()) && existingAbility instanceof CAutocastAbility) {
-					((CAutocastAbility)existingAbility).setAutoCastOn(unit, true);
+				if (ability.equals(unitTypeInstance.getDefaultAutocastAbility())
+						&& (existingAbility instanceof CAutocastAbility)) {
+					((CAutocastAbility) existingAbility).setAutoCastOn(simulation, unit, true);
 				}
 			}
+		}
+
+		if (unitTypeInstance.isHero() && simulation.isMapReignOfChaos()
+				&& (unit.getFirstAbilityOfType(CAbilityInventory.class) == null)) {
+			unit.add(simulation,
+					simulation.getAbilityData().createAbility(War3ID.fromString("AInv"), handleIdAllocator.createId()));
 		}
 	}
 
@@ -514,7 +560,7 @@ public class CUnitData {
 			final CPrimaryAttribute primaryAttribute = CPrimaryAttribute
 					.parsePrimaryAttribute(unitType.getFieldAsString(PRIMARY_ATTRIBUTE, 0));
 
-			final String properNames = unitType.getFieldAsString(PROPER_NAMES, 0);
+			final String properNames = unitType.getField(PROPER_NAMES);
 			final int properNamesCount = unitType.getFieldAsInteger(PROPER_NAMES_COUNT, 0);
 
 			final boolean isBldg = unitType.getFieldAsBoolean(IS_BLDG, 0);
@@ -625,7 +671,7 @@ public class CUnitData {
 				final float rangeMotionBuffer = unitType.getFieldAsFloat(ATTACK2_RANGE_MOTION_BUFFER, 0);
 				boolean showUI = unitType.getFieldAsBoolean(ATTACK2_SHOW_UI, 0);
 				final EnumSet<CTargetType> targetsAllowed = CTargetType
-						.parseTargetTypeSet(unitType.getFieldAsList(ATTACK1_TARGETS_ALLOWED));
+						.parseTargetTypeSet(unitType.getFieldAsList(ATTACK2_TARGETS_ALLOWED));
 				final String weaponSound = unitType.getFieldAsString(ATTACK2_WEAPON_SOUND, 0);
 				final String weapon_type_temp = unitType.getFieldAsString(ATTACK2_WEAPON_TYPE, 0);
 				CWeaponType weaponType = CWeaponType.NONE;
@@ -664,6 +710,10 @@ public class CUnitData {
 			final int lumberCost = unitType.getFieldAsInteger(LUMBER_COST, 0);
 			final int buildTime = (int) Math
 					.ceil(unitType.getFieldAsInteger(BUILD_TIME, 0) * WarsmashConstants.GAME_SPEED_TIME_FACTOR);
+			final int goldRepairCost = unitType.getFieldAsInteger(GOLD_REPAIR_COST, 0);
+			final int lumberRepairCost = unitType.getFieldAsInteger(LUMBER_REPAIR_COST, 0);
+			final int repairTime = (int) Math
+					.ceil(unitType.getFieldAsInteger(REPAIR_TIME, 0) * WarsmashConstants.GAME_SPEED_TIME_FACTOR);
 			final int foodUsed = unitType.getFieldAsInteger(FOOD_USED, 0);
 			final int foodMade = unitType.getFieldAsInteger(FOOD_MADE, 0);
 
@@ -710,7 +760,8 @@ public class CUnitData {
 			final List<War3ID> itemsMade = parseIDList(unitType.getFieldAsList(ITEMS_MADE));
 
 			final War3ID defaultAutocastAbilityId;
-			if (defaultAutocastAbility != null && !defaultAutocastAbility.isEmpty() && !defaultAutocastAbility.equals("_")) {
+			if ((defaultAutocastAbility != null) && !defaultAutocastAbility.isEmpty()
+					&& !defaultAutocastAbility.equals("_")) {
 				defaultAutocastAbilityId = War3ID.fromString(defaultAutocastAbility);
 			} else {
 				defaultAutocastAbilityId = null;
@@ -743,19 +794,22 @@ public class CUnitData {
 
 			final List<String> heroProperNames = Arrays.asList(properNames.split(","));
 
+			final boolean neutralBuildingShowMinimapIcon = unitType.getFieldAsBoolean(NEUTRAL_BUILDING_SHOW_ICON, 0);
+
 			unitTypeInstance = new CUnitType(unitName, legacyName, typeId, life, lifeRegen, manaRegen, lifeRegenType,
 					manaInitial, manaMaximum, speed, defense, defaultAutocastAbilityId, abilityList, isBldg,
 					movementType, moveHeight, collisionSize, classifications, attacks, attacksEnabled, armorType, raise,
 					decay, defenseType, impactZ, buildingPathingPixelMap, deathTime, targetedAs, acquisitionRange,
 					minimumAttackRange, structuresBuilt, unitsTrained, researchesAvailable, upgradesUsed,
 					upgradeClassToType, upgradesTo, itemsSold, itemsMade, unitRace, goldCost, lumberCost, foodUsed,
-					foodMade, buildTime, preventedPathingTypes, requiredPathingTypes, propWindow, turnRate,
-					requirements, requirementTiers, unitLevel, hero, strength, strPlus, agility, agiPlus, intelligence,
-					intPlus, primaryAttribute, heroAbilityList, heroProperNames, properNamesCount, canFlee, priority,
-					revivesHeroes, pointValue, castBackswingPoint, castPoint, canBeBuiltOnThem, canBuildOnMe,
-					defenseUpgradeBonus, sightRadiusDay, sightRadiusNight, extendedLineOfSight, goldBountyAwardedBase,
-					goldBountyAwardedDice, goldBountyAwardedSides, lumberBountyAwardedBase, lumberBountyAwardedDice,
-					lumberBountyAwardedSides);
+					foodMade, buildTime, goldRepairCost, lumberRepairCost, repairTime, preventedPathingTypes,
+					requiredPathingTypes, propWindow, turnRate, requirements, requirementTiers, unitLevel, hero,
+					strength, strPlus, agility, agiPlus, intelligence, intPlus, primaryAttribute, heroAbilityList,
+					heroProperNames, properNamesCount, canFlee, priority, revivesHeroes, pointValue, castBackswingPoint,
+					castPoint, canBeBuiltOnThem, canBuildOnMe, defenseUpgradeBonus, sightRadiusDay, sightRadiusNight,
+					extendedLineOfSight, goldBountyAwardedBase, goldBountyAwardedDice, goldBountyAwardedSides,
+					lumberBountyAwardedBase, lumberBountyAwardedDice, lumberBountyAwardedSides,
+					neutralBuildingShowMinimapIcon);
 			this.unitIdToUnitType.put(typeId, unitTypeInstance);
 			this.jassLegacyNameToUnitId.put(legacyName, typeId);
 		}
@@ -884,14 +938,15 @@ public class CUnitData {
 					cooldownTime, damageBase, damageDice, damageSidesPerDie, damageUpgradeAmount, range,
 					rangeMotionBuffer, showUI, targetsAllowed, weaponSound, weaponType, projectileArc, projectileArt,
 					projectileHomingEnabled, projectileSpeed, areaOfEffectFullDamage, areaOfEffectMediumDamage,
-					areaOfEffectSmallDamage, areaOfEffectTargets, damageFactorMedium, damageFactorSmall);
+					areaOfEffectSmallDamage, areaOfEffectTargets, damageFactorMedium, damageFactorSmall,
+					weaponType == CWeaponType.ARTILLERY);
 			break;
 		case MLINE:
 		case ALINE:
 			attack = new CUnitAttackMissileLine(animationBackswingPoint, animationDamagePoint, attackType, cooldownTime,
 					damageBase, damageDice, damageSidesPerDie, damageUpgradeAmount, range, rangeMotionBuffer, showUI,
 					targetsAllowed, weaponSound, weaponType, projectileArc, projectileArt, projectileHomingEnabled,
-					projectileSpeed, damageSpillDistance, damageSpillRadius);
+					projectileSpeed, damageSpillDistance, damageSpillRadius, weaponType == CWeaponType.ALINE);
 			break;
 		case INSTANT:
 			attack = new CUnitAttackInstant(animationBackswingPoint, animationDamagePoint, attackType, cooldownTime,

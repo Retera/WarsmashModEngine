@@ -61,18 +61,18 @@ public class CAbilityCarrionSwarmDummy extends AbstractGenericSingleIconNoSmartA
 	}
 
 	@Override
-	public CBehavior begin(final CSimulation game, final CUnit caster, final int orderId, final CWidget target) {
-		return this.behaviorCarrionSwarmDummy.reset(target);
+	public CBehavior begin(final CSimulation game, final CUnit caster, final int orderId, boolean autoOrder, final CWidget target) {
+		return this.behaviorCarrionSwarmDummy.reset(game, target);
 	}
 
 	@Override
 	public CBehavior begin(final CSimulation game, final CUnit caster, final int orderId,
-			final AbilityPointTarget point) {
-		return this.behaviorCarrionSwarmDummy.reset(point);
+			boolean autoOrder, final AbilityPointTarget point) {
+		return this.behaviorCarrionSwarmDummy.reset(game, point);
 	}
 
 	@Override
-	public CBehavior beginNoTarget(final CSimulation game, final CUnit caster, final int orderId) {
+	public CBehavior beginNoTarget(final CSimulation game, final CUnit caster, final int orderId, boolean autoOrder) {
 		return caster.pollNextOrderBehavior(game);
 	}
 
@@ -132,6 +132,11 @@ public class CAbilityCarrionSwarmDummy extends AbstractGenericSingleIconNoSmartA
 	@Override
 	public boolean isPhysical() {
 		return false;
+	}
+
+	@Override
+	public boolean isMagic() {
+		return true;
 	}
 
 	@Override

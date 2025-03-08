@@ -16,6 +16,11 @@ public abstract class AbstractCBuff extends AbstractGenericAliasedAbility implem
 	}
 
 	@Override
+	public boolean isMagic() {
+		return false;
+	}
+
+	@Override
 	public boolean isPhysical() {
 		return false;
 	}
@@ -28,6 +33,31 @@ public abstract class AbstractCBuff extends AbstractGenericAliasedAbility implem
 	@Override
 	public CAbilityCategory getAbilityCategory() {
 		return CAbilityCategory.BUFF;
+	}
+	
+	@Override
+	public boolean isPositive() {
+		return true;
+	}
+	
+	@Override
+	public boolean isLeveled() {
+		return false;
+	}
+	
+	@Override
+	public boolean isDispellable() {
+		return false;
+	}
+	
+	@Override
+	public boolean isAura() {
+		return false;
+	}
+	
+	@Override
+	public boolean isHero() {
+		return false;
 	}
 
 }

@@ -6,6 +6,7 @@ import com.badlogic.gdx.math.collision.BoundingBox;
 import com.badlogic.gdx.math.collision.Ray;
 
 public class Bounds {
+	private static final Vector3 tempVec = new Vector3();
 	public float x, y, z, r;
 	private BoundingBox boundingBox;
 
@@ -37,5 +38,10 @@ public class Bounds {
 
 	public BoundingBox getBoundingBox() {
 		return this.boundingBox;
+	}
+
+	public float getEstimatedMaxZ() {
+		this.boundingBox.getMax(tempVec);
+		return tempVec.z;
 	}
 }

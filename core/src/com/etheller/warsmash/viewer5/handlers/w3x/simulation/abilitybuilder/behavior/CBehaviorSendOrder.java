@@ -5,6 +5,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehavior;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehaviorCategory;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehaviorVisitor;
 
 public class CBehaviorSendOrder implements CBehavior {
@@ -26,7 +27,7 @@ public class CBehaviorSendOrder implements CBehavior {
 
 	@Override
 	public CBehavior update(CSimulation game) {
-		return ability.begin(game, unit, orderId, target);
+		return ability.begin(game, unit, orderId, false, target);
 	}
 
 	@Override
@@ -50,6 +51,11 @@ public class CBehaviorSendOrder implements CBehavior {
 	@Override
 	public <T> T visit(final CBehaviorVisitor<T> visitor) {
 		return visitor.accept(this);
+	}
+
+	@Override
+	public CBehaviorCategory getBehaviorCategory() {
+		return CBehaviorCategory.IDLE;
 	}
 
 

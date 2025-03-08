@@ -62,6 +62,8 @@ public abstract class Scene {
 	public boolean alpha = false;
 	public Color backgroundColor = Color.BLACK;
 	private final SceneLightManager lightManager;
+	public FogSettings fogSettings = new FogSettings();
+	public boolean show = true;
 
 	public Scene(final ModelViewer viewer, final SceneLightManager lightManager) {
 		final CanvasProvider canvas = viewer.canvas;
@@ -243,7 +245,8 @@ public abstract class Scene {
 		// If this scene doesn't want alpha, clear it.
 		gl.glDepthMask(true);
 		if (!this.alpha) {
-			gl.glClearColor(backgroundColor.r, backgroundColor.g, backgroundColor.b, backgroundColor.a);
+			gl.glClearColor(this.backgroundColor.r, this.backgroundColor.g, this.backgroundColor.b,
+					this.backgroundColor.a);
 			gl.glClear(GL20.GL_DEPTH_BUFFER_BIT | GL20.GL_COLOR_BUFFER_BIT);
 		}
 		else {
@@ -253,6 +256,9 @@ public abstract class Scene {
 	}
 
 	public void renderOpaque() {
+		if (!this.show) {
+			return;
+		}
 		final Rectangle viewport = this.camera.rect;
 		this.viewer.gl.glViewport((int) viewport.x, (int) viewport.y, (int) viewport.width, (int) viewport.height);
 
@@ -263,7 +269,7 @@ public abstract class Scene {
 
 		// Add all of the batched instances to batches.
 		for (final ModelInstance instance : this.batchedInstances) {
-			this.addToBatch(instance);
+			addToBatch(instance);
 		}
 
 		// Render all of the batches.
@@ -278,6 +284,9 @@ public abstract class Scene {
 	}
 
 	public void renderOpaque(final DynamicShadowManager dynamicShadowManager, final WebGL webGL) {
+		if (!this.show) {
+			return;
+		}
 		final Matrix4 depthMatrix = dynamicShadowManager.prepareShadowMatrix();
 		dynamicShadowManager.beginShadowMap(webGL);
 		Gdx.gl30.glDepthMask(true);
@@ -300,6 +309,9 @@ public abstract class Scene {
 	 * camera's viewport.
 	 */
 	public void renderTranslucent() {
+		if (!this.show) {
+			return;
+		}
 		final Rectangle viewport = this.camera.rect;
 
 		this.viewer.gl.glViewport((int) viewport.x, (int) viewport.y, (int) viewport.width, (int) viewport.height);

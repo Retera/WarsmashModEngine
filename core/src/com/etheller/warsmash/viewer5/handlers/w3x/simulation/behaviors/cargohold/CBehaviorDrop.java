@@ -8,6 +8,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.cargohold
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityPointTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CAbstractRangedBehavior;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehavior;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehaviorCategory;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.OrderIds;
 
 public class CBehaviorDrop extends CAbstractRangedBehavior {
@@ -19,9 +20,8 @@ public class CBehaviorDrop extends CAbstractRangedBehavior {
 		this.ability = ability;
 	}
 
-	public CBehaviorDrop reset(final AbilityPointTarget target) {
-		innerReset(target, false);
-		return this;
+	public CBehavior reset(CSimulation game, final AbilityPointTarget target) {
+		return innerReset(game, target, false);
 	}
 
 	@Override
@@ -42,6 +42,7 @@ public class CBehaviorDrop extends CAbstractRangedBehavior {
 		final float durationTicks = (int) Math.ceil(cargoData.getDuration() / WarsmashConstants.SIMULATION_STEP_TIME);
 		if (deltaTicks >= durationTicks) {
 			cargoData.dropUnitByIndex(simulation, unit, 0);
+			this.unit.notifyOrdersChanged();
 			this.lastDropTick = gameTurnTick;
 		}
 		return this;
@@ -81,5 +82,10 @@ public class CBehaviorDrop extends CAbstractRangedBehavior {
 	@Override
 	public boolean interruptable() {
 		return true;
+	}
+
+	@Override
+	public CBehaviorCategory getBehaviorCategory() {
+		return CBehaviorCategory.SPELL;
 	}
 }

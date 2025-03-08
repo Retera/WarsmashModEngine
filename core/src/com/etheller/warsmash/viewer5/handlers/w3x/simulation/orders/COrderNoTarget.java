@@ -11,11 +11,17 @@ public class COrderNoTarget implements COrder {
 	private final int abilityHandleId;
 	private final int orderId;
 	private final boolean queued;
+	private boolean autoOrder;
 
 	public COrderNoTarget(final int abilityHandleId, final int orderId, final boolean queued) {
+		this(abilityHandleId, orderId, queued, false);
+	}
+
+	public COrderNoTarget(final int abilityHandleId, final int orderId, final boolean queued, final boolean autoOrder) {
 		this.abilityHandleId = abilityHandleId;
 		this.orderId = orderId;
 		this.queued = queued;
+		this.autoOrder = autoOrder;
 	}
 
 	@Override
@@ -43,20 +49,19 @@ public class COrderNoTarget implements COrder {
 			game.getCommandErrorListener().showInterfaceError(caster.getPlayerIndex(), "NOTEXTERN: No such ability");
 			return caster.pollNextOrderBehavior(game);
 		}
-		ability.checkCanUse(game, caster, this.orderId, this.abilityActivationReceiver.reset());
+		ability.checkCanUse(game, caster, this.orderId, this.autoOrder, this.abilityActivationReceiver.reset());
 		if (this.abilityActivationReceiver.isUseOk()) {
 			final ExternStringMsgTargetCheckReceiver<Void> targetReceiver = (ExternStringMsgTargetCheckReceiver<Void>) targetCheckReceiver;
-			ability.checkCanTargetNoTarget(game, caster, this.orderId, targetReceiver);
+			ability.checkCanTargetNoTarget(game, caster, this.orderId, this.autoOrder, targetReceiver);
 			if (targetReceiver.getExternStringKey() == null) {
 				caster.fireOrderEvents(game, this);
-				return ability.beginNoTarget(game, caster, this.orderId);
-			}
-			else {
-				game.getCommandErrorListener().showInterfaceError(caster.getPlayerIndex(), targetReceiver.getExternStringKey());
+				return ability.beginNoTarget(game, caster, this.orderId, this.autoOrder);
+			} else {
+				game.getCommandErrorListener().showInterfaceError(caster.getPlayerIndex(),
+						targetReceiver.getExternStringKey());
 				return caster.pollNextOrderBehavior(game);
 			}
-		}
-		else {
+		} else {
 			game.getCommandErrorListener().showInterfaceError(caster.getPlayerIndex(),
 					this.abilityActivationReceiver.getExternStringKey());
 			return caster.pollNextOrderBehavior(game);

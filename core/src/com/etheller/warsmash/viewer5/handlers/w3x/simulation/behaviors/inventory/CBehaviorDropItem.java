@@ -8,6 +8,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTargetStillAliveVisitor;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CAbstractRangedBehavior;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehavior;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehaviorCategory;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.OrderIds;
 
 public class CBehaviorDropItem extends CAbstractRangedBehavior {
@@ -19,10 +20,9 @@ public class CBehaviorDropItem extends CAbstractRangedBehavior {
 		this.inventory = inventory;
 	}
 
-	public CBehaviorDropItem reset(final CItem targetItem, final AbilityPointTarget targetPoint) {
-		innerReset(targetPoint);
+	public CBehavior reset(CSimulation game, final CItem targetItem, final AbilityPointTarget targetPoint) {
 		this.targetItem = targetItem;
-		return this;
+		return innerReset(game, targetPoint);
 	}
 
 	@Override
@@ -71,6 +71,11 @@ public class CBehaviorDropItem extends CAbstractRangedBehavior {
 	@Override
 	public boolean interruptable() {
 		return true;
+	}
+
+	@Override
+	public CBehaviorCategory getBehaviorCategory() {
+		return CBehaviorCategory.MOVEMENT;
 	}
 
 }

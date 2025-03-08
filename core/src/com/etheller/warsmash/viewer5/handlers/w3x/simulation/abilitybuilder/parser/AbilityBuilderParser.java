@@ -1,10 +1,12 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.parser;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABAction;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABCallback;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABCondition;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.parser.template.MeleeRangeTargetOverride;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.parser.template.StatBuffFromDataField;
@@ -12,6 +14,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.pars
 public class AbilityBuilderParser {
 
 	private List<AbilityBuilderDupe> ids;
+	private String parentId;
 
 	private AbilityBuilderType type;
 	private AbilityBuilderSpecialDisplayFields displayFields;
@@ -32,6 +35,7 @@ public class AbilityBuilderParser {
 	private List<ABAction> onOrderIssued;
 	private List<ABAction> onActivate;
 	private List<ABAction> onDeactivate;
+	private List<ABAction> onChangeAutoCast;
 
 	private List<ABAction> onLevelChange;
 
@@ -40,8 +44,101 @@ public class AbilityBuilderParser {
 	private List<ABAction> onChannelTick;
 	private List<ABAction> onEndChannel;
 	
+	private Map<String, List<ABAction>> reuseActions;
+	private Map<String, ABCallback> reuseCallbacks;
+	
 	//Template only
 	private AbilityBuilderParserTemplateFields templateFields;
+
+
+	public void updateFromParent(AbilityBuilderParser parent) {
+		this.type = parent.type;
+		
+		if (parent.displayFields != null) {
+			if (this.displayFields == null) {
+				this.displayFields = new AbilityBuilderSpecialDisplayFields();
+			}
+			this.displayFields.updateFromParent(parent.displayFields);
+		}
+		if (parent.specialFields != null) {
+			if (this.specialFields == null) {
+				this.specialFields = new AbilityBuilderSpecialConfigFields();
+			}
+			this.specialFields.updateFromParent(parent.specialFields);
+		}
+		if (parent.overrideFields != null) {
+			if (this.overrideFields == null) {
+				this.overrideFields = new AbilityBuilderOverrideFields();
+			}
+			this.overrideFields.updateFromParent(parent.overrideFields);
+		}
+		if (parent.templateFields != null) {
+			if (this.templateFields == null) {
+				this.templateFields = new AbilityBuilderParserTemplateFields();
+			}
+			this.templateFields.updateFromParent(parent.templateFields);
+		}
+
+		if (parent.reuseActions != null) {
+			if (this.reuseActions == null) {
+				this.reuseActions = new HashMap<>();
+			}
+			for (String key : parent.reuseActions.keySet()) {
+				if (!this.reuseActions.containsKey(key)) {
+					this.reuseActions.put(key, parent.reuseActions.get(key));
+				}
+			}
+		}
+		if (parent.reuseCallbacks != null) {
+			if (this.reuseCallbacks == null) {
+				this.reuseCallbacks = new HashMap<>();
+			}
+			for (String key : parent.reuseCallbacks.keySet()) {
+				if (!this.reuseCallbacks.containsKey(key)) {
+					this.reuseCallbacks.put(key, parent.reuseCallbacks.get(key));
+				}
+			}
+		}
+		
+		if (this.extraTargetConditions == null)
+			this.extraTargetConditions = parent.extraTargetConditions;
+		if (this.extraAutoTargetConditions == null)
+			this.extraAutoTargetConditions = parent.extraAutoTargetConditions;
+		if (this.extraAutoNoTargetConditions == null)
+			this.extraAutoNoTargetConditions = parent.extraAutoNoTargetConditions;
+		if (this.extraCastConditions == null)
+			this.extraCastConditions = parent.extraCastConditions;
+		if (this.onAddAbility == null)
+			this.onAddAbility = parent.onAddAbility;
+		if (this.onAddDisabledAbility == null)
+			this.onAddDisabledAbility = parent.onAddDisabledAbility;
+		if (this.onRemoveAbility == null)
+			this.onRemoveAbility = parent.onRemoveAbility;
+		if (this.onRemoveDisabledAbility == null)
+			this.onRemoveDisabledAbility = parent.onRemoveDisabledAbility;
+		if (this.onDeathPreCast == null)
+			this.onDeathPreCast = parent.onDeathPreCast;
+		if (this.onCancelPreCast == null)
+			this.onCancelPreCast = parent.onCancelPreCast;
+		if (this.onOrderIssued == null)
+			this.onOrderIssued = parent.onOrderIssued;
+		if (this.onActivate == null)
+			this.onActivate = parent.onActivate;
+		if (this.onDeactivate == null)
+			this.onDeactivate = parent.onDeactivate;
+		if (this.onChangeAutoCast == null)
+			this.onChangeAutoCast = parent.onChangeAutoCast;
+		if (this.onLevelChange == null)
+			this.onLevelChange = parent.onLevelChange;
+		if (this.onBeginCasting == null)
+			this.onBeginCasting = parent.onBeginCasting;
+		if (this.onEndCasting == null)
+			this.onEndCasting = parent.onEndCasting;
+		if (this.onChannelTick == null)
+			this.onChannelTick = parent.onChannelTick;
+		if (this.onEndChannel == null)
+			this.onEndChannel = parent.onEndChannel;
+	}
 
 	public List<AbilityBuilderDupe> getIds() {
 		return ids;
@@ -49,6 +146,14 @@ public class AbilityBuilderParser {
 
 	public void setIds(List<AbilityBuilderDupe> ids) {
 		this.ids = ids;
+	}
+
+	public String getParentId() {
+		return parentId;
+	}
+
+	public void setParentId(String parentId) {
+		this.parentId = parentId;
 	}
 
 	public AbilityBuilderType getType() {
@@ -205,6 +310,14 @@ public class AbilityBuilderParser {
 		this.onDeactivate = onDeactivate;
 	}
 
+	public List<ABAction> getOnChangeAutoCast() {
+		return onChangeAutoCast;
+	}
+
+	public void setOnChangeAutoCast(List<ABAction> onChangeAutoCast) {
+		this.onChangeAutoCast = onChangeAutoCast;
+	}
+
 	public List<ABAction> getOnBeginCasting() {
 		return onBeginCasting;
 	}
@@ -243,6 +356,22 @@ public class AbilityBuilderParser {
 
 	public void setOnEndChannel(List<ABAction> onEndChannel) {
 		this.onEndChannel = onEndChannel;
+	}
+
+	public Map<String, List<ABAction>> getReuseActions() {
+		return reuseActions;
+	}
+
+	public void setReuseActions(Map<String, List<ABAction>> reuseActions) {
+		this.reuseActions = reuseActions;
+	}
+
+	public Map<String, ABCallback> getReuseCallbacks() {
+		return reuseCallbacks;
+	}
+
+	public void setReuseCallbacks(Map<String, ABCallback> reuseCallbacks) {
+		this.reuseCallbacks = reuseCallbacks;
 	}
 
 	public AbilityBuilderTemplateType getTemplateType() {

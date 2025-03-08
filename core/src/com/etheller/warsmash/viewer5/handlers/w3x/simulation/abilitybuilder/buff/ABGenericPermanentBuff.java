@@ -6,13 +6,17 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 
 public abstract class ABGenericPermanentBuff extends ABBuff {
 
-	public ABGenericPermanentBuff(int handleId, War3ID alias, boolean showIcon) {
+	public ABGenericPermanentBuff(int handleId, War3ID alias, boolean showIcon, boolean leveled, boolean positive) {
 		super(handleId, alias, alias);
 		this.setIconShowing(showIcon);
+		this.setLeveled(leveled);
+		this.setPositive(positive);
 	}
-	
-	public ABGenericPermanentBuff(int handleId, War3ID alias) {
+
+	public ABGenericPermanentBuff(int handleId, War3ID alias, boolean leveled, boolean positive) {
 		super(handleId, alias, alias);
+		this.setLeveled(leveled);
+		this.setPositive(positive);
 	}
 
 	protected abstract void onBuffAdd(CSimulation game, CUnit unit);
@@ -40,17 +44,11 @@ public abstract class ABGenericPermanentBuff extends ABBuff {
 	}
 
 	@Override
-	public boolean isTimedLifeBar() {
-		return false;
-	}
-
-	@Override
 	public void onTick(CSimulation game, CUnit unit) {
 	}
 
 	@Override
 	public void onDeath(CSimulation game, CUnit cUnit) {
 	}
-
 
 }

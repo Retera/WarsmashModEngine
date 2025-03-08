@@ -12,15 +12,21 @@ public class ABTimedTickingPausedBuff extends ABTimedBuff {
 
 	private List<ABAction> onTickActions;
 
-	public ABTimedTickingPausedBuff(int handleId, War3ID alias, float duration, boolean showTimedLifeBar, Map<String, Object> localStore,
-			List<ABAction> onAddActions, List<ABAction> onRemoveActions, List<ABAction> onExpireActions, List<ABAction> onTickActions, boolean showIcon, final int castId) {
-		this(handleId, alias, duration, showTimedLifeBar, localStore, onAddActions, onRemoveActions, onExpireActions, onTickActions, castId);
+	public ABTimedTickingPausedBuff(int handleId, War3ID alias, float duration, boolean showTimedLifeBar,
+			Map<String, Object> localStore, List<ABAction> onAddActions, List<ABAction> onRemoveActions,
+			List<ABAction> onExpireActions, List<ABAction> onTickActions, boolean showIcon, final int castId,
+			final boolean leveled, final boolean positive, final boolean dispellable) {
+		this(handleId, alias, duration, showTimedLifeBar, localStore, onAddActions, onRemoveActions, onExpireActions,
+				onTickActions, castId, leveled, positive, dispellable);
 		this.setIconShowing(showIcon);
 	}
-	
-	public ABTimedTickingPausedBuff(int handleId, War3ID alias, float duration, boolean showTimedLifeBar, Map<String, Object> localStore,
-			List<ABAction> onAddActions, List<ABAction> onRemoveActions, List<ABAction> onExpireActions, List<ABAction> onTickActions, final int castId) {
-		super(handleId, alias, duration, showTimedLifeBar, localStore, onAddActions, onRemoveActions, onExpireActions, castId);
+
+	public ABTimedTickingPausedBuff(int handleId, War3ID alias, float duration, boolean showTimedLifeBar,
+			Map<String, Object> localStore, List<ABAction> onAddActions, List<ABAction> onRemoveActions,
+			List<ABAction> onExpireActions, List<ABAction> onTickActions, final int castId, final boolean leveled,
+			final boolean positive, final boolean dispellable) {
+		super(handleId, alias, duration, showTimedLifeBar, localStore, onAddActions, onRemoveActions, onExpireActions,
+				castId, leveled, positive, dispellable);
 		this.onTickActions = onTickActions;
 	}
 

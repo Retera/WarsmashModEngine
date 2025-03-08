@@ -2,6 +2,7 @@ package com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.beh
 
 import java.util.Map;
 
+import com.etheller.warsmash.parsers.jass.JassTextGenerator;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.booleancallbacks.ABBooleanCallback;
@@ -17,10 +18,33 @@ public class ABActionSetExplodesOnDeath implements ABAction {
 
 	@Override
 	public void runAction(CSimulation game, CUnit caster, Map<String, Object> localStore, final int castId) {
-		CUnit targetUnit = unit.callback(game, caster, localStore, castId);
-		targetUnit.setExplodesOnDeath(explodes.callback(game, caster, localStore, castId));
-		if (buffId != null) {
-			targetUnit.setExplodesOnDeathBuffId(buffId.callback(game, caster, localStore, castId));
+		final CUnit targetUnit = this.unit.callback(game, caster, localStore, castId);
+		targetUnit.setExplodesOnDeath(this.explodes.callback(game, caster, localStore, castId));
+		if (this.buffId != null) {
+			targetUnit.setExplodesOnDeathBuffId(this.buffId.callback(game, caster, localStore, castId));
+		}
+	}
+
+	@Override
+	public void generateJassEquivalent(int indent, JassTextGenerator jassTextGenerator) {
+		final StringBuilder sb = new StringBuilder();
+		JassTextGenerator.Util.indent(indent, sb);
+		sb.append("call SetUnitExploded(");
+		sb.append(this.unit.generateJassEquivalent(jassTextGenerator));
+		sb.append(", ");
+		sb.append(this.explodes.generateJassEquivalent(jassTextGenerator));
+		sb.append(")");
+		jassTextGenerator.println(sb.toString());
+
+		if (this.buffId != null) {
+			sb.setLength(0);
+			JassTextGenerator.Util.indent(indent, sb);
+			sb.append("call SetUnitExplodeOnDeathBuffId(");
+			sb.append(this.unit.generateJassEquivalent(jassTextGenerator));
+			sb.append(", ");
+			sb.append(this.buffId.generateJassEquivalent(jassTextGenerator));
+			sb.append(")");
+			jassTextGenerator.println(sb.toString());
 		}
 	}
 

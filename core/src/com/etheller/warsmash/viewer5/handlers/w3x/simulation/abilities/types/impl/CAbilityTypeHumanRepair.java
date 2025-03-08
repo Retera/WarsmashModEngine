@@ -21,12 +21,13 @@ public class CAbilityTypeHumanRepair extends CAbilityType<CAbilityTypeHumanRepai
 	public CAbility createAbility(final int handleId) {
 		final CAbilityTypeHumanRepairLevelData levelData = getLevelData(0);
 		return new CAbilityHumanRepair(handleId, getCode(), getAlias(), levelData.getTargetsAllowed(),
-				levelData.getNavalRangeBonus(), levelData.getRepairCostRatio(), levelData.getRepairTimeRatio(),
-				levelData.getCastRange());
+				levelData.getNavalRangeBonus(), levelData.getPowerBuildCostRatio(), levelData.getPowerBuildTimeRatio(),
+				levelData.getRepairCostRatio(), levelData.getRepairTimeRatio(), levelData.getCastRange());
 	}
 
 	@Override
-	public void setLevel(final CSimulation game, final CUnit unit, final CLevelingAbility existingAbility, final int level) {
+	public void setLevel(final CSimulation game, final CUnit unit, final CLevelingAbility existingAbility,
+			final int level) {
 
 		final CAbilityTypeHumanRepairLevelData levelData = getLevelData(level - 1);
 		final CAbilityHumanRepair heroAbility = ((CAbilityHumanRepair) existingAbility);

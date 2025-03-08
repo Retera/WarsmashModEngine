@@ -1,18 +1,20 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities;
 
+import com.etheller.interpreter.ast.util.CExtensibleHandleAbstract;
 import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CItem;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityActivationReceiver;
 
-public abstract class AbstractCAbility implements CAbility {
+public abstract class AbstractCAbility extends CExtensibleHandleAbstract implements CAbility {
 	private final int handleId;
 	private byte disabled = 0;
+	private boolean hero = false;
 	private boolean iconShowing = true;
 	private boolean permanent = false;
-	
-	private War3ID code;
+
+	private final War3ID code;
 
 	public AbstractCAbility(final int handleId, final War3ID code) {
 		this.handleId = handleId;
@@ -23,14 +25,24 @@ public abstract class AbstractCAbility implements CAbility {
 	public final int getHandleId() {
 		return this.handleId;
 	}
-	
-	public War3ID getCode() { 
+
+	@Override
+	public War3ID getCode() {
 		return this.code;
 	}
-	
+
 	@Override
 	public War3ID getAlias() {
-		return this.getCode();
+		return getCode();
+	}
+
+	@Override
+	public boolean isHero() {
+		return hero;
+	}
+
+	public void setHero(boolean hero) {
+		this.hero = hero;
 	}
 
 	@Override
@@ -38,13 +50,20 @@ public abstract class AbstractCAbility implements CAbility {
 		return this.disabled != 0;
 	}
 
+	protected void onSetDisabled(final boolean disabled, final boolean wasDisabled, final CAbilityDisableType type) {
+
+	}
+
 	@Override
-	public final void setDisabled(final boolean disabled, CAbilityDisableType type) {
+	public final void setDisabled(final boolean disabled, final CAbilityDisableType type) {
+		boolean wasDisabled = this.isDisabled();
 		if (disabled) {
 			this.disabled |= type.getMask();
-		} else {
+		}
+		else {
 			this.disabled &= ~type.getMask();
 		}
+		onSetDisabled(disabled, wasDisabled, type);
 	}
 
 	@Override
@@ -52,36 +71,58 @@ public abstract class AbstractCAbility implements CAbility {
 		return this.iconShowing;
 	}
 
+	protected void onSetIconShowing(final boolean iconShowing) {
+
+	}
+
 	@Override
 	public final void setIconShowing(final boolean iconShowing) {
 		this.iconShowing = iconShowing;
+		onSetIconShowing(iconShowing);
 	}
 
 	@Override
-	public boolean isPermanent() {
+	public final boolean isPermanent() {
 		return this.permanent;
 	}
 
-	@Override
-	public void setPermanent(final boolean permanent) {
-		this.permanent = permanent;
+	protected void onSetPermanent(final boolean permanent) {
+
 	}
-	
-	@Override 
-	public void setItemAbility(CItem item, int slot) {
-		//do nothing
+
+	@Override
+	public final void setPermanent(final boolean permanent) {
+		this.permanent = permanent;
+		onSetPermanent(permanent);
+	}
+
+	@Override
+	public void setItemAbility(final CItem item, final int slot) {
+		// do nothing
+	}
+
+	@Override
+	public CItem getItem() {
+		// do nothing
+		return null;
 	}
 
 	@Override
 	public final void checkCanUse(final CSimulation game, final CUnit unit, final int orderId,
-			final AbilityActivationReceiver receiver) {
-		if (this.isDisabled()) {
+			boolean autoOrder, final AbilityActivationReceiver receiver) {
+		if (isDisabled()) {
 			receiver.disabled();
-			this.checkRequirementsMet(game, unit, receiver);
+			checkRequirementsMet(game, unit, receiver);
+			innerCheckCooldownDisabled(game,unit,orderId,receiver);
 		}
 		else {
 			innerCheckCanUse(game, unit, orderId, receiver);
 		}
+	}
+
+	protected void innerCheckCooldownDisabled(final CSimulation game, final CUnit unit, final int orderId,
+			final AbilityActivationReceiver receiver) {
+		//do nothing
 	}
 
 	protected abstract void innerCheckCanUse(final CSimulation game, final CUnit unit, final int orderId,
@@ -92,22 +133,23 @@ public abstract class AbstractCAbility implements CAbility {
 	}
 
 	@Override
-	public void checkRequirementsMet(CSimulation game, CUnit unit, AbilityActivationReceiver receiver) {
-		
+	public void checkRequirementsMet(final CSimulation game, final CUnit unit,
+			final AbilityActivationReceiver receiver) {
+
 	}
-	
+
 	@Override
-	public boolean isRequirementsMet(CSimulation game, CUnit unit) {
+	public boolean isRequirementsMet(final CSimulation game, final CUnit unit) {
 		return true;
 	}
-	
+
 	@Override
-	public void onAddDisabled(CSimulation game, CUnit unit) {
-		//do nothing
+	public void onAddDisabled(final CSimulation game, final CUnit unit) {
+		// do nothing
 	}
-	
+
 	@Override
-	public void onRemoveDisabled(CSimulation game, CUnit unit) {
-		//do nothing
+	public void onRemoveDisabled(final CSimulation game, final CUnit unit) {
+		// do nothing
 	}
 }

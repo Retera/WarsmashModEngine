@@ -11,7 +11,7 @@ import com.etheller.warsmash.units.DataTable;
 
 public class WorldEditorFrame extends JFrame {
 	public WorldEditorFrame(final DataTable warsmashIni) {
-		super("Warsmash Model Editor");
+		super("Warsmash World Editor");
 		setDefaultCloseOperation(DISPOSE_ON_CLOSE);
 		final TerrainEditorPanel contentPane = new TerrainEditorPanel(warsmashIni);
 		setContentPane(contentPane);

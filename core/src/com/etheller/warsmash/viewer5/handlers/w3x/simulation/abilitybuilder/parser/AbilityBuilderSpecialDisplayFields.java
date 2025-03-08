@@ -20,6 +20,34 @@ public class AbilityBuilderSpecialDisplayFields {
 	private ABBooleanCallback castToggleOff;
 	private ABBooleanCallback separateOnAndOff;
 	private ABIDCallback alternateUnitId;
+
+	public void updateFromParent(AbilityBuilderSpecialDisplayFields parent) {
+		if (this.showOnAndOffIcons == null)
+			this.showOnAndOffIcons = parent.showOnAndOffIcons;
+
+		if (this.foodCost == null)
+			this.foodCost = parent.foodCost;
+		if (this.goldCost == null)
+			this.goldCost = parent.goldCost;
+		if (this.lumberCost == null)
+			this.lumberCost = parent.lumberCost;
+
+		if (this.hideAreaCursor == null)
+			this.hideAreaCursor = parent.hideAreaCursor;
+		if (this.instantCast == null)
+			this.instantCast = parent.instantCast;
+		if (this.castlessNoTarget == null)
+			this.castlessNoTarget = parent.castlessNoTarget;
+
+		if (this.toggleable == null)
+			this.toggleable = parent.toggleable;
+		if (this.castToggleOff == null)
+			this.castToggleOff = parent.castToggleOff;
+		if (this.separateOnAndOff == null)
+			this.separateOnAndOff = parent.separateOnAndOff;
+		if (this.alternateUnitId == null)
+			this.alternateUnitId = parent.alternateUnitId;
+	}
 	
 	public ABBooleanCallback getShowOnAndOffIcons() {
 		return showOnAndOffIcons;

@@ -37,13 +37,13 @@ public class CAbilityOrcBuild extends AbstractCAbilityBuild {
 	}
 
 	@Override
-	public CBehavior begin(final CSimulation game, final CUnit caster, final int orderId, final CWidget target) {
+	public CBehavior begin(final CSimulation game, final CUnit caster, final int orderId, boolean autoOrder, final CWidget target) {
 		return caster.pollNextOrderBehavior(game);
 	}
 
 	@Override
 	public CBehavior begin(final CSimulation game, final CUnit caster, final int orderId,
-			final AbilityPointTarget point) {
+			boolean autoOrder, final AbilityPointTarget point) {
 		final War3ID orderIdAsRawtype = new War3ID(orderId);
 		final CUnitType unitType = game.getUnitData().getUnitType(orderIdAsRawtype);
 		roundTargetPoint(point, unitType);
@@ -52,11 +52,11 @@ public class CAbilityOrcBuild extends AbstractCAbilityBuild {
 		if (unitType.getFoodUsed() != 0) {
 			player.setFoodUsed(player.getFoodUsed() + unitType.getFoodUsed());
 		}
-		return this.buildBehavior.reset(point, orderId, getBaseOrderId());
+		return this.buildBehavior.reset(game, point, orderId, getBaseOrderId());
 	}
 
 	@Override
-	public CBehavior beginNoTarget(final CSimulation game, final CUnit caster, final int orderId) {
+	public CBehavior beginNoTarget(final CSimulation game, final CUnit caster, final int orderId, boolean autoOrder) {
 		return caster.pollNextOrderBehavior(game);
 	}
 
@@ -68,6 +68,11 @@ public class CAbilityOrcBuild extends AbstractCAbilityBuild {
 	@Override
 	public boolean isPhysical() {
 		return true;
+	}
+
+	@Override
+	public boolean isMagic() {
+		return false;
 	}
 
 	@Override

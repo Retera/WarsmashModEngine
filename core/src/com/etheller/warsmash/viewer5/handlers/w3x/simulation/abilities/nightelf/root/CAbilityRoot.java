@@ -102,7 +102,9 @@ public class CAbilityRoot extends AbstractGenericSingleIconNoSmartActiveAbility 
 		}
 		unit.setFacing(game.getGameplayConstants().getRootAngle());
 		unit.setUnitSpecificCurrentAttacks(this.rootedAttacks);
-		unit.getUnitAnimationListener().addSecondaryTag(SecondaryTag.ALTERNATE);
+		if (unit.getUnitAnimationListener().addSecondaryTag(SecondaryTag.ALTERNATE)) {
+			unit.getUnitAnimationListener().forceResetCurrentAnimation();
+		}
 	}
 
 	@Override
@@ -133,7 +135,9 @@ public class CAbilityRoot extends AbstractGenericSingleIconNoSmartActiveAbility 
 			unit.setAttackMoveBehavior(null);
 			unit.setFacing(game.getGameplayConstants().getRootAngle());
 			unit.setUnitSpecificCurrentAttacks(this.rootedAttacks);
-			unit.getUnitAnimationListener().addSecondaryTag(SecondaryTag.ALTERNATE);
+			if (unit.getUnitAnimationListener().addSecondaryTag(SecondaryTag.ALTERNATE)) {
+				unit.getUnitAnimationListener().forceResetCurrentAnimation();
+			}
 		}
 		else {
 			for (final CAbility ability : this.rootedAbilities) {
@@ -160,21 +164,21 @@ public class CAbilityRoot extends AbstractGenericSingleIconNoSmartActiveAbility 
 	}
 
 	@Override
-	public CBehavior begin(final CSimulation game, final CUnit caster, final int orderId, final CWidget target) {
+	public CBehavior begin(final CSimulation game, final CUnit caster, final int orderId, boolean autoOrder, final CWidget target) {
 		return null;
 	}
 
 	@Override
 	public CBehavior begin(final CSimulation game, final CUnit caster, final int orderId,
-			final AbilityPointTarget point) {
+			boolean autoOrder, final AbilityPointTarget point) {
 		if (!this.rooted && (orderId == OrderIds.root)) {
-			return this.behaviorRoot.reset(point);
+			return this.behaviorRoot.reset(game, point);
 		}
 		return caster.pollNextOrderBehavior(game);
 	}
 
 	@Override
-	public CBehavior beginNoTarget(final CSimulation game, final CUnit caster, final int orderId) {
+	public CBehavior beginNoTarget(final CSimulation game, final CUnit caster, final int orderId, boolean autoOrder) {
 		if (this.rooted && (orderId == OrderIds.unroot)) {
 			return this.behaviorUproot.reset();
 		}
@@ -325,6 +329,11 @@ public class CAbilityRoot extends AbstractGenericSingleIconNoSmartActiveAbility 
 
 	@Override
 	public boolean isPhysical() {
+		return false;
+	}
+
+	@Override
+	public boolean isMagic() {
 		return false;
 	}
 

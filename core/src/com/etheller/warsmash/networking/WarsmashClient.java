@@ -9,6 +9,7 @@ import java.util.Map;
 import java.util.Queue;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.utils.IntIntMap;
 import com.etheller.warsmash.util.WarsmashConstants;
 import com.etheller.warsmash.viewer5.handlers.w3x.War3MapViewer;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayerUnitOrderExecutor;
@@ -23,19 +24,22 @@ public class WarsmashClient implements ServerToClientListener, GameTurnManager {
 	private int latestLocallyRequestedTurn = -1;
 	private final WarsmashClientWriter writer;
 	private final Queue<QueuedMessage> queuedMessages = new ArrayDeque<>();
+	private final IntIntMap serverSlotToMapSlot;
 
 	public WarsmashClient(final InetAddress serverAddress, final int udpPort, final War3MapViewer game,
-			final long sessionToken) throws UnknownHostException, IOException {
+			final long sessionToken, final IntIntMap serverSlotToMapSlot) throws UnknownHostException, IOException {
 		this.udpClient = new OrderedUdpClient(serverAddress, udpPort, new WarsmashClientParser(this));
 		this.game = game;
 		this.writer = new WarsmashClientWriter(this.udpClient, sessionToken);
+		this.serverSlotToMapSlot = serverSlotToMapSlot;
 	}
 
-	public CPlayerUnitOrderExecutor getExecutor(final int playerIndex) {
-		CPlayerUnitOrderExecutor executor = this.indexToExecutor.get(playerIndex);
+	private CPlayerUnitOrderExecutor getExecutor(final int serverPlayerIndex) {
+		final int mapPlayerIndex = this.serverSlotToMapSlot.get(serverPlayerIndex, -1);
+		CPlayerUnitOrderExecutor executor = this.indexToExecutor.get(serverPlayerIndex);
 		if (executor == null) {
-			executor = new CPlayerUnitOrderExecutor(this.game.simulation, playerIndex);
-			this.indexToExecutor.put(playerIndex, executor);
+			executor = new CPlayerUnitOrderExecutor(this.game.simulation, mapPlayerIndex);
+			this.indexToExecutor.put(serverPlayerIndex, executor);
 		}
 		return executor;
 	}

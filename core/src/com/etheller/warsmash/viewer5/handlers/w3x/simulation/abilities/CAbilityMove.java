@@ -4,18 +4,25 @@ import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.cargohold.CAbilityLoad;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityPointTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTargetVisitor;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.*;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehavior;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehaviorBoardTransport;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehaviorFollow;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehaviorHoldPosition;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehaviorMove;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehaviorPatrol;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.OrderIds;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.*;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityActivationReceiver;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetCheckReceiver;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.CommandStringErrorKeys;
 
 public class CAbilityMove extends AbstractCAbility {
+	public static final War3ID CODE = War3ID.fromString("Amov");
 
 	public CAbilityMove(final int handleId) {
-		super(handleId, War3ID.fromString("AMov"));
+		super(handleId, CODE);
 	}
 
 	@Override
@@ -25,8 +32,8 @@ public class CAbilityMove extends AbstractCAbility {
 	}
 
 	@Override
-	public void checkCanTarget(final CSimulation game, final CUnit unit, final int orderId, final CWidget target,
-			final AbilityTargetCheckReceiver<CWidget> receiver) {
+	public void checkCanTarget(final CSimulation game, final CUnit unit, final int orderId, boolean autoOrder,
+			final CWidget target, final AbilityTargetCheckReceiver<CWidget> receiver) {
 		switch (orderId) {
 		case OrderIds.smart:
 		case OrderIds.patrol:
@@ -46,7 +53,7 @@ public class CAbilityMove extends AbstractCAbility {
 
 	@Override
 	public void checkCanTarget(final CSimulation game, final CUnit unit, final int orderId,
-			final AbilityPointTarget target, final AbilityTargetCheckReceiver<AbilityPointTarget> receiver) {
+			boolean autoOrder, final AbilityPointTarget target, final AbilityTargetCheckReceiver<AbilityPointTarget> receiver) {
 		switch (orderId) {
 		case OrderIds.smart:
 		case OrderIds.move:
@@ -61,7 +68,7 @@ public class CAbilityMove extends AbstractCAbility {
 
 	@Override
 	public void checkCanTargetNoTarget(final CSimulation game, final CUnit unit, final int orderId,
-			final AbilityTargetCheckReceiver<Void> receiver) {
+			boolean autoOrder, final AbilityTargetCheckReceiver<Void> receiver) {
 		switch (orderId) {
 		case OrderIds.holdposition:
 			receiver.targetOk(null);
@@ -92,25 +99,26 @@ public class CAbilityMove extends AbstractCAbility {
 
 	@Override
 	public boolean checkBeforeQueue(final CSimulation game, final CUnit caster, final int orderId,
-			final AbilityTarget target) {
+			boolean autoOrder, final AbilityTarget target) {
 		return true;
 	}
 
 	@Override
-	public CBehavior begin(final CSimulation game, final CUnit caster, final int orderId, final CWidget target) {
-		boolean smart = orderId == OrderIds.smart;
-		CUnit targetUnit = target.visit(AbilityTargetVisitor.UNIT);
+	public CBehavior begin(final CSimulation game, final CUnit caster, final int orderId, boolean autoOrder, final CWidget target) {
+		final boolean smart = orderId == OrderIds.smart;
+		final CUnit targetUnit = target.visit(AbilityTargetVisitor.UNIT);
 		if (targetUnit != null) {
 			CBehavior behavior = null;
 			if (smart) {
-				CAbilityLoad transportLoad = CAbilityLoad.getTransportLoad(game, caster, targetUnit, true, true);
+				final CBehaviorBoardTransport boardTransportBehavior = caster.getBoardTransportBehavior();
+				final CAbilityRanged transportLoad = boardTransportBehavior.getPartnerAbility(game, caster, targetUnit,
+						true, true);
 				if (transportLoad != null) {
-					behavior = caster.getBoardTransportBehavior().reset(OrderIds.move, targetUnit);
+					behavior = boardTransportBehavior.reset(game, OrderIds.move, targetUnit);
 				}
 			}
 			if (behavior == null) {
-				behavior = caster.getFollowBehavior()
-						.reset(smart ? OrderIds.move : orderId, targetUnit);
+				behavior = caster.getFollowBehavior().reset(game, smart ? OrderIds.move : orderId, targetUnit);
 				caster.setDefaultBehavior(behavior);
 			}
 			return behavior;
@@ -121,7 +129,7 @@ public class CAbilityMove extends AbstractCAbility {
 
 	@Override
 	public CBehavior begin(final CSimulation game, final CUnit caster, final int orderId,
-			final AbilityPointTarget point) {
+			boolean autoOrder, final AbilityPointTarget point) {
 		if (orderId == OrderIds.patrol) {
 			final CBehavior patrolBehavior = caster.getPatrolBehavior().reset(point);
 			caster.setDefaultBehavior(patrolBehavior);
@@ -133,7 +141,7 @@ public class CAbilityMove extends AbstractCAbility {
 	}
 
 	@Override
-	public CBehavior beginNoTarget(final CSimulation game, final CUnit caster, final int orderId) {
+	public CBehavior beginNoTarget(final CSimulation game, final CUnit caster, final int orderId, boolean autoOrder) {
 		if (orderId == OrderIds.holdposition) {
 			caster.setDefaultBehavior(caster.getHoldPositionBehavior());
 		}
@@ -152,14 +160,14 @@ public class CAbilityMove extends AbstractCAbility {
 	@Override
 	public void onDeath(final CSimulation game, final CUnit cUnit) {
 	}
-	
-	@Override
-	public boolean isPermanent() {
-		return true;
-	}
 
 	@Override
 	public boolean isPhysical() {
+		return false;
+	}
+
+	@Override
+	public boolean isMagic() {
 		return false;
 	}
 

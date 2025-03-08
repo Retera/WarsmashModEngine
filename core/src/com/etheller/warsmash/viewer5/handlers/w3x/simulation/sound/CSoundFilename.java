@@ -1,12 +1,13 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.sound;
 
 import com.badlogic.gdx.audio.Sound;
+import com.badlogic.gdx.utils.TimeUtils;
 import com.etheller.warsmash.viewer5.AudioBufferSource;
 import com.etheller.warsmash.viewer5.AudioContext;
 import com.etheller.warsmash.viewer5.AudioPanner;
+import com.etheller.warsmash.viewer5.gl.Extensions;
 
 public class CSoundFilename implements CSound {
-
 	private final Sound sound;
 	private final boolean looping;
 	private final boolean stopWhenOutOfRange;
@@ -21,6 +22,7 @@ public class CSoundFilename implements CSound {
 	private final float minDistance = 99999;
 	private final float distanceCutoff = 99999;
 	private final String eaxSetting;
+	private long lastStartTimestamp;
 
 	public CSoundFilename(final Sound sound, final AudioContext audioContext, final boolean looping,
 			final boolean stopWhenOutOfRange, final int fadeInRate, final int fadeOutRate, final String eaxSetting) {
@@ -59,6 +61,25 @@ public class CSoundFilename implements CSound {
 
 		// Make a sound.
 		source.start(0, this.volume, this.pitch, this.looping);
+
+		this.lastStartTimestamp = TimeUtils.millis();
+	}
+
+	@Override
+	public float getPredictedDuration() {
+		return Extensions.audio.getDuration(this.sound);
+	}
+
+	@Override
+	public float getRemainingTimeToPlayOnTheDesyncLocalComputer() {
+		final long currentTime = TimeUtils.millis();
+		final long deltaTime = currentTime - this.lastStartTimestamp;
+		final float deltaTimeSeconds = deltaTime / 1000f;
+		final float predictedDuration = getPredictedDuration();
+		if (deltaTimeSeconds > predictedDuration) {
+			return 0;
+		}
+		return predictedDuration - deltaTimeSeconds;
 	}
 
 }

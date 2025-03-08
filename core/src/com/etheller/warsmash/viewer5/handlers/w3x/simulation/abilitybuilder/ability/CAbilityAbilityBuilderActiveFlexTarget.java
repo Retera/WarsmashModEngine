@@ -38,7 +38,7 @@ public class CAbilityAbilityBuilderActiveFlexTarget extends CAbilityAbilityBuild
 		if (config.getSpecialFields() != null && config.getSpecialFields().getTargetedSpell() != null) {
 			boolean result = true;
 			for (ABCondition condition : config.getSpecialFields().getTargetedSpell()) {
-				result = result && condition.evaluate(game, unit, localStore, castId);
+				result = result && condition.callback(game, unit, localStore, castId);
 			}
 			this.targetedSpell = result;
 		}
@@ -47,7 +47,7 @@ public class CAbilityAbilityBuilderActiveFlexTarget extends CAbilityAbilityBuild
 		if (config.getSpecialFields() != null && config.getSpecialFields().getPointTargeted() != null) {
 			boolean result = true;
 			for (ABCondition condition : config.getSpecialFields().getPointTargeted()) {
-				result = result && condition.evaluate(game, unit, localStore, castId);
+				result = result && condition.callback(game, unit, localStore, castId);
 			}
 			this.pointTarget = result;
 		}
@@ -93,7 +93,7 @@ public class CAbilityAbilityBuilderActiveFlexTarget extends CAbilityAbilityBuild
 
 	@Override
 	public void onAddDisabled(CSimulation game, CUnit unit) {
-		localStore.put(ABLocalStoreKeys.FLEXABILITY, this);
+		localStore.put(ABLocalStoreKeys.ISFLEXABILITY, this);
 		super.onAddDisabled(game, unit);
 	}
 
@@ -108,45 +108,49 @@ public class CAbilityAbilityBuilderActiveFlexTarget extends CAbilityAbilityBuild
 
 	@Override
 	public boolean checkBeforeQueue(final CSimulation game, final CUnit caster, final int orderId,
-			final AbilityTarget target) {
+			boolean autoOrder, final AbilityTarget target) {
+		this.localStore.put(ABLocalStoreKeys.combineKey(ABLocalStoreKeys.ISAUTOCAST, orderId), autoOrder);
 		if (!this.isTargetedSpell() && castless && orderId == this.getBaseOrderId()) {
 			this.runBeginCastingActions(game, caster, orderId);
 			this.runEndCastingActions(game, caster, orderId);
 			return false;
 		}
-		return super.checkBeforeQueue(game, caster, orderId, target);
+		return super.checkBeforeQueue(game, caster, orderId, autoOrder, target);
 	}
 
 	@Override
-	public CBehavior begin(CSimulation game, CUnit caster, int orderId, CWidget target) {
+	public CBehavior begin(CSimulation game, CUnit caster, int orderId, boolean autoOrder, CWidget target) {
 		if (this.isTargetedSpell() && !this.isPointTarget()) {
+			this.localStore.put(ABLocalStoreKeys.combineKey(ABLocalStoreKeys.ISAUTOCAST, orderId), autoOrder);
 			this.localStore.put(ABLocalStoreKeys.ABILITYTARGETEDUNIT + castId, target.visit(AbilityTargetVisitor.UNIT));
 			this.localStore.put(ABLocalStoreKeys.ABILITYTARGETEDITEM + castId, target.visit(AbilityTargetVisitor.ITEM));
 			this.localStore.put(ABLocalStoreKeys.ABILITYTARGETEDDESTRUCTABLE + castId, target.visit(AbilityTargetVisitor.DESTRUCTABLE));
 			this.runOnOrderIssuedActions(game, caster, orderId);
-			return this.behavior.reset(target);
+			return this.behavior.reset(game, target);
 		} else {
 			return null;
 		}
 	}
 
 	@Override
-	public CBehavior begin(CSimulation game, CUnit caster, int orderId, AbilityPointTarget point) {
+	public CBehavior begin(CSimulation game, CUnit caster, int orderId, boolean autoOrder, AbilityPointTarget point) {
 		if (this.isTargetedSpell() && this.isPointTarget()) {
+			this.localStore.put(ABLocalStoreKeys.combineKey(ABLocalStoreKeys.ISAUTOCAST, orderId), autoOrder);
 			localStore.put(ABLocalStoreKeys.ABILITYTARGETEDLOCATION+this.castId, point);
 			this.runOnOrderIssuedActions(game, caster, orderId);
-			return this.behavior.reset(point);
+			return this.behavior.reset(game, point);
 		} else {
 			return null;
 		}
 	}
 
 	@Override
-	public CBehavior beginNoTarget(CSimulation game, CUnit caster, int orderId) {
+	public CBehavior beginNoTarget(CSimulation game, CUnit caster, int orderId, boolean autoOrder) {
 		if (!this.isTargetedSpell()) {
 			if (castless) {
 				return null;
 			} else {
+				this.localStore.put(ABLocalStoreKeys.combineKey(ABLocalStoreKeys.ISAUTOCAST, orderId), autoOrder);
 				this.runOnOrderIssuedActions(game, caster, orderId);
 				return this.behavior.reset();
 			}

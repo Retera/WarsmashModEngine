@@ -10,6 +10,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.nightelf.
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityPointTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CAbstractRangedBehavior;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehavior;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehaviorCategory;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.OrderIds;
 
 public class CBehaviorRoot extends CAbstractRangedBehavior {
@@ -22,10 +23,10 @@ public class CBehaviorRoot extends CAbstractRangedBehavior {
 		this.abilityRoot = abilityRoot;
 	}
 
-	public CAbstractRangedBehavior reset(final AbilityPointTarget pointTarget) {
+	public CBehavior reset(final CSimulation game, final AbilityPointTarget pointTarget) {
 		this.rootStartTick = -1;
 		this.rootFinishTick = -1;
-		return this.innerReset(pointTarget);
+		return this.innerReset(game, pointTarget);
 	}
 
 	@Override
@@ -72,9 +73,9 @@ public class CBehaviorRoot extends CAbstractRangedBehavior {
 						SequenceUtils.EMPTY, duration, true);
 			}
 			else if (simulation.getGameTurnTick() >= this.rootFinishTick) {
+				this.unit.getUnitAnimationListener().addSecondaryTag(SecondaryTag.ALTERNATE);
 				this.unit.getUnitAnimationListener().playAnimation(false, PrimaryTag.STAND, SequenceUtils.EMPTY, 1.0f,
 						true);
-				this.unit.getUnitAnimationListener().addSecondaryTag(SecondaryTag.ALTERNATE);
 				this.unit.setAcceptingOrders(true);
 				return this.unit.pollNextOrderBehavior(simulation);
 			}
@@ -100,6 +101,11 @@ public class CBehaviorRoot extends CAbstractRangedBehavior {
 	@Override
 	public boolean interruptable() {
 		return true;
+	}
+
+	@Override
+	public CBehaviorCategory getBehaviorCategory() {
+		return CBehaviorCategory.MOVEMENT;
 	}
 
 }

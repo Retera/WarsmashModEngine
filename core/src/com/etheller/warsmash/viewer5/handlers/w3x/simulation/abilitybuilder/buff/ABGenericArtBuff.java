@@ -49,11 +49,6 @@ public class ABGenericArtBuff extends ABBuff {
 	}
 
 	@Override
-	public boolean isTimedLifeBar() {
-		return false;
-	}
-
-	@Override
 	public void onTick(CSimulation game, CUnit unit) {
 	}
 

@@ -19,7 +19,7 @@ public class War3MapConfigPlayer extends CBasePlayer {
 	@Override
 	public RemovableTriggerEvent addEvent(final GlobalScope globalScope, final Trigger whichTrigger,
 			final JassGameEventsWar3 eventType) {
-		return RemovableTriggerEvent.DO_NOTHING;
+		return RemovableTriggerEvent.doNothing(whichTrigger);
 	}
 
 	@Override

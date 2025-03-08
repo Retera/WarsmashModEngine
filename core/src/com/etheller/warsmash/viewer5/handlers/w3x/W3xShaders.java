@@ -52,13 +52,13 @@ public class W3xShaders {
 					"        if (u_aboveWater) {\r\n" + //
 					"          height = max(height, (texture2D(u_waterHeightsMap, base * u_pixel + halfPixel).r + u_waterHeightOffset) * 128.0);\r\n"
 					+ //
-					"          hL = max(hL, (texture2D(u_heightMap, vec2(base - vec2(normalDist, 0.0)) * u_pixel + halfPixel).r + u_waterHeightOffset));\r\n"
+					"          hL = max(hL, (texture2D(u_waterHeightsMap, vec2(base - vec2(normalDist, 0.0)) * u_pixel + halfPixel).r + u_waterHeightOffset));\r\n"
 					+ //
-					"          hR = max(hR, (texture2D(u_heightMap, vec2(base + vec2(normalDist, 0.0)) * u_pixel + halfPixel).r + u_waterHeightOffset));\r\n"
+					"          hR = max(hR, (texture2D(u_waterHeightsMap, vec2(base + vec2(normalDist, 0.0)) * u_pixel + halfPixel).r + u_waterHeightOffset));\r\n"
 					+ //
-					"          hD = max(hD, (texture2D(u_heightMap, vec2(base - vec2(0.0, normalDist)) * u_pixel + halfPixel).r + u_waterHeightOffset));\r\n"
+					"          hD = max(hD, (texture2D(u_waterHeightsMap, vec2(base - vec2(0.0, normalDist)) * u_pixel + halfPixel).r + u_waterHeightOffset));\r\n"
 					+ //
-					"          hU = max(hU, (texture2D(u_heightMap, vec2(base + vec2(0.0, normalDist)) * u_pixel + halfPixel).r + u_waterHeightOffset));\r\n"
+					"          hU = max(hU, (texture2D(u_waterHeightsMap, vec2(base + vec2(0.0, normalDist)) * u_pixel + halfPixel).r + u_waterHeightOffset));\r\n"
 					+ //
 					"        }\r\n" + //
 					"      } else {\r\n" + //
@@ -88,6 +88,9 @@ public class W3xShaders {
 				"    uniform sampler2D u_fogOfWarMap;\r\n" + //
 				"    uniform vec4 u_color;\r\n" + //
 				"    uniform bool u_show_lighting;\r\n" + //
+				"    uniform bool u_unfogged;\r\n" + //
+				"    uniform vec4 u_fogColor;\r\n" + //
+				"    uniform vec4 u_fogParams;\r\n" + //
 				"    varying vec2 v_uv;\r\n" + //
 				"    varying vec2 v_suv;\r\n" + //
 				"    varying vec3 v_normal;\r\n" + //
@@ -110,6 +113,7 @@ public class W3xShaders {
 				"      if (u_show_lighting) {;\r\n" + //
 				"        color.xyz *= shadeColor;\r\n" + //
 				"      };\r\n" + //
+				Shaders.fogSystem(false, null) + //
 				"      gl_FragColor = color;\r\n" + //
 				"    }\r\n" + //
 				"  ";

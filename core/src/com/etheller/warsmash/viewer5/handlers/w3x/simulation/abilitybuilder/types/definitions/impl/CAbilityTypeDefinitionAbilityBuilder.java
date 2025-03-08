@@ -54,7 +54,7 @@ public class CAbilityTypeDefinitionAbilityBuilder
 		final String[] effectStrings = abilityEditorData.readSLKTag(EFFECT+level).split(",");
 		final String unitIdStr = abilityEditorData.readSLKTag(UNIT_ID+level);
 		War3ID unitId = War3ID.NONE;
-		if (unitIdStr != null && !unitIdStr.isEmpty()) {
+		if (unitIdStr != null && !unitIdStr.isEmpty() && unitIdStr.length() == 4) {
 			unitId = War3ID.fromString(unitIdStr);
 		}
 		

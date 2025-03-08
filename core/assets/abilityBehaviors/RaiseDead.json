@@ -71,12 +71,12 @@
 					"value": "false"
 				}
 			},{
-				"type": "iterateActions",
+				"type": "for",
 				"times": {
 					"type": "getAbilityDataAsInteger",
 					"dataField": "A"
 				},
-				"iterationActions": [{
+				"actions": [{
 						"type": "createUnit",
 						"id": {
 							"type": "getAbilityDataAsID",
@@ -116,12 +116,12 @@
 						}
 				}]
 			},{
-				"type": "iterateActions",
+				"type": "for",
 				"times": {
 					"type": "getAbilityDataAsInteger",
 					"dataField": "B"
 				},
-				"iterationActions": [{
+				"actions": [{
 						"type": "createUnit",
 						"id": {
 							"type": "getAbilityDataAsID",
@@ -265,12 +265,12 @@
 				}
 		}],
 		"onEndCasting": [{
-				"type": "iterateActions",
+				"type": "for",
 				"times": {
 					"type": "getAbilityDataAsInteger",
 					"dataField": "A"
 				},
-				"iterationActions": [{
+				"actions": [{
 						"type": "if",
 						"condition": {
 							"type": "f!=0",
@@ -282,6 +282,10 @@
 							"type": "createTimedBuff",
 							"buffId": {
 								"type": "getFirstBuffId"
+							},
+							"dispellable": {
+								"type": "rawBoolean",
+								"value": "false"
 							},
 							"duration": {
 								"type": "getAbilityDuration"
@@ -398,12 +402,12 @@
 						}
 				}]
 			},{
-				"type": "iterateActions",
+				"type": "for",
 				"times": {
 					"type": "getAbilityDataAsInteger",
 					"dataField": "B"
 				},
-				"iterationActions": [{
+				"actions": [{
 						"type": "if",
 						"condition": {
 							"type": "f!=0",
@@ -415,6 +419,10 @@
 							"type": "createTimedBuff",
 							"buffId": {
 								"type": "getFirstBuffId"
+							},
+							"dispellable": {
+								"type": "rawBoolean",
+								"value": "false"
 							},
 							"duration": {
 								"type": "getAbilityDuration"
@@ -687,12 +695,12 @@
 				}
 		}],
 		"onEndCasting": [{
-				"type": "iterateActions",
+				"type": "for",
 				"times": {
 					"type": "getAbilityDataAsInteger",
 					"dataField": "A"
 				},
-				"iterationActions": [{
+				"actions": [{
 						"type": "if",
 						"condition": {
 							"type": "f!=0",
@@ -704,6 +712,10 @@
 							"type": "createTimedBuff",
 							"buffId": {
 								"type": "getFirstBuffId"
+							},
+							"dispellable": {
+								"type": "rawBoolean",
+								"value": "false"
 							},
 							"duration": {
 								"type": "getAbilityDuration"
@@ -848,12 +860,12 @@
 						}
 				}]
 			},{
-				"type": "iterateActions",
+				"type": "for",
 				"times": {
 					"type": "getAbilityDataAsInteger",
 					"dataField": "B"
 				},
-				"iterationActions": [{
+				"actions": [{
 						"type": "if",
 						"condition": {
 							"type": "f!=0",
@@ -865,6 +877,10 @@
 							"type": "createTimedBuff",
 							"buffId": {
 								"type": "getFirstBuffId"
+							},
+							"dispellable": {
+								"type": "rawBoolean",
+								"value": "false"
 							},
 							"duration": {
 								"type": "getAbilityDuration"
@@ -1021,7 +1037,7 @@
 						"type": "while",
 						"condition": {
 							"type": "and",
-							"condition1": {
+							"conditions": [{
 								"type": "i>",
 								"value1": {
 									"type": "i+",
@@ -1044,8 +1060,7 @@
 									"type": "getAbilityDataAsInteger",
 									"dataField": "E"
 								}
-							},
-							"condition2": {
+							},{
 								"type": "i!=0",
 								"value": {
 									"type": "getUnitQueueSize",
@@ -1054,7 +1069,7 @@
 										"name": "summons2"
 									}
 								}
-							}
+							}]
 						},
 						"loopActions": [{
 							"type": "killUnit",

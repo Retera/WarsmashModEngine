@@ -104,7 +104,7 @@ public class CPsuedoProjectile extends CProjectile {
 	}
 
 	protected void onHitTarget(CSimulation game, CWidget target) {
-		projectileListener.onHit(game, target);
+		projectileListener.onHit(game, this, target);
 	}
 
 	@Override
@@ -162,7 +162,7 @@ public class CPsuedoProjectile extends CProjectile {
 			}
 
 			
-			this.projectileListener.onPreHits(game, loc);
+			this.projectileListener.onPreHits(game, this, loc);
 			
 			game.getWorldCollision().enumDestructablesInRect(recycleRect, new CDestructableEnumFunction() {
 				@Override

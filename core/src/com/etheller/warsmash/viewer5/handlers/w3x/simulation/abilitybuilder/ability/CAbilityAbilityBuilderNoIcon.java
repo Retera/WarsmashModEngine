@@ -3,6 +3,7 @@ package com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.abi
 import java.util.List;
 import java.util.Map;
 
+import com.etheller.warsmash.units.GameObject;
 import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CItem;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
@@ -12,6 +13,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityVisitor;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.AbstractGenericNoIconAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityPointTarget;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.definitions.impl.AbilityFields;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABAction;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABLocalStoreKeys;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.parser.AbilityBuilderConfiguration;
@@ -21,7 +23,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayer;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityActivationReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetCheckReceiver;
 
-public class CAbilityAbilityBuilderNoIcon extends AbstractGenericNoIconAbility implements AbilityBuilderAbility {
+public class CAbilityAbilityBuilderNoIcon extends AbstractGenericNoIconAbility implements AbilityBuilderPassiveAbility {
 
 	protected List<CAbilityTypeAbilityBuilderLevelData> levelData;
 	protected AbilityBuilderConfiguration config;
@@ -31,6 +33,8 @@ public class CAbilityAbilityBuilderNoIcon extends AbstractGenericNoIconAbility i
 	
 	protected float cooldown = 0;
 	protected float area = 0;
+	protected float range = 0;
+	protected float castTime = 0;
 
 	public CAbilityAbilityBuilderNoIcon(int handleId, War3ID code, War3ID alias, List<CAbilityTypeAbilityBuilderLevelData> levelData,
 			AbilityBuilderConfiguration config, Map<String, Object> localStore) {
@@ -39,21 +43,41 @@ public class CAbilityAbilityBuilderNoIcon extends AbstractGenericNoIconAbility i
 		this.config = config;
 		this.localStore = localStore;
 		localStore.put(ABLocalStoreKeys.ABILITY, this);
+		GameObject editorData = (GameObject) localStore.get(ABLocalStoreKeys.ABILITYEDITORDATA);
+		final int levels = editorData.getFieldAsInteger(AbilityFields.LEVELS, 0);
+		localStore.put(ABLocalStoreKeys.ISABILITYLEVELED, levels > 1);
+		localStore.put(ABLocalStoreKeys.ISABILITYMAGIC, false);
+		localStore.put(ABLocalStoreKeys.ISABILITYPHYSICAL, false);
 	}
 
 	protected void setSpellFields(CSimulation game, CUnit unit) {
 		CAbilityTypeAbilityBuilderLevelData levelDataLevel = this.levelData.get(this.getLevel() - 1);
 		this.cooldown = levelDataLevel.getCooldown();
 		this.area = levelDataLevel.getArea();
+		this.range = levelDataLevel.getCastRange();
 		if (this.config.getOverrideFields() != null) {
 			if (this.config.getOverrideFields().getAreaOverride() != null) {
 				this.area = this.config.getOverrideFields().getAreaOverride().callback(game, unit, localStore, 0);
+			}
+			if (this.config.getOverrideFields().getRangeOverride() != null) {
+				this.range = this.config.getOverrideFields().getRangeOverride().callback(game, unit, localStore,
+						0);
+			}
+			if (this.config.getOverrideFields().getCastTimeOverride() != null) {
+				this.castTime = this.config.getOverrideFields().getCastTimeOverride().callback(game, unit, localStore,
+						0);
 			}
 			if (this.config.getOverrideFields().getCooldownOverride() != null) {
 				this.cooldown = this.config.getOverrideFields().getCooldownOverride().callback(game, unit, localStore,
 						0);
 			}
 		}
+	}
+	
+	@Override
+	public int getAbilityIntField(String field) {
+		GameObject editorData = (GameObject) localStore.get(ABLocalStoreKeys.ABILITYEDITORDATA);
+		return editorData.getFieldValue(field);
 	}
 
 	@Override
@@ -77,6 +101,15 @@ public class CAbilityAbilityBuilderNoIcon extends AbstractGenericNoIconAbility i
 	}
 
 	@Override
+	public float getCastRange() {
+		return range;
+	}
+
+	public float getCastTime() {
+		return castTime;
+	}
+
+	@Override
 	public float getCooldown() {
 		return cooldown;
 	}
@@ -87,6 +120,15 @@ public class CAbilityAbilityBuilderNoIcon extends AbstractGenericNoIconAbility i
 		if (cdID != War3ID.NONE) {
 			unit.beginCooldown(game, cdID, this.cooldown);
 		}
+	}
+
+	@Override
+	public float getCooldownRemainingTicks(CSimulation game, CUnit unit) {
+		War3ID cdID = getCooldownId();
+		if (cdID != War3ID.NONE) {
+			return unit.getCooldownRemainingTicks(game, cdID);
+		}
+		return unit.getCooldownRemainingTicks(game, this.getCode());
 	}
 
 	@Override
@@ -115,6 +157,11 @@ public class CAbilityAbilityBuilderNoIcon extends AbstractGenericNoIconAbility i
 		this.item = item;
 		this.localStore.put(ABLocalStoreKeys.ITEM, item);
 		this.localStore.put(ABLocalStoreKeys.ITEMSLOT, slot);
+	}
+
+	@Override
+	public CItem getItem() {
+		return this.item;
 	}
 
 	@Override
@@ -227,17 +274,17 @@ public class CAbilityAbilityBuilderNoIcon extends AbstractGenericNoIconAbility i
 	}
 
 	@Override
-	public CBehavior begin(CSimulation game, CUnit caster, int orderId, CWidget target) {
+	public CBehavior begin(CSimulation game, CUnit caster, int orderId, boolean autoOrder, CWidget target) {
 		return null;
 	}
 
 	@Override
-	public CBehavior begin(CSimulation game, CUnit caster, int orderId, AbilityPointTarget point) {
+	public CBehavior begin(CSimulation game, CUnit caster, int orderId, boolean autoOrder, AbilityPointTarget point) {
 		return null;
 	}
 
 	@Override
-	public CBehavior beginNoTarget(CSimulation game, CUnit caster, int orderId) {
+	public CBehavior beginNoTarget(CSimulation game, CUnit caster, int orderId, boolean autoOrder) {
 		return null;
 	}
 
@@ -247,20 +294,20 @@ public class CAbilityAbilityBuilderNoIcon extends AbstractGenericNoIconAbility i
 	}
 
 	@Override
-	public void checkCanTarget(CSimulation game, CUnit unit, int orderId, CWidget target,
-			AbilityTargetCheckReceiver<CWidget> receiver) {
+	public void checkCanTarget(CSimulation game, CUnit unit, int orderId, boolean autoOrder,
+			CWidget target, AbilityTargetCheckReceiver<CWidget> receiver) {
 		receiver.orderIdNotAccepted();
 	}
 
 	@Override
-	public void checkCanTarget(CSimulation game, CUnit unit, int orderId, AbilityPointTarget target,
-			AbilityTargetCheckReceiver<AbilityPointTarget> receiver) {
+	public void checkCanTarget(CSimulation game, CUnit unit, int orderId, boolean autoOrder,
+			AbilityPointTarget target, AbilityTargetCheckReceiver<AbilityPointTarget> receiver) {
 		receiver.orderIdNotAccepted();
 	}
 
 	@Override
 	public void checkCanTargetNoTarget(CSimulation game, CUnit unit, int orderId,
-			AbilityTargetCheckReceiver<Void> receiver) {
+			boolean autoOrder, AbilityTargetCheckReceiver<Void> receiver) {
 		receiver.orderIdNotAccepted();
 	}
 

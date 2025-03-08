@@ -8,6 +8,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.item.shop
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTargetStillAliveVisitor;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CAbstractRangedBehavior;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehavior;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehaviorCategory;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.OrderIds;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayer;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.ResourceType;
@@ -22,11 +23,10 @@ public class CBehaviorGiveItemToHero extends CAbstractRangedBehavior {
 		this.inventory = inventory;
 	}
 
-	public CBehaviorGiveItemToHero reset(final CItem targetItem, final CUnit targetHero) {
-		innerReset(targetHero);
+	public CBehavior reset(final CSimulation game, final CItem targetItem, final CUnit targetHero) {
 		this.targetItem = targetItem;
 		this.targetHero = targetHero;
-		return this;
+		return innerReset(game, targetHero);
 	}
 
 	@Override
@@ -64,7 +64,7 @@ public class CBehaviorGiveItemToHero extends CAbstractRangedBehavior {
 			 * note: below: pawnable check is not enforced by ability targeting because of
 			 * the dual targets "drop item @ unit" concept, which is a bit of a hack
 			 */
-			if ((shopPurchaseItemAbility != null) && this.targetItem.getItemType().isPawnable()) {
+			if ((shopPurchaseItemAbility != null) && this.targetItem.isPawnable()) {
 				final CPlayer player = simulation.getPlayer(this.unit.getPlayerIndex());
 
 				final int goldCost = this.targetItem.getItemType().getGoldCost();
@@ -82,7 +82,7 @@ public class CBehaviorGiveItemToHero extends CAbstractRangedBehavior {
 					simulation.unitGainResourceEvent(this.targetHero, player.getId(), ResourceType.LUMBER,
 							lumberGained);
 				}
-				simulation.removeItem(targetItem);
+				simulation.removeItem(this.targetItem);
 				simulation.unitSoundEffectEvent(this.targetHero, shopPurchaseItemAbility.getAlias());
 			}
 		}
@@ -107,6 +107,11 @@ public class CBehaviorGiveItemToHero extends CAbstractRangedBehavior {
 	@Override
 	public boolean interruptable() {
 		return true;
+	}
+
+	@Override
+	public CBehaviorCategory getBehaviorCategory() {
+		return CBehaviorCategory.MOVEMENT;
 	}
 
 }

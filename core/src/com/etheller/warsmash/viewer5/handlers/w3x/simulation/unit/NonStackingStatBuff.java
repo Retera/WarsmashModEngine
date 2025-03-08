@@ -1,35 +1,48 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.unit;
 
-public class NonStackingStatBuff {
+import com.etheller.interpreter.ast.util.CHandle;
+
+public class NonStackingStatBuff implements CHandle {
 	public static final String ALLOW_STACKING_KEY = "STACK";
-	
+
 	private NonStackingStatBuffType buffType;
 	private String stackingKey;
 	private float value;
-	
-	public NonStackingStatBuff(NonStackingStatBuffType buffType, String stackingKey, float value) {
+
+	public NonStackingStatBuff(final NonStackingStatBuffType buffType, final String stackingKey, final float value) {
 		super();
 		this.buffType = buffType;
 		this.stackingKey = stackingKey;
 		this.value = value;
 	}
-	
+
 	public NonStackingStatBuffType getBuffType() {
-		return buffType;
+		return this.buffType;
 	}
-	public void setBuffType(NonStackingStatBuffType buffType) {
+
+	public void setBuffType(final NonStackingStatBuffType buffType) {
 		this.buffType = buffType;
 	}
+
 	public String getStackingKey() {
-		return stackingKey;
+		return this.stackingKey;
 	}
-	public void setStackingKey(String stackingKey) {
+
+	public void setStackingKey(final String stackingKey) {
 		this.stackingKey = stackingKey;
 	}
+
 	public float getValue() {
-		return value;
+		return this.value;
 	}
-	public void setValue(float value) {
+
+	public void setValue(final float value) {
 		this.value = value;
+	}
+
+	@Override
+	public int getHandleId() {
+		// NOTE: these are all zero right now, so jass doesnt crash, but it's useless
+		return 0;
 	}
 }

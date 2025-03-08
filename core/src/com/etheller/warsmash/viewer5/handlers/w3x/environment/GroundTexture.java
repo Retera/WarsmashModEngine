@@ -12,27 +12,35 @@ import com.etheller.warsmash.util.ImageUtils.AnyExtensionImage;
 
 public class GroundTexture {
 	public int id;
+	private String tileId;
 	private int tileSize;
 	private boolean buildable;
 	public boolean extended;
 
-	public GroundTexture(final String path, final Element terrainTileInfo, final DataSource dataSource, final GL30 gl) throws IOException {
-		if(terrainTileInfo != null) {
-			this.buildable = Integer.parseInt(terrainTileInfo.getField("buildable")) == 1;
-		} else {
+	public GroundTexture(final String path, final Element terrainTileInfo, final DataSource dataSource, final GL30 gl)
+			throws IOException {
+		if (terrainTileInfo != null) {
+			this.tileId = terrainTileInfo.getId();
+			final String buildableFieldValue = terrainTileInfo.getField("buildable");
+			this.buildable = buildableFieldValue.isEmpty() ? false : Integer.parseInt(buildableFieldValue) == 1;
+		}
+		else {
 			this.buildable = true;
 		}
-		final AnyExtensionImage imageInfo = ImageUtils.getAnyExtensionImageFixRGB(dataSource, path, "ground texture");
-		loadImage(path, gl, imageInfo.getImageData(), imageInfo.isNeedsSRGBFix());
+		if (dataSource.has(path)) {
+			final AnyExtensionImage imageInfo = ImageUtils.getAnyExtensionImageFixRGB(dataSource, path,
+					"ground texture: " + this.tileId);
+			loadImage(path, gl, imageInfo.getImageData(), imageInfo.isNeedsSRGBFix());
+		}
 	}
 
 	public boolean isBuildable() {
-		return buildable;
+		return this.buildable;
 	}
 
 	private void loadImage(final String path, final GL30 gl, final BufferedImage image, final boolean sRGBFix) {
 		if (image == null) {
-			throw new IllegalStateException("Missing ground texture: " + path);
+			throw new IllegalStateException(this.tileId + ": Missing ground texture: " + path);
 		}
 		final Buffer buffer = ImageUtils.getTextureBuffer(sRGBFix ? ImageUtils.forceBufferedImagesRGB(image) : image);
 		final int width = image.getWidth();

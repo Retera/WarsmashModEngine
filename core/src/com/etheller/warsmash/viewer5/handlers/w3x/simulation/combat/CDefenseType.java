@@ -1,6 +1,8 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat;
 
-public enum CDefenseType implements CodeKeyType {
+import com.etheller.interpreter.ast.util.CHandle;
+
+public enum CDefenseType implements CodeKeyType, CHandle {
 	SMALL,
 	MEDIUM,
 	LARGE,
@@ -28,9 +30,11 @@ public enum CDefenseType implements CodeKeyType {
 		if (upperCaseTypeString.equals("HEAVY")) {
 			return LARGE;
 		}
-		if (upperCaseTypeString.trim().isEmpty()) {
-			System.err.println("bad");
-		}
 		return valueOf(upperCaseTypeString);
+	}
+
+	@Override
+	public int getHandleId() {
+		return ordinal();
 	}
 }

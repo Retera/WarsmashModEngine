@@ -83,6 +83,14 @@ public final class UnitSound {
 				exc.printStackTrace();
 			}
 		}
+		else if (dataSource.has(filePath + ".mp3")) {
+			try {
+				newSound = Gdx.audio.newSound(new DataSourceFileHandle(dataSource, filePath + ".mp3"));
+			}
+			catch (final Exception exc) {
+				exc.printStackTrace();
+			}
+		}
 		return newSound;
 	}
 
@@ -114,7 +122,8 @@ public final class UnitSound {
 		return false;
 	}
 
-	public long play(final AudioContext audioContext, final float x, final float y, final float z, final boolean loopOverride) {
+	public long play(final AudioContext audioContext, final float x, final float y, final float z,
+			final boolean loopOverride) {
 		return play(audioContext, x, y, z, (int) (Math.random() * this.sounds.size()), loopOverride);
 	}
 
@@ -126,7 +135,8 @@ public final class UnitSound {
 		return play(audioContext, x, y, z, index, null);
 	}
 
-	public long play(final AudioContext audioContext, final float x, final float y, final float z, final int index, final Boolean loopOverride) {
+	public long play(final AudioContext audioContext, final float x, final float y, final float z, final int index,
+			final Boolean loopOverride) {
 		if (this.sounds.isEmpty()) {
 			return -1;
 		}
@@ -151,7 +161,8 @@ public final class UnitSound {
 		if (loopOverride == null) {
 			soundId = source.start(0, this.volume,
 					(this.pitch + ((float) Math.random() * this.pitchVariance * 2)) - this.pitchVariance, this.looping);
-		} else {
+		}
+		else {
 			soundId = source.start(0, this.volume,
 					(this.pitch + ((float) Math.random() * this.pitchVariance * 2)) - this.pitchVariance, loopOverride);
 		}
@@ -174,7 +185,8 @@ public final class UnitSound {
 	}
 
 	public void stop(long soundId) {
-		// This may misbehave if called for a list longer than 1, due to the random index used when starting?
+		// This may misbehave if called for a list longer than 1, due to the random
+		// index used when starting?
 		// Not sure if IDs are unique per source
 		for (final Sound sound : this.sounds) {
 			sound.stop(soundId);

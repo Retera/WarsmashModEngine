@@ -21,4 +21,8 @@ public class RealJassValue implements JassValue {
 	public String toString() {
 		return Double.toString(this.value);
 	}
+
+	public static RealJassValue of(final double value) {
+		return new RealJassValue(value);
+	}
 }

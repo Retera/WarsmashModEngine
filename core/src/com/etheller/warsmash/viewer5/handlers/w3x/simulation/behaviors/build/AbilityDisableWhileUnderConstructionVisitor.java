@@ -152,7 +152,7 @@ public class AbilityDisableWhileUnderConstructionVisitor implements CAbilityVisi
 	}
 
 	@Override
-	public Void accept(GenericSingleIconPassiveAbility ability) {
+	public Void accept(final GenericSingleIconPassiveAbility ability) {
 		return null;
 	}
 
@@ -206,7 +206,7 @@ public class AbilityDisableWhileUnderConstructionVisitor implements CAbilityVisi
 
 	@Override
 	public Void accept(final CAbilityJass ability) {
-		final boolean enabledWhileUnderConstruction = ability.getType().isEnabledWhileUnderConstruction();
+		final boolean enabledWhileUnderConstruction = ability.isEnabledWhileUnderConstruction();
 		ability.setDisabled(!enabledWhileUnderConstruction, CAbilityDisableType.CONSTRUCTION);
 		ability.setIconShowing(enabledWhileUnderConstruction);
 		return null;

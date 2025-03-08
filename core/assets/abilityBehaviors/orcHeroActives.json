@@ -1,0 +1,223 @@
+{
+	"abilityList": [{
+		"ids": [{"id":"AOwk", "castId": "windwalk"}],
+		"type": "NORMAL_NOTARGET",
+		"displayFields": {
+			"castlessNoTarget": {
+				"type": "rawBoolean",
+				"value": "true"
+			}
+		},
+		"onAddAbility": [{
+				"type": "createStateModBuff",
+				"buffType": "INVISIBLE"
+			},{
+				"type": "createNonStackingStatBuff",
+				"buffType": {
+					"type": "getNonStackingStatBuffTypeFromString",
+					"id": {
+						"type": "rawString",
+						"value": "MVSPDPCT"
+					}
+				},
+				"stackingKey": {
+					"type": "rawString",
+					"value": "windwalk"
+				},
+				"value": {
+					"type": "getAbilityDataAsFloat",
+					"dataField": "B"
+				}
+		}],
+		"onLevelChange": [{
+			"type": "updateNonStackingStatBuff",
+			"buff": {
+				"type": "getLastCreatedNonStackingStatBuff"
+			},
+			"value": {
+				"type": "getAbilityDataAsFloat",
+				"dataField": "B"
+			}
+		}],
+		"onEndCasting": [{
+					"type": "createTimedBuff",
+					"buffId": {
+						"type": "getFirstBuffId"
+					},
+					"duration": {
+						"type": "getAbilityHeroDuration"
+					},
+					"onAddActions": [{
+						"type": "if",
+						"condition": {
+							"type": "f!=0",
+							"value": {
+								"type": "getAbilityDataAsFloat",
+								"dataField": "A"
+							}
+						},
+						"thenActions": [{
+								"type": "createTimer",
+								"timeout": {
+									"type": "getAbilityDataAsFloat",
+									"dataField": "A"
+								},
+								"actions": [{
+										"type": "setUnitMovementTypeNoCollision",
+										"unit": {
+											"type": "getBuffedUnit"
+										}
+									},{
+										"type": "addNonStackingStatBuff",
+										"targetUnit": {
+											"type": "getBuffedUnit"
+										},
+										"buff": {
+											"type": "getLastCreatedNonStackingStatBuff"
+										}
+									},{
+										"type": "addStateModBuff",
+										"targetUnit": {
+											"type": "getBuffedUnit"
+										},
+										"buff": {
+											"type": "getLastCreatedStateModBuff"
+										}
+									}]
+							},{
+								"type": "storeValueLocally",
+								"key": {
+									"type": "rawString",
+									"value": "fadeTimer"
+								},
+								"valueToStore": {
+									"type": "getLastCreatedTimer"
+								}
+						},{
+							"type": "setUnitFadeTimer",
+							"targetUnit": {
+								"type": "getBuffedUnit"
+							},
+							"timer": {
+								"type": "getLastCreatedTimer"
+							}
+						}],
+						"elseActions": [{
+								"type": "setUnitMovementTypeNoCollision",
+								"unit": {
+									"type": "getBuffedUnit"
+								}
+							},{
+								"type": "addNonStackingStatBuff",
+								"targetUnit": {
+									"type": "getBuffedUnit"
+								},
+								"buff": {
+									"type": "getLastCreatedNonStackingStatBuff"
+								}
+							},{
+								"type": "addStateModBuff",
+								"targetUnit": {
+									"type": "getBuffedUnit"
+								},
+								"buff": {
+									"type": "getLastCreatedStateModBuff"
+								}
+							}]
+					}],
+					"onRemoveActions": [{
+							"type": "if",
+							"condition": {
+								"type": "f!=0",
+								"value": {
+									"type": "getAbilityDataAsFloat",
+									"dataField": "A"
+								}
+							},
+							"thenActions": [{
+								"type": "if",
+								"condition": {
+									"type": "isTimerActive",
+									"timer": {
+										"type": "getStoredTimerByKey",
+										"key": {
+											"type": "rawString",
+											"value": "fadeTimer"
+										}
+									}
+								},
+								"thenActions": [{
+									"type": "removeTimer",
+									"timer": {
+										"type": "getStoredTimerByKey",
+										"key": {
+											"type": "rawString",
+											"value": "fadeTimer"
+										}
+									}
+								}],
+								"elseActions": [{
+										"type": "setUnitMovementTypeNoCollision",
+										"unit": {
+											"type": "getBuffedUnit"
+										},
+										"active": {
+											"type": "rawBoolean",
+											"value": "false"
+										}
+									},{
+										"type": "removeNonStackingStatBuff",
+										"targetUnit": {
+											"type": "getBuffedUnit"
+										},
+										"buff": {
+											"type": "getLastCreatedNonStackingStatBuff"
+										}
+									},{
+										"type": "removeStateModBuff",
+										"targetUnit": {
+											"type": "getBuffedUnit"
+										},
+										"buff": {
+											"type": "getLastCreatedStateModBuff"
+										}
+									}]
+							}],
+							"elseActions": [{
+									"type": "setUnitMovementTypeNoCollision",
+									"unit": {
+										"type": "getBuffedUnit"
+									},
+									"active": {
+										"type": "rawBoolean",
+										"value": "false"
+									}
+								},{
+									"type": "removeNonStackingStatBuff",
+									"targetUnit": {
+										"type": "getBuffedUnit"
+									},
+									"buff": {
+										"type": "getLastCreatedNonStackingStatBuff"
+									}
+								},{
+									"type": "removeStateModBuff",
+									"targetUnit": {
+										"type": "getBuffedUnit"
+									},
+									"buff": {
+										"type": "getLastCreatedStateModBuff"
+									}
+								}]
+					}]
+				},{
+					"type": "addBuff",
+					"target": {
+						"type": "getCastingUnit"
+					},
+					"buff": {
+						"type": "getLastCreatedBuff"
+					}
+			}]
+	}]
+}

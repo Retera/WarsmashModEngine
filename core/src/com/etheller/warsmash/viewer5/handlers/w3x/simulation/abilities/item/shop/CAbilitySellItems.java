@@ -40,7 +40,8 @@ public final class CAbilitySellItems extends AbstractCAbility {
 		final int playerIndex = orderId & 0xFF; // TODO this is stupid, and should be passed as some "acting player" arg
 		final int itemIndex = ((orderId & 0xFF00) >> 8) - 1;
 		if ((itemIndex >= 0) && (itemIndex < this.itemsSold.size())) {
-			final CItemType itemType = game.getItemData().getItemType(this.itemsSold.get(itemIndex));
+			final War3ID itemTypeId = this.itemsSold.get(itemIndex);
+			final CItemType itemType = game.getItemData().getItemType(itemTypeId);
 			if (itemType != null) {
 				final CPlayer player = game.getPlayer(playerIndex);
 				if ((player.getGold() >= itemType.getGoldCost())) {
@@ -65,20 +66,20 @@ public final class CAbilitySellItems extends AbstractCAbility {
 	}
 
 	@Override
-	public final void checkCanTarget(final CSimulation game, final CUnit unit, final int orderId, final CWidget target,
-			final AbilityTargetCheckReceiver<CWidget> receiver) {
+	public final void checkCanTarget(final CSimulation game, final CUnit unit, final int orderId, boolean autoOrder,
+			final CWidget target, final AbilityTargetCheckReceiver<CWidget> receiver) {
 		receiver.orderIdNotAccepted();
 	}
 
 	@Override
 	public final void checkCanTarget(final CSimulation game, final CUnit unit, final int orderId,
-			final AbilityPointTarget target, final AbilityTargetCheckReceiver<AbilityPointTarget> receiver) {
+			boolean autoOrder, final AbilityPointTarget target, final AbilityTargetCheckReceiver<AbilityPointTarget> receiver) {
 		receiver.orderIdNotAccepted();
 	}
 
 	@Override
 	public final void checkCanTargetNoTarget(final CSimulation game, final CUnit unit, final int orderId,
-			final AbilityTargetCheckReceiver<Void> receiver) {
+			boolean autoOrder, final AbilityTargetCheckReceiver<Void> receiver) {
 		final int playerIndex = orderId & 0xFF; // TODO this is stupid, and should be passed as some "acting player" arg
 		final int itemIndex = ((orderId & 0xFF00) >> 8) - 1;
 		if ((itemIndex >= 0) && (itemIndex < this.itemsSold.size())) {
@@ -91,7 +92,7 @@ public final class CAbilitySellItems extends AbstractCAbility {
 
 	@Override
 	public boolean checkBeforeQueue(final CSimulation game, final CUnit caster, final int orderId,
-			final AbilityTarget target) {
+			boolean autoOrder, final AbilityTarget target) {
 		return true;
 	}
 
@@ -110,18 +111,18 @@ public final class CAbilitySellItems extends AbstractCAbility {
 	}
 
 	@Override
-	public CBehavior begin(final CSimulation game, final CUnit caster, final int orderId, final CWidget target) {
+	public CBehavior begin(final CSimulation game, final CUnit caster, final int orderId, boolean autoOrder, final CWidget target) {
 		return null;
 	}
 
 	@Override
 	public CBehavior begin(final CSimulation game, final CUnit caster, final int orderId,
-			final AbilityPointTarget point) {
+			boolean autoOrder, final AbilityPointTarget point) {
 		return null;
 	}
 
 	@Override
-	public CBehavior beginNoTarget(final CSimulation game, final CUnit caster, final int orderId) {
+	public CBehavior beginNoTarget(final CSimulation game, final CUnit caster, final int orderId, boolean autoOrder) {
 		final int playerIndex = orderId & 0xFF; // TODO this is stupid, and should be passed as some "acting player" arg
 		final int itemIndex = ((orderId & 0xFF00) >> 8) - 1;
 		final CAbilityNeutralBuilding neutralBuildingData = caster.getNeutralBuildingData();
@@ -170,6 +171,11 @@ public final class CAbilitySellItems extends AbstractCAbility {
 
 	@Override
 	public boolean isPhysical() {
+		return false;
+	}
+
+	@Override
+	public boolean isMagic() {
 		return false;
 	}
 

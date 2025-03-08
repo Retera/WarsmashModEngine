@@ -14,7 +14,10 @@ public enum StatBuffType {
 	HPSTEAL,
 	THORNS,
 	MAXHP,
-	MAXMP;
+	MAXMP,
+	STR,
+	AGI,
+	INT;
 	
 	
 	public NonStackingStatBuffType toNonStackingStatBuffType(boolean percentage) {
@@ -72,6 +75,24 @@ public enum StatBuffType {
 				return NonStackingStatBuffType.THORNSPCT;
 			} else {
 				return NonStackingStatBuffType.THORNS;
+			}
+		case STR:
+			if (percentage) {
+				return NonStackingStatBuffType.STRPCT;
+			} else {
+				return NonStackingStatBuffType.STR;
+			}
+		case AGI:
+			if (percentage) {
+				return NonStackingStatBuffType.AGIPCT;
+			} else {
+				return NonStackingStatBuffType.AGI;
+			}
+		case INT:
+			if (percentage) {
+				return NonStackingStatBuffType.INTPCT;
+			} else {
+				return NonStackingStatBuffType.INT;
 			}
 		case ATKSPD:
 			return NonStackingStatBuffType.ATKSPD;

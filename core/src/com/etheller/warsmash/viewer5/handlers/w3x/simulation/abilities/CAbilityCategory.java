@@ -1,6 +1,8 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities;
 
-public enum CAbilityCategory {
+import com.etheller.interpreter.ast.util.CHandle;
+
+public enum CAbilityCategory implements CHandle {
 	ATTACK,
 	MOVEMENT,
 	CORE,
@@ -8,4 +10,11 @@ public enum CAbilityCategory {
 	SPELL,
 	ITEM,
 	BUFF;
+
+	@Override
+	public int getHandleId() {
+		return ordinal();
+	}
+
+	public static final CAbilityCategory[] VALUES = values();
 }

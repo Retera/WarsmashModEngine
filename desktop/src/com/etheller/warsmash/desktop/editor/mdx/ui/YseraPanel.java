@@ -14,13 +14,12 @@ import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
-import org.lwjgl.util.vector.Quaternion;
-
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.InputProcessor;
 import com.badlogic.gdx.backends.lwjgl.LwjglApplicationConfiguration;
 import com.badlogic.gdx.backends.lwjgl.LwjglCanvas;
+import com.badlogic.gdx.math.Quaternion;
 import com.badlogic.gdx.math.Vector3;
 import com.etheller.warsmash.WarsmashPreviewApplication;
 import com.etheller.warsmash.desktop.editor.mdx.listeners.YseraGUIListener;
@@ -184,9 +183,14 @@ public class YseraPanel extends JPanel {
 		}
 
 		@Override
-		public boolean scrolled(final int amount) {
+		public boolean scrolled(final float amountX, final float amountY) {
 			final PortraitCameraManager cameraManager = this.warsmashPreviewApplication.getCameraManager();
-			cameraManager.distance += amount * 100;
+			cameraManager.distance += amountY * 100;
+			return false;
+		}
+
+		@Override
+		public boolean touchCancelled(final int screenX, final int screenY, final int pointer, final int button) {
 			return false;
 		}
 	}

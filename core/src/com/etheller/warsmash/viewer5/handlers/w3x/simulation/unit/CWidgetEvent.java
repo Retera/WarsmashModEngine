@@ -14,7 +14,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTargetVisitor;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.JassGameEventsWar3;
 
-public class CWidgetEvent implements RemovableTriggerEvent {
+public class CWidgetEvent extends RemovableTriggerEvent {
 	private final GlobalScope globalScope;
 	private final CWidget widget;
 	private final Trigger trigger;
@@ -23,6 +23,7 @@ public class CWidgetEvent implements RemovableTriggerEvent {
 
 	public CWidgetEvent(final GlobalScope globalScope, final CWidget widget, final Trigger trigger,
 			final JassGameEventsWar3 eventType, final TriggerBooleanExpression filter) {
+		super(trigger);
 		this.globalScope = globalScope;
 		this.widget = widget;
 		this.trigger = trigger;

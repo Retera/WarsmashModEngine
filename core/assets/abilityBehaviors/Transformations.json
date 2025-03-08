@@ -219,562 +219,275 @@
 				}
 			}
 		},
-		"onAddDisabledAbility": [{
-			"type": "if",
-			"condition": {
-				"type": "isToggleAbilityActive"
-			},
-			"thenActions": [{
-				"type": "transformedUnitAbilityAdd",
-				"unit": {
-					"type": "getCastingUnit"
-				},
-				"baseUnitId": {
-					"type": "getAbilityDataAsID",
-					"dataField": "A"
-				},
-				"alternateUnitId": {
-					"type": "getAbilityUnitId"
-				},
-				"immediateLanding": {
-					"type": "i2b",
+		"reuseActions": {
+			"storeBaseType": [{
+				"type": "if",
+				"condition": {
+					"type": "isNull",
 					"value": {
-						"type": "i&",
-						"value1": {
-							"type": "getAbilityDataAsInteger",
-							"dataField": "B"
+						"type": "getStoredIDByKey",
+						"key": {
+							"type": "rawString",
+							"value": "baseType"
 						},
-						"value2": {
-							"type": "rawInteger",
-							"value": 2
+						"instanceValue": {
+							"type": "rawBoolean",
+							"value": "false"
 						}
 					}
 				},
-				"immediateTakeOff": {
-					"type": "i2b",
-					"value": {
-						"type": "i&",
-						"value1": {
-							"type": "getAbilityDataAsInteger",
-							"dataField": "B"
-						},
-						"value2": {
-							"type": "rawInteger",
-							"value": 4
+				"thenActions": [{
+					"type": "if",
+					"condition": {
+						"type": "not",
+						"condition": {
+							"type": "or",
+							"conditions": [{
+									"type": "isUnitType",
+									"unit": {
+										"type": "getCastingUnit"
+									},
+									"unitType": {
+										"type": "getAbilityDataAsID",
+										"dataField": "A"
+									}
+								},{
+									"type": "isUnitType",
+									"unit": {
+										"type": "getCastingUnit"
+									},
+									"unitType": {
+										"type": "getAbilityUnitId"
+									}
+							}]
 						}
-					}
-				},
-				"permanent": {
-					"type": "i2b",
-					"value": {
-						"type": "i&",
-						"value1": {
-							"type": "getAbilityDataAsInteger",
-							"dataField": "B"
-						},
-						"value2": {
-							"type": "rawInteger",
-							"value": 8
-						}
-					}
-				},
-				"requiresPayment": {
-					"type": "i2b",
-					"value": {
-						"type": "i&",
-						"value1": {
-							"type": "getAbilityDataAsInteger",
-							"dataField": "B"
-						},
-						"value2": {
-							"type": "rawInteger",
-							"value": 16
-						}
-					}
-				},
-				"altitudeAdjustmentDelay": {
-					"type": "getAbilityCastTime"
-				},
-				"altitudeAdjustmentTime": {
-					"type": "getAbilityDataAsFloat",
-					"dataField": "C"
-				},
-				"landingDelayTime": {
-					"type": "getAbilityDataAsFloat",
-					"dataField": "D"
-				},
-				"transformTime": {
-					"type": "getAbilityDuration"
-				},
-				"duration": {
-					"type": "getAbilityHeroDuration"
-				},
-				"buffId": {
-					"type": "getFirstBuffId"
-				}
-			}],
-				"elseActions": []
-		}],
-		"onRemoveDisabledAbility": [{
-			"type": "transformedUnitAbilityRemove",
-			"unit": {
-				"type": "getCastingUnit"
-			},
-			"baseUnitId": {
-				"type": "getAbilityDataAsID",
-				"dataField": "A"
-			},
-			"alternateUnitId": {
-				"type": "getAbilityUnitId"
-			},
-			"permanent": {
-				"type": "i2b",
-				"value": {
-					"type": "i&",
-					"value1": {
-						"type": "getAbilityDataAsInteger",
-						"dataField": "B"
 					},
-					"value2": {
-						"type": "rawInteger",
-						"value": 8
+					"thenActions": [{
+						"type": "storeValueLocally",
+						"key": {
+							"type": "rawString",
+							"value": "baseType"
+						},
+						"instanceValue": {
+							"type": "rawBoolean",
+							"value": "false"
+						},
+						"valueToStore": {
+							"type": "getUnitType",
+							"unit": {
+								"type": "getCastingUnit"
+							}
+						}
+					}],
+					"elseActions": [{
+						"type": "storeValueLocally",
+						"key": {
+							"type": "rawString",
+							"value": "baseType"
+						},
+						"instanceValue": {
+							"type": "rawBoolean",
+							"value": "false"
+						},
+						"valueToStore": {
+							"type": "getAbilityDataAsID",
+							"dataField": "A"
+						}
+					}]
+				}]
+			}],
+			"clearBaseType": [{
+				"type": "storeValueLocally",
+				"key": {
+					"type": "rawString",
+					"value": "baseType"
+				},
+				"instanceValue": {
+					"type": "rawBoolean",
+					"value": "false"
+				},
+				"valueToStore": {
+					"type": "null"
+				}
+			}]
+		},
+		"extraCastConditions": [{
+			"type": "setCantUseReasonOnFailure",
+			"condition": {
+				"type": "isLocationPathableForUnitType",
+				"location": {
+					"type": "getUnitLocation",
+					"unit": {
+						"type": "getCastingUnit"
+					}
+				},
+				"unitType": {
+					"type": "getNonCurrentTransformType",
+					"baseUnitId": {
+						"type": "inlineConditionID",
+						"condition": {
+							"type": "isNull",
+							"value": {
+								"type": "getStoredIDByKey",
+								"key": {
+									"type": "rawString",
+									"value": "baseType"
+								},
+								"instanceValue": {
+									"type": "rawBoolean",
+									"value": "false"
+								}
+							}
+						},
+						"pass": {
+							"type": "getAbilityDataAsID",
+							"dataField": "A"
+						},
+						"fail": {
+							"type": "getStoredIDByKey",
+							"key": {
+								"type": "rawString",
+								"value": "baseType"
+							},
+							"instanceValue": {
+								"type": "rawBoolean",
+								"value": "false"
+							}
+						}
+					},
+					"alternateUnitId": {
+						"type": "getAbilityUnitId"
 					}
 				}
-			}
+			},
+			"reason": "UNABLE_TO_LAND_THERE"
 		}],
-		"onBeginCasting": [{
-				"type": "createTemporarySpellEffectOnUnit",
-				"target": {
-					"type": "getCastingUnit"
-				},
-				"id": {
-					"type": "getAlias"
-				},
-				"effectType": "CASTER"
-			},{
-				"type": "transformUnit",
-				"unit": {
-					"type": "getCastingUnit"
-				},
-				"baseUnitId": {
-					"type": "getAbilityDataAsID",
-					"dataField": "A"
-				},
-				"alternateUnitId": {
-					"type": "getAbilityUnitId"
-				},
-				"immediateLanding": {
-					"type": "i2b",
-					"value": {
-						"type": "i&",
-						"value1": {
-							"type": "getAbilityDataAsInteger",
-							"dataField": "B"
-						},
-						"value2": {
-							"type": "rawInteger",
-							"value": 2
-						}
-					}
-				},
-				"immediateTakeOff": {
-					"type": "i2b",
-					"value": {
-						"type": "i&",
-						"value1": {
-							"type": "getAbilityDataAsInteger",
-							"dataField": "B"
-						},
-						"value2": {
-							"type": "rawInteger",
-							"value": 4
-						}
-					}
-				},
-				"permanent": {
-					"type": "i2b",
-					"value": {
-						"type": "i&",
-						"value1": {
-							"type": "getAbilityDataAsInteger",
-							"dataField": "B"
-						},
-						"value2": {
-							"type": "rawInteger",
-							"value": 8
-						}
-					}
-				},
-				"requiresPayment": {
-					"type": "i2b",
-					"value": {
-						"type": "i&",
-						"value1": {
-							"type": "getAbilityDataAsInteger",
-							"dataField": "B"
-						},
-						"value2": {
-							"type": "rawInteger",
-							"value": 16
-						}
-					}
-				},
-				"altitudeAdjustmentDelay": {
-					"type": "getAbilityCastTime"
-				},
-				"altitudeAdjustmentTime": {
-					"type": "getAbilityDataAsFloat",
-					"dataField": "C"
-				},
-				"landingDelayTime": {
-					"type": "getAbilityDataAsFloat",
-					"dataField": "D"
-				},
-				"transformTime": {
-					"type": "getAbilityDuration"
-				},
-				"duration": {
-					"type": "getAbilityHeroDuration"
-				},
-				"buffId": {
-					"type": "getFirstBuffId"
+		"onAddDisabledAbility": [{
+				"type": "runReuseAction",
+				"name": {
+					"type": "rawString",
+					"value": "setup"
 				}
 			},{
 				"type": "if",
 				"condition": {
-					"type": "isTransformingToAlternate"
+					"type": "isToggleAbilityActive"
 				},
 				"thenActions": [{
-					"type": "activateToggledAbility"
-				}],
-				"elseActions": [{
-					"type": "deactivateToggledAbility"
-				}]
-		}]
-	},{
-		"ids": [{"id":"Abur", "castId": "burrow", "uncastId": "unburrow"}],
-		"type": "NORMAL_NOTARGET",
-		"displayFields": {
-			"toggleable": {
-				"type": "rawBoolean",
-				"value": "true"
-			},
-			"castToggleOff": {
-				"type": "rawBoolean",
-				"value": "true"
-			},
-			"alternateUnitId": {
-				"type": "getAbilityUnitId"
-			},
-			"goldCost": {
-				"type": "i0IfFalse",
-				"bool": {
-					"type": "i2b",
-					"value": {
-						"type": "i&",
-						"value1": {
-							"type": "getAbilityDataAsInteger",
-							"dataField": "B"
-						},
-						"value2": {
-							"type": "rawInteger",
-							"value": 16
+						"type": "runReuseAction",
+						"name": {
+							"type": "rawString",
+							"value": "storeBaseType"
 						}
-					}
-				},
-				"value": {
-					"type": "iIf",
-					"condition": {
-						"type": "gameplayConstantIsRelativeUpgradeCosts"
-					},
-					"value1": {
-						"type": "i-",
-						"value1": {
-							"type": "getUnitTypeGoldCost",
-							"id": {
-								"type": "getNonCurrentTransformType",
-								"baseUnitId": {
-									"type": "getAbilityDataAsID",
-									"dataField": "A"
+					},{
+						"type": "transformedUnitAbilityAdd",
+						"unit": {
+							"type": "getCastingUnit"
+						},
+						"baseUnitId": {
+							"type": "getAbilityDataAsID",
+							"dataField": "A"
+						},
+						"alternateUnitId": {
+							"type": "getAbilityUnitId"
+						},
+						"immediateLanding": {
+							"type": "i2b",
+							"value": {
+								"type": "i&",
+								"value1": {
+									"type": "getAbilityDataAsInteger",
+									"dataField": "B"
 								},
-								"alternateUnitId": {
-									"type": "getAbilityUnitId"
+								"value2": {
+									"type": "rawInteger",
+									"value": 2
 								}
 							}
 						},
-						"value2": {
-						"type": "getUnitTypeGoldCost",
-							"id": {
-								"type": "getUnitType"
-							}
-						}
-					},
-					"value2": {
-						"type": "getUnitTypeGoldCost",
-						"id": {
-							"type": "getNonCurrentTransformType",
-							"baseUnitId": {
-								"type": "getAbilityDataAsID",
-								"dataField": "A"
-							},
-							"alternateUnitId": {
-								"type": "getAbilityUnitId"
-							}
-						}
-					}
-				}
-			},
-			"lumberCost": {
-				"type": "i0IfFalse",
-				"bool": {
-					"type": "i2b",
-					"value": {
-						"type": "i&",
-						"value1": {
-							"type": "getAbilityDataAsInteger",
-							"dataField": "B"
-						},
-						"value2": {
-							"type": "rawInteger",
-							"value": 16
-						}
-					}
-				},
-				"value": {
-					"type": "iIf",
-					"condition": {
-						"type": "gameplayConstantIsRelativeUpgradeCosts"
-					},
-					"value1": {
-						"type": "i-",
-						"value1": {
-							"type": "getUnitTypeLumberCost",
-							"id": {
-								"type": "getNonCurrentTransformType",
-								"baseUnitId": {
-									"type": "getAbilityDataAsID",
-									"dataField": "A"
+						"immediateTakeOff": {
+							"type": "i2b",
+							"value": {
+								"type": "i&",
+								"value1": {
+									"type": "getAbilityDataAsInteger",
+									"dataField": "B"
 								},
-								"alternateUnitId": {
-									"type": "getAbilityUnitId"
+								"value2": {
+									"type": "rawInteger",
+									"value": 4
 								}
 							}
 						},
-						"value2": {
-						"type": "getUnitTypeLumberCost",
-							"id": {
-								"type": "getUnitType"
+						"permanent": {
+							"type": "i2b",
+							"value": {
+								"type": "i&",
+								"value1": {
+									"type": "getAbilityDataAsInteger",
+									"dataField": "B"
+								},
+								"value2": {
+									"type": "rawInteger",
+									"value": 8
+								}
 							}
-						}
-					},
-					"value2": {
-						"type": "getUnitTypeLumberCost",
-						"id": {
-							"type": "getNonCurrentTransformType",
-							"baseUnitId": {
-								"type": "getAbilityDataAsID",
-								"dataField": "A"
-							},
-							"alternateUnitId": {
-								"type": "getAbilityUnitId"
+						},
+						"requiresPayment": {
+							"type": "i2b",
+							"value": {
+								"type": "i&",
+								"value1": {
+									"type": "getAbilityDataAsInteger",
+									"dataField": "B"
+								},
+								"value2": {
+									"type": "rawInteger",
+									"value": 16
+								}
 							}
-						}
-					}
-				}
-			},
-			"foodCost": {
-				"type": "i0IfFalse",
-				"bool": {
-					"type": "i2b",
-					"value": {
-						"type": "i&",
-						"value1": {
-							"type": "getAbilityDataAsInteger",
-							"dataField": "B"
 						},
-						"value2": {
-							"type": "rawInteger",
-							"value": 16
-						}
-					}
-				},
-				"value": {
-					"type": "i-",
-					"value1": {
-					"type": "getUnitTypeFoodCost",
-						"id": {
-							"type": "getNonCurrentTransformType",
-							"baseUnitId": {
-								"type": "getAbilityDataAsID",
-								"dataField": "A"
-							},
-							"alternateUnitId": {
-								"type": "getAbilityUnitId"
+						"altitudeAdjustmentDelay": {
+							"type": "getAbilityCastTime"
+						},
+						"altitudeAdjustmentTime": {
+							"type": "getAbilityDataAsFloat",
+							"dataField": "C"
+						},
+						"landingDelayTime": {
+							"type": "getAbilityDataAsFloat",
+							"dataField": "D"
+						},
+						"transformTime": {
+							"type": "getAbilityDuration"
+						},
+						"duration": {
+							"type": "getAbilityHeroDuration"
+						},
+						"buffId": {
+							"type": "getFirstBuffId"
+						},
+						"onTransformActions": [{
+							"type": "runReuseAction",
+							"name": {
+								"type": "rawString",
+								"value": "onTransform"
 							}
-						}
-					},
-					"value2": {
-					"type": "getUnitTypeFoodCost",
-						"id": {
-							"type": "getUnitType"
-						}
-					}
-				}
-			}
-		},
-		"overrideFields": {
-			"physicalSpell": {
-				"type": "rawBoolean",
-				"value": "true"
-			},
-			"onTooltipOverride": {
-				"type": "nullIfFalse",
-				"condition": {
-					"type": "bool",
-					"bool": {
-						"type": "i2b",
-						"value": {
-							"type": "i&",
-							"value1": {
-								"type": "getAbilityDataAsInteger",
-								"dataField": "B"
-							},
-							"value2": {
-								"type": "rawInteger",
-								"value": 16
-							}
-						}
-					}
-				},
-				"value": {
-					"type": "getAbilityDataAsID",
-					"dataField": "A"
-				}
-			},
-			"offTooltipOverride": {
-				"type": "nullIfFalse",
-				"condition": {
-					"type": "bool",
-					"bool": {
-						"type": "i2b",
-						"value": {
-							"type": "i&",
-							"value1": {
-								"type": "getAbilityDataAsInteger",
-								"dataField": "B"
-							},
-							"value2": {
-								"type": "rawInteger",
-								"value": 16
-							}
-						}
-					}
-				},
-				"value": {
-					"type": "getAbilityUnitId"
-				}
-			}
-		},
-		"onAddDisabledAbility": [{
-			"type": "if",
-			"condition": {
-				"type": "isToggleAbilityActive"
-			},
-			"thenActions": [{
-				"type": "transformedUnitAbilityAdd",
-				"unit": {
-					"type": "getCastingUnit"
-				},
-				"baseUnitId": {
-					"type": "getAbilityDataAsID",
-					"dataField": "A"
-				},
-				"alternateUnitId": {
-					"type": "getAbilityUnitId"
-				},
-				"immediateLanding": {
-					"type": "i2b",
-					"value": {
-						"type": "i&",
-						"value1": {
-							"type": "getAbilityDataAsInteger",
-							"dataField": "B"
-						},
-						"value2": {
-							"type": "rawInteger",
-							"value": 2
-						}
-					}
-				},
-				"immediateTakeOff": {
-					"type": "i2b",
-					"value": {
-						"type": "i&",
-						"value1": {
-							"type": "getAbilityDataAsInteger",
-							"dataField": "B"
-						},
-						"value2": {
-							"type": "rawInteger",
-							"value": 4
-						}
-					}
-				},
-				"permanent": {
-					"type": "i2b",
-					"value": {
-						"type": "i&",
-						"value1": {
-							"type": "getAbilityDataAsInteger",
-							"dataField": "B"
-						},
-						"value2": {
-							"type": "rawInteger",
-							"value": 8
-						}
-					}
-				},
-				"requiresPayment": {
-					"type": "i2b",
-					"value": {
-						"type": "i&",
-						"value1": {
-							"type": "getAbilityDataAsInteger",
-							"dataField": "B"
-						},
-						"value2": {
-							"type": "rawInteger",
-							"value": 16
-						}
-					}
-				},
-				"altitudeAdjustmentDelay": {
-					"type": "getAbilityCastTime"
-				},
-				"altitudeAdjustmentTime": {
-					"type": "getAbilityDataAsFloat",
-					"dataField": "C"
-				},
-				"landingDelayTime": {
-					"type": "getAbilityDataAsFloat",
-					"dataField": "D"
-				},
-				"transformTime": {
-					"type": "getAbilityDuration"
-				},
-				"duration": {
-					"type": "getAbilityHeroDuration"
-				},
-				"buffId": {
-					"type": "getFirstBuffId"
-				},
-				"onTransformActions": [{
-					"type": "setBurrowPlaceholder"
+						}],
+						"onUntransformActions": [{
+								"type": "runReuseAction",
+								"name": {
+									"type": "rawString",
+									"value": "onUnTransform"
+								}
+							},{
+								"type": "runReuseAction",
+								"name": {
+									"type": "rawString",
+									"value": "clearBaseType"
+								}
+						}]
 				}],
-				"onUntransformActions": [{
-					"type": "setBurrowPlaceholder"
-				}]
-			}],
 				"elseActions": []
 		}],
 		"onRemoveDisabledAbility": [{
@@ -783,8 +496,15 @@
 				"type": "getCastingUnit"
 			},
 			"baseUnitId": {
-				"type": "getAbilityDataAsID",
-				"dataField": "A"
+				"type": "getStoredIDByKey",
+				"key": {
+					"type": "rawString",
+					"value": "baseType"
+				},
+				"instanceValue": {
+					"type": "rawBoolean",
+					"value": "false"
+				}
 			},
 			"alternateUnitId": {
 				"type": "getAbilityUnitId"
@@ -804,10 +524,33 @@
 				}
 			},
 			"onUntransformActions": [{
-				"type": "setBurrowPlaceholder"
+					"type": "runReuseAction",
+					"name": {
+						"type": "rawString",
+						"value": "onUnTransform"
+					}
+				},{
+					"type": "runReuseAction",
+					"name": {
+						"type": "rawString",
+						"value": "clearBaseType"
+					}
 			}]
 		}],
+		"onLevelChange": [{
+			"type": "runReuseAction",
+			"name": {
+				"type": "rawString",
+				"value": "onLevelChange"
+			}
+		}],
 		"onBeginCasting": [{
+				"type": "runReuseAction",
+				"name": {
+					"type": "rawString",
+					"value": "storeBaseType"
+				}
+			},{
 				"type": "createTemporarySpellEffectOnUnit",
 				"target": {
 					"type": "getCastingUnit"
@@ -822,8 +565,15 @@
 					"type": "getCastingUnit"
 				},
 				"baseUnitId": {
-					"type": "getAbilityDataAsID",
-					"dataField": "A"
+					"type": "getStoredIDByKey",
+					"key": {
+						"type": "rawString",
+						"value": "baseType"
+					},
+					"instanceValue": {
+						"type": "rawBoolean",
+						"value": "false"
+					}
 				},
 				"alternateUnitId": {
 					"type": "getAbilityUnitId"
@@ -905,248 +655,108 @@
 					"type": "getFirstBuffId"
 				},
 				"onTransformActions": [{
-					"type": "setBurrowPlaceholder"
+					"type": "runReuseAction",
+					"name": {
+						"type": "rawString",
+						"value": "onTransform"
+					}
 				}],
 				"onUntransformActions": [{
-					"type": "setBurrowPlaceholder"
+						"type": "runReuseAction",
+						"name": {
+							"type": "rawString",
+							"value": "onUnTransform"
+						}
+					},{
+						"type": "runReuseAction",
+						"name": {
+							"type": "rawString",
+							"value": "clearBaseType"
+						}
 				}]
 			},{
 				"type": "if",
 				"condition": {
-					"type": "isTransformingToAlternate"
+					"type": "notNull",
+					"value": {
+						"type": "isTransformingToAlternate"
+					}
 				},
 				"thenActions": [{
-					"type": "activateToggledAbility"
-				}],
-				"elseActions": [{
-					"type": "deactivateToggledAbility"
+						"type": "if",
+						"condition": {
+							"type": "isTransformingToAlternate"
+						},
+						"thenActions": [{
+								"type": "activateToggledAbility"
+							},{
+								"type": "runReuseAction",
+								"name": {
+									"type": "rawString",
+									"value": "onTransformExtra"
+								}
+						}],
+						"elseActions": [{
+								"type": "deactivateToggledAbility"
+							},{
+								"type": "runReuseAction",
+								"name": {
+									"type": "rawString",
+									"value": "onUnTransformExtra"
+								}
+						}]
 				}]
 		}]
 	},{
-		"ids": [{"id":"Astn", "castId": "stoneform", "uncastId": "unstoneform"}],
-		"type": "NORMAL_NOTARGET",
-		"displayFields": {
-			"toggleable": {
-				"type": "rawBoolean",
-				"value": "true"
-			},
-			"castToggleOff": {
-				"type": "rawBoolean",
-				"value": "true"
-			},
-			"alternateUnitId": {
-				"type": "getAbilityUnitId"
-			},
-			"goldCost": {
-				"type": "i0IfFalse",
-				"bool": {
-					"type": "i2b",
-					"value": {
-						"type": "i&",
-						"value1": {
-							"type": "getAbilityDataAsInteger",
-							"dataField": "B"
-						},
-						"value2": {
-							"type": "rawInteger",
-							"value": 16
-						}
-					}
-				},
-				"value": {
-					"type": "iIf",
-					"condition": {
-						"type": "gameplayConstantIsRelativeUpgradeCosts"
-					},
-					"value1": {
-						"type": "i-",
-						"value1": {
-							"type": "getUnitTypeGoldCost",
-							"id": {
-								"type": "getNonCurrentTransformType",
-								"baseUnitId": {
-									"type": "getAbilityDataAsID",
-									"dataField": "A"
-								},
-								"alternateUnitId": {
-									"type": "getAbilityUnitId"
-								}
-							}
-						},
-						"value2": {
-						"type": "getUnitTypeGoldCost",
-							"id": {
-								"type": "getUnitType"
-							}
-						}
-					},
-					"value2": {
-						"type": "getUnitTypeGoldCost",
-						"id": {
-							"type": "getNonCurrentTransformType",
-							"baseUnitId": {
-								"type": "getAbilityDataAsID",
-								"dataField": "A"
-							},
-							"alternateUnitId": {
-								"type": "getAbilityUnitId"
-							}
-						}
-					}
-				}
-			},
-			"lumberCost": {
-				"type": "i0IfFalse",
-				"bool": {
-					"type": "i2b",
-					"value": {
-						"type": "i&",
-						"value1": {
-							"type": "getAbilityDataAsInteger",
-							"dataField": "B"
-						},
-						"value2": {
-							"type": "rawInteger",
-							"value": 16
-						}
-					}
-				},
-				"value": {
-					"type": "iIf",
-					"condition": {
-						"type": "gameplayConstantIsRelativeUpgradeCosts"
-					},
-					"value1": {
-						"type": "i-",
-						"value1": {
-							"type": "getUnitTypeLumberCost",
-							"id": {
-								"type": "getNonCurrentTransformType",
-								"baseUnitId": {
-									"type": "getAbilityDataAsID",
-									"dataField": "A"
-								},
-								"alternateUnitId": {
-									"type": "getAbilityUnitId"
-								}
-							}
-						},
-						"value2": {
-						"type": "getUnitTypeLumberCost",
-							"id": {
-								"type": "getUnitType"
-							}
-						}
-					},
-					"value2": {
-						"type": "getUnitTypeLumberCost",
-						"id": {
-							"type": "getNonCurrentTransformType",
-							"baseUnitId": {
-								"type": "getAbilityDataAsID",
-								"dataField": "A"
-							},
-							"alternateUnitId": {
-								"type": "getAbilityUnitId"
-							}
-						}
-					}
-				}
-			},
-			"foodCost": {
-				"type": "i0IfFalse",
-				"bool": {
-					"type": "i2b",
-					"value": {
-						"type": "i&",
-						"value1": {
-							"type": "getAbilityDataAsInteger",
-							"dataField": "B"
-						},
-						"value2": {
-							"type": "rawInteger",
-							"value": 16
-						}
-					}
-				},
-				"value": {
-					"type": "i-",
-					"value1": {
-					"type": "getUnitTypeFoodCost",
-						"id": {
-							"type": "getNonCurrentTransformType",
-							"baseUnitId": {
-								"type": "getAbilityDataAsID",
-								"dataField": "A"
-							},
-							"alternateUnitId": {
-								"type": "getAbilityUnitId"
-							}
-						}
-					},
-					"value2": {
-					"type": "getUnitTypeFoodCost",
-						"id": {
-							"type": "getUnitType"
-						}
-					}
-				}
-			}
-		},
+		"ids": [{"id":"Abur", "castId": "burrow", "uncastId": "unburrow"}],
+		"type": "INHERIT",
+		"parentId": "Arav",
 		"overrideFields": {
 			"physicalSpell": {
 				"type": "rawBoolean",
 				"value": "true"
-			},
-			"onTooltipOverride": {
-				"type": "nullIfFalse",
-				"condition": {
-					"type": "bool",
-					"bool": {
-						"type": "i2b",
-						"value": {
-							"type": "i&",
-							"value1": {
-								"type": "getAbilityDataAsInteger",
-								"dataField": "B"
-							},
-							"value2": {
-								"type": "rawInteger",
-								"value": 16
-							}
-						}
-					}
-				},
-				"value": {
-					"type": "getAbilityDataAsID",
-					"dataField": "A"
-				}
-			},
-			"offTooltipOverride": {
-				"type": "nullIfFalse",
-				"condition": {
-					"type": "bool",
-					"bool": {
-						"type": "i2b",
-						"value": {
-							"type": "i&",
-							"value1": {
-								"type": "getAbilityDataAsInteger",
-								"dataField": "B"
-							},
-							"value2": {
-								"type": "rawInteger",
-								"value": 16
-							}
-						}
-					}
-				},
-				"value": {
-					"type": "getAbilityUnitId"
-				}
 			}
 		},
-		"onAddDisabledAbility": [{
+		"reuseActions": {
+			"setup": [{
+				"type": "createStateModBuff",
+				"buffType": "INVISIBLE",
+				"value": {
+					"type": "rawLong",
+					"value": 2
+				}
+			}],
+			"onTransform": [{
+				"type": "addStateModBuff",
+				"targetUnit": {
+					"type": "getCastingUnit"
+				},
+				"buff": {
+					"type": "getLastCreatedStateModBuff"
+				}
+			}],
+			"onUnTransform": [{
+				"type": "removeStateModBuff",
+				"targetUnit": {
+					"type": "getCastingUnit"
+				},
+				"buff": {
+					"type": "getLastCreatedStateModBuff"
+				}
+			}]
+		}
+	},{
+		"ids": [{"id":"Astn", "castId": "stoneform", "uncastId": "unstoneform"}],
+		"type": "INHERIT",
+		"parentId": "Arav",
+		"overrideFields": {
+			"physicalSpell": {
+				"type": "rawBoolean",
+				"value": "true"
+			}
+		},
+		"reuseActions": {
+			"setup": [{
 				"type": "createNonStackingStatBuff",
 				"buffType": {
 					"type": "getNonStackingStatBuffTypeFromString",
@@ -1162,147 +772,20 @@
 					"type": "getAbilityDataAsFloat",
 					"dataField": "E"
 				}
-			},{
-				"type": "if",
-				"condition": {
-					"type": "isToggleAbilityActive"
+			}],
+			"onTransform": [{
+				"type": "addNonStackingStatBuff",
+				"targetUnit": {
+					"type": "getCastingUnit"
 				},
-				"thenActions": [{
-					"type": "transformedUnitAbilityAdd",
-					"unit": {
-						"type": "getCastingUnit"
-					},
-					"baseUnitId": {
-						"type": "getAbilityDataAsID",
-						"dataField": "A"
-					},
-					"alternateUnitId": {
-						"type": "getAbilityUnitId"
-					},
-					"immediateLanding": {
-						"type": "i2b",
-						"value": {
-							"type": "i&",
-							"value1": {
-								"type": "getAbilityDataAsInteger",
-								"dataField": "B"
-							},
-							"value2": {
-								"type": "rawInteger",
-								"value": 2
-							}
-						}
-					},
-					"immediateTakeOff": {
-						"type": "i2b",
-						"value": {
-							"type": "i&",
-							"value1": {
-								"type": "getAbilityDataAsInteger",
-								"dataField": "B"
-							},
-							"value2": {
-								"type": "rawInteger",
-								"value": 4
-							}
-						}
-					},
-					"permanent": {
-						"type": "i2b",
-						"value": {
-							"type": "i&",
-							"value1": {
-								"type": "getAbilityDataAsInteger",
-								"dataField": "B"
-							},
-							"value2": {
-								"type": "rawInteger",
-								"value": 8
-							}
-						}
-					},
-					"requiresPayment": {
-						"type": "i2b",
-						"value": {
-							"type": "i&",
-							"value1": {
-								"type": "getAbilityDataAsInteger",
-								"dataField": "B"
-							},
-							"value2": {
-								"type": "rawInteger",
-								"value": 16
-							}
-						}
-					},
-					"altitudeAdjustmentDelay": {
-						"type": "getAbilityCastTime"
-					},
-					"altitudeAdjustmentTime": {
-						"type": "getAbilityDataAsFloat",
-						"dataField": "C"
-					},
-					"landingDelayTime": {
-						"type": "getAbilityDataAsFloat",
-						"dataField": "D"
-					},
-					"transformTime": {
-						"type": "getAbilityDuration"
-					},
-					"duration": {
-						"type": "getAbilityHeroDuration"
-					},
-					"buffId": {
-						"type": "getFirstBuffId"
-					},
-					"onTransformActions": [{
-						"type": "addNonStackingStatBuff",
-						"targetUnit": {
-							"type": "getCastingUnit"
-						},
-						"buff": {
-							"type": "getLastCreatedNonStackingStatBuff"
-						}
-					}],
-					"onUntransformActions": [{
-						"type": "removeNonStackingStatBuff",
-						"targetUnit": {
-							"type": "getCastingUnit"
-						},
-						"buff": {
-							"type": "getLastCreatedNonStackingStatBuff"
-						}
-					}]
-				}],
-					"elseActions": []
-		}],
-		"onRemoveDisabledAbility": [{
-			"type": "transformedUnitAbilityRemove",
-			"unit": {
-				"type": "getCastingUnit"
-			},
-			"baseUnitId": {
-				"type": "getAbilityDataAsID",
-				"dataField": "A"
-			},
-			"alternateUnitId": {
-				"type": "getAbilityUnitId"
-			},
-			"permanent": {
-				"type": "i2b",
-				"value": {
-					"type": "i&",
-					"value1": {
-						"type": "getAbilityDataAsInteger",
-						"dataField": "B"
-					},
-					"value2": {
-						"type": "rawInteger",
-						"value": 8
-					}
+				"buff": {
+					"type": "getLastCreatedNonStackingStatBuff"
 				}
-			},
-			"onUntransformActions": [{
+			}],
+			"onTransformExtra": [{
+				"type": "resetCooldown"
+			}],
+			"onUnTransform": [{
 				"type": "removeNonStackingStatBuff",
 				"targetUnit": {
 					"type": "getCastingUnit"
@@ -1310,376 +793,67 @@
 				"buff": {
 					"type": "getLastCreatedNonStackingStatBuff"
 				}
+			}],
+			"onLevelChange": [{
+				"type": "updateNonStackingStatBuff",
+				"buff": {
+					"type": "getLastCreatedNonStackingStatBuff"
+				},
+				"value": {
+					"type": "getAbilityDataAsFloat",
+					"dataField": "E"
+				}
 			}]
-		}],
-		"onLevelChange": [{
-			"type": "updateNonStackingStatBuff",
-			"buff": {
-				"type": "getLastCreatedNonStackingStatBuff"
-			},
-			"value": {
-				"type": "getAbilityDataAsFloat",
-				"dataField": "E"
-			}
-		}],
-		"onBeginCasting": [{
-				"type": "createTemporarySpellEffectOnUnit",
-				"target": {
-					"type": "getCastingUnit"
-				},
-				"id": {
-					"type": "getAlias"
-				},
-				"effectType": "CASTER"
-			},{
-				"type": "transformUnit",
-				"unit": {
-					"type": "getCastingUnit"
-				},
-				"baseUnitId": {
-					"type": "getAbilityDataAsID",
-					"dataField": "A"
-				},
-				"alternateUnitId": {
-					"type": "getAbilityUnitId"
-				},
-				"immediateLanding": {
-					"type": "i2b",
-					"value": {
-						"type": "i&",
-						"value1": {
-							"type": "getAbilityDataAsInteger",
-							"dataField": "B"
-						},
-						"value2": {
-							"type": "rawInteger",
-							"value": 2
-						}
-					}
-				},
-				"immediateTakeOff": {
-					"type": "i2b",
-					"value": {
-						"type": "i&",
-						"value1": {
-							"type": "getAbilityDataAsInteger",
-							"dataField": "B"
-						},
-						"value2": {
-							"type": "rawInteger",
-							"value": 4
-						}
-					}
-				},
-				"permanent": {
-					"type": "i2b",
-					"value": {
-						"type": "i&",
-						"value1": {
-							"type": "getAbilityDataAsInteger",
-							"dataField": "B"
-						},
-						"value2": {
-							"type": "rawInteger",
-							"value": 8
-						}
-					}
-				},
-				"requiresPayment": {
-					"type": "i2b",
-					"value": {
-						"type": "i&",
-						"value1": {
-							"type": "getAbilityDataAsInteger",
-							"dataField": "B"
-						},
-						"value2": {
-							"type": "rawInteger",
-							"value": 16
-						}
-					}
-				},
-				"altitudeAdjustmentDelay": {
-					"type": "getAbilityCastTime"
-				},
-				"altitudeAdjustmentTime": {
-					"type": "getAbilityDataAsFloat",
-					"dataField": "C"
-				},
-				"landingDelayTime": {
-					"type": "getAbilityDataAsFloat",
-					"dataField": "D"
-				},
-				"transformTime": {
-					"type": "getAbilityDuration"
-				},
-				"duration": {
-					"type": "getAbilityHeroDuration"
-				},
-				"buffId": {
-					"type": "getFirstBuffId"
-				},
-				"onTransformActions": [{
-					"type": "addNonStackingStatBuff",
-					"targetUnit": {
-						"type": "getCastingUnit"
-					},
-					"buff": {
-						"type": "getLastCreatedNonStackingStatBuff"
-					}
-				}],
-				"onUntransformActions": [{
-					"type": "removeNonStackingStatBuff",
-					"targetUnit": {
-						"type": "getCastingUnit"
-					},
-					"buff": {
-						"type": "getLastCreatedNonStackingStatBuff"
-					}
-				}]
-			},{
-				"type": "if",
-				"condition": {
-					"type": "isTransformingToAlternate"
-				},
-				"thenActions": [{
-						"type": "activateToggledAbility"
-					},{
-						"type": "resetCooldown"
-				}],
-				"elseActions": [{
-					"type": "deactivateToggledAbility"
-				}]
-		}]
+		}
 	},{
 		"ids": [{"id":"Acpf", "castId": "corporealform", "uncastId": "uncorporealform"}],
-		"type": "NORMAL_NOTARGET",
-		"displayFields": {
-			"toggleable": {
-				"type": "rawBoolean",
-				"value": "true"
-			},
-			"castToggleOff": {
-				"type": "rawBoolean",
-				"value": "true"
-			},
-			"alternateUnitId": {
-				"type": "getAbilityUnitId"
-			},
-			"goldCost": {
-				"type": "i0IfFalse",
-				"bool": {
-					"type": "i2b",
-					"value": {
-						"type": "i&",
-						"value1": {
-							"type": "getAbilityDataAsInteger",
-							"dataField": "B"
-						},
-						"value2": {
-							"type": "rawInteger",
-							"value": 16
-						}
-					}
-				},
-				"value": {
-					"type": "iIf",
-					"condition": {
-						"type": "gameplayConstantIsRelativeUpgradeCosts"
-					},
-					"value1": {
-						"type": "i-",
-						"value1": {
-							"type": "getUnitTypeGoldCost",
-							"id": {
-								"type": "getNonCurrentTransformType",
-								"baseUnitId": {
-									"type": "getAbilityDataAsID",
-									"dataField": "A"
-								},
-								"alternateUnitId": {
-									"type": "getAbilityUnitId"
-								}
-							}
-						},
-						"value2": {
-						"type": "getUnitTypeGoldCost",
-							"id": {
-								"type": "getUnitType"
-							}
-						}
-					},
-					"value2": {
-						"type": "getUnitTypeGoldCost",
-						"id": {
-							"type": "getNonCurrentTransformType",
-							"baseUnitId": {
-								"type": "getAbilityDataAsID",
-								"dataField": "A"
-							},
-							"alternateUnitId": {
-								"type": "getAbilityUnitId"
-							}
-						}
-					}
-				}
-			},
-			"lumberCost": {
-				"type": "i0IfFalse",
-				"bool": {
-					"type": "i2b",
-					"value": {
-						"type": "i&",
-						"value1": {
-							"type": "getAbilityDataAsInteger",
-							"dataField": "B"
-						},
-						"value2": {
-							"type": "rawInteger",
-							"value": 16
-						}
-					}
-				},
-				"value": {
-					"type": "iIf",
-					"condition": {
-						"type": "gameplayConstantIsRelativeUpgradeCosts"
-					},
-					"value1": {
-						"type": "i-",
-						"value1": {
-							"type": "getUnitTypeLumberCost",
-							"id": {
-								"type": "getNonCurrentTransformType",
-								"baseUnitId": {
-									"type": "getAbilityDataAsID",
-									"dataField": "A"
-								},
-								"alternateUnitId": {
-									"type": "getAbilityUnitId"
-								}
-							}
-						},
-						"value2": {
-						"type": "getUnitTypeLumberCost",
-							"id": {
-								"type": "getUnitType"
-							}
-						}
-					},
-					"value2": {
-						"type": "getUnitTypeLumberCost",
-						"id": {
-							"type": "getNonCurrentTransformType",
-							"baseUnitId": {
-								"type": "getAbilityDataAsID",
-								"dataField": "A"
-							},
-							"alternateUnitId": {
-								"type": "getAbilityUnitId"
-							}
-						}
-					}
-				}
-			},
-			"foodCost": {
-				"type": "i0IfFalse",
-				"bool": {
-					"type": "i2b",
-					"value": {
-						"type": "i&",
-						"value1": {
-							"type": "getAbilityDataAsInteger",
-							"dataField": "B"
-						},
-						"value2": {
-							"type": "rawInteger",
-							"value": 16
-						}
-					}
-				},
-				"value": {
-					"type": "i-",
-					"value1": {
-					"type": "getUnitTypeFoodCost",
-						"id": {
-							"type": "getNonCurrentTransformType",
-							"baseUnitId": {
-								"type": "getAbilityDataAsID",
-								"dataField": "A"
-							},
-							"alternateUnitId": {
-								"type": "getAbilityUnitId"
-							}
-						}
-					},
-					"value2": {
-					"type": "getUnitTypeFoodCost",
-						"id": {
-							"type": "getUnitType"
-						}
-					}
-				}
-			}
-		},
-		"overrideFields": {
-			"onTooltipOverride": {
-				"type": "nullIfFalse",
-				"condition": {
-					"type": "bool",
-					"bool": {
-						"type": "i2b",
-						"value": {
-							"type": "i&",
-							"value1": {
-								"type": "getAbilityDataAsInteger",
-								"dataField": "B"
-							},
-							"value2": {
-								"type": "rawInteger",
-								"value": 16
-							}
-						}
-					}
-				},
-				"value": {
-					"type": "getAbilityDataAsID",
-					"dataField": "A"
-				}
-			},
-			"offTooltipOverride": {
-				"type": "nullIfFalse",
-				"condition": {
-					"type": "bool",
-					"bool": {
-						"type": "i2b",
-						"value": {
-							"type": "i&",
-							"value1": {
-								"type": "getAbilityDataAsInteger",
-								"dataField": "B"
-							},
-							"value2": {
-								"type": "rawInteger",
-								"value": 16
-							}
-						}
-					}
-				},
-				"value": {
-					"type": "getAbilityUnitId"
-				}
-			}
-		},
-		"onAddDisabledAbility": [{
+		"type": "INHERIT",
+		"parentId": "Arav",
+		"reuseActions": {
+			"setup": [{
 				"type": "createStateModBuff",
 				"buffType": "ETHEREAL"
+			}],
+			"onTransform": [{
+				"type": "removeStateModBuff",
+				"targetUnit": {
+					"type": "getCastingUnit"
+				},
+				"buff": {
+					"type": "getLastCreatedStateModBuff"
+				}
+			}],
+			"onTransformExtra": [{
+				"type": "resetCooldown"
+			}],
+			"onUnTransform": [{
+				"type": "addStateModBuff",
+				"targetUnit": {
+					"type": "getCastingUnit"
+				},
+				"buff": {
+					"type": "getLastCreatedStateModBuff"
+				}
+			}]
+		},
+		"onAddDisabledAbility": [{
+				"type": "runReuseAction",
+				"name": {
+					"type": "rawString",
+					"value": "setup"
+				}
 			},{
 				"type": "if",
 				"condition": {
 					"type": "isToggleAbilityActive"
 				},
 				"thenActions": [{
+					"type": "runReuseAction",
+					"name": {
+						"type": "rawString",
+						"value": "storeBaseType"
+					}
+				},{
 					"type": "transformedUnitAbilityAdd",
 					"unit": {
 						"type": "getCastingUnit"
@@ -1768,31 +942,31 @@
 						"type": "getFirstBuffId"
 					},
 					"onTransformActions": [{
-						"type": "removeStateModBuff",
-						"targetUnit": {
-							"type": "getCastingUnit"
-						},
-						"buff": {
-							"type": "getLastCreatedStateModBuff"
+						"type": "runReuseAction",
+						"name": {
+							"type": "rawString",
+							"value": "onTransform"
 						}
 					}],
 					"onUntransformActions": [{
-						"type": "addStateModBuff",
-						"targetUnit": {
-							"type": "getCastingUnit"
-						},
-						"buff": {
-							"type": "getLastCreatedStateModBuff"
-						}
+							"type": "runReuseAction",
+							"name": {
+								"type": "rawString",
+								"value": "onUnTransform"
+							}
+						},{
+							"type": "runReuseAction",
+							"name": {
+								"type": "rawString",
+								"value": "clearBaseType"
+							}
 					}]
 				}],
 				"elseActions": [{
-					"type": "addStateModBuff",
-					"targetUnit": {
-						"type": "getCastingUnit"
-					},
-					"buff": {
-						"type": "getLastCreatedStateModBuff"
+					"type": "runReuseAction",
+					"name": {
+						"type": "rawString",
+						"value": "onUnTransform"
 					}
 				}]
 		}],
@@ -1802,8 +976,15 @@
 				"type": "getCastingUnit"
 			},
 			"baseUnitId": {
-				"type": "getAbilityDataAsID",
-				"dataField": "A"
+				"type": "getStoredIDByKey",
+				"key": {
+					"type": "rawString",
+					"value": "baseType"
+				},
+				"instanceValue": {
+					"type": "rawBoolean",
+					"value": "false"
+				}
 			},
 			"alternateUnitId": {
 				"type": "getAbilityUnitId"
@@ -1822,500 +1003,29 @@
 					}
 				}
 			}
-		}],
-		"onBeginCasting": [{
-				"type": "createTemporarySpellEffectOnUnit",
-				"target": {
-					"type": "getCastingUnit"
-				},
-				"id": {
-					"type": "getAlias"
-				},
-				"effectType": "CASTER"
-			},{
-				"type": "transformUnit",
-				"unit": {
-					"type": "getCastingUnit"
-				},
-				"baseUnitId": {
-					"type": "getAbilityDataAsID",
-					"dataField": "A"
-				},
-				"alternateUnitId": {
-					"type": "getAbilityUnitId"
-				},
-				"immediateLanding": {
-					"type": "i2b",
-					"value": {
-						"type": "i&",
-						"value1": {
-							"type": "getAbilityDataAsInteger",
-							"dataField": "B"
-						},
-						"value2": {
-							"type": "rawInteger",
-							"value": 2
-						}
-					}
-				},
-				"immediateTakeOff": {
-					"type": "i2b",
-					"value": {
-						"type": "i&",
-						"value1": {
-							"type": "getAbilityDataAsInteger",
-							"dataField": "B"
-						},
-						"value2": {
-							"type": "rawInteger",
-							"value": 4
-						}
-					}
-				},
-				"permanent": {
-					"type": "i2b",
-					"value": {
-						"type": "i&",
-						"value1": {
-							"type": "getAbilityDataAsInteger",
-							"dataField": "B"
-						},
-						"value2": {
-							"type": "rawInteger",
-							"value": 8
-						}
-					}
-				},
-				"requiresPayment": {
-					"type": "i2b",
-					"value": {
-						"type": "i&",
-						"value1": {
-							"type": "getAbilityDataAsInteger",
-							"dataField": "B"
-						},
-						"value2": {
-							"type": "rawInteger",
-							"value": 16
-						}
-					}
-				},
-				"altitudeAdjustmentDelay": {
-					"type": "getAbilityCastTime"
-				},
-				"altitudeAdjustmentTime": {
-					"type": "getAbilityDataAsFloat",
-					"dataField": "C"
-				},
-				"landingDelayTime": {
-					"type": "getAbilityDataAsFloat",
-					"dataField": "D"
-				},
-				"transformTime": {
-					"type": "getAbilityDuration"
-				},
-				"duration": {
-					"type": "getAbilityHeroDuration"
-				},
-				"buffId": {
-					"type": "getFirstBuffId"
-				},
-				"onTransformActions": [{
-					"type": "removeStateModBuff",
-					"targetUnit": {
-						"type": "getCastingUnit"
-					},
-					"buff": {
-						"type": "getLastCreatedStateModBuff"
-					}
-				}],
-				"onUntransformActions": [{
-					"type": "addStateModBuff",
-					"targetUnit": {
-						"type": "getCastingUnit"
-					},
-					"buff": {
-						"type": "getLastCreatedStateModBuff"
-					}
-				}]
-			},{
-				"type": "if",
-				"condition": {
-					"type": "isTransformingToAlternate"
-				},
-				"thenActions": [{
-						"type": "activateToggledAbility"
-					},{
-						"type": "resetCooldown"
-				}],
-				"elseActions": [{
-					"type": "deactivateToggledAbility"
-				}]
 		}]
 	},{
 		"ids": [{"id":"Aetf", "castId": "etherealform", "uncastId": "unetherealform"}],
-		"type": "NORMAL_NOTARGET",
-		"displayFields": {
-			"toggleable": {
-				"type": "rawBoolean",
-				"value": "true"
-			},
-			"castToggleOff": {
-				"type": "rawBoolean",
-				"value": "true"
-			},
-			"alternateUnitId": {
-				"type": "getAbilityUnitId"
-			},
-			"goldCost": {
-				"type": "i0IfFalse",
-				"bool": {
-					"type": "i2b",
-					"value": {
-						"type": "i&",
-						"value1": {
-							"type": "getAbilityDataAsInteger",
-							"dataField": "B"
-						},
-						"value2": {
-							"type": "rawInteger",
-							"value": 16
-						}
-					}
-				},
-				"value": {
-					"type": "iIf",
-					"condition": {
-						"type": "gameplayConstantIsRelativeUpgradeCosts"
-					},
-					"value1": {
-						"type": "i-",
-						"value1": {
-							"type": "getUnitTypeGoldCost",
-							"id": {
-								"type": "getNonCurrentTransformType",
-								"baseUnitId": {
-									"type": "getAbilityDataAsID",
-									"dataField": "A"
-								},
-								"alternateUnitId": {
-									"type": "getAbilityUnitId"
-								}
-							}
-						},
-						"value2": {
-						"type": "getUnitTypeGoldCost",
-							"id": {
-								"type": "getUnitType"
-							}
-						}
-					},
-					"value2": {
-						"type": "getUnitTypeGoldCost",
-						"id": {
-							"type": "getNonCurrentTransformType",
-							"baseUnitId": {
-								"type": "getAbilityDataAsID",
-								"dataField": "A"
-							},
-							"alternateUnitId": {
-								"type": "getAbilityUnitId"
-							}
-						}
-					}
-				}
-			},
-			"lumberCost": {
-				"type": "i0IfFalse",
-				"bool": {
-					"type": "i2b",
-					"value": {
-						"type": "i&",
-						"value1": {
-							"type": "getAbilityDataAsInteger",
-							"dataField": "B"
-						},
-						"value2": {
-							"type": "rawInteger",
-							"value": 16
-						}
-					}
-				},
-				"value": {
-					"type": "iIf",
-					"condition": {
-						"type": "gameplayConstantIsRelativeUpgradeCosts"
-					},
-					"value1": {
-						"type": "i-",
-						"value1": {
-							"type": "getUnitTypeLumberCost",
-							"id": {
-								"type": "getNonCurrentTransformType",
-								"baseUnitId": {
-									"type": "getAbilityDataAsID",
-									"dataField": "A"
-								},
-								"alternateUnitId": {
-									"type": "getAbilityUnitId"
-								}
-							}
-						},
-						"value2": {
-						"type": "getUnitTypeLumberCost",
-							"id": {
-								"type": "getUnitType"
-							}
-						}
-					},
-					"value2": {
-						"type": "getUnitTypeLumberCost",
-						"id": {
-							"type": "getNonCurrentTransformType",
-							"baseUnitId": {
-								"type": "getAbilityDataAsID",
-								"dataField": "A"
-							},
-							"alternateUnitId": {
-								"type": "getAbilityUnitId"
-							}
-						}
-					}
-				}
-			},
-			"foodCost": {
-				"type": "i0IfFalse",
-				"bool": {
-					"type": "i2b",
-					"value": {
-						"type": "i&",
-						"value1": {
-							"type": "getAbilityDataAsInteger",
-							"dataField": "B"
-						},
-						"value2": {
-							"type": "rawInteger",
-							"value": 16
-						}
-					}
-				},
-				"value": {
-					"type": "i-",
-					"value1": {
-					"type": "getUnitTypeFoodCost",
-						"id": {
-							"type": "getNonCurrentTransformType",
-							"baseUnitId": {
-								"type": "getAbilityDataAsID",
-								"dataField": "A"
-							},
-							"alternateUnitId": {
-								"type": "getAbilityUnitId"
-							}
-						}
-					},
-					"value2": {
-					"type": "getUnitTypeFoodCost",
-						"id": {
-							"type": "getUnitType"
-						}
-					}
-				}
-			}
-		},
-		"overrideFields": {
-			"onTooltipOverride": {
-				"type": "nullIfFalse",
-				"condition": {
-					"type": "bool",
-					"bool": {
-						"type": "i2b",
-						"value": {
-							"type": "i&",
-							"value1": {
-								"type": "getAbilityDataAsInteger",
-								"dataField": "B"
-							},
-							"value2": {
-								"type": "rawInteger",
-								"value": 16
-							}
-						}
-					}
-				},
-				"value": {
-					"type": "getAbilityDataAsID",
-					"dataField": "A"
-				}
-			},
-			"offTooltipOverride": {
-				"type": "nullIfFalse",
-				"condition": {
-					"type": "bool",
-					"bool": {
-						"type": "i2b",
-						"value": {
-							"type": "i&",
-							"value1": {
-								"type": "getAbilityDataAsInteger",
-								"dataField": "B"
-							},
-							"value2": {
-								"type": "rawInteger",
-								"value": 16
-							}
-						}
-					}
-				},
-				"value": {
-					"type": "getAbilityUnitId"
-				}
-			}
-		},
-		"onAddDisabledAbility": [{
+		"type": "INHERIT",
+		"parentId": "Arav",
+		"reuseActions": {
+			"setup": [{
 				"type": "createStateModBuff",
 				"buffType": "ETHEREAL"
-			},{
-				"type": "if",
-				"condition": {
-					"type": "isToggleAbilityActive"
+			}],
+			"onTransform": [{
+				"type": "addStateModBuff",
+				"targetUnit": {
+					"type": "getCastingUnit"
 				},
-				"thenActions": [{
-					"type": "transformedUnitAbilityAdd",
-					"unit": {
-						"type": "getCastingUnit"
-					},
-					"baseUnitId": {
-						"type": "getAbilityDataAsID",
-						"dataField": "A"
-					},
-					"alternateUnitId": {
-						"type": "getAbilityUnitId"
-					},
-					"immediateLanding": {
-						"type": "i2b",
-						"value": {
-							"type": "i&",
-							"value1": {
-								"type": "getAbilityDataAsInteger",
-								"dataField": "B"
-							},
-							"value2": {
-								"type": "rawInteger",
-								"value": 2
-							}
-						}
-					},
-					"immediateTakeOff": {
-						"type": "i2b",
-						"value": {
-							"type": "i&",
-							"value1": {
-								"type": "getAbilityDataAsInteger",
-								"dataField": "B"
-							},
-							"value2": {
-								"type": "rawInteger",
-								"value": 4
-							}
-						}
-					},
-					"permanent": {
-						"type": "i2b",
-						"value": {
-							"type": "i&",
-							"value1": {
-								"type": "getAbilityDataAsInteger",
-								"dataField": "B"
-							},
-							"value2": {
-								"type": "rawInteger",
-								"value": 8
-							}
-						}
-					},
-					"requiresPayment": {
-						"type": "i2b",
-						"value": {
-							"type": "i&",
-							"value1": {
-								"type": "getAbilityDataAsInteger",
-								"dataField": "B"
-							},
-							"value2": {
-								"type": "rawInteger",
-								"value": 16
-							}
-						}
-					},
-					"altitudeAdjustmentDelay": {
-						"type": "getAbilityCastTime"
-					},
-					"altitudeAdjustmentTime": {
-						"type": "getAbilityDataAsFloat",
-						"dataField": "C"
-					},
-					"landingDelayTime": {
-						"type": "getAbilityDataAsFloat",
-						"dataField": "D"
-					},
-					"transformTime": {
-						"type": "getAbilityDuration"
-					},
-					"duration": {
-						"type": "getAbilityHeroDuration"
-					},
-					"buffId": {
-						"type": "getFirstBuffId"
-					},
-					"onTransformActions": [{
-						"type": "addStateModBuff",
-						"targetUnit": {
-							"type": "getCastingUnit"
-						},
-						"buff": {
-							"type": "getLastCreatedStateModBuff"
-						}
-					}],
-					"onUntransformActions": [{
-						"type": "removeStateModBuff",
-						"targetUnit": {
-							"type": "getCastingUnit"
-						},
-						"buff": {
-							"type": "getLastCreatedStateModBuff"
-						}
-					}]
-				}],
-					"elseActions": []
-		}],
-		"onRemoveDisabledAbility": [{
-			"type": "transformedUnitAbilityRemove",
-			"unit": {
-				"type": "getCastingUnit"
-			},
-			"baseUnitId": {
-				"type": "getAbilityDataAsID",
-				"dataField": "A"
-			},
-			"alternateUnitId": {
-				"type": "getAbilityUnitId"
-			},
-			"permanent": {
-				"type": "i2b",
-				"value": {
-					"type": "i&",
-					"value1": {
-						"type": "getAbilityDataAsInteger",
-						"dataField": "B"
-					},
-					"value2": {
-						"type": "rawInteger",
-						"value": 8
-					}
+				"buff": {
+					"type": "getLastCreatedStateModBuff"
 				}
-			},
-			"onUntransformActions": [{
+			}],
+			"onTransformExtra": [{
+				"type": "resetCooldown"
+			}],
+			"onUnTransform": [{
 				"type": "removeStateModBuff",
 				"targetUnit": {
 					"type": "getCastingUnit"
@@ -2324,8 +1034,54 @@
 					"type": "getLastCreatedStateModBuff"
 				}
 			}]
-		}],
+		}
+	},{
+		"ids": [{"id":"Aave", "castId": "avengerform", "uncastId": "unavengerform"}],
+		"type": "INHERIT",
+		"parentId": "Arav",
+		"reuseActions": {
+			"onTransform": [{
+				"type": "setMp",
+				"target": {
+					"type": "getCastingUnit"
+				},
+				"amount": {
+					"type": "getUnitInitialMana",
+					"unit": {
+						"type": "getCastingUnit"
+					}
+				}
+			}]
+		}
+	},{
+		"ids": [{"id":"ANcr", "castId": "chemicalrage"}],
+		"type": "INHERIT",
+		"parentId": "Arav",
+		"reuseActions": {
+			"onTransform": [{
+				"type": "disableAbility"
+			}],
+			"onUnTransform": [{
+				"type": "enableAbility"
+			}]
+		},
+		"displayFields": {
+			"alternateUnitId": {
+				"type": "getStoredIDByKey",
+				"key": {
+					"type": "rawString",
+					"value": "null"
+				}
+			}
+		},
+		"onAddDisabledAbility": [],
 		"onBeginCasting": [{
+				"type": "runReuseAction",
+				"name": {
+					"type": "rawString",
+					"value": "storeBaseType"
+				}
+			},{
 				"type": "createTemporarySpellEffectOnUnit",
 				"target": {
 					"type": "getCastingUnit"
@@ -2340,8 +1096,15 @@
 					"type": "getCastingUnit"
 				},
 				"baseUnitId": {
-					"type": "getAbilityDataAsID",
-					"dataField": "A"
+					"type": "getStoredIDByKey",
+					"key": {
+						"type": "rawString",
+						"value": "baseType"
+					},
+					"instanceValue": {
+						"type": "rawBoolean",
+						"value": "false"
+					}
 				},
 				"alternateUnitId": {
 					"type": "getAbilityUnitId"
@@ -2422,719 +1185,47 @@
 				"buffId": {
 					"type": "getFirstBuffId"
 				},
+				"instantTransformAtDurationEnd": {
+					"type": "rawBoolean",
+					"value": "true"
+				},
+				"onlyTransformToAlternate": {
+					"type": "rawBoolean",
+					"value": "true"
+				},
 				"onTransformActions": [{
-					"type": "addStateModBuff",
-					"targetUnit": {
-						"type": "getCastingUnit"
-					},
-					"buff": {
-						"type": "getLastCreatedStateModBuff"
+					"type": "runReuseAction",
+					"name": {
+						"type": "rawString",
+						"value": "onTransform"
 					}
 				}],
 				"onUntransformActions": [{
-					"type": "removeStateModBuff",
-					"targetUnit": {
-						"type": "getCastingUnit"
-					},
-					"buff": {
-						"type": "getLastCreatedStateModBuff"
-					}
-				}]
-			},{
-				"type": "if",
-				"condition": {
-					"type": "isTransformingToAlternate"
-				},
-				"thenActions": [{
-						"type": "activateToggledAbility"
+						"type": "runReuseAction",
+						"name": {
+							"type": "rawString",
+							"value": "onUnTransform"
+						}
 					},{
-						"type": "resetCooldown"
-				}],
-				"elseActions": [{
-					"type": "deactivateToggledAbility"
-				}]
-		}]
-	},{
-		"ids": [{"id":"Aave", "castId": "avengerform", "uncastId": "unavengerform"}],
-		"type": "NORMAL_NOTARGET",
-		"displayFields": {
-			"toggleable": {
-				"type": "rawBoolean",
-				"value": "true"
-			},
-			"castToggleOff": {
-				"type": "rawBoolean",
-				"value": "true"
-			},
-			"alternateUnitId": {
-				"type": "getAbilityUnitId"
-			},
-			"goldCost": {
-				"type": "i0IfFalse",
-				"bool": {
-					"type": "i2b",
-					"value": {
-						"type": "i&",
-						"value1": {
-							"type": "getAbilityDataAsInteger",
-							"dataField": "B"
-						},
-						"value2": {
-							"type": "rawInteger",
-							"value": 16
+						"type": "runReuseAction",
+						"name": {
+							"type": "rawString",
+							"value": "clearBaseType"
 						}
-					}
-				},
-				"value": {
-					"type": "iIf",
-					"condition": {
-						"type": "gameplayConstantIsRelativeUpgradeCosts"
-					},
-					"value1": {
-						"type": "i-",
-						"value1": {
-							"type": "getUnitTypeGoldCost",
-							"id": {
-								"type": "getNonCurrentTransformType",
-								"baseUnitId": {
-									"type": "getAbilityDataAsID",
-									"dataField": "A"
-								},
-								"alternateUnitId": {
-									"type": "getAbilityUnitId"
-								}
-							}
-						},
-						"value2": {
-						"type": "getUnitTypeGoldCost",
-							"id": {
-								"type": "getUnitType"
-							}
-						}
-					},
-					"value2": {
-						"type": "getUnitTypeGoldCost",
-						"id": {
-							"type": "getNonCurrentTransformType",
-							"baseUnitId": {
-								"type": "getAbilityDataAsID",
-								"dataField": "A"
-							},
-							"alternateUnitId": {
-								"type": "getAbilityUnitId"
-							}
-						}
-					}
-				}
-			},
-			"lumberCost": {
-				"type": "i0IfFalse",
-				"bool": {
-					"type": "i2b",
-					"value": {
-						"type": "i&",
-						"value1": {
-							"type": "getAbilityDataAsInteger",
-							"dataField": "B"
-						},
-						"value2": {
-							"type": "rawInteger",
-							"value": 16
-						}
-					}
-				},
-				"value": {
-					"type": "iIf",
-					"condition": {
-						"type": "gameplayConstantIsRelativeUpgradeCosts"
-					},
-					"value1": {
-						"type": "i-",
-						"value1": {
-							"type": "getUnitTypeLumberCost",
-							"id": {
-								"type": "getNonCurrentTransformType",
-								"baseUnitId": {
-									"type": "getAbilityDataAsID",
-									"dataField": "A"
-								},
-								"alternateUnitId": {
-									"type": "getAbilityUnitId"
-								}
-							}
-						},
-						"value2": {
-						"type": "getUnitTypeLumberCost",
-							"id": {
-								"type": "getUnitType"
-							}
-						}
-					},
-					"value2": {
-						"type": "getUnitTypeLumberCost",
-						"id": {
-							"type": "getNonCurrentTransformType",
-							"baseUnitId": {
-								"type": "getAbilityDataAsID",
-								"dataField": "A"
-							},
-							"alternateUnitId": {
-								"type": "getAbilityUnitId"
-							}
-						}
-					}
-				}
-			},
-			"foodCost": {
-				"type": "i0IfFalse",
-				"bool": {
-					"type": "i2b",
-					"value": {
-						"type": "i&",
-						"value1": {
-							"type": "getAbilityDataAsInteger",
-							"dataField": "B"
-						},
-						"value2": {
-							"type": "rawInteger",
-							"value": 16
-						}
-					}
-				},
-				"value": {
-					"type": "i-",
-					"value1": {
-					"type": "getUnitTypeFoodCost",
-						"id": {
-							"type": "getNonCurrentTransformType",
-							"baseUnitId": {
-								"type": "getAbilityDataAsID",
-								"dataField": "A"
-							},
-							"alternateUnitId": {
-								"type": "getAbilityUnitId"
-							}
-						}
-					},
-					"value2": {
-					"type": "getUnitTypeFoodCost",
-						"id": {
-							"type": "getUnitType"
-						}
-					}
-				}
-			}
-		},
-		"overrideFields": {
-			"physicalSpell": {
-				"type": "rawBoolean",
-				"value": "true"
-			},
-			"onTooltipOverride": {
-				"type": "nullIfFalse",
-				"condition": {
-					"type": "bool",
-					"bool": {
-						"type": "i2b",
-						"value": {
-							"type": "i&",
-							"value1": {
-								"type": "getAbilityDataAsInteger",
-								"dataField": "B"
-							},
-							"value2": {
-								"type": "rawInteger",
-								"value": 16
-							}
-						}
-					}
-				},
-				"value": {
-					"type": "getAbilityDataAsID",
-					"dataField": "A"
-				}
-			},
-			"offTooltipOverride": {
-				"type": "nullIfFalse",
-				"condition": {
-					"type": "bool",
-					"bool": {
-						"type": "i2b",
-						"value": {
-							"type": "i&",
-							"value1": {
-								"type": "getAbilityDataAsInteger",
-								"dataField": "B"
-							},
-							"value2": {
-								"type": "rawInteger",
-								"value": 16
-							}
-						}
-					}
-				},
-				"value": {
-					"type": "getAbilityUnitId"
-				}
-			}
-		},
-		"onAddDisabledAbility": [{
-			"type": "if",
-			"condition": {
-				"type": "isToggleAbilityActive"
-			},
-			"thenActions": [{
-				"type": "transformedUnitAbilityAdd",
-				"unit": {
-					"type": "getCastingUnit"
-				},
-				"baseUnitId": {
-					"type": "getAbilityDataAsID",
-					"dataField": "A"
-				},
-				"alternateUnitId": {
-					"type": "getAbilityUnitId"
-				},
-				"immediateLanding": {
-					"type": "i2b",
-					"value": {
-						"type": "i&",
-						"value1": {
-							"type": "getAbilityDataAsInteger",
-							"dataField": "B"
-						},
-						"value2": {
-							"type": "rawInteger",
-							"value": 2
-						}
-					}
-				},
-				"immediateTakeOff": {
-					"type": "i2b",
-					"value": {
-						"type": "i&",
-						"value1": {
-							"type": "getAbilityDataAsInteger",
-							"dataField": "B"
-						},
-						"value2": {
-							"type": "rawInteger",
-							"value": 4
-						}
-					}
-				},
-				"permanent": {
-					"type": "i2b",
-					"value": {
-						"type": "i&",
-						"value1": {
-							"type": "getAbilityDataAsInteger",
-							"dataField": "B"
-						},
-						"value2": {
-							"type": "rawInteger",
-							"value": 8
-						}
-					}
-				},
-				"requiresPayment": {
-					"type": "i2b",
-					"value": {
-						"type": "i&",
-						"value1": {
-							"type": "getAbilityDataAsInteger",
-							"dataField": "B"
-						},
-						"value2": {
-							"type": "rawInteger",
-							"value": 16
-						}
-					}
-				},
-				"altitudeAdjustmentDelay": {
-					"type": "getAbilityCastTime"
-				},
-				"altitudeAdjustmentTime": {
-					"type": "getAbilityDataAsFloat",
-					"dataField": "C"
-				},
-				"landingDelayTime": {
-					"type": "getAbilityDataAsFloat",
-					"dataField": "D"
-				},
-				"transformTime": {
-					"type": "getAbilityDuration"
-				},
-				"duration": {
-					"type": "getAbilityHeroDuration"
-				},
-				"buffId": {
-					"type": "getFirstBuffId"
-				}
-			}],
-				"elseActions": []
-		}],
-		"onRemoveDisabledAbility": [{
-			"type": "transformedUnitAbilityRemove",
-			"unit": {
-				"type": "getCastingUnit"
-			},
-			"baseUnitId": {
-				"type": "getAbilityDataAsID",
-				"dataField": "A"
-			},
-			"alternateUnitId": {
-				"type": "getAbilityUnitId"
-			},
-			"permanent": {
-				"type": "i2b",
-				"value": {
-					"type": "i&",
-					"value1": {
-						"type": "getAbilityDataAsInteger",
-						"dataField": "B"
-					},
-					"value2": {
-						"type": "rawInteger",
-						"value": 8
-					}
-				}
-			}
-		}],
-		"onBeginCasting": [{
-				"type": "createTemporarySpellEffectOnUnit",
-				"target": {
-					"type": "getCastingUnit"
-				},
-				"id": {
-					"type": "getAlias"
-				},
-				"effectType": "CASTER"
-			},{
-				"type": "transformUnit",
-				"unit": {
-					"type": "getCastingUnit"
-				},
-				"baseUnitId": {
-					"type": "getAbilityDataAsID",
-					"dataField": "A"
-				},
-				"alternateUnitId": {
-					"type": "getAbilityUnitId"
-				},
-				"immediateLanding": {
-					"type": "i2b",
-					"value": {
-						"type": "i&",
-						"value1": {
-							"type": "getAbilityDataAsInteger",
-							"dataField": "B"
-						},
-						"value2": {
-							"type": "rawInteger",
-							"value": 2
-						}
-					}
-				},
-				"immediateTakeOff": {
-					"type": "i2b",
-					"value": {
-						"type": "i&",
-						"value1": {
-							"type": "getAbilityDataAsInteger",
-							"dataField": "B"
-						},
-						"value2": {
-							"type": "rawInteger",
-							"value": 4
-						}
-					}
-				},
-				"permanent": {
-					"type": "i2b",
-					"value": {
-						"type": "i&",
-						"value1": {
-							"type": "getAbilityDataAsInteger",
-							"dataField": "B"
-						},
-						"value2": {
-							"type": "rawInteger",
-							"value": 8
-						}
-					}
-				},
-				"requiresPayment": {
-					"type": "i2b",
-					"value": {
-						"type": "i&",
-						"value1": {
-							"type": "getAbilityDataAsInteger",
-							"dataField": "B"
-						},
-						"value2": {
-							"type": "rawInteger",
-							"value": 16
-						}
-					}
-				},
-				"altitudeAdjustmentDelay": {
-					"type": "getAbilityCastTime"
-				},
-				"altitudeAdjustmentTime": {
-					"type": "getAbilityDataAsFloat",
-					"dataField": "C"
-				},
-				"landingDelayTime": {
-					"type": "getAbilityDataAsFloat",
-					"dataField": "D"
-				},
-				"transformTime": {
-					"type": "getAbilityDuration"
-				},
-				"duration": {
-					"type": "getAbilityHeroDuration"
-				},
-				"buffId": {
-					"type": "getFirstBuffId"
-				},
-				"onTransformActions": [{
-					"type": "setMp",
-					"target": {
-						"type": "getCastingUnit"
-					},
-					"amount": {
-						"type": "getUnitInitialMana",
-						"unit": {
-							"type": "getCastingUnit"
-						}
-					}
-				}]
-			},{
-				"type": "if",
-				"condition": {
-					"type": "isTransformingToAlternate"
-				},
-				"thenActions": [{
-					"type": "activateToggledAbility"
-				}],
-				"elseActions": [{
-					"type": "deactivateToggledAbility"
 				}]
 		}]
 	},{
 		"ids": [{"id":"AEme", "castId": "metamorphosis"}],
-		"type": "NORMAL_NOTARGET",
+		"type": "INHERIT",
+		"parentId": "Arav",
 		"displayFields": {
-			"alternateUnitId": {
-				"type": "getAbilityUnitId"
-			},
-			"goldCost": {
-				"type": "i0IfFalse",
-				"bool": {
-					"type": "i2b",
-					"value": {
-						"type": "i&",
-						"value1": {
-							"type": "getAbilityDataAsInteger",
-							"dataField": "B"
-						},
-						"value2": {
-							"type": "rawInteger",
-							"value": 16
-						}
-					}
-				},
-				"value": {
-					"type": "iIf",
-					"condition": {
-						"type": "gameplayConstantIsRelativeUpgradeCosts"
-					},
-					"value1": {
-						"type": "i-",
-						"value1": {
-							"type": "getUnitTypeGoldCost",
-							"id": {
-								"type": "getNonCurrentTransformType",
-								"baseUnitId": {
-									"type": "getAbilityDataAsID",
-									"dataField": "A"
-								},
-								"alternateUnitId": {
-									"type": "getAbilityUnitId"
-								}
-							}
-						},
-						"value2": {
-						"type": "getUnitTypeGoldCost",
-							"id": {
-								"type": "getUnitType"
-							}
-						}
-					},
-					"value2": {
-						"type": "getUnitTypeGoldCost",
-						"id": {
-							"type": "getNonCurrentTransformType",
-							"baseUnitId": {
-								"type": "getAbilityDataAsID",
-								"dataField": "A"
-							},
-							"alternateUnitId": {
-								"type": "getAbilityUnitId"
-							}
-						}
-					}
-				}
-			},
-			"lumberCost": {
-				"type": "i0IfFalse",
-				"bool": {
-					"type": "i2b",
-					"value": {
-						"type": "i&",
-						"value1": {
-							"type": "getAbilityDataAsInteger",
-							"dataField": "B"
-						},
-						"value2": {
-							"type": "rawInteger",
-							"value": 16
-						}
-					}
-				},
-				"value": {
-					"type": "iIf",
-					"condition": {
-						"type": "gameplayConstantIsRelativeUpgradeCosts"
-					},
-					"value1": {
-						"type": "i-",
-						"value1": {
-							"type": "getUnitTypeLumberCost",
-							"id": {
-								"type": "getNonCurrentTransformType",
-								"baseUnitId": {
-									"type": "getAbilityDataAsID",
-									"dataField": "A"
-								},
-								"alternateUnitId": {
-									"type": "getAbilityUnitId"
-								}
-							}
-						},
-						"value2": {
-						"type": "getUnitTypeLumberCost",
-							"id": {
-								"type": "getUnitType"
-							}
-						}
-					},
-					"value2": {
-						"type": "getUnitTypeLumberCost",
-						"id": {
-							"type": "getNonCurrentTransformType",
-							"baseUnitId": {
-								"type": "getAbilityDataAsID",
-								"dataField": "A"
-							},
-							"alternateUnitId": {
-								"type": "getAbilityUnitId"
-							}
-						}
-					}
-				}
-			},
-			"foodCost": {
-				"type": "i0IfFalse",
-				"bool": {
-					"type": "i2b",
-					"value": {
-						"type": "i&",
-						"value1": {
-							"type": "getAbilityDataAsInteger",
-							"dataField": "B"
-						},
-						"value2": {
-							"type": "rawInteger",
-							"value": 16
-						}
-					}
-				},
-				"value": {
-					"type": "i-",
-					"value1": {
-					"type": "getUnitTypeFoodCost",
-						"id": {
-							"type": "getNonCurrentTransformType",
-							"baseUnitId": {
-								"type": "getAbilityDataAsID",
-								"dataField": "A"
-							},
-							"alternateUnitId": {
-								"type": "getAbilityUnitId"
-							}
-						}
-					},
-					"value2": {
-					"type": "getUnitTypeFoodCost",
-						"id": {
-							"type": "getUnitType"
-						}
-					}
-				}
+			"toggleable": {
+				"type": "rawBoolean",
+				"value": "false"
 			}
 		},
-		"overrideFields": {
-			"onTooltipOverride": {
-				"type": "nullIfFalse",
-				"condition": {
-					"type": "bool",
-					"bool": {
-						"type": "i2b",
-						"value": {
-							"type": "i&",
-							"value1": {
-								"type": "getAbilityDataAsInteger",
-								"dataField": "B"
-							},
-							"value2": {
-								"type": "rawInteger",
-								"value": 16
-							}
-						}
-					}
-				},
-				"value": {
-					"type": "getAbilityDataAsID",
-					"dataField": "A"
-				}
-			},
-			"offTooltipOverride": {
-				"type": "nullIfFalse",
-				"condition": {
-					"type": "bool",
-					"bool": {
-						"type": "i2b",
-						"value": {
-							"type": "i&",
-							"value1": {
-								"type": "getAbilityDataAsInteger",
-								"dataField": "B"
-							},
-							"value2": {
-								"type": "rawInteger",
-								"value": 16
-							}
-						}
-					}
-				},
-				"value": {
-					"type": "getAbilityUnitId"
-				}
-			}
-		},
-		"onAddDisabledAbility": [{
+		"reuseActions": {
+			"setup": [{
 				"type": "createNonStackingStatBuff",
 				"buffType": {
 					"type": "getNonStackingStatBuffTypeFromString",
@@ -3150,34 +1241,19 @@
 					"type": "getAbilityDataAsFloat",
 					"dataField": "E"
 				}
-		}],
-		"onRemoveDisabledAbility": [{
-			"type": "transformedUnitAbilityRemove",
-			"unit": {
-				"type": "getCastingUnit"
-			},
-			"baseUnitId": {
-				"type": "getAbilityDataAsID",
-				"dataField": "A"
-			},
-			"alternateUnitId": {
-				"type": "getAbilityUnitId"
-			},
-			"permanent": {
-				"type": "i2b",
-				"value": {
-					"type": "i&",
-					"value1": {
-						"type": "getAbilityDataAsInteger",
-						"dataField": "B"
+			}],
+			"onTransform": [{
+					"type": "addNonStackingStatBuff",
+					"targetUnit": {
+						"type": "getCastingUnit"
 					},
-					"value2": {
-						"type": "rawInteger",
-						"value": 8
+					"buff": {
+						"type": "getLastCreatedNonStackingStatBuff"
 					}
-				}
-			},
-			"onUntransformActions": [{
+				},{
+					"type": "deactivateToggledAbility"
+			}],
+			"onUnTransform": [{
 				"type": "removeNonStackingStatBuff",
 				"targetUnit": {
 					"type": "getCastingUnit"
@@ -3185,19 +1261,25 @@
 				"buff": {
 					"type": "getLastCreatedNonStackingStatBuff"
 				}
+			}],
+			"onLevelChange": [{
+				"type": "updateNonStackingStatBuff",
+				"buff": {
+					"type": "getLastCreatedNonStackingStatBuff"
+				},
+				"value": {
+					"type": "getAbilityDataAsFloat",
+					"dataField": "E"
+				}
 			}]
-		}],
-		"onLevelChange": [{
-			"type": "updateNonStackingStatBuff",
-			"buff": {
-				"type": "getLastCreatedNonStackingStatBuff"
-			},
-			"value": {
-				"type": "getAbilityDataAsFloat",
-				"dataField": "E"
-			}
-		}],
+		},
 		"onBeginCasting": [{
+				"type": "runReuseAction",
+				"name": {
+					"type": "rawString",
+					"value": "storeBaseType"
+				}
+			},{
 				"type": "createTemporarySpellEffectOnUnit",
 				"target": {
 					"type": "getCastingUnit"
@@ -3212,8 +1294,15 @@
 					"type": "getCastingUnit"
 				},
 				"baseUnitId": {
-					"type": "getAbilityDataAsID",
-					"dataField": "A"
+					"type": "getStoredIDByKey",
+					"key": {
+						"type": "rawString",
+						"value": "baseType"
+					},
+					"instanceValue": {
+						"type": "rawBoolean",
+						"value": "false"
+					}
 				},
 				"alternateUnitId": {
 					"type": "getAbilityUnitId"
@@ -3299,24 +1388,189 @@
 					"value": "true"
 				},
 				"onTransformActions": [{
+					"type": "runReuseAction",
+					"name": {
+						"type": "rawString",
+						"value": "onTransform"
+					}
+				}],
+				"onUntransformActions": [{
+						"type": "runReuseAction",
+						"name": {
+							"type": "rawString",
+							"value": "onUnTransform"
+						}
+					},{
+						"type": "runReuseAction",
+						"name": {
+							"type": "rawString",
+							"value": "clearBaseType"
+						}
+				}]
+		}]
+	},{
+		"ids": [{"id":"ANrg", "castId": "robogoblin", "uncastId": "unrobogoblin"}],
+		"type": "INHERIT",
+		"parentId": "Arav",
+		"reuseActions": {
+			"setup": [{
+					"type": "createNonStackingStatBuff",
+					"buffType": {
+						"type": "getNonStackingStatBuffTypeFromString",
+						"id": {
+							"type": "rawString",
+							"value": "STR"
+						}
+					},
+					"stackingKey": {
+						"type": "getAllowStackingKey"
+					},
+					"value": {
+						"type": "getAbilityDataAsFloat",
+						"dataField": "E"
+					}
+				},{
+					"type": "storeValueLocally",
+					"key": {
+						"type": "rawString",
+						"value": "strbuff"
+					},
+					"valueToStore": {
+						"type": "getLastCreatedNonStackingStatBuff"
+					}
+				},{
+					"type": "createNonStackingStatBuff",
+					"buffType": {
+						"type": "getNonStackingStatBuffTypeFromString",
+						"id": {
+							"type": "rawString",
+							"value": "DEF"
+						}
+					},
+					"stackingKey": {
+						"type": "getAllowStackingKey"
+					},
+					"value": {
+						"type": "getAbilityDataAsFloat",
+						"dataField": "F"
+					}
+				},{
+					"type": "storeValueLocally",
+					"key": {
+						"type": "rawString",
+						"value": "defbuff"
+					},
+					"valueToStore": {
+						"type": "getLastCreatedNonStackingStatBuff"
+					}
+			}],
+			"onTransform": [{
 					"type": "addNonStackingStatBuff",
 					"targetUnit": {
 						"type": "getCastingUnit"
 					},
 					"buff": {
-						"type": "getLastCreatedNonStackingStatBuff"
+						"type": "getStoredNonStackingStatBuffByKey",
+						"key": {
+							"type": "rawString",
+							"value": "strbuff"
+						}
 					}
-				}],
-				"onUntransformActions": [{
+				},{
+					"type": "addNonStackingStatBuff",
+					"targetUnit": {
+						"type": "getCastingUnit"
+					},
+					"buff": {
+						"type": "getStoredNonStackingStatBuffByKey",
+						"key": {
+							"type": "rawString",
+							"value": "defbuff"
+						}
+					}
+			}],
+			"onUnTransform": [{
 					"type": "removeNonStackingStatBuff",
 					"targetUnit": {
 						"type": "getCastingUnit"
 					},
 					"buff": {
-						"type": "getLastCreatedNonStackingStatBuff"
+						"type": "getStoredNonStackingStatBuffByKey",
+						"key": {
+							"type": "rawString",
+							"value": "strbuff"
+						}
 					}
-				}]
-		}]
+				},{
+					"type": "removeNonStackingStatBuff",
+					"targetUnit": {
+						"type": "getCastingUnit"
+					},
+					"buff": {
+						"type": "getStoredNonStackingStatBuffByKey",
+						"key": {
+							"type": "rawString",
+							"value": "defbuff"
+						}
+					}
+			}],
+			"onLevelChange": [{
+					"type": "updateNonStackingStatBuff",
+					"buff": {
+						"type": "getStoredNonStackingStatBuffByKey",
+						"key": {
+							"type": "rawString",
+							"value": "strbuff"
+						}
+					},
+					"value": {
+						"type": "getAbilityDataAsFloat",
+						"dataField": "E"
+					}
+				},{
+					"type": "updateNonStackingStatBuff",
+					"buff": {
+						"type": "getStoredNonStackingStatBuffByKey",
+						"key": {
+							"type": "rawString",
+							"value": "defbuff"
+						}
+					},
+					"value": {
+						"type": "getAbilityDataAsFloat",
+						"dataField": "F"
+					}
+			}]
+		}
+	},{
+		"ids": [{"id":"ANsu", "castId": "submerge", "uncastId": "unsubmerge"}],
+		"type": "INHERIT",
+		"parentId": "Abur",
+		"extraCastConditions": [{
+			"type": "setCantUseReasonOnFailure",
+			"condition": {
+				"type": "isLocationDeepWater",
+				"location": {
+					"type": "getUnitLocation",
+					"unit": {
+						"type": "getCastingUnit"
+					}
+				}
+			},
+			"reason": "UNABLE_TO_SUBMERGE_THERE"
+		}],
+		"reuseActions": {
+			"onUnTransform": [{
+				"type": "addSecondaryAnimationTag",
+				"unit": {
+					"type": "getCastingUnit"
+				},
+				"tag": {
+					"type": "rawString",
+					"value": "SWIM"
+				}
+			}]
+		}
 	},{
 		"ids": [{"id":"Acha"}],
 		"type": "HIDDEN",
@@ -3331,6 +1585,10 @@
 				"permanent": {
 					"type": "rawBoolean",
 					"value": "true"
+				},
+				"keepRatios": {
+					"type": "rawBoolean",
+					"value": "false"
 				}
 		}]
 	}]

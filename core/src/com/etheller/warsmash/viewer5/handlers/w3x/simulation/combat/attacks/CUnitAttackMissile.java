@@ -7,16 +7,21 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTargetWidgetVisitor;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CAttackDamageFlags;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CAttackType;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CDamageFlags;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CTargetType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CWeaponType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.listeners.CUnitAttackPreDamageListenerDamageModResult;
 
 public class CUnitAttackMissile extends CUnitAttack {
+	private static CAttackDamageFlags ATTACK_FLAGS = new CAttackDamageFlags(true);
 	private float projectileArc;
 	private String projectileArt;
 	private boolean projectileHomingEnabled;
 	private int projectileSpeed;
+	
+	protected CDamageFlags damageFlags;
 
 	public CUnitAttackMissile(final float animationBackswingPoint, final float animationDamagePoint,
 			final CAttackType attackType, final float cooldownTime, final int damageBase, final int damageDice,
@@ -31,6 +36,7 @@ public class CUnitAttackMissile extends CUnitAttack {
 		this.projectileArt = projectileArt;
 		this.projectileHomingEnabled = projectileHomingEnabled;
 		this.projectileSpeed = projectileSpeed;
+		this.damageFlags = ATTACK_FLAGS;
 	}
 
 	@Override
@@ -42,18 +48,30 @@ public class CUnitAttackMissile extends CUnitAttack {
 	}
 
 	public float getProjectileArc() {
+		if (this.attackReplacement != null) {
+			return this.attackReplacement.getProjectileArc();
+		}
 		return this.projectileArc;
 	}
 
 	public String getProjectileArt() {
+		if (this.attackReplacement != null) {
+			return this.attackReplacement.getProjectileArt();
+		}
 		return this.projectileArt;
 	}
 
 	public boolean isProjectileHomingEnabled() {
+		if (this.attackReplacement != null) {
+			return this.attackReplacement.isProjectileHomingEnabled();
+		}
 		return this.projectileHomingEnabled;
 	}
 
 	public int getProjectileSpeed() {
+		if (this.attackReplacement != null) {
+			return this.attackReplacement.getProjectileSpeed();
+		}
 		return this.projectileSpeed;
 	}
 
@@ -87,7 +105,7 @@ public class CUnitAttackMissile extends CUnitAttack {
 		final CWidget widget = target.visit(AbilityTargetWidgetVisitor.INSTANCE);
 		if (widget != null) {
 			CUnitAttackPreDamageListenerDamageModResult modDamage = runPreDamageListeners(cSimulation, source, target, damage);
-			float damageDealt = widget.damage(cSimulation, source, true, true, getAttackType(), getWeaponType().getDamageType(), getWeaponSound(), modDamage.computeFinalDamage(), modDamage.getBonusDamage());
+			float damageDealt = widget.damage(cSimulation, source, damageFlags, getAttackType(), getWeaponType().getDamageType(), getWeaponSound(), modDamage.computeFinalDamage(), modDamage.getBonusDamage());
 			runPostDamageListeners(cSimulation, source, target, damageDealt);
 			attackListener.onHit(target, damage);
 		}

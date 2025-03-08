@@ -8,6 +8,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.nightelf.root.CAbilityRoot;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehavior;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehaviorCategory;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehaviorVisitor;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.OrderIds;
 
@@ -39,7 +40,9 @@ public class CBehaviorUproot implements CBehavior {
 			this.abilityRoot.setRooted(false, this.unit, game);
 			this.unit.getUnitAnimationListener().playAnimation(false, PrimaryTag.STAND, SequenceUtils.EMPTY, 1.0f,
 					true);
-			this.unit.getUnitAnimationListener().removeSecondaryTag(SecondaryTag.ALTERNATE);
+			if (this.unit.getUnitAnimationListener().removeSecondaryTag(SecondaryTag.ALTERNATE)) {
+				this.unit.getUnitAnimationListener().forceResetCurrentAnimation();
+			}
 			this.unit.setAcceptingOrders(true);
 			return this.unit.pollNextOrderBehavior(game);
 		}
@@ -69,5 +72,10 @@ public class CBehaviorUproot implements CBehavior {
 	@Override
 	public <T> T visit(final CBehaviorVisitor<T> visitor) {
 		return visitor.accept(this);
+	}
+
+	@Override
+	public CBehaviorCategory getBehaviorCategory() {
+		return CBehaviorCategory.MOVEMENT;
 	}
 }

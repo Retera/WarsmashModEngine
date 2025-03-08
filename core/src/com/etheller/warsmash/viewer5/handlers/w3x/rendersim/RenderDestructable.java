@@ -23,6 +23,7 @@ public class RenderDestructable extends RenderDoodad implements RenderWidget {
 	private static final String TEX_ID = "texID"; // replaced from 'btxi'
 	private static final String SEL_CIRCLE_SIZE = "selcircsize"; // replaced from 'bgsc'
 
+	private final MdxModel portraitModel;
 	private float life;
 	public Rectangle walkableBounds;
 	private final CDestructable simulationDestructable;
@@ -36,11 +37,13 @@ public class RenderDestructable extends RenderDoodad implements RenderWidget {
 	private final int replaceableTextureId;
 	private String replaceableTextureFile;
 
-	public RenderDestructable(final War3MapViewer map, final MdxModel model, final GameObject row,
-			final float[] location3D, final float[] scale3D, final float facingRadians, final float selectionScale,
-			final float maxPitch, final float maxRoll, final float life, final BuildingShadow destructableShadow,
-			final CDestructable simulationDestructable, final int doodadVariation) {
+	public RenderDestructable(final War3MapViewer map, final MdxModel model, MdxModel portraitModel,
+			final GameObject row, final float[] location3D, final float[] scale3D, final float facingRadians,
+			final float selectionScale, final float maxPitch, final float maxRoll, final float life,
+			final BuildingShadow destructableShadow, final CDestructable simulationDestructable,
+			final int doodadVariation) {
 		super(map, model, row, location3D, scale3D, facingRadians, maxPitch, maxRoll, selectionScale, doodadVariation);
+		this.portraitModel = portraitModel;
 		this.life = simulationDestructable.getLife();
 		this.destructableShadow = destructableShadow;
 		this.simulationDestructable = simulationDestructable;
@@ -63,6 +66,10 @@ public class RenderDestructable extends RenderDoodad implements RenderWidget {
 		simulationDestructable.setUnitAnimationListener(this.unitAnimationListenerImpl);
 		this.unitAnimationListenerImpl.playAnimation(true, getAnimation(), SequenceUtils.EMPTY, 1.0f, true);
 		this.selectable = row.readSLKTagBoolean("selectable");
+	}
+
+	public MdxModel getPortraitModel() {
+		return this.portraitModel;
 	}
 
 	@Override
@@ -135,7 +142,7 @@ public class RenderDestructable extends RenderDoodad implements RenderWidget {
 
 	@Override
 	public boolean isIntersectedOnMeshAlways() {
-		return false;
+		return true;
 	}
 
 	@Override

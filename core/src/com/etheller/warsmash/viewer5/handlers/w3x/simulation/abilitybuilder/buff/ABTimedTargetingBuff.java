@@ -6,7 +6,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 
 public class ABTimedTargetingBuff extends ABGenericTimedBuff {
 	public ABTimedTargetingBuff(int handleId, War3ID alias, float duration) {
-		super(handleId, alias, duration, false);
+		super(handleId, alias, duration, false, false, true, false);
 		this.setIconShowing(false);
 	}
 

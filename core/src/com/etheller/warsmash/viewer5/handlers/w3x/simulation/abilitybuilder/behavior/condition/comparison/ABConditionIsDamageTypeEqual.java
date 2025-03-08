@@ -7,13 +7,13 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.beha
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABCondition;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CDamageType;
 
-public class ABConditionIsDamageTypeEqual implements ABCondition {
+public class ABConditionIsDamageTypeEqual extends ABCondition {
 
 	private ABDamageTypeCallback damageType1;
 	private ABDamageTypeCallback damageType2;
 
 	@Override
-	public boolean evaluate(CSimulation game, CUnit caster, Map<String, Object> localStore, final int castId) {
+	public Boolean callback(CSimulation game, CUnit caster, Map<String, Object> localStore, final int castId) {
 		CDamageType lD = damageType1.callback(game, caster, localStore, castId);
 		CDamageType rD = damageType2.callback(game, caster, localStore, castId);
 		if (lD == null) {

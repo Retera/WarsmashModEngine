@@ -9,8 +9,9 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CTargetType;
 
 public class CAbilityCargoHoldEntangledMine extends CAbilityCargoHold {
 
-	public CAbilityCargoHoldEntangledMine(final int handleId, final War3ID code, final War3ID alias, final int cargoCapacity,
-			final float duration, final float castRange, final EnumSet<CTargetType> targetsAllowed) {
+	public CAbilityCargoHoldEntangledMine(final int handleId, final War3ID code, final War3ID alias,
+			final int cargoCapacity, final float duration, final float castRange,
+			final EnumSet<CTargetType> targetsAllowed) {
 		super(handleId, code, alias, cargoCapacity, duration, castRange, targetsAllowed);
 	}
 
@@ -32,11 +33,19 @@ public class CAbilityCargoHoldEntangledMine extends CAbilityCargoHold {
 	}
 
 	public void updateTags(final CUnit cargoHoldUnit, final SecondaryTag tagBefore, final SecondaryTag tagAfter) {
+		boolean tagsChanged = false;
 		if (tagBefore != null) {
-			cargoHoldUnit.getUnitAnimationListener().removeSecondaryTag(tagBefore);
+			if (cargoHoldUnit.getUnitAnimationListener().removeSecondaryTag(tagBefore)) {
+				tagsChanged = true;
+			}
 		}
 		if (tagAfter != null) {
-			cargoHoldUnit.getUnitAnimationListener().addSecondaryTag(tagAfter);
+			if (cargoHoldUnit.getUnitAnimationListener().addSecondaryTag(tagAfter)) {
+				tagsChanged = true;
+			}
+		}
+		if (tagsChanged) {
+			cargoHoldUnit.getUnitAnimationListener().forceResetCurrentAnimation();
 		}
 	}
 }

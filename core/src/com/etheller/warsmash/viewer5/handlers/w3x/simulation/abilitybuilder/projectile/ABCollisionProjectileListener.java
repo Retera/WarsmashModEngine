@@ -14,6 +14,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABCondition;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABLocalStoreKeys;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.projectile.CAbilityCollisionProjectileListener;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.projectile.CProjectile;
 
 public class ABCollisionProjectileListener implements CAbilityCollisionProjectileListener {
 	
@@ -39,20 +40,24 @@ public class ABCollisionProjectileListener implements CAbilityCollisionProjectil
 	}
 
 	@Override
-	public void onLaunch(CSimulation game, AbilityTarget target) {
+	public void onLaunch(CSimulation game, CProjectile projectile, AbilityTarget target) {
 		if (onLaunch != null) {
+			localStore.put(ABLocalStoreKeys.THISPROJECTILE+castId, projectile);
 			for (ABAction action : onLaunch) {
 				action.runAction(game, caster, localStore, castId);
 			}
+			localStore.remove(ABLocalStoreKeys.THISPROJECTILE+castId);
 		}
 	}
 
 	@Override
-	public void onPreHits(CSimulation game, AbilityPointTarget loc) {
+	public void onPreHits(CSimulation game, CProjectile projectile, AbilityPointTarget loc) {
 		if (onPreHits != null) {
+			localStore.put(ABLocalStoreKeys.THISPROJECTILE+castId, projectile);
 			for (ABAction action : onPreHits) {
 				action.runAction(game, caster, localStore, castId);
 			}
+			localStore.remove(ABLocalStoreKeys.THISPROJECTILE+castId);
 		}
 	}
 
@@ -65,7 +70,7 @@ public class ABCollisionProjectileListener implements CAbilityCollisionProjectil
 			localStore.put(ABLocalStoreKeys.PROJECTILEHITUNIT+castId, targetUnit);
 			localStore.put(ABLocalStoreKeys.PROJECTILEHITDEST+castId, targetDest);
 			for (ABCondition condition : canHitTarget) {
-				result = result && condition.evaluate(game, caster, localStore, castId);
+				result = result && condition.callback(game, caster, localStore, castId);
 			}
 			localStore.remove(ABLocalStoreKeys.PROJECTILEHITUNIT+castId);
 			localStore.remove(ABLocalStoreKeys.PROJECTILEHITDEST+castId);
@@ -74,10 +79,11 @@ public class ABCollisionProjectileListener implements CAbilityCollisionProjectil
 	}
 
 	@Override
-	public void onHit(CSimulation game, AbilityTarget target) {
+	public void onHit(CSimulation game, CProjectile projectile, AbilityTarget target) {
 		if (onHit != null) {
 			CUnit targetUnit = target.visit(AbilityTargetVisitor.UNIT);
 			CDestructable targetDest = target.visit(AbilityTargetVisitor.DESTRUCTABLE);
+			localStore.put(ABLocalStoreKeys.THISPROJECTILE+castId, projectile);
 			localStore.put(ABLocalStoreKeys.PROJECTILEHITUNIT+castId, targetUnit);
 			localStore.put(ABLocalStoreKeys.PROJECTILEHITDEST+castId, targetDest);
 			for (ABAction action : onHit) {
@@ -85,6 +91,7 @@ public class ABCollisionProjectileListener implements CAbilityCollisionProjectil
 			}
 			localStore.remove(ABLocalStoreKeys.PROJECTILEHITUNIT+castId);
 			localStore.remove(ABLocalStoreKeys.PROJECTILEHITDEST+castId);
+			localStore.remove(ABLocalStoreKeys.THISPROJECTILE+castId);
 		}
 	}
 

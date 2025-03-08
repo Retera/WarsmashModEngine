@@ -6,27 +6,29 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 
 public abstract class ABGenericTimedBuff extends ABBuff {
-	private boolean showTimedLifeBar;
 	private final float duration;
 	private int currentTick = 0;
 	private int expireTick;
-	
-	public ABGenericTimedBuff(int handleId, War3ID alias, float duration, boolean showTimedLifeBar) {
-		super(handleId, alias, alias);
-		this.showTimedLifeBar = showTimedLifeBar;
-		this.duration = duration;
-	}
 
-	@Override
-	public boolean isTimedLifeBar() {
-		return showTimedLifeBar;
+	public ABGenericTimedBuff(int handleId, War3ID alias, float duration, boolean showTimedLifeBar, boolean leveled,
+			boolean positive, boolean dispellable) {
+		super(handleId, alias, alias);
+		this.setTimedLifeBar(showTimedLifeBar);
+		this.duration = duration;
+		this.setLeveled(leveled);
+		this.setPositive(positive);
+		this.setDispellable(dispellable);
 	}
 
 	@Override
 	public void onAdd(CSimulation game, CUnit unit) {
 		this.onBuffAdd(game, unit);
-		final int durationTicks = (int) (this.duration / WarsmashConstants.SIMULATION_STEP_TIME);
-		expireTick = durationTicks;
+		if (this.duration == 0) {
+			expireTick = Integer.MAX_VALUE;
+		} else {
+			final int durationTicks = (int) (this.duration / WarsmashConstants.SIMULATION_STEP_TIME);
+			expireTick = durationTicks;
+		}
 	}
 
 	protected abstract void onBuffAdd(CSimulation game, CUnit unit);
@@ -35,7 +37,7 @@ public abstract class ABGenericTimedBuff extends ABBuff {
 	public void onRemove(CSimulation game, CUnit unit) {
 		this.onBuffRemove(game, unit);
 	}
-	
+
 	protected abstract void onBuffRemove(CSimulation game, CUnit unit);
 
 	protected abstract void onBuffExpire(CSimulation game, CUnit unit);
@@ -64,7 +66,7 @@ public abstract class ABGenericTimedBuff extends ABBuff {
 	public void onDeath(final CSimulation game, final CUnit cUnit) {
 		cUnit.remove(game, this);
 	}
-	
+
 	public void updateExpiration(final CSimulation game, final CUnit unit) {
 		final int durationTicks = (int) (this.duration / WarsmashConstants.SIMULATION_STEP_TIME);
 		expireTick = game.getGameTurnTick() + durationTicks;

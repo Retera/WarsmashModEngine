@@ -11,7 +11,7 @@ import com.etheller.warsmash.units.DataTable;
 
 public class YseraFrame extends JFrame {
 	public YseraFrame(final DataTable warsmashIni) {
-		super("Warsmash Model Editor");
+		super("Warsmash Model Viewer");
 		setDefaultCloseOperation(DISPOSE_ON_CLOSE);
 		final WarsmashPreviewApplication warsmashPreviewApplication = new WarsmashPreviewApplication(warsmashIni);
 		final YseraPanel contentPane = new YseraPanel(warsmashPreviewApplication);

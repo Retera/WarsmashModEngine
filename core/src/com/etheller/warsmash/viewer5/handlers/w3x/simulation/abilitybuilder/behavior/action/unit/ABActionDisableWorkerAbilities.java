@@ -2,6 +2,7 @@ package com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.beh
 
 import java.util.Map;
 
+import com.etheller.warsmash.parsers.jass.JassTextGenerator;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbility;
@@ -18,9 +19,9 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.harvest.C
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.harvest.CAbilityHarvest;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.harvest.CAbilityWispHarvest;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.unitcallbacks.ABUnitCallback;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABAction;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABSingleAction;
 
-public class ABActionDisableWorkerAbilities implements ABAction {
+public class ABActionDisableWorkerAbilities implements ABSingleAction {
 
 	private ABUnitCallback unit;
 
@@ -28,22 +29,35 @@ public class ABActionDisableWorkerAbilities implements ABAction {
 	@Override
 	public void runAction(CSimulation game, CUnit caster, Map<String, Object> localStore, final int castId) {
 		CUnit targetUnit = caster;
-		if (unit != null) {
-			targetUnit = unit.callback(game, caster, localStore, castId);
+		if (this.unit != null) {
+			targetUnit = this.unit.callback(game, caster, localStore, castId);
 		}
 
-		Class[] workerAbils = { CAbilityAcolyteHarvest.class, CAbilityHarvest.class, CAbilityWispHarvest.class,
+		final Class[] workerAbils = { CAbilityAcolyteHarvest.class, CAbilityHarvest.class, CAbilityWispHarvest.class,
 				CAbilityHumanBuild.class, CAbilityHumanRepair.class, CAbilityNagaBuild.class,
 				CAbilityNeutralBuild.class, CAbilityNightElfBuild.class, CAbilityOrcBuild.class, CAbilityRepair.class,
 				CAbilityUndeadBuild.class };
-		for (Class type : workerAbils) {
-			CAbility abil = targetUnit.getFirstAbilityOfType(type);
+		for (final Class type : workerAbils) {
+			final CAbility abil = targetUnit.getFirstAbilityOfType(type);
 			if (abil != null) {
 				abil.setDisabled(true, CAbilityDisableType.TRANSFORMATION);
 				abil.setIconShowing(false);
 				targetUnit.checkDisabledAbilities(game, true);
 			}
 		}
+	}
+
+	@Override
+	public String generateJassEquivalent(JassTextGenerator jassTextGenerator) {
+		String casterExpression;
+		if (this.unit != null) {
+			casterExpression = this.unit.generateJassEquivalent(jassTextGenerator);
+		}
+		else {
+			casterExpression = jassTextGenerator.getCaster();
+		}
+
+		return "DisableWorkerAbilitiesAU(" + casterExpression + ", true)";
 	}
 
 }

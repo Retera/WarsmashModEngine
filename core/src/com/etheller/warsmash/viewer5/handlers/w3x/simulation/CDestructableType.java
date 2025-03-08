@@ -16,9 +16,14 @@ public class CDestructableType {
 	private final BufferedImage pathingPixelMap;
 	private final BufferedImage pathingDeathPixelMap;
 
+	private final int goldRepairCost;
+	private final int lumberRepairCost;
+	private final int repairTime;
+
 	public CDestructableType(final String name, final float maxLife, final EnumSet<CTargetType> targetedAs,
-			final String armorType, final int buildTime, final float occlusionHeight,
-			final BufferedImage pathingPixelMap, final BufferedImage pathingDeathPixelMap) {
+			final String armorType, final int buildTime, final int goldRepairCost, final int lumberRepairCost,
+			final int repairTime, final float occlusionHeight, final BufferedImage pathingPixelMap,
+			final BufferedImage pathingDeathPixelMap) {
 		this.name = name;
 		this.maxLife = maxLife;
 		this.targetedAs = targetedAs;
@@ -27,6 +32,9 @@ public class CDestructableType {
 		this.occlusionHeight = occlusionHeight;
 		this.pathingPixelMap = pathingPixelMap;
 		this.pathingDeathPixelMap = pathingDeathPixelMap;
+		this.goldRepairCost = goldRepairCost;
+		this.lumberRepairCost = lumberRepairCost;
+		this.repairTime = repairTime;
 	}
 
 	public String getName() {
@@ -47,6 +55,18 @@ public class CDestructableType {
 
 	public int getBuildTime() {
 		return this.buildTime;
+	}
+
+	public int getGoldRepairCost() {
+		return goldRepairCost;
+	}
+
+	public int getLumberRepairCost() {
+		return lumberRepairCost;
+	}
+
+	public int getRepairTime() {
+		return repairTime;
 	}
 
 	public float getOcclusionHeight() {

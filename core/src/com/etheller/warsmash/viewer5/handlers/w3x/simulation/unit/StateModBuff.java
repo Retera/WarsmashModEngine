@@ -3,9 +3,9 @@ package com.etheller.warsmash.viewer5.handlers.w3x.simulation.unit;
 public class StateModBuff {
 	
 	private StateModBuffType buffType;
-	private float value;
+	private long value;
 	
-	public StateModBuff(StateModBuffType buffType, float value) {
+	public StateModBuff(StateModBuffType buffType, long value) {
 		super();
 		this.buffType = buffType;
 		this.value = value;
@@ -17,10 +17,10 @@ public class StateModBuff {
 	public void setBuffType(StateModBuffType buffType) {
 		this.buffType = buffType;
 	}
-	public float getValue() {
+	public long getValue() {
 		return value;
 	}
-	public void setValue(float value) {
+	public void setValue(long value) {
 		this.value = value;
 	}
 }

@@ -12,13 +12,20 @@ public class COrderTargetWidget implements COrder {
 	private final int orderId;
 	private final int targetHandleId;
 	private final boolean queued;
+	private boolean autoOrder;
 
 	public COrderTargetWidget(final int abilityHandleId, final int orderId, final int targetHandleId,
 			final boolean queued) {
+		this(abilityHandleId, orderId, targetHandleId, queued, false);
+	}
+
+	public COrderTargetWidget(final int abilityHandleId, final int orderId, final int targetHandleId,
+			final boolean queued, final boolean autoOrder) {
 		this.abilityHandleId = abilityHandleId;
 		this.orderId = orderId;
 		this.targetHandleId = targetHandleId;
 		this.queued = queued;
+		this.autoOrder = autoOrder;
 	}
 
 	@Override
@@ -48,14 +55,14 @@ public class COrderTargetWidget implements COrder {
 			game.getCommandErrorListener().showInterfaceError(caster.getPlayerIndex(), "NOTEXTERN: No such ability");
 			return caster.pollNextOrderBehavior(game);
 		}
-		ability.checkCanUse(game, caster, this.orderId, abilityActivationReceiver.reset());
+		ability.checkCanUse(game, caster, this.orderId, this.autoOrder, abilityActivationReceiver.reset());
 		if (abilityActivationReceiver.isUseOk()) {
 			final CWidget target = game.getWidget(this.targetHandleId);
 			final ExternStringMsgTargetCheckReceiver<CWidget> targetReceiver = (ExternStringMsgTargetCheckReceiver<CWidget>) targetCheckReceiver;
-			ability.checkCanTarget(game, caster, this.orderId, target, targetReceiver.reset());
+			ability.checkCanTarget(game, caster, this.orderId, this.autoOrder, target, targetReceiver.reset());
 			if (targetReceiver.getTarget() != null) {
 				caster.fireOrderEvents(game, this);
-				return ability.begin(game, caster, this.orderId, targetReceiver.getTarget());
+				return ability.begin(game, caster, this.orderId, this.autoOrder, targetReceiver.getTarget());
 			}
 			else {
 				game.getCommandErrorListener().showInterfaceError(caster.getPlayerIndex(), targetReceiver.getExternStringKey());

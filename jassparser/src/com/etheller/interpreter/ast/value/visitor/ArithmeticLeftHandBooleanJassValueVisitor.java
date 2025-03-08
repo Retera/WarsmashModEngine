@@ -4,12 +4,15 @@ import com.etheller.interpreter.ast.expression.ArithmeticSign;
 import com.etheller.interpreter.ast.value.ArrayJassValue;
 import com.etheller.interpreter.ast.value.BooleanJassValue;
 import com.etheller.interpreter.ast.value.CodeJassValue;
+import com.etheller.interpreter.ast.value.DummyJassValue;
 import com.etheller.interpreter.ast.value.HandleJassValue;
 import com.etheller.interpreter.ast.value.IntegerJassValue;
 import com.etheller.interpreter.ast.value.JassValue;
 import com.etheller.interpreter.ast.value.JassValueVisitor;
 import com.etheller.interpreter.ast.value.RealJassValue;
+import com.etheller.interpreter.ast.value.StaticStructTypeJassValue;
 import com.etheller.interpreter.ast.value.StringJassValue;
+import com.etheller.interpreter.ast.value.StructJassValue;
 
 public class ArithmeticLeftHandBooleanJassValueVisitor implements JassValueVisitor<JassValue> {
 	public static final ArithmeticLeftHandBooleanJassValueVisitor INSTANCE = new ArithmeticLeftHandBooleanJassValueVisitor();
@@ -61,4 +64,18 @@ public class ArithmeticLeftHandBooleanJassValueVisitor implements JassValueVisit
 		throw new UnsupportedOperationException("Cannot perform arithmetic on handle");
 	}
 
+	@Override
+	public JassValue accept(final DummyJassValue value) {
+		return value;
+	}
+
+	@Override
+	public JassValue accept(final StructJassValue value) {
+		throw new UnsupportedOperationException("Cannot perform arithmetic on struct");
+	}
+
+	@Override
+	public JassValue accept(final StaticStructTypeJassValue value) {
+		throw new UnsupportedOperationException("Cannot perform arithmetic on struct type");
+	}
 }

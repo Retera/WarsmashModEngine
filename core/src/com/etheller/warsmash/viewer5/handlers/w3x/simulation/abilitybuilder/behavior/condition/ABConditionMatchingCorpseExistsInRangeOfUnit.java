@@ -13,7 +13,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABLocalStoreKeys;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.iterstructs.UnitAndRange;
 
-public class ABConditionMatchingCorpseExistsInRangeOfUnit implements ABCondition {
+public class ABConditionMatchingCorpseExistsInRangeOfUnit extends ABCondition {
 	private static final Rectangle recycleRect = new Rectangle();
 
 	private ABUnitCallback originUnit;
@@ -21,7 +21,7 @@ public class ABConditionMatchingCorpseExistsInRangeOfUnit implements ABCondition
 	private List<ABCondition> conditions;
 
 	@Override
-	public boolean evaluate(CSimulation game, CUnit caster, Map<String, Object> localStore, final int castId) {
+	public Boolean callback(CSimulation game, CUnit caster, Map<String, Object> localStore, final int castId) {
 		CUnit originUnitTarget = originUnit.callback(game, caster, localStore, castId);
 		Float rangeVal = range.callback(game, caster, localStore, castId);
 		
@@ -38,7 +38,7 @@ public class ABConditionMatchingCorpseExistsInRangeOfUnit implements ABCondition
 							boolean result = true;
 							localStore.put(ABLocalStoreKeys.MATCHINGUNIT+castId, enumUnit);
 							for (ABCondition condition : conditions) {
-								result = result && condition.evaluate(game, caster, localStore, castId);
+								result = result && condition.callback(game, caster, localStore, castId);
 							}
 							localStore.remove(ABLocalStoreKeys.MATCHINGUNIT+castId);
 							if (result) {

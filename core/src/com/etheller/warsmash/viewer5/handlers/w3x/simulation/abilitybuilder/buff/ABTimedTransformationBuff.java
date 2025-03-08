@@ -19,6 +19,7 @@ public class ABTimedTransformationBuff extends ABGenericTimedBuff {
 	private OnTransformationActions actions;
 	private AbilityBuilderActiveAbility abil;
 	private CUnitType targetType;
+	private boolean keepRatios;
 	private boolean addAlternateTagAfter;
 	private boolean perm;
 	private float dur;
@@ -30,16 +31,18 @@ public class ABTimedTransformationBuff extends ABGenericTimedBuff {
 	private boolean imTakeOff;
 	private boolean instantTransformation;
 
-	public ABTimedTransformationBuff(int handleId, Map<String, Object> localStore, OnTransformationActions actions, War3ID alias, float duration, AbilityBuilderActiveAbility ability,
-			CUnitType newType, boolean addAlternateTagAfter, boolean permanent, float transformationDuration,
+	public ABTimedTransformationBuff(int handleId, Map<String, Object> localStore, OnTransformationActions actions,
+			War3ID alias, float duration, AbilityBuilderActiveAbility ability, CUnitType newType,
+			final boolean keepRatios, boolean addAlternateTagAfter, boolean permanent, float transformationDuration,
 			float transformationTime, float landingDelay, float altitudeAdjustmentDelay,
 			float altitudeAdjustmentDuration, boolean immediateLanding, boolean immediateTakeoff) {
-		super(handleId, alias, duration, true);
+		super(handleId, alias, duration, true, false, true, false);
 		this.setIconShowing(false);
 		this.localStore = localStore;
 		this.actions = actions;
 		this.abil = ability;
 		this.targetType = newType;
+		this.keepRatios = keepRatios;
 		this.addAlternateTagAfter = addAlternateTagAfter;
 		this.perm = permanent;
 		this.dur = transformationDuration;
@@ -52,9 +55,10 @@ public class ABTimedTransformationBuff extends ABGenericTimedBuff {
 		this.instantTransformation = false;
 	}
 
-	public ABTimedTransformationBuff(int handleId, Map<String, Object> localStore, OnTransformationActions actions, War3ID alias, float duration, AbilityBuilderActiveAbility ability, 
-			CUnitType newType, boolean addAlternateTagAfter, boolean permanent, float transformationDuration) {
-		super(handleId, alias, duration, true);
+	public ABTimedTransformationBuff(int handleId, Map<String, Object> localStore, OnTransformationActions actions,
+			War3ID alias, float duration, AbilityBuilderActiveAbility ability, CUnitType newType,
+			boolean addAlternateTagAfter, boolean permanent, float transformationDuration) {
+		super(handleId, alias, duration, true, false, true, false);
 		this.setIconShowing(false);
 		this.localStore = localStore;
 		this.actions = actions;
@@ -75,6 +79,15 @@ public class ABTimedTransformationBuff extends ABGenericTimedBuff {
 	}
 
 	@Override
+	public void onDeath(CSimulation game, CUnit unit) {
+		if (unit.isHero()) {
+			TransformationHandler.instantTransformation(game, localStore, unit, targetType, keepRatios, actions, abil,
+					addAlternateTagAfter, perm, true);
+			unit.remove(game, this);
+		}
+	}
+
+	@Override
 	protected void onBuffExpire(CSimulation game, CUnit unit) {
 		if (abil.isToggleOn()) {
 			abil.deactivate(game, unit);
@@ -82,17 +95,20 @@ public class ABTimedTransformationBuff extends ABGenericTimedBuff {
 		if (instantTransformation) {
 			if (dur > 0) {
 				TransformationHandler.playMorphAnimation(unit, addAlternateTagAfter);
-				new DelayInstantTransformationTimer(game, localStore, unit, actions, addAlternateTagAfter, transTime, null, targetType, abil,
-						null, transTime, 0).start(game);
+				new DelayInstantTransformationTimer(game, localStore, unit, actions, addAlternateTagAfter, transTime,
+						null, targetType, keepRatios, abil, null, transTime, 0).start(game);
 			} else {
-				TransformationHandler.instantTransformation(game, localStore, unit, targetType, actions, abil, addAlternateTagAfter, perm, true);
+				TransformationHandler.instantTransformation(game, localStore, unit, targetType, keepRatios, actions,
+						abil, addAlternateTagAfter, perm, true);
 			}
 		} else {
-			unit.order(game, new COrderStartTransformation(
-					new CBehaviorFinishTransformation(localStore, unit, abil, targetType, actions, addAlternateTagAfter,
+			unit.order(game,
+					new COrderStartTransformation(new CBehaviorFinishTransformation(localStore, unit, abil, targetType,
+							keepRatios, actions, addAlternateTagAfter,
 							addAlternateTagAfter ? abil.getBaseOrderId() : abil.getOffOrderId(), perm, dur, transTime,
-							landTime, atlAdDelay, altAdTime, imLand, imTakeOff, this.getAlias(), targetType, instantTransformation),
-					abil.getBaseOrderId()), false);
+							landTime, atlAdDelay, altAdTime, imLand, imTakeOff, this.getAlias(), targetType,
+							instantTransformation), abil.getBaseOrderId()),
+					false);
 		}
 	}
 

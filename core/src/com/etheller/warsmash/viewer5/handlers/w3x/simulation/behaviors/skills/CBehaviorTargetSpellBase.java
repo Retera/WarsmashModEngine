@@ -9,6 +9,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTargetStillAliveAndTargetableVisitor;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CAbstractRangedBehavior;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehavior;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehaviorCategory;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.CommandStringErrorKeys;
 
 public class CBehaviorTargetSpellBase extends CAbstractRangedBehavior {
@@ -24,20 +25,18 @@ public class CBehaviorTargetSpellBase extends CAbstractRangedBehavior {
 		this.stillAliveVisitor = new AbilityTargetStillAliveAndTargetableVisitor();
 	}
 
-	public CBehaviorTargetSpellBase reset(final CWidget target) {
-		innerReset(target, false);
+	public CBehavior reset(CSimulation game, final CWidget target) {
 		this.castStartTick = 0;
 		this.doneEffect = false;
 		this.channeling = false;
-		return this;
+		return innerReset(game, target, false);
 	}
 
-	public CBehaviorTargetSpellBase reset(final AbilityPointTarget target) {
-		innerReset(target, false);
+	public CBehavior reset(CSimulation game, final AbilityPointTarget target) {
 		this.castStartTick = 0;
 		this.doneEffect = false;
 		this.channeling = false;
-		return this;
+		return innerReset(game, target, false);
 	}
 
 	@Override
@@ -149,5 +148,10 @@ public class CBehaviorTargetSpellBase extends CAbstractRangedBehavior {
 	@Override
 	public boolean interruptable() {
 		return true;
+	}
+
+	@Override
+	public CBehaviorCategory getBehaviorCategory() {
+		return CBehaviorCategory.SPELL;
 	}
 }

@@ -22,7 +22,12 @@ public class MdxEditorMain {
 		catch (final Exception exc) {
 		}
 
-		final DataTable warsmashIni = DesktopLauncher.loadWarsmashIni();
+		String iniPath = null;
+		if (args.length > 0) {
+			iniPath = args[0];
+		}
+
+		final DataTable warsmashIni = DesktopLauncher.loadWarsmashIni(iniPath);
 
 		SwingUtilities.invokeLater(new Runnable() {
 			@Override

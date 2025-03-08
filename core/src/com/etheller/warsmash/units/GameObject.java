@@ -8,6 +8,8 @@ import com.etheller.warsmash.util.War3ID;
 
 public interface GameObject {
 
+	public void setField(String field, String value);
+
 	public void setField(String slk, String field, String value);
 
 	public void setField(String slk, String field, String value, int index);
@@ -77,6 +79,9 @@ public interface GameObject {
 	public Set<String> keySet();
 
 	GameObject EMPTY = new GameObject() {
+		@Override
+		public void setField(final String field, final String value) {
+		}
 
 		@Override
 		public void setField(final String slk, final String field, final String value, final int index) {

@@ -14,10 +14,16 @@ public class ABGenericAuraBuff extends ABBuff {
 	
 	private CUnit caster;
 
-	public ABGenericAuraBuff(int handleId, War3ID alias, CUnit caster) {
+	public ABGenericAuraBuff(int handleId, War3ID alias, CUnit caster, boolean leveled,
+			boolean positive) {
 		super(handleId, alias, alias);
 		this.caster = caster;
 		this.fx = new HashMap<>();
+		this.setHero(caster.isHero());
+		this.setLeveled(leveled);
+		this.setPositive(positive);
+		this.setAura(true);
+		this.setLevel(null, null, 1);
 	}
 
 	@Override
@@ -44,11 +50,6 @@ public class ABGenericAuraBuff extends ABBuff {
 	@Override
 	public float getDurationMax() {
 		return 0;
-	}
-
-	@Override
-	public boolean isTimedLifeBar() {
-		return false;
 	}
 
 	@Override

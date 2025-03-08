@@ -1,26 +1,25 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.projectile;
 
+import com.etheller.interpreter.ast.util.CExtensibleHandleAbstract;
 import com.etheller.warsmash.util.WarsmashConstants;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTarget;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CWeaponType;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.CUnitAttackListener;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.CUnitAttackMissile;
 
-public abstract class CProjectile implements CEffect {
+public abstract class CProjectile extends CExtensibleHandleAbstract implements CEffect {
 	protected float x;
 	protected float y;
-	private final float initialTargetX;
-	private final float initialTargetY;
+	private float initialTargetX;
+	private float initialTargetY;
 	private final float speed;
-	private final AbilityTarget target;
-	private boolean homingEnabled;
+	private AbilityTarget target;
+	private final boolean homingEnabled;
 	protected boolean done;
 	private final CUnit source;
+	private boolean reflected = false;
 
-	public CProjectile(final float x, final float y, final float speed, final AbilityTarget target, boolean homingEnabled,
-			final CUnit source) {
+	public CProjectile(final float x, final float y, final float speed, final AbilityTarget target,
+			final boolean homingEnabled, final CUnit source) {
 		this.x = x;
 		this.y = y;
 		this.speed = speed;
@@ -57,12 +56,12 @@ public abstract class CProjectile implements CEffect {
 		this.y = this.y + dy;
 
 		if (done && !this.done) {
-			this.onHitTarget(game);
 			this.done = true;
+			this.onHitTarget(game);
 		}
 		return this.done;
 	}
-	
+
 	protected abstract void onHitTarget(CSimulation game);
 
 	public final float getX() {
@@ -76,21 +75,31 @@ public abstract class CProjectile implements CEffect {
 	public final float getSpeed() {
 		return this.speed;
 	}
-	
+
 	public final CUnit getSource() {
-		return source;
+		return this.source;
 	}
 
 	public final AbilityTarget getTarget() {
 		return this.target;
 	}
 
+	public void setTarget(final AbilityTarget target) {
+		this.target = target;
+		this.initialTargetX = target.getX();
+		this.initialTargetY = target.getY();
+	}
+
 	public final boolean isDone() {
 		return this.done;
 	}
 
+	public void setDone(final boolean done) {
+		this.done = done;
+	}
+
 	public final float getTargetX() {
-		if (homingEnabled) {
+		if (this.homingEnabled) {
 			return this.target.getX();
 		}
 		else {
@@ -99,11 +108,19 @@ public abstract class CProjectile implements CEffect {
 	}
 
 	public final float getTargetY() {
-		if (homingEnabled) {
+		if (this.homingEnabled) {
 			return this.target.getY();
 		}
 		else {
 			return this.initialTargetY;
 		}
+	}
+
+	public boolean isReflected() {
+		return this.reflected;
+	}
+
+	public void setReflected(final boolean reflected) {
+		this.reflected = reflected;
 	}
 }

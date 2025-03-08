@@ -4,13 +4,16 @@ import com.etheller.interpreter.ast.expression.ArithmeticSign;
 import com.etheller.interpreter.ast.value.ArrayJassValue;
 import com.etheller.interpreter.ast.value.BooleanJassValue;
 import com.etheller.interpreter.ast.value.CodeJassValue;
+import com.etheller.interpreter.ast.value.DummyJassValue;
 import com.etheller.interpreter.ast.value.HandleJassType;
 import com.etheller.interpreter.ast.value.HandleJassValue;
 import com.etheller.interpreter.ast.value.IntegerJassValue;
 import com.etheller.interpreter.ast.value.JassValue;
 import com.etheller.interpreter.ast.value.JassValueVisitor;
 import com.etheller.interpreter.ast.value.RealJassValue;
+import com.etheller.interpreter.ast.value.StaticStructTypeJassValue;
 import com.etheller.interpreter.ast.value.StringJassValue;
+import com.etheller.interpreter.ast.value.StructJassValue;
 
 public class ArithmeticLeftHandNullJassValueVisitor implements JassValueVisitor<JassValue> {
 	public static final ArithmeticLeftHandNullJassValueVisitor INSTANCE = new ArithmeticLeftHandNullJassValueVisitor();
@@ -59,6 +62,21 @@ public class ArithmeticLeftHandNullJassValueVisitor implements JassValueVisitor<
 		}
 		// TODO would be nice not to have to call getNullValue here...
 		return this.sign.apply(rightHandType.getNullValue(), value);
+	}
+
+	@Override
+	public JassValue accept(final DummyJassValue value) {
+		return value;
+	}
+
+	@Override
+	public JassValue accept(final StructJassValue value) {
+		throw new UnsupportedOperationException("Cannot perform arithmetic on struct");
+	}
+
+	@Override
+	public JassValue accept(final StaticStructTypeJassValue value) {
+		throw new UnsupportedOperationException("Cannot perform arithmetic on struct type");
 	}
 
 }

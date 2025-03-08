@@ -19,7 +19,7 @@ allprojects {
     version = '1.0'
     ext {
         appName = "warsmash"
-        gdxVersion = '1.9.8'
+        gdxVersion = '1.12.1'
         antlrVersion = '4.7'
         xstreamVersion = '1.4.19'
     }

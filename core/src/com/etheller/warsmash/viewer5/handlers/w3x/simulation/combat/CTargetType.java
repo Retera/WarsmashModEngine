@@ -3,14 +3,47 @@ package com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat;
 import java.util.EnumSet;
 import java.util.List;
 
-public enum CTargetType {
-	AIR, ALIVE, ALLIES, DEAD, DEBRIS, ENEMIES, GROUND, HERO, INVULNERABLE, ITEM, MECHANICAL, NEUTRAL, NONE, NONHERO,
-	NONSAPPER, NOTSELF, ORGANIC, PLAYERUNITS, SAPPER, SELF, STRUCTURE, TERRAIN, TREE, VULNERABLE, WALL, WARD, ANCIENT,
-	NONANCIENT, FRIEND, BRIDGE, DECORATION,
+import com.etheller.interpreter.ast.util.CHandle;
+
+public enum CTargetType implements CHandle {
+	AIR,
+	ALIVE,
+	ALLIES,
+	DEAD,
+	DEBRIS,
+	ENEMIES,
+	GROUND,
+	HERO,
+	INVULNERABLE,
+	ITEM,
+	MECHANICAL,
+	NEUTRAL,
+	NONE,
+	NONHERO,
+	NONSAPPER,
+	NOTSELF,
+	ORGANIC,
+	PLAYERUNITS,
+	SAPPER,
+	SELF,
+	STRUCTURE,
+	TERRAIN,
+	TREE,
+	VULNERABLE,
+	WALL,
+	WARD,
+	ANCIENT,
+	NONANCIENT,
+	FRIEND,
+	BRIDGE,
+	DECORATION,
 	// BELOW: internal values:
-	NON_MAGIC_IMMUNE, NON_ETHEREAL
+	NON_MAGIC_IMMUNE,
+	NON_ETHEREAL
 
 	;
+
+	public final static CTargetType[] VALUES = values();
 
 	public static CTargetType parseTargetType(final String targetTypeString) {
 		if (targetTypeString == null) {
@@ -123,5 +156,10 @@ public enum CTargetType {
 			}
 		}
 		return types;
+	}
+
+	@Override
+	public int getHandleId() {
+		return ordinal();
 	}
 }

@@ -3,6 +3,7 @@ package com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.beh
 import java.util.List;
 import java.util.Map;
 
+import com.etheller.warsmash.parsers.jass.JassTextGenerator;
 import com.etheller.warsmash.units.GameObject;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
@@ -17,9 +18,11 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.beha
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABAction;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABCondition;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABLocalStoreKeys;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABSingleAction;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.projectile.ABCollisionProjectileListener;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.projectile.CProjectile;
 
-public class ABActionCreateUnitTargetedCollisionProjectile implements ABAction {
+public class ABActionCreateUnitTargetedCollisionProjectile implements ABSingleAction {
 
 	private ABUnitCallback source;
 	private ABLocationCallback sourceLoc;
@@ -32,7 +35,7 @@ public class ABActionCreateUnitTargetedCollisionProjectile implements ABAction {
 	private List<ABAction> onPreHits;
 	private List<ABCondition> canHitTarget;
 	private List<ABAction> onHit;
-	
+
 	private ABIntegerCallback maxHits;
 	private ABIntegerCallback hitsPerTarget;
 	private ABFloatCallback radius;
@@ -41,6 +44,7 @@ public class ABActionCreateUnitTargetedCollisionProjectile implements ABAction {
 	private ABFloatCallback collisionInterval;
 	private ABBooleanCallback provideCounts;
 
+	@Override
 	public void runAction(final CSimulation game, final CUnit caster, final Map<String, Object> localStore,
 			final int castId) {
 		float theSpeed = 0;
@@ -51,60 +55,166 @@ public class ABActionCreateUnitTargetedCollisionProjectile implements ABAction {
 		float theEndingRadius = 0;
 		float theCollisionInterval = 0.05f;
 		boolean isProvideCounts = false;
-		CUnit theSource = source.callback(game, caster, localStore, castId);
+		final CUnit theSource = this.source.callback(game, caster, localStore, castId);
 		AbilityTarget sourceLocation = theSource;
 
-		if (sourceLoc != null) {
-			sourceLocation = sourceLoc.callback(game, caster, localStore, castId);
+		if (this.sourceLoc != null) {
+			sourceLocation = this.sourceLoc.callback(game, caster, localStore, castId);
 		}
-		if (maxHits != null) {
-			theMaxHits = maxHits.callback(game, caster, localStore, castId);
+		if (this.maxHits != null) {
+			theMaxHits = this.maxHits.callback(game, caster, localStore, castId);
 		}
-		if (hitsPerTarget != null) {
-			theHitsPerTarget = hitsPerTarget.callback(game, caster, localStore, castId);
+		if (this.hitsPerTarget != null) {
+			theHitsPerTarget = this.hitsPerTarget.callback(game, caster, localStore, castId);
 		}
-		if (radius != null ) { 
-			float rad = radius.callback(game, caster, localStore, castId);
+		if (this.radius != null) {
+			final float rad = this.radius.callback(game, caster, localStore, castId);
 			theStartingRadius = rad;
 			theEndingRadius = rad;
-		} else {
-			if (endingRadius != null) {
-				theStartingRadius = startingRadius.callback(game, caster, localStore, castId);
-				theEndingRadius = endingRadius.callback(game, caster, localStore, castId);
-			} else {
-				float rad = startingRadius.callback(game, caster, localStore, castId);
+		}
+		else {
+			if (this.endingRadius != null) {
+				theStartingRadius = this.startingRadius.callback(game, caster, localStore, castId);
+				theEndingRadius = this.endingRadius.callback(game, caster, localStore, castId);
+			}
+			else {
+				final float rad = this.startingRadius.callback(game, caster, localStore, castId);
 				theStartingRadius = rad;
 				theEndingRadius = rad;
 			}
 		}
-		if (collisionInterval != null) {
-			theCollisionInterval = collisionInterval.callback(game, caster, localStore, castId);
+		if (this.collisionInterval != null) {
+			theCollisionInterval = this.collisionInterval.callback(game, caster, localStore, castId);
 		}
-		if (provideCounts != null) {
-			isProvideCounts = provideCounts.callback(game, caster, localStore, castId);
+		if (this.provideCounts != null) {
+			isProvideCounts = this.provideCounts.callback(game, caster, localStore, castId);
 		}
-		
 
-		GameObject editorData = (GameObject) localStore.get(ABLocalStoreKeys.ABILITYEDITORDATA);
-		int level = (int) localStore.get(ABLocalStoreKeys.CURRENTLEVEL);
+		final GameObject editorData = (GameObject) localStore.get(ABLocalStoreKeys.ABILITYEDITORDATA);
+		final int level = (int) localStore.get(ABLocalStoreKeys.CURRENTLEVEL);
 
-		if (speed != null) {
-			theSpeed = speed.callback(game, caster, localStore, castId);
-		} else {
+		if (this.speed != null) {
+			theSpeed = this.speed.callback(game, caster, localStore, castId);
+		}
+		else {
 			theSpeed = editorData.getFieldAsFloat(AbilityFields.PROJECTILE_SPEED, 0);
 		}
-		if (homing != null) {
-			isHoming = homing.callback(game, caster, localStore, castId);
-		} else {
+		if (this.homing != null) {
+			isHoming = this.homing.callback(game, caster, localStore, castId);
+		}
+		else {
 			isHoming = editorData.getFieldAsBoolean(AbilityFields.PROJECTILE_HOMING_ENABLED, 0);
 		}
 
-		CUnit theTarget = target.callback(game, caster, localStore, castId);
+		final CUnit theTarget = this.target.callback(game, caster, localStore, castId);
 
-		ABCollisionProjectileListener listener = new ABCollisionProjectileListener(onLaunch, onPreHits, canHitTarget, onHit, caster, localStore, castId);
+		final ABCollisionProjectileListener listener = new ABCollisionProjectileListener(this.onLaunch, this.onPreHits,
+				this.canHitTarget, this.onHit, caster, localStore, castId);
 
-		game.createCollisionProjectile(theSource, id.callback(game, caster, localStore, castId), sourceLocation.getX(),
-				sourceLocation.getY(), (float) theSource.angleTo(theTarget), theSpeed, isHoming, theTarget, theMaxHits,
-				theHitsPerTarget, theStartingRadius, theEndingRadius, theCollisionInterval, listener, isProvideCounts);
+		final CProjectile proj = game.createCollisionProjectile(theSource,
+				this.id.callback(game, caster, localStore, castId), sourceLocation.getX(), sourceLocation.getY(),
+				(float) theSource.angleTo(theTarget), theSpeed, isHoming, theTarget, theMaxHits, theHitsPerTarget,
+				theStartingRadius, theEndingRadius, theCollisionInterval, listener, isProvideCounts);
+
+		localStore.put(ABLocalStoreKeys.LASTCREATEDPROJECTILE + castId, proj);
+	}
+
+	@Override
+	public String generateJassEquivalent(final JassTextGenerator jassTextGenerator) {
+		final String launchFunctionName = jassTextGenerator.createAnonymousFunction(this.onLaunch,
+				"CreateLocationTargetedCollisionProjectileAU_OnLaunch");
+		final String preHitsFunctionName = jassTextGenerator.createAnonymousFunction(this.onPreHits,
+				"CreateLocationTargetedCollisionProjectileAU_OnPreHits");
+		final String canHitTargetFunctionName = jassTextGenerator.createAnonymousBooleanFunction(this.canHitTarget,
+				"CreateLocationTargetedCollisionProjectileAU_CanHitTarget");
+		final String hitFunctionName = jassTextGenerator.createAnonymousFunction(this.onHit,
+				"CreateLocationTargetedCollisionProjectileAU_OnHit");
+
+		final String sourceUnitExpression = this.source.generateJassEquivalent(jassTextGenerator);
+		String sourceLocExpression;
+		if (this.sourceLoc != null) {
+			sourceLocExpression = this.sourceLoc.generateJassEquivalent(jassTextGenerator);
+		}
+		else {
+			sourceLocExpression = "GetUnitLoc(" + sourceUnitExpression + ")";
+		}
+
+		String maxHitsExpression = "0";
+		if (this.maxHits != null) {
+			maxHitsExpression = this.maxHits.generateJassEquivalent(jassTextGenerator);
+		}
+
+		String hitsPerTargetExpression = "1";
+		if (this.hitsPerTarget != null) {
+			hitsPerTargetExpression = this.hitsPerTarget.generateJassEquivalent(jassTextGenerator);
+		}
+
+		String startingRadiusExpression;
+		String endingRadiusExpression;
+		if (this.radius != null) {
+			final String radiusExpression = this.radius.generateJassEquivalent(jassTextGenerator);
+			startingRadiusExpression = radiusExpression;
+			endingRadiusExpression = radiusExpression;
+		}
+		else {
+			if (this.endingRadius != null) {
+				startingRadiusExpression = this.startingRadius.generateJassEquivalent(jassTextGenerator);
+				endingRadiusExpression = this.endingRadius.generateJassEquivalent(jassTextGenerator);
+			}
+			else {
+				final String radiusExpression = this.startingRadius.generateJassEquivalent(jassTextGenerator);
+				startingRadiusExpression = radiusExpression;
+				endingRadiusExpression = radiusExpression;
+			}
+		}
+
+		String collisionIntervalExpression = "0.05";
+		if (this.collisionInterval != null) {
+			collisionIntervalExpression = this.collisionInterval.generateJassEquivalent(jassTextGenerator);
+		}
+
+		String provideCountsExpression = "false";
+		if (this.provideCounts != null) {
+			provideCountsExpression = this.provideCounts.generateJassEquivalent(jassTextGenerator);
+		}
+		if (this.speed != null) {
+			if (this.homing != null) {
+				String homingExpression = "true";
+				if (this.homing != null) {
+					homingExpression = this.homing.generateJassEquivalent(jassTextGenerator);
+				}
+				return "CreateUnitTargetedCollisionProjectileAnySpeedAU(" + jassTextGenerator.getCaster() + ", "
+						+ jassTextGenerator.getTriggerLocalStore() + ", " + jassTextGenerator.getCastId() + ", "
+						+ this.source.generateJassEquivalent(jassTextGenerator) + ", " + sourceLocExpression + ", "
+						+ this.target.generateJassEquivalent(jassTextGenerator) + ", "
+						+ this.id.generateJassEquivalent(jassTextGenerator) + ", "
+						+ this.speed.generateJassEquivalent(jassTextGenerator) + ", " + homingExpression + ", "
+						+ jassTextGenerator.functionPointerByName(launchFunctionName) + ", "
+						+ jassTextGenerator.functionPointerByName(preHitsFunctionName) + ", Condition("
+						+ jassTextGenerator.functionPointerByName(canHitTargetFunctionName) + "), "
+						+ jassTextGenerator.functionPointerByName(hitFunctionName) + ", " + maxHitsExpression + ", "
+						+ hitsPerTargetExpression + ", " + startingRadiusExpression + ", " + endingRadiusExpression
+						+ ", " + collisionIntervalExpression + ", " + provideCountsExpression + ")";
+
+			}
+			else {
+				throw new UnsupportedOperationException();
+			}
+		}
+		else if (this.homing != null) {
+			throw new UnsupportedOperationException();
+		}
+
+		return "CreateUnitTargetedCollisionProjectileAU(" + jassTextGenerator.getCaster() + ", "
+				+ jassTextGenerator.getTriggerLocalStore() + ", " + jassTextGenerator.getCastId() + ", "
+				+ this.source.generateJassEquivalent(jassTextGenerator) + ", " + sourceLocExpression + ", "
+				+ this.target.generateJassEquivalent(jassTextGenerator) + ", "
+				+ this.id.generateJassEquivalent(jassTextGenerator) + ", "
+				+ jassTextGenerator.functionPointerByName(launchFunctionName) + ", "
+				+ jassTextGenerator.functionPointerByName(preHitsFunctionName) + ", Condition("
+				+ jassTextGenerator.functionPointerByName(canHitTargetFunctionName) + "), "
+				+ jassTextGenerator.functionPointerByName(hitFunctionName) + ", " + maxHitsExpression + ", "
+				+ hitsPerTargetExpression + ", " + startingRadiusExpression + ", " + endingRadiusExpression + ", "
+				+ collisionIntervalExpression + ", " + provideCountsExpression + ")";
 	}
 }

@@ -73,7 +73,7 @@ public class CCollisionProjectile extends CProjectile {
 	}
 
 	protected void onHitTarget(CSimulation game, CWidget target) {
-		projectileListener.onHit(game, target);
+		projectileListener.onHit(game, this, target);
 	}
 
 	@Override
@@ -140,7 +140,7 @@ public class CCollisionProjectile extends CProjectile {
 				this.projectileListener.setDestructableTargets(destCount.get());
 			}
 			
-			this.projectileListener.onPreHits(game, loc);
+			this.projectileListener.onPreHits(game, this, loc);
 			
 			
 			game.getWorldCollision().enumDestructablesInRect(recycleRect, new CDestructableEnumFunction() {

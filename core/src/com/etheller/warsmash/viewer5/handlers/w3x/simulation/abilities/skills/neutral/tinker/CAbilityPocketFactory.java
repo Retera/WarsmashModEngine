@@ -12,6 +12,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.definitions.impl.AbilityFields;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.definitions.impl.AbstractCAbilityTypeDefinition;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.projectile.CAbilityProjectileListener;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.projectile.CProjectile;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.OrderIds;
 
 public class CAbilityPocketFactory extends CAbilityPointTargetSpellBase {
@@ -53,12 +54,12 @@ public class CAbilityPocketFactory extends CAbilityPointTargetSpellBase {
 		simulation.createProjectile(caster, getAlias(), caster.getX(), caster.getY(), (float) caster.angleTo(target),
 				projectileSpeed, false, target, new CAbilityProjectileListener() {
 					@Override
-					public void onLaunch(final CSimulation game, final AbilityTarget target) {
+					public void onLaunch(final CSimulation game, CProjectile projectile, final AbilityTarget target) {
 
 					}
 
 					@Override
-					public void onHit(final CSimulation game, final AbilityTarget target) {
+					public void onHit(final CSimulation game, CProjectile projectile, final AbilityTarget target) {
 						final CUnit factoryUnit = simulation.createUnitSimple(CAbilityPocketFactory.this.factoryUnitId,
 								caster.getPlayerIndex(), target.getX(), target.getY(),
 								game.getGameplayConstants().getBuildingAngle());

@@ -10,7 +10,9 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTargetVisitor;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.definitions.impl.AbilityFields;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CAttackType;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CSpellDamageFlags;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.projectile.CAbilityProjectileListener;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.projectile.CProjectile;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.OrderIds;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CDamageType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CEffectType;
@@ -72,16 +74,16 @@ public class CAbilityDeathCoil extends CAbilityTargetSpellBase {
 		simulation.createProjectile(caster, getAlias(), caster.getX(), caster.getY(), (float) caster.angleTo(target),
 				missileSpeed, projectilHomingEnabled, target, new CAbilityProjectileListener() {
 					@Override
-					public void onLaunch(final CSimulation game, final AbilityTarget target) {
+					public void onLaunch(final CSimulation game, CProjectile projectile, final AbilityTarget target) {
 
 					}
 
 					@Override
-					public void onHit(final CSimulation game, final AbilityTarget abilTarget) {
+					public void onHit(final CSimulation game, CProjectile projectile, final AbilityTarget abilTarget) {
 						final CUnit targetUnit = target.visit(AbilityTargetVisitor.UNIT);
 						if (targetUnit != null) {
 							if (!targetUnit.isUnitType(CUnitTypeJass.UNDEAD)) {
-								targetUnit.damage(simulation, caster, false, true, CAttackType.SPELLS, CDamageType.DEATH, null,
+								targetUnit.damage(simulation, caster, DAMAGE_FLAGS, CAttackType.SPELLS, CDamageType.DEATH, null,
 										healAmount * .5f);
 							}
 							else {

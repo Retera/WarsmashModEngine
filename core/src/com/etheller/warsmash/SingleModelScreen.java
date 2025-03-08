@@ -1,7 +1,9 @@
 package com.etheller.warsmash;
 
+import com.etheller.warsmash.viewer5.FogSettings;
+
 public interface SingleModelScreen {
-	void setModel(String path);
+	void setModel(String path, FogSettings fogSettings);
 
 	void alternateModelToBattlenet();
 

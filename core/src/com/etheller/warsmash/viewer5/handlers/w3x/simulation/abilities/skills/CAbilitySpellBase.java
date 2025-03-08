@@ -18,11 +18,13 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.A
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTargetVisitor;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.definitions.impl.AbilityFields;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CSpellDamageFlags;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CTargetType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityActivationReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.CommandStringErrorKeys;
 
 public abstract class CAbilitySpellBase extends AbstractGenericSingleIconNoSmartActiveAbility implements CAbilitySpell {
+	protected static CSpellDamageFlags DAMAGE_FLAGS = new CSpellDamageFlags();
 	private int manaCost;
 	private float castRange;
 	private float cooldown;
@@ -59,11 +61,7 @@ public abstract class CAbilitySpellBase extends AbstractGenericSingleIconNoSmart
 		final EnumSet<AnimationTokens.PrimaryTag> primaryTags = EnumSet.noneOf(AnimationTokens.PrimaryTag.class);
 		this.castingSecondaryTags = EnumSet.noneOf(AnimationTokens.SecondaryTag.class);
 		Sequence.populateTags(primaryTags, this.castingSecondaryTags, animNames);
-		if (primaryTags.isEmpty()) {
-			this.castingPrimaryTag = null;
-		} else {
-			this.castingPrimaryTag = primaryTags.iterator().next();
-		}
+		this.castingPrimaryTag = Sequence.any(primaryTags);
 		if (this.castingSecondaryTags.isEmpty()) {
 			this.castingSecondaryTags = SequenceUtils.SPELL;
 		}
@@ -88,11 +86,11 @@ public abstract class CAbilitySpellBase extends AbstractGenericSingleIconNoSmart
 	}
 
 	public float getDuration() {
-		return duration;
+		return this.duration;
 	}
 
 	public float getHeroDuration() {
-		return heroDuration;
+		return this.heroDuration;
 	}
 
 	public abstract void populateData(GameObject worldEditorAbility, int level);
@@ -136,9 +134,11 @@ public abstract class CAbilitySpellBase extends AbstractGenericSingleIconNoSmart
 			final float cooldownLengthDisplay = unit.getCooldownLengthDisplayTicks(game, getCode())
 					* WarsmashConstants.SIMULATION_STEP_TIME;
 			receiver.cooldownNotYetReady(cooldownRemaining, cooldownLengthDisplay);
-		} else if (unit.getMana() < this.manaCost) {
+		}
+		else if (unit.getMana() < this.manaCost) {
 			receiver.activationCheckFailed(CommandStringErrorKeys.NOT_ENOUGH_MANA);
-		} else {
+		}
+		else {
 			innerCheckCanUseSpell(game, unit, orderId, receiver);
 		}
 	}
@@ -219,7 +219,7 @@ public abstract class CAbilitySpellBase extends AbstractGenericSingleIconNoSmart
 
 	@Override
 	public War3ID getCode() {
-		return code;
+		return this.code;
 	}
 
 	@Override
@@ -230,6 +230,11 @@ public abstract class CAbilitySpellBase extends AbstractGenericSingleIconNoSmart
 	@Override
 	public boolean isPhysical() {
 		return false;
+	}
+
+	@Override
+	public boolean isMagic() {
+		return true;
 	}
 
 	@Override

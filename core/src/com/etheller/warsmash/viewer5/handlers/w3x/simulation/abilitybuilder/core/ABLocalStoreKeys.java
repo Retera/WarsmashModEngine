@@ -15,6 +15,7 @@ public class ABLocalStoreKeys {
 	public static final String ITEM = "_item";
 	public static final String ITEMSLOT = "_itemSlot";
 	public static final String ITERATORCOUNT = "_i";
+	public static final String BREAK = "_break";
 	public static final String BUFFCASTINGUNIT = "_buffCastingUnit";
 	
 	public static final String NEWBEHAVIOR = "_newBehavior";
@@ -27,9 +28,15 @@ public class ABLocalStoreKeys {
 
 	public static final String CANTUSEREASON = "_cantUseReason";
 
-	public static final String TOGGLEDABILITY = "_toggledAbility";
-	public static final String FLEXABILITY = "_flexAbility";
-	public static final String PAIRABILITY = "_pairAbility";
+	public static final String ISAUTOCAST = "_isAutoCast";
+
+	public static final String ISTOGGLEDABILITY = "_toggledAbility";
+	public static final String ISFLEXABILITY = "_flexAbility";
+	public static final String ISPAIRABILITY = "_pairAbility";
+	public static final String ISABILITYLEVELED = "_isAbilityLeveld";
+	public static final String ISABILITYMAGIC = "_isAbilityMagic";
+	public static final String ISABILITYPHYSICAL = "_isAbilityPhysical";
+	
 	
 	// Aura Template
 	public static final String AURAGROUP = "_auraGroup";
@@ -51,19 +58,30 @@ public class ABLocalStoreKeys {
 	public static final String LASTADDEDABILITY = "_lastAddedAbility";
 	public static final String LASTADDEDBUFF = "_lastAddedBuff";
 	public static final String CURRENTLEVEL = "_currentLevel";
+
+	public static final String ENUMBUFF = "_enumBuff";
 	
 	public static final String LASTCREATEDUNITGROUP = "_lastCreatedUnitGroup";
 	public static final String LASTCREATEDUNITQUEUE = "_lastCreatedUnitQueue";
 
 	public static final String LASTCREATEDDESTBUFF = "_lastCreatedDestBuff";
 	
-	//Generic Targetting
+	//Generic Targeting
 	public static final String ATTACKINGUNIT = "_attackingUnit#";
 	public static final String ATTACKEDUNIT = "_attackedUnit#";
 	public static final String ABILITYTARGETEDUNIT = "_abilityTargetedUnit#";
 	public static final String ABILITYTARGETEDDESTRUCTABLE = "_abilityTargetedDestructable#";
 	public static final String ABILITYTARGETEDITEM = "_abilityTargetedItem#";
 	public static final String ABILITYTARGETEDLOCATION = "_abilityTargetedLocation#";
+
+	//Event Targeting
+	public static final String EVENTABILITY = "_eventAbility#";
+	public static final String EVENTABILITYID = "_eventAbilityId#";
+	public static final String EVENTCASTINGUNIT = "_eventCastingUnit#";
+	public static final String EVENTTARGETEDUNIT = "_eventTargetedUnit#";
+	public static final String EVENTTARGETEDDESTRUCTABLE = "_eventTargetedDestructable#";
+	public static final String EVENTTARGETEDITEM = "_eventTargetedItem#";
+	public static final String EVENTTARGETEDLOCATION = "_eventTargetedLocation#";
 	
 	//Generic Attacks
 	public static final String BASEDAMAGEDEALT = "_baseDamageDealt#";
@@ -75,8 +93,12 @@ public class ABLocalStoreKeys {
 	
 	//Timers
 	public static final String LASTCREATEDTIMER = "_lastCreatedTimer";
-	public static final String LASTSTARTEDTIMER = "_lastCreatedTimer";
+	public static final String LASTSTARTEDTIMER = "_lastStartedTimer";
 	public static final String FIRINGTIMER = "_firingTimer";
+	
+	//Events
+	public static final String LASTCREATEDTODEVENT = "_lastCreatedToDEvent";
+	
 
 	// Dest Names
 	public static final String BUFFEDDEST = "_buffedDest#";
@@ -84,6 +106,7 @@ public class ABLocalStoreKeys {
 	
 	//Projectiles
 	public static final String LASTCREATEDPROJECTILE = "_lastCreatedProjectile";
+	public static final String THISPROJECTILE = "_thisProjectile#";
 	public static final String PROJECTILEUNITTARGETS = "_projUnitTargets#";
 	public static final String PROJECTILEDESTTARGETS = "_projDestTargets#";
 	public static final String PROJECTILECURRENTLOC = "_projCurrentLoc#";
@@ -140,6 +163,27 @@ public class ABLocalStoreKeys {
 	public static final String DEATHRESULT = "_deathResult#";
 	public static final String DEATHSTACKING = "_deathStacking#";
 	
+	// Reaction Names
+	public static final String LASTCREATEDAtkPRL = "_lastCreatedAtkPRL";
+	public static final String LASTCREATEDAbPRL = "_lastCreatedAbPRL";
+	public static final String LASTCREATEDAbERL = "_lastCreatedAbERL";
+	public static final String REACTIONALLOWHIT = "_reactionAllowHit#";
+	public static final String ATTACKPROJ = "_attackProj#";
+	public static final String ABILITYPROJ = "_abilityProj#";
+	public static final String REACTIONABILITY = "_reactionAbility#";
+	public static final String REACTIONABILITYCASTER = "_reactionAbilityCaster#";
+	public static final String REACTIONABILITYTARGET = "_reactionAbilityTarget#";
+	
+	// Behavior Change Names
+	public static final String LASTCREATEDBCL = "_lastCreatedBCL";
+	public static final String PRECHANGEBEHAVIOR = "_preChangeBehavior#";
+	public static final String POSTCHANGEBEHAVIOR = "_postChangeBehaviorj#";
+	public static final String BEHAVIORONGOING = "_behaviorOngoing#";
+	
+	// Autocast on/off actions
+	public static final String WASAUTOCASTON = "_wasAutocastOn";
+	public static final String ISAUTOCASTON = "_isAutocastOn";
+	
 	public static String combineKey(String key, int castId) {
 		return key + castId;
 	}
@@ -150,5 +194,17 @@ public class ABLocalStoreKeys {
 	
 	public static String combineUserInstanceKey(String key, int castId) {
 		return "__" + key + "#" + castId;
+	}
+	
+	public static String combineSubroutineKey(String key, int castId) {
+		return "_!" + key;
+	}
+	
+	public static String combineSubroutineInstanceKey(String key, int castId) {
+		return "_!" + key + "#" + castId;
+	}
+	
+	public static String combineArgumentKey(String key) {
+		return "_$" + key;
 	}
 }

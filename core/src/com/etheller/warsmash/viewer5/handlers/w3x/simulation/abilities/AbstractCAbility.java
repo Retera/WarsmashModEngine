@@ -65,6 +65,15 @@ public abstract class AbstractCAbility extends CExtensibleHandleAbstract impleme
 		}
 		onSetDisabled(disabled, wasDisabled, type);
 	}
+	
+	@Override
+	public boolean isClickDisabled() {
+		return this.disabled != 0;
+	}
+	
+	@Override
+	public void setClickDisabled(final boolean disabled, final CAbilityDisableType type) {
+	}
 
 	@Override
 	public final boolean isIconShowing() {
@@ -105,6 +114,28 @@ public abstract class AbstractCAbility extends CExtensibleHandleAbstract impleme
 	public CItem getItem() {
 		// do nothing
 		return null;
+	}
+	
+	@Override
+	public boolean hasUniqueFlag(String flag) {
+		return false;
+	}
+	
+	public void addUniqueFlag(String flag) {
+	}
+	
+	public void removeUniqueFlag(String flag) {
+	}
+	
+	@Override
+	public <T> T getUniqueValue(String key, Class<T> cls) {
+		return null;
+	}
+	
+	public void addUniqueValue(Object item, String key) {
+	}
+	
+	public void removeUniqueValue(String key) {
 	}
 
 	@Override

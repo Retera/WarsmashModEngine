@@ -92,6 +92,8 @@ public class CommonTriggerExecutionScope extends TriggerExecutionScope {
 	private String enumFilePath; // Warsmash only
 	private Map<String, Object> triggerLocalStore; // warsmash only
 	private int triggerCastId; // Warsmash only
+	private float damageTaken;
+	private CUnit damageSource;
 
 	private JassGameEventsWar3 triggerEventId;
 
@@ -172,6 +174,8 @@ public class CommonTriggerExecutionScope extends TriggerExecutionScope {
 		this.enumFilePath = parentScope.enumFilePath;
 		this.triggerLocalStore = parentScope.triggerLocalStore;
 		this.triggerEventId = parentScope.triggerEventId;
+		this.damageTaken = parentScope.damageTaken;
+		this.damageSource = parentScope.damageSource;
 	}
 
 	public CUnit getEnumUnit() {
@@ -454,6 +458,14 @@ public class CommonTriggerExecutionScope extends TriggerExecutionScope {
 		return this.triggerCastId;
 	}
 
+	public float getDamageTaken() {
+		return this.damageTaken;
+	}
+
+	public CUnit getDamageSource() {
+		return this.damageSource;
+	}
+
 	public static CommonTriggerExecutionScope filterScope(final TriggerExecutionScope parentScope,
 			final CUnit filterUnit) {
 		final CommonTriggerExecutionScope scope = new CommonTriggerExecutionScope(parentScope.getTriggeringTrigger(),
@@ -540,6 +552,16 @@ public class CommonTriggerExecutionScope extends TriggerExecutionScope {
 		scope.leavingUnit = leavingUnit;
 		scope.triggeringUnit = leavingUnit;
 		scope.triggeringRegion = triggeringRegion;
+		scope.triggerEventId = triggerEventId;
+		return scope;
+	}
+
+	public static CommonTriggerExecutionScope simpleUnitScope(final JassGameEventsWar3 triggerEventId,
+			final Trigger trigger, final CUnit unit, final CPlayerJass player) {
+		final CommonTriggerExecutionScope scope = new CommonTriggerExecutionScope(trigger, TriggerExecutionScope.EMPTY);
+		scope.triggeringUnit = unit;
+		scope.triggeringPlayer = player;
+		scope.triggerWidget = unit;
 		scope.triggerEventId = triggerEventId;
 		return scope;
 	}
@@ -676,6 +698,16 @@ public class CommonTriggerExecutionScope extends TriggerExecutionScope {
 		return scope;
 	}
 
+	public static CommonTriggerExecutionScope unitConstructCancelScope(final JassGameEventsWar3 triggerEventId,
+			final Trigger trigger, final CUnit cancelledStructure, final CUnit constructingUnit) {
+		final CommonTriggerExecutionScope scope = new CommonTriggerExecutionScope(trigger, TriggerExecutionScope.EMPTY);
+		scope.triggerWidget = cancelledStructure;
+		scope.triggeringUnit = cancelledStructure;
+		scope.cancelledStructure = cancelledStructure;
+		scope.triggerEventId = triggerEventId;
+		return scope;
+	}
+
 	public static CommonTriggerExecutionScope unitTrainFinishScope(final JassGameEventsWar3 triggerEventId,
 			final Trigger trigger, final CUnit trainingUnit, final CUnit trainedUnit) {
 		final CommonTriggerExecutionScope scope = new CommonTriggerExecutionScope(trigger, TriggerExecutionScope.EMPTY);
@@ -747,6 +779,15 @@ public class CommonTriggerExecutionScope extends TriggerExecutionScope {
 		scope.spellTargetPoint = targetPoint;
 		scope.spellAbilityId = spellAbilityId;
 		scope.triggerEventId = triggerEventId;
+		return scope;
+	}
+
+	public static CommonTriggerExecutionScope unitDamageTakenScope(final JassGameEventsWar3 triggerEventId,
+			final Trigger trigger, final CUnit damagedUnit, final CUnit source, final float damage) {
+		final CommonTriggerExecutionScope scope = new CommonTriggerExecutionScope(trigger, TriggerExecutionScope.EMPTY);
+		scope.damageTaken = damage;
+		scope.damageSource = source;
+		scope.triggeringUnit = damagedUnit;
 		return scope;
 	}
 

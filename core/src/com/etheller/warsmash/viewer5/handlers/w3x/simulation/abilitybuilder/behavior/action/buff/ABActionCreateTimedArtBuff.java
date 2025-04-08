@@ -1,5 +1,6 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.action.buff;
 
+import java.util.List;
 import java.util.Map;
 
 import com.etheller.warsmash.parsers.jass.JassTextGenerator;
@@ -8,6 +9,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.booleancallbacks.ABBooleanCallback;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.floatcallbacks.ABFloatCallback;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.idcallbacks.ABIDCallback;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.stringcallbacks.ABStringCallback;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.buff.ABTimedArtBuff;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABLocalStoreKeys;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABSingleAction;
@@ -23,6 +25,11 @@ public class ABActionCreateTimedArtBuff implements ABSingleAction {
 	private ABBooleanCallback leveled;
 	private ABBooleanCallback positive;
 	private ABBooleanCallback dispellable;
+
+	private ABBooleanCallback stacks;
+	private ABStringCallback visibilityGroup;
+	
+	private List<ABStringCallback> uniqueFlags;
 
 	public void runAction(final CSimulation game, final CUnit caster, final Map<String, Object> localStore,
 			final int castId) {
@@ -43,23 +50,33 @@ public class ABActionCreateTimedArtBuff implements ABSingleAction {
 			isDispellable = ((boolean) localStore.getOrDefault(ABLocalStoreKeys.ISABILITYMAGIC, true));
 		}
 
+		ABTimedArtBuff ability;
 		if (showIcon != null) {
-			ABTimedArtBuff ability = new ABTimedArtBuff(game.getHandleIdAllocator().createId(),
+			ability = new ABTimedArtBuff(game.getHandleIdAllocator().createId(),
 					buffId.callback(game, caster, localStore, castId),
 					duration.callback(game, caster, localStore, castId),
 					showIcon.callback(game, caster, localStore, castId), isLeveled, isPositive, isDispellable);
-			if (artType != null) {
-				ability.setArtType(artType);
-			}
-			localStore.put(ABLocalStoreKeys.LASTCREATEDBUFF, ability);
 		} else {
-			ABTimedArtBuff ability = new ABTimedArtBuff(game.getHandleIdAllocator().createId(),
+			ability = new ABTimedArtBuff(game.getHandleIdAllocator().createId(),
 					buffId.callback(game, caster, localStore, castId),
 					duration.callback(game, caster, localStore, castId), isLeveled, isPositive, isDispellable);
-			if (artType != null) {
-				ability.setArtType(artType);
+		}
+		if (artType != null) {
+			ability.setArtType(artType);
+		}
+		boolean isStacks = false;
+		if (stacks != null) {
+			isStacks = stacks.callback(game, caster, localStore, castId);
+		}
+		ability.setStacks(isStacks);
+		if (visibilityGroup != null) {
+			ability.setVisibilityGroup(visibilityGroup.callback(game, caster, localStore, castId));
+		}
+		localStore.put(ABLocalStoreKeys.LASTCREATEDBUFF, ability);
+		if (uniqueFlags != null) {
+			for (ABStringCallback flag : uniqueFlags) {
+				ability.addUniqueFlag(flag.callback(game, caster, localStore, castId));
 			}
-			localStore.put(ABLocalStoreKeys.LASTCREATEDBUFF, ability);
 		}
 		if (!localStore.containsKey(ABLocalStoreKeys.BUFFCASTINGUNIT)) {
 			localStore.put(ABLocalStoreKeys.BUFFCASTINGUNIT, caster);

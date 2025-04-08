@@ -45,7 +45,7 @@ public class CAbilityBuildInProgress extends AbstractCAbility {
 			caster.cancelUpgrade(game);
 		}
 		else {
-			caster.setLife(game, 0);
+			caster.cancelConstruction(game);
 		}
 		return false;
 	}

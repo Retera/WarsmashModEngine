@@ -33,6 +33,11 @@ public class BehaviorTargetUnitVisitor implements CBehaviorVisitor<CUnit> {
 	public CUnit accept(CBehaviorAbilityBuilderNoTarget target) {
 		return null;
 	}
+
+	@Override
+	public CUnit accept(CBehaviorMove target) {
+		return null;
+	}
 	
 	
 }

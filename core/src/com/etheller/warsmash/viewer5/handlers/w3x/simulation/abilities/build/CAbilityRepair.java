@@ -34,6 +34,7 @@ public class CAbilityRepair extends AbstractGenericSingleIconActiveAbility imple
 			final float castRange) {
 		super(handleId, code, alias);
 		this.targetsAllowed = targetsAllowed;
+		this.targetsAllowed.add(CTargetType.REPAIRABLE);
 		this.navalRangeBonus = navalRangeBonus;
 		this.repairCostRatio = repairCostRatio;
 		this.repairTimeRatio = repairTimeRatio;
@@ -190,9 +191,11 @@ public class CAbilityRepair extends AbstractGenericSingleIconActiveAbility imple
 	}
 
 	@Override
-	public void setAutoCastOn(final CSimulation simulation, final CUnit caster, final boolean autoCastOn) {
+	public void setAutoCastOn(final CSimulation simulation, final CUnit caster, final boolean autoCastOn, final boolean notify) {
 		this.autocasting = autoCastOn;
-		caster.setAutocastAbility(autoCastOn ? this : null);
+		if (notify) {
+			caster.setAutocastAbility(simulation, autoCastOn ? this : null);
+		}
 	}
 
 	@Override

@@ -1,5 +1,7 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.buff;
 
+import java.util.ArrayList;
+import java.util.List;
 import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
@@ -20,8 +22,12 @@ public abstract class ABBuff extends AbstractCBuff {
 	protected static int PHYSICAL = 0b100000;
 	protected static int MAGIC = 0b1000000;
 	protected static int AURA = 0b10000000;
+	protected static int STACKS = 0b100000000;
 	
 	protected int flags = DISPELLABLE;
+	
+	protected List<String> uniqueFlags = null;
+	private String visibilityGroup = null;
 
 	public ABBuff(int handleId, War3ID code, War3ID alias) {
 		super(handleId, code, alias);
@@ -74,6 +80,41 @@ public abstract class ABBuff extends AbstractCBuff {
 	@Override
 	public <T> T visit(final CAbilityVisitor<T> visitor) {
 		return visitor.accept(this);
+	}
+	
+	@Override
+	public boolean hasUniqueFlag(String flag) {
+		if (this.uniqueFlags != null) {
+			return this.uniqueFlags.contains(flag);
+		}
+		return false;
+	}
+	
+	public void addUniqueFlag(String flag) {
+		if (this.uniqueFlags == null) {
+			this.uniqueFlags = new ArrayList<>();
+		}
+		this.uniqueFlags.add(flag);
+	}
+	
+	public void removeUniqueFlag(String flag) {
+		if (this.uniqueFlags != null) {
+			this.uniqueFlags.remove(flag);
+		}
+	}
+	
+	@Override
+	public <T> T getUniqueValue(String key, Class<T> cls) {
+		return null;
+	}
+	
+	public void setVisibilityGroup(String visibilityGroup) {
+		this.visibilityGroup = visibilityGroup;
+	}
+	
+	@Override
+	public String getVisibilityGroup() {
+		return this.visibilityGroup;
 	}
 	
 	public void setTimedLifeBar(boolean timedLife) {
@@ -146,5 +187,13 @@ public abstract class ABBuff extends AbstractCBuff {
 	@Override
 	public boolean isAura() {
 		return  ((this.flags & AURA) != 0);
+	}
+	
+	public void setStacks(boolean stacks) {
+		this.flags = stacks ? this.flags | STACKS : this.flags & ~STACKS;
+	}
+
+	public boolean isStacks() {
+		return  ((this.flags & STACKS) != 0);
 	}
 }

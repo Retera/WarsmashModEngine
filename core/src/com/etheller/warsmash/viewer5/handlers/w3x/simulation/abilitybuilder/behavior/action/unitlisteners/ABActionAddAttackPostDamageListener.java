@@ -11,11 +11,11 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core
 
 public class ABActionAddAttackPostDamageListener implements ABAction {
 
-	private ABUnitCallback targetUnit;
+	private ABUnitCallback unit;
 	private ABAttackPostDamageListenerCallback listener;
 
 	public void runAction(final CSimulation game, final CUnit caster, final Map<String, Object> localStore, final int castId) {
-		CUnit target = targetUnit.callback(game, caster, localStore, castId);
+		CUnit target = unit.callback(game, caster, localStore, castId);
 		
 		target.addPostDamageListener(listener.callback(game, caster, localStore, castId));
 	}

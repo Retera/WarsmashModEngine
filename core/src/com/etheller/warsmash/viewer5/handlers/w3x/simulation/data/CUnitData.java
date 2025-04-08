@@ -371,12 +371,12 @@ public class CUnitData {
 				}
 				if (ability.equals(unitTypeInstance.getDefaultAutocastAbility())
 						&& (createAbility instanceof CAutocastAbility)) {
-					((CAutocastAbility) createAbility).setAutoCastOn(simulation, unit, true);
+					((CAutocastAbility) createAbility).setAutoCastOn(simulation, unit, true, true);
 				}
 			} else {
 				if (ability.equals(unitTypeInstance.getDefaultAutocastAbility())
 						&& (existingAbility instanceof CAutocastAbility)) {
-					((CAutocastAbility) existingAbility).setAutoCastOn(simulation, unit, true);
+					((CAutocastAbility) existingAbility).setAutoCastOn(simulation, unit, true, true);
 				}
 			}
 		}
@@ -501,12 +501,12 @@ public class CUnitData {
 				}
 				if (ability.equals(unitTypeInstance.getDefaultAutocastAbility())
 						&& (createAbility instanceof CAutocastAbility)) {
-					((CAutocastAbility) createAbility).setAutoCastOn(simulation, unit, true);
+					((CAutocastAbility) createAbility).setAutoCastOn(simulation, unit, true, true);
 				}
 			} else {
 				if (ability.equals(unitTypeInstance.getDefaultAutocastAbility())
 						&& (existingAbility instanceof CAutocastAbility)) {
-					((CAutocastAbility) existingAbility).setAutoCastOn(simulation, unit, true);
+					((CAutocastAbility) existingAbility).setAutoCastOn(simulation, unit, true, true);
 				}
 			}
 		}

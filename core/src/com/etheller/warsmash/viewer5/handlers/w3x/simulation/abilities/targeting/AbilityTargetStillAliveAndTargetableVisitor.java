@@ -4,7 +4,6 @@ import java.util.EnumSet;
 
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.*;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CTargetType;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.BooleanAbilityTargetCheckReceiver;
 
 public final class AbilityTargetStillAliveAndTargetableVisitor implements AbilityTargetVisitor<Boolean> {
 	private CSimulation simulation;

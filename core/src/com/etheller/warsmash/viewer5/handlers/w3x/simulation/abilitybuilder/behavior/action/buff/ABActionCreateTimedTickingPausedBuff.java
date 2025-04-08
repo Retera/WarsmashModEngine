@@ -9,8 +9,10 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.booleancallbacks.ABBooleanCallback;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.floatcallbacks.ABFloatCallback;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.idcallbacks.ABIDCallback;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.stringcallbacks.ABStringCallback;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.buff.ABTimedTickingPausedBuff;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABAction;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABCallback;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABLocalStoreKeys;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABSingleAction;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CEffectType;
@@ -32,6 +34,12 @@ public class ABActionCreateTimedTickingPausedBuff implements ABSingleAction {
 	private ABBooleanCallback dispellable;
 	private ABBooleanCallback magic;
 	private ABBooleanCallback physical;
+
+	private ABBooleanCallback stacks;
+	private ABStringCallback visibilityGroup;
+	
+	private List<ABStringCallback> uniqueFlags;
+	private Map<ABStringCallback, ABCallback> uniqueValues;
 
 	@Override
 	public void runAction(final CSimulation game, final CUnit caster, final Map<String, Object> localStore,
@@ -66,29 +74,44 @@ public class ABActionCreateTimedTickingPausedBuff implements ABSingleAction {
 			isPhysical = physical.callback(game, caster, localStore, castId);
 		}
 
+		ABTimedTickingPausedBuff ability;
 		if (showIcon != null) {
-			ABTimedTickingPausedBuff ability = new ABTimedTickingPausedBuff(game.getHandleIdAllocator().createId(),
+			ability = new ABTimedTickingPausedBuff(game.getHandleIdAllocator().createId(),
 					buffId.callback(game, caster, localStore, castId),
 					duration.callback(game, caster, localStore, castId), showTimedLife, localStore, onAddActions,
 					onRemoveActions, onExpireActions, onTickActions,
 					showIcon.callback(game, caster, localStore, castId), castId, isLeveled, isPositive, isDispellable);
-			if (artType != null) {
-				ability.setArtType(artType);
-			}
-			ability.setMagic(isMagic);
-			ability.setPhysical(isPhysical);
-			localStore.put(ABLocalStoreKeys.LASTCREATEDBUFF, ability);
 		} else {
-			ABTimedTickingPausedBuff ability = new ABTimedTickingPausedBuff(game.getHandleIdAllocator().createId(),
+			ability = new ABTimedTickingPausedBuff(game.getHandleIdAllocator().createId(),
 					buffId.callback(game, caster, localStore, castId),
 					duration.callback(game, caster, localStore, castId), showTimedLife, localStore, onAddActions,
 					onRemoveActions, onExpireActions, onTickActions, castId, isLeveled, isPositive, isDispellable);
-			if (artType != null) {
-				ability.setArtType(artType);
+		}
+		if (artType != null) {
+			ability.setArtType(artType);
+		}
+		ability.setMagic(isMagic);
+		ability.setPhysical(isPhysical);
+		boolean isStacks = false;
+		if (stacks != null) {
+			isStacks = stacks.callback(game, caster, localStore, castId);
+		}
+		ability.setStacks(isStacks);
+		if (visibilityGroup != null) {
+			ability.setVisibilityGroup(visibilityGroup.callback(game, caster, localStore, castId));
+		}
+		
+		localStore.put(ABLocalStoreKeys.LASTCREATEDBUFF, ability);
+		if (uniqueFlags != null) {
+			for (ABStringCallback flag : uniqueFlags) {
+				ability.addUniqueFlag(flag.callback(game, caster, localStore, castId));
 			}
-			ability.setMagic(isMagic);
-			ability.setPhysical(isPhysical);
-			localStore.put(ABLocalStoreKeys.LASTCREATEDBUFF, ability);
+		}
+		if (uniqueValues != null) {
+			for (ABStringCallback key : uniqueValues.keySet()) {
+				ability.addUniqueValue(uniqueValues.get(key).callback(game, caster, localStore, castId),
+						key.callback(game, caster, localStore, castId));
+			}
 		}
 		if (!localStore.containsKey(ABLocalStoreKeys.BUFFCASTINGUNIT)) {
 			localStore.put(ABLocalStoreKeys.BUFFCASTINGUNIT, caster);

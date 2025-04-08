@@ -14,6 +14,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.CUnitAttackInstant;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.CUnitAttackListener;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.CUnitAttackMissile;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.replacement.CUnitAttackSettings;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.projectile.CAbilityCollisionProjectileListener;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.projectile.CAbilityProjectile;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.projectile.CAbilityProjectileListener;
@@ -26,10 +27,14 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.C
 public interface SimulationRenderController {
 	CAttackProjectile createAttackProjectile(CSimulation simulation, float launchX, float launchY, float launchFacing,
 			CUnit source, CUnitAttackMissile attack, AbilityTarget target, float damage, int bounceIndex,
-			CUnitAttackListener attackListener);
+			CUnitAttackListener attackListener, CUnitAttackSettings settings);
 
 	CAbilityProjectile createProjectile(CSimulation cSimulation, float launchX, float launchY, float launchFacing,
 			float speed, boolean homing, CUnit source, War3ID spellAlias, AbilityTarget target,
+			CAbilityProjectileListener projectileListener);
+
+	CAbilityProjectile createProjectile(CSimulation cSimulation, float launchX, float launchY, float launchFacing,
+			CUnit source, CUnitAttackSettings settings, AbilityTarget target,
 			CAbilityProjectileListener projectileListener);
 
 	CJassProjectile createJassProjectile(CSimulation cSimulation, float launchX, float launchY, float launchFacing,

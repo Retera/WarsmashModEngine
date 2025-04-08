@@ -13,7 +13,6 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnitType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.ability.AbilityBuilderAbility;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.ability.AbilityBuilderActiveAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.ability.GetInstantTransformationBuffVisitor;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.buff.ABBuff;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.buff.ABTimedTransformationBuff;
@@ -203,7 +202,7 @@ public class TransformationHandler {
 
 	public static void createSlowTransformBackBuff(final CSimulation game, final Map<String, Object> localStore,
 			final CUnit unit, final CUnitType newType, final boolean keepRatios, final OnTransformationActions actions,
-			final AbilityBuilderActiveAbility ability, final War3ID buffId, final boolean addAlternateTagAfter,
+			final AbilityBuilderAbility ability, final War3ID buffId, final boolean addAlternateTagAfter,
 			final float transformationTime, final float duration, final boolean permanent, final boolean takingOff,
 			final boolean landing, final boolean immediateTakeoff, final boolean immediateLanding,
 			final float altitudeAdjustmentDelay, final float landingDelay, final float altitudeAdjustmentDuration) {

@@ -111,16 +111,6 @@
 			}]
 		}
 	},{
-		"ids": [{"id":"AIva"}],
-		"type": "TEMPLATE",
-		"templateFields": {
-			"templateType": "PASSIVE_STATS",
-			"statBuffsFromDataFields": [{
-				"type": "HPSTEAL",
-				"dataField": "A"
-			}]
-		}
-	},{
 		"ids": [{"id":"AIas"}],
 		"type": "TEMPLATE",
 		"templateFields": {

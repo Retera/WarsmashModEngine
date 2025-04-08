@@ -230,9 +230,11 @@ public class CAbilityMoonWell extends CAbilitySpellBase implements CAutocastAbil
 	}
 
 	@Override
-	public void setAutoCastOn(final CSimulation simulation, final CUnit caster, final boolean autoCastOn) {
+	public void setAutoCastOn(final CSimulation simulation, final CUnit caster, final boolean autoCastOn, final boolean notify) {
 		this.autoCastActive = autoCastOn;
-		caster.setAutocastAbility(autoCastOn ? this : null);
+		if (notify) {
+			caster.setAutocastAbility(simulation, autoCastOn ? this : null);
+		}
 	}
 
 	@Override

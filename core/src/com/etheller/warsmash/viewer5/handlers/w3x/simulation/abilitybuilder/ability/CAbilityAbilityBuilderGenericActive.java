@@ -1,8 +1,11 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.ability;
 
 import java.util.EnumSet;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+
 import com.etheller.warsmash.units.GameObject;
 import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.util.WarsmashConstants;
@@ -17,6 +20,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnitTypeRequirement;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityCategory;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityDisableType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityVisitor;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.autocast.AutocastType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.AbstractGenericSingleIconNoSmartActiveAbility;
@@ -27,6 +31,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.def
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.ABBehavior;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.CBehaviorAbilityBuilderBase;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.CBehaviorAbilityBuilderNoTarget;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.stringcallbacks.ABStringCallback;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABAction;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABCondition;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABLocalStoreKeys;
@@ -61,6 +66,8 @@ public abstract class CAbilityAbilityBuilderGenericActive extends AbstractGeneri
 	protected boolean allowCastlessDeactivate = true;
 	protected PrimaryTag castingPrimaryTag;
 	protected EnumSet<SecondaryTag> castingSecondaryTags;
+	
+	protected byte clickDisabled = 0;
 
 	protected CItem item = null;
 
@@ -83,6 +90,11 @@ public abstract class CAbilityAbilityBuilderGenericActive extends AbstractGeneri
 	private boolean physical = false;
 	private boolean magic = true;
 	private boolean universal = false;
+	
+	protected Set<String> uniqueFlags = null;
+	
+	private boolean isMenu = false;
+	private int visibleMenuId = 0;
 
 	public CAbilityAbilityBuilderGenericActive(int handleId, War3ID code, War3ID alias,
 			List<CAbilityTypeAbilityBuilderLevelData> levelData, AbilityBuilderConfiguration config,
@@ -93,7 +105,11 @@ public abstract class CAbilityAbilityBuilderGenericActive extends AbstractGeneri
 		this.localStore = localStore;
 		localStore.put(ABLocalStoreKeys.ABILITY, this);
 		
-		orderId = OrderIdUtils.getOrderId(config.getCastId());
+		if (config.getCastId() != null) {
+			orderId = OrderIdUtils.getOrderId(config.getCastId());
+		} else {
+			orderId = 0;
+		}
 		if (config.getUncastId() != null) {
 			unorderId = OrderIdUtils.getOrderId(config.getUncastId());
 		}
@@ -129,6 +145,24 @@ public abstract class CAbilityAbilityBuilderGenericActive extends AbstractGeneri
 		GameObject editorData = (GameObject) localStore.get(ABLocalStoreKeys.ABILITYEDITORDATA);
 		return editorData.getFieldValue(field);
 	}
+	
+	@Override
+	public float getAbilityFloatField(String field) {
+		GameObject editorData = (GameObject) localStore.get(ABLocalStoreKeys.ABILITYEDITORDATA);
+		return editorData.getFieldFloatValue(field);
+	}
+	
+	@Override
+	public String getAbilityStringField(String field) {
+		GameObject editorData = (GameObject) localStore.get(ABLocalStoreKeys.ABILITYEDITORDATA);
+		return editorData.getField(field);
+	}
+	
+	@Override
+	public boolean getAbilityBooleanField(String field) {
+		GameObject editorData = (GameObject) localStore.get(ABLocalStoreKeys.ABILITYEDITORDATA);
+		return editorData.getFieldValue(field) != 0;
+	}
 
 	@Override
 	public void setLevel(CSimulation game, CUnit unit, int level) {
@@ -158,6 +192,7 @@ public abstract class CAbilityAbilityBuilderGenericActive extends AbstractGeneri
 	public void onAddDisabled(CSimulation game, CUnit unit) {
 		localStore.put(ABLocalStoreKeys.GAME, game);
 		localStore.put(ABLocalStoreKeys.THISUNIT, unit);
+		addInitialUniqueFlags(game, unit);
 		setSpellFields(game, unit);
 		determineToggleableFields(game, unit);
 		if (config.getOnAddDisabledAbility() != null) {
@@ -175,6 +210,16 @@ public abstract class CAbilityAbilityBuilderGenericActive extends AbstractGeneri
 			}
 		}
 	}
+	
+	private void addInitialUniqueFlags(CSimulation game, CUnit unit) {
+		if (this.config.getInitialUniqueFlags() != null && !this.config.getInitialUniqueFlags().isEmpty()) {
+			this.uniqueFlags = new HashSet<>();
+			for (ABStringCallback flag : this.config.getInitialUniqueFlags()) {
+				this.uniqueFlags.add(flag.callback(game, unit, localStore, 0));
+			}
+		}
+	}
+
 
 	private void determineToggleableFields(CSimulation game, CUnit unit) {
 		if (config.getDisplayFields() != null && config.getDisplayFields().getSeparateOnAndOff() != null) {
@@ -296,7 +341,21 @@ public abstract class CAbilityAbilityBuilderGenericActive extends AbstractGeneri
 
 		if (this.config.getDisplayFields() != null && this.config.getDisplayFields().getHideAreaCursor() != null) {
 			this.hideAreaCursor = this.config.getDisplayFields().getHideAreaCursor().callback(game, unit, localStore,
+					castId);
+		}
+		if (this.config.getDisplayFields() != null && this.config.getDisplayFields().getIsMenu() != null) {
+			this.isMenu = this.config.getDisplayFields().getIsMenu().callback(game, unit, localStore,
 					this.getLevel());
+			if (this.isMenu) {
+				if (this.config.getDisplayFields().getMenuId() != null) {
+					this.orderId = this.config.getDisplayFields().getMenuId().callback(game, unit, localStore,
+							castId);
+				} else {
+					if (this.orderId == 0) {
+						this.orderId = this.getHandleId();
+					}
+				}
+			}
 		}
 		localStore.put(ABLocalStoreKeys.ISABILITYMAGIC, this.magic);
 		localStore.put(ABLocalStoreKeys.ISABILITYPHYSICAL, this.physical);
@@ -381,6 +440,45 @@ public abstract class CAbilityAbilityBuilderGenericActive extends AbstractGeneri
 	public Map<String, Object> getLocalStore() {
 		return this.localStore;
 	}
+	
+	@Override
+	public boolean hasUniqueFlag(String flag) {
+		if (this.uniqueFlags != null) {
+			return this.uniqueFlags.contains(flag);
+		}
+		return false;
+	}
+	
+	public void addUniqueFlag(String flag) {
+		if (this.uniqueFlags == null) {
+			this.uniqueFlags = new HashSet<>();
+		}
+		this.uniqueFlags.add(flag);
+	}
+	
+	public void removeUniqueFlag(String flag) {
+		if (this.uniqueFlags != null) {
+			this.uniqueFlags.remove(flag);
+		}
+	}
+
+	@SuppressWarnings("unchecked")
+	@Override
+	public <T> T getUniqueValue(String key, Class<T> cls) {
+		Object o = this.localStore.get(ABLocalStoreKeys.combineUniqueValueKey(key, this.getHandleId()));
+		if (o != null && o.getClass() == cls) {
+			return (T)o;
+		}
+		return null;
+	}
+	
+	public void addUniqueValue(Object item, String key) {
+		this.localStore.put(ABLocalStoreKeys.combineUniqueValueKey(key, this.getHandleId()), item);
+	}
+	
+	public void removeUniqueValue(String key) {
+		this.localStore.remove(ABLocalStoreKeys.combineUniqueValueKey(key, this.getHandleId()));
+	}
 
 	@Override
 	public War3ID getOnTooltipOverride() {
@@ -430,6 +528,10 @@ public abstract class CAbilityAbilityBuilderGenericActive extends AbstractGeneri
 	public void setCastTime(float castTime) {
 		this.castTime = castTime;
 	}
+	
+	public EnumSet<CTargetType> getTargetsAllowed() {
+		return targetsAllowed;
+	}
 
 	@Override
 	public boolean isSeparateOnAndOff() {
@@ -444,6 +546,21 @@ public abstract class CAbilityAbilityBuilderGenericActive extends AbstractGeneri
 	@Override
 	public boolean isActive() {
 		return this.active;
+	}
+	
+	@Override
+	public boolean isClickDisabled() {
+		return this.clickDisabled != 0;
+	}
+
+	@Override
+	public final void setClickDisabled(final boolean disabled, final CAbilityDisableType type) {
+		if (disabled) {
+			this.clickDisabled |= type.getMask();
+		}
+		else {
+			this.clickDisabled &= ~type.getMask();
+		}
 	}
 
 	@Override
@@ -462,10 +579,12 @@ public abstract class CAbilityAbilityBuilderGenericActive extends AbstractGeneri
 	}
 
 	@Override
-	public void setAutoCastOn(final CSimulation simulation, final CUnit caster, final boolean autoCastOn) {
+	public void setAutoCastOn(final CSimulation simulation, final CUnit caster, final boolean autoCastOn, final boolean notify) {
 		this.localStore.put(ABLocalStoreKeys.WASAUTOCASTON, this.autocasting);
 		this.autocasting = autoCastOn;
-		caster.setAutocastAbility(autoCastOn ? this : null);
+		if (notify) {
+			caster.setAutocastAbility(simulation, autoCastOn ? this : null);
+		}
 		this.localStore.put(ABLocalStoreKeys.ISAUTOCASTON, autoCastOn);
 		if (this.config.getOnChangeAutoCast() != null) {
 			for (ABAction action : this.config.getOnChangeAutoCast()) {
@@ -1120,5 +1239,33 @@ public abstract class CAbilityAbilityBuilderGenericActive extends AbstractGeneri
 	@Override
 	public CAbilityCategory getAbilityCategory() {
 		return CAbilityCategory.SPELL;
+	}
+
+	@Override
+	public void cleanupInputs() {
+		this.cleanupInputs(castId);
+	}
+
+	@Override
+	public void cleanupInputs(int theCastId) {
+		this.localStore.remove(ABLocalStoreKeys.ABILITYTARGETEDUNIT + theCastId);
+		this.localStore.remove(ABLocalStoreKeys.ABILITYTARGETEDDESTRUCTABLE + theCastId);
+		this.localStore.remove(ABLocalStoreKeys.ABILITYTARGETEDITEM + theCastId);
+		this.localStore.remove(ABLocalStoreKeys.ABILITYTARGETEDLOCATION + theCastId);
+	}
+
+	@Override
+	public int getIconVisibleMenuId() {
+		return this.visibleMenuId;
+	}
+	
+	@Override
+	public void setIconVisibleMenuId(int menu) {
+		this.visibleMenuId = menu;
+	}
+
+	@Override
+	public boolean isMenuAbility() {
+		return this.isMenu;
 	}
 }

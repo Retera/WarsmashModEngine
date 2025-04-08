@@ -13,21 +13,27 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core
 
 public class ABActionAddAbility implements ABSingleAction {
 
-	private ABUnitCallback targetUnit;
-	private ABAbilityCallback abilityToAdd;
+	private ABUnitCallback unit;
+	private ABAbilityCallback ability;
 
 	@Override
 	public void runAction(final CSimulation game, final CUnit caster, final Map<String, Object> localStore,
 			final int castId) {
-		final CAbility ability = this.abilityToAdd.callback(game, caster, localStore, castId);
-		this.targetUnit.callback(game, caster, localStore, castId).add(game, ability);
-		localStore.put(ABLocalStoreKeys.LASTADDEDABILITY, ability);
+		final CAbility theAbility = this.ability.callback(game, caster, localStore, castId);
+		CUnit theUnit = caster;
+		if (unit != null) {
+			theUnit = unit.callback(game, caster, localStore, castId);
+		}
+		if (theAbility != null) {
+			theUnit.add(game, theAbility);
+			localStore.put(ABLocalStoreKeys.LASTADDEDABILITY, theAbility);
+		}
 	}
 
 	@Override
 	public String generateJassEquivalent(JassTextGenerator jassTextGenerator) {
 		return "AddUnitAbilityAU(" + jassTextGenerator.getTriggerLocalStore() + ", "
-				+ this.targetUnit.generateJassEquivalent(jassTextGenerator) + ", "
-				+ this.abilityToAdd.generateJassEquivalent(jassTextGenerator) + ")";
+				+ this.unit.generateJassEquivalent(jassTextGenerator) + ", "
+				+ this.ability.generateJassEquivalent(jassTextGenerator) + ")";
 	}
 }

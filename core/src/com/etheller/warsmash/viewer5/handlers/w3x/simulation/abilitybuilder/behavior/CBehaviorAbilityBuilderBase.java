@@ -174,6 +174,11 @@ public class CBehaviorAbilityBuilderBase extends CAbstractRangedBehavior impleme
 		} else {
 			final int ticksSinceCast = game.getGameTurnTick() - this.castStartTick;
 			if ((ticksSinceCast >= castPointTicks) || (ticksSinceCast >= backswingTicks)) {
+				if (!this.isWithinRange(game)) {
+					// Unit moved too far, out of range now
+					cleanupInputs();
+					return this.unit.pollNextOrderBehavior(game);
+				}
 				CBehavior beh = tryDoEffect(game, wasChanneling);
 				if (beh != null) {
 					return beh;
@@ -194,10 +199,7 @@ public class CBehaviorAbilityBuilderBase extends CAbstractRangedBehavior impleme
 	}
 
 	private void cleanupInputs() {
-		this.localStore.remove(ABLocalStoreKeys.ABILITYTARGETEDUNIT + castId);
-		this.localStore.remove(ABLocalStoreKeys.ABILITYTARGETEDDESTRUCTABLE + castId);
-		this.localStore.remove(ABLocalStoreKeys.ABILITYTARGETEDITEM + castId);
-		this.localStore.remove(ABLocalStoreKeys.ABILITYTARGETEDLOCATION + castId);
+		this.ability.cleanupInputs(castId);
 	}
 
 	private CBehavior tryDoEffect(CSimulation game, boolean wasChanneling) {
@@ -276,7 +278,11 @@ public class CBehaviorAbilityBuilderBase extends CAbstractRangedBehavior impleme
 
 	@Override
 	public boolean isWithinRange(CSimulation simulation) {
-		return this.unit.canReach(this.target, this.ability.getCastRange());
+		float range = this.ability.getCastRange();
+		if (this.castStartTick > 0) {
+			range += simulation.getGameplayConstants().getSpellCastRangeBuffer();
+		}
+		return this.unit.canReach(this.target, range);
 	}
 
 	@Override

@@ -43,7 +43,6 @@ public class ABActionCreateLocationTargetedProjectile implements ABSingleAction 
 		AbilityTarget sourceLocation = theSource;
 
 		final GameObject editorData = (GameObject) localStore.get(ABLocalStoreKeys.ABILITYEDITORDATA);
-		final int level = (int) localStore.get(ABLocalStoreKeys.CURRENTLEVEL);
 
 		if (this.sourceLoc != null) {
 			sourceLocation = this.sourceLoc.callback(game, caster, localStore, castId);

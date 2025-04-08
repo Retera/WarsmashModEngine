@@ -7,8 +7,9 @@ import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABAction;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABLocalStoreKeys;
 
-public class ABTimedTickingPausedBuff extends ABTimedBuff {
+public class ABTimedTickingPausedBuff extends ABTimedBuff implements CPausedTickingBuff {
 
 	private List<ABAction> onTickActions;
 
@@ -33,9 +34,11 @@ public class ABTimedTickingPausedBuff extends ABTimedBuff {
 	@Override
 	public void onTick(CSimulation game, CUnit unit) {
 		if (onTickActions != null) {
+			localStore.put(ABLocalStoreKeys.BUFF, this);
 			for (ABAction action : onTickActions) {
 				action.runAction(game, unit, localStore, castId);
 			}
+			localStore.remove(ABLocalStoreKeys.BUFF);
 		}
 		if (!unit.isPaused()) {
 			super.onTick(game, unit);

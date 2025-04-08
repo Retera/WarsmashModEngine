@@ -7,6 +7,7 @@ import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnitType;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.ability.AbilityBuilderAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.ability.AbilityBuilderActiveAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.CBehaviorFinishTransformation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.booleancallbacks.ABBooleanCallback;
@@ -63,7 +64,7 @@ public class ABActionTransformUnit implements ABAction {
 		if (this.requiresPayment != null) {
 			charge = this.requiresPayment.callback(game, caster, localStore, castId);
 		}
-		AbilityBuilderActiveAbility abil = (AbilityBuilderActiveAbility) localStore.get(ABLocalStoreKeys.ABILITY);
+		AbilityBuilderAbility abil = (AbilityBuilderAbility) localStore.get(ABLocalStoreKeys.ABILITY);
 
 		if (baseId == null || altId == null) {
 			localStore.put(ABLocalStoreKeys.FAILEDTOCAST + castId, true);
@@ -162,11 +163,17 @@ public class ABActionTransformUnit implements ABAction {
 		if (instantTransformAtDurationEnd != null) {
 			instant = instantTransformAtDurationEnd.callback(game, caster, localStore, castId);
 		}
+		
+		int orderId = -1;
+		if (abil instanceof AbilityBuilderActiveAbility) {
+			AbilityBuilderActiveAbility activeabil = (AbilityBuilderActiveAbility) abil;
+			orderId = addAlternateTagAfter ? activeabil.getBaseOrderId() : activeabil.getOffOrderId();
+		}
 
 		localStore.put(ABLocalStoreKeys.TRANSFORMINGTOALT + castId, addAlternateTagAfter);
 		localStore.put(ABLocalStoreKeys.NEWBEHAVIOR,
 				new CBehaviorFinishTransformation(localStore, u1, abil, targetType, isKeepRatios, actions,
-						addAlternateTagAfter, addAlternateTagAfter ? abil.getBaseOrderId() : abil.getOffOrderId(), perm,
+						addAlternateTagAfter, orderId, perm,
 						dur, transTime, landTime, atlAdDelay, altAdTime, imLand, imTakeOff, theBuffId,
 						game.getUnitData().getUnitType(baseId), instant));
 

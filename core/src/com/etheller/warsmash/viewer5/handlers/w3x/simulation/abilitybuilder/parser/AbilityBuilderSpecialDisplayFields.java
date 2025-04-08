@@ -21,6 +21,9 @@ public class AbilityBuilderSpecialDisplayFields {
 	private ABBooleanCallback separateOnAndOff;
 	private ABIDCallback alternateUnitId;
 
+	private ABBooleanCallback isMenu;
+	private ABIntegerCallback menuId;
+
 	public void updateFromParent(AbilityBuilderSpecialDisplayFields parent) {
 		if (this.showOnAndOffIcons == null)
 			this.showOnAndOffIcons = parent.showOnAndOffIcons;
@@ -114,6 +117,19 @@ public class AbilityBuilderSpecialDisplayFields {
 	}
 	public void setAlternateUnitId(ABIDCallback alternateUnitId) {
 		this.alternateUnitId = alternateUnitId;
+	}
+
+	public ABBooleanCallback getIsMenu() {
+		return this.isMenu;
+	}
+	public void setIsMenu(ABBooleanCallback isMenu) {
+		this.isMenu = isMenu;
+	}
+	public ABIntegerCallback getMenuId() {
+		return this.menuId;
+	}
+	public void setMenuId(ABIntegerCallback menuId) {
+		this.menuId = menuId;
 	}
 
 }

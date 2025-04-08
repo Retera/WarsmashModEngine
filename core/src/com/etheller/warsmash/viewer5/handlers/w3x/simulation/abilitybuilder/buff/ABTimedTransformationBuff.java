@@ -6,6 +6,7 @@ import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnitType;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.ability.AbilityBuilderAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.ability.AbilityBuilderActiveAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.CBehaviorFinishTransformation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.COrderStartTransformation;
@@ -17,7 +18,7 @@ public class ABTimedTransformationBuff extends ABGenericTimedBuff {
 
 	private Map<String, Object> localStore;
 	private OnTransformationActions actions;
-	private AbilityBuilderActiveAbility abil;
+	private AbilityBuilderAbility abil;
 	private CUnitType targetType;
 	private boolean keepRatios;
 	private boolean addAlternateTagAfter;
@@ -32,10 +33,10 @@ public class ABTimedTransformationBuff extends ABGenericTimedBuff {
 	private boolean instantTransformation;
 
 	public ABTimedTransformationBuff(int handleId, Map<String, Object> localStore, OnTransformationActions actions,
-			War3ID alias, float duration, AbilityBuilderActiveAbility ability, CUnitType newType,
-			final boolean keepRatios, boolean addAlternateTagAfter, boolean permanent, float transformationDuration,
-			float transformationTime, float landingDelay, float altitudeAdjustmentDelay,
-			float altitudeAdjustmentDuration, boolean immediateLanding, boolean immediateTakeoff) {
+			War3ID alias, float duration, AbilityBuilderAbility ability, CUnitType newType, final boolean keepRatios,
+			boolean addAlternateTagAfter, boolean permanent, float transformationDuration, float transformationTime,
+			float landingDelay, float altitudeAdjustmentDelay, float altitudeAdjustmentDuration,
+			boolean immediateLanding, boolean immediateTakeoff) {
 		super(handleId, alias, duration, true, false, true, false);
 		this.setIconShowing(false);
 		this.localStore = localStore;
@@ -56,7 +57,7 @@ public class ABTimedTransformationBuff extends ABGenericTimedBuff {
 	}
 
 	public ABTimedTransformationBuff(int handleId, Map<String, Object> localStore, OnTransformationActions actions,
-			War3ID alias, float duration, AbilityBuilderActiveAbility ability, CUnitType newType,
+			War3ID alias, float duration, AbilityBuilderAbility ability, CUnitType newType,
 			boolean addAlternateTagAfter, boolean permanent, float transformationDuration) {
 		super(handleId, alias, duration, true, false, true, false);
 		this.setIconShowing(false);
@@ -89,8 +90,15 @@ public class ABTimedTransformationBuff extends ABGenericTimedBuff {
 
 	@Override
 	protected void onBuffExpire(CSimulation game, CUnit unit) {
-		if (abil.isToggleOn()) {
-			abil.deactivate(game, unit);
+		int visibleOrderId = -1;
+		int transformId = -1;
+		if (abil instanceof AbilityBuilderActiveAbility) {
+			AbilityBuilderActiveAbility actabil = (AbilityBuilderActiveAbility) abil;
+			if (actabil.isToggleOn()) {
+				actabil.deactivate(game, unit);
+			}
+			visibleOrderId = addAlternateTagAfter ? actabil.getBaseOrderId() : actabil.getOffOrderId();
+			transformId = actabil.getBaseOrderId();
 		}
 		if (instantTransformation) {
 			if (dur > 0) {
@@ -103,11 +111,11 @@ public class ABTimedTransformationBuff extends ABGenericTimedBuff {
 			}
 		} else {
 			unit.order(game,
-					new COrderStartTransformation(new CBehaviorFinishTransformation(localStore, unit, abil, targetType,
-							keepRatios, actions, addAlternateTagAfter,
-							addAlternateTagAfter ? abil.getBaseOrderId() : abil.getOffOrderId(), perm, dur, transTime,
-							landTime, atlAdDelay, altAdTime, imLand, imTakeOff, this.getAlias(), targetType,
-							instantTransformation), abil.getBaseOrderId()),
+					new COrderStartTransformation(
+							new CBehaviorFinishTransformation(localStore, unit, abil, targetType, keepRatios, actions,
+									addAlternateTagAfter, visibleOrderId, perm, dur, transTime, landTime, atlAdDelay,
+									altAdTime, imLand, imTakeOff, this.getAlias(), targetType, instantTransformation),
+							transformId),
 					false);
 		}
 	}

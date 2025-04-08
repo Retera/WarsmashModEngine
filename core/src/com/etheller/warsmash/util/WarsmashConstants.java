@@ -63,6 +63,8 @@ public class WarsmashConstants {
 
 	public static final boolean SHOW_FPS = true;
 
+	public static List<String> ABILITY_COMPATIBILITY = null;
+
 	public static void loadConstants(final GameObject emulatorConstants, final DataTable warsmashIni) {
 		MAX_PLAYERS = emulatorConstants.getFieldValue("MaxPlayers");
 		GAME_VERSION = emulatorConstants.getFieldValue("GameVersion");
@@ -104,6 +106,7 @@ public class WarsmashConstants {
 			}
 		}
 		RACE_MANAGER.build();
+		ABILITY_COMPATIBILITY = emulatorConstants.getFieldAsList("AbilityCompatibility");
 	}
 
 	public static final String getGameId() {

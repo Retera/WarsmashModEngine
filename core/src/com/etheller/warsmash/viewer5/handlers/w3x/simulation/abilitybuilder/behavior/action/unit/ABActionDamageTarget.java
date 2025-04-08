@@ -31,6 +31,7 @@ public class ABActionDamageTarget implements ABSingleAction {
 	private ABBooleanCallback damageInvulnerable;
 	private ABBooleanCallback explodeOnDeath;
 	private ABBooleanCallback onlyDamageSummons;
+	private ABBooleanCallback nonlethal;
 
 	@Override
 	public void runAction(CSimulation game, CUnit caster, Map<String, Object> localStore, final int castId) {
@@ -55,13 +56,16 @@ public class ABActionDamageTarget implements ABSingleAction {
 		if (onlyDamageSummons != null) {
 			flags.setOnlyDamageSummons(onlyDamageSummons.callback(game, caster, localStore, castId));
 		}
+		if (nonlethal != null) {
+			flags.setNonlethal(nonlethal.callback(game, caster, localStore, castId));
+		}
 		if (this.attackType != null) {
 			theAttackType = this.attackType.callback(game, caster, localStore, castId);
 		}
 		if (this.damageType != null) {
 			theDamageType = this.damageType.callback(game, caster, localStore, castId);
 		}
-		if (ignoreLTEZero == null || !ignoreLTEZero.callback(game, caster, localStore, castId) || theDamage > 0) {
+		if (theDamage > 0 || ignoreLTEZero == null || !ignoreLTEZero.callback(game, caster, localStore, castId)) {
 			target.callback(game, caster, localStore, castId).damage(game,
 					source.callback(game, caster, localStore, castId), flags, theAttackType, theDamageType,
 					CWeaponSoundTypeJass.WHOKNOWS.name(), damage.callback(game, caster, localStore, castId));

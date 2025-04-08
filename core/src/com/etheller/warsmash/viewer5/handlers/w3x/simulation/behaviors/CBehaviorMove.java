@@ -407,6 +407,10 @@ public class CBehaviorMove implements CBehavior {
 		return this.unit;
 	}
 
+	public CRangedBehavior getRangedBehavior() {
+		return this.rangedBehavior;
+	}
+
 	public void pathFound(final List<Point2D.Float> waypoints, final CSimulation simulation) {
 		this.pathfindingActive = false;
 

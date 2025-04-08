@@ -12,6 +12,7 @@ public class ABLocalStoreKeys {
 	public static final String GAME = "_game";
 	public static final String THISUNIT = "_thisUnit";
 	public static final String ABILITY = "_ability";
+	public static final String BUFF = "_buff";
 	public static final String ITEM = "_item";
 	public static final String ITEMSLOT = "_itemSlot";
 	public static final String ITERATORCOUNT = "_i";
@@ -51,6 +52,11 @@ public class ABLocalStoreKeys {
 	public static final String LASTCREATEDUNIT = "_lastCreatedUnit";
 	public static final String LASTADDEDUNIT = "_lastAddedUnit";
 	public static final String LASTREMOVEDDUNIT = "_lastRemovedUnit";
+	public static final String COMPUNIT1 = "_compUnit1";
+	public static final String COMPUNIT2 = "_compUnit2";
+	
+	// Item Names
+	public static final Object LASTCREATEDITEM = "_lastCreatedItem";
 	
 	// Ability Names
 	public static final String LASTCREATEDABILITY = "_lastCreatedAbility";
@@ -68,7 +74,8 @@ public class ABLocalStoreKeys {
 	
 	//Generic Targeting
 	public static final String ATTACKINGUNIT = "_attackingUnit#";
-	public static final String ATTACKEDUNIT = "_attackedUnit#";
+	public static final String ATTACKTARGET = "_attackTarget#";
+	public static final String ATTACKIMPACTLOCATION = "_attackImpactLocation#";
 	public static final String ABILITYTARGETEDUNIT = "_abilityTargetedUnit#";
 	public static final String ABILITYTARGETEDDESTRUCTABLE = "_abilityTargetedDestructable#";
 	public static final String ABILITYTARGETEDITEM = "_abilityTargetedItem#";
@@ -98,6 +105,7 @@ public class ABLocalStoreKeys {
 	
 	//Events
 	public static final String LASTCREATEDTODEVENT = "_lastCreatedToDEvent";
+	public static final String LASTCREATEDWIDEVENT = "_lastCreatedWidEvent";
 	
 
 	// Dest Names
@@ -140,6 +148,7 @@ public class ABLocalStoreKeys {
 
 	// AttackPostDamageListener Names
 	public static final String LASTCREATEDAPoDL = "_lastCreatedAPoDL";
+	public static final String LISTENERLOOP = "_listenerLoop#";
 
 	// AttackPreDamageListener Names
 	public static final String LASTCREATEDAPrDL = "_lastCreatedAPrDL";
@@ -184,6 +193,19 @@ public class ABLocalStoreKeys {
 	public static final String WASAUTOCASTON = "_wasAutocastOn";
 	public static final String ISAUTOCASTON = "_isAutocastOn";
 	
+	// Attack Modifier Names
+	public static final String LASTCREATEDAMod = "_lastCreatedAMod";
+	public static final String ATTACKSETTINGS = "_attackSettings#";
+	public static final String ATTACKMODLOOP = "_attackModLoop#";
+	public static final String THEATTACK = "_theAttack#";
+
+	// Attack Settings
+	public static final String LASTCREATEDASettings = "_lastCreatedASettings";
+	
+	//Unit State Listener
+	public static final String LASTCREATEDUSL = "_lastCreatedUSL";
+	public static final String LASTSTATELISTENERADDEDUNIT = "_lastStateListenerAddedUnit";
+	
 	public static String combineKey(String key, int castId) {
 		return key + castId;
 	}
@@ -206,5 +228,9 @@ public class ABLocalStoreKeys {
 	
 	public static String combineArgumentKey(String key) {
 		return "_$" + key;
+	}
+	
+	public static String combineUniqueValueKey(String key, int handleId) {
+		return "_*" + handleId +"#" + key;
 	}
 }

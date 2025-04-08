@@ -8,6 +8,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.booleancallbacks.ABBooleanCallback;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.idcallbacks.ABIDCallback;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.stringcallbacks.ABStringCallback;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.buff.ABPermanentPassiveBuff;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABAction;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABLocalStoreKeys;
@@ -27,6 +28,10 @@ public class ABActionCreatePassiveBuff implements ABSingleAction {
 
 	private ABBooleanCallback leveled;
 	private ABBooleanCallback positive;
+
+	private ABStringCallback visibilityGroup;
+	
+	private List<ABStringCallback> uniqueFlags;
 
 	@Override
 	public void runAction(final CSimulation game, final CUnit caster, final Map<String, Object> localStore,
@@ -62,6 +67,14 @@ public class ABActionCreatePassiveBuff implements ABSingleAction {
 		}
 		if (this.playSfx != null) {
 			ability.setPlaySfx(this.playSfx.callback(game, caster, localStore, castId));
+		}
+		if (uniqueFlags != null) {
+			for (ABStringCallback flag : uniqueFlags) {
+				ability.addUniqueFlag(flag.callback(game, caster, localStore, castId));
+			}
+		}
+		if (visibilityGroup != null) {
+			ability.setVisibilityGroup(visibilityGroup.callback(game, caster, localStore, castId));
 		}
 		if (!localStore.containsKey(ABLocalStoreKeys.BUFFCASTINGUNIT)) {
 			localStore.put(ABLocalStoreKeys.BUFFCASTINGUNIT, caster);

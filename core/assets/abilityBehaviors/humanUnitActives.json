@@ -1528,7 +1528,7 @@
 							"type": "if",
 							"condition": {
 								"type": "isNewBehaviorCategoryInList",
-								"list": ["ATTACK","SPELL"]
+								"list": ["ATTACK","SPELL","BUILD"]
 							},
 							"thenActions": [{
 								"type": "removeBuff",

@@ -45,6 +45,7 @@ public interface CAbility extends CAbilityView, CExtensibleHandle {
 	void setHero(boolean isHero);
 
 	void setDisabled(boolean disabled, CAbilityDisableType type);
+	void setClickDisabled(boolean disabled, CAbilityDisableType type);
 
 	void setIconShowing(boolean iconShowing);
 
@@ -53,5 +54,13 @@ public interface CAbility extends CAbilityView, CExtensibleHandle {
 	void setItemAbility(CItem item, int slot);
 
 	CItem getItem();
+
+	boolean hasUniqueFlag(String flag);
+	void addUniqueFlag(String flag);
+	void removeUniqueFlag(String flag);
+
+	<T> T getUniqueValue(String key, Class<T> cls);
+	void addUniqueValue(Object item, String key);
+	void removeUniqueValue(String key);
 
 }

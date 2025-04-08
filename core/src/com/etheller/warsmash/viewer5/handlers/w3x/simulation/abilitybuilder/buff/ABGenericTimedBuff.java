@@ -19,6 +19,18 @@ public abstract class ABGenericTimedBuff extends ABBuff {
 		this.setPositive(positive);
 		this.setDispellable(dispellable);
 	}
+	
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		ABGenericTimedBuff other = (ABGenericTimedBuff) obj;
+		return this.getAlias() == other.getAlias() && this.getLevel() == other.getLevel() && !this.isStacks();
+	}
 
 	@Override
 	public void onAdd(CSimulation game, CUnit unit) {
@@ -36,6 +48,11 @@ public abstract class ABGenericTimedBuff extends ABBuff {
 	@Override
 	public void onRemove(CSimulation game, CUnit unit) {
 		this.onBuffRemove(game, unit);
+		this.cleanUpUniqueValues();
+	}
+
+	protected void cleanUpUniqueValues() {
+		// Do nothing
 	}
 
 	protected abstract void onBuffRemove(CSimulation game, CUnit unit);
@@ -68,7 +85,6 @@ public abstract class ABGenericTimedBuff extends ABBuff {
 	}
 
 	public void updateExpiration(final CSimulation game, final CUnit unit) {
-		final int durationTicks = (int) (this.duration / WarsmashConstants.SIMULATION_STEP_TIME);
-		expireTick = game.getGameTurnTick() + durationTicks;
+		this.currentTick = 0;
 	}
 }

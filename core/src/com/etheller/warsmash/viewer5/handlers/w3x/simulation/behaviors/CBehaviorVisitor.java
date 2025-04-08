@@ -11,4 +11,6 @@ public interface CBehaviorVisitor<T> {
 	T accept(CBehaviorAbilityBuilderBase target);
 	T accept(CBehaviorAbilityBuilderNoTarget target);
 
+	T accept(CBehaviorMove target);
+
 }

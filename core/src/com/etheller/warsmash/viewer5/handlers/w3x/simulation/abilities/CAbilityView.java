@@ -34,6 +34,7 @@ public interface CAbilityView extends CHandle {
 	boolean isHero();
 
 	boolean isDisabled();
+	boolean isClickDisabled();
 
 	boolean isIconShowing();
 

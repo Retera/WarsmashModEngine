@@ -8,7 +8,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.environment.PathingGrid.Moveme
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnitType;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.ability.AbilityBuilderActiveAbility;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.ability.AbilityBuilderAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.handler.TransformationHandler;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.handler.TransformationHandler.OnTransformationActions;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehavior;
@@ -19,7 +19,7 @@ public class CBehaviorFinishTransformation implements CBehavior {
 	private Map<String, Object> localStore;
 	private OnTransformationActions actions;
 	private CUnit unit;
-	private AbilityBuilderActiveAbility ability;
+	private AbilityBuilderAbility ability;
 	private CUnitType baseTypeForDuration;
 	private CUnitType newType;
 	private boolean keepRatios;
@@ -46,7 +46,7 @@ public class CBehaviorFinishTransformation implements CBehavior {
 	private int castStartTick = 0;
 
 	public CBehaviorFinishTransformation(Map<String, Object> localStore, final CUnit unit,
-			AbilityBuilderActiveAbility ability, CUnitType newType, final boolean keepRatios,
+			AbilityBuilderAbility ability, CUnitType newType, final boolean keepRatios,
 			OnTransformationActions actions, boolean addAlternateTagAfter, final int visibleOrderId, boolean permanent,
 			float duration, float transformationTime, float landingDelay, float altitudeAdjustmentDelay,
 			float altitudeAdjustmentDuration, boolean immediateLanding, boolean immediateTakeoff, War3ID buffId,

@@ -40,6 +40,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehavior
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.CUnitAttackInstant;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.CUnitAttackListener;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.CUnitAttackMissile;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.replacement.CUnitAttackSettings;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.projectile.CAbilityCollisionProjectileListener;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.projectile.CAbilityProjectile;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.projectile.CAbilityProjectileListener;
@@ -180,8 +181,7 @@ public class CSimulation implements CPlayerAPI, CFogMaskSettings {
 				final CRaceManagerEntry raceEntry = WarsmashConstants.RACE_MANAGER
 						.get(seededRandom.nextInt(WarsmashConstants.RACE_MANAGER.getEntryCount()));
 				defaultRace = WarsmashConstants.RACE_MANAGER.getRace(raceEntry.getRaceId());
-			}
-			else {
+			} else {
 				for (int j = 0; j < WarsmashConstants.RACE_MANAGER.getEntryCount(); j++) {
 					final CRaceManagerEntry entry = WarsmashConstants.RACE_MANAGER.get(j);
 					final CRace race = WarsmashConstants.RACE_MANAGER.getRace(entry.getRaceId());
@@ -290,7 +290,8 @@ public class CSimulation implements CPlayerAPI, CFogMaskSettings {
 	}
 
 	public CUnit internalCreateUnit(final War3ID typeId, final int playerIndex, final float x, final float y,
-			final float facing, final BufferedImage buildingPathingPixelMap, int editorConfigHitPointPercent, int editorConfigManaAmount) {
+			final float facing, final BufferedImage buildingPathingPixelMap, int editorConfigHitPointPercent,
+			int editorConfigManaAmount) {
 		final CUnit unit = this.unitData.create(this, playerIndex, typeId, x, y, facing, buildingPathingPixelMap,
 				this.handleIdAllocator, editorConfigHitPointPercent, editorConfigManaAmount);
 		this.newUnits.add(unit);
@@ -323,7 +324,13 @@ public class CSimulation implements CPlayerAPI, CFogMaskSettings {
 
 	public CUnit createUnit(final War3ID typeId, final int playerIndex, final float x, final float y,
 			final float facing) {
+		return this.createUnit(typeId, playerIndex, x, y, facing, false);
+	}
+
+	public CUnit createUnit(final War3ID typeId, final int playerIndex, final float x, final float y,
+			final float facing, final boolean constructing) {
 		final CUnit createdUnit = this.simulationRenderController.createUnit(this, typeId, playerIndex, x, y, facing);
+		createdUnit.setConstructing(constructing);
 		if (createdUnit != null) {
 			setupCreatedUnit(createdUnit);
 			if (createdUnit.getCollisionRectangle() == null) {
@@ -389,9 +396,9 @@ public class CSimulation implements CPlayerAPI, CFogMaskSettings {
 
 	public CAttackProjectile createProjectile(final CUnit source, final float launchX, final float launchY,
 			final float launchFacing, final CUnitAttackMissile attack, final AbilityTarget target, final float damage,
-			final int bounceIndex, final CUnitAttackListener attackListener) {
+			final int bounceIndex, final CUnitAttackListener attackListener, final CUnitAttackSettings settings) {
 		final CAttackProjectile projectile = this.simulationRenderController.createAttackProjectile(this, launchX,
-				launchY, launchFacing, source, attack, target, damage, bounceIndex, attackListener);
+				launchY, launchFacing, source, attack, target, damage, bounceIndex, attackListener, settings);
 		this.newProjectiles.add(projectile);
 		return projectile;
 	}
@@ -401,6 +408,16 @@ public class CSimulation implements CPlayerAPI, CFogMaskSettings {
 			final AbilityTarget target, final CAbilityProjectileListener projectileListener) {
 		final CAbilityProjectile projectile = this.simulationRenderController.createProjectile(this, launchX, launchY,
 				launchFacing, speed, homing, source, spellAlias, target, projectileListener);
+		this.newProjectiles.add(projectile);
+		projectileListener.onLaunch(this, projectile, target);
+		return projectile;
+	}
+
+	public CAbilityProjectile createProjectile(final CUnit source, final CUnitAttackSettings settings,
+			final float launchX, final float launchY, final float launchFacing, final AbilityTarget target,
+			final CAbilityProjectileListener projectileListener) {
+		final CAbilityProjectile projectile = this.simulationRenderController.createProjectile(this, launchX, launchY,
+				launchFacing, source, settings, target, projectileListener);
 		this.newProjectiles.add(projectile);
 		projectileListener.onLaunch(this, projectile, target);
 		return projectile;
@@ -548,14 +565,12 @@ public class CSimulation implements CPlayerAPI, CFogMaskSettings {
 			if (!this.falseTimeOfDay.tick()) {
 				this.falseTimeOfDay = null;
 			}
-		}
-		else {
+		} else {
 			if (this.nextGameTime != null) {
 				this.currentGameDayTimeElapsed = (this.nextGameTime / this.gameplayConstants.getGameDayHours())
 						* this.gameplayConstants.getGameDayLength();
 				this.nextGameTime = null;
-			}
-			else if (!this.timeOfDaySuspended) {
+			} else if (!this.timeOfDaySuspended) {
 				this.currentGameDayTimeElapsed = (this.currentGameDayTimeElapsed
 						+ WarsmashConstants.SIMULATION_STEP_TIME) % this.gameplayConstants.getGameDayLength();
 			}
@@ -1192,30 +1207,24 @@ public class CSimulation implements CPlayerAPI, CFogMaskSettings {
 			if (this.fogMaskEnabled) {
 				if (this.fogEnabled) {
 					return CFogState.MASKED.getMask();
-				}
-				else {
+				} else {
 					return CFogState.MASKED.getMask();
 				}
-			}
-			else if (this.fogEnabled) {
+			} else if (this.fogEnabled) {
 				return CFogState.FOGGED.getMask();
-			}
-			else {
+			} else {
 				return CFogState.VISIBLE.getMask();
 			}
 		case FOGGED:
 			if (this.fogMaskEnabled) {
 				if (this.fogEnabled) {
 					return CFogState.FOGGED.getMask();
-				}
-				else {
+				} else {
 					return CFogState.VISIBLE.getMask();
 				}
-			}
-			else if (this.fogEnabled) {
+			} else if (this.fogEnabled) {
 				return CFogState.FOGGED.getMask();
-			}
-			else {
+			} else {
 				return CFogState.VISIBLE.getMask();
 			}
 		case VISIBLE:

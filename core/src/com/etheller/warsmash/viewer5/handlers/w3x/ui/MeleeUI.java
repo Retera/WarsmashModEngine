@@ -3925,6 +3925,11 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 	}
 
 	@Override
+	public void upgradesChanged() {
+		reloadSelectedUnitUI(this.selectedUnit);
+	}
+
+	@Override
 	public void inventoryChanged() {
 		reloadSelectedUnitUI(this.selectedUnit);
 	}
@@ -5083,6 +5088,13 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 
 		@Override
 		public void abilitiesChanged() {
+			if (this.disposed) {
+				return;
+			}
+		}
+
+		@Override
+		public void upgradesChanged() {
 			if (this.disposed) {
 				return;
 			}

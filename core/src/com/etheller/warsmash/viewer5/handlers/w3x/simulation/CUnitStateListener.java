@@ -25,6 +25,8 @@ public interface CUnitStateListener {
 
     void hideStateChanged();
 
+	void upgradesChanged();
+
     public static final class CUnitStateNotifier extends SubscriberSetNotifier<CUnitStateListener>
 			implements CUnitStateListener {
 		@Override
@@ -101,6 +103,13 @@ public interface CUnitStateListener {
 		public void hideStateChanged() {
 			for (final CUnitStateListener listener : set) {
 				listener.hideStateChanged();
+			}
+		}
+
+		@Override
+		public void upgradesChanged() {
+			for (final CUnitStateListener listener : set) {
+				listener.upgradesChanged();
 			}
 		}
 	}

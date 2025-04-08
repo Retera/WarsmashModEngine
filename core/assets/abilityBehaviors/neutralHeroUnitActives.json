@@ -78,7 +78,7 @@
 						}],
 						"elseActions": [{
 								"type": "subtractMp",
-								"target": {
+								"unit": {
 									"type": "getListenerUnit"
 								},
 								"amount": {

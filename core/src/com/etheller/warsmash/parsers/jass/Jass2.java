@@ -5061,6 +5061,15 @@ public class Jass2 {
 						return new HandleJassValue(unitType,
 								((CommonTriggerExecutionScope) triggerScope).getKillingUnit());
 					});
+			jassProgramVisitor.getJassNativeManager().createNative("GetEventDamageSource",
+					(arguments, globalScope, triggerScope) -> {
+						return new HandleJassValue(unitType,
+								((CommonTriggerExecutionScope) triggerScope).getDamageSource());
+					});
+			jassProgramVisitor.getJassNativeManager().createNative("GetEventDamage",
+					(arguments, globalScope, triggerScope) -> {
+						return RealJassValue.of(((CommonTriggerExecutionScope) triggerScope).getDamageTaken());
+					});
 			jassProgramVisitor.getJassNativeManager().createNative("GetTriggerUnit",
 					(arguments, globalScope, triggerScope) -> {
 						return new HandleJassValue(unitType,

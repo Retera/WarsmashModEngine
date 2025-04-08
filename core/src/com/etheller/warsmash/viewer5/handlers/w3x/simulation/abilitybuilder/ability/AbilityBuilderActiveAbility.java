@@ -13,8 +13,10 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.autocast.CAutocastAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.GenericSingleIconActiveAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityPointTarget;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.parser.AbilityBuilderConfiguration;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.types.impl.CAbilityTypeAbilityBuilderLevelData;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CTargetType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetCheckReceiver;
 
 public interface AbilityBuilderActiveAbility extends AbilityBuilderAbility, CAutocastAbility, GenericSingleIconActiveAbility {
@@ -26,6 +28,8 @@ public interface AbilityBuilderActiveAbility extends AbilityBuilderAbility, CAut
 	
 	public int getChargedManaCost();
 	public void setCastRange(float castRange);
+	
+	public EnumSet<CTargetType> getTargetsAllowed();
 
 	public int getOffOrderId();
 	
@@ -46,6 +50,8 @@ public interface AbilityBuilderActiveAbility extends AbilityBuilderAbility, CAut
 	public void checkCanTargetNoTarget(final CSimulation game, final CUnit unit, final int orderId,
 			boolean autoOrder, final AbilityTargetCheckReceiver<Void> receiver);
 
+	public void internalBegin(CSimulation game, CUnit theCaster, int orderId, boolean b, AbilityTarget theTarget);
+
 	public void runOnOrderIssuedActions(CSimulation game, CUnit caster, int orderId);
 
 	public void runBeginCastingActions(CSimulation game, CUnit caster, int orderId);
@@ -65,5 +71,10 @@ public interface AbilityBuilderActiveAbility extends AbilityBuilderAbility, CAut
 	War3ID getOffTooltipOverride();
 
 	boolean isActive();
+	
+	public void cleanupInputs();
+	public void cleanupInputs(int castId);
+
+	public boolean isMenuAbility();
 
 }

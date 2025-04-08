@@ -729,7 +729,7 @@
 								"periodicActions": [{
 									"type": "damageTarget",
 									"source": {
-										"type": "getCastingUnit"
+										"type": "getBuffCastingUnit"
 									},
 									"target": {
 										"type": "getBuffedUnit"

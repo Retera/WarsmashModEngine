@@ -3,12 +3,14 @@ package com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.beh
 import java.util.Map;
 
 import com.etheller.warsmash.parsers.jass.JassTextGenerator;
+import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityPointTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.floatcallbacks.ABFloatCallback;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.idcallbacks.ABIDCallback;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.locationcallbacks.ABLocationCallback;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABLocalStoreKeys;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABSingleAction;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CEffectType;
 
@@ -27,8 +29,14 @@ public class ABActionCreateTemporarySpellEffectAtLocation implements ABSingleAct
 		if (this.facing != null) {
 			dir = this.facing.callback(game, caster, localStore, castId);
 		}
+		War3ID theId = null;
+		if (id == null) {
+			theId = (War3ID) localStore.get(ABLocalStoreKeys.ALIAS);
+		} else {
+			theId = id.callback(game, caster, localStore, castId);
+		}
 		game.spawnTemporarySpellEffectOnPoint(loc.getX(), loc.getY(), dir,
-				this.id.callback(game, caster, localStore, castId), this.effectType, 0);
+				theId, this.effectType, 0);
 	}
 
 	@Override

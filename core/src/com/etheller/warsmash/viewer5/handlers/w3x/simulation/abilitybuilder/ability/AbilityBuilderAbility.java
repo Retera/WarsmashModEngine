@@ -35,5 +35,15 @@ public interface AbilityBuilderAbility extends CLevelingAbility, Aliased {
 	War3ID getOnTooltipOverride();
 	
 	public int getAbilityIntField(String field);
+	public float getAbilityFloatField(String field);
+	public String getAbilityStringField(String field);
+	public boolean getAbilityBooleanField(String field);
+
+	boolean hasUniqueFlag(String flag);
+	void addUniqueFlag(String flag);
+	void removeUniqueFlag(String flag);
+
+	public int getIconVisibleMenuId();
+	void setIconVisibleMenuId(int menu);
 
 }

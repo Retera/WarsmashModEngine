@@ -16,7 +16,10 @@ public class ABConditionDoesUnitHaveBuff extends ABCondition {
 
 	@Override
 	public Boolean callback(CSimulation game, CUnit caster, Map<String, Object> localStore, final int castId) {
-		CUnit theUnit = unit.callback(game, caster, localStore, castId);
+		CUnit theUnit = caster;
+		if (unit != null) {
+			theUnit = unit.callback(game, caster, localStore, castId);
+		}
 		if (theUnit != null) {
 			for (CAbility ability : theUnit.getAbilities()) {
 				if (ability instanceof CBuff) {

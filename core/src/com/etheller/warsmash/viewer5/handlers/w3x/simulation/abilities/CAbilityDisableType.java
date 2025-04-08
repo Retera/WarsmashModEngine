@@ -7,7 +7,7 @@ public enum CAbilityDisableType implements CHandle {
 	CONSTRUCTION((byte) 2),
 	TRANSFORMATION((byte) 4),
 	TRIGGER((byte) 8),
-	ATTACKDISABLED((byte) 16),
+	DISABLED_EFFECT((byte) 16),
 	PLAYER((byte) 32),
 	ABILITYINTERNAL((byte) 64);
 

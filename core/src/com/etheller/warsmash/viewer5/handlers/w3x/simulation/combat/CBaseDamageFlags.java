@@ -6,6 +6,7 @@ public abstract class CBaseDamageFlags implements CDamageFlags {
 	private static int IGNOREINVUL = 0b100;
 	private static int EXPLODE = 0b1000;
 	private static int SUMMON = 0b10000;
+	private static int NONLETHAL = 0b100000;
 
 	private int flags = 0;
 
@@ -60,5 +61,15 @@ public abstract class CBaseDamageFlags implements CDamageFlags {
 	@Override
 	public void setOnlyDamageSummons(boolean summon) {
 		this.flags = summon ? this.flags | SUMMON : this.flags & ~SUMMON;
+	}
+
+	@Override
+	public boolean isNonlethal() {
+		return (this.flags & NONLETHAL) != 0;
+	}
+
+	@Override
+	public void setNonlethal(boolean nonlethal) {
+		this.flags = nonlethal ? this.flags | NONLETHAL : this.flags & ~NONLETHAL;
 	}
 }

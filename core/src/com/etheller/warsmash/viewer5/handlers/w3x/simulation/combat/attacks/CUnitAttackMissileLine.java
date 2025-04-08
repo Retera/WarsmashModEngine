@@ -6,6 +6,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CAttackDamag
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CAttackType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CTargetType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CWeaponType;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.replacement.CUnitAttackSettings;
 
 public class CUnitAttackMissileLine extends CUnitAttackMissile {
 	private float damageSpillDistance;
@@ -21,7 +22,7 @@ public class CUnitAttackMissileLine extends CUnitAttackMissile {
 			final float damageSpillRadius, final boolean isArtillery) {
 		super(animationBackswingPoint, animationDamagePoint, attackType, cooldownTime, damageBase, damageDice,
 				damageSidesPerDie, damageUpgradeAmount, range, rangeMotionBuffer, showUI, targetsAllowed, weaponSound,
-				weaponType, projectileArc, projectileArt, projectileHomingEnabled, projectileSpeed);
+				weaponType, projectileArc, projectileArt, isArtillery ? false : projectileHomingEnabled, projectileSpeed);
 		this.damageSpillDistance = damageSpillDistance;
 		this.damageSpillRadius = damageSpillRadius;
 		this.artillery = isArtillery;
@@ -29,6 +30,7 @@ public class CUnitAttackMissileLine extends CUnitAttackMissile {
 			this.damageFlags = new CAttackDamageFlags(true);
 			this.damageFlags.setExplode(true);
 		}
+		initialSettings();
 	}
 
 	@Override
@@ -54,6 +56,19 @@ public class CUnitAttackMissileLine extends CUnitAttackMissile {
 
 	public void setDamageSpillRadius(final float damageSpillRadius) {
 		this.damageSpillRadius = damageSpillRadius;
+	}
+
+	public Boolean isArtillery() {
+		return this.artillery;
+	}
+
+	public CUnitAttackSettings initialSettings() {
+		this.attackModifier = super.initialSettings();
+		if (this.artillery) {
+			this.attackModifier.setImpactZ(0f);
+			this.attackModifier.setApplyEffectsOnMiss(true);
+		}
+		return this.attackModifier;
 	}
 
 }

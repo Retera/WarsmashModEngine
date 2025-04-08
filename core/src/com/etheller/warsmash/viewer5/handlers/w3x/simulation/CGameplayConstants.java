@@ -42,6 +42,7 @@ public class CGameplayConstants {
 	private final float frostAttackSpeedDecrease;
 	private final float frostMoveSpeedDecrease;
 
+	private final boolean invulnerableSummonsTakeDispelDamage;
 	private final boolean magicImmuneResistsDamage;
 	private final boolean magicImmuneResistsLeech;
 	private final boolean magicImmuneResistsThorns;
@@ -223,6 +224,7 @@ public class CGameplayConstants {
 		this.frostAttackSpeedDecrease = miscData.getFieldFloatValue("FrostAttackSpeedDecrease");
 		this.frostMoveSpeedDecrease = miscData.getFieldFloatValue("FrostMoveSpeedDecrease");
 
+		this.invulnerableSummonsTakeDispelDamage = miscData.getFieldValue("InvulnSummonDispelDamage") != 0;
 		this.magicImmuneResistsDamage = miscData.getFieldValue("MagicImmunesResistDamage") != 0;
 		this.magicImmuneResistsLeech = miscData.getFieldValue("MagicImmunesResistLeech") != 0;
 		this.magicImmuneResistsThorns = miscData.getFieldValue("MagicImmunesResistThorns") != 0;
@@ -422,6 +424,10 @@ public class CGameplayConstants {
 
 	public float getFrostMoveSpeedDecrease() {
 		return frostMoveSpeedDecrease;
+	}
+
+	public boolean isInvulnerableSummonsTakeDispelDamage() {
+		return invulnerableSummonsTakeDispelDamage;
 	}
 
 	public boolean isMagicImmuneResistsDamage() {

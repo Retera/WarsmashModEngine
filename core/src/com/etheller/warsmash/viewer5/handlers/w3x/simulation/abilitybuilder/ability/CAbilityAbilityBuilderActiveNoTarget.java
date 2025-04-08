@@ -9,6 +9,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityPointTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTarget;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTargetVisitor;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.ABBehavior;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABLocalStoreKeys;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.parser.AbilityBuilderConfiguration;
@@ -87,14 +88,21 @@ public class CAbilityAbilityBuilderActiveNoTarget extends CAbilityAbilityBuilder
 
 	@Override
 	public CBehavior beginNoTarget(CSimulation game, CUnit caster, int orderId, boolean autoOrder) {
-		this.castId++;
+		this.internalBegin(game, caster, orderId, autoOrder, null);
 		if (castless) {
 			return null;
 		} else {
-			this.localStore.put(ABLocalStoreKeys.combineKey(ABLocalStoreKeys.ISAUTOCAST, orderId), autoOrder);
-			this.runOnOrderIssuedActions(game, caster, orderId);
 			this.behavior.setCastId(castId);
 			return this.behavior.reset();
+		}
+	}
+
+	@Override
+	public void internalBegin(CSimulation game, CUnit caster, int orderId, boolean autoOrder, AbilityTarget target) {
+		this.castId++;
+		if (!castless) {
+			this.localStore.put(ABLocalStoreKeys.combineKey(ABLocalStoreKeys.ISAUTOCAST, orderId), autoOrder);
+			this.runOnOrderIssuedActions(game, caster, orderId);
 		}
 	}
 

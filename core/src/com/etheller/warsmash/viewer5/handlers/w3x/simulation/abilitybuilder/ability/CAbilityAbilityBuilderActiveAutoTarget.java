@@ -8,6 +8,8 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityPointTarget;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTarget;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTargetVisitor;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.ABBehavior;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABAction;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABLocalStoreKeys;
@@ -58,6 +60,20 @@ public class CAbilityAbilityBuilderActiveAutoTarget extends CAbilityAbilityBuild
 			this.localStore.remove(ABLocalStoreKeys.ABILITYTARGETEDDESTRUCTABLE + castId);
 			this.localStore.remove(ABLocalStoreKeys.ABILITYTARGETEDITEM + castId);
 			return null;
+		}
+	}
+
+	@Override
+	public void internalBegin(CSimulation game, CUnit caster, int orderId, boolean autoOrder, AbilityTarget noTarget) {
+		this.castId++;
+		this.localStore.put(ABLocalStoreKeys.combineKey(ABLocalStoreKeys.ISAUTOCAST, orderId), autoOrder);
+		CWidget target = autoTarget(game, caster);
+		if (target != null) {
+			this.runOnOrderIssuedActions(game, caster, orderId);
+		} else {
+			this.localStore.remove(ABLocalStoreKeys.ABILITYTARGETEDUNIT + castId);
+			this.localStore.remove(ABLocalStoreKeys.ABILITYTARGETEDDESTRUCTABLE + castId);
+			this.localStore.remove(ABLocalStoreKeys.ABILITYTARGETEDITEM + castId);
 		}
 	}
 	

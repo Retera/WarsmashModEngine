@@ -110,9 +110,11 @@ public class CAbilityKaboom extends CAbilityUnitOrPointTargetSpellBase implement
 	}
 
 	@Override
-	public void setAutoCastOn(final CSimulation simulation, final CUnit caster, final boolean autoCastOn) {
+	public void setAutoCastOn(final CSimulation simulation, final CUnit caster, final boolean autoCastOn, final boolean notify) {
 		this.autoCastOn = autoCastOn;
-		caster.setAutocastAbility(autoCastOn ? this : null);
+		if (notify) {
+			caster.setAutocastAbility(simulation, autoCastOn ? this : null);
+		}
 	}
 
 	@Override

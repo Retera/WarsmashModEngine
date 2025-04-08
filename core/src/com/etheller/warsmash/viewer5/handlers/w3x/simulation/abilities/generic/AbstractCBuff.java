@@ -59,5 +59,10 @@ public abstract class AbstractCBuff extends AbstractGenericAliasedAbility implem
 	public boolean isHero() {
 		return false;
 	}
+	
+	@Override
+	public String getVisibilityGroup() {
+		return null;
+	}
 
 }

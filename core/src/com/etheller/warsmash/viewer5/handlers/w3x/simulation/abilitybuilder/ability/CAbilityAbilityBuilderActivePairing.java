@@ -15,6 +15,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.CPairingAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityPointTarget;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTargetVisitor;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.ABBehavior;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.CBehaviorSendOrder;
@@ -177,6 +178,13 @@ public class CAbilityAbilityBuilderActivePairing extends CAbilityAbilityBuilderG
 
 	private boolean offOrderId(final int orderId) {
 		return ((this.toggleable && this.active) || this.separateOnAndOff) && orderId == this.getOffOrderId();
+	}
+
+	@Override
+	public void internalBegin(CSimulation game, CUnit caster, int orderId, boolean autoOrder, AbilityTarget noTarget) {
+		this.castId++;
+		this.localStore.put(ABLocalStoreKeys.combineKey(ABLocalStoreKeys.ISAUTOCAST, orderId), autoOrder);
+		//Just don't do this
 	}
 
 	// ----
@@ -350,7 +358,7 @@ public class CAbilityAbilityBuilderActivePairing extends CAbilityAbilityBuilderG
 		}
 		if (getPairAbilityCode(game, caster) != null) {
 			for (CAbility ability : target.getAbilities()) {
-				if (ability.getCode().equals(this.getPairAbilityCode(game, caster))) {
+				if (this.getPairAbilityCode(game, caster).equals(ability.getCode())) {
 					localStore.put(ABLocalStoreKeys.LASTPARTNERABILITY, ability);
 					return true;
 				}

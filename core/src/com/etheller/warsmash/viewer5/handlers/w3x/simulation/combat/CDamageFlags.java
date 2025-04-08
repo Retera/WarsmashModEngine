@@ -22,4 +22,8 @@ public interface CDamageFlags {
 
 	void setOnlyDamageSummons(boolean callback);
 
+	boolean isNonlethal();
+
+	void setNonlethal(boolean callback);
+
 }

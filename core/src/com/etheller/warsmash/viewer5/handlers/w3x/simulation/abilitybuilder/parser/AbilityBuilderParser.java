@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.etheller.warsmash.util.War3ID;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.stringcallbacks.ABStringCallback;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABAction;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABCallback;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABCondition;
@@ -46,6 +47,8 @@ public class AbilityBuilderParser {
 	
 	private Map<String, List<ABAction>> reuseActions;
 	private Map<String, ABCallback> reuseCallbacks;
+
+	private List<ABStringCallback> initialUniqueFlags;
 	
 	//Template only
 	private AbilityBuilderParserTemplateFields templateFields;
@@ -138,6 +141,9 @@ public class AbilityBuilderParser {
 			this.onChannelTick = parent.onChannelTick;
 		if (this.onEndChannel == null)
 			this.onEndChannel = parent.onEndChannel;
+		
+		if (this.initialUniqueFlags == null)
+			this.initialUniqueFlags = parent.initialUniqueFlags;
 	}
 
 	public List<AbilityBuilderDupe> getIds() {
@@ -436,5 +442,13 @@ public class AbilityBuilderParser {
 
 	public void setMeleeRangeTargetOverride(MeleeRangeTargetOverride meleeRangeTargetOverride) {
 		this.templateFields.setMeleeRangeTargetOverride(meleeRangeTargetOverride);
+	}
+
+	public List<ABStringCallback> getInitialUniqueFlags() {
+		return this.initialUniqueFlags;
+	}
+
+	public void setInitialUniqueFlags( List<ABStringCallback> initialUniqueFlags) {
+		this.initialUniqueFlags = initialUniqueFlags;
 	}
 }

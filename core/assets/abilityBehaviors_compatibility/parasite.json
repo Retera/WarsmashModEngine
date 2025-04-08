@@ -1,0 +1,412 @@
+{
+	"abilityList": [{
+		"ids": [{"id":"ANpa", "castId": "parasite", "autoCastOnId": "parasiteon", "autoCastOffId": "parasiteoff", "autoCastType": "FARTHESTVALID"}],
+		"type": "NORMAL_UNITTARGET",
+		"overrideFields": {
+			"castTimeOverride": {
+				"type": "rawFloat",
+				"value": 0.0
+			}
+		},
+		"extraTargetConditions": [{
+			"type": "setCantUseReasonOnFailure",
+			"condition": {
+				"type": "not",
+				"condition": {
+					"type": "isUnitSummoned",
+					"unit": {
+						"type": "getAbilityTargetedUnit"
+					}
+				}
+			},
+			"reason": "UNABLE_TO_TARGET_SUMMONED_UNITS"
+		}],
+		"extraAutoTargetConditions": [{
+			"type": "not",
+			"condition": {
+				"type": "doesUnitHaveBuff",
+				"unit": {
+					"type": "getAbilityTargetedUnit"
+				},
+				"id": {
+					"type": "getFirstBuffId"
+				}
+			}
+		}],
+		"reuseActions": {
+			"setup": [{
+					"type": "createNonStackingStatBuff",
+					"buffType": {
+						"type": "getNonStackingStatBuffTypeFromString",
+						"id": {
+							"type": "rawString",
+							"value": "MVSPDPCT"
+						}
+					},
+					"stackingKey": {
+						"type": "rawString",
+						"value": "parasite"
+					},
+					"value": {
+						"type": "negativeFloat",
+						"value": {
+							"type": "getAbilityDataAsFloat",
+							"dataField": "C"
+						}
+					}
+				},{
+					"type": "storeValueLocally",
+					"key": {
+						"type": "rawString",
+						"value": "mvbuff"
+					},
+					"instanceValue": {
+						"type": "rawBoolean",
+						"value": "false"
+					},
+					"valueToStore": {
+						"type": "getLastCreatedNonStackingStatBuff"
+					}
+				},{
+					"type": "createNonStackingStatBuff",
+					"buffType": {
+						"type": "getNonStackingStatBuffTypeFromString",
+						"id": {
+							"type": "rawString",
+							"value": "ATKSPD"
+						}
+					},
+					"stackingKey": {
+						"type": "rawString",
+						"value": "parasite"
+					},
+					"value": {
+						"type": "negativeFloat",
+						"value": {
+							"type": "getAbilityDataAsFloat",
+							"dataField": "B"
+						}
+					}
+				},{
+					"type": "storeValueLocally",
+					"key": {
+						"type": "rawString",
+						"value": "asbuff"
+					},
+					"instanceValue": {
+						"type": "rawBoolean",
+						"value": "false"
+					},
+					"valueToStore": {
+						"type": "getLastCreatedNonStackingStatBuff"
+					}
+			}],
+			"levelChange": [{
+					"type": "updateNonStackingStatBuff",
+					"buff": {
+						"type": "getStoredNonStackingStatBuffByKey",
+						"instanceValue": {
+							"type": "rawBoolean",
+							"value": "false"
+						},
+						"key": {
+							"type": "rawString",
+							"value": "mvbuff"
+						}
+					},
+					"value": {
+						"type": "negativeFloat",
+						"value": {
+							"type": "getAbilityDataAsFloat",
+							"dataField": "C"
+						}
+					}
+				},{
+					"type": "updateNonStackingStatBuff",
+					"buff": {
+						"type": "getStoredNonStackingStatBuffByKey",
+						"instanceValue": {
+							"type": "rawBoolean",
+							"value": "false"
+						},
+						"key": {
+							"type": "rawString",
+							"value": "asbuff"
+						}
+					},
+					"value": {
+						"type": "negativeFloat",
+						"value": {
+							"type": "getAbilityDataAsFloat",
+							"dataField": "B"
+						}
+					}
+			}]
+		},
+		"onAddDisabledAbility": [{
+			"type": "runReuseAction",
+			"name": {
+				"type": "rawString",
+				"value": "setup"
+			}
+		}],
+		"onEndCasting": [{
+				"type": "createTemporarySpellEffectOnUnit",
+				"target": {
+					"type": "getCastingUnit"
+				},
+				"id": {
+					"type": "getAlias"
+				},
+				"effectType": "CASTER"
+			},{
+				"type": "createUnitTargetedProjectile",
+				"source": {
+					"type": "getCastingUnit"
+				},
+				"target": {
+					"type": "getAbilityTargetedUnit"
+				},
+				"id": {
+					"type": "getAlias"
+				},
+				"onHit": [{
+					"type": "checkAbilityProjReaction",
+					"target": {
+						"type": "getProjectileHitUnit"
+					},
+					"projectile": {
+						"type": "getReactionAbilityProjectile"
+					},
+					"onHitActions": [{
+							"type": "checkAbilityEffectReaction",
+							"target": {
+								"type": "getProjectileHitUnit"
+							},
+							"onHitActions": [{
+								"type": "if",
+								"condition": {
+									"type": "i2b",
+									"value": {
+										"type": "i&",
+										"value1": {
+											"type": "getAbilityDataAsInteger",
+											"dataField": "D"
+										},
+										"value2": {
+											"type": "rawInteger",
+											"value": 7
+										}
+									}
+								},
+								"elseActions": [{
+										"type": "createTimedTickingBuff",
+										"buffId": {
+											"type": "getFirstBuffId"
+										},
+										"duration": {
+											"type": "getAbilityDuration",
+											"target": {
+												"type": "getProjectileHitUnit"
+											}
+										},
+										"positive": {
+											"type": "rawBoolean",
+											"value": "false"
+										},
+										"magic": {
+											"type": "rawBoolean",
+											"value": "false"
+										},
+										"onAddActions": [{
+												"type": "addNonStackingStatBuff",
+												"targetUnit": {
+													"type": "getBuffedUnit"
+												},
+												"buff": {
+													"type": "getStoredNonStackingStatBuffByKey",
+													"instanceValue": {
+														"type": "rawBoolean",
+														"value": "false"
+													},
+													"key": {
+														"type": "rawString",
+														"value": "mvbuff"
+													}
+												}
+											},{
+												"type": "addNonStackingStatBuff",
+												"targetUnit": {
+													"type": "getBuffedUnit"
+												},
+												"buff": {
+													"type": "getStoredNonStackingStatBuffByKey",
+													"instanceValue": {
+														"type": "rawBoolean",
+														"value": "false"
+													},
+													"key": {
+														"type": "rawString",
+														"value": "asbuff"
+													}
+												}
+										}],
+										"onTickActions": [{
+												"type": "periodicExecute",
+												"periodicActions": [{
+													"type": "damageTarget",
+													"source": {
+														"type": "getBuffCastingUnit"
+													},
+													"target": {
+														"type": "getBuffedUnit"
+													},
+													"nonlethal": {
+														"type": "not",
+														"condition": {
+															"type": "i2b",
+															"value": {
+																"type": "i&",
+																"value1": {
+																	"type": "getAbilityDataAsInteger",
+																	"dataField": "D"
+																},
+																"value2": {
+																	"type": "rawInteger",
+																	"value": 8
+																}
+															}
+														}
+													},
+													"damage": {
+														"type": "getAbilityDataAsFloat",
+														"dataField": "A"
+													}
+												}],
+												"delaySeconds": {
+													"type": "rawFloat",
+													"value": 1
+												},
+												"unique": {
+													"type": "getUnitHandleAsString",
+													"unit": {
+														"type": "getBuffedUnit"
+													}
+												}
+										}],
+										"onRemoveActions": [{
+												"type": "removeNonStackingStatBuff",
+												"targetUnit": {
+													"type": "getBuffedUnit"
+												},
+												"buff": {
+													"type": "getStoredNonStackingStatBuffByKey",
+													"instanceValue": {
+														"type": "rawBoolean",
+														"value": "false"
+													},
+													"key": {
+														"type": "rawString",
+														"value": "mvbuff"
+													}
+												}
+											},{
+												"type": "removeNonStackingStatBuff",
+												"targetUnit": {
+													"type": "getBuffedUnit"
+												},
+												"buff": {
+													"type": "getStoredNonStackingStatBuffByKey",
+													"instanceValue": {
+														"type": "rawBoolean",
+														"value": "false"
+													},
+													"key": {
+														"type": "rawString",
+														"value": "asbuff"
+													}
+												}
+											},{
+												"type": "if",
+												"condition": {
+													"type": "isUnitDead",
+													"unit": {
+														"type": "getBuffedUnit"
+													}
+												},
+												"thenActions": [{
+													"type": "for",
+													"times": {
+														"type": "getAbilityDataAsInteger",
+														"dataField": "E"
+													},
+													"actions": [{
+															"type": "createUnit",
+															"id": {
+																"type": "getAbilityUnitId"
+															},
+															"owner": {
+																"type": "getOwnerOfUnit",
+																"unit": {
+																	"type": "getBuffCastingUnit"
+																}
+															},
+															"loc": {
+																"type": "getUnitLocation",
+																"unit": {
+																	"type": "getBuffedUnit"
+																}
+															},
+															"facing": {
+																"type": "getUnitFacing",
+																"unit": {
+																	"type": "getBuffedUnit"
+																}
+															}
+														},{
+															"type": "createTimedLifeBuff",
+															"buffId": {
+																"type": "getSecondBuffId"
+															},
+															"duration": {
+																"type": "getAbilityCastTime"
+															},
+															"explode": {
+																"type": "rawBoolean",
+																"value": "false"
+															}
+														},{
+															"type": "addBuff",
+															"target": {
+																"type": "getLastCreatedUnit"
+															},
+															"buff": {
+																"type": "getLastCreatedBuff"
+															}
+														},{
+															"type": "cleanUpCastInstance"
+													}]
+												}]
+										}]
+									},{
+										"type": "addBuff",
+										"target": {
+											"type": "getProjectileHitUnit"
+										},
+										"buff": {
+											"type": "getLastCreatedBuff"
+										}
+								}]
+							}]
+					}]
+				}]
+		}],
+		"onLevelChange": [{
+			"type": "runReuseAction",
+			"name": {
+				"type": "rawString",
+				"value": "levelChange"
+			}
+		}]
+	}]
+}

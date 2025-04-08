@@ -152,6 +152,6 @@ public class CBehaviorRepair extends CAbstractRangedBehavior {
 
 	@Override
 	public CBehaviorCategory getBehaviorCategory() {
-		return CBehaviorCategory.SPELL;
+		return CBehaviorCategory.BUILD;
 	}
 }

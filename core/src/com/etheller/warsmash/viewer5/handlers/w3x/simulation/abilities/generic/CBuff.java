@@ -23,5 +23,7 @@ public interface CBuff extends CAliasedLevelingAbility {
 	boolean isMagic();
 
 	boolean isAura();
+
+	String getVisibilityGroup();
 	
 }

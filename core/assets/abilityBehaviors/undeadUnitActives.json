@@ -465,7 +465,7 @@
 							},
 							"thenActions": [{
 								"type": "subtractMp",
-								"target": {
+								"unit": {
 									"type": "getCastingUnit"
 								},
 								"amount": {

@@ -2,6 +2,7 @@ package com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.beh
 
 import java.util.Map;
 
+import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.idcallbacks.ABIDCallback;
@@ -21,15 +22,21 @@ public class ABActionCreateSpellEffectOnUnit implements ABAction {
 
 	public void runAction(final CSimulation game, final CUnit caster, final Map<String, Object> localStore,
 			final int castId) {
+		War3ID theId = null;
+		if (id == null) {
+			theId = (War3ID) localStore.get(ABLocalStoreKeys.ALIAS);
+		} else {
+			theId = id.callback(game, caster, localStore, castId);
+		}
 		if (index == null) {
 			SimulationRenderComponent ret = game.createPersistentSpellEffectOnUnit(
-					(target.callback(game, caster, localStore, castId)), this.id.callback(game, caster, localStore, castId),
-					this.effectType);
+					(target.callback(game, caster, localStore, castId)), theId, this.effectType);
 			localStore.put(ABLocalStoreKeys.LASTCREATEDFX, ret);
 		} else {
 			SimulationRenderComponent ret = game.createPersistentSpellEffectOnUnit(
-					(target.callback(game, caster, localStore, castId)), this.id.callback(game, caster, localStore, castId),
-					this.effectType, this.index.callback(game, caster, localStore, castId));
+					(target.callback(game, caster, localStore, castId)),
+					this.id.callback(game, caster, localStore, castId), this.effectType,
+					this.index.callback(game, caster, localStore, castId));
 			localStore.put(ABLocalStoreKeys.LASTCREATEDFX, ret);
 		}
 	}

@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.autocast.AutocastType;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.stringcallbacks.ABStringCallback;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABAction;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABCallback;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABCondition;
@@ -50,6 +51,8 @@ public class AbilityBuilderConfiguration {
 	private Map<String, List<ABAction>> reuseActions;
 	private Map<String, ABCallback> reuseCallbacks;
 
+	private List<ABStringCallback> initialUniqueFlags;
+
 	public AbilityBuilderConfiguration(AbilityBuilderParser parser, AbilityBuilderDupe dupe) {
 		this.id = dupe.getId();
 		this.castId = dupe.getCastId();
@@ -87,6 +90,8 @@ public class AbilityBuilderConfiguration {
 		
 		this.setReuseActions(parser.getReuseActions());
 		this.setReuseCallbacks(parser.getReuseCallbacks());
+		
+		this.setInitialUniqueFlags(parser.getInitialUniqueFlags());
 	}
 	
 	public CAbilityTypeDefinitionAbilityBuilder createDefinition() {
@@ -363,6 +368,14 @@ public class AbilityBuilderConfiguration {
 
 	public void setReuseCallbacks(Map<String, ABCallback> reuseCallbacks) {
 		this.reuseCallbacks = reuseCallbacks;
+	}
+
+	public List<ABStringCallback> getInitialUniqueFlags() {
+		return this.initialUniqueFlags;
+	}
+
+	public void setInitialUniqueFlags( List<ABStringCallback> initialUniqueFlags) {
+		this.initialUniqueFlags = initialUniqueFlags;
 	}
 
 }

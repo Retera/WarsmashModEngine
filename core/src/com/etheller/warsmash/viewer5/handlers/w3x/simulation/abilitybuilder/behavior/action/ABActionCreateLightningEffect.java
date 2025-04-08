@@ -2,6 +2,7 @@ package com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.beh
 
 import java.util.Map;
 
+import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.floatcallbacks.ABFloatCallback;
@@ -26,14 +27,21 @@ public class ABActionCreateLightningEffect implements ABAction {
 		if (index != null) {
 			i = index.callback(game, caster, localStore, castId);
 		}
+		War3ID theId = null;
+		if (id == null) {
+			theId = (War3ID) localStore.get(ABLocalStoreKeys.ALIAS);
+		} else {
+			theId = id.callback(game, caster, localStore, castId);
+		}
 		if (duration != null) {
 			SimulationRenderComponentLightning ret = game.createAbilityLightning(
-					origin.callback(game, caster, localStore, castId), this.id.callback(game, caster, localStore, castId), i,
-					target.callback(game, caster, localStore, castId), duration.callback(game, caster, localStore, castId));
+					origin.callback(game, caster, localStore, castId), theId, i,
+					target.callback(game, caster, localStore, castId),
+					duration.callback(game, caster, localStore, castId));
 			localStore.put(ABLocalStoreKeys.LASTCREATEDLIGHTNING, ret);
 		} else {
 			SimulationRenderComponentLightning ret = game.createAbilityLightning(
-					origin.callback(game, caster, localStore, castId), this.id.callback(game, caster, localStore, castId), i,
+					origin.callback(game, caster, localStore, castId), theId, i,
 					target.callback(game, caster, localStore, castId));
 			localStore.put(ABLocalStoreKeys.LASTCREATEDLIGHTNING, ret);
 		}

@@ -622,7 +622,7 @@ public class RenderUnit implements RenderWidget {
 
 	@Override
 	public boolean isSelectable(final CSimulation simulation, final int byPlayer) {
-		return this.simulationUnit.isVisible(simulation, byPlayer); // later needs locust
+		return this.simulationUnit.isVisible(simulation, byPlayer) && this.simulationUnit.isSelectable(simulation, byPlayer);
 	}
 
 	@Override

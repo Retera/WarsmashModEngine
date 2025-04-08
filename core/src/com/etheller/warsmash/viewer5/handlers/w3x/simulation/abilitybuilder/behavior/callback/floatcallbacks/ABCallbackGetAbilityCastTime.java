@@ -6,6 +6,7 @@ import java.util.Map;
 import com.etheller.warsmash.parsers.jass.JassTextGenerator;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.ability.AbilityBuilderAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABLocalStoreKeys;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.types.impl.CAbilityTypeAbilityBuilderLevelData;
 
@@ -15,9 +16,14 @@ public class ABCallbackGetAbilityCastTime extends ABFloatCallback {
 	@Override
 	public Float callback(final CSimulation game, final CUnit caster, final Map<String, Object> localStore,
 			final int castId) {
-		final List<CAbilityTypeAbilityBuilderLevelData> levelData = (List<CAbilityTypeAbilityBuilderLevelData>) localStore
-				.get(ABLocalStoreKeys.LEVELDATA);
-		return levelData.get(((int) localStore.get(ABLocalStoreKeys.CURRENTLEVEL)) - 1).getCastTime();
+		AbilityBuilderAbility ability = (AbilityBuilderAbility) localStore.get(ABLocalStoreKeys.ABILITY);
+		if (ability != null) {
+			return ability.getCastTime();
+		} else {
+			final List<CAbilityTypeAbilityBuilderLevelData> levelData = (List<CAbilityTypeAbilityBuilderLevelData>) localStore
+					.get(ABLocalStoreKeys.LEVELDATA);
+			return levelData.get(((int) localStore.get(ABLocalStoreKeys.CURRENTLEVEL)) - 1).getCastTime();
+		}
 	}
 
 	@Override

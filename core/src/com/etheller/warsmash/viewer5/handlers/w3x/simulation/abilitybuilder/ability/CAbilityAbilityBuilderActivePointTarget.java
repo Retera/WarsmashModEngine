@@ -8,6 +8,8 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityPointTarget;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTarget;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTargetVisitor;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.ABBehavior;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABLocalStoreKeys;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.parser.AbilityBuilderConfiguration;
@@ -44,12 +46,17 @@ public class CAbilityAbilityBuilderActivePointTarget extends CAbilityAbilityBuil
 
 	@Override
 	public CBehavior begin(CSimulation game, CUnit caster, int orderId, boolean autoOrder, AbilityPointTarget point) {
-		this.castId++;
-		this.localStore.put(ABLocalStoreKeys.combineKey(ABLocalStoreKeys.ISAUTOCAST, orderId), autoOrder);
-		localStore.put(ABLocalStoreKeys.ABILITYTARGETEDLOCATION+this.castId, point);
-		this.runOnOrderIssuedActions(game, caster, orderId);
+		this.internalBegin(game, caster, orderId, autoOrder, point);
 		this.behavior.setCastId(castId);
 		return this.behavior.reset(game, point);
+	}
+
+	@Override
+	public void internalBegin(CSimulation game, CUnit caster, int orderId, boolean autoOrder, AbilityTarget theTarget) {
+		this.castId++;
+		this.localStore.put(ABLocalStoreKeys.combineKey(ABLocalStoreKeys.ISAUTOCAST, orderId), autoOrder);
+		localStore.put(ABLocalStoreKeys.ABILITYTARGETEDLOCATION+this.castId, theTarget.visit(AbilityTargetVisitor.POINT));
+		this.runOnOrderIssuedActions(game, caster, orderId);
 	}
 
 	@Override

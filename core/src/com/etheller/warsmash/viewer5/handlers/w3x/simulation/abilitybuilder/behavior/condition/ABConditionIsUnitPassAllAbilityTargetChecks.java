@@ -19,7 +19,10 @@ public class ABConditionIsUnitPassAllAbilityTargetChecks extends ABCondition {
 	@Override
 	public Boolean callback(CSimulation game, CUnit casterUnit, Map<String, Object> localStore, final int castId) {
 		CUnit theCaster = casterUnit;
-
+		CUnit theTarget = target.callback(game, casterUnit, localStore, castId);
+		if (theTarget == null) {
+			return false;
+		}
 		if (caster != null) {
 			theCaster = caster.callback(game, casterUnit, localStore, castId);
 		}
@@ -29,7 +32,7 @@ public class ABConditionIsUnitPassAllAbilityTargetChecks extends ABCondition {
 				.<CWidget>getInstance().reset();
 
 		abil.checkCanTarget(game, theCaster, abil.getBaseOrderId(),
-				false, target.callback(game, casterUnit, localStore, castId), booleanTargetReceiver);
+				false, theTarget, booleanTargetReceiver);
 
 		if (booleanTargetReceiver.isTargetable()) {
 			return true;

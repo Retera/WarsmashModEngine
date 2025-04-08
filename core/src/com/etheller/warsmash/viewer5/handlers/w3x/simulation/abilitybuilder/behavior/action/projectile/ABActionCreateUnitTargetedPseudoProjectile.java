@@ -108,7 +108,6 @@ public class ABActionCreateUnitTargetedPseudoProjectile implements ABSingleActio
 		}
 
 		final GameObject editorData = (GameObject) localStore.get(ABLocalStoreKeys.ABILITYEDITORDATA);
-		final int level = (int) localStore.get(ABLocalStoreKeys.CURRENTLEVEL);
 
 		if (this.speed != null) {
 			theSpeed = this.speed.callback(game, caster, localStore, castId);

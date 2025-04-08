@@ -2,6 +2,7 @@ package com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.beh
 
 import java.util.Map;
 
+import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityPointTarget;
@@ -28,8 +29,14 @@ public class ABActionCreateSpellEffectAtLocation implements ABAction {
 		if (this.facing != null) {
 			dir = this.facing.callback(game, caster, localStore, castId);
 		}
-		final SimulationRenderComponent ret = game.spawnSpellEffectOnPoint(loc.getX(), loc.getY(), dir,
-				this.id.callback(game, caster, localStore, castId), this.effectType, 0);
+		War3ID theId = null;
+		if (id == null) {
+			theId = (War3ID) localStore.get(ABLocalStoreKeys.ALIAS);
+		} else {
+			theId = id.callback(game, caster, localStore, castId);
+		}
+		final SimulationRenderComponent ret = game.spawnSpellEffectOnPoint(loc.getX(), loc.getY(), dir, theId,
+				this.effectType, 0);
 		localStore.put(ABLocalStoreKeys.LASTCREATEDFX, ret);
 	}
 }

@@ -1,0 +1,219 @@
+{
+	"abilityList": [{
+		"ids": [{"id":"Aloc"}],
+		"type": "HIDDEN",
+		"onAddDisabledAbility": [{
+				"type": "createStateModBuff",
+				"buffType": "INVULNERABLE"
+			},{
+				"type": "storeValueLocally",
+				"key": {
+					"type": "rawString",
+					"value": "invuln"
+				},
+				"instanceValue": {
+					"type": "rawBoolean",
+					"value": "false"
+				},
+				"valueToStore": {
+					"type": "getLastCreatedStateModBuff"
+				}
+			},{
+				"type": "createStateModBuff",
+				"buffType": "UNENUMERABLE"
+			},{
+				"type": "storeValueLocally",
+				"key": {
+					"type": "rawString",
+					"value": "unenum"
+				},
+				"instanceValue": {
+					"type": "rawBoolean",
+					"value": "false"
+				},
+				"valueToStore": {
+					"type": "getLastCreatedStateModBuff"
+				}
+			},{
+				"type": "createStateModBuff",
+				"buffType": "UNSELECTABLE",
+				"value": {
+					"type": "playerMaskAllPlayers"
+				}
+			},{
+				"type": "storeValueLocally",
+				"key": {
+					"type": "rawString",
+					"value": "unsel"
+				},
+				"instanceValue": {
+					"type": "rawBoolean",
+					"value": "false"
+				},
+				"valueToStore": {
+					"type": "getLastCreatedStateModBuff"
+				}
+			},{
+				"type": "createStateModBuff",
+				"buffType": "UNTARGETABLE",
+				"value": {
+					"type": "playerMaskAllPlayers"
+				}
+			},{
+				"type": "storeValueLocally",
+				"key": {
+					"type": "rawString",
+					"value": "untar"
+				},
+				"instanceValue": {
+					"type": "rawBoolean",
+					"value": "false"
+				},
+				"valueToStore": {
+					"type": "getLastCreatedStateModBuff"
+				}
+			},{
+				"type": "createUnitStateListener",
+				"onHideStateChanged": [{
+					"type": "if",
+					"condition": {
+						"type": "isUnitHidden",
+						"unit": {
+							"type": "getCastingUnit"
+						}
+					},
+					"thenActions": [{
+							"type": "removeStateModBuff",
+							"targetUnit": {
+								"type": "getCastingUnit"
+							},
+							"buff": {
+								"type": "getStoredStateModBuffByKey",
+								"key": {
+									"type": "rawString",
+									"value": "unenum"
+								},
+								"instanceValue": {
+									"type": "rawBoolean",
+									"value": "false"
+								}
+							}
+						},{
+							"type": "removeStateModBuff",
+							"targetUnit": {
+								"type": "getCastingUnit"
+							},
+							"buff": {
+								"type": "getStoredStateModBuffByKey",
+								"key": {
+									"type": "rawString",
+									"value": "unsel"
+								},
+								"instanceValue": {
+									"type": "rawBoolean",
+									"value": "false"
+								}
+							}
+						},{
+							"type": "removeUnitStateListener",
+							"unit": {
+								"type": "getCastingUnit"
+							},
+							"listener": {
+								"type": "getLastCreatedUnitStateListener"
+							}
+					}]
+				}]
+			}],
+		"onAddAbility": [{
+				"type": "addStateModBuff",
+				"targetUnit": {
+					"type": "getCastingUnit"
+				},
+				"buff": {
+					"type": "getStoredStateModBuffByKey",
+					"key": {
+						"type": "rawString",
+						"value": "invuln"
+					},
+					"instanceValue": {
+						"type": "rawBoolean",
+						"value": "false"
+					}
+				}
+			},{
+				"type": "addStateModBuff",
+				"targetUnit": {
+					"type": "getCastingUnit"
+				},
+				"buff": {
+					"type": "getStoredStateModBuffByKey",
+					"key": {
+						"type": "rawString",
+						"value": "unenum"
+					},
+					"instanceValue": {
+						"type": "rawBoolean",
+						"value": "false"
+					}
+				}
+			},{
+				"type": "addStateModBuff",
+				"targetUnit": {
+					"type": "getCastingUnit"
+				},
+				"buff": {
+					"type": "getStoredStateModBuffByKey",
+					"key": {
+						"type": "rawString",
+						"value": "unsel"
+					},
+					"instanceValue": {
+						"type": "rawBoolean",
+						"value": "false"
+					}
+				}
+			},{
+				"type": "addStateModBuff",
+				"targetUnit": {
+					"type": "getCastingUnit"
+				},
+				"buff": {
+					"type": "getStoredStateModBuffByKey",
+					"key": {
+						"type": "rawString",
+						"value": "untar"
+					},
+					"instanceValue": {
+						"type": "rawBoolean",
+						"value": "false"
+					}
+				}
+			},{
+				"type": "addUnitStateListener",
+				"unit": {
+					"type": "getCastingUnit"
+				},
+				"listener": {
+					"type": "getLastCreatedUnitStateListener"
+				}
+		}],
+		"onRemoveAbility": [{
+				"type": "removeStateModBuff",
+				"targetUnit": {
+					"type": "getCastingUnit"
+				},
+				"buff": {
+					"type": "getStoredStateModBuffByKey",
+					"key": {
+						"type": "rawString",
+						"value": "invuln"
+					},
+					"instanceValue": {
+						"type": "rawBoolean",
+						"value": "false"
+					}
+				}
+			}]
+	}]
+}

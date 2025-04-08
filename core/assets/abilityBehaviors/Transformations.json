@@ -1591,5 +1591,571 @@
 					"value": "false"
 				}
 		}]
+	},{
+		"ids": [{"id":"Aphx"}],
+		"type": "HIDDEN",
+		"reuseActions": {
+			"storeBaseType": [{
+				"type": "if",
+				"condition": {
+					"type": "isNull",
+					"value": {
+						"type": "getStoredIDByKey",
+						"key": {
+							"type": "rawString",
+							"value": "baseType"
+						},
+						"instanceValue": {
+							"type": "rawBoolean",
+							"value": "false"
+						}
+					}
+				},
+				"thenActions": [{
+					"type": "if",
+					"condition": {
+						"type": "not",
+						"condition": {
+							"type": "or",
+							"conditions": [{
+									"type": "isUnitType",
+									"unit": {
+										"type": "getCastingUnit"
+									},
+									"unitType": {
+										"type": "getAbilityDataAsID",
+										"dataField": "A"
+									}
+								},{
+									"type": "isUnitType",
+									"unit": {
+										"type": "getCastingUnit"
+									},
+									"unitType": {
+										"type": "getAbilityUnitId"
+									}
+							}]
+						}
+					},
+					"thenActions": [{
+						"type": "storeValueLocally",
+						"key": {
+							"type": "rawString",
+							"value": "baseType"
+						},
+						"instanceValue": {
+							"type": "rawBoolean",
+							"value": "false"
+						},
+						"valueToStore": {
+							"type": "getUnitType",
+							"unit": {
+								"type": "getCastingUnit"
+							}
+						}
+					}],
+					"elseActions": [{
+						"type": "storeValueLocally",
+						"key": {
+							"type": "rawString",
+							"value": "baseType"
+						},
+						"instanceValue": {
+							"type": "rawBoolean",
+							"value": "false"
+						},
+						"valueToStore": {
+							"type": "getAbilityDataAsID",
+							"dataField": "A"
+						}
+					}]
+				}]
+			}],
+			"clearBaseType": [{
+				"type": "storeValueLocally",
+				"key": {
+					"type": "rawString",
+					"value": "baseType"
+				},
+				"instanceValue": {
+					"type": "rawBoolean",
+					"value": "false"
+				},
+				"valueToStore": {
+					"type": "null"
+				}
+			}],
+			"onTransform": [{
+					"type": "removeStateModBuff",
+					"targetUnit": {
+						"type": "getCastingUnit"
+					},
+					"buff": {
+						"type": "getStoredStateModBuffByKey",
+						"instanceValue": {
+							"type": "rawBoolean",
+							"value": "false"
+						},
+						"key": {
+							"type": "rawString",
+							"value": "invuln"
+						}
+					}
+				},{
+					"type": "removeStateModBuff",
+					"targetUnit": {
+						"type": "getCastingUnit"
+					},
+					"buff": {
+						"type": "getStoredStateModBuffByKey",
+						"instanceValue": {
+							"type": "rawBoolean",
+							"value": "false"
+						},
+						"key": {
+							"type": "rawString",
+							"value": "magim"
+						}
+					}
+				},{
+					"type": "removeNonStackingStatBuff",
+					"targetUnit": {
+						"type": "getCastingUnit"
+					},
+					"buff": {
+						"type": "getLastCreatedNonStackingStatBuff"
+					}
+				},{
+					"type": "setHp",
+					"target": {
+						"type": "getListenerUnit"
+					},
+					"amount": {
+						"type": "rawFloat",
+						"value": 100
+					},
+					"isPercent": {
+						"type": "rawBoolean",
+						"value": "true"
+					}
+			}],
+			"onUnTransform": [{
+				"type": "createTemporarySpellEffectAtLocation",
+				"location": {
+					"type": "getUnitLocation",
+					"unit": {
+						"type": "getCastingUnit"
+					}
+				},
+				"id": {
+					"type": "getAlias"
+				},
+				"effectType": "CASTER"
+			}]
+		},
+		"onAddDisabledAbility": [{
+				"type": "createStateModBuff",
+				"buffType": "INVULNERABLE"
+			},{
+				"type": "storeValueLocally",
+				"key": {
+					"type": "rawString",
+					"value": "invuln"
+				},
+				"instanceValue": {
+					"type": "rawBoolean",
+					"value": "false"
+				},
+				"valueToStore": {
+					"type": "getLastCreatedStateModBuff"
+				}
+			},{
+				"type": "createStateModBuff",
+				"buffType": "MAGIC_IMMUNE"
+			},{
+				"type": "storeValueLocally",
+				"key": {
+					"type": "rawString",
+					"value": "magim"
+				},
+				"instanceValue": {
+					"type": "rawBoolean",
+					"value": "false"
+				},
+				"valueToStore": {
+					"type": "getLastCreatedStateModBuff"
+				}
+			},{
+				"type": "createNonStackingStatBuff",
+				"buffType": {
+					"type": "getNonStackingStatBuffTypeFromString",
+					"id": {
+						"type": "rawString",
+						"value": "HPGENPCT"
+					}
+				},
+				"stackingKey": {
+					"type": "getAllowStackingKey"
+				},
+				"value": {
+					"type": "rawFloat",
+					"value": -1
+				}
+			},{
+				"type": "createDeathReplacementEffect",
+				"actions": [{
+					"type": "if",
+					"condition": {
+						"type": "not",
+						"condition": {
+							"type": "isUnitType",
+							"unit": {
+								"type": "getCastingUnit"
+							},
+							"unitType": {
+								"type": "getAbilityUnitId"
+							}
+						}
+					},
+					"thenActions": [{
+							"type": "setReviving"
+						},{
+							"type": "addStateModBuff",
+							"targetUnit": {
+								"type": "getCastingUnit"
+							},
+							"buff": {
+								"type": "getStoredStateModBuffByKey",
+								"instanceValue": {
+									"type": "rawBoolean",
+									"value": "false"
+								},
+								"key": {
+									"type": "rawString",
+									"value": "invuln"
+								}
+							}
+						},{
+							"type": "addStateModBuff",
+							"targetUnit": {
+								"type": "getCastingUnit"
+							},
+							"buff": {
+								"type": "getStoredStateModBuffByKey",
+								"instanceValue": {
+									"type": "rawBoolean",
+									"value": "false"
+								},
+								"key": {
+									"type": "rawString",
+									"value": "magim"
+								}
+							}
+						},{
+							"type": "addNonStackingStatBuff",
+							"targetUnit": {
+								"type": "getCastingUnit"
+							},
+							"buff": {
+								"type": "getLastCreatedNonStackingStatBuff"
+							}
+						},{
+							"type": "setHp",
+							"target": {
+								"type": "getCastingUnit"
+							},
+							"amount": {
+								"type": "rawFloat",
+								"value": 1
+							}
+						},{
+							"type": "runReuseAction",
+							"name": {
+								"type": "rawString",
+								"value": "storeBaseType"
+							}
+						},{
+							"type": "createTemporarySpellEffectOnUnit",
+							"target": {
+								"type": "getCastingUnit"
+							},
+							"id": {
+								"type": "getAlias"
+							},
+							"effectType": "CASTER"
+						},{
+							"type": "transformUnit",
+							"unit": {
+								"type": "getCastingUnit"
+							},
+							"baseUnitId": {
+								"type": "getStoredIDByKey",
+								"key": {
+									"type": "rawString",
+									"value": "baseType"
+								},
+								"instanceValue": {
+									"type": "rawBoolean",
+									"value": "false"
+								}
+							},
+							"alternateUnitId": {
+								"type": "getAbilityUnitId"
+							},
+							"immediateLanding": {
+								"type": "i2b",
+								"value": {
+									"type": "i&",
+									"value1": {
+										"type": "getAbilityDataAsInteger",
+										"dataField": "B"
+									},
+									"value2": {
+										"type": "rawInteger",
+										"value": 2
+									}
+								}
+							},
+							"immediateTakeOff": {
+								"type": "i2b",
+								"value": {
+									"type": "i&",
+									"value1": {
+										"type": "getAbilityDataAsInteger",
+										"dataField": "B"
+									},
+									"value2": {
+										"type": "rawInteger",
+										"value": 4
+									}
+								}
+							},
+							"permanent": {
+								"type": "i2b",
+								"value": {
+									"type": "i&",
+									"value1": {
+										"type": "getAbilityDataAsInteger",
+										"dataField": "B"
+									},
+									"value2": {
+										"type": "rawInteger",
+										"value": 8
+									}
+								}
+							},
+							"requiresPayment": {
+								"type": "i2b",
+								"value": {
+									"type": "i&",
+									"value1": {
+										"type": "getAbilityDataAsInteger",
+										"dataField": "B"
+									},
+									"value2": {
+										"type": "rawInteger",
+										"value": 16
+									}
+								}
+							},
+							"altitudeAdjustmentDelay": {
+								"type": "getAbilityCastTime"
+							},
+							"altitudeAdjustmentTime": {
+								"type": "getAbilityDataAsFloat",
+								"dataField": "C"
+							},
+							"landingDelayTime": {
+								"type": "getAbilityDataAsFloat",
+								"dataField": "D"
+							},
+							"transformTime": {
+								"type": "getAbilityDuration"
+							},
+							"duration": {
+								"type": "getAbilityHeroDuration"
+							},
+							"buffId": {
+								"type": "getWar3IDFromString",
+								"id": "Bphx"
+							},
+							"onTransformActions": [{
+								"type": "runReuseAction",
+								"name": {
+									"type": "rawString",
+									"value": "onTransform"
+								}
+							}],
+							"onUntransformActions": [{
+									"type": "runReuseAction",
+									"name": {
+										"type": "rawString",
+										"value": "onUnTransform"
+									}
+								},{
+									"type": "runReuseAction",
+									"name": {
+										"type": "rawString",
+										"value": "clearBaseType"
+									}
+							}]
+						},{
+							"type": "forceBeginCreatedBehavior"
+					}]
+				}]
+			},{
+				"type": "if",
+				"condition": {
+					"type": "isUnitType",
+					"unit": {
+						"type": "getCastingUnit"
+					},
+					"unitType": {
+						"type": "getAbilityUnitId"
+					}
+				},
+				"thenActions": [{
+						"type": "runReuseAction",
+						"name": {
+							"type": "rawString",
+							"value": "storeBaseType"
+						}
+					},{
+						"type": "transformedUnitAbilityAdd",
+						"unit": {
+							"type": "getCastingUnit"
+						},
+						"baseUnitId": {
+							"type": "getAbilityDataAsID",
+							"dataField": "A"
+						},
+						"alternateUnitId": {
+							"type": "getAbilityUnitId"
+						},
+						"immediateLanding": {
+							"type": "i2b",
+							"value": {
+								"type": "i&",
+								"value1": {
+									"type": "getAbilityDataAsInteger",
+									"dataField": "B"
+								},
+								"value2": {
+									"type": "rawInteger",
+									"value": 2
+								}
+							}
+						},
+						"immediateTakeOff": {
+							"type": "i2b",
+							"value": {
+								"type": "i&",
+								"value1": {
+									"type": "getAbilityDataAsInteger",
+									"dataField": "B"
+								},
+								"value2": {
+									"type": "rawInteger",
+									"value": 4
+								}
+							}
+						},
+						"permanent": {
+							"type": "i2b",
+							"value": {
+								"type": "i&",
+								"value1": {
+									"type": "getAbilityDataAsInteger",
+									"dataField": "B"
+								},
+								"value2": {
+									"type": "rawInteger",
+									"value": 8
+								}
+							}
+						},
+						"requiresPayment": {
+							"type": "i2b",
+							"value": {
+								"type": "i&",
+								"value1": {
+									"type": "getAbilityDataAsInteger",
+									"dataField": "B"
+								},
+								"value2": {
+									"type": "rawInteger",
+									"value": 16
+								}
+							}
+						},
+						"altitudeAdjustmentDelay": {
+							"type": "getAbilityCastTime"
+						},
+						"altitudeAdjustmentTime": {
+							"type": "getAbilityDataAsFloat",
+							"dataField": "C"
+						},
+						"landingDelayTime": {
+							"type": "getAbilityDataAsFloat",
+							"dataField": "D"
+						},
+						"transformTime": {
+							"type": "getAbilityDuration"
+						},
+						"duration": {
+							"type": "getAbilityHeroDuration"
+						},
+						"buffId": {
+							"type": "getWar3IDFromString",
+							"id": "Bphx"
+						},
+						"onTransformActions": [{
+							"type": "runReuseAction",
+							"name": {
+								"type": "rawString",
+								"value": "onTransform"
+							}
+						}],
+						"onUntransformActions": [{
+								"type": "runReuseAction",
+								"name": {
+									"type": "rawString",
+									"value": "onUnTransform"
+								}
+							},{
+								"type": "runReuseAction",
+								"name": {
+									"type": "rawString",
+									"value": "clearBaseType"
+								}
+						}]
+				}]
+		}],
+		"onAddAbility": [{
+				"type": "addDeathReplacementEffect",
+				"target": {
+					"type": "getCastingUnit"
+				},
+				"priority": {
+					"type": "rawPriority",
+					"priority": "PHOENIXREVIVE"
+				},
+				"listener": {
+					"type": "getLastCreatedDeathReplacement"
+				}
+		}],
+		"onRemoveAbility": [{
+				"type": "removeDeathReplacementEffect",
+				"target": {
+					"type": "getCastingUnit"
+				},
+				"priority": {
+					"type": "rawPriority",
+					"priority": "PHOENIXREVIVE"
+				},
+				"listener": {
+					"type": "getLastCreatedDeathReplacement"
+				}
+		}]
 	}]
 }

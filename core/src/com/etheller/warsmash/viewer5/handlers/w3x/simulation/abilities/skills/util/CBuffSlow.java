@@ -50,8 +50,8 @@ public class CBuffSlow extends CBuffTimed {
 	}
 	
 	@Override
-	public boolean isMagic() {
-		return true;
+	public boolean isPositive() {
+		return false;
 	}
 
 }

@@ -1,7 +1,9 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.buff;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
@@ -48,6 +50,34 @@ public class ABTimedBuff extends ABGenericTimedBuff {
 		
 		this.setLevel(null, null, (int) localStore.getOrDefault(ABLocalStoreKeys.CURRENTLEVEL, 1));
 	}
+	
+	@SuppressWarnings("unchecked")
+	@Override
+	public <T> T getUniqueValue(String key, Class<T> cls) {
+		Object o = this.localStore.get(ABLocalStoreKeys.combineUniqueValueKey(key, this.getHandleId()));
+		if (o != null && o.getClass() == cls) {
+			return (T)o;
+		}
+		return null;
+	}
+	
+	public void addUniqueValue(Object item, String key) {
+		this.localStore.put(ABLocalStoreKeys.combineUniqueValueKey(key, this.getHandleId()), item);
+	}
+	
+	public void removeUniqueValue(String key) {
+		this.localStore.remove(ABLocalStoreKeys.combineUniqueValueKey(key, this.getHandleId()));
+	}
+
+	public void cleanUpUniqueValues() {
+		final Set<String> keySet = new HashSet<>(localStore.keySet());
+		String search = ABLocalStoreKeys.combineUniqueValueKey("", this.getHandleId());
+		for (final String key : keySet) {
+			if (key.contains(search)) {
+				localStore.remove(key);
+			}
+		}
+	}
 
 	public void setArtType(CEffectType artType) {
 		this.artType = artType;
@@ -66,9 +96,11 @@ public class ABTimedBuff extends ABGenericTimedBuff {
 			this.lsfx = game.unitLoopSoundEffectEvent(unit, getAlias());
 		}
 		if (onAddActions != null) {
+			localStore.put(ABLocalStoreKeys.BUFF, this);
 			for (ABAction action : onAddActions) {
 				action.runAction(game, unit, localStore, castId);
 			}
+			localStore.remove(ABLocalStoreKeys.BUFF);
 		}
 	}
 
@@ -84,18 +116,22 @@ public class ABTimedBuff extends ABGenericTimedBuff {
 			this.lsfx.remove();
 		}
 		if (onRemoveActions != null) {
+			localStore.put(ABLocalStoreKeys.BUFF, this);
 			for (ABAction action : onRemoveActions) {
 				action.runAction(game, unit, localStore, castId);
 			}
+			localStore.remove(ABLocalStoreKeys.BUFF);
 		}
 	}
 
 	@Override
 	protected void onBuffExpire(CSimulation game, CUnit unit) {
 		if (onExpireActions != null) {
+			localStore.put(ABLocalStoreKeys.BUFF, this);
 			for (ABAction action : onExpireActions) {
 				action.runAction(game, unit, localStore, castId);
 			}
+			localStore.remove(ABLocalStoreKeys.BUFF);
 		}
 	}
 

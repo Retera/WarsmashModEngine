@@ -9,6 +9,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.booleancallbacks.ABBooleanCallback;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.floatcallbacks.ABFloatCallback;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.idcallbacks.ABIDCallback;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.stringcallbacks.ABStringCallback;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.buff.ABTimedTickingPostDeathBuff;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABAction;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABLocalStoreKeys;
@@ -32,6 +33,11 @@ public class ABActionCreateTimedTickingPostDeathBuff implements ABSingleAction {
 	private ABBooleanCallback dispellable;
 	private ABBooleanCallback magic;
 	private ABBooleanCallback physical;
+
+	private ABBooleanCallback stacks;
+	private ABStringCallback visibilityGroup;
+	
+	private List<ABStringCallback> uniqueFlags;
 
 	@Override
 	public void runAction(final CSimulation game, final CUnit caster, final Map<String, Object> localStore,
@@ -66,9 +72,9 @@ public class ABActionCreateTimedTickingPostDeathBuff implements ABSingleAction {
 			isPhysical = physical.callback(game, caster, localStore, castId);
 		}
 
-
+		ABTimedTickingPostDeathBuff ability;
 		if (showIcon != null) {
-			ABTimedTickingPostDeathBuff ability = new ABTimedTickingPostDeathBuff(
+			ability = new ABTimedTickingPostDeathBuff(
 					game.getHandleIdAllocator().createId(), buffId.callback(game, caster, localStore, castId),
 					duration.callback(game, caster, localStore, castId), showTimedLife, localStore, onAddActions,
 					onRemoveActions, onExpireActions, onTickActions,
@@ -76,20 +82,31 @@ public class ABActionCreateTimedTickingPostDeathBuff implements ABSingleAction {
 			if (artType != null) {
 				ability.setArtType(artType);
 			}
-			ability.setMagic(isMagic);
-			ability.setPhysical(isPhysical);
-			localStore.put(ABLocalStoreKeys.LASTCREATEDBUFF, ability);
 		} else {
-			ABTimedTickingPostDeathBuff ability = new ABTimedTickingPostDeathBuff(
+			ability = new ABTimedTickingPostDeathBuff(
 					game.getHandleIdAllocator().createId(), buffId.callback(game, caster, localStore, castId),
 					duration.callback(game, caster, localStore, castId), showTimedLife, localStore, onAddActions,
 					onRemoveActions, onExpireActions, onTickActions, castId, isLeveled, isPositive, isDispellable);
 			if (artType != null) {
 				ability.setArtType(artType);
 			}
-			ability.setMagic(isMagic);
-			ability.setPhysical(isPhysical);
-			localStore.put(ABLocalStoreKeys.LASTCREATEDBUFF, ability);
+		}
+		ability.setMagic(isMagic);
+		ability.setPhysical(isPhysical);
+		boolean isStacks = false;
+		if (stacks != null) {
+			isStacks = stacks.callback(game, caster, localStore, castId);
+		}
+		ability.setStacks(isStacks);
+		if (visibilityGroup != null) {
+			ability.setVisibilityGroup(visibilityGroup.callback(game, caster, localStore, castId));
+		}
+		
+		localStore.put(ABLocalStoreKeys.LASTCREATEDBUFF, ability);
+		if (uniqueFlags != null) {
+			for (ABStringCallback flag : uniqueFlags) {
+				ability.addUniqueFlag(flag.callback(game, caster, localStore, castId));
+			}
 		}
 		if (!localStore.containsKey(ABLocalStoreKeys.BUFFCASTINGUNIT)) {
 			localStore.put(ABLocalStoreKeys.BUFFCASTINGUNIT, caster);

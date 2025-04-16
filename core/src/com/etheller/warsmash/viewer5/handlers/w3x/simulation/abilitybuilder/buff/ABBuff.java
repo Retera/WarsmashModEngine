@@ -6,6 +6,7 @@ import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityVisitor;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.AbstractCBuff;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityPointTarget;
@@ -28,9 +29,13 @@ public abstract class ABBuff extends AbstractCBuff {
 	
 	protected List<String> uniqueFlags = null;
 	private String visibilityGroup = null;
+	private CAbility sourceAbil;
+	protected CUnit sourceUnit;
 
-	public ABBuff(int handleId, War3ID code, War3ID alias) {
+	public ABBuff(int handleId, War3ID code, War3ID alias, CAbility sourceAbility, CUnit sourceUnit) {
 		super(handleId, code, alias);
+		this.sourceAbil = sourceAbility;
+		this.sourceUnit = sourceUnit;
 	}
 
 	@Override
@@ -195,5 +200,15 @@ public abstract class ABBuff extends AbstractCBuff {
 
 	public boolean isStacks() {
 		return  ((this.flags & STACKS) != 0);
+	}
+
+	@Override
+	public CAbility getSourceAbility() {
+		return this.sourceAbil;
+	}
+
+	@Override
+	public CUnit getSourceUnit() {
+		return this.sourceUnit;
 	}
 }

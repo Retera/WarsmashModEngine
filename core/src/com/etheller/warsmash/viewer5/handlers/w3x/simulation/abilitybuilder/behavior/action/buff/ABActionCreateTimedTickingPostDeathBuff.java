@@ -6,6 +6,7 @@ import java.util.Map;
 import com.etheller.warsmash.parsers.jass.JassTextGenerator;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.booleancallbacks.ABBooleanCallback;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.floatcallbacks.ABFloatCallback;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.idcallbacks.ABIDCallback;
@@ -36,7 +37,7 @@ public class ABActionCreateTimedTickingPostDeathBuff implements ABSingleAction {
 
 	private ABBooleanCallback stacks;
 	private ABStringCallback visibilityGroup;
-	
+
 	private List<ABStringCallback> uniqueFlags;
 
 	@Override
@@ -62,7 +63,7 @@ public class ABActionCreateTimedTickingPostDeathBuff implements ABSingleAction {
 		} else {
 			isDispellable = ((boolean) localStore.getOrDefault(ABLocalStoreKeys.ISABILITYMAGIC, true));
 		}
-		
+
 		boolean isMagic = ((boolean) localStore.getOrDefault(ABLocalStoreKeys.ISABILITYMAGIC, true));
 		boolean isPhysical = ((boolean) localStore.getOrDefault(ABLocalStoreKeys.ISABILITYPHYSICAL, false));
 		if (magic != null) {
@@ -74,8 +75,9 @@ public class ABActionCreateTimedTickingPostDeathBuff implements ABSingleAction {
 
 		ABTimedTickingPostDeathBuff ability;
 		if (showIcon != null) {
-			ability = new ABTimedTickingPostDeathBuff(
-					game.getHandleIdAllocator().createId(), buffId.callback(game, caster, localStore, castId),
+			ability = new ABTimedTickingPostDeathBuff(game.getHandleIdAllocator().createId(),
+					buffId.callback(game, caster, localStore, castId),
+					(CAbility) localStore.get(ABLocalStoreKeys.ABILITY), caster,
 					duration.callback(game, caster, localStore, castId), showTimedLife, localStore, onAddActions,
 					onRemoveActions, onExpireActions, onTickActions,
 					showIcon.callback(game, caster, localStore, castId), castId, isLeveled, isPositive, isDispellable);
@@ -83,8 +85,9 @@ public class ABActionCreateTimedTickingPostDeathBuff implements ABSingleAction {
 				ability.setArtType(artType);
 			}
 		} else {
-			ability = new ABTimedTickingPostDeathBuff(
-					game.getHandleIdAllocator().createId(), buffId.callback(game, caster, localStore, castId),
+			ability = new ABTimedTickingPostDeathBuff(game.getHandleIdAllocator().createId(),
+					buffId.callback(game, caster, localStore, castId),
+					(CAbility) localStore.get(ABLocalStoreKeys.ABILITY), caster,
 					duration.callback(game, caster, localStore, castId), showTimedLife, localStore, onAddActions,
 					onRemoveActions, onExpireActions, onTickActions, castId, isLeveled, isPositive, isDispellable);
 			if (artType != null) {
@@ -101,7 +104,7 @@ public class ABActionCreateTimedTickingPostDeathBuff implements ABSingleAction {
 		if (visibilityGroup != null) {
 			ability.setVisibilityGroup(visibilityGroup.callback(game, caster, localStore, castId));
 		}
-		
+
 		localStore.put(ABLocalStoreKeys.LASTCREATEDBUFF, ability);
 		if (uniqueFlags != null) {
 			for (ABStringCallback flag : uniqueFlags) {
@@ -133,8 +136,7 @@ public class ABActionCreateTimedTickingPostDeathBuff implements ABSingleAction {
 		String showIconExpression;
 		if (this.showIcon != null) {
 			showIconExpression = this.showIcon.generateJassEquivalent(jassTextGenerator);
-		}
-		else {
+		} else {
 			showIconExpression = "true";
 		}
 

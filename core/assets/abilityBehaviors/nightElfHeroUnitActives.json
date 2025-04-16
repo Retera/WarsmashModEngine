@@ -2,6 +2,12 @@
 	"abilityList": [{
 		"ids": [{"id":"AEsh", "castId": "shadowstrike"}],
 		"type": "NORMAL_UNITTARGET",
+		"overrideFields": {
+			"ignoreCastTime": {
+				"type": "rawBoolean",
+				"value": "true"
+			}
+		},
 		"onEndCasting": [{
 				"type": "createUnitTargetedProjectile",
 				"source": {

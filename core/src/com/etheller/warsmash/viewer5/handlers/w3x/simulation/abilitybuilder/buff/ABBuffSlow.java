@@ -3,6 +3,7 @@ package com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.buf
 import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CEffectType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.unit.NonStackingFx;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.unit.NonStackingStatBuff;
@@ -20,9 +21,9 @@ public class ABBuffSlow extends ABGenericTimedBuff {
 	private SimulationRenderComponent sfx;
 	private SimulationRenderComponent lsfx;
 
-	public ABBuffSlow(final CSimulation game, final int handleId, final War3ID alias, final float duration,
+	public ABBuffSlow(final CSimulation game, final int handleId, final War3ID alias, CAbility sourceAbility, CUnit sourceUnit, final float duration,
 			boolean leveled) {
-		super(handleId, alias, duration, false, leveled, false, false);
+		super(handleId, alias, sourceAbility, sourceUnit, duration, false, leveled, false, false);
 		if (STANDARD_ATTACK_DEBUFF == null) {
 			STANDARD_ATTACK_DEBUFF = new NonStackingStatBuff(NonStackingStatBuffType.ATKSPD, "genericSlow",
 					-1 * game.getGameplayConstants().getFrostAttackSpeedDecrease());
@@ -35,9 +36,9 @@ public class ABBuffSlow extends ABGenericTimedBuff {
 		this.moveSpeedDebuff = STANDARD_MOVE_DEBUFF;
 	}
 
-	public ABBuffSlow(final int handleId, final War3ID alias, final float duration,
+	public ABBuffSlow(final int handleId, final War3ID alias, CAbility sourceAbility, CUnit sourceUnit, final float duration,
 			final float attackSpeedReductionPercent, final float moveSpeedReductionPercent, boolean leveled) {
-		super(handleId, alias, duration, false, leveled, false, false);
+		super(handleId, alias, sourceAbility, sourceUnit, duration, false, leveled, false, false);
 		this.attackSpeedDebuff = new NonStackingStatBuff(NonStackingStatBuffType.ATKSPD, "genericSlow",
 				-1 * attackSpeedReductionPercent);
 		this.moveSpeedDebuff = new NonStackingStatBuff(NonStackingStatBuffType.MVSPDPCT, "genericSlow",

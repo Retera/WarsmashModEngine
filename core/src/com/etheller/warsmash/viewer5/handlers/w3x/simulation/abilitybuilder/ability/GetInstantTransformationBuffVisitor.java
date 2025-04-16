@@ -4,7 +4,9 @@ import java.util.Map;
 
 import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnitType;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityAttack;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityGenericDoNothing;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityMove;
@@ -31,6 +33,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.upgrade.C
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.buff.ABBuff;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.buff.ABTimedInstantTransformationBuff;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.buff.ABTimedTransformationBuff;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABLocalStoreKeys;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.handler.TransformationHandler.OnTransformationActions;
 
 public class GetInstantTransformationBuffVisitor implements CAbilityVisitor<ABBuff> {
@@ -41,6 +44,7 @@ public class GetInstantTransformationBuffVisitor implements CAbilityVisitor<ABBu
 	}
 
 	private CSimulation game;
+	private CUnit caster;
 	private Map<String, Object> localStore;
 	private CUnitType newType;
 	private boolean keepRatios;
@@ -51,10 +55,11 @@ public class GetInstantTransformationBuffVisitor implements CAbilityVisitor<ABBu
 	private float duration;
 	private boolean permanent;
 
-	public GetInstantTransformationBuffVisitor reset(CSimulation game, Map<String, Object> localStore,
+	public GetInstantTransformationBuffVisitor reset(CSimulation game, CUnit caster, Map<String, Object> localStore,
 			CUnitType newType, final boolean keepRatios, OnTransformationActions actions, War3ID buffId,
 			boolean addAlternateTagAfter, float transformationTime, float duration, boolean permanent) {
 		this.game = game;
+		this.caster = caster;
 		this.localStore = localStore;
 		this.newType = newType;
 		this.keepRatios = keepRatios;
@@ -69,7 +74,8 @@ public class GetInstantTransformationBuffVisitor implements CAbilityVisitor<ABBu
 
 	@Override
 	public ABBuff accept(final AbilityBuilderActiveAbility ability) {
-		return new ABTimedTransformationBuff(game.getHandleIdAllocator().createId(), localStore, actions,
+		return new ABTimedTransformationBuff(game.getHandleIdAllocator().createId(),
+				ability, caster, localStore, actions,
 				buffId == null ? ability.getAlias() : buffId, duration, ability, newType, !addAlternateTagAfter,
 				permanent, transformationTime);
 	}
@@ -82,7 +88,8 @@ public class GetInstantTransformationBuffVisitor implements CAbilityVisitor<ABBu
 	@Override
 	public ABBuff accept(GenericSingleIconPassiveAbility ability) {
 		if (ability instanceof AbilityBuilderPassiveAbility) {
-			return new ABTimedInstantTransformationBuff(game.getHandleIdAllocator().createId(), localStore, actions,
+			return new ABTimedInstantTransformationBuff(game.getHandleIdAllocator().createId(),
+					ability, caster, localStore, actions,
 					buffId == null ? ability.getAlias() : buffId, duration, (AbilityBuilderPassiveAbility) ability,
 					newType, keepRatios, !addAlternateTagAfter, permanent, transformationTime);
 		}
@@ -92,7 +99,8 @@ public class GetInstantTransformationBuffVisitor implements CAbilityVisitor<ABBu
 	@Override
 	public ABBuff accept(final GenericNoIconAbility ability) {
 		if (ability instanceof AbilityBuilderPassiveAbility) {
-			return new ABTimedInstantTransformationBuff(game.getHandleIdAllocator().createId(), localStore, actions,
+			return new ABTimedInstantTransformationBuff(game.getHandleIdAllocator().createId(),
+					ability, caster, localStore, actions,
 					buffId == null ? ability.getAlias() : buffId, duration, (AbilityBuilderPassiveAbility) ability,
 					newType, keepRatios, !addAlternateTagAfter, permanent, transformationTime);
 		}

@@ -15,6 +15,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.parser.AbilityBuilderConfiguration;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.types.impl.CAbilityTypeAbilityBuilderLevelData;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehavior;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.JassGameEventsWar3;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityActivationReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetCheckReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.CommandStringErrorKeys;
@@ -35,15 +36,16 @@ public class CAbilityAbilityBuilderActiveNoTarget extends CAbilityAbilityBuilder
 		super.onAdd(game, unit);
 		determineCastless(unit);
 	}
-	
+
 	@Override
 	public void setLevel(CSimulation game, CUnit unit, int level) {
 		super.setLevel(game, unit, level);
 		determineCastless(unit);
 	}
-	
+
 	protected void determineCastless(CUnit unit) {
-		if (this.item != null || this.config.getDisplayFields() != null && this.config.getDisplayFields().getCastlessNoTarget() != null
+		if (this.item != null || this.config.getDisplayFields() != null
+				&& this.config.getDisplayFields().getCastlessNoTarget() != null
 				&& this.config.getDisplayFields().getCastlessNoTarget().callback(null, unit, localStore, castId)) {
 			this.castless = true;
 			this.behavior = null;
@@ -64,9 +66,9 @@ public class CAbilityAbilityBuilderActiveNoTarget extends CAbilityAbilityBuilder
 	}
 
 	@Override
-	public boolean checkBeforeQueue(final CSimulation game, final CUnit caster, final int orderId,
-			boolean autoOrder, final AbilityTarget target) {
-		this.localStore.put(ABLocalStoreKeys.combineKey(ABLocalStoreKeys.ISAUTOCAST, orderId), autoOrder);
+	public boolean checkBeforeQueue(final CSimulation game, final CUnit caster, final int orderId, boolean autoOrder,
+			final AbilityTarget target) {
+		this.localStore.put(ABLocalStoreKeys.combineKey(ABLocalStoreKeys.ISAUTOCAST, castId), autoOrder);
 
 //		System.err.println("Checking queue notarg level: " + active + " orderID : " + orderId + " offID: " + this.getOffOrderId());
 		if (castless && orderId == this.getBaseOrderId()) {
@@ -81,6 +83,11 @@ public class CAbilityAbilityBuilderActiveNoTarget extends CAbilityAbilityBuilder
 			this.startCooldown(game, caster);
 			this.runBeginCastingActions(game, caster, orderId);
 			this.runEndCastingActions(game, caster, orderId);
+			caster.fireSpellEvents(game, JassGameEventsWar3.EVENT_UNIT_SPELL_CHANNEL, this, null);
+			caster.fireSpellEvents(game, JassGameEventsWar3.EVENT_UNIT_SPELL_CAST, this, null);
+			caster.fireSpellEvents(game, JassGameEventsWar3.EVENT_UNIT_SPELL_EFFECT, this, null);
+			caster.fireSpellEvents(game, JassGameEventsWar3.EVENT_UNIT_SPELL_FINISH, this, null);
+			caster.fireSpellEvents(game, JassGameEventsWar3.EVENT_UNIT_SPELL_ENDCAST, this, null);
 			return false;
 		}
 		return super.checkBeforeQueue(game, caster, orderId, autoOrder, target);
@@ -93,7 +100,7 @@ public class CAbilityAbilityBuilderActiveNoTarget extends CAbilityAbilityBuilder
 			return null;
 		} else {
 			this.behavior.setCastId(castId);
-			return this.behavior.reset();
+			return this.behavior.reset(orderId, autoOrder);
 		}
 	}
 
@@ -101,9 +108,15 @@ public class CAbilityAbilityBuilderActiveNoTarget extends CAbilityAbilityBuilder
 	public void internalBegin(CSimulation game, CUnit caster, int orderId, boolean autoOrder, AbilityTarget target) {
 		this.castId++;
 		if (!castless) {
-			this.localStore.put(ABLocalStoreKeys.combineKey(ABLocalStoreKeys.ISAUTOCAST, orderId), autoOrder);
+			this.localStore.put(ABLocalStoreKeys.combineKey(ABLocalStoreKeys.ISAUTOCAST, castId), autoOrder);
+			this.localStore.put(ABLocalStoreKeys.PREVIOUSBEHAVIOR, caster.getCurrentBehavior());
 			this.runOnOrderIssuedActions(game, caster, orderId);
 		}
+	}
+
+	@Override
+	public void cleanupInputs(int theCastId) {
+		this.localStore.remove(ABLocalStoreKeys.PREVIOUSBEHAVIOR);
 	}
 
 	@Override
@@ -131,6 +144,5 @@ public class CAbilityAbilityBuilderActiveNoTarget extends CAbilityAbilityBuilder
 			AbilityActivationReceiver receiver) {
 		return true;
 	}
-
 
 }

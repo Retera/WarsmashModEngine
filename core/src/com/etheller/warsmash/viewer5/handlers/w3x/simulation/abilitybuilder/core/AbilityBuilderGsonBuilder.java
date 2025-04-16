@@ -5,11 +5,13 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.beha
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.action.ability.*;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.action.attack.*;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.action.attack.internal.*;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.action.behavior.*;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.action.buff.*;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.action.destructable.*;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.action.events.timeofday.*;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.action.events.widget.*;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.action.floatingtext.*;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.action.fx.*;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.action.gamestate.*;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.action.item.*;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.action.player.*;
@@ -90,6 +92,8 @@ public abstract class AbilityBuilderGsonBuilder {
 				.registerSubtype(ABCallbackGetLastCreatedAbility.class, "getLastCreatedAbility")
 				.registerSubtype(ABCallbackGetThisAbility.class, "getThisAbility")
 				.registerSubtype(ABCallbackGetAbilityById.class, "getAbilityById")
+
+				.registerSubtype(ABCallbackGetBuffSourceAbility.class, "getBuffSourceAbility")
 
 				.registerSubtype(ABCallbackArgumentAbility.class, "argumentAbility")
 				.registerSubtype(ABCallbackReuseAbility.class, "reuseAbility")
@@ -186,6 +190,7 @@ public abstract class AbilityBuilderGsonBuilder {
 				.registerSubtype(ABCallbackThisBuff.class, "thisBuff")
 				.registerSubtype(ABCallbackGetLastCreatedBuff.class, "getLastCreatedBuff")
 				.registerSubtype(ABCallbackEnumBuff.class, "enumBuff")
+				.registerSubtype(ABCallbackGetMatchingBuff.class, "getMatchingBuff")
 
 				.registerSubtype(ABCallbackGetBuffById.class, "getBuffById")
 
@@ -262,6 +267,10 @@ public abstract class AbilityBuilderGsonBuilder {
 				.registerSubtype(ABCallbackGetAbilityCastRange.class, "getAbilityCastRange")
 				.registerSubtype(ABCallbackGetAbilityHeroDuration.class, "getAbilityHeroDuration")
 				.registerSubtype(ABCallbackGetAbilityCooldown.class, "getAbilityCooldown")
+
+				.registerSubtype(ABCallbackGetBuffDurationElapsed.class, "getBuffDurationElapsed")
+
+				.registerSubtype(ABCallbackOneGameTick.class, "oneGameTick")
 				
 				.registerSubtype(ABCallbackRawFloat.class, "rawFloat")
 				.registerSubtype(ABCallbackIntToFloat.class, "i2f")
@@ -350,6 +359,8 @@ public abstract class AbilityBuilderGsonBuilder {
 				.registerSubtype(ABCallbackGetSecondBuffId.class, "getSecondBuffId")
 				.registerSubtype(ABCallbackGetFirstEffectId.class, "getFirstEffectId")
 
+				.registerSubtype(ABCallbackGetBuffAlias.class, "getBuffAlias")
+
 				.registerSubtype(ABCallbackGetUnitType.class, "getUnitType")
 				.registerSubtype(ABCallbackGetNonCurrentTransformType.class, "getNonCurrentTransformType")
 				
@@ -363,6 +374,7 @@ public abstract class AbilityBuilderGsonBuilder {
 	private static void registerIntegerCallbacks(RuntimeTypeAdapterFactory callbackTypeFactory) {
 		callbackTypeFactory.registerSubtype(ABCallbackRawInteger.class, "rawInteger")
 				.registerSubtype(ABCallbackGetStoredIntegerByKey.class, "getStoredIntegerByKey")
+				.registerSubtype(ABCallbackGetCastId.class, "getCastId")
 				.registerSubtype(ABCallbackGetAbilityUniqueValueInteger.class, "getAbilityUniqueValueInteger")
 				.registerSubtype(ABCallbackGetBuffUniqueValueInteger.class, "getBuffUniqueValueInteger")
 				
@@ -376,6 +388,10 @@ public abstract class AbilityBuilderGsonBuilder {
 
 				.registerSubtype(ABCallbackGetUnitMaximumHp.class, "getUnitMaximumHp")
 				.registerSubtype(ABCallbackGetUnitMaximumMp.class, "getUnitMaximumMp")
+
+				.registerSubtype(ABCallbackGetUnitHandleAsInteger.class, "getUnitHandleAsInteger")
+				.registerSubtype(ABCallbackGetAbilityHandleAsInteger.class, "getAbilityHandleAsInteger")
+				.registerSubtype(ABCallbackGetBuffHandleAsInteger.class, "getBuffHandleAsInteger")
 				
 				.registerSubtype(ABCallbackCountUnitsInRangeOfUnit.class, "countUnitsInRangeOfUnit")
 				.registerSubtype(ABCallbackCountUnitsInRangeOfLocation.class, "countUnitsInRangeOfLocation")
@@ -772,6 +788,7 @@ public abstract class AbilityBuilderGsonBuilder {
 
 				.registerSubtype(ABConditionIsUnitType.class, "isUnitType")
 				.registerSubtype(ABConditionDoesUnitHaveBuff.class, "doesUnitHaveBuff")
+				.registerSubtype(ABConditionDoesUnitHaveBuffMatchingCondition.class, "doesUnitHaveBuffMatchingCondition")
 				.registerSubtype(ABConditionIsUnitMaxHp.class, "isUnitMaxHp")
 				.registerSubtype(ABConditionIsUnitMaxMp.class, "isUnitMaxMp")
 				.registerSubtype(ABConditionIsUnitBuilding.class, "isUnitBuilding")
@@ -854,6 +871,7 @@ public abstract class AbilityBuilderGsonBuilder {
 				.registerSubtype(ABActionCreateLoopingSoundEffectOnUnit.class, "createLoopingSoundEffectOnUnit")
 				.registerSubtype(ABActionCreateLightningEffect.class, "createLightningEffect")
 				.registerSubtype(ABActionRemoveLightningEffect.class, "removeLightningEffect")
+				.registerSubtype(ABActionCreateGroupEffectAtLocation.class, "createGroupEffectAtLocation")
 
 				.registerSubtype(ABActionCreateUnitTargetedProjectile.class, "createUnitTargetedProjectile")
 				.registerSubtype(ABActionCreateLocationTargetedProjectile.class, "createLocationTargetedProjectile")
@@ -873,7 +891,7 @@ public abstract class AbilityBuilderGsonBuilder {
 				.registerSubtype(ABActionRemoveAbility.class, "removeAbility")
 				.registerSubtype(ABActionStoreValueLocally.class, "storeValueLocally")
 				.registerSubtype(ABActionDeleteStoredKey.class, "deleteStoredKey")
-				.registerSubtype(ABActionRemoveSpellEffect.class, "removeSpellEffect")
+				.registerSubtype(ABActionRemoveEffect.class, "removeEffect")
 				.registerSubtype(ABActionCreateAbilityFromId.class, "createAbilityFromId")
 				.registerSubtype(ABActionAddDefenseBonus.class, "addDefenseBonus")
 				.registerSubtype(ABActionRemoveDefenseBonus.class, "removeDefenseBonus")
@@ -956,12 +974,15 @@ public abstract class AbilityBuilderGsonBuilder {
 				.registerSubtype(ABActionAddTargetAllowed.class, "addTargetAllowed")
 				.registerSubtype(ABActionRemoveTargetAllowed.class, "removeTargetAllowed")
 				.registerSubtype(ABActionAbilityAttemptToApplyEffect.class, "abilityAttemptToApplyEffect")
+				.registerSubtype(ABActionSendStartCastingEvents.class, "sendStartCastingEvents")
+				.registerSubtype(ABActionSetPreventEndEvents.class, "setPreventEndEvents")
 				
 
 				.registerSubtype(ABActionCreateTimer.class, "createTimer")
 				.registerSubtype(ABActionStartTimer.class, "startTimer")
 				.registerSubtype(ABActionUpdateTimerTimeout.class, "updateTimerTimeout")
 				.registerSubtype(ABActionRemoveTimer.class, "removeTimer")
+				.registerSubtype(ABActionKillTimer.class, "killTimer")
 
 				.registerSubtype(ABActionAddBuff.class, "addBuff")
 				.registerSubtype(ABActionAddNonStackingDisplayBuff.class, "addNonStackingDisplayBuff")
@@ -1128,6 +1149,9 @@ public abstract class AbilityBuilderGsonBuilder {
 				.registerSubtype(ABActionRunReuseActionWithArguments.class, "runReuseActionWithArguments")
 
 				.registerSubtype(ABActionSetFalseTimeOfDay.class, "setFalseTimeOfDay")
+
+				.registerSubtype(ABActionAttemptToReOrderPreviousBehavior.class, "attemptToReOrderPreviousBehavior")
+				.registerSubtype(ABActionAttemptToResumePreviousBehavior.class, "attemptToResumePreviousBehavior")
 				;
 	}
 

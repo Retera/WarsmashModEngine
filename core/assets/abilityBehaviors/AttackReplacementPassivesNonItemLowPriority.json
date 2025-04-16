@@ -2170,5 +2170,387 @@
 				"type": "getLastCreatedAttackModifier"
 			}
 		}]
+	},{
+		"ids": [{"id":"Abof"}],
+		"type": "PASSIVE",
+		"reuseCallbacks": {
+			"notTakingDamage": {
+				"type": "not",
+				"condition": {
+					"type": "doesUnitHaveBuffMatchingCondition",
+					"unit": {
+						"type": "getEnumUnit"
+					},
+					"condition": {
+						"type": "and",
+						"conditions": [{
+								"type": "isIdEqual",
+								"id1": {
+									"type": "getBuffAlias",
+									"buff": {
+										"type": "getMatchingBuff"
+									}
+								},
+								"id2": {
+									"type": "getFirstBuffId"
+								}
+							},{
+								"type": "f<",
+								"value1": {
+									"type": "getBuffDurationElapsed",
+									"buff": {
+										"type": "getMatchingBuff"
+									}
+								},
+								"value2": {
+									"type": "f-",
+									"value1": {
+										"type": "getStoredFloatByKey",
+										"key": {
+											"type": "rawString",
+											"value": "curDelay"
+										}
+									},
+									"value2": {
+										"type": "f*",
+										"value1": {
+											"type": "oneGameTick"
+										},
+										"value2": {
+											"type": "rawFloat",
+											"value": 2
+										}
+									}
+								}
+						}]
+					}
+				}
+			}
+		},
+		"reuseActions": {
+			"damageUnits": [{
+					"type": "damageArea",
+					"source": {
+						"type": "getCastingUnit"
+					},
+					"target": {
+						"type": "getStoredLocationByKey",
+						"key": {
+							"type": "rawString",
+							"value": "targetLoc"
+						}
+					},
+					"validTarget": {
+						"type": "and",
+						"conditions": [{
+							"type": "isUnitValidTarget",
+							"target": {
+								"type": "getEnumUnit"
+							}
+						},{
+							"type": "reuseBoolean",
+							"name": {
+								"type": "rawString",
+								"value": "notTakingDamage"
+							}
+						}]
+					},
+					"damageType": {
+						"type": "getDamageTypeFromString",
+						"id": {
+							"type": "rawString",
+							"value": "FIRE"
+						}
+					},
+					"damage": {
+						"type": "getStoredFloatByKey",
+						"key": {
+							"type": "rawString",
+							"value": "curDamage"
+						}
+					},
+					"maxDamage": {
+						"type": "getAbilityDataAsFloat",
+						"dataField": "F"
+					},
+					"unitSpecificDamageMod": {
+						"type": "inlineConditionFloat",
+						"condition": {
+							"type": "isUnitBuilding",
+							"unit": {
+								"type": "getEnumUnit"
+							}
+						},
+						"pass": {
+							"type": "getAbilityDataAsFloat",
+							"dataField": "E"
+						},
+						"fail": {
+							"type": "rawFloat",
+							"value": 1
+						}
+					},
+					"radius": {
+						"type": "getAbilityArea"
+					},
+					"extraActions": [{
+							"type": "createTimedBuff",
+							"buffId": {
+								"type": "getFirstBuffId"
+							},
+							"positive": {
+								"type": "rawBoolean",
+								"value": "false"
+							},
+							"duration": {
+								"type": "f+",
+								"value1": {
+									"type": "getStoredFloatByKey",
+									"key": {
+										"type": "rawString",
+										"value": "curDelay"
+									}
+								},
+								"value2": {
+									"type": "oneGameTick"
+								}
+							}
+						},{
+							"type": "addBuff",
+							"target": {
+								"type": "getEnumUnit"
+							},
+							"buff": {
+								"type": "getLastCreatedBuff"
+							}
+					}]
+			}],
+			"onHit": [{
+					"type": "storeValueLocally",
+					"key": {
+						"type": "rawString",
+						"value": "targetLoc"
+					},
+					"valueToStore": {
+						"type": "getAttackImpactLocation"
+					}
+				},{
+					"type": "createGroupEffectAtLocation",
+					"location": {
+						"type": "getStoredLocationByKey",
+						"key": {
+							"type": "rawString",
+							"value": "targetLoc"
+						}
+					},
+					"radius": {
+						"type": "getAbilityArea"
+					},
+					"id": {
+						"type": "getFirstEffectId"
+					},
+					"effectType": "EFFECT"
+				},{
+					"type": "storeValueLocally",
+					"key": {
+						"type": "rawString",
+						"value": "_gEff"
+					},
+					"valueToStore": {
+						"type": "getLastCreatedSpellEffect"
+					}
+				},{
+					"type": "storeValueLocally",
+					"key": {
+						"type": "rawString",
+						"value": "curDamage"
+					},
+					"valueToStore": {
+						"type": "getAbilityDataAsFloat",
+						"dataField": "A"
+					}
+				},{
+					"type": "storeValueLocally",
+					"key": {
+						"type": "rawString",
+						"value": "curDelay"
+					},
+					"valueToStore": {
+						"type": "getAbilityDataAsFloat",
+						"dataField": "B"
+					}
+				},{
+					"type": "createTimer",
+					"timeout": {
+						"type": "getAbilityDataAsFloat",
+						"dataField": "B"
+					},
+					"repeats": {
+						"type": "rawBoolean",
+						"value": "true"
+					},
+					"delay": {
+						"type": "rawFloat",
+						"value": 0
+					},
+					"actions": [{
+						"type": "runReuseAction",
+						"name": {
+							"type": "rawString",
+							"value": "damageUnits"
+						}
+					}]
+				},{
+					"type": "storeValueLocally",
+					"key": {
+						"type": "rawString",
+						"value": "dmgTimer"
+					},
+					"valueToStore": {
+						"type": "getLastCreatedTimer"
+					}
+				},{
+					"type": "createTimer",
+					"timeout": {
+						"type": "getAbilityHeroDuration"
+					},
+					"actions": [{
+							"type": "updateTimerTimeout",
+							"timer": {
+								"type": "getStoredTimerByKey",
+								"key": {
+									"type": "rawString",
+									"value": "dmgTimer"
+								}
+							},
+							"timeout": {
+								"type": "getAbilityDataAsFloat",
+								"dataField": "D"
+							}
+						},{
+							"type": "storeValueLocally",
+							"key": {
+								"type": "rawString",
+								"value": "curDelay"
+							},
+							"valueToStore": {
+								"type": "getAbilityDataAsFloat",
+								"dataField": "D"
+							}
+						},{
+							"type": "storeValueLocally",
+							"key": {
+								"type": "rawString",
+								"value": "curDamage"
+							},
+							"valueToStore": {
+								"type": "getAbilityDataAsFloat",
+								"dataField": "C"
+							}
+					}]
+				},{
+					"type": "storeValueLocally",
+					"key": {
+						"type": "rawString",
+						"value": "subDmgTimer"
+					},
+					"valueToStore": {
+						"type": "getLastCreatedTimer"
+					}
+				},{
+					"type": "createTimer",
+					"timeout": {
+						"type": "getAbilityDuration"
+					},
+					"actions": [{
+							"type": "removeEffect",
+							"effect": {
+								"type": "getStoredFXByKey",
+								"key": {
+									"type": "rawString",
+									"value": "_gEff"
+								}
+							}
+						},{
+							"type": "killTimer",
+							"timer": {
+								"type": "getStoredTimerByKey",
+								"key": {
+									"type": "rawString",
+									"value": "subDmgTimer"
+								}
+							}
+						},{
+							"type": "killTimer",
+							"timer": {
+								"type": "getStoredTimerByKey",
+								"key": {
+									"type": "rawString",
+									"value": "dmgTimer"
+								}
+							}
+						},{
+							"type": "cleanUpCastInstance"
+					}]
+			}]
+		},
+		"onAddDisabledAbility": [{
+				"type": "createAttackPreDamageListener",
+				"useCastId": {
+					"type": "rawBoolean",
+					"value": "false"
+				},
+				"actions": [{
+						"type": "runReuseAction",
+						"name": {
+							"type": "rawString",
+							"value": "onHit"
+						}
+					},{
+						"type": "setStacking",
+						"allowStacking": {
+							"type": "rawBoolean",
+							"value": "false"
+						},
+						"allowSamePriorityStacking": {
+							"type": "rawBoolean",
+							"value": "false"
+						}
+				}]
+			},{
+				"type": "createAttackModifier",
+				"priority": {
+					"type": "rawInteger",
+					"value": 10
+				},
+				"modification": [{
+						"type": "attackModifierAddPreDamageListener",
+						"listener": {
+							"type": "getLastCreatedAttackPreDamageListener"
+						}
+					},{
+						"type": "attackModifierApplyArt"
+					},{
+						"type": "attackModifierPreventOtherModifications"
+				}]
+		}],
+		"onAddAbility": [{
+			"type": "addAttackModifier",
+			"unit": {
+				"type": "getCastingUnit"
+			},
+			"modifier": {
+				"type": "getLastCreatedAttackModifier"
+			}
+		}],
+		"onRemoveAbility": [{
+			"type": "removeAttackModifier",
+			"unit": {
+				"type": "getCastingUnit"
+			},
+			"modifier": {
+				"type": "getLastCreatedAttackModifier"
+			}
+		}]
 	}]
 }

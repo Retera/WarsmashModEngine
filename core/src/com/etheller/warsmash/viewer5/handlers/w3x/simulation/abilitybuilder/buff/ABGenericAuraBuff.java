@@ -6,6 +6,7 @@ import java.util.Map;
 import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CEffectType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.unit.NonStackingFx;
 
@@ -14,9 +15,9 @@ public class ABGenericAuraBuff extends ABBuff {
 	
 	private CUnit caster;
 
-	public ABGenericAuraBuff(int handleId, War3ID alias, CUnit caster, boolean leveled,
+	public ABGenericAuraBuff(int handleId, War3ID alias, CAbility sourceAbility, CUnit caster, boolean leveled,
 			boolean positive) {
-		super(handleId, alias, alias);
+		super(handleId, alias, alias, sourceAbility, caster);
 		this.caster = caster;
 		this.fx = new HashMap<>();
 		this.setHero(caster.isHero());

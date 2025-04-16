@@ -29,7 +29,7 @@ public class BehaviorTargetVisitor implements CBehaviorVisitor<AbilityTarget> {
 
 	@Override
 	public AbilityTarget accept(CBehaviorMove target) {
-		return null;
+		return target.getTarget();
 	}
 	
 	

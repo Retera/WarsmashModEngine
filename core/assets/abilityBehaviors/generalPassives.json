@@ -315,8 +315,8 @@
 										"value": "true"
 									}
 								},{
-									"type": "removeSpellEffect",
-									"effectToRemove": {
+									"type": "removeEffect",
+									"effect": {
 										"type": "getLastCreatedSpellEffect"
 									}
 								}, {
@@ -443,8 +443,8 @@
 									}],
 									"elseActions": []
 								},{
-									"type": "removeSpellEffect",
-									"effectToRemove": {
+									"type": "removeEffect",
+									"effect": {
 										"type": "getLastCreatedSpellEffect"
 									}
 								}, {
@@ -950,8 +950,8 @@
 				}]
 		}],
 		"onRemoveAbility": [{
-				"type": "removeSpellEffect",
-				"effectToRemove": {
+				"type": "removeEffect",
+				"effect": {
 					"type": "getLastCreatedSpellEffect"
 				}
 			},{
@@ -1556,8 +1556,8 @@
 					}
 			}],
 			"undetect": [{
-					"type": "removeSpellEffect",
-					"effectToRemove": {
+					"type": "removeEffect",
+					"effect": {
 						"type": "getLastCreatedSpellEffect"
 					}
 				},{
@@ -1750,8 +1750,8 @@
 										"value": "false"
 									}
 								},{
-									"type": "removeSpellEffect",
-									"effectToRemove": {
+									"type": "removeEffect",
+									"effect": {
 										"type": "getStoredFXByKey",
 										"key": {
 											"type": "catStrings",
@@ -1924,7 +1924,7 @@
 							}
 						},
 						"thenActions": [{
-							"type": "removeTimer",
+							"type": "killTimer",
 							"timer": {
 								"type": "getStoredTimerByKey",
 								"key": {
@@ -2080,7 +2080,7 @@
 				}
 		}],
 		"onRemoveAbility": [{
-				"type": "removeTimer",
+				"type": "killTimer",
 				"timer": {
 					"type": "getStoredTimerByKey",
 					"key": {

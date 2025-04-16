@@ -11,6 +11,10 @@
 				"type": "rawBoolean",
 				"value": "true"
 			},
+			"instantCast": {
+				"type": "rawBoolean",
+				"value": "true"
+			},
 			"alternateUnitId": {
 				"type": "getAbilityUnitId"
 			},
@@ -468,11 +472,13 @@
 							"type": "getFirstBuffId"
 						},
 						"onTransformActions": [{
-							"type": "runReuseAction",
-							"name": {
-								"type": "rawString",
-								"value": "onTransform"
-							}
+								"type": "runReuseAction",
+								"name": {
+									"type": "rawString",
+									"value": "onTransform"
+								}
+							},{
+								"type": "attemptToReOrderPreviousBehavior"
 						}],
 						"onUntransformActions": [{
 								"type": "runReuseAction",
@@ -486,6 +492,17 @@
 									"type": "rawString",
 									"value": "clearBaseType"
 								}
+							},{
+								"type": "if",
+								"condition": {
+									"type": "f!=0",
+									"value": {
+										"type": "getAbilityDuration"
+									}
+								},
+								"thenActions": [{
+									"type": "attemptToReOrderPreviousBehavior"
+								}]
 						}]
 				}],
 				"elseActions": []
@@ -544,7 +561,7 @@
 				"value": "onLevelChange"
 			}
 		}],
-		"onBeginCasting": [{
+		"onEndCasting": [{
 				"type": "runReuseAction",
 				"name": {
 					"type": "rawString",
@@ -559,6 +576,8 @@
 					"type": "getAlias"
 				},
 				"effectType": "CASTER"
+			},{
+				"type": "setPreventEndEvents"
 			},{
 				"type": "transformUnit",
 				"unit": {
@@ -655,11 +674,13 @@
 					"type": "getFirstBuffId"
 				},
 				"onTransformActions": [{
-					"type": "runReuseAction",
-					"name": {
-						"type": "rawString",
-						"value": "onTransform"
-					}
+						"type": "runReuseAction",
+						"name": {
+							"type": "rawString",
+							"value": "onTransform"
+						}
+					},{
+						"type": "attemptToReOrderPreviousBehavior"
 				}],
 				"onUntransformActions": [{
 						"type": "runReuseAction",
@@ -673,6 +694,17 @@
 							"type": "rawString",
 							"value": "clearBaseType"
 						}
+					},{
+						"type": "if",
+						"condition": {
+							"type": "f!=0",
+							"value": {
+								"type": "getAbilityDuration"
+							}
+						},
+						"thenActions": [{
+							"type": "attemptToReOrderPreviousBehavior"
+						}]
 				}]
 			},{
 				"type": "if",
@@ -942,11 +974,13 @@
 						"type": "getFirstBuffId"
 					},
 					"onTransformActions": [{
-						"type": "runReuseAction",
-						"name": {
-							"type": "rawString",
-							"value": "onTransform"
-						}
+							"type": "runReuseAction",
+							"name": {
+								"type": "rawString",
+								"value": "onTransform"
+							}
+						},{
+							"type": "attemptToReOrderPreviousBehavior"
 					}],
 					"onUntransformActions": [{
 							"type": "runReuseAction",
@@ -960,6 +994,17 @@
 								"type": "rawString",
 								"value": "clearBaseType"
 							}
+						},{
+							"type": "if",
+							"condition": {
+								"type": "f!=0",
+								"value": {
+									"type": "getAbilityDuration"
+								}
+							},
+							"thenActions": [{
+								"type": "attemptToReOrderPreviousBehavior"
+							}]
 					}]
 				}],
 				"elseActions": [{
@@ -1075,7 +1120,7 @@
 			}
 		},
 		"onAddDisabledAbility": [],
-		"onBeginCasting": [{
+		"onEndCasting": [{
 				"type": "runReuseAction",
 				"name": {
 					"type": "rawString",
@@ -1090,6 +1135,8 @@
 					"type": "getAlias"
 				},
 				"effectType": "CASTER"
+			},{
+				"type": "setPreventEndEvents"
 			},{
 				"type": "transformUnit",
 				"unit": {
@@ -1194,11 +1241,13 @@
 					"value": "true"
 				},
 				"onTransformActions": [{
-					"type": "runReuseAction",
-					"name": {
-						"type": "rawString",
-						"value": "onTransform"
-					}
+						"type": "runReuseAction",
+						"name": {
+							"type": "rawString",
+							"value": "onTransform"
+						}
+					},{
+						"type": "attemptToReOrderPreviousBehavior"
 				}],
 				"onUntransformActions": [{
 						"type": "runReuseAction",
@@ -1273,7 +1322,7 @@
 				}
 			}]
 		},
-		"onBeginCasting": [{
+		"onEndCasting": [{
 				"type": "runReuseAction",
 				"name": {
 					"type": "rawString",
@@ -1288,6 +1337,8 @@
 					"type": "getAlias"
 				},
 				"effectType": "CASTER"
+			},{
+				"type": "setPreventEndEvents"
 			},{
 				"type": "transformUnit",
 				"unit": {
@@ -1383,16 +1434,14 @@
 				"buffId": {
 					"type": "getFirstBuffId"
 				},
-				"instantTransformAtDurationEnd": {
-					"type": "rawBoolean",
-					"value": "true"
-				},
 				"onTransformActions": [{
-					"type": "runReuseAction",
-					"name": {
-						"type": "rawString",
-						"value": "onTransform"
-					}
+						"type": "runReuseAction",
+						"name": {
+							"type": "rawString",
+							"value": "onTransform"
+						}
+					},{
+						"type": "attemptToReOrderPreviousBehavior"
 				}],
 				"onUntransformActions": [{
 						"type": "runReuseAction",
@@ -1406,6 +1455,17 @@
 							"type": "rawString",
 							"value": "clearBaseType"
 						}
+					},{
+						"type": "if",
+						"condition": {
+							"type": "f!=0",
+							"value": {
+								"type": "getAbilityDuration"
+							}
+						},
+						"thenActions": [{
+							"type": "attemptToReOrderPreviousBehavior"
+						}]
 				}]
 		}]
 	},{
@@ -1435,6 +1495,10 @@
 						"type": "rawString",
 						"value": "strbuff"
 					},
+					"instanceValue": {
+						"type": "rawBoolean",
+						"value": "false"
+					},
 					"valueToStore": {
 						"type": "getLastCreatedNonStackingStatBuff"
 					}
@@ -1460,6 +1524,10 @@
 						"type": "rawString",
 						"value": "defbuff"
 					},
+					"instanceValue": {
+						"type": "rawBoolean",
+						"value": "false"
+					},
 					"valueToStore": {
 						"type": "getLastCreatedNonStackingStatBuff"
 					}
@@ -1474,6 +1542,10 @@
 						"key": {
 							"type": "rawString",
 							"value": "strbuff"
+						},
+						"instanceValue": {
+							"type": "rawBoolean",
+							"value": "false"
 						}
 					}
 				},{
@@ -1486,6 +1558,10 @@
 						"key": {
 							"type": "rawString",
 							"value": "defbuff"
+						},
+						"instanceValue": {
+							"type": "rawBoolean",
+							"value": "false"
 						}
 					}
 			}],
@@ -1499,6 +1575,10 @@
 						"key": {
 							"type": "rawString",
 							"value": "strbuff"
+						},
+						"instanceValue": {
+							"type": "rawBoolean",
+							"value": "false"
 						}
 					}
 				},{
@@ -1511,6 +1591,10 @@
 						"key": {
 							"type": "rawString",
 							"value": "defbuff"
+						},
+						"instanceValue": {
+							"type": "rawBoolean",
+							"value": "false"
 						}
 					}
 			}],
@@ -1521,6 +1605,10 @@
 						"key": {
 							"type": "rawString",
 							"value": "strbuff"
+						},
+						"instanceValue": {
+							"type": "rawBoolean",
+							"value": "false"
 						}
 					},
 					"value": {
@@ -1534,6 +1622,10 @@
 						"key": {
 							"type": "rawString",
 							"value": "defbuff"
+						},
+						"instanceValue": {
+							"type": "rawBoolean",
+							"value": "false"
 						}
 					},
 					"value": {
@@ -1883,6 +1975,8 @@
 								"type": "getAlias"
 							},
 							"effectType": "CASTER"
+						},{
+							"type": "sendStartCastingEvents"
 						},{
 							"type": "transformUnit",
 							"unit": {

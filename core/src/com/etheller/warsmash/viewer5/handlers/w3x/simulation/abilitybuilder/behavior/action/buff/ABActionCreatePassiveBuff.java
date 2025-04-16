@@ -6,6 +6,7 @@ import java.util.Map;
 import com.etheller.warsmash.parsers.jass.JassTextGenerator;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.booleancallbacks.ABBooleanCallback;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.idcallbacks.ABIDCallback;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.stringcallbacks.ABStringCallback;
@@ -30,7 +31,7 @@ public class ABActionCreatePassiveBuff implements ABSingleAction {
 	private ABBooleanCallback positive;
 
 	private ABStringCallback visibilityGroup;
-	
+
 	private List<ABStringCallback> uniqueFlags;
 
 	@Override
@@ -50,13 +51,16 @@ public class ABActionCreatePassiveBuff implements ABSingleAction {
 
 		if (showIcon != null) {
 			ability = new ABPermanentPassiveBuff(game.getHandleIdAllocator().createId(),
-					buffId.callback(game, caster, localStore, castId), localStore, onAddActions, onRemoveActions,
-					showIcon.callback(game, caster, localStore, castId), castId, isLeveled, isPositive);
+					buffId.callback(game, caster, localStore, castId),
+					(CAbility) localStore.get(ABLocalStoreKeys.ABILITY), caster, localStore, onAddActions,
+					onRemoveActions, showIcon.callback(game, caster, localStore, castId), castId, isLeveled,
+					isPositive);
 			localStore.put(ABLocalStoreKeys.LASTCREATEDBUFF, ability);
 		} else {
 			ability = new ABPermanentPassiveBuff(game.getHandleIdAllocator().createId(),
-					buffId.callback(game, caster, localStore, castId), localStore, onAddActions, onRemoveActions, true,
-					castId, isLeveled, isPositive);
+					buffId.callback(game, caster, localStore, castId),
+					(CAbility) localStore.get(ABLocalStoreKeys.ABILITY), caster, localStore, onAddActions,
+					onRemoveActions, true, castId, isLeveled, isPositive);
 			localStore.put(ABLocalStoreKeys.LASTCREATEDBUFF, ability);
 		}
 		if (this.artType != null) {

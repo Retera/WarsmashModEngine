@@ -19,6 +19,7 @@ import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.AbstractCBuff;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.CBuff;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityPointTarget;
@@ -177,6 +178,18 @@ public class CBuffJass extends AbstractCBuff implements CBuff {
 	protected void innerCheckCanUse(final CSimulation game, final CUnit unit, final int orderId,
 			final AbilityActivationReceiver receiver) {
 		receiver.notAnActiveAbility();
+	}
+
+	@Override
+	public CAbility getSourceAbility() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public CUnit getSourceUnit() {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 }

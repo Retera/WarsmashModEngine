@@ -1,43 +1,49 @@
-package com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.action;
+package com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.action.fx;
 
 import java.util.Map;
 
 import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.floatcallbacks.ABFloatCallback;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.idcallbacks.ABIDCallback;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.integercallbacks.ABIntegerCallback;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.unitcallbacks.ABUnitCallback;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABAction;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABLocalStoreKeys;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CEffectType;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.SimulationRenderComponent;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.SimulationRenderComponentLightning;
 
-public class ABActionCreateSpellEffectOnUnit implements ABAction {
+public class ABActionCreateLightningEffect implements ABAction {
 
+	private ABUnitCallback origin;
 	private ABUnitCallback target;
 	private ABIDCallback id;
-	private CEffectType effectType;
+	private ABFloatCallback duration;
 	private ABIntegerCallback index;
 
 	public void runAction(final CSimulation game, final CUnit caster, final Map<String, Object> localStore,
 			final int castId) {
+		int i = 0;
+		if (index != null) {
+			i = index.callback(game, caster, localStore, castId);
+		}
 		War3ID theId = null;
 		if (id == null) {
 			theId = (War3ID) localStore.get(ABLocalStoreKeys.ALIAS);
 		} else {
 			theId = id.callback(game, caster, localStore, castId);
 		}
-		if (index == null) {
-			SimulationRenderComponent ret = game.createPersistentSpellEffectOnUnit(
-					(target.callback(game, caster, localStore, castId)), theId, this.effectType);
-			localStore.put(ABLocalStoreKeys.LASTCREATEDFX, ret);
+		if (duration != null) {
+			SimulationRenderComponentLightning ret = game.createAbilityLightning(
+					origin.callback(game, caster, localStore, castId), theId, i,
+					target.callback(game, caster, localStore, castId),
+					duration.callback(game, caster, localStore, castId));
+			localStore.put(ABLocalStoreKeys.LASTCREATEDLIGHTNING, ret);
 		} else {
-			SimulationRenderComponent ret = game.createPersistentSpellEffectOnUnit(
-					(target.callback(game, caster, localStore, castId)),
-					this.id.callback(game, caster, localStore, castId), this.effectType,
-					this.index.callback(game, caster, localStore, castId));
-			localStore.put(ABLocalStoreKeys.LASTCREATEDFX, ret);
+			SimulationRenderComponentLightning ret = game.createAbilityLightning(
+					origin.callback(game, caster, localStore, castId), theId, i,
+					target.callback(game, caster, localStore, castId));
+			localStore.put(ABLocalStoreKeys.LASTCREATEDLIGHTNING, ret);
 		}
 	}
 }

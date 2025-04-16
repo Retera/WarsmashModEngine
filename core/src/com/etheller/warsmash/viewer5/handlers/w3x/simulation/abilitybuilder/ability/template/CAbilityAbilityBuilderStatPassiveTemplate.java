@@ -153,8 +153,8 @@ public class CAbilityAbilityBuilderStatPassiveTemplate extends AbilityGenericSin
 	@Override
 	public void onAdd(CSimulation game, CUnit unit) {
 		if (this.buffId != null) {
-			this.buff = new ABPermanentPassiveBuff(game.getHandleIdAllocator().createId(), this.buffId, localStore,
-					null, null, 0, false, true);
+			this.buff = new ABPermanentPassiveBuff(game.getHandleIdAllocator().createId(), this.buffId, this, unit,
+					localStore, null, null, 0, false, true);
 			unit.addNonStackingDisplayBuff(game, auraStackingKey, buff);
 		}
 		this.caster = unit;

@@ -52,7 +52,9 @@ public class COrderTargetPoint implements COrder {
 	public CBehavior begin(final CSimulation game, final CUnit caster) {
 		final CAbility ability = game.getAbility(this.abilityHandleId);
 		if (ability == null) {
-			game.getCommandErrorListener().showInterfaceError(caster.getPlayerIndex(), "NOTEXTERN: No such ability");
+			if (!caster.order(game, this.orderId, this.target)) {
+				game.getCommandErrorListener().showInterfaceError(caster.getPlayerIndex(), "NOTEXTERN: No such ability");
+			}
 			return caster.pollNextOrderBehavior(game);
 		}
 		ability.checkCanUse(game, caster, this.orderId, this.autoOrder, this.abilityActivationReceiver.reset());

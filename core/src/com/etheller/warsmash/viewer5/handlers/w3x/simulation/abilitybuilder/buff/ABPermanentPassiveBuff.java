@@ -6,6 +6,7 @@ import java.util.Map;
 import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABAction;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CEffectType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.unit.NonStackingFx;
@@ -27,17 +28,18 @@ public class ABPermanentPassiveBuff extends ABGenericPermanentBuff {
 
 	protected int castId = 0;
 
-	public ABPermanentPassiveBuff(int handleId, War3ID alias, Map<String, Object> localStore,
-			List<ABAction> onAddActions, List<ABAction> onRemoveActions, boolean showIcon, final int castId,
-			boolean leveled, boolean positive) {
-		this(handleId, alias, localStore, onAddActions, onRemoveActions, castId, leveled, positive);
+	public ABPermanentPassiveBuff(int handleId, War3ID alias, CAbility sourceAbility, CUnit sourceUnit,
+			Map<String, Object> localStore, List<ABAction> onAddActions, List<ABAction> onRemoveActions,
+			boolean showIcon, final int castId, boolean leveled, boolean positive) {
+		this(handleId, alias, sourceAbility, sourceUnit, localStore, onAddActions, onRemoveActions, castId, leveled,
+				positive);
 		this.setIconShowing(showIcon);
 	}
 
-	public ABPermanentPassiveBuff(int handleId, War3ID alias, Map<String, Object> localStore,
-			List<ABAction> onAddActions, List<ABAction> onRemoveActions, final int castId, boolean leveled,
-			boolean positive) {
-		super(handleId, alias, leveled, positive);
+	public ABPermanentPassiveBuff(int handleId, War3ID alias, CAbility sourceAbility, CUnit sourceUnit,
+			Map<String, Object> localStore, List<ABAction> onAddActions, List<ABAction> onRemoveActions,
+			final int castId, boolean leveled, boolean positive) {
+		super(handleId, alias, sourceAbility, sourceUnit, leveled, positive);
 		this.localStore = localStore;
 		this.onAddActions = onAddActions;
 		this.onRemoveActions = onRemoveActions;

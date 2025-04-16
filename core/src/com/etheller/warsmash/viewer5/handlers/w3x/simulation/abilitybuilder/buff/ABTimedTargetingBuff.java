@@ -3,10 +3,11 @@ package com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.buf
 import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbility;
 
 public class ABTimedTargetingBuff extends ABGenericTimedBuff {
-	public ABTimedTargetingBuff(int handleId, War3ID alias, float duration) {
-		super(handleId, alias, duration, false, false, true, false);
+	public ABTimedTargetingBuff(int handleId, War3ID alias, CAbility sourceAbility, CUnit sourceUnit, float duration) {
+		super(handleId, alias, sourceAbility, sourceUnit, duration, false, false, true, false);
 		this.setIconShowing(false);
 	}
 

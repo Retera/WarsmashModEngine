@@ -67,8 +67,8 @@
 					}
 				},
 				"thenActions": [{
-					"type": "removeSpellEffect",
-					"effectToRemove": {
+					"type": "removeEffect",
+					"effect": {
 						"type": "getLastCreatedSpellEffect"
 					}
 				}]
@@ -152,8 +152,8 @@
 					}
 				},
 				"thenActions": [{
-					"type": "removeSpellEffect",
-					"effectToRemove": {
+					"type": "removeEffect",
+					"effect": {
 						"type": "getLastCreatedSpellEffect"
 					}
 				}]

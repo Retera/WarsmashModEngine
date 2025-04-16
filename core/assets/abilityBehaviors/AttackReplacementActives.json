@@ -2,6 +2,12 @@
 	"abilityList": [{
 		"ids": [{"id":"AHfa", "castId": "flamingarrowstarg", "autoCastOnId": "flamingarrows", "autoCastOffId": "unflamingarrows", "autoCastType": "NOAUTOCASTBEHAVIOR"}],
 		"type": "NORMAL_UNITTARGET",
+		"overrideFields": {
+			"ignoreCastTime": {
+				"type": "rawBoolean",
+				"value": "true"
+			}
+		},
 		"reuseActions": {
 			"onHit": [{
 				"type": "addBonusDamageDealt",

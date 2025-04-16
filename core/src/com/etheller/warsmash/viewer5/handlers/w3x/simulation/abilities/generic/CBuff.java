@@ -2,6 +2,7 @@ package com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic;
 
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbility;
 
 public interface CBuff extends CAliasedLevelingAbility {
 	float getDurationRemaining(CSimulation game, CUnit unit);
@@ -25,5 +26,9 @@ public interface CBuff extends CAliasedLevelingAbility {
 	boolean isAura();
 
 	String getVisibilityGroup();
+
+	CAbility getSourceAbility();
+	
+	CUnit getSourceUnit();
 	
 }

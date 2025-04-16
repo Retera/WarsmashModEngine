@@ -352,12 +352,16 @@ public class CUnit extends CWidget {
 	}
 
 	public void beginBehavior(final CSimulation game, final CBehavior behavior) {
+		this.beginBehavior(game, behavior, false);
+	}
+
+	public void beginBehavior(final CSimulation game, final CBehavior behavior, boolean interrupted) {
 		if (this.currentBehavior != behavior) {
 			final int lastBehaviorHighlightOrderId = this.currentBehavior != null
 					? this.currentBehavior.getHighlightOrderId()
 					: -1;
 			if (this.currentBehavior != null) {
-				this.currentBehavior.end(game, false);
+				this.currentBehavior.end(game, interrupted);
 			}
 
 			fireBehaviorChangeEvent(game, behavior, false);
@@ -387,7 +391,7 @@ public class CUnit extends CWidget {
 	}
 
 	public void performDefaultBehavior(final CSimulation game) {
-		beginBehavior(game, this.defaultBehavior);
+		beginBehavior(game, this.defaultBehavior, true);
 	}
 
 	public void regeneratePathingInstance(final CSimulation game, final BufferedImage buildingPathingPixelMap) {
@@ -2765,7 +2769,9 @@ public class CUnit extends CWidget {
 				if (queuedOrder != null) {
 					final int abilityHandleId = queuedOrder.getAbilityHandleId();
 					final CAbility ability = game.getAbility(abilityHandleId);
-					ability.onCancelFromQueue(game, this, queuedOrder.getOrderId());
+					if (ability != null) {
+						ability.onCancelFromQueue(game, this, queuedOrder.getOrderId());
+					}
 				}
 			}
 			this.orderQueue.clear();
@@ -2786,7 +2792,7 @@ public class CUnit extends CWidget {
 			this.stateNotifier.waypointsChanged();
 		} else {
 			setDefaultBehavior(this.stopBehavior);
-			beginBehavior(game, beginOrder(game, order));
+			beginBehavior(game, beginOrder(game, order), true);
 			for (final COrder queuedOrder : this.orderQueue) {
 				if (queuedOrder != null) {
 					final int abilityHandleId = queuedOrder.getAbilityHandleId();
@@ -3340,7 +3346,7 @@ public class CUnit extends CWidget {
 							final CBehaviorAttack attackBehaviorForAtk = getAttackBehavior();
 							if (attackBehaviorForAtk != null) {
 								beginBehavior(simulation, attackBehaviorForAtk.reset(simulation, OrderIds.attack,
-										attack, source, false, CBehaviorAttackListener.DO_NOTHING));
+										attack, source, false, CBehaviorAttackListener.DO_NOTHING), true);
 								foundMatchingReturnFireAttack = true;
 								break;
 							}
@@ -3355,7 +3361,8 @@ public class CUnit extends CWidget {
 							this.moveBehavior.reset(OrderIds.move,
 									new AbilityPointTarget(
 											(float) (getX() + (distanceToFlee * StrictMath.cos(angleTo))),
-											(float) (getY() + (distanceToFlee * StrictMath.sin(angleTo))))));
+											(float) (getY() + (distanceToFlee * StrictMath.sin(angleTo))))),
+							true);
 				}
 			}
 		}
@@ -3363,7 +3370,7 @@ public class CUnit extends CWidget {
 	}
 
 	private void kill(final CSimulation simulation, final CUnit source) {
-		beginBehavior(simulation, null);
+		beginBehavior(simulation, null, true);
 
 		final CUnitDeathReplacementResult result = new CUnitDeathReplacementResult();
 		CUnitDeathReplacementStacking allowContinue = new CUnitDeathReplacementStacking();
@@ -3696,11 +3703,16 @@ public class CUnit extends CWidget {
 			final CPlayer sourcePlayer = simulation.getPlayer(sourcePlayerIndex);
 			if (!targetsAllowed.contains(CTargetType.ENEMIES)
 					|| !sourcePlayer.hasAlliance(this.playerIndex, CAllianceType.PASSIVE)
-					|| targetsAllowed.contains(CTargetType.FRIEND) || targetsAllowed.contains(CTargetType.NEUTRAL)) {
+					|| (targetsAllowed.contains(CTargetType.FRIEND)
+							&& sourcePlayer.hasAlliance(this.playerIndex, CAllianceType.SHARED_SPELLS))
+					|| (targetsAllowed.contains(CTargetType.NEUTRAL)
+							&& !sourcePlayer.hasAlliance(this.playerIndex, CAllianceType.SHARED_SPELLS))) {
 				if (!targetsAllowed.contains(CTargetType.FRIEND)
 						|| sourcePlayer.hasAlliance(this.playerIndex, CAllianceType.SHARED_SPELLS)
-						|| targetsAllowed.contains(CTargetType.ENEMIES)
-						|| targetsAllowed.contains(CTargetType.NEUTRAL)) {
+						|| (targetsAllowed.contains(CTargetType.ENEMIES)
+								&& !sourcePlayer.hasAlliance(this.playerIndex, CAllianceType.PASSIVE))
+						|| (targetsAllowed.contains(CTargetType.NEUTRAL)
+								&& sourcePlayer.hasAlliance(this.playerIndex, CAllianceType.PASSIVE))) {
 					if (!targetsAllowed.contains(CTargetType.NEUTRAL)
 							|| (sourcePlayer.hasAlliance(this.playerIndex, CAllianceType.PASSIVE)
 									&& !sourcePlayer.hasAlliance(this.playerIndex, CAllianceType.SHARED_SPELLS))
@@ -4095,9 +4107,10 @@ public class CUnit extends CWidget {
 									&& !(this.game.getGameplayConstants().isMagicImmuneResistsDamage()
 											&& unit.isUnitType(CUnitTypeJass.MAGIC_IMMUNE)
 											&& (attack.getAttackType() == CAttackType.MAGIC))) {
-								this.source.beginBehavior(this.game,
-										this.source.getAttackBehavior().reset(this.game, OrderIds.attack, attack, unit,
-												this.disableMove, CBehaviorAttackListener.DO_NOTHING));
+								this.source.beginBehavior(
+										this.game, this.source.getAttackBehavior().reset(this.game, OrderIds.attack,
+												attack, unit, this.disableMove, CBehaviorAttackListener.DO_NOTHING),
+										true);
 								this.foundAnyTarget = true;
 								return true;
 							}

@@ -3270,7 +3270,7 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 								}
 								final Vector3 unitPosition = new Vector3(renderPeer.location);
 								final Bounds bounds = renderPeer.instance.getBounds();
-								final TextTag textTag = new TextTag(unitPosition, new Vector2(0, 60f), text,
+								final TextTag textTag = new TextTag(unitPosition, new Vector2(0, 3.328125f), text,
 										textTagConfig.getColor(), textTagConfig.getLifetime(),
 										textTagConfig.getFadeStart(), textTagConfig.getHeight(),
 										BUILTIN_TEXT_TAG_REPORTED_HANDLE_ID);
@@ -3293,7 +3293,7 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 								} else {
 									unitPosition = new Vector3(0, 0, 0);
 								}
-								final TextTag textTag = new TextTag(unitPosition, new Vector2(0, 60f), message,
+								final TextTag textTag = new TextTag(unitPosition, new Vector2(0, 3.328125f), message,
 										textTagConfig.getColor(), textTagConfig.getLifetime(),
 										textTagConfig.getFadeStart(), textTagConfig.getHeight(),
 										BUILTIN_TEXT_TAG_REPORTED_HANDLE_ID);

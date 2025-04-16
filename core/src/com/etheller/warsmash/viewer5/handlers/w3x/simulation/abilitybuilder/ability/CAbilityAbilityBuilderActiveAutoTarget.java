@@ -49,12 +49,12 @@ public class CAbilityAbilityBuilderActiveAutoTarget extends CAbilityAbilityBuild
 	@Override
 	public CBehavior beginNoTarget(CSimulation game, CUnit caster, int orderId, boolean autoOrder) {
 		castId++;
-		this.localStore.put(ABLocalStoreKeys.combineKey(ABLocalStoreKeys.ISAUTOCAST, orderId), autoOrder);
+		this.localStore.put(ABLocalStoreKeys.combineKey(ABLocalStoreKeys.ISAUTOCAST, castId), autoOrder);
 		CWidget target = autoTarget(game, caster);
 		if (target != null) {
 			this.runOnOrderIssuedActions(game, caster, orderId);
 			this.behavior.setCastId(castId);
-			return this.behavior.reset(game, target);
+			return this.behavior.reset(game, target, orderId, autoOrder);
 		} else {
 			this.localStore.remove(ABLocalStoreKeys.ABILITYTARGETEDUNIT + castId);
 			this.localStore.remove(ABLocalStoreKeys.ABILITYTARGETEDDESTRUCTABLE + castId);
@@ -66,7 +66,8 @@ public class CAbilityAbilityBuilderActiveAutoTarget extends CAbilityAbilityBuild
 	@Override
 	public void internalBegin(CSimulation game, CUnit caster, int orderId, boolean autoOrder, AbilityTarget noTarget) {
 		this.castId++;
-		this.localStore.put(ABLocalStoreKeys.combineKey(ABLocalStoreKeys.ISAUTOCAST, orderId), autoOrder);
+		this.localStore.put(ABLocalStoreKeys.combineKey(ABLocalStoreKeys.ISAUTOCAST, castId), autoOrder);
+		this.localStore.put(ABLocalStoreKeys.PREVIOUSBEHAVIOR, caster.getCurrentBehavior());
 		CWidget target = autoTarget(game, caster);
 		if (target != null) {
 			this.runOnOrderIssuedActions(game, caster, orderId);

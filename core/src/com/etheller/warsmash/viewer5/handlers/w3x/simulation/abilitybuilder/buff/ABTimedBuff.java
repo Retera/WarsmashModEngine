@@ -8,6 +8,7 @@ import java.util.Set;
 import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABAction;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABLocalStoreKeys;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CEffectType;
@@ -28,20 +29,20 @@ public class ABTimedBuff extends ABGenericTimedBuff {
 
 	protected int castId = 0;
 
-	public ABTimedBuff(int handleId, War3ID alias, float duration, boolean showTimedLifeBar,
+	public ABTimedBuff(int handleId, War3ID alias, CAbility sourceAbility, CUnit sourceUnit, float duration, boolean showTimedLifeBar,
 			Map<String, Object> localStore, List<ABAction> onAddActions, List<ABAction> onRemoveActions,
 			List<ABAction> onExpireActions, boolean showIcon, final int castId, final boolean leveled,
 			final boolean positive, final boolean dispellable) {
-		this(handleId, alias, duration, showTimedLifeBar, localStore, onAddActions, onRemoveActions, onExpireActions,
+		this(handleId, alias, sourceAbility, sourceUnit, duration, showTimedLifeBar, localStore, onAddActions, onRemoveActions, onExpireActions,
 				castId, leveled, positive, dispellable);
 		this.setIconShowing(showIcon);
 	}
 
-	public ABTimedBuff(int handleId, War3ID alias, float duration, boolean showTimedLifeBar,
+	public ABTimedBuff(int handleId, War3ID alias, CAbility sourceAbility, CUnit sourceUnit, float duration, boolean showTimedLifeBar,
 			Map<String, Object> localStore, List<ABAction> onAddActions, List<ABAction> onRemoveActions,
 			List<ABAction> onExpireActions, final int castId, final boolean leveled, final boolean positive,
 			final boolean dispellable) {
-		super(handleId, alias, duration, showTimedLifeBar, leveled, positive, dispellable);
+		super(handleId, alias, sourceAbility, sourceUnit, duration, showTimedLifeBar, leveled, positive, dispellable);
 		this.localStore = localStore;
 		this.onAddActions = onAddActions;
 		this.onRemoveActions = onRemoveActions;

@@ -17,7 +17,7 @@ public class ABConditionIntegerEq extends ABCondition {
 		Integer v1 = value1.callback(game, caster, localStore, castId);
 		Integer v2 = value2.callback(game, caster, localStore, castId);
 		
-		return v1==v2;
+		return v1.equals(v2);
 	}
 
 }

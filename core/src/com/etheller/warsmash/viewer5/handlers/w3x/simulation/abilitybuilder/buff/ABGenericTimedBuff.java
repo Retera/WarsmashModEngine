@@ -4,15 +4,16 @@ import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.util.WarsmashConstants;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbility;
 
 public abstract class ABGenericTimedBuff extends ABBuff {
 	private final float duration;
 	private int currentTick = 0;
 	private int expireTick;
 
-	public ABGenericTimedBuff(int handleId, War3ID alias, float duration, boolean showTimedLifeBar, boolean leveled,
+	public ABGenericTimedBuff(int handleId, War3ID alias, CAbility sourceAbility, CUnit sourceUnit, float duration, boolean showTimedLifeBar, boolean leveled,
 			boolean positive, boolean dispellable) {
-		super(handleId, alias, alias);
+		super(handleId, alias, alias, sourceAbility, sourceUnit);
 		this.setTimedLifeBar(showTimedLifeBar);
 		this.duration = duration;
 		this.setLeveled(leveled);

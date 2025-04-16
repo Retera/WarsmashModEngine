@@ -48,14 +48,15 @@ public class CAbilityAbilityBuilderActivePointTarget extends CAbilityAbilityBuil
 	public CBehavior begin(CSimulation game, CUnit caster, int orderId, boolean autoOrder, AbilityPointTarget point) {
 		this.internalBegin(game, caster, orderId, autoOrder, point);
 		this.behavior.setCastId(castId);
-		return this.behavior.reset(game, point);
+		return this.behavior.reset(game, point, orderId, autoOrder);
 	}
 
 	@Override
 	public void internalBegin(CSimulation game, CUnit caster, int orderId, boolean autoOrder, AbilityTarget theTarget) {
 		this.castId++;
-		this.localStore.put(ABLocalStoreKeys.combineKey(ABLocalStoreKeys.ISAUTOCAST, orderId), autoOrder);
+		this.localStore.put(ABLocalStoreKeys.combineKey(ABLocalStoreKeys.ISAUTOCAST, castId), autoOrder);
 		localStore.put(ABLocalStoreKeys.ABILITYTARGETEDLOCATION+this.castId, theTarget.visit(AbilityTargetVisitor.POINT));
+		this.localStore.put(ABLocalStoreKeys.PREVIOUSBEHAVIOR, caster.getCurrentBehavior());
 		this.runOnOrderIssuedActions(game, caster, orderId);
 	}
 

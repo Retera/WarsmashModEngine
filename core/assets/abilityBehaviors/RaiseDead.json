@@ -191,6 +191,19 @@
 			},
 			"reason": "THERE_ARE_NO_USABLE_CORPSES_NEARBY"
 		}],
+		"extraAutoNoTargetConditions": [{
+			"type": "i<",
+			"value1": {
+				"type": "getUnitQueueSize",
+				"queue": {
+					"type": "getLastCreatedUnitQueue"
+				}
+			},
+			"value2": {
+				"type": "getAbilityDataAsInteger",
+				"dataField": "E"
+			}
+		}],
 		"extraTargetConditions": [{
 			"type": "setCantUseReasonOnFailure",
 			"condition": {

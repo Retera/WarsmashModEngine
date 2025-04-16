@@ -38,16 +38,17 @@ public class CAbilityAbilityBuilderActiveUnitTarget extends CAbilityAbilityBuild
 	public CBehavior begin(CSimulation game, CUnit caster, int orderId, boolean autoOrder, CWidget target) {
 		this.internalBegin(game, caster, orderId, autoOrder, target);
 		this.behavior.setCastId(castId);
-		return this.behavior.reset(game, target);
+		return this.behavior.reset(game, target, orderId, autoOrder);
 	}
 
 	@Override
 	public void internalBegin(CSimulation game, CUnit caster, int orderId, boolean autoOrder, AbilityTarget target) {
 		this.castId++;
-		this.localStore.put(ABLocalStoreKeys.combineKey(ABLocalStoreKeys.ISAUTOCAST, orderId), autoOrder);
+		this.localStore.put(ABLocalStoreKeys.combineKey(ABLocalStoreKeys.ISAUTOCAST, castId), autoOrder);
 		this.localStore.put(ABLocalStoreKeys.ABILITYTARGETEDUNIT + castId, target.visit(AbilityTargetVisitor.UNIT));
 		this.localStore.put(ABLocalStoreKeys.ABILITYTARGETEDITEM + castId, target.visit(AbilityTargetVisitor.ITEM));
 		this.localStore.put(ABLocalStoreKeys.ABILITYTARGETEDDESTRUCTABLE + castId, target.visit(AbilityTargetVisitor.DESTRUCTABLE));
+		this.localStore.put(ABLocalStoreKeys.PREVIOUSBEHAVIOR, caster.getCurrentBehavior());
 		this.runOnOrderIssuedActions(game, caster, orderId);
 	}
 

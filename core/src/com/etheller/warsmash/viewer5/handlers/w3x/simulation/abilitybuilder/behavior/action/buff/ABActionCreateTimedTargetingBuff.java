@@ -6,6 +6,7 @@ import java.util.Map;
 import com.etheller.warsmash.parsers.jass.JassTextGenerator;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.booleancallbacks.ABBooleanCallback;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.floatcallbacks.ABFloatCallback;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.idcallbacks.ABIDCallback;
@@ -20,7 +21,7 @@ public class ABActionCreateTimedTargetingBuff implements ABSingleAction {
 	private ABFloatCallback duration;
 
 	private ABBooleanCallback stacks;
-	
+
 	private List<ABStringCallback> uniqueFlags;
 
 	@Override
@@ -28,6 +29,7 @@ public class ABActionCreateTimedTargetingBuff implements ABSingleAction {
 			final int castId) {
 		final ABTimedTargetingBuff ability = new ABTimedTargetingBuff(game.getHandleIdAllocator().createId(),
 				this.buffId.callback(game, caster, localStore, castId),
+				(CAbility) localStore.get(ABLocalStoreKeys.ABILITY), caster,
 				this.duration.callback(game, caster, localStore, castId));
 		if (uniqueFlags != null) {
 			for (ABStringCallback flag : uniqueFlags) {

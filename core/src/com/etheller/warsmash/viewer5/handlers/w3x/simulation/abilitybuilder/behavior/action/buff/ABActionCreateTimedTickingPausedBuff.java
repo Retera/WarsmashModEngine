@@ -6,6 +6,7 @@ import java.util.Map;
 import com.etheller.warsmash.parsers.jass.JassTextGenerator;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.booleancallbacks.ABBooleanCallback;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.floatcallbacks.ABFloatCallback;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.idcallbacks.ABIDCallback;
@@ -37,7 +38,7 @@ public class ABActionCreateTimedTickingPausedBuff implements ABSingleAction {
 
 	private ABBooleanCallback stacks;
 	private ABStringCallback visibilityGroup;
-	
+
 	private List<ABStringCallback> uniqueFlags;
 	private Map<ABStringCallback, ABCallback> uniqueValues;
 
@@ -64,7 +65,7 @@ public class ABActionCreateTimedTickingPausedBuff implements ABSingleAction {
 		} else {
 			isDispellable = ((boolean) localStore.getOrDefault(ABLocalStoreKeys.ISABILITYMAGIC, true));
 		}
-		
+
 		boolean isMagic = ((boolean) localStore.getOrDefault(ABLocalStoreKeys.ISABILITYMAGIC, true));
 		boolean isPhysical = ((boolean) localStore.getOrDefault(ABLocalStoreKeys.ISABILITYPHYSICAL, false));
 		if (magic != null) {
@@ -78,12 +79,14 @@ public class ABActionCreateTimedTickingPausedBuff implements ABSingleAction {
 		if (showIcon != null) {
 			ability = new ABTimedTickingPausedBuff(game.getHandleIdAllocator().createId(),
 					buffId.callback(game, caster, localStore, castId),
+					(CAbility) localStore.get(ABLocalStoreKeys.ABILITY), caster,
 					duration.callback(game, caster, localStore, castId), showTimedLife, localStore, onAddActions,
 					onRemoveActions, onExpireActions, onTickActions,
 					showIcon.callback(game, caster, localStore, castId), castId, isLeveled, isPositive, isDispellable);
 		} else {
 			ability = new ABTimedTickingPausedBuff(game.getHandleIdAllocator().createId(),
 					buffId.callback(game, caster, localStore, castId),
+					(CAbility) localStore.get(ABLocalStoreKeys.ABILITY), caster,
 					duration.callback(game, caster, localStore, castId), showTimedLife, localStore, onAddActions,
 					onRemoveActions, onExpireActions, onTickActions, castId, isLeveled, isPositive, isDispellable);
 		}
@@ -100,7 +103,7 @@ public class ABActionCreateTimedTickingPausedBuff implements ABSingleAction {
 		if (visibilityGroup != null) {
 			ability.setVisibilityGroup(visibilityGroup.callback(game, caster, localStore, castId));
 		}
-		
+
 		localStore.put(ABLocalStoreKeys.LASTCREATEDBUFF, ability);
 		if (uniqueFlags != null) {
 			for (ABStringCallback flag : uniqueFlags) {

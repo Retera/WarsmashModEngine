@@ -46,7 +46,7 @@ public class ABActionStartModifiedAttack implements ABAction {
 					theUnit.beginBehavior(game,
 							theUnit.getAttackBehavior().reset(game, OrderIds.attack, attack, theTarget, isDisableMove,
 									CBehaviorAttackListener.DO_NOTHING,
-									modifier.callback(game, caster, localStore, castId)));
+									modifier.callback(game, caster, localStore, castId)), true);
 					return;
 				}
 			}

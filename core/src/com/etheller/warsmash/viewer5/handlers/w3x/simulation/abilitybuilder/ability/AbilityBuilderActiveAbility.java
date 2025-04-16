@@ -28,6 +28,7 @@ public interface AbilityBuilderActiveAbility extends AbilityBuilderAbility, CAut
 	
 	public int getChargedManaCost();
 	public void setCastRange(float castRange);
+	public boolean ignoreCastTime();
 	
 	public EnumSet<CTargetType> getTargetsAllowed();
 

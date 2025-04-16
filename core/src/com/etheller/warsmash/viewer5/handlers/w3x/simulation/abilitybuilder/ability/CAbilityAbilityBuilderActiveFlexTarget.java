@@ -109,7 +109,7 @@ public class CAbilityAbilityBuilderActiveFlexTarget extends CAbilityAbilityBuild
 	@Override
 	public boolean checkBeforeQueue(final CSimulation game, final CUnit caster, final int orderId,
 			boolean autoOrder, final AbilityTarget target) {
-		this.localStore.put(ABLocalStoreKeys.combineKey(ABLocalStoreKeys.ISAUTOCAST, orderId), autoOrder);
+		this.localStore.put(ABLocalStoreKeys.combineKey(ABLocalStoreKeys.ISAUTOCAST, castId), autoOrder);
 		if (!this.isTargetedSpell() && castless && orderId == this.getBaseOrderId()) {
 			this.runBeginCastingActions(game, caster, orderId);
 			this.runEndCastingActions(game, caster, orderId);
@@ -123,12 +123,12 @@ public class CAbilityAbilityBuilderActiveFlexTarget extends CAbilityAbilityBuild
 		if (this.isTargetedSpell() && !this.isPointTarget()) {
 			this.castId++;
 			this.behavior.setCastId(this.castId);
-			this.localStore.put(ABLocalStoreKeys.combineKey(ABLocalStoreKeys.ISAUTOCAST, orderId), autoOrder);
+			this.localStore.put(ABLocalStoreKeys.combineKey(ABLocalStoreKeys.ISAUTOCAST, castId), autoOrder);
 			this.localStore.put(ABLocalStoreKeys.ABILITYTARGETEDUNIT + castId, target.visit(AbilityTargetVisitor.UNIT));
 			this.localStore.put(ABLocalStoreKeys.ABILITYTARGETEDITEM + castId, target.visit(AbilityTargetVisitor.ITEM));
 			this.localStore.put(ABLocalStoreKeys.ABILITYTARGETEDDESTRUCTABLE + castId, target.visit(AbilityTargetVisitor.DESTRUCTABLE));
 			this.runOnOrderIssuedActions(game, caster, orderId);
-			return this.behavior.reset(game, target);
+			return this.behavior.reset(game, target, orderId, autoOrder);
 		} else {
 			return null;
 		}
@@ -139,10 +139,10 @@ public class CAbilityAbilityBuilderActiveFlexTarget extends CAbilityAbilityBuild
 		if (this.isTargetedSpell() && this.isPointTarget()) {
 			this.castId++;
 			this.behavior.setCastId(this.castId);
-			this.localStore.put(ABLocalStoreKeys.combineKey(ABLocalStoreKeys.ISAUTOCAST, orderId), autoOrder);
+			this.localStore.put(ABLocalStoreKeys.combineKey(ABLocalStoreKeys.ISAUTOCAST, castId), autoOrder);
 			localStore.put(ABLocalStoreKeys.ABILITYTARGETEDLOCATION+this.castId, point);
 			this.runOnOrderIssuedActions(game, caster, orderId);
-			return this.behavior.reset(game, point);
+			return this.behavior.reset(game, point, orderId, autoOrder);
 		} else {
 			return null;
 		}
@@ -156,9 +156,9 @@ public class CAbilityAbilityBuilderActiveFlexTarget extends CAbilityAbilityBuild
 			} else {
 				this.castId++;
 				this.behavior.setCastId(this.castId);
-				this.localStore.put(ABLocalStoreKeys.combineKey(ABLocalStoreKeys.ISAUTOCAST, orderId), autoOrder);
+				this.localStore.put(ABLocalStoreKeys.combineKey(ABLocalStoreKeys.ISAUTOCAST, castId), autoOrder);
 				this.runOnOrderIssuedActions(game, caster, orderId);
-				return this.behavior.reset();
+				return this.behavior.reset(orderId, autoOrder);
 			}
 		} else {
 			return null;
@@ -168,13 +168,14 @@ public class CAbilityAbilityBuilderActiveFlexTarget extends CAbilityAbilityBuild
 	@Override
 	public void internalBegin(CSimulation game, CUnit caster, int orderId, boolean autoOrder, AbilityTarget target) {
 		this.castId++;
+		this.localStore.put(ABLocalStoreKeys.PREVIOUSBEHAVIOR, caster.getCurrentBehavior());
 		if (this.isTargetedSpell()) {
 			if (this.isPointTarget()) {
-				this.localStore.put(ABLocalStoreKeys.combineKey(ABLocalStoreKeys.ISAUTOCAST, orderId), autoOrder);
+				this.localStore.put(ABLocalStoreKeys.combineKey(ABLocalStoreKeys.ISAUTOCAST, castId), autoOrder);
 				localStore.put(ABLocalStoreKeys.ABILITYTARGETEDLOCATION+this.castId, target.visit(AbilityTargetVisitor.POINT));
 				this.runOnOrderIssuedActions(game, caster, orderId);
 			} else {
-				this.localStore.put(ABLocalStoreKeys.combineKey(ABLocalStoreKeys.ISAUTOCAST, orderId), autoOrder);
+				this.localStore.put(ABLocalStoreKeys.combineKey(ABLocalStoreKeys.ISAUTOCAST, castId), autoOrder);
 				this.localStore.put(ABLocalStoreKeys.ABILITYTARGETEDUNIT + castId, target.visit(AbilityTargetVisitor.UNIT));
 				this.localStore.put(ABLocalStoreKeys.ABILITYTARGETEDITEM + castId, target.visit(AbilityTargetVisitor.ITEM));
 				this.localStore.put(ABLocalStoreKeys.ABILITYTARGETEDDESTRUCTABLE + castId, target.visit(AbilityTargetVisitor.DESTRUCTABLE));
@@ -182,7 +183,7 @@ public class CAbilityAbilityBuilderActiveFlexTarget extends CAbilityAbilityBuild
 			}
 		} else {
 			if (!castless) {
-				this.localStore.put(ABLocalStoreKeys.combineKey(ABLocalStoreKeys.ISAUTOCAST, orderId), autoOrder);
+				this.localStore.put(ABLocalStoreKeys.combineKey(ABLocalStoreKeys.ISAUTOCAST, castId), autoOrder);
 				this.runOnOrderIssuedActions(game, caster, orderId);
 			}
 		}

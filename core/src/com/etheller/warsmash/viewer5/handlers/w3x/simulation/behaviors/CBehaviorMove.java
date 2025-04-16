@@ -504,4 +504,13 @@ public class CBehaviorMove implements CBehavior {
 	public CBehaviorCategory getBehaviorCategory() {
 		return CBehaviorCategory.MOVEMENT;
 	}
+	
+	public AbilityTarget getTarget() {
+		if (this.rangedBehavior != null) {
+			return this.rangedBehavior.getTarget();
+		} else if (this.followUnit != null) {
+			return this.followUnit;
+		}
+		return new AbilityPointTarget(this.target.x, this.target.y);
+	}
 }

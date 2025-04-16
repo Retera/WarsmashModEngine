@@ -76,6 +76,7 @@ public abstract class CAbilityAbilityBuilderGenericActive extends AbstractGeneri
 	protected float area = 0;
 	protected float range = 0;
 	protected float castTime = 0;
+	private boolean ignoreCastTime = false;
 
 	protected boolean hideAreaCursor = false;
 
@@ -291,6 +292,10 @@ public abstract class CAbilityAbilityBuilderGenericActive extends AbstractGeneri
 			}
 			if (this.config.getOverrideFields().getCastTimeOverride() != null) {
 				this.castTime = this.config.getOverrideFields().getCastTimeOverride().callback(game, unit, localStore,
+						castId);
+			}
+			if (this.config.getOverrideFields().getIgnoreCastTime() != null) {
+				this.ignoreCastTime = this.config.getOverrideFields().getIgnoreCastTime().callback(game, unit, localStore,
 						castId);
 			}
 			if (this.config.getOverrideFields().getCooldownOverride() != null) {
@@ -529,6 +534,10 @@ public abstract class CAbilityAbilityBuilderGenericActive extends AbstractGeneri
 		this.castTime = castTime;
 	}
 	
+	public boolean ignoreCastTime() {
+		return this.ignoreCastTime;
+	}
+	
 	public EnumSet<CTargetType> getTargetsAllowed() {
 		return targetsAllowed;
 	}
@@ -716,7 +725,7 @@ public abstract class CAbilityAbilityBuilderGenericActive extends AbstractGeneri
 	@Override
 	public void checkCanTarget(final CSimulation game, final CUnit unit, final int orderId, boolean autoOrder,
 			final CWidget target, final AbilityTargetCheckReceiver<CWidget> receiver) {
-		this.localStore.put(ABLocalStoreKeys.ISAUTOCAST, autoOrder);
+		this.localStore.put(ABLocalStoreKeys.combineKey(ABLocalStoreKeys.ISAUTOCAST, castId), autoOrder);
 		if (innerCheckCastOrderId(game, unit, orderId)) {
 			innerCheckCanTarget(game, unit, orderId, target, receiver);
 		} else if (orderId == OrderIds.smart) {
@@ -765,7 +774,7 @@ public abstract class CAbilityAbilityBuilderGenericActive extends AbstractGeneri
 	@Override
 	public void checkCanTarget(final CSimulation game, final CUnit unit, final int orderId,
 			boolean autoOrder, final AbilityPointTarget target, final AbilityTargetCheckReceiver<AbilityPointTarget> receiver) {
-		this.localStore.put(ABLocalStoreKeys.ISAUTOCAST, autoOrder);
+		this.localStore.put(ABLocalStoreKeys.combineKey(ABLocalStoreKeys.ISAUTOCAST, castId), autoOrder);
 		if (innerCheckCastOrderId(game, unit, orderId)) {
 			innerCheckCanTarget(game, unit, orderId, target, receiver);
 		} else if (orderId == OrderIds.smart) {
@@ -805,7 +814,7 @@ public abstract class CAbilityAbilityBuilderGenericActive extends AbstractGeneri
 	@Override
 	public void checkCanTargetNoTarget(final CSimulation game, final CUnit unit, final int orderId,
 			boolean autoOrder, final AbilityTargetCheckReceiver<Void> receiver) {
-		this.localStore.put(ABLocalStoreKeys.ISAUTOCAST, autoOrder);
+		this.localStore.put(ABLocalStoreKeys.combineKey(ABLocalStoreKeys.ISAUTOCAST, castId), autoOrder);
 		if ((orderId != 0) && ((orderId == getAutoCastOffOrderId()) || (orderId == getAutoCastOnOrderId()))) {
 			receiver.targetOk(null);
 		} else if (innerCheckCastOrderId(game, unit, orderId)) {
@@ -1162,7 +1171,7 @@ public abstract class CAbilityAbilityBuilderGenericActive extends AbstractGeneri
 	@Override
 	public boolean checkBeforeQueue(final CSimulation game, final CUnit caster, final int orderId,
 			boolean autoOrder, final AbilityTarget target) {
-		this.localStore.put(ABLocalStoreKeys.ISAUTOCAST, autoOrder);
+		this.localStore.put(ABLocalStoreKeys.combineKey(ABLocalStoreKeys.ISAUTOCAST, castId), autoOrder);
 //		System.err.println("Checking queue top level: " + active + " orderID : " + orderId + " offID: " + this.getOffOrderId());
 		if (this.allowCastlessDeactivate && this.toggleable && this.active && orderId == this.getOffOrderId()) {
 			this.deactivate(game, caster);
@@ -1252,6 +1261,7 @@ public abstract class CAbilityAbilityBuilderGenericActive extends AbstractGeneri
 		this.localStore.remove(ABLocalStoreKeys.ABILITYTARGETEDDESTRUCTABLE + theCastId);
 		this.localStore.remove(ABLocalStoreKeys.ABILITYTARGETEDITEM + theCastId);
 		this.localStore.remove(ABLocalStoreKeys.ABILITYTARGETEDLOCATION + theCastId);
+		this.localStore.remove(ABLocalStoreKeys.PREVIOUSBEHAVIOR);
 	}
 
 	@Override

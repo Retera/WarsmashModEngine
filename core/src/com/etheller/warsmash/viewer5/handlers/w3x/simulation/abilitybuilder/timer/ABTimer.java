@@ -15,6 +15,7 @@ public class ABTimer extends CTimer {
 	private List<ABAction> actions;
 	
 	private int castId = 0;
+	private boolean alive = true;
 
 	public ABTimer(CUnit caster, Map<String, Object> localStore, List<ABAction> actions, final int castId) {
 		super();
@@ -24,13 +25,23 @@ public class ABTimer extends CTimer {
 		this.castId = castId;
 	}
 
+	public void kill(CSimulation simulation) {
+		simulation.unregisterTimer(this);
+		this.alive  = false;
+		this.caster = null;
+		this.localStore = null;
+		this.actions = null;
+	}
 	
 	public void onFire(CSimulation simulation) {
-		localStore.put(ABLocalStoreKeys.FIRINGTIMER, this);
-		if (actions != null) {
-			for (ABAction action : actions) {
-				action.runAction(simulation, caster, localStore, castId);
+		if (alive) {
+			localStore.put(ABLocalStoreKeys.FIRINGTIMER, this);
+			if (actions != null) {
+				for (ABAction action : actions) {
+					action.runAction(simulation, caster, localStore, castId);
+				}
 			}
+			localStore.remove(ABLocalStoreKeys.FIRINGTIMER);
 		}
 	}
 	

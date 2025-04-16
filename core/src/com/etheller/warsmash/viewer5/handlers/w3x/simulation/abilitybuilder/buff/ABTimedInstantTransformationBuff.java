@@ -6,10 +6,12 @@ import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnitType;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.ability.AbilityBuilderPassiveAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.handler.TransformationHandler;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.handler.TransformationHandler.OnTransformationActions;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.timer.DelayInstantTransformationTimer;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.JassGameEventsWar3;
 
 public class ABTimedInstantTransformationBuff extends ABGenericTimedBuff {
 
@@ -23,11 +25,11 @@ public class ABTimedInstantTransformationBuff extends ABGenericTimedBuff {
 	private float dur;
 	private float transTime;
 
-	public ABTimedInstantTransformationBuff(int handleId, Map<String, Object> localStore,
+	public ABTimedInstantTransformationBuff(int handleId, CAbility sourceAbility, CUnit sourceUnit, Map<String, Object> localStore,
 			OnTransformationActions actions, War3ID alias, float duration, AbilityBuilderPassiveAbility ability,
 			CUnitType newType, final boolean keepRatios, boolean addAlternateTagAfter, boolean permanent,
 			float transformationDuration) {
-		super(handleId, alias, duration, true, false, true, false);
+		super(handleId, alias, sourceAbility, sourceUnit, duration, true, false, true, false);
 		this.setIconShowing(false);
 		this.localStore = localStore;
 		this.actions = actions;
@@ -60,12 +62,14 @@ public class ABTimedInstantTransformationBuff extends ABGenericTimedBuff {
 	protected void onBuffExpire(CSimulation game, CUnit unit) {
 		if (dur > 0) {
 			TransformationHandler.playMorphAnimation(unit, addAlternateTagAfter);
-			new DelayInstantTransformationTimer(game, localStore, unit, actions, addAlternateTagAfter, transTime, null,
+			new DelayInstantTransformationTimer(game, sourceUnit, localStore, unit, actions, addAlternateTagAfter, transTime, null,
 					targetType, keepRatios, abil, null, transTime, 0).start(game);
 		} else {
 			TransformationHandler.instantTransformation(game, localStore, unit, targetType, keepRatios, actions, abil,
 					addAlternateTagAfter, perm, true);
 		}
+		unit.fireSpellEvents(game, JassGameEventsWar3.EVENT_UNIT_SPELL_FINISH, this.abil, null);
+		unit.fireSpellEvents(game, JassGameEventsWar3.EVENT_UNIT_SPELL_ENDCAST, this.abil, null);
 	}
 
 }

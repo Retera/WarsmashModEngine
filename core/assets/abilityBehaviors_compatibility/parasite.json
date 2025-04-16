@@ -3,9 +3,9 @@
 		"ids": [{"id":"ANpa", "castId": "parasite", "autoCastOnId": "parasiteon", "autoCastOffId": "parasiteoff", "autoCastType": "FARTHESTVALID"}],
 		"type": "NORMAL_UNITTARGET",
 		"overrideFields": {
-			"castTimeOverride": {
-				"type": "rawFloat",
-				"value": 0.0
+			"ignoreCastTime": {
+				"type": "rawBoolean",
+				"value": "true"
 			}
 		},
 		"extraTargetConditions": [{

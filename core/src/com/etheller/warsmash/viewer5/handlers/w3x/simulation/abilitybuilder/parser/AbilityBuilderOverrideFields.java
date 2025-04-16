@@ -13,6 +13,8 @@ public class AbilityBuilderOverrideFields {
 	private ABFloatCallback castTimeOverride;
 	private ABFloatCallback cooldownOverride;
 	private ABIntegerCallback manaCostOverride;
+
+	private ABBooleanCallback ignoreCastTime;
 	
 	private ABAutocastTypeCallback autocastTypeOverride;
 	
@@ -34,6 +36,9 @@ public class AbilityBuilderOverrideFields {
 			this.cooldownOverride = parent.cooldownOverride;
 		if (this.manaCostOverride == null)
 			this.manaCostOverride = parent.manaCostOverride;
+
+		if (this.ignoreCastTime == null)
+			this.ignoreCastTime = parent.ignoreCastTime;
 
 		if (this.autocastTypeOverride == null)
 			this.autocastTypeOverride = parent.autocastTypeOverride;
@@ -80,6 +85,12 @@ public class AbilityBuilderOverrideFields {
 	}
 	public void setManaCostOverride(ABIntegerCallback manaCostOverride) {
 		this.manaCostOverride = manaCostOverride;
+	}
+	public ABBooleanCallback getIgnoreCastTime() {
+		return ignoreCastTime;
+	}
+	public void setIgnoreCastTime(ABBooleanCallback ignoreCastTime) {
+		this.ignoreCastTime = ignoreCastTime;
 	}
 	public ABAutocastTypeCallback getAutocastTypeOverride() {
 		return autocastTypeOverride;

@@ -4,7 +4,6 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.etheller.interpreter.ast.util.CHandle;
-import com.etheller.warsmash.util.WarsmashConstants;
 
 public class TextTag implements CHandle {
 	private final Vector3 position;
@@ -41,8 +40,7 @@ public class TextTag implements CHandle {
 		if (this.suspended) {
 			return false;
 		}
-		float deltaTicks = deltaTime / WarsmashConstants.SIMULATION_STEP_TIME;
-		this.screenCoordTravelOffset.add(this.velocity.x * deltaTicks, this.velocity.y * deltaTicks);
+		this.screenCoordTravelOffset.add(this.velocity.x * deltaTime, this.velocity.y * deltaTime);
 		this.lifetime += deltaTime;
 		final float fadeStart = getFadeStart();
 		final float remainingLife = getRemainingLife();
@@ -135,9 +133,7 @@ public class TextTag implements CHandle {
 	}
 
 	public void setVelocity(final float vx, final float vy) {
-		//TODO Mult by 75 is a hack to get close to the velocities in War3
-		// There's probably some better logic that would better match the game
-		this.velocity.set((float)(vx *75), (float)(vy *75));
+		this.velocity.set(vx, vy);
 	}
 
 	public boolean isVisible() {

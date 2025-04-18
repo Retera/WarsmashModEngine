@@ -2102,7 +2102,8 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 				if (this.war3MapViewer.worldScene.camera.rect.contains(screenCoordsVector.x,
 						(Gdx.graphics.getHeight() - screenCoordsVector.y))) {
 					final Vector2 unprojected = this.uiViewport.unproject(screenCoordsVector);
-					unprojected.add(textTag.getScreenCoordTravelOffset());
+					unprojected.add(this.uiViewport.getMinWorldWidth() * textTag.getScreenCoordTravelOffset().x,
+							this.uiViewport.getMinWorldHeight() * textTag.getScreenCoordTravelOffset().y);
 					this.textTagFontParam.size = (int) GameUI.convertY(this.uiViewport, textTag.getFontHeight() * 0.5f);
 					// below: generateFont is a caching call, so hopefully this is not allocating
 					// font object on every loop, which would be wasteful

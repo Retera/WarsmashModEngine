@@ -2416,7 +2416,8 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 										- (projectileLaunchX * cosFacing);
 
 								final float height = War3MapViewer.this.terrain.getGroundHeight(x, y)
-										+ (settings.getZ() != null ? settings.getZ() : (source.getFlyHeight() + projectileLaunchZ));
+										+ (settings.getZ() != null ? settings.getZ()
+												: (source.getFlyHeight() + projectileLaunchZ));
 								final CAttackProjectile simulationAttackProjectile = new CAttackProjectileMissile(x, y,
 										projectileSpeed, target, source, damage, unitAttack, bounceIndex,
 										attackListener, settings);
@@ -2523,7 +2524,8 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 										- (projectileLaunchX * cosFacing);
 
 								final float height = War3MapViewer.this.terrain.getGroundHeight(x, y)
-										+ (settings.getZ() != null ? settings.getZ() : (source.getFlyHeight() + projectileLaunchZ));
+										+ (settings.getZ() != null ? settings.getZ()
+												: (source.getFlyHeight() + projectileLaunchZ));
 								final CAbilityProjectile simulationAbilityProjectile = new CAbilityProjectile(x, y,
 										projectileSpeed, target, homing, source, projectileListener);
 
@@ -3270,8 +3272,9 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 								}
 								final Vector3 unitPosition = new Vector3(renderPeer.location);
 								final Bounds bounds = renderPeer.instance.getBounds();
-								final TextTag textTag = new TextTag(unitPosition, new Vector2(0, 3.328125f), text,
-										textTagConfig.getColor(), textTagConfig.getLifetime(),
+								final TextTag textTag = new TextTag(unitPosition,
+										new Vector2(textTagConfig.getVelocity()[0], textTagConfig.getVelocity()[1]),
+										text, textTagConfig.getColor(), textTagConfig.getLifetime(),
 										textTagConfig.getFadeStart(), textTagConfig.getHeight(),
 										BUILTIN_TEXT_TAG_REPORTED_HANDLE_ID);
 								War3MapViewer.this.textTags.add(textTag);
@@ -3293,8 +3296,9 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 								} else {
 									unitPosition = new Vector3(0, 0, 0);
 								}
-								final TextTag textTag = new TextTag(unitPosition, new Vector2(0, 3.328125f), message,
-										textTagConfig.getColor(), textTagConfig.getLifetime(),
+								final TextTag textTag = new TextTag(unitPosition,
+										new Vector2(textTagConfig.getVelocity()[0], textTagConfig.getVelocity()[1]),
+										message, textTagConfig.getColor(), textTagConfig.getLifetime(),
 										textTagConfig.getFadeStart(), textTagConfig.getHeight(),
 										BUILTIN_TEXT_TAG_REPORTED_HANDLE_ID);
 								War3MapViewer.this.textTags.add(textTag);

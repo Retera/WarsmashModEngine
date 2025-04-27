@@ -102,14 +102,16 @@ public class ThirdPersonUI implements WarsmashToggleableUI {
 		final List<CUnit> pawnUnits = new ArrayList<>();
 		if (ALL_PLAYERS) {
 			for (int i = 0; i < WarsmashConstants.MAX_PLAYERS; i++) {
-				pawnUnits.add(this.war3MapViewer.simulation.createUnitSimple(this.pawnId, i, 0, 0, 0));
+				float[] startLocation = war3MapViewer.simulation.getPlayer(i).getStartLocation();
+				pawnUnits.add(this.war3MapViewer.simulation.createUnitSimple(this.pawnId, i, startLocation[0], startLocation[1], 0));
 			}
 
 			this.pawnUnit = pawnUnits.get(this.war3MapViewer.getLocalPlayerIndex());
 		}
 		else {
+			float[] startLocation = war3MapViewer.simulation.getPlayer(this.war3MapViewer.getLocalPlayerIndex()).getStartLocation();
 			pawnUnits.add(this.war3MapViewer.simulation.createUnitSimple(this.pawnId,
-					this.war3MapViewer.getLocalPlayerIndex(), 0, 0, 0));
+					this.war3MapViewer.getLocalPlayerIndex(), startLocation[0], startLocation[1], 0));
 
 			this.pawnUnit = pawnUnits.get(0);
 		}
@@ -136,21 +138,19 @@ public class ThirdPersonUI implements WarsmashToggleableUI {
 				this.uiViewport, this.uiScene, this.war3MapViewer, 0, this.war3MapViewer.getAllObjectData().getWts(),
 				new KeyedSounds(uiSoundsTable, this.war3MapViewer.mapMpq));
 
-		if(false) {
-			try {
-				this.rootFrame.loadTOCFile("Interface\\FrameXML\\FrameXML.toc");
-			}
-			catch (final IOException e) {
-				throw new IllegalStateException(e);
-			}
-			
-			final UIFrame mainMenuBarFixed = this.rootFrame.getFrameByName("MainMenuBar", 0);
-			mainMenuBarFixed.setVisible(true);
-			
-			this.tooltipFrame = this.rootFrame.createFrame("GameTooltip", this.rootFrame, 0, 0);
-//		this.uiParent.add(this.tooltipFrame);
-			this.tooltipFrame1 = (StringFrame) this.rootFrame.getFrameByName("$parentTextLeft1", 0);
+		try {
+			this.rootFrame.loadTOCFile("Interface\\FrameXML\\FrameXML.toc");
 		}
+		catch (final IOException e) {
+			throw new IllegalStateException(e);
+		}
+		
+		final UIFrame mainMenuBarFixed = this.rootFrame.getFrameByName("MainMenuBar", 0);
+		mainMenuBarFixed.setVisible(true);
+		
+		this.tooltipFrame = this.rootFrame.createFrame("GameTooltip", this.rootFrame, 0, 0);
+//		this.uiParent.add(this.tooltipFrame);
+		this.tooltipFrame1 = (StringFrame) this.rootFrame.getFrameByName("$parentTextLeft1", 0);
 
 
 		this.cursorFrame = (SpriteFrame) this.rootFrame.createFrameByType("SPRITE", "SmashTPCursorFrame",
@@ -323,13 +323,13 @@ public class ThirdPersonUI implements WarsmashToggleableUI {
 		final int dy = newY - this.lastY;
 		if (this.touchDown) {
 			if (this.button == Input.Buttons.LEFT) {
-				this.cameraManager.horizontalAngle -= Math.toRadians(dx * 0.15);
-				this.cameraManager.verticalAngle -= Math.toRadians(dy * 0.15);
+				this.cameraManager.horizontalAngle -= Math.toRadians(dx * 0.15 * 2);
+				this.cameraManager.verticalAngle -= Math.toRadians(dy * 0.15 * 2);
 			}
 			else if (this.button == Input.Buttons.RIGHT) {
-				this.cameraManager.horizontalAngle -= Math.toRadians(dx * 0.15);
-				this.cameraManager.verticalAngle -= Math.toRadians(dy * 0.15);
-//				this.pawnUnit.setFacing((float) Math.toDegrees(this.cameraManager.horizontalAngle));
+				this.cameraManager.horizontalAngle -= Math.toRadians(dx * 0.15 * 2);
+				this.cameraManager.verticalAngle -= Math.toRadians(dy * 0.15 * 2);
+				this.pawnUnit.setFacing((float) Math.toDegrees(this.cameraManager.horizontalAngle));
 			}
 			this.lastX = newX;
 			this.lastY = newY;

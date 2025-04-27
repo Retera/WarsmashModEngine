@@ -32,6 +32,7 @@ public class RenderDoodad {
 	private static final String DOODAD_COLOR_BLUE = "vertB"; // replaced from 'dvb1'
 
 	private CFogState fogState;
+	private byte lastFogStateColor = -1;
 	private final float[] vertexColorBase;
 	private final float[] vertexColorFogged;
 	
@@ -105,6 +106,7 @@ public class RenderDoodad {
 		this.row = row;
 
 		this.fogState = CFogState.MASKED;
+		this.lastFogStateColor = fogState.getMask();
 		((MdxComplexInstance) instance).setVertexColor(VERTEX_COLOR_BLACK);
 		
 		typeId = War3ID.fromString( row.getId());
@@ -126,9 +128,8 @@ public class RenderDoodad {
 		return PrimaryTag.STAND;
 	}
 
-	private byte lastFogStateColor = 0;
 
-	public void updateFog(final War3MapViewer war3MapViewer) {
+	public void updateFog(final War3MapViewer war3MapViewer, boolean fade) {
 		final CPlayerFogOfWar fogOfWar = war3MapViewer.getFogOfWar();
 		final PathingGrid pathingGrid = war3MapViewer.simulation.getPathingGrid();
 		final int fogOfWarIndexX = pathingGrid.getFogOfWarIndexX(this.x);
@@ -138,7 +139,7 @@ public class RenderDoodad {
 			this.fogState = newFogState;
 		}
 		if (newFogState.getMask() != this.lastFogStateColor) {
-			this.lastFogStateColor = War3MapViewer.fadeLineOfSightColor(this.lastFogStateColor, newFogState.getMask());
+			this.lastFogStateColor = fade ? War3MapViewer.fadeLineOfSightColor(this.lastFogStateColor, newFogState.getMask()) : newFogState.getMask();
 			for (int i = 0; i < this.vertexColorBase.length; i++) {
 				VERTEX_COLOR_HEAP[i] = (this.vertexColorBase[i] * (255 - (this.lastFogStateColor & 0xFF))) / 255f;
 			}

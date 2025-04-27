@@ -679,9 +679,7 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 			@Override
 			public void onFire(final CSimulation simulation) {
 				War3MapViewer.this.terrain.reloadFogOfWarDataToGPU(simulation);
-				for (final RenderDoodad doodad : War3MapViewer.this.decals) {
-					doodad.updateFog(War3MapViewer.this);
-				}
+				updateDoodadFogColors(true);
 			}
 		};
 		fogGpuUpdateTimer.setTimeoutTime(0.03f);
@@ -3871,6 +3869,12 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 					}
 				}
 			}
+		}
+	}
+
+	public void updateDoodadFogColors(boolean fade) {
+		for (final RenderDoodad doodad : War3MapViewer.this.decals) {
+			doodad.updateFog(War3MapViewer.this, fade);
 		}
 	}
 }

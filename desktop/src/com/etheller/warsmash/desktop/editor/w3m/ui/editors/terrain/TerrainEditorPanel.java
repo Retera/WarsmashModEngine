@@ -13,6 +13,7 @@ import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JToolBar;
+import javax.swing.ProgressMonitor;
 import javax.swing.SwingUtilities;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
@@ -115,9 +116,28 @@ public class TerrainEditorPanel extends AbstractWorldEditorPanel {
 										final DataTable worldEditData = viewer.loadWorldEditData(map);
 										final War3MapW3i mapInfo = map.readMapInformation();
 										final MapLoader mapLoader = viewer.createMapLoader(map, mapInfo, 0);
+
+										final int barMaxProgress = 100;
+										final ProgressMonitor progressMonitor = new ProgressMonitor(null, "Loading map",
+												"...", 0, barMaxProgress);
+
 										while (!mapLoader.process()) {
 											System.out.println(mapLoader.getCompletionRatio());
+											final int progress = (int) (barMaxProgress
+													* mapLoader.getCompletionRatio());
+											SwingUtilities.invokeLater(new Runnable() {
+												@Override
+												public void run() {
+													progressMonitor.setProgress(progress);
+												}
+											});
 										}
+										SwingUtilities.invokeLater(new Runnable() {
+											@Override
+											public void run() {
+												progressMonitor.setProgress(barMaxProgress);
+											}
+										});
 										final Element unitLights = worldEditData.get("UnitLights");
 										final Element terrainLights = worldEditData.get("TerrainLights");
 										final String tilesetString = String.valueOf(mapInfo.getTileset());
@@ -126,6 +146,13 @@ public class TerrainEditorPanel extends AbstractWorldEditorPanel {
 										viewer.setDayNightModels(terrainLightString, unitLightString);
 										System.out.println("map loader finished");
 										TerrainEditorPanel.this.warsmashGdxTerrainEditor.loadViewer(viewer);
+										viewer.simulation.setFogEnabled(false);
+										viewer.simulation.setFogMaskEnabled(false);
+										viewer.simulation.setGameTimeOfDay((viewer.simulation.getGameplayConstants()
+												.getDawnTimeGameHours()
+												+ viewer.simulation.getGameplayConstants().getDuskTimeGameHours()) / 2);
+										viewer.simulation.updateTimeOfDayForEditor();
+										viewer.updateDoodadFogColors(false);
 									}
 									catch (final IOException exc) {
 										exc.printStackTrace();

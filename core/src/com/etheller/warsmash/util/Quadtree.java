@@ -34,6 +34,9 @@ public class Quadtree<T> {
 
 	public void translate(final T object, final Rectangle prevBoundsToUpdate, final float xShift, final float yShift) {
 		final Node<T> node = remove(object, prevBoundsToUpdate, null);
+		if(node == null) {
+			throw new IllegalStateException("what?");
+		}
 		prevBoundsToUpdate.x += xShift;
 		prevBoundsToUpdate.y += yShift;
 		add(node, 0);

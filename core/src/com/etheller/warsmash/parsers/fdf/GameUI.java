@@ -5,6 +5,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.HashMap;
@@ -100,6 +101,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.ui.sound.KeyedSounds;
 import com.hiveworkshop.rms.parsers.mdlx.MdlxLayer.FilterMode;
 
 public final class GameUI extends AbstractUIFrame implements UIFrame {
+	private static final String IN_STRING = " in ";
 	private static final boolean SHOW_BLACKNESS_BEHIND_DIALOGS = false;
 	public static final boolean DEBUG = false;
 	public static final boolean DEBUG_LOG = false;
@@ -274,8 +276,8 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 						for (int i = 0; i < rootChildNodes.getLength(); i++) {
 							final Node uiChild = rootChildNodes.item(i);
 							if (uiChild.getNodeName().equals("Ui")) {
-								final File xmlFile = new File(line);
-								final List<FrameDefinition> mainUiElements = inflateMultipleXMLs(xmlFile.getParent(),
+								int filenameCutoff = Math.max(line.lastIndexOf('\\'), line.lastIndexOf('/'));
+								final List<FrameDefinition> mainUiElements = inflateMultipleXMLs(line.substring(0, filenameCutoff),
 										uiChild.getChildNodes());
 //								final SimpleFrame rootUiElement = new SimpleFrame("#Ui" + this.untitledXMLFrameId++,
 //										this);
@@ -1145,14 +1147,34 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 		return frameDefinition;
 	}
 
-	public void loadLuaFile(final String fileName) {
+	public void loadLuaFile(String fileName) {
+		fileName = fileName.replace('/', '\\');
 		if (this.dataSource.has(fileName)) {
-			try (InputStreamReader reader = new InputStreamReader(this.dataSource.getResourceAsStream(fileName))) {
-				this.luaGlobals.runLua(reader, fileName);
+			StringBuilder fileContents = new StringBuilder();
+			try (BufferedReader reader = new BufferedReader(new InputStreamReader(this.dataSource.getResourceAsStream(fileName)))) {
+				String line;
+				while ((line = reader.readLine()) != null) {
+					if (line.contains("for ")) {
+						System.out.println(line);
+					}
+					String trimmedLine = line.trim();
+					if (trimmedLine.startsWith("for ") && trimmedLine.endsWith(" do") ) {
+						int inIndex = line.indexOf(IN_STRING);
+						if(inIndex != -1) {
+							int replaceStart = inIndex + IN_STRING.length();
+							int replaceEnd = line.lastIndexOf(" do");
+							String toReplace = line.substring(replaceStart, replaceEnd);
+							line = line.substring(0, replaceStart) + "ipairs(" + toReplace + ")" + line.substring(replaceEnd);
+						}
+					}
+					fileContents.append(line);
+					fileContents.append('\n');
+				}
 			}
 			catch (final IOException e) {
 				throw new RuntimeException(e);
 			}
+			this.luaGlobals.runLua(new StringReader(fileContents.toString()), fileName);
 		}
 	}
 

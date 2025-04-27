@@ -59,33 +59,40 @@ public class CWorldCollision {
 			this.deadUnitCollision.add(unit, bounds);
 		}
 		else {
-			final MovementType movementType = unit.getMovementType();
-			if (movementType != null) {
-				switch (movementType) {
-				case AMPHIBIOUS:
-					this.seaUnitCollision.add(unit, bounds);
-					this.groundUnitCollision.add(unit, bounds);
-					break;
-				case FLOAT:
-					this.seaUnitCollision.add(unit, bounds);
-					break;
-				case FLY:
-					this.airUnitCollision.add(unit, bounds);
-					break;
-				case DISABLED:
-					this.unsetMovetypeUnitCollision.add(unit, bounds);
-					break;
-				default:
-				case FOOT:
-				case FOOT_NO_COLLISION:
-				case HORSE:
-				case HOVER:
-					this.groundUnitCollision.add(unit, bounds);
-					break;
-				}
+			if (unit.isBuilding()) {
+				// buildings are here so that we can include them when enumerating all units in
+				// a rect, but they don't really move dynamically, this is kind of pointless
+				this.buildingUnitCollision.add(unit, bounds);
 			}
-			else {
-				this.unsetMovetypeUnitCollision.add(unit, bounds);
+			else {				
+				final MovementType movementType = unit.getMovementType();
+				if (movementType != null) {
+					switch (movementType) {
+					case AMPHIBIOUS:
+						this.seaUnitCollision.add(unit, bounds);
+						this.groundUnitCollision.add(unit, bounds);
+						break;
+					case FLOAT:
+						this.seaUnitCollision.add(unit, bounds);
+						break;
+					case FLY:
+						this.airUnitCollision.add(unit, bounds);
+						break;
+					case DISABLED:
+						this.unsetMovetypeUnitCollision.add(unit, bounds);
+						break;
+					default:
+					case FOOT:
+					case FOOT_NO_COLLISION:
+					case HORSE:
+					case HOVER:
+						this.groundUnitCollision.add(unit, bounds);
+						break;
+					}
+				}
+				else {
+					this.unsetMovetypeUnitCollision.add(unit, bounds);
+				}
 			}
 		}
 	}

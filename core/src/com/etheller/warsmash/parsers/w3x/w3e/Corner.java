@@ -164,4 +164,8 @@ public class Corner {
 	public void setWaterHeight(final float waterHeight) {
 		this.waterHeight = waterHeight;
 	}
+	
+	public void setGroundHeight(float groundHeight) {
+		this.groundHeight = groundHeight;
+	}
 }

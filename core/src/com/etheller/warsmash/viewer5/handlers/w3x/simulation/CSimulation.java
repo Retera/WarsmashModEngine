@@ -542,26 +542,7 @@ public class CSimulation implements CPlayerAPI, CFogMaskSettings {
 		}
 		this.gameTurnTick++;
 		final float timeOfDayBefore = getGameTimeOfDay();
-		if (this.falseTimeOfDay != null) {
-			if (this.nextGameTime != null) {
-				this.falseTimeOfDay.setTimeOfDay(this.nextGameTime);
-				this.nextGameTime = null;
-			}
-			if (!this.falseTimeOfDay.tick()) {
-				this.falseTimeOfDay = null;
-			}
-		}
-		else {
-			if (this.nextGameTime != null) {
-				this.currentGameDayTimeElapsed = (this.nextGameTime / this.gameplayConstants.getGameDayHours())
-						* this.gameplayConstants.getGameDayLength();
-				this.nextGameTime = null;
-			}
-			else if (!this.timeOfDaySuspended) {
-				this.currentGameDayTimeElapsed = (this.currentGameDayTimeElapsed
-						+ WarsmashConstants.SIMULATION_STEP_TIME) % this.gameplayConstants.getGameDayLength();
-			}
-		}
+		updateGameTimeOfDayInternal();
 		final float timeOfDayAfter = getGameTimeOfDay();
 		this.daytime = (timeOfDayAfter >= this.gameplayConstants.getDawnTimeGameHours())
 				&& (timeOfDayAfter < this.gameplayConstants.getDuskTimeGameHours());
@@ -601,6 +582,29 @@ public class CSimulation implements CPlayerAPI, CFogMaskSettings {
 		this.postUpdateCallbacks.clear();
 		for (final Runnable runnable : this.runningPostUpdateCallbacks) {
 			runnable.run();
+		}
+	}
+
+	private void updateGameTimeOfDayInternal() {
+		if (this.falseTimeOfDay != null) {
+			if (this.nextGameTime != null) {
+				this.falseTimeOfDay.setTimeOfDay(this.nextGameTime);
+				this.nextGameTime = null;
+			}
+			if (!this.falseTimeOfDay.tick()) {
+				this.falseTimeOfDay = null;
+			}
+		}
+		else {
+			if (this.nextGameTime != null) {
+				this.currentGameDayTimeElapsed = (this.nextGameTime / this.gameplayConstants.getGameDayHours())
+						* this.gameplayConstants.getGameDayLength();
+				this.nextGameTime = null;
+			}
+			else if (!this.timeOfDaySuspended) {
+				this.currentGameDayTimeElapsed = (this.currentGameDayTimeElapsed
+						+ WarsmashConstants.SIMULATION_STEP_TIME) % this.gameplayConstants.getGameDayLength();
+			}
 		}
 	}
 
@@ -779,7 +783,7 @@ public class CSimulation implements CPlayerAPI, CFogMaskSettings {
 		this.simulationRenderController.destroyTextTag(textTag);
 	}
 
-	public void unitGainLevelEvent(final CUnit unit, boolean showEffect) {
+	public void unitGainLevelEvent(final CUnit unit, final boolean showEffect) {
 		this.players.get(unit.getPlayerIndex()).fireHeroLevelEvents(unit);
 		if (showEffect) {
 			this.simulationRenderController.spawnGainLevelEffect(unit);
@@ -1008,7 +1012,7 @@ public class CSimulation implements CPlayerAPI, CFogMaskSettings {
 		cItem.setLife(this, 0);
 	}
 
-	public void removeDestructable(CDestructable dest) {
+	public void removeDestructable(final CDestructable dest) {
 		dest.setLife(this, 0);
 		this.removedDestructables.add(dest);
 	}
@@ -1084,7 +1088,10 @@ public class CSimulation implements CPlayerAPI, CFogMaskSettings {
 
 	public void setTimeOfDaySuspended(final boolean flag) {
 		this.timeOfDaySuspended = flag;
+	}
 
+	public void updateTimeOfDayForEditor() {
+		updateGameTimeOfDayInternal();
 	}
 
 	public boolean isDay() {
@@ -1183,7 +1190,7 @@ public class CSimulation implements CPlayerAPI, CFogMaskSettings {
 	}
 
 	@Override
-	public byte getFogStateFromSettings(byte mask) {
+	public byte getFogStateFromSettings(final byte mask) {
 		final CFogState state = CFogState.getByMask(mask);
 		switch (state) {
 		case MASKED:
@@ -1223,7 +1230,7 @@ public class CSimulation implements CPlayerAPI, CFogMaskSettings {
 	}
 
 	@Override
-	public void setColor(CPlayerJass player, CPlayerColor color) {
+	public void setColor(final CPlayerJass player, final CPlayerColor color) {
 		final int previousColor = player.getColor();
 		final int newColor = color.ordinal();
 		player.setColor(newColor);
@@ -1239,7 +1246,7 @@ public class CSimulation implements CPlayerAPI, CFogMaskSettings {
 		}
 	}
 
-	public void fireRequirementUpdateForAbilities(CPlayer player, boolean disable) {
+	public void fireRequirementUpdateForAbilities(final CPlayer player, final boolean disable) {
 		this.postUpdateCallbacks.add(new Runnable() {
 			@Override
 			public void run() {
@@ -1252,9 +1259,9 @@ public class CSimulation implements CPlayerAPI, CFogMaskSettings {
 		});
 	}
 
-	public void setupPlayerPawn(CUnit unit, CAbilityPlayerPawn abilityPlayerPawn,
-			CBehaviorPlayerPawn behaviorPlayerPawn) {
-		simulationRenderController.setupPlayerPawn(unit, abilityPlayerPawn, behaviorPlayerPawn);
+	public void setupPlayerPawn(final CUnit unit, final CAbilityPlayerPawn abilityPlayerPawn,
+			final CBehaviorPlayerPawn behaviorPlayerPawn) {
+		this.simulationRenderController.setupPlayerPawn(unit, abilityPlayerPawn, behaviorPlayerPawn);
 	}
 
 }

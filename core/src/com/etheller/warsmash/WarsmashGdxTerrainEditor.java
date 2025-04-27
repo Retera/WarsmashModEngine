@@ -29,7 +29,7 @@ import com.etheller.warsmash.viewer5.Scene;
 import com.etheller.warsmash.viewer5.handlers.w3x.War3MapViewer;
 import com.etheller.warsmash.viewer5.handlers.w3x.camera.CameraPreset;
 import com.etheller.warsmash.viewer5.handlers.w3x.camera.CameraRates;
-import com.etheller.warsmash.viewer5.handlers.w3x.camera.GameCameraManager;
+import com.etheller.warsmash.viewer5.handlers.w3x.camera.EditorCameraManager;
 
 public class WarsmashGdxTerrainEditor extends ApplicationAdapter implements InputProcessor {
 	public static final boolean ENABLE_AUDIO = true;
@@ -48,7 +48,7 @@ public class WarsmashGdxTerrainEditor extends ApplicationAdapter implements Inpu
 	private Scene previewScene;
 	private final List<Message> errorMessages = new LinkedList<>();
 	private BitmapFont defaultFont;
-	private GameCameraManager cameraManager;
+	private EditorCameraManager cameraManager;
 
 	public WarsmashGdxTerrainEditor() {
 	}
@@ -80,7 +80,7 @@ public class WarsmashGdxTerrainEditor extends ApplicationAdapter implements Inpu
 		this.solidGreenTexture = ImageUtils.getAnyExtensionTexture(this.viewer.dataSource,
 				"ReplaceableTextures\\TeamColor\\TeamColor06.blp");
 
-		this.cameraManager = new GameCameraManager(cameraPresets, cameraRates);
+		this.cameraManager = new EditorCameraManager(cameraPresets, cameraRates);
 
 		this.cameraManager.setupCamera(this.viewer.worldScene);
 

@@ -8,8 +8,15 @@ grammar FDF;
 }
 
 program :
+    UnicodeBOM?
 	(statement)*
 	;
+
+UnicodeBOM :
+    '\uFEFF' {skip();}
+    ;
+
+
 	
 statement:
 	STRING_LIST OPEN_CURLY (ID STRING_LITERAL COMMA)*? CLOSE_CURLY # StringListStatement

@@ -124,6 +124,12 @@ public class ABActionDamageArea implements ABAction {
 				}
 				float damPerTar = baseDamage * count > theMaxDamage ? theMaxDamage / count : baseDamage;
 				for (CUnit hit : hits) {
+					localStore.put(ABLocalStoreKeys.ENUMUNIT + castId, hit);
+					if (extraActions != null) {
+						for (ABAction action : extraActions) {
+							action.runAction(game, caster, localStore, castId);
+						}
+					}
 					if (unitSpecificDamageMod != null) {
 						hit.damage(game, ftheSource, flags, ftheAttackType, ftheDamageType,
 								CWeaponSoundTypeJass.WHOKNOWS.name(),
@@ -132,13 +138,7 @@ public class ABActionDamageArea implements ABAction {
 						hit.damage(game, ftheSource, flags, ftheAttackType, ftheDamageType,
 								CWeaponSoundTypeJass.WHOKNOWS.name(), damPerTar);
 					}
-					if (extraActions != null) {
-						localStore.put(ABLocalStoreKeys.ENUMUNIT + castId, hit);
-						for (ABAction action : extraActions) {
-							action.runAction(game, caster, localStore, castId);
-						}
-						localStore.remove(ABLocalStoreKeys.ENUMUNIT + castId);
-					}
+					localStore.remove(ABLocalStoreKeys.ENUMUNIT + castId);
 				}
 
 			} else {
@@ -147,6 +147,11 @@ public class ABActionDamageArea implements ABAction {
 					public boolean call(final CUnit enumUnit) {
 						localStore.put(ABLocalStoreKeys.ENUMUNIT + castId, enumUnit);
 						if (validTarget == null || validTarget.callback(game, caster, localStore, castId)) {
+							if (extraActions != null) {
+								for (ABAction action : extraActions) {
+									action.runAction(game, caster, localStore, castId);
+								}
+							}
 							if (unitSpecificDamageMod != null) {
 								enumUnit.damage(game, ftheSource, flags, ftheAttackType, ftheDamageType,
 										CWeaponSoundTypeJass.WHOKNOWS.name(),
@@ -154,11 +159,6 @@ public class ABActionDamageArea implements ABAction {
 							} else {
 								enumUnit.damage(game, ftheSource, flags, ftheAttackType, ftheDamageType,
 										CWeaponSoundTypeJass.WHOKNOWS.name(), baseDamage);
-							}
-							if (extraActions != null) {
-								for (ABAction action : extraActions) {
-									action.runAction(game, caster, localStore, castId);
-								}
 							}
 						}
 						localStore.remove(ABLocalStoreKeys.ENUMUNIT + castId);

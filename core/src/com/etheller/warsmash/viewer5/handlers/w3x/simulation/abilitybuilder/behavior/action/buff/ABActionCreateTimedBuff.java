@@ -1,5 +1,6 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.action.buff;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -10,6 +11,8 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.booleancallbacks.ABBooleanCallback;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.floatcallbacks.ABFloatCallback;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.idcallbacks.ABIDCallback;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.statbuffcallbacks.ABNonStackingStatBuffCallback;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.statemodcallbacks.ABStateModBuffCallback;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.stringcallbacks.ABStringCallback;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.buff.ABTimedBuff;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABAction;
@@ -17,6 +20,8 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABLocalStoreKeys;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABSingleAction;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CEffectType;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.unit.NonStackingStatBuff;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.unit.StateModBuff;
 
 public class ABActionCreateTimedBuff implements ABSingleAction {
 
@@ -26,6 +31,10 @@ public class ABActionCreateTimedBuff implements ABSingleAction {
 	private List<ABAction> onAddActions;
 	private List<ABAction> onRemoveActions;
 	private List<ABAction> onExpireActions;
+
+	private List<ABNonStackingStatBuffCallback> statBuffs;
+	private List<ABStateModBuffCallback> stateMods;
+
 	private ABBooleanCallback showIcon;
 	private CEffectType artType;
 	private ABBooleanCallback hideArt;
@@ -78,19 +87,35 @@ public class ABActionCreateTimedBuff implements ABSingleAction {
 		ABTimedBuff ability;
 		if (showIcon != null) {
 			ability = new ABTimedBuff(game.getHandleIdAllocator().createId(),
-					buffId.callback(game, caster, localStore, castId),
+					buffId.callback(game, caster, localStore, castId), localStore,
 					(CAbility) localStore.get(ABLocalStoreKeys.ABILITY), caster,
-					duration.callback(game, caster, localStore, castId), showTimedLife, localStore, onAddActions,
-					onRemoveActions, onExpireActions, showIcon.callback(game, caster, localStore, castId), castId,
-					isLeveled, isPositive, isDispellable);
+					duration.callback(game, caster, localStore, castId), showTimedLife, onAddActions, onRemoveActions,
+					onExpireActions, showIcon.callback(game, caster, localStore, castId), castId, isLeveled, isPositive,
+					isDispellable);
 
 		} else {
 			ability = new ABTimedBuff(game.getHandleIdAllocator().createId(),
-					buffId.callback(game, caster, localStore, castId),
+					buffId.callback(game, caster, localStore, castId), localStore,
 					(CAbility) localStore.get(ABLocalStoreKeys.ABILITY), caster,
-					duration.callback(game, caster, localStore, castId), showTimedLife, localStore, onAddActions,
-					onRemoveActions, onExpireActions, castId, isLeveled, isPositive, isDispellable);
+					duration.callback(game, caster, localStore, castId), showTimedLife, onAddActions, onRemoveActions,
+					onExpireActions, castId, isLeveled, isPositive, isDispellable);
 		}
+
+		if (stateMods != null) {
+			List<StateModBuff> buffMods = new ArrayList<>();
+			for (ABStateModBuffCallback mod : stateMods) {
+				buffMods.add(mod.callback(game, caster, localStore, castId));
+			}
+			ability.setStateMods(buffMods);
+		}
+		if (statBuffs != null) {
+			List<NonStackingStatBuff> buffStats = new ArrayList<>();
+			for (ABNonStackingStatBuffCallback mod : statBuffs) {
+				buffStats.add(mod.callback(game, caster, localStore, castId));
+			}
+			ability.setStatBuffs(buffStats);
+		}
+
 		if (artType != null) {
 			ability.setArtType(artType);
 		}

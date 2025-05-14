@@ -11,21 +11,22 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core
 
 public class ABTimedTickingPostDeathBuff extends ABTimedTickingBuff {
 
-	public ABTimedTickingPostDeathBuff(int handleId, War3ID alias, CAbility sourceAbility, CUnit sourceUnit,
-			float duration, boolean showTimedLifeBar, Map<String, Object> localStore, List<ABAction> onAddActions,
+	public ABTimedTickingPostDeathBuff(int handleId, War3ID alias, Map<String, Object> localStore, CAbility sourceAbility, CUnit sourceUnit,
+			float duration, boolean showTimedLifeBar, List<ABAction> onAddActions,
 			List<ABAction> onRemoveActions, List<ABAction> onExpireActions, List<ABAction> onTickActions,
 			boolean showIcon, final int castId, final boolean leveled, final boolean positive,
 			final boolean dispellable) {
-		this(handleId, alias, sourceAbility, sourceUnit, duration, showTimedLifeBar, localStore, onAddActions,
+		this(handleId, alias, localStore, sourceAbility, sourceUnit, duration, showTimedLifeBar, onAddActions,
 				onRemoveActions, onExpireActions, onTickActions, castId, leveled, positive, dispellable);
 		this.setIconShowing(showIcon);
 	}
 
-	public ABTimedTickingPostDeathBuff(int handleId, War3ID alias, CAbility sourceAbility, CUnit sourceUnit,
-			float duration, boolean showTimedLifeBar, Map<String, Object> localStore, List<ABAction> onAddActions,
+	public ABTimedTickingPostDeathBuff(int handleId, War3ID alias, Map<String, Object> localStore, CAbility sourceAbility, CUnit sourceUnit,
+			float duration, boolean showTimedLifeBar, List<ABAction> onAddActions,
 			List<ABAction> onRemoveActions, List<ABAction> onExpireActions, List<ABAction> onTickActions,
 			final int castId, final boolean leveled, final boolean positive, final boolean dispellable) {
-		super(handleId, alias, sourceAbility, sourceUnit, duration, showTimedLifeBar, localStore, onAddActions,
+		super(handleId, alias, localStore,
+				sourceAbility, sourceUnit, duration, showTimedLifeBar, onAddActions,
 				onRemoveActions, onExpireActions, onTickActions, castId, leveled, positive, dispellable);
 	}
 

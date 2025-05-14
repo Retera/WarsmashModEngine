@@ -235,10 +235,17 @@ public class CBehaviorAbilityBuilderBase extends CAbstractRangedBehavior impleme
 					return this;
 				}
 
-				this.unit.getUnitAnimationListener().playAnimation(false, this.ability.getCastingPrimaryTag(),
-						this.ability.getCastingSecondaryTags(), 1.0f, true);
 				this.channeling = (boolean) localStore.get(ABLocalStoreKeys.CHANNELING);
 				this.doneCastTime = true;
+			}
+			if (this.channeling) {
+				EnumSet<SecondaryTag> tags = this.ability.getCastingSecondaryTags().clone();
+				tags.add(SecondaryTag.CHANNEL);
+				this.unit.getUnitAnimationListener().playAnimation(false, this.ability.getCastingPrimaryTag(), tags,
+						1.0f, true);
+			} else {
+				this.unit.getUnitAnimationListener().playAnimation(false, this.ability.getCastingPrimaryTag(),
+						this.ability.getCastingSecondaryTags(), 1.0f, true);
 			}
 
 			if ((ticksSinceCast >= castPointTicks)) {

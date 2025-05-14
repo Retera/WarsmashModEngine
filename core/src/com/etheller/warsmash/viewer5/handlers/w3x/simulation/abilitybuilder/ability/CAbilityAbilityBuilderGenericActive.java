@@ -66,7 +66,7 @@ public abstract class CAbilityAbilityBuilderGenericActive extends AbstractGeneri
 	protected boolean allowCastlessDeactivate = true;
 	protected PrimaryTag castingPrimaryTag;
 	protected EnumSet<SecondaryTag> castingSecondaryTags;
-	
+
 	protected byte clickDisabled = 0;
 
 	protected CItem item = null;
@@ -79,6 +79,7 @@ public abstract class CAbilityAbilityBuilderGenericActive extends AbstractGeneri
 	private boolean ignoreCastTime = false;
 
 	protected boolean hideAreaCursor = false;
+	private Float areaCursorOverride;
 
 	protected int bufferMana = 0;
 	private ManaDepletedCheckTimer timer;
@@ -91,9 +92,9 @@ public abstract class CAbilityAbilityBuilderGenericActive extends AbstractGeneri
 	private boolean physical = false;
 	private boolean magic = true;
 	private boolean universal = false;
-	
+
 	protected Set<String> uniqueFlags = null;
-	
+
 	private boolean isMenu = false;
 	private int visibleMenuId = 0;
 
@@ -105,7 +106,7 @@ public abstract class CAbilityAbilityBuilderGenericActive extends AbstractGeneri
 		this.config = config;
 		this.localStore = localStore;
 		localStore.put(ABLocalStoreKeys.ABILITY, this);
-		
+
 		if (config.getCastId() != null) {
 			orderId = OrderIdUtils.getOrderId(config.getCastId());
 		} else {
@@ -140,25 +141,25 @@ public abstract class CAbilityAbilityBuilderGenericActive extends AbstractGeneri
 		final int levels = editorData.getFieldAsInteger(AbilityFields.LEVELS, 0);
 		localStore.put(ABLocalStoreKeys.ISABILITYLEVELED, levels > 1);
 	}
-	
+
 	@Override
 	public int getAbilityIntField(String field) {
 		GameObject editorData = (GameObject) localStore.get(ABLocalStoreKeys.ABILITYEDITORDATA);
 		return editorData.getFieldValue(field);
 	}
-	
+
 	@Override
 	public float getAbilityFloatField(String field) {
 		GameObject editorData = (GameObject) localStore.get(ABLocalStoreKeys.ABILITYEDITORDATA);
 		return editorData.getFieldFloatValue(field);
 	}
-	
+
 	@Override
 	public String getAbilityStringField(String field) {
 		GameObject editorData = (GameObject) localStore.get(ABLocalStoreKeys.ABILITYEDITORDATA);
 		return editorData.getField(field);
 	}
-	
+
 	@Override
 	public boolean getAbilityBooleanField(String field) {
 		GameObject editorData = (GameObject) localStore.get(ABLocalStoreKeys.ABILITYEDITORDATA);
@@ -211,7 +212,7 @@ public abstract class CAbilityAbilityBuilderGenericActive extends AbstractGeneri
 			}
 		}
 	}
-	
+
 	private void addInitialUniqueFlags(CSimulation game, CUnit unit) {
 		if (this.config.getInitialUniqueFlags() != null && !this.config.getInitialUniqueFlags().isEmpty()) {
 			this.uniqueFlags = new HashSet<>();
@@ -220,7 +221,6 @@ public abstract class CAbilityAbilityBuilderGenericActive extends AbstractGeneri
 			}
 		}
 	}
-
 
 	private void determineToggleableFields(CSimulation game, CUnit unit) {
 		if (config.getDisplayFields() != null && config.getDisplayFields().getSeparateOnAndOff() != null) {
@@ -295,8 +295,8 @@ public abstract class CAbilityAbilityBuilderGenericActive extends AbstractGeneri
 						castId);
 			}
 			if (this.config.getOverrideFields().getIgnoreCastTime() != null) {
-				this.ignoreCastTime = this.config.getOverrideFields().getIgnoreCastTime().callback(game, unit, localStore,
-						castId);
+				this.ignoreCastTime = this.config.getOverrideFields().getIgnoreCastTime().callback(game, unit,
+						localStore, castId);
 			}
 			if (this.config.getOverrideFields().getCooldownOverride() != null) {
 				this.cooldown = this.config.getOverrideFields().getCooldownOverride().callback(game, unit, localStore,
@@ -307,8 +307,8 @@ public abstract class CAbilityAbilityBuilderGenericActive extends AbstractGeneri
 						castId);
 			}
 			if (this.config.getOverrideFields().getAutocastTypeOverride() != null) {
-				this.autocastType = this.config.getOverrideFields().getAutocastTypeOverride().callback(game, unit, localStore,
-						castId);
+				this.autocastType = this.config.getOverrideFields().getAutocastTypeOverride().callback(game, unit,
+						localStore, castId);
 			}
 
 			if (this.config.getOverrideFields().getOnTooltipOverride() != null) {
@@ -316,28 +316,29 @@ public abstract class CAbilityAbilityBuilderGenericActive extends AbstractGeneri
 						localStore, castId);
 			}
 			if (this.config.getOverrideFields().getOffTooltipOverride() != null) {
-				this.offTooltipOverride = this.config.getOverrideFields().getOffTooltipOverride().callback(game,
-						unit, localStore, castId);
+				this.offTooltipOverride = this.config.getOverrideFields().getOffTooltipOverride().callback(game, unit,
+						localStore, castId);
 			}
 			if (this.config.getOverrideFields().getPhysicalSpell() != null) {
-				this.physical = this.config.getOverrideFields().getPhysicalSpell().callback(game,
-						unit, localStore, castId);
-				this.magic = this.physical ? false : this.magic; // Spells that just declare physical:true default to magic:false
+				this.physical = this.config.getOverrideFields().getPhysicalSpell().callback(game, unit, localStore,
+						castId);
+				this.magic = this.physical ? false : this.magic; // Spells that just declare physical:true default to
+																	// magic:false
 			}
 			if (this.config.getOverrideFields().getMagicSpell() != null) {
-				this.magic = this.config.getOverrideFields().getMagicSpell().callback(game,
-						unit, localStore, castId);
+				this.magic = this.config.getOverrideFields().getMagicSpell().callback(game, unit, localStore, castId);
 			}
 			if (this.config.getOverrideFields().getUniversalSpell() != null) {
-				this.universal = this.config.getOverrideFields().getUniversalSpell().callback(game,
-						unit, localStore, castId);
+				this.universal = this.config.getOverrideFields().getUniversalSpell().callback(game, unit, localStore,
+						castId);
 			}
 		}
 
 		GameObject editorData = (GameObject) localStore.get(ABLocalStoreKeys.ABILITYEDITORDATA);
 		final int requiredLevel = editorData.getFieldAsInteger(AbilityFields.REQUIRED_LEVEL, 0);
 		this.targetsAllowed = levelDataLevel.getTargetsAllowed();
-		if ((requiredLevel < 6 || game.getGameplayConstants().isMagicImmuneResistsUltimates()) && !isPhysical() && !isUniversal()) {
+		if ((requiredLevel < 6 || game.getGameplayConstants().isMagicImmuneResistsUltimates()) && !isPhysical()
+				&& !isUniversal()) {
 			this.targetsAllowed.add(CTargetType.NON_MAGIC_IMMUNE);
 		}
 		if (isPhysical() && !isUniversal()) {
@@ -348,13 +349,15 @@ public abstract class CAbilityAbilityBuilderGenericActive extends AbstractGeneri
 			this.hideAreaCursor = this.config.getDisplayFields().getHideAreaCursor().callback(game, unit, localStore,
 					castId);
 		}
+		if (this.config.getDisplayFields() != null && this.config.getDisplayFields().getAreaCursorOverride() != null) {
+			this.areaCursorOverride = this.config.getDisplayFields().getAreaCursorOverride().callback(game, unit,
+					localStore, castId);
+		}
 		if (this.config.getDisplayFields() != null && this.config.getDisplayFields().getIsMenu() != null) {
-			this.isMenu = this.config.getDisplayFields().getIsMenu().callback(game, unit, localStore,
-					this.getLevel());
+			this.isMenu = this.config.getDisplayFields().getIsMenu().callback(game, unit, localStore, this.getLevel());
 			if (this.isMenu) {
 				if (this.config.getDisplayFields().getMenuId() != null) {
-					this.orderId = this.config.getDisplayFields().getMenuId().callback(game, unit, localStore,
-							castId);
+					this.orderId = this.config.getDisplayFields().getMenuId().callback(game, unit, localStore, castId);
 				} else {
 					if (this.orderId == 0) {
 						this.orderId = this.getHandleId();
@@ -410,7 +413,7 @@ public abstract class CAbilityAbilityBuilderGenericActive extends AbstractGeneri
 		this.localStore.put(ABLocalStoreKeys.ITEM, item);
 		this.localStore.put(ABLocalStoreKeys.ITEMSLOT, slot);
 	}
-	
+
 	@Override
 	public CItem getItem() {
 		return this.item;
@@ -445,7 +448,7 @@ public abstract class CAbilityAbilityBuilderGenericActive extends AbstractGeneri
 	public Map<String, Object> getLocalStore() {
 		return this.localStore;
 	}
-	
+
 	@Override
 	public boolean hasUniqueFlag(String flag) {
 		if (this.uniqueFlags != null) {
@@ -453,14 +456,14 @@ public abstract class CAbilityAbilityBuilderGenericActive extends AbstractGeneri
 		}
 		return false;
 	}
-	
+
 	public void addUniqueFlag(String flag) {
 		if (this.uniqueFlags == null) {
 			this.uniqueFlags = new HashSet<>();
 		}
 		this.uniqueFlags.add(flag);
 	}
-	
+
 	public void removeUniqueFlag(String flag) {
 		if (this.uniqueFlags != null) {
 			this.uniqueFlags.remove(flag);
@@ -472,15 +475,15 @@ public abstract class CAbilityAbilityBuilderGenericActive extends AbstractGeneri
 	public <T> T getUniqueValue(String key, Class<T> cls) {
 		Object o = this.localStore.get(ABLocalStoreKeys.combineUniqueValueKey(key, this.getHandleId()));
 		if (o != null && o.getClass() == cls) {
-			return (T)o;
+			return (T) o;
 		}
 		return null;
 	}
-	
+
 	public void addUniqueValue(Object item, String key) {
 		this.localStore.put(ABLocalStoreKeys.combineUniqueValueKey(key, this.getHandleId()), item);
 	}
-	
+
 	public void removeUniqueValue(String key) {
 		this.localStore.remove(ABLocalStoreKeys.combineUniqueValueKey(key, this.getHandleId()));
 	}
@@ -507,7 +510,9 @@ public abstract class CAbilityAbilityBuilderGenericActive extends AbstractGeneri
 
 	@Override
 	public float getUIAreaOfEffect() {
-		return (this.area == 0 || this.hideAreaCursor) ? Float.NaN : this.area;
+		return ((this.area == 0 && (this.areaCursorOverride == null || this.areaCursorOverride == 0))
+				|| this.hideAreaCursor) ? Float.NaN
+						: (this.areaCursorOverride == null ? this.area : this.areaCursorOverride);
 	}
 
 	public float getCooldown() {
@@ -533,11 +538,11 @@ public abstract class CAbilityAbilityBuilderGenericActive extends AbstractGeneri
 	public void setCastTime(float castTime) {
 		this.castTime = castTime;
 	}
-	
+
 	public boolean ignoreCastTime() {
 		return this.ignoreCastTime;
 	}
-	
+
 	public EnumSet<CTargetType> getTargetsAllowed() {
 		return targetsAllowed;
 	}
@@ -556,7 +561,7 @@ public abstract class CAbilityAbilityBuilderGenericActive extends AbstractGeneri
 	public boolean isActive() {
 		return this.active;
 	}
-	
+
 	@Override
 	public boolean isClickDisabled() {
 		return this.clickDisabled != 0;
@@ -566,8 +571,7 @@ public abstract class CAbilityAbilityBuilderGenericActive extends AbstractGeneri
 	public final void setClickDisabled(final boolean disabled, final CAbilityDisableType type) {
 		if (disabled) {
 			this.clickDisabled |= type.getMask();
-		}
-		else {
+		} else {
 			this.clickDisabled &= ~type.getMask();
 		}
 	}
@@ -588,7 +592,8 @@ public abstract class CAbilityAbilityBuilderGenericActive extends AbstractGeneri
 	}
 
 	@Override
-	public void setAutoCastOn(final CSimulation simulation, final CUnit caster, final boolean autoCastOn, final boolean notify) {
+	public void setAutoCastOn(final CSimulation simulation, final CUnit caster, final boolean autoCastOn,
+			final boolean notify) {
 		this.localStore.put(ABLocalStoreKeys.WASAUTOCASTON, this.autocasting);
 		this.autocasting = autoCastOn;
 		if (notify) {
@@ -772,8 +777,8 @@ public abstract class CAbilityAbilityBuilderGenericActive extends AbstractGeneri
 	}
 
 	@Override
-	public void checkCanTarget(final CSimulation game, final CUnit unit, final int orderId,
-			boolean autoOrder, final AbilityPointTarget target, final AbilityTargetCheckReceiver<AbilityPointTarget> receiver) {
+	public void checkCanTarget(final CSimulation game, final CUnit unit, final int orderId, boolean autoOrder,
+			final AbilityPointTarget target, final AbilityTargetCheckReceiver<AbilityPointTarget> receiver) {
 		this.localStore.put(ABLocalStoreKeys.combineKey(ABLocalStoreKeys.ISAUTOCAST, castId), autoOrder);
 		if (innerCheckCastOrderId(game, unit, orderId)) {
 			innerCheckCanTarget(game, unit, orderId, target, receiver);
@@ -812,8 +817,8 @@ public abstract class CAbilityAbilityBuilderGenericActive extends AbstractGeneri
 	}
 
 	@Override
-	public void checkCanTargetNoTarget(final CSimulation game, final CUnit unit, final int orderId,
-			boolean autoOrder, final AbilityTargetCheckReceiver<Void> receiver) {
+	public void checkCanTargetNoTarget(final CSimulation game, final CUnit unit, final int orderId, boolean autoOrder,
+			final AbilityTargetCheckReceiver<Void> receiver) {
 		this.localStore.put(ABLocalStoreKeys.combineKey(ABLocalStoreKeys.ISAUTOCAST, castId), autoOrder);
 		if ((orderId != 0) && ((orderId == getAutoCastOffOrderId()) || (orderId == getAutoCastOnOrderId()))) {
 			receiver.targetOk(null);
@@ -913,7 +918,8 @@ public abstract class CAbilityAbilityBuilderGenericActive extends AbstractGeneri
 				|| ((this.active || this.separateOnAndOff) && orderId == getOffOrderId());
 	}
 
-	protected boolean innerCheckTargetTargetable(CSimulation game, CUnit unit, CWidget target, final AbilityTargetCheckReceiver<CWidget> receiver) {
+	protected boolean innerCheckTargetTargetable(CSimulation game, CUnit unit, CWidget target,
+			final AbilityTargetCheckReceiver<CWidget> receiver) {
 		return target.canBeTargetedBy(game, unit, targetsAllowed, receiver);
 	}
 
@@ -1169,8 +1175,8 @@ public abstract class CAbilityAbilityBuilderGenericActive extends AbstractGeneri
 	}
 
 	@Override
-	public boolean checkBeforeQueue(final CSimulation game, final CUnit caster, final int orderId,
-			boolean autoOrder, final AbilityTarget target) {
+	public boolean checkBeforeQueue(final CSimulation game, final CUnit caster, final int orderId, boolean autoOrder,
+			final AbilityTarget target) {
 		this.localStore.put(ABLocalStoreKeys.combineKey(ABLocalStoreKeys.ISAUTOCAST, castId), autoOrder);
 //		System.err.println("Checking queue top level: " + active + " orderID : " + orderId + " offID: " + this.getOffOrderId());
 		if (this.allowCastlessDeactivate && this.toggleable && this.active && orderId == this.getOffOrderId()) {
@@ -1268,7 +1274,7 @@ public abstract class CAbilityAbilityBuilderGenericActive extends AbstractGeneri
 	public int getIconVisibleMenuId() {
 		return this.visibleMenuId;
 	}
-	
+
 	@Override
 	public void setIconVisibleMenuId(int menu) {
 		this.visibleMenuId = menu;

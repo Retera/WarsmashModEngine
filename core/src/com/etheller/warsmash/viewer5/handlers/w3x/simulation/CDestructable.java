@@ -24,7 +24,7 @@ public class CDestructable extends CWidget {
 	private final CDestructableType destType;
 	private final RemovablePathingMapInstance pathingInstance;
 	private final RemovablePathingMapInstance pathingInstanceDeath;
-	private UnitAnimationListenerImpl unitAnimationListenerImpl;
+	private UnitAnimationListenerImpl unitAnimationListener;
 	private boolean invulnerable;
 	private boolean blighted;
 	private Rectangle registeredEnumRectangle;
@@ -187,7 +187,11 @@ public class CDestructable extends CWidget {
 	}
 
 	public void setUnitAnimationListener(final UnitAnimationListenerImpl unitAnimationListenerImpl) {
-		this.unitAnimationListenerImpl = unitAnimationListenerImpl;
+		this.unitAnimationListener = unitAnimationListenerImpl;
+	}
+
+	public CUnitAnimationListener getUnitAnimationListener() {
+		return this.unitAnimationListener;
 	}
 
 	@Override

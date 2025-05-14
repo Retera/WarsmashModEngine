@@ -1,5 +1,7 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.buff;
 
+import java.util.Map;
+
 import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
@@ -7,15 +9,17 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbility;
 
 public abstract class ABGenericPermanentBuff extends ABBuff {
 
-	public ABGenericPermanentBuff(int handleId, War3ID alias, CAbility sourceAbility, CUnit sourceUnit, boolean showIcon, boolean leveled, boolean positive) {
-		super(handleId, alias, alias, sourceAbility, sourceUnit);
+	public ABGenericPermanentBuff(int handleId, War3ID alias, Map<String, Object> localStore, CAbility sourceAbility,
+			CUnit sourceUnit, boolean showIcon, boolean leveled, boolean positive) {
+		super(handleId, alias, alias, localStore, sourceAbility, sourceUnit);
 		this.setIconShowing(showIcon);
 		this.setLeveled(leveled);
 		this.setPositive(positive);
 	}
 
-	public ABGenericPermanentBuff(int handleId, War3ID alias, CAbility sourceAbility, CUnit sourceUnit, boolean leveled, boolean positive) {
-		super(handleId, alias, alias, sourceAbility, sourceUnit);
+	public ABGenericPermanentBuff(int handleId, War3ID alias, Map<String, Object> localStore, CAbility sourceAbility,
+			CUnit sourceUnit, boolean leveled, boolean positive) {
+		super(handleId, alias, alias, localStore, sourceAbility, sourceUnit);
 		this.setLeveled(leveled);
 		this.setPositive(positive);
 	}

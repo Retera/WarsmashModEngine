@@ -74,10 +74,9 @@ public class GetInstantTransformationBuffVisitor implements CAbilityVisitor<ABBu
 
 	@Override
 	public ABBuff accept(final AbilityBuilderActiveAbility ability) {
-		return new ABTimedTransformationBuff(game.getHandleIdAllocator().createId(),
-				ability, caster, localStore, actions,
-				buffId == null ? ability.getAlias() : buffId, duration, ability, newType, !addAlternateTagAfter,
-				permanent, transformationTime);
+		return new ABTimedTransformationBuff(game.getHandleIdAllocator().createId(), localStore, ability, caster,
+				actions, buffId == null ? ability.getAlias() : buffId, duration, ability, newType,
+				!addAlternateTagAfter, permanent, transformationTime);
 	}
 
 	@Override
@@ -88,10 +87,10 @@ public class GetInstantTransformationBuffVisitor implements CAbilityVisitor<ABBu
 	@Override
 	public ABBuff accept(GenericSingleIconPassiveAbility ability) {
 		if (ability instanceof AbilityBuilderPassiveAbility) {
-			return new ABTimedInstantTransformationBuff(game.getHandleIdAllocator().createId(),
-					ability, caster, localStore, actions,
-					buffId == null ? ability.getAlias() : buffId, duration, (AbilityBuilderPassiveAbility) ability,
-					newType, keepRatios, !addAlternateTagAfter, permanent, transformationTime);
+			return new ABTimedInstantTransformationBuff(game.getHandleIdAllocator().createId(), localStore, ability,
+					caster, actions, buffId == null ? ability.getAlias() : buffId, duration,
+					(AbilityBuilderPassiveAbility) ability, newType, keepRatios, !addAlternateTagAfter, permanent,
+					transformationTime);
 		}
 		return null;
 	}
@@ -99,10 +98,10 @@ public class GetInstantTransformationBuffVisitor implements CAbilityVisitor<ABBu
 	@Override
 	public ABBuff accept(final GenericNoIconAbility ability) {
 		if (ability instanceof AbilityBuilderPassiveAbility) {
-			return new ABTimedInstantTransformationBuff(game.getHandleIdAllocator().createId(),
-					ability, caster, localStore, actions,
-					buffId == null ? ability.getAlias() : buffId, duration, (AbilityBuilderPassiveAbility) ability,
-					newType, keepRatios, !addAlternateTagAfter, permanent, transformationTime);
+			return new ABTimedInstantTransformationBuff(game.getHandleIdAllocator().createId(), localStore, ability,
+					caster, actions, buffId == null ? ability.getAlias() : buffId, duration,
+					(AbilityBuilderPassiveAbility) ability, newType, keepRatios, !addAlternateTagAfter, permanent,
+					transformationTime);
 		}
 		return null;
 	}

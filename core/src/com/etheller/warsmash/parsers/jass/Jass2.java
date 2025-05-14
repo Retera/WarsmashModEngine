@@ -7869,10 +7869,12 @@ public class Jass2 {
 			jassProgramVisitor.getJassNativeManager().createNative("CreateTargetingBuff",
 					(arguments, globalScope, triggerScope) -> {
 						final int buffRawcode = arguments.get(0).visit(IntegerJassValueVisitor.getInstance());
+						final Map<String, Object> localStore = nullable(arguments, 1,
+								ObjectJassValueVisitor.getInstance());
 
 						final CBuff ability = new ABTargetingBuff(
 								CommonEnvironment.this.simulation.getHandleIdAllocator().createId(),
-								new War3ID(buffRawcode), null, null);
+								new War3ID(buffRawcode), localStore, null, null);
 
 						return new HandleJassValue(buffType, ability);
 					});
@@ -7886,10 +7888,12 @@ public class Jass2 {
 						final boolean leveled = arguments.get(4).visit(BooleanJassValueVisitor.getInstance());
 						final boolean positive = arguments.get(5).visit(BooleanJassValueVisitor.getInstance());
 						final boolean dispellable = arguments.get(6).visit(BooleanJassValueVisitor.getInstance());
+						final Map<String, Object> localStore = nullable(arguments, 7,
+								ObjectJassValueVisitor.getInstance());
 
 						final ABTimedArtBuff ability = new ABTimedArtBuff(
-								this.simulation.getHandleIdAllocator().createId(), new War3ID(buffRawcode), null, null,
-								duration, showIcon, leveled, positive, dispellable);
+								this.simulation.getHandleIdAllocator().createId(), new War3ID(buffRawcode), localStore,
+								null, null, duration, showIcon, leveled, positive, dispellable);
 						if (artType != null) {
 							ability.setArtType(artType);
 						}
@@ -7914,7 +7918,7 @@ public class Jass2 {
 						final boolean dispellable = arguments.get(12).visit(BooleanJassValueVisitor.getInstance());
 
 						final ABTimedBuff ability = new ABTimedBuff(this.simulation.getHandleIdAllocator().createId(),
-								new War3ID(buffRawcode), null, null, duration, showTimedLifeBar, localStore,
+								new War3ID(buffRawcode), localStore, null, null, duration, showTimedLifeBar,
 								ABActionJass.wrap(onAddAction), ABActionJass.wrap(onRemoveAction),
 								ABActionJass.wrap(onExpireAction), showIcon, castId, leveled, positive, dispellable);
 						ability.setArtType(artType);
@@ -7937,10 +7941,12 @@ public class Jass2 {
 					(arguments, globalScope, triggerScope) -> {
 						final int buffRawcode = arguments.get(0).visit(IntegerJassValueVisitor.getInstance());
 						final float duration = arguments.get(1).visit(RealJassValueVisitor.getInstance()).floatValue();
+						final Map<String, Object> localStore = nullable(arguments, 2,
+								ObjectJassValueVisitor.getInstance());
 
 						final CBuff ability = new ABTimedTargetingBuff(
-								this.simulation.getHandleIdAllocator().createId(), new War3ID(buffRawcode), null, null,
-								duration);
+								this.simulation.getHandleIdAllocator().createId(), new War3ID(buffRawcode), localStore, null,
+								null, duration);
 
 						return new HandleJassValue(buffType, ability);
 					});
@@ -7963,8 +7969,8 @@ public class Jass2 {
 						final boolean dispellable = arguments.get(13).visit(BooleanJassValueVisitor.getInstance());
 
 						final ABTimedTickingBuff ability = new ABTimedTickingBuff(
-								this.simulation.getHandleIdAllocator().createId(), new War3ID(buffRawcode), null, null,
-								duration, showTimedLifeBar, localStore, ABActionJass.wrap(onAddAction),
+								this.simulation.getHandleIdAllocator().createId(), new War3ID(buffRawcode), localStore, null,
+								null, duration, showTimedLifeBar, ABActionJass.wrap(onAddAction),
 								ABActionJass.wrap(onRemoveAction), ABActionJass.wrap(onExpireAction),
 								ABActionJass.wrap(onTickAction), showIcon, castId, leveled, positive, dispellable);
 						ability.setArtType(artType);
@@ -7990,8 +7996,8 @@ public class Jass2 {
 						final boolean dispellable = arguments.get(13).visit(BooleanJassValueVisitor.getInstance());
 
 						final ABTimedTickingPausedBuff ability = new ABTimedTickingPausedBuff(
-								this.simulation.getHandleIdAllocator().createId(), new War3ID(buffRawcode), null, null,
-								duration, showTimedLifeBar, localStore, ABActionJass.wrap(onAddAction),
+								this.simulation.getHandleIdAllocator().createId(), new War3ID(buffRawcode), localStore, null,
+								null, duration, showTimedLifeBar, ABActionJass.wrap(onAddAction),
 								ABActionJass.wrap(onRemoveAction), ABActionJass.wrap(onExpireAction),
 								ABActionJass.wrap(onTickAction), showIcon, castId, leveled, positive, dispellable);
 						ability.setArtType(artType);
@@ -8017,8 +8023,8 @@ public class Jass2 {
 						final boolean dispellable = arguments.get(13).visit(BooleanJassValueVisitor.getInstance());
 
 						final ABTimedTickingPostDeathBuff ability = new ABTimedTickingPostDeathBuff(
-								this.simulation.getHandleIdAllocator().createId(), new War3ID(buffRawcode), null, null,
-								duration, showTimedLifeBar, localStore, ABActionJass.wrap(onAddAction),
+								this.simulation.getHandleIdAllocator().createId(), new War3ID(buffRawcode), localStore, null,
+								null, duration, showTimedLifeBar, ABActionJass.wrap(onAddAction),
 								ABActionJass.wrap(onRemoveAction), ABActionJass.wrap(onExpireAction),
 								ABActionJass.wrap(onTickAction), showIcon, castId, leveled, positive, dispellable);
 						ability.setArtType(artType);

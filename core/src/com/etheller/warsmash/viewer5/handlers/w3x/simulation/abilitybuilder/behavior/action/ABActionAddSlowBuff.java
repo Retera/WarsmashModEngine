@@ -44,7 +44,7 @@ public class ABActionAddSlowBuff implements ABSingleAction {
 			isShowIcon = showIcon.callback(game, caster, localStore, castId);
 		}
 
-		final ABBuffSlow ability = new ABBuffSlow(game, game.getHandleIdAllocator().createId(), alias,
+		final ABBuffSlow ability = new ABBuffSlow(game, game.getHandleIdAllocator().createId(), alias, localStore,
 				(CAbility) localStore.get(ABLocalStoreKeys.ABILITY), caster,
 				this.duration.callback(game, caster, localStore, castId), isLeveled);
 

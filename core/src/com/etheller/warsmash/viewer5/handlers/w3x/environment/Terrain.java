@@ -136,9 +136,10 @@ public class Terrain {
 	private final int[] mapBounds;
 	private final float[] shaderMapBounds;
 	private final int[] mapSize;
+	public FloatBuffer renderGroundBuffer;
 	public final SoftwareGroundMesh softwareGroundMesh;
 	public final SoftwareWaterAndGroundMesh softwareWaterAndGroundMesh;
-	private final int testArrayBuffer;
+	private int testArrayBuffer;
 	private final int testElementBuffer;
 	private boolean initShadowsFinished = false;
 	private byte[] staticShadowData;
@@ -201,8 +202,7 @@ public class Terrain {
 			this.waterHeightOffset = waterInfo.getFieldFloatValue("height");
 			this.waterTextureCount = waterInfo.getFieldValue("numTex");
 			this.waterIncreasePerFrame = waterInfo.getFieldValue("texRate");
-		}
-		else {
+		} else {
 			this.waterHeightOffset = 0;
 			this.waterTextureCount = 0;
 			this.waterIncreasePerFrame = 0;
@@ -440,8 +440,9 @@ public class Terrain {
 
 		this.testArrayBuffer = gl.glGenBuffer();
 		gl.glBindBuffer(GL30.GL_ARRAY_BUFFER, this.testArrayBuffer);
-		gl.glBufferData(GL30.GL_ARRAY_BUFFER, this.softwareGroundMesh.vertices.length,
-				RenderMathUtils.wrap(this.softwareGroundMesh.vertices), GL30.GL_STATIC_DRAW);
+		this.renderGroundBuffer = RenderMathUtils.wrap(this.softwareGroundMesh.vertices);
+		gl.glBufferData(GL30.GL_ARRAY_BUFFER, this.softwareGroundMesh.vertices.length, this.renderGroundBuffer,
+				GL30.GL_STATIC_DRAW);
 
 		this.testElementBuffer = gl.glGenBuffer();
 //		gl.glBindBuffer(GL30.GL_ELEMENT_ARRAY_BUFFER, this.testElementBuffer);
@@ -614,18 +615,15 @@ public class Terrain {
 								final int bottomRightCliffTex = bottomRight.getCliffTexture();
 								if (bottomRightCliffTex == 15) {
 									bottomLeftCliffTex -= 14;
-								}
-								else {
+								} else {
 									bottomLeftCliffTex = bottomRightCliffTex;
 									foundTexture = true;
 								}
-							}
-							else {
+							} else {
 								bottomLeftCliffTex = topRightCliffTex;
 								foundTexture = true;
 							}
-						}
-						else {
+						} else {
 							bottomLeftCliffTex = topLeftCliffTex;
 							foundTexture = true;
 						}
@@ -653,20 +651,16 @@ public class Terrain {
 							if (DISALLOW_HEIGHT_3_RAMPS) {
 								if (rampBlockedByCliff) {
 									invalidRamp = true;
-								}
-								else if (topLeftHeight > 1) {
+								} else if (topLeftHeight > 1) {
 									invalidRamp = true;
 									topLeft.setRamp(0);
-								}
-								else if (topRightHeight > 1) {
+								} else if (topRightHeight > 1) {
 									invalidRamp = true;
 									topRight.setRamp(0);
-								}
-								else if (bottomRightHeight > 1) {
+								} else if (bottomRightHeight > 1) {
 									invalidRamp = true;
 									bottomRight.setRamp(0);
-								}
-								else if (bottomLeftHeight > 1) {
+								} else if (bottomLeftHeight > 1) {
 									invalidRamp = true;
 									bottomLeft.setRamp(0);
 								}
@@ -795,8 +789,7 @@ public class Terrain {
 		uploadGroundTexture();
 		try {
 			updateCliffMeshes(new Rectangle(i - 1, j - 1, 1, 1)); // TODO does this work?
-		}
-		catch (final IOException e) {
+		} catch (final IOException e) {
 			throw new RuntimeException(e);
 		}
 	}
@@ -810,8 +803,7 @@ public class Terrain {
 		uploadGroundTexture();
 		try {
 			updateCliffMeshes(new Rectangle(0, 0, this.columns - 1, this.rows - 1));
-		}
-		catch (final IOException e) {
+		} catch (final IOException e) {
 			throw new RuntimeException(e);
 		}
 	}
@@ -925,19 +917,15 @@ public class Terrain {
 		if (texture.extended) {
 			if (variation <= 15) {
 				return (short) (16 + variation);
-			}
-			else if (variation == 16) {
+			} else if (variation == 16) {
 				return 15;
-			}
-			else {
+			} else {
 				return 0;
 			}
-		}
-		else {
+		} else {
 			if (variation == 0) {
 				return 0;
-			}
-			else {
+			} else {
 				return 15;
 			}
 		}
@@ -1462,8 +1450,7 @@ public class Terrain {
 
 			if ((sqX + sqY) < 1) {
 				height = bottomLeft + ((bottomRight - bottomLeft) * sqX) + ((topLeft - bottomLeft) * sqY);
-			}
-			else {
+			} else {
 				height = topRight + ((bottomRight - topRight) * (1 - sqY)) + ((topLeft - topRight) * (1 - sqX));
 			}
 
@@ -1471,6 +1458,10 @@ public class Terrain {
 		}
 
 		return 0;
+	}
+
+	public float getTerrainSpaceX(float x) {
+		return (x - this.centerOffset[0]) / 128.0f;
 	}
 
 	public int get128CellX(final float x) {
@@ -1481,6 +1472,10 @@ public class Terrain {
 
 	public float get128WorldCoordinateFromCellX(final int cellX) {
 		return (cellX * 128.0f) + this.centerOffset[0];
+	}
+
+	public float getTerrainSpaceY(float y) {
+		return (y - this.centerOffset[1]) / 128.0f;
 	}
 
 	public int get128CellY(final float y) {
@@ -1523,8 +1518,7 @@ public class Terrain {
 
 			if ((sqX + sqY) < 1) {
 				height = bottomLeft + ((bottomRight - bottomLeft) * sqX) + ((topLeft - bottomLeft) * sqY);
-			}
-			else {
+			} else {
 				height = topRight + ((bottomRight - topRight) * (1 - sqY)) + ((topLeft - topRight) * (1 - sqX));
 			}
 
@@ -1649,8 +1643,7 @@ public class Terrain {
 						if (waterExistsData[groundCornerHeightIndex] != 0) {
 							height = Math.max(groundCornerHeights[groundCornerHeightIndex],
 									waterHeights[groundCornerHeightIndex] + waterHeightOffset);
-						}
-						else {
+						} else {
 							height = groundCornerHeights[groundCornerHeightIndex];
 						}
 						this.vertices[(instanceId * 4 * 3) + (vertexId * 3)] = ((vPositionX + x) * 128f)
@@ -1722,8 +1715,7 @@ public class Terrain {
 			default:
 				throw new IllegalArgumentException("Invalid ramp");
 			}
-		}
-		else {
+		} else {
 			return (char) ('A' + layerHeightOffset);
 		}
 	}
@@ -1766,5 +1758,46 @@ public class Terrain {
 			this.maxShallowColorApplied[i] = this.maxShallowColor[i] * rgba[i];
 			this.minShallowColorApplied[i] = this.minShallowColor[i] * rgba[i];
 		}
+	}
+
+	private static Rectangle tempRect = new Rectangle();
+
+	public void updateGroundBuffer(float x, float y, float i) {
+		int nodeX = get128CellX(x);
+		int nodeY = get128CellY(y);
+		final int instanceId = (nodeY * (columns - 1)) + nodeX;
+		final int vertexZ = (instanceId * 4 * 3) + (0 * 3) + 2;
+		softwareGroundMesh.vertices[vertexZ] = softwareGroundMesh.vertices[vertexZ] + i;
+		this.corners[nodeX][nodeY].setGroundHeight(this.corners[nodeX][nodeY].getGroundHeight() + i / 512);
+		this.updateGroundHeights(tempRect.set(nodeX, nodeY, 1, 1));
+	}
+
+	public int[] getTerrainModBufferSize(float x, float y, float width, float height) {
+		return new int[] { Math.min(this.rows - 1, Math.max(0, get128CellX(x))),
+				Math.min(this.columns - 1, Math.max(0, get128CellY(y))),
+				Math.min(this.rows - 1, Math.max(0, get128CellX(x + width)+1)),
+				Math.min(this.columns - 1, Math.max(0, get128CellY(y + height)+1)) };
+	}
+
+	public int[] getTerrainModBufferSize(float centerX, float centerY, float radius) {
+		return getTerrainModBufferSize(centerX - radius, centerY - radius, radius * 2, radius * 2);
+	}
+
+	public void updateGroundBuffer(int[] rect, float[] modBuffer) {
+		updateGroundBuffer(rect[0], rect[1], rect[2]-rect[0] + 1, rect[3]-rect[1] + 1, modBuffer);
+	}
+
+	public void updateGroundBuffer(int x, int y, int width, int height, float[] modBuffer) {
+		for (int j = (int) y; j < (y + height); j++) {
+			for (int i = (int) x; i < (x + width); i++) {
+				final int vertexZ = (((j * (columns - 1)) + i) * 4 * 3) + 2;
+				softwareGroundMesh.vertices[vertexZ] = softwareGroundMesh.vertices[vertexZ]
+						+ modBuffer[(i - x) + (j - y) * width];
+				this.corners[i][j].setGroundHeight(
+						this.corners[i][j].getGroundHeight() + modBuffer[(i - x) + (j - y) * width] / 512);
+			}
+		}
+		this.updateGroundHeights(tempRect.set(x, y, width, height));
+
 	}
 }

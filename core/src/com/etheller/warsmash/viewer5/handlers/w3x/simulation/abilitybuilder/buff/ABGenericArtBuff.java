@@ -1,5 +1,7 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.buff;
 
+import java.util.Map;
+
 import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
@@ -12,8 +14,9 @@ public class ABGenericArtBuff extends ABBuff {
 	private SimulationRenderComponent sfx;
 	private SimulationRenderComponent lsfx;
 
-	public ABGenericArtBuff(int handleId, War3ID alias, CAbility sourceAbility, CUnit sourceUnit) {
-		super(handleId, alias, alias, sourceAbility, sourceUnit);
+	public ABGenericArtBuff(int handleId, War3ID alias, Map<String, Object> localStore, CAbility sourceAbility,
+			CUnit sourceUnit) {
+		super(handleId, alias, alias, localStore, sourceAbility, sourceUnit);
 		this.setIconShowing(false);
 	}
 

@@ -30,7 +30,7 @@
 							"conditions": [{
 									"type": "isNull",
 									"value": {
-										"type": "getLastCreatedSpellEffect"
+										"type": "getLastCreatedFX"
 									}
 								},{
 									"type": "unitHasResearch",
@@ -63,13 +63,13 @@
 				"condition": {
 					"type": "notNull",
 					"value": {
-						"type": "getLastCreatedSpellEffect"
+						"type": "getLastCreatedFX"
 					}
 				},
 				"thenActions": [{
 					"type": "removeEffect",
 					"effect": {
-						"type": "getLastCreatedSpellEffect"
+						"type": "getLastCreatedFX"
 					}
 				}]
 			},{
@@ -115,7 +115,7 @@
 							"conditions": [{
 									"type": "isNull",
 									"value": {
-										"type": "getLastCreatedSpellEffect"
+										"type": "getLastCreatedFX"
 									}
 								},{
 									"type": "unitHasResearch",
@@ -148,13 +148,13 @@
 				"condition": {
 					"type": "notNull",
 					"value": {
-						"type": "getLastCreatedSpellEffect"
+						"type": "getLastCreatedFX"
 					}
 				},
 				"thenActions": [{
 					"type": "removeEffect",
 					"effect": {
-						"type": "getLastCreatedSpellEffect"
+						"type": "getLastCreatedFX"
 					}
 				}]
 			},{

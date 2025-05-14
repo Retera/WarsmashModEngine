@@ -14,7 +14,6 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.SimulationRend
 
 public class ABPermanentPassiveBuff extends ABGenericPermanentBuff {
 
-	protected Map<String, Object> localStore;
 	private List<ABAction> onAddActions;
 	private List<ABAction> onRemoveActions;
 
@@ -39,8 +38,7 @@ public class ABPermanentPassiveBuff extends ABGenericPermanentBuff {
 	public ABPermanentPassiveBuff(int handleId, War3ID alias, CAbility sourceAbility, CUnit sourceUnit,
 			Map<String, Object> localStore, List<ABAction> onAddActions, List<ABAction> onRemoveActions,
 			final int castId, boolean leveled, boolean positive) {
-		super(handleId, alias, sourceAbility, sourceUnit, leveled, positive);
-		this.localStore = localStore;
+		super(handleId, alias, localStore, sourceAbility, sourceUnit, leveled, positive);
 		this.onAddActions = onAddActions;
 		this.onRemoveActions = onRemoveActions;
 		this.castId = castId;

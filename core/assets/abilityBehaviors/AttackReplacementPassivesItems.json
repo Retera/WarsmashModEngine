@@ -286,7 +286,7 @@
 					"value": "_orbEff"
 				},
 				"valueToStore": {
-					"type": "getLastCreatedSpellEffect"
+					"type": "getLastCreatedFX"
 				}
 			},{
 				"type": "addNonStackingStatBuff",

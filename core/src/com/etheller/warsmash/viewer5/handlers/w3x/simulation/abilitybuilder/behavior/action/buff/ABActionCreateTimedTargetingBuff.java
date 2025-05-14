@@ -12,6 +12,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.beha
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.idcallbacks.ABIDCallback;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.stringcallbacks.ABStringCallback;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.buff.ABTimedTargetingBuff;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABCallback;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABLocalStoreKeys;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABSingleAction;
 
@@ -23,17 +24,23 @@ public class ABActionCreateTimedTargetingBuff implements ABSingleAction {
 	private ABBooleanCallback stacks;
 
 	private List<ABStringCallback> uniqueFlags;
+	private Map<String, ABCallback> uniqueValues;
 
 	@Override
 	public void runAction(final CSimulation game, final CUnit caster, final Map<String, Object> localStore,
 			final int castId) {
 		final ABTimedTargetingBuff ability = new ABTimedTargetingBuff(game.getHandleIdAllocator().createId(),
-				this.buffId.callback(game, caster, localStore, castId),
+				this.buffId.callback(game, caster, localStore, castId), localStore,
 				(CAbility) localStore.get(ABLocalStoreKeys.ABILITY), caster,
 				this.duration.callback(game, caster, localStore, castId));
 		if (uniqueFlags != null) {
 			for (ABStringCallback flag : uniqueFlags) {
 				ability.addUniqueFlag(flag.callback(game, caster, localStore, castId));
+			}
+		}
+		if (uniqueValues != null) {
+			for (String key : uniqueValues.keySet()) {
+				ability.addUniqueValue(uniqueValues.get(key).callback(game, caster, localStore, castId), key);
 			}
 		}
 		boolean isStacks = false;

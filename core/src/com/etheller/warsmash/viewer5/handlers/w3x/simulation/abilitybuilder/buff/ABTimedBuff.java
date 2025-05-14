@@ -1,10 +1,7 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.buff;
 
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-
 import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
@@ -13,11 +10,12 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABLocalStoreKeys;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CEffectType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.unit.NonStackingFx;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.unit.NonStackingStatBuff;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.unit.StateModBuff;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.SimulationRenderComponent;
 
 public class ABTimedBuff extends ABGenericTimedBuff {
 
-	protected Map<String, Object> localStore;
 	private List<ABAction> onAddActions;
 	private List<ABAction> onRemoveActions;
 	private List<ABAction> onExpireActions;
@@ -29,55 +27,30 @@ public class ABTimedBuff extends ABGenericTimedBuff {
 
 	protected int castId = 0;
 
-	public ABTimedBuff(int handleId, War3ID alias, CAbility sourceAbility, CUnit sourceUnit, float duration, boolean showTimedLifeBar,
-			Map<String, Object> localStore, List<ABAction> onAddActions, List<ABAction> onRemoveActions,
-			List<ABAction> onExpireActions, boolean showIcon, final int castId, final boolean leveled,
-			final boolean positive, final boolean dispellable) {
-		this(handleId, alias, sourceAbility, sourceUnit, duration, showTimedLifeBar, localStore, onAddActions, onRemoveActions, onExpireActions,
-				castId, leveled, positive, dispellable);
+	private List<StateModBuff> stateMods = null;
+	private List<NonStackingStatBuff> statBuffs = null;
+
+	public ABTimedBuff(int handleId, War3ID alias, Map<String, Object> localStore, CAbility sourceAbility,
+			CUnit sourceUnit, float duration, boolean showTimedLifeBar, List<ABAction> onAddActions,
+			List<ABAction> onRemoveActions, List<ABAction> onExpireActions, boolean showIcon, final int castId,
+			final boolean leveled, final boolean positive, final boolean dispellable) {
+		this(handleId, alias, localStore, sourceAbility, sourceUnit, duration, showTimedLifeBar, onAddActions,
+				onRemoveActions, onExpireActions, castId, leveled, positive, dispellable);
 		this.setIconShowing(showIcon);
 	}
 
-	public ABTimedBuff(int handleId, War3ID alias, CAbility sourceAbility, CUnit sourceUnit, float duration, boolean showTimedLifeBar,
-			Map<String, Object> localStore, List<ABAction> onAddActions, List<ABAction> onRemoveActions,
-			List<ABAction> onExpireActions, final int castId, final boolean leveled, final boolean positive,
-			final boolean dispellable) {
-		super(handleId, alias, sourceAbility, sourceUnit, duration, showTimedLifeBar, leveled, positive, dispellable);
-		this.localStore = localStore;
+	public ABTimedBuff(int handleId, War3ID alias, Map<String, Object> localStore, CAbility sourceAbility,
+			CUnit sourceUnit, float duration, boolean showTimedLifeBar, List<ABAction> onAddActions,
+			List<ABAction> onRemoveActions, List<ABAction> onExpireActions, final int castId, final boolean leveled,
+			final boolean positive, final boolean dispellable) {
+		super(handleId, alias, localStore, sourceAbility, sourceUnit, duration, showTimedLifeBar, leveled, positive,
+				dispellable);
 		this.onAddActions = onAddActions;
 		this.onRemoveActions = onRemoveActions;
 		this.onExpireActions = onExpireActions;
 		this.castId = castId;
-		
-		this.setLevel(null, null, (int) localStore.getOrDefault(ABLocalStoreKeys.CURRENTLEVEL, 1));
-	}
-	
-	@SuppressWarnings("unchecked")
-	@Override
-	public <T> T getUniqueValue(String key, Class<T> cls) {
-		Object o = this.localStore.get(ABLocalStoreKeys.combineUniqueValueKey(key, this.getHandleId()));
-		if (o != null && o.getClass() == cls) {
-			return (T)o;
-		}
-		return null;
-	}
-	
-	public void addUniqueValue(Object item, String key) {
-		this.localStore.put(ABLocalStoreKeys.combineUniqueValueKey(key, this.getHandleId()), item);
-	}
-	
-	public void removeUniqueValue(String key) {
-		this.localStore.remove(ABLocalStoreKeys.combineUniqueValueKey(key, this.getHandleId()));
-	}
 
-	public void cleanUpUniqueValues() {
-		final Set<String> keySet = new HashSet<>(localStore.keySet());
-		String search = ABLocalStoreKeys.combineUniqueValueKey("", this.getHandleId());
-		for (final String key : keySet) {
-			if (key.contains(search)) {
-				localStore.remove(key);
-			}
-		}
+		this.setLevel(null, null, (int) localStore.getOrDefault(ABLocalStoreKeys.CURRENTLEVEL, 1));
 	}
 
 	public void setArtType(CEffectType artType) {
@@ -95,6 +68,16 @@ public class ABTimedBuff extends ABGenericTimedBuff {
 			}
 			this.sfx = game.unitSoundEffectEvent(unit, getAlias());
 			this.lsfx = game.unitLoopSoundEffectEvent(unit, getAlias());
+		}
+		if (this.statBuffs != null) {
+			for (NonStackingStatBuff buff : this.statBuffs) {
+				unit.addNonStackingStatBuff(game, buff);
+			}
+		}
+		if (this.stateMods != null) {
+			for (StateModBuff mod : this.stateMods) {
+				unit.addStateModBuff(mod);
+			}
 		}
 		if (onAddActions != null) {
 			localStore.put(ABLocalStoreKeys.BUFF, this);
@@ -123,6 +106,16 @@ public class ABTimedBuff extends ABGenericTimedBuff {
 			}
 			localStore.remove(ABLocalStoreKeys.BUFF);
 		}
+		if (this.statBuffs != null) {
+			for (NonStackingStatBuff buff : this.statBuffs) {
+				unit.removeNonStackingStatBuff(game, buff);
+			}
+		}
+		if (this.stateMods != null) {
+			for (StateModBuff mod : this.stateMods) {
+				unit.removeStateModBuff(mod);
+			}
+		}
 	}
 
 	@Override
@@ -134,6 +127,14 @@ public class ABTimedBuff extends ABGenericTimedBuff {
 			}
 			localStore.remove(ABLocalStoreKeys.BUFF);
 		}
+	}
+
+	public void setStateMods(List<StateModBuff> stateMods) {
+		this.stateMods = stateMods;
+	}
+
+	public void setStatBuffs(List<NonStackingStatBuff> statBuffs) {
+		this.statBuffs = statBuffs;
 	}
 
 }

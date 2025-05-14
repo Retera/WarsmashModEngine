@@ -11,13 +11,13 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.C
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.unit.NonStackingFx;
 
 public class ABGenericAuraBuff extends ABBuff {
-	private Map<Integer, NonStackingFx > fx;
-	
+	private Map<Integer, NonStackingFx> fx;
+
 	private CUnit caster;
 
-	public ABGenericAuraBuff(int handleId, War3ID alias, CAbility sourceAbility, CUnit caster, boolean leveled,
-			boolean positive) {
-		super(handleId, alias, alias, sourceAbility, caster);
+	public ABGenericAuraBuff(int handleId, War3ID alias, Map<String, Object> localStore, CAbility sourceAbility,
+			CUnit caster, boolean leveled, boolean positive) {
+		super(handleId, alias, alias, localStore, sourceAbility, caster);
 		this.caster = caster;
 		this.fx = new HashMap<>();
 		this.setHero(caster.isHero());

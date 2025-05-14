@@ -43,7 +43,7 @@ public class ABActionAddStunBuff implements ABSingleAction {
 		if (showIcon != null) {
 			isShowIcon = showIcon.callback(game, caster, localStore, castId);
 		}
-		final ABBuffStun ability = new ABBuffStun(game.getHandleIdAllocator().createId(), alias,
+		final ABBuffStun ability = new ABBuffStun(game.getHandleIdAllocator().createId(), alias, localStore,
 				(CAbility) localStore.get(ABLocalStoreKeys.ABILITY), caster,
 				this.duration.callback(game, caster, localStore, castId), isLeveled);
 		ability.setIconShowing(isShowIcon);

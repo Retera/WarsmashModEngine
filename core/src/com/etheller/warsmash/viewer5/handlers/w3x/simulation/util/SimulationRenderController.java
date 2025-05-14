@@ -30,7 +30,7 @@ public interface SimulationRenderController {
 			CUnitAttackListener attackListener, CUnitAttackSettings settings);
 
 	CAbilityProjectile createProjectile(CSimulation cSimulation, float launchX, float launchY, float launchFacing,
-			float speed, boolean homing, CUnit source, War3ID spellAlias, AbilityTarget target,
+			Float speed, Boolean homing, CUnit source, War3ID spellAlias, AbilityTarget target,
 			CAbilityProjectileListener projectileListener);
 
 	CAbilityProjectile createProjectile(CSimulation cSimulation, float launchX, float launchY, float launchFacing,
@@ -62,6 +62,8 @@ public interface SimulationRenderController {
 
 	SimulationRenderComponentLightning createAbilityLightning(CSimulation simulation, War3ID lightningId, CUnit source,
 			CUnit target, int index, Float duration);
+
+	SimulationRenderComponent createStaticUberSplat(float x, float y, War3ID id);
 
 	CUnit createUnit(CSimulation simulation, final War3ID typeId, final int playerIndex, final float x, final float y,
 			final float facing);
@@ -163,6 +165,18 @@ public interface SimulationRenderController {
 
 	float[] getUnitVertexColor(CUnit unit);
 
+	int[] getTerrainModBufferSize(float x, float y, float width, float height);
+
+	int[] getTerrainModBufferSize(float centerX, float centerY, float radius);
+
+	void adjustTerrain(float x, float y, float i);
+
+	void adjustTerrain(int[] rect, float[] modBuffer);
+
+	float getTerrainSpaceX(float x);
+
+	float getTerrainSpaceY(float y);
+	
 	int getTerrainHeight(float x, float y);
 
 	boolean isTerrainRomp(float x, float y);

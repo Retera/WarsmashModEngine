@@ -59,7 +59,10 @@ public class ABLocalStoreKeys {
 	public static final String COMPUNIT2 = "_compUnit2";
 	
 	// Item Names
-	public static final Object LASTCREATEDITEM = "_lastCreatedItem";
+	public static final String LASTCREATEDITEM = "_lastCreatedItem";
+	
+	// Destructable Names
+	public static final String LASTCREATEDDESTRUCTABLE = "_lastCreatedDest";
 	
 	// Ability Names
 	public static final String LASTCREATEDABILITY = "_lastCreatedAbility";

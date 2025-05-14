@@ -1,13 +1,16 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.buff;
 
+import java.util.Map;
+
 import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbility;
 
 public class ABTargetingBuff extends ABBuff {
-	public ABTargetingBuff(int handleId, War3ID alias, CAbility sourceAbility, CUnit sourceUnit) {
-		super(handleId, alias, alias, sourceAbility, sourceUnit);
+	public ABTargetingBuff(int handleId, War3ID alias, Map<String, Object> localStore, CAbility sourceAbility,
+			CUnit sourceUnit) {
+		super(handleId, alias, alias, localStore, sourceAbility, sourceUnit);
 		this.setIconShowing(false);
 	}
 

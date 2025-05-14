@@ -317,7 +317,7 @@
 								},{
 									"type": "removeEffect",
 									"effect": {
-										"type": "getLastCreatedSpellEffect"
+										"type": "getLastCreatedFX"
 									}
 								}, {
 									"type": "finishReincarnating"
@@ -445,7 +445,7 @@
 								},{
 									"type": "removeEffect",
 									"effect": {
-										"type": "getLastCreatedSpellEffect"
+										"type": "getLastCreatedFX"
 									}
 								}, {
 									"type": "finishReincarnating"
@@ -952,7 +952,7 @@
 		"onRemoveAbility": [{
 				"type": "removeEffect",
 				"effect": {
-					"type": "getLastCreatedSpellEffect"
+					"type": "getLastCreatedFX"
 				}
 			},{
 				"type": "removeBuff",
@@ -1558,7 +1558,7 @@
 			"undetect": [{
 					"type": "removeEffect",
 					"effect": {
-						"type": "getLastCreatedSpellEffect"
+						"type": "getLastCreatedFX"
 					}
 				},{
 					"type": "removeStateModBuff",
@@ -1685,7 +1685,7 @@
 							"value": "false"
 						},
 						"valueToStore": {
-							"type": "getLastCreatedSpellEffect"
+							"type": "getLastCreatedFX"
 						}
 				}]
 			},{
@@ -1905,7 +1905,7 @@
 										"value": "false"
 									},
 									"valueToStore": {
-										"type": "getLastCreatedSpellEffect"
+										"type": "getLastCreatedFX"
 									}
 								},{
 									"type": "break"

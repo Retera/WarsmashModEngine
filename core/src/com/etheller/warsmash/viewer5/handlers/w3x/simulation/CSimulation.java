@@ -31,6 +31,7 @@ import com.etheller.warsmash.util.WarsmashConstants;
 import com.etheller.warsmash.viewer5.handlers.w3x.AnimationTokens.PrimaryTag;
 import com.etheller.warsmash.viewer5.handlers.w3x.SequenceUtils;
 import com.etheller.warsmash.viewer5.handlers.w3x.TextTag;
+import com.etheller.warsmash.viewer5.handlers.w3x.War3MapViewer;
 import com.etheller.warsmash.viewer5.handlers.w3x.environment.PathingGrid;
 import com.etheller.warsmash.viewer5.handlers.w3x.environment.PathingGrid.RemovablePathingMapInstance;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbility;
@@ -404,7 +405,7 @@ public class CSimulation implements CPlayerAPI, CFogMaskSettings {
 	}
 
 	public CAbilityProjectile createProjectile(final CUnit source, final War3ID spellAlias, final float launchX,
-			final float launchY, final float launchFacing, final float speed, final boolean homing,
+			final float launchY, final float launchFacing, final Float speed, final Boolean homing,
 			final AbilityTarget target, final CAbilityProjectileListener projectileListener) {
 		final CAbilityProjectile projectile = this.simulationRenderController.createProjectile(this, launchX, launchY,
 				launchFacing, speed, homing, source, spellAlias, target, projectileListener);
@@ -424,7 +425,7 @@ public class CSimulation implements CPlayerAPI, CFogMaskSettings {
 	}
 
 	public CJassProjectile createProjectile(final CUnit source, final War3ID spellAlias, final float launchX,
-			final float launchY, final float launchFacing, final float speed, final boolean homing,
+			final float launchY, final float launchFacing, final Float speed, final Boolean homing,
 			final AbilityTarget target) {
 		final CJassProjectile projectile = this.simulationRenderController.createJassProjectile(this, launchX, launchY,
 				launchFacing, speed, homing, source, spellAlias, target);
@@ -484,6 +485,10 @@ public class CSimulation implements CPlayerAPI, CFogMaskSettings {
 			final int lightningIndex, final CUnit target, final Float duration) {
 		return this.simulationRenderController.createAbilityLightning(this, lightningId, source, target, lightningIndex,
 				duration);
+	}
+
+	public SimulationRenderComponent createStaticUberSplat(float x, float y, War3ID id) {
+		return this.simulationRenderController.createStaticUberSplat(x, y, id);
 	}
 
 	public void createInstantAttackEffect(final CUnit source, final CUnitAttackInstant attack, final CWidget target) {
@@ -1159,6 +1164,30 @@ public class CSimulation implements CPlayerAPI, CFogMaskSettings {
 
 	public GlobalScope getGlobalScope() {
 		return this.globalScope;
+	}
+
+	public int[] getTerrainModBufferSize(float x, float y, float width, float height) {
+		return this.simulationRenderController.getTerrainModBufferSize(x, y, width, height);
+	}
+
+	public int[] getTerrainModBufferSize(float centerX, float centerY, float radius) {
+		return this.simulationRenderController.getTerrainModBufferSize(centerX, centerY, radius);
+	}
+
+	public void adjustTerrain(int[] rect, float[] modBuffer) {
+		this.simulationRenderController.adjustTerrain(rect, modBuffer);
+	}
+
+	public void adjustTerrain(float x, float y, float i) {
+		this.simulationRenderController.adjustTerrain(x, y, i);
+	}
+
+	public float getTerrainSpaceX(final float x) {
+		return this.simulationRenderController.getTerrainSpaceX(x);
+	}
+
+	public float getTerrainSpaceY(final float y) {
+		return this.simulationRenderController.getTerrainSpaceY(y);
 	}
 
 	public int getTerrainHeight(final float x, final float y) {

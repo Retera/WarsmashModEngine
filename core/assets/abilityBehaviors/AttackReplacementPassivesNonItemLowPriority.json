@@ -2357,7 +2357,7 @@
 						"value": "_gEff"
 					},
 					"valueToStore": {
-						"type": "getLastCreatedSpellEffect"
+						"type": "getLastCreatedFX"
 					}
 				},{
 					"type": "storeValueLocally",

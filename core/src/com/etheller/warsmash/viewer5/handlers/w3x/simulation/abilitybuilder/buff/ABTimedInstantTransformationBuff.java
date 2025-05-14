@@ -15,7 +15,6 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.JassGameEve
 
 public class ABTimedInstantTransformationBuff extends ABGenericTimedBuff {
 
-	private Map<String, Object> localStore;
 	private OnTransformationActions actions;
 	private AbilityBuilderPassiveAbility abil;
 	private CUnitType targetType;
@@ -25,13 +24,12 @@ public class ABTimedInstantTransformationBuff extends ABGenericTimedBuff {
 	private float dur;
 	private float transTime;
 
-	public ABTimedInstantTransformationBuff(int handleId, CAbility sourceAbility, CUnit sourceUnit, Map<String, Object> localStore,
-			OnTransformationActions actions, War3ID alias, float duration, AbilityBuilderPassiveAbility ability,
-			CUnitType newType, final boolean keepRatios, boolean addAlternateTagAfter, boolean permanent,
-			float transformationDuration) {
-		super(handleId, alias, sourceAbility, sourceUnit, duration, true, false, true, false);
+	public ABTimedInstantTransformationBuff(int handleId, Map<String, Object> localStore, CAbility sourceAbility,
+			CUnit sourceUnit, OnTransformationActions actions, War3ID alias, float duration,
+			AbilityBuilderPassiveAbility ability, CUnitType newType, final boolean keepRatios,
+			boolean addAlternateTagAfter, boolean permanent, float transformationDuration) {
+		super(handleId, alias, localStore, sourceAbility, sourceUnit, duration, true, false, true, false);
 		this.setIconShowing(false);
-		this.localStore = localStore;
 		this.actions = actions;
 		this.abil = ability;
 		this.targetType = newType;
@@ -57,13 +55,13 @@ public class ABTimedInstantTransformationBuff extends ABGenericTimedBuff {
 			unit.remove(game, this);
 		}
 	}
-	
+
 	@Override
 	protected void onBuffExpire(CSimulation game, CUnit unit) {
 		if (dur > 0) {
 			TransformationHandler.playMorphAnimation(unit, addAlternateTagAfter);
-			new DelayInstantTransformationTimer(game, sourceUnit, localStore, unit, actions, addAlternateTagAfter, transTime, null,
-					targetType, keepRatios, abil, null, transTime, 0).start(game);
+			new DelayInstantTransformationTimer(game, sourceUnit, localStore, unit, actions, addAlternateTagAfter,
+					transTime, null, targetType, keepRatios, abil, null, transTime, 0).start(game);
 		} else {
 			TransformationHandler.instantTransformation(game, localStore, unit, targetType, keepRatios, actions, abil,
 					addAlternateTagAfter, perm, true);

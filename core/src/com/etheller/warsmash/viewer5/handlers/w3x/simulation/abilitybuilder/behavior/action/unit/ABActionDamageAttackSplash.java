@@ -174,6 +174,11 @@ public class ABActionDamageAttackSplash implements ABAction {
 						: baseDamage;
 				for (CUnit hit : fullhits) {
 					localStore.put(ABLocalStoreKeys.ENUMUNIT + castId, hit);
+					if (extraActions != null) {
+						for (ABAction action : extraActions) {
+							action.runAction(game, caster, localStore, castId);
+						}
+					}
 					if (unitSpecificDamageMod != null) {
 						hit.damage(game, ftheSource, flags, ftheAttackType, ftheDamageType,
 								CWeaponSoundTypeJass.WHOKNOWS.name(),
@@ -182,14 +187,14 @@ public class ABActionDamageAttackSplash implements ABAction {
 						hit.damage(game, ftheSource, flags, ftheAttackType, ftheDamageType,
 								CWeaponSoundTypeJass.WHOKNOWS.name(), damPerTar);
 					}
+				}
+				for (CUnit hit : medhits) {
+					localStore.put(ABLocalStoreKeys.ENUMUNIT + castId, hit);
 					if (extraActions != null) {
 						for (ABAction action : extraActions) {
 							action.runAction(game, caster, localStore, castId);
 						}
 					}
-				}
-				for (CUnit hit : medhits) {
-					localStore.put(ABLocalStoreKeys.ENUMUNIT + castId, hit);
 					if (unitSpecificDamageMod != null) {
 						hit.damage(game, ftheSource, flags, ftheAttackType, ftheDamageType,
 								CWeaponSoundTypeJass.WHOKNOWS.name(),
@@ -198,14 +203,14 @@ public class ABActionDamageAttackSplash implements ABAction {
 						hit.damage(game, ftheSource, flags, ftheAttackType, ftheDamageType,
 								CWeaponSoundTypeJass.WHOKNOWS.name(), damPerTar * medDam);
 					}
+				}
+				for (CUnit hit : smallhits) {
+					localStore.put(ABLocalStoreKeys.ENUMUNIT + castId, hit);
 					if (extraActions != null) {
 						for (ABAction action : extraActions) {
 							action.runAction(game, caster, localStore, castId);
 						}
 					}
-				}
-				for (CUnit hit : smallhits) {
-					localStore.put(ABLocalStoreKeys.ENUMUNIT + castId, hit);
 					if (unitSpecificDamageMod != null) {
 						hit.damage(game, ftheSource, flags, ftheAttackType, ftheDamageType,
 								CWeaponSoundTypeJass.WHOKNOWS.name(), damPerTar * smallDam
@@ -213,11 +218,6 @@ public class ABActionDamageAttackSplash implements ABAction {
 					} else {
 						hit.damage(game, ftheSource, flags, ftheAttackType, ftheDamageType,
 								CWeaponSoundTypeJass.WHOKNOWS.name(), damPerTar * smallDam);
-					}
-					if (extraActions != null) {
-						for (ABAction action : extraActions) {
-							action.runAction(game, caster, localStore, castId);
-						}
 					}
 				}
 				localStore.remove(ABLocalStoreKeys.ENUMUNIT + castId);
@@ -230,6 +230,11 @@ public class ABActionDamageAttackSplash implements ABAction {
 								localStore.put(ABLocalStoreKeys.ENUMUNIT + castId, enumUnit);
 								if (validTarget == null || validTarget.callback(game, caster, localStore, castId)) {
 									if (enumUnit.canReach(loc, fullRad)) {
+										if (extraActions != null) {
+											for (ABAction action : extraActions) {
+												action.runAction(game, caster, localStore, castId);
+											}
+										}
 										if (unitSpecificDamageMod != null) {
 											enumUnit.damage(game, ftheSource, flags, ftheAttackType, ftheDamageType,
 													CWeaponSoundTypeJass.WHOKNOWS.name(),
@@ -239,12 +244,12 @@ public class ABActionDamageAttackSplash implements ABAction {
 											enumUnit.damage(game, ftheSource, flags, ftheAttackType, ftheDamageType,
 													CWeaponSoundTypeJass.WHOKNOWS.name(), baseDamage);
 										}
+									} else if (enumUnit.canReach(loc, medRad)) {
 										if (extraActions != null) {
 											for (ABAction action : extraActions) {
 												action.runAction(game, caster, localStore, castId);
 											}
 										}
-									} else if (enumUnit.canReach(loc, medRad)) {
 										if (unitSpecificDamageMod != null) {
 											enumUnit.damage(game, ftheSource, flags, ftheAttackType, ftheDamageType,
 													CWeaponSoundTypeJass.WHOKNOWS.name(),
@@ -254,12 +259,12 @@ public class ABActionDamageAttackSplash implements ABAction {
 											enumUnit.damage(game, ftheSource, flags, ftheAttackType, ftheDamageType,
 													CWeaponSoundTypeJass.WHOKNOWS.name(), baseDamage * medDam);
 										}
+									} else if (enumUnit.canReach(loc, smallRad)) {
 										if (extraActions != null) {
 											for (ABAction action : extraActions) {
 												action.runAction(game, caster, localStore, castId);
 											}
 										}
-									} else if (enumUnit.canReach(loc, smallRad)) {
 										if (unitSpecificDamageMod != null) {
 											enumUnit.damage(game, ftheSource, flags, ftheAttackType, ftheDamageType,
 													CWeaponSoundTypeJass.WHOKNOWS.name(),
@@ -268,11 +273,6 @@ public class ABActionDamageAttackSplash implements ABAction {
 										} else {
 											enumUnit.damage(game, ftheSource, flags, ftheAttackType, ftheDamageType,
 													CWeaponSoundTypeJass.WHOKNOWS.name(), baseDamage * smallDam);
-										}
-										if (extraActions != null) {
-											for (ABAction action : extraActions) {
-												action.runAction(game, caster, localStore, castId);
-											}
 										}
 									}
 								}

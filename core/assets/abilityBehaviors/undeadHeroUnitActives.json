@@ -224,7 +224,7 @@
 			}]
 		}]
 	},{
-		"ids": [{"id":"AUcs", "castId": "carrionswarm"},{"id":"AOsh", "castId": "shockwave"}],
+		"ids": [{"id":"AUcs", "castId": "carrionswarm"}],
 		"type": "NORMAL_POINTTARGET",
 		"displayFields": {
 			"hideAreaCursor": {
@@ -439,7 +439,6 @@
 					"elseActions": []
 				}]
 		}]
-		
 	},{
 		"ids": [{"id":"AUim", "castId": "impale"}],
 		"type": "NORMAL_POINTTARGET",

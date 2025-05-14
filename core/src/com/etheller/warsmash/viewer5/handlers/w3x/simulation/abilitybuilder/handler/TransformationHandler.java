@@ -208,7 +208,7 @@ public class TransformationHandler {
 			final float altitudeAdjustmentDelay, final float landingDelay, final float altitudeAdjustmentDuration) {
 		if (addAlternateTagAfter && (duration > 0)) {
 			unit.add(game,
-					new ABTimedTransformationBuff(game.getHandleIdAllocator().createId(), ability, sourceUnit, localStore, actions,
+					new ABTimedTransformationBuff(game.getHandleIdAllocator().createId(), localStore, ability, sourceUnit, actions,
 							buffId == null ? ability.getAlias() : buffId, duration, ability, newType, keepRatios,
 							!addAlternateTagAfter, permanent, duration, transformationTime, landingDelay,
 							altitudeAdjustmentDelay, altitudeAdjustmentDuration, immediateLanding, immediateTakeoff));

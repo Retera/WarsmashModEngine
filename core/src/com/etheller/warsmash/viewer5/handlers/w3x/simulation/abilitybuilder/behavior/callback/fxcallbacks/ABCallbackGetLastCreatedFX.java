@@ -7,7 +7,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABLocalStoreKeys;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.SimulationRenderComponent;
 
-public class ABCallbackGetLastCreatedSpellEffect extends ABFXCallback {
+public class ABCallbackGetLastCreatedFX extends ABFXCallback {
 
 	@Override
 	public SimulationRenderComponent callback(CSimulation game, CUnit caster, Map<String, Object> localStore, final int castId) {

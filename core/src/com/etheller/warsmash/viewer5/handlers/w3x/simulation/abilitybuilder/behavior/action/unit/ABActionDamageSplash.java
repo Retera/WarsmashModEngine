@@ -171,53 +171,56 @@ public class ABActionDamageSplash implements ABAction {
 				for (float c : counts) {
 					count += c;
 				}
-				float damPerTar = baseDamage * count > theMaxDamage ? theMaxDamage
-						/ (fullhits.size() + medRatio * medhits.size() + smallRatio * smallhits.size()) : baseDamage;
+				float damPerTar = baseDamage * count > theMaxDamage
+						? theMaxDamage / (fullhits.size() + medRatio * medhits.size() + smallRatio * smallhits.size())
+						: baseDamage;
 
 				for (CUnit hit : fullhits) {
 					localStore.put(ABLocalStoreKeys.ENUMUNIT + castId, hit);
+					if (extraActions != null) {
+						for (ABAction action : extraActions) {
+							action.runAction(game, caster, localStore, castId);
+						}
+					}
 					if (unitSpecificDamageMod != null) {
-					hit.damage(game, ftheSource, flags, ftheAttackType, ftheDamageType,
-							CWeaponSoundTypeJass.WHOKNOWS.name(),
-							damPerTar * unitSpecificDamageMod.callback(game, caster, localStore, castId));
+						hit.damage(game, ftheSource, flags, ftheAttackType, ftheDamageType,
+								CWeaponSoundTypeJass.WHOKNOWS.name(),
+								damPerTar * unitSpecificDamageMod.callback(game, caster, localStore, castId));
 					} else {
 						hit.damage(game, ftheSource, flags, ftheAttackType, ftheDamageType,
 								CWeaponSoundTypeJass.WHOKNOWS.name(), damPerTar);
 					}
+				}
+				for (CUnit hit : medhits) {
+					localStore.put(ABLocalStoreKeys.ENUMUNIT + castId, hit);
 					if (extraActions != null) {
 						for (ABAction action : extraActions) {
 							action.runAction(game, caster, localStore, castId);
 						}
 					}
-				}
-				for (CUnit hit : medhits) {
-					localStore.put(ABLocalStoreKeys.ENUMUNIT + castId, hit);
 					if (unitSpecificDamageMod != null) {
-					hit.damage(game, ftheSource, flags, ftheAttackType, ftheDamageType,
-							CWeaponSoundTypeJass.WHOKNOWS.name(), damPerTar * medRatio * unitSpecificDamageMod.callback(game, caster, localStore, castId));
+						hit.damage(game, ftheSource, flags, ftheAttackType, ftheDamageType,
+								CWeaponSoundTypeJass.WHOKNOWS.name(), damPerTar * medRatio
+										* unitSpecificDamageMod.callback(game, caster, localStore, castId));
 					} else {
 						hit.damage(game, ftheSource, flags, ftheAttackType, ftheDamageType,
 								CWeaponSoundTypeJass.WHOKNOWS.name(), damPerTar * medRatio);
 					}
-					if (extraActions != null) {
-						for (ABAction action : extraActions) {
-							action.runAction(game, caster, localStore, castId);
-						}
-					}
 				}
 				for (CUnit hit : smallhits) {
 					localStore.put(ABLocalStoreKeys.ENUMUNIT + castId, hit);
-					if (unitSpecificDamageMod != null) {
-					hit.damage(game, ftheSource, flags, ftheAttackType, ftheDamageType,
-							CWeaponSoundTypeJass.WHOKNOWS.name(), damPerTar * smallRatio * unitSpecificDamageMod.callback(game, caster, localStore, castId));
-					} else {
-						hit.damage(game, ftheSource, flags, ftheAttackType, ftheDamageType,
-								CWeaponSoundTypeJass.WHOKNOWS.name(), damPerTar * smallRatio);
-					}
 					if (extraActions != null) {
 						for (ABAction action : extraActions) {
 							action.runAction(game, caster, localStore, castId);
 						}
+					}
+					if (unitSpecificDamageMod != null) {
+						hit.damage(game, ftheSource, flags, ftheAttackType, ftheDamageType,
+								CWeaponSoundTypeJass.WHOKNOWS.name(), damPerTar * smallRatio
+										* unitSpecificDamageMod.callback(game, caster, localStore, castId));
+					} else {
+						hit.damage(game, ftheSource, flags, ftheAttackType, ftheDamageType,
+								CWeaponSoundTypeJass.WHOKNOWS.name(), damPerTar * smallRatio);
 					}
 				}
 				localStore.remove(ABLocalStoreKeys.ENUMUNIT + castId);
@@ -230,6 +233,11 @@ public class ABActionDamageSplash implements ABAction {
 								localStore.put(ABLocalStoreKeys.ENUMUNIT + castId, enumUnit);
 								if (validTarget == null || validTarget.callback(game, caster, localStore, castId)) {
 									if (enumUnit.canReach(loc, fullRad)) {
+										if (extraActions != null) {
+											for (ABAction action : extraActions) {
+												action.runAction(game, caster, localStore, castId);
+											}
+										}
 										if (unitSpecificDamageMod != null) {
 											enumUnit.damage(game, ftheSource, flags, ftheAttackType, ftheDamageType,
 													CWeaponSoundTypeJass.WHOKNOWS.name(),
@@ -240,12 +248,12 @@ public class ABActionDamageSplash implements ABAction {
 											enumUnit.damage(game, ftheSource, flags, ftheAttackType, ftheDamageType,
 													CWeaponSoundTypeJass.WHOKNOWS.name(), baseDamage);
 										}
+									} else if (enumUnit.canReach(loc, medRad)) {
 										if (extraActions != null) {
 											for (ABAction action : extraActions) {
 												action.runAction(game, caster, localStore, castId);
 											}
 										}
-									} else if (enumUnit.canReach(loc, medRad)) {
 										if (unitSpecificDamageMod != null) {
 											enumUnit.damage(game, ftheSource, flags, ftheAttackType, ftheDamageType,
 													CWeaponSoundTypeJass.WHOKNOWS.name(), medDam * unitSpecificDamageMod
@@ -254,12 +262,12 @@ public class ABActionDamageSplash implements ABAction {
 											enumUnit.damage(game, ftheSource, flags, ftheAttackType, ftheDamageType,
 													CWeaponSoundTypeJass.WHOKNOWS.name(), medDam);
 										}
+									} else if (enumUnit.canReach(loc, smallRad)) {
 										if (extraActions != null) {
 											for (ABAction action : extraActions) {
 												action.runAction(game, caster, localStore, castId);
 											}
 										}
-									} else if (enumUnit.canReach(loc, smallRad)) {
 										if (unitSpecificDamageMod != null) {
 											enumUnit.damage(game, ftheSource, flags, ftheAttackType, ftheDamageType,
 													CWeaponSoundTypeJass.WHOKNOWS.name(),
@@ -268,11 +276,6 @@ public class ABActionDamageSplash implements ABAction {
 										} else {
 											enumUnit.damage(game, ftheSource, flags, ftheAttackType, ftheDamageType,
 													CWeaponSoundTypeJass.WHOKNOWS.name(), smallDam);
-										}
-										if (extraActions != null) {
-											for (ABAction action : extraActions) {
-												action.runAction(game, caster, localStore, castId);
-											}
 										}
 									}
 								}

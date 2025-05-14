@@ -4,12 +4,10 @@ import java.util.List;
 import java.util.Map;
 
 import com.etheller.warsmash.parsers.jass.JassTextGenerator;
-import com.etheller.warsmash.units.GameObject;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityPointTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTarget;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.definitions.impl.AbilityFields;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.booleancallbacks.ABBooleanCallback;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.floatcallbacks.ABFloatCallback;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.idcallbacks.ABIDCallback;
@@ -52,8 +50,8 @@ public class ABActionCreateLocationTargetedPseudoProjectile implements ABSingleA
 	@Override
 	public void runAction(final CSimulation game, final CUnit caster, final Map<String, Object> localStore,
 			final int castId) {
-		float theSpeed = 0;
-		boolean isHoming = true;
+		Float theSpeed = null;
+		Boolean isHoming = null;
 		int theMaxHits = 0;
 		int theHitsPerTarget = 1;
 		float theStartingRadius = 0;
@@ -86,13 +84,11 @@ public class ABActionCreateLocationTargetedPseudoProjectile implements ABSingleA
 			final float rad = this.radius.callback(game, caster, localStore, castId);
 			theStartingRadius = rad;
 			theEndingRadius = rad;
-		}
-		else {
+		} else {
 			if (this.endingRadius != null) {
 				theStartingRadius = this.startingRadius.callback(game, caster, localStore, castId);
 				theEndingRadius = this.endingRadius.callback(game, caster, localStore, castId);
-			}
-			else {
+			} else {
 				final float rad = this.startingRadius.callback(game, caster, localStore, castId);
 				theStartingRadius = rad;
 				theEndingRadius = rad;
@@ -108,19 +104,11 @@ public class ABActionCreateLocationTargetedPseudoProjectile implements ABSingleA
 			isProvideCounts = this.provideCounts.callback(game, caster, localStore, castId);
 		}
 
-		final GameObject editorData = (GameObject) localStore.get(ABLocalStoreKeys.ABILITYEDITORDATA);
-
 		if (this.speed != null) {
 			theSpeed = this.speed.callback(game, caster, localStore, castId);
 		}
-		else {
-			theSpeed = editorData.getFieldAsFloat(AbilityFields.PROJECTILE_SPEED, 0);
-		}
 		if (this.homing != null) {
 			isHoming = this.homing.callback(game, caster, localStore, castId);
-		}
-		else {
-			isHoming = editorData.getFieldAsBoolean(AbilityFields.PROJECTILE_HOMING_ENABLED, 0);
 		}
 
 		final AbilityPointTarget theTarget = this.target.callback(game, caster, localStore, castId);
@@ -130,9 +118,10 @@ public class ABActionCreateLocationTargetedPseudoProjectile implements ABSingleA
 
 		final CProjectile proj = game.createPseudoProjectile(theSource,
 				this.id.callback(game, caster, localStore, castId), theEffectType, theEffectArtIndex,
-				sourceLocation.getX(), sourceLocation.getY(), (float) theSource.angleTo(theTarget), theSpeed,
-				theCollisionInterval, theArtSkip, isHoming, theTarget, theMaxHits, theHitsPerTarget, theStartingRadius,
-				theEndingRadius, listener, isProvideCounts);
+				sourceLocation.getX(), sourceLocation.getY(),
+				(float) AbilityTarget.angleBetween(sourceLocation, theTarget), theSpeed, theCollisionInterval,
+				theArtSkip, isHoming, theTarget, theMaxHits, theHitsPerTarget, theStartingRadius, theEndingRadius,
+				listener, isProvideCounts);
 
 		localStore.put(ABLocalStoreKeys.LASTCREATEDPROJECTILE + castId, proj);
 	}
@@ -162,8 +151,7 @@ public class ABActionCreateLocationTargetedPseudoProjectile implements ABSingleA
 		String sourceLocExpression;
 		if (this.sourceLoc != null) {
 			sourceLocExpression = this.sourceLoc.generateJassEquivalent(jassTextGenerator);
-		}
-		else {
+		} else {
 			sourceLocExpression = "GetUnitLoc(" + sourceUnitExpression + ")";
 		}
 
@@ -183,13 +171,11 @@ public class ABActionCreateLocationTargetedPseudoProjectile implements ABSingleA
 			final String radiusExpression = this.radius.generateJassEquivalent(jassTextGenerator);
 			startingRadiusExpression = radiusExpression;
 			endingRadiusExpression = radiusExpression;
-		}
-		else {
+		} else {
 			if (this.endingRadius != null) {
 				startingRadiusExpression = this.startingRadius.generateJassEquivalent(jassTextGenerator);
 				endingRadiusExpression = this.endingRadius.generateJassEquivalent(jassTextGenerator);
-			}
-			else {
+			} else {
 				final String radiusExpression = this.startingRadius.generateJassEquivalent(jassTextGenerator);
 				startingRadiusExpression = radiusExpression;
 				endingRadiusExpression = radiusExpression;
@@ -230,12 +216,10 @@ public class ABActionCreateLocationTargetedPseudoProjectile implements ABSingleA
 						+ ", " + collisionIntervalExpression + ", " + artSkipExpression + ", " + provideCountsExpression
 						+ ")";
 
-			}
-			else {
+			} else {
 				throw new UnsupportedOperationException();
 			}
-		}
-		else if (this.homing != null) {
+		} else if (this.homing != null) {
 			throw new UnsupportedOperationException();
 		}
 

@@ -22,7 +22,7 @@ public class ABCallbackArgumentLocation extends ABLocationCallback {
 		if (cbck != null && cbck instanceof ABLocationCallback) {
 			return ((ABLocationCallback) cbck).callback(game, caster, localStore, castId);
 		} else {
-			System.err.println("Trying to run ReuseLocationCallback, but key is missing or callback was the wrong type: " + keyS);
+			System.err.println("Trying to run ArgumentLocationCallback, but key is missing or callback was the wrong type: " + keyS);
 		}
 		return null;
 	}

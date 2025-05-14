@@ -77,6 +77,7 @@ public class ABTimedBuff extends ABGenericTimedBuff {
 		if (this.stateMods != null) {
 			for (StateModBuff mod : this.stateMods) {
 				unit.addStateModBuff(mod);
+				unit.computeUnitState(game, mod.getBuffType());
 			}
 		}
 		if (onAddActions != null) {
@@ -114,6 +115,7 @@ public class ABTimedBuff extends ABGenericTimedBuff {
 		if (this.stateMods != null) {
 			for (StateModBuff mod : this.stateMods) {
 				unit.removeStateModBuff(mod);
+				unit.computeUnitState(game, mod.getBuffType());
 			}
 		}
 	}

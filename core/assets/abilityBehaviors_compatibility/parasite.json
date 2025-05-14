@@ -218,37 +218,25 @@
 											"type": "rawBoolean",
 											"value": "false"
 										},
-										"onAddActions": [{
-												"type": "addNonStackingStatBuff",
-												"targetUnit": {
-													"type": "getBuffedUnit"
+										"statBuffs": [{
+												"type": "getStoredNonStackingStatBuffByKey",
+												"instanceValue": {
+													"type": "rawBoolean",
+													"value": "false"
 												},
-												"buff": {
-													"type": "getStoredNonStackingStatBuffByKey",
-													"instanceValue": {
-														"type": "rawBoolean",
-														"value": "false"
-													},
-													"key": {
-														"type": "rawString",
-														"value": "mvbuff"
-													}
+												"key": {
+													"type": "rawString",
+													"value": "mvbuff"
 												}
 											},{
-												"type": "addNonStackingStatBuff",
-												"targetUnit": {
-													"type": "getBuffedUnit"
+												"type": "getStoredNonStackingStatBuffByKey",
+												"instanceValue": {
+													"type": "rawBoolean",
+													"value": "false"
 												},
-												"buff": {
-													"type": "getStoredNonStackingStatBuffByKey",
-													"instanceValue": {
-														"type": "rawBoolean",
-														"value": "false"
-													},
-													"key": {
-														"type": "rawString",
-														"value": "asbuff"
-													}
+												"key": {
+													"type": "rawString",
+													"value": "asbuff"
 												}
 										}],
 										"onTickActions": [{
@@ -295,38 +283,6 @@
 												}
 										}],
 										"onRemoveActions": [{
-												"type": "removeNonStackingStatBuff",
-												"targetUnit": {
-													"type": "getBuffedUnit"
-												},
-												"buff": {
-													"type": "getStoredNonStackingStatBuffByKey",
-													"instanceValue": {
-														"type": "rawBoolean",
-														"value": "false"
-													},
-													"key": {
-														"type": "rawString",
-														"value": "mvbuff"
-													}
-												}
-											},{
-												"type": "removeNonStackingStatBuff",
-												"targetUnit": {
-													"type": "getBuffedUnit"
-												},
-												"buff": {
-													"type": "getStoredNonStackingStatBuffByKey",
-													"instanceValue": {
-														"type": "rawBoolean",
-														"value": "false"
-													},
-													"key": {
-														"type": "rawString",
-														"value": "asbuff"
-													}
-												}
-											},{
 												"type": "if",
 												"condition": {
 													"type": "isUnitDead",

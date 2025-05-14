@@ -49,7 +49,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.projectile.C
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.projectile.CCollisionProjectile;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.projectile.CEffect;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.projectile.CJassProjectile;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.projectile.CPsuedoProjectile;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.projectile.CPseudoProjectile;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.config.CBasePlayer;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.config.CPlayerAPI;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.config.War3MapConfig;
@@ -434,7 +434,7 @@ public class CSimulation implements CPlayerAPI, CFogMaskSettings {
 	}
 
 	public CCollisionProjectile createCollisionProjectile(final CUnit source, final War3ID spellAlias,
-			final float launchX, final float launchY, final float launchFacing, final float speed, final boolean homing,
+			final float launchX, final float launchY, final float launchFacing, final Float speed, final Boolean homing,
 			final AbilityTarget target, final int maxHits, final int hitsPerTarget, final float startingRadius,
 			final float finalRadius, final float collisionInterval,
 			final CAbilityCollisionProjectileListener projectileListener, final boolean provideCounts) {
@@ -446,13 +446,13 @@ public class CSimulation implements CPlayerAPI, CFogMaskSettings {
 		return projectile;
 	}
 
-	public CPsuedoProjectile createPseudoProjectile(final CUnit source, final War3ID spellAlias,
+	public CPseudoProjectile createPseudoProjectile(final CUnit source, final War3ID spellAlias,
 			final CEffectType effectType, final int effectArtIndex, final float launchX, final float launchY,
 			final float launchFacing, final float speed, final float projectileStepInterval,
 			final int projectileArtSkip, final boolean homing, final AbilityTarget target, final int maxHits,
 			final int hitsPerTarget, final float startingRadius, final float finalRadius,
 			final CAbilityCollisionProjectileListener projectileListener, final boolean provideCounts) {
-		final CPsuedoProjectile projectile = this.simulationRenderController.createPseudoProjectile(this, launchX,
+		final CPseudoProjectile projectile = this.simulationRenderController.createPseudoProjectile(this, launchX,
 				launchY, launchFacing, speed, projectileStepInterval, projectileArtSkip, homing, source, spellAlias,
 				effectType, effectArtIndex, target, maxHits, hitsPerTarget, startingRadius, finalRadius,
 				projectileListener, provideCounts);

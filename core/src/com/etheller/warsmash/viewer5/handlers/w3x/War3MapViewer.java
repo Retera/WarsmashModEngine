@@ -141,7 +141,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.projectile.C
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.projectile.CAttackProjectileMissile;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.projectile.CCollisionProjectile;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.projectile.CJassProjectile;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.projectile.CPsuedoProjectile;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.projectile.CPseudoProjectile;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.config.War3MapConfig;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CAllianceType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayer;
@@ -2661,7 +2661,7 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 							@Override
 							public CCollisionProjectile createCollisionProjectile(final CSimulation cSimulation,
 									final float launchX, final float launchY, final float launchFacing,
-									final float projectileSpeed, final boolean homing, final CUnit source,
+									final Float projectileSpeed, final Boolean homing, final CUnit source,
 									final War3ID spellAlias, final AbilityTarget target, final int maxHits,
 									final int hitsPerTarget, final float startingRadius, final float finalRadius,
 									final float collisionInterval,
@@ -2671,6 +2671,8 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 								final AbilityUI spellDataUI = War3MapViewer.this.abilityDataUI.getUI(spellAlias);
 								final EffectAttachmentUIMissile abilityMissileArt = spellDataUI.getMissileArt(0);
 								final float projectileArc = abilityMissileArt == null ? 0 : abilityMissileArt.getArc();
+								final float pSpeed = projectileSpeed == null ? abilityMissileArt.getSpeed() : projectileSpeed;
+								final boolean pHome = homing == null ? abilityMissileArt.isHoming() : homing;
 								final String missileArt = abilityMissileArt == null ? ""
 										: abilityMissileArt.getModelPath();
 								final float projectileLaunchX = War3MapViewer.this.simulation.getUnitData()
@@ -2691,7 +2693,7 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 								final float height = War3MapViewer.this.terrain.getGroundHeight(x, y)
 										+ source.getFlyHeight() + projectileLaunchZ;
 								final CCollisionProjectile simulationAbilityProjectile = new CCollisionProjectile(x, y,
-										projectileSpeed, target, homing, source, maxHits, hitsPerTarget, startingRadius,
+										pSpeed, target, pHome, source, maxHits, hitsPerTarget, startingRadius,
 										finalRadius, collisionInterval, projectileListener, provideCounts);
 
 								final MdxModel model = loadModelMdx(missileArt);
@@ -2714,7 +2716,7 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 							}
 
 							@Override
-							public CPsuedoProjectile createPseudoProjectile(final CSimulation cSimulation,
+							public CPseudoProjectile createPseudoProjectile(final CSimulation cSimulation,
 									final float launchX, final float launchY, final float launchFacing,
 									final float projectileSpeed, final float projectileStepInterval,
 									final int projectileArtSkip, final boolean homing, final CUnit source,
@@ -2738,7 +2740,7 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 								final float y = (launchY + (projectileLaunchY * sinFacing))
 										- (projectileLaunchX * cosFacing);
 
-								final CPsuedoProjectile simulationAbilityProjectile = new CPsuedoProjectile(x, y,
+								final CPseudoProjectile simulationAbilityProjectile = new CPseudoProjectile(x, y,
 										projectileSpeed, projectileStepInterval, projectileArtSkip, target, homing,
 										source, spellAlias, effectType, effectArtIndex, maxHits, hitsPerTarget,
 										startingRadius, finalRadius, projectileListener, provideCounts);

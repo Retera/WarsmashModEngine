@@ -16,7 +16,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CEffectType;
 
-public class CPsuedoProjectile extends CProjectile {
+public class CPseudoProjectile extends CProjectile {
 
 	private static final Rectangle recycleRect = new Rectangle();
 
@@ -52,7 +52,7 @@ public class CPsuedoProjectile extends CProjectile {
 	
 	private int stepCount = 0;
 
-	public CPsuedoProjectile(final float x, final float y, final float speed, final float projectileStepInterval, final int projectileArtSkip,
+	public CPseudoProjectile(final float x, final float y, final float speed, final float projectileStepInterval, final int projectileArtSkip,
 			final AbilityTarget target, boolean homingEnabled, final CUnit source, final War3ID alias,
 			final CEffectType effectType, final int effectArtIndex, final int maxHits, final int hitsPerTarget,
 			final float startingRadius, final float finalRadius, final CAbilityCollisionProjectileListener projectileListener, boolean provideCounts) {
@@ -195,7 +195,7 @@ public class CPsuedoProjectile extends CProjectile {
 
 			this.x = this.x + this.dx;
 			this.y = this.y + this.dy;
-			
+
 			this.nextActionTick = game.getGameTurnTick() + this.stepInterval;
 			this.stepCount++;
 			this.done |= this.stepCount > this.steps;

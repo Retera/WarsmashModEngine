@@ -21,7 +21,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.projectile.C
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.projectile.CAttackProjectile;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.projectile.CCollisionProjectile;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.projectile.CJassProjectile;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.projectile.CPsuedoProjectile;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.projectile.CPseudoProjectile;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CEffectType;
 
 public interface SimulationRenderController {
@@ -41,11 +41,11 @@ public interface SimulationRenderController {
 			float speed, boolean homing, CUnit source, War3ID spellAlias, AbilityTarget target);
 
 	CCollisionProjectile createCollisionProjectile(CSimulation cSimulation, float launchX, float launchY,
-			float launchFacing, float projectileSpeed, boolean homing, CUnit source, War3ID spellAlias,
+			float launchFacing, Float projectileSpeed, Boolean homing, CUnit source, War3ID spellAlias,
 			AbilityTarget target, int maxHits, int hitsPerTarget, float startingRadius, float finalRadius,
 			float collisionInterval, CAbilityCollisionProjectileListener projectileListener, boolean provideCounts);
 
-	CPsuedoProjectile createPseudoProjectile(CSimulation cSimulation, float launchX, float launchY, float launchFacing,
+	CPseudoProjectile createPseudoProjectile(CSimulation cSimulation, float launchX, float launchY, float launchFacing,
 			float projectileSpeed, float projectileStepInterval, int projectileArtSkip, boolean homing, CUnit source,
 			War3ID spellAlias, CEffectType effectType, int effectArtIndex, AbilityTarget target, int maxHits,
 			int hitsPerTarget, float startingRadius, float finalRadius,

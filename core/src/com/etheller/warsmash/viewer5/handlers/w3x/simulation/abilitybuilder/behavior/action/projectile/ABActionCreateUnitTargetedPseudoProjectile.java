@@ -4,9 +4,11 @@ import java.util.List;
 import java.util.Map;
 
 import com.etheller.warsmash.parsers.jass.JassTextGenerator;
+import com.etheller.warsmash.units.GameObject;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTarget;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.definitions.impl.AbilityFields;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.booleancallbacks.ABBooleanCallback;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.floatcallbacks.ABFloatCallback;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.idcallbacks.ABIDCallback;
@@ -49,8 +51,8 @@ public class ABActionCreateUnitTargetedPseudoProjectile implements ABSingleActio
 	@Override
 	public void runAction(final CSimulation game, final CUnit caster, final Map<String, Object> localStore,
 			final int castId) {
-		Float theSpeed = null;
-		Boolean isHoming = null;
+		float theSpeed = 0;
+		boolean isHoming = false;
 		int theMaxHits = 0;
 		int theHitsPerTarget = 1;
 		float theStartingRadius = 0;
@@ -103,11 +105,19 @@ public class ABActionCreateUnitTargetedPseudoProjectile implements ABSingleActio
 			isProvideCounts = this.provideCounts.callback(game, caster, localStore, castId);
 		}
 
-		if (this.speed != null) {
-			theSpeed = this.speed.callback(game, caster, localStore, castId);
+		final GameObject editorData = (GameObject) localStore.get(ABLocalStoreKeys.ABILITYEDITORDATA);
+
+ 		if (this.speed != null) {
+ 			theSpeed = this.speed.callback(game, caster, localStore, castId);
+ 		}
+		else {
+			theSpeed = editorData.getFieldAsFloat(AbilityFields.PROJECTILE_SPEED, 0);
 		}
-		if (this.homing != null) {
-			isHoming = this.homing.callback(game, caster, localStore, castId);
+ 		if (this.homing != null) {
+ 			isHoming = this.homing.callback(game, caster, localStore, castId);
+ 		}
+		else {
+			isHoming = editorData.getFieldAsBoolean(AbilityFields.PROJECTILE_HOMING_ENABLED, 0);
 		}
 
 		final CUnit theTarget = this.target.callback(game, caster, localStore, castId);

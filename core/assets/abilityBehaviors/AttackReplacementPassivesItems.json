@@ -457,16 +457,10 @@
 				}
 			}],
 			"levelChange": [{
-				"type": "updateNonStackingStatBuff",
-				"buff": {
-					"type": "getLastCreatedNonStackingStatBuff"
-				},
-				"value": {
-					"type": "negativeFloat",
-					"value": {
-						"type": "getAbilityDataAsFloat",
-						"dataField": "B"
-					}
+				"type": "runReuseAction",
+				"name": {
+					"type": "rawString",
+					"value": "setup"
 				}
 			}],
 			"onHit": [{
@@ -488,23 +482,8 @@
 						"type": "rawBoolean",
 						"value": "false"
 					},
-					"onAddActions": [{
-						"type": "addNonStackingStatBuff",
-						"targetUnit": {
-							"type": "getBuffedUnit"
-						},
-						"buff": {
-							"type": "getLastCreatedNonStackingStatBuff"
-						}
-					}],
-					"onRemoveActions": [{
-						"type": "removeNonStackingStatBuff",
-						"targetUnit": {
-							"type": "getBuffedUnit"
-						},
-						"buff": {
-							"type": "getLastCreatedNonStackingStatBuff"
-						}
+					"statBuffs": [{
+						"type": "getLastCreatedNonStackingStatBuff"
 					}]
 				},{
 					"type": "addBuff",
@@ -1302,172 +1281,25 @@
 								}
 							}
 						},
-						"onAddActions": [{
-								"type": "addNonStackingStatBuff",
-								"targetUnit": {
-									"type": "getBuffedUnit"
-								},
-								"buff": {
-									"type": "getStoredNonStackingStatBuffByKey",
-									"instanceValue": {
-										"type": "rawBoolean",
-										"value": "false"
-									},
-									"key": {
-										"type": "rawString",
-										"value": "mvbuff"
-									}
-								}
-							},{
-								"type": "storeValueLocally",
-								"key": {
-									"type": "catStrings",
-									"stringList": [{
-										"type": "rawString",
-										"value": "mvbuff"
-									},{
-										"type": "getBuffHandleAsString",
-										"buff": {
-											"type": "thisBuff"
-										}
-									}]
-								},
+						"statBuffs": [{
+								"type": "getStoredNonStackingStatBuffByKey",
 								"instanceValue": {
 									"type": "rawBoolean",
 									"value": "false"
 								},
-								"valueToStore": {
-									"type": "getStoredNonStackingStatBuffByKey",
-									"instanceValue": {
-										"type": "rawBoolean",
-										"value": "false"
-									},
-									"key": {
-										"type": "rawString",
-										"value": "mvbuff"
-									}
-								}
-							},{
-								"type": "addNonStackingStatBuff",
-								"targetUnit": {
-									"type": "getBuffedUnit"
-								},
-								"buff": {
-									"type": "getStoredNonStackingStatBuffByKey",
-									"instanceValue": {
-										"type": "rawBoolean",
-										"value": "false"
-									},
-									"key": {
-										"type": "rawString",
-										"value": "asbuff"
-									}
-								}
-							},{
-								"type": "storeValueLocally",
 								"key": {
-									"type": "catStrings",
-									"stringList": [{
-										"type": "rawString",
-										"value": "asbuff"
-									},{
-										"type": "getBuffHandleAsString",
-										"buff": {
-											"type": "thisBuff"
-										}
-									}]
-								},
+									"type": "rawString",
+									"value": "mvbuff"
+								}
+							},{
+								"type": "getStoredNonStackingStatBuffByKey",
 								"instanceValue": {
 									"type": "rawBoolean",
 									"value": "false"
 								},
-								"valueToStore": {
-									"type": "getStoredNonStackingStatBuffByKey",
-									"instanceValue": {
-										"type": "rawBoolean",
-										"value": "false"
-									},
-									"key": {
-										"type": "rawString",
-										"value": "asbuff"
-									}
-								}
-						}],
-						"onRemoveActions": [{
-								"type": "removeNonStackingStatBuff",
-								"targetUnit": {
-									"type": "getBuffedUnit"
-								},
-								"buff": {
-									"type": "getStoredNonStackingStatBuffByKey",
-									"instanceValue": {
-										"type": "rawBoolean",
-										"value": "false"
-									},
-									"key": {
-										"type": "catStrings",
-										"stringList": [{
-											"type": "rawString",
-											"value": "mvbuff"
-										},{
-											"type": "getBuffHandleAsString",
-											"buff": {
-												"type": "thisBuff"
-											}
-										}]
-									}
-								}
-							},{
-								"type": "removeNonStackingStatBuff",
-								"targetUnit": {
-									"type": "getBuffedUnit"
-								},
-								"buff": {
-									"type": "getStoredNonStackingStatBuffByKey",
-									"instanceValue": {
-										"type": "rawBoolean",
-										"value": "false"
-									},
-									"key": {
-										"type": "catStrings",
-										"stringList": [{
-											"type": "rawString",
-											"value": "asbuff"
-										},{
-											"type": "getBuffHandleAsString",
-											"buff": {
-												"type": "thisBuff"
-											}
-										}]
-									}
-								}
-							},{
-								"type": "deleteStoredKey",
 								"key": {
-									"type": "catStrings",
-									"stringList": [{
-										"type": "rawString",
-										"value": "mvbuff"
-									},{
-										"type": "getBuffHandleAsString",
-										"buff": {
-											"type": "thisBuff"
-										}
-									}]
-								}
-							},{
-								"type": "deleteStoredKey",
-								"key": {
-									"type": "catStrings",
-									"stringList": [{
-										"type": "rawString",
-										"value": "asbuff"
-									},{
-										"type": "getBuffHandleAsString",
-										"buff": {
-											"type": "thisBuff"
-										}
-									}]
+									"type": "rawString",
+									"value": "asbuff"
 								}
 						}]
 					},{

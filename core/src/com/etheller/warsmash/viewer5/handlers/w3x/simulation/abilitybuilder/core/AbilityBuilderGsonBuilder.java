@@ -989,6 +989,7 @@ public abstract class AbilityBuilderGsonBuilder {
 				.registerSubtype(ABActionSetUnitMovementTypeNoCollision.class, "setUnitMovementTypeNoCollision")
 
 				.registerSubtype(ABActionPlayAnimation.class, "playAnimation")
+				.registerSubtype(ABActionQueueAnimation.class, "queueAnimation")
 				.registerSubtype(ABActionAddSecondaryAnimationTag.class, "addSecondaryAnimationTag")
 				.registerSubtype(ABActionRemoveSecondaryAnimationTag.class, "removeSecondaryAnimationTag")
 

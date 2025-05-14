@@ -294,29 +294,17 @@
 									"type": "rawBoolean",
 									"value": "false"
 								},
-								"onAddActions": [{
-										"type": "addNonStackingStatBuff",
-										"targetUnit": {
-											"type": "getBuffedUnit"
-										},
-										"buff": {
-											"type": "getStoredNonStackingStatBuffByKey",
-											"key": {
-												"type": "rawString",
-												"value": "atkSpdBuff"
-											}
+								"statBuffs": [{
+										"type": "getStoredNonStackingStatBuffByKey",
+										"key": {
+											"type": "rawString",
+											"value": "atkSpdBuff"
 										}
 									},{
-										"type": "addNonStackingStatBuff",
-										"targetUnit": {
-											"type": "getBuffedUnit"
-										},
-										"buff": {
-											"type": "getStoredNonStackingStatBuffByKey",
-											"key": {
-												"type": "rawString",
-												"value": "moveBuff"
-											}
+										"type": "getStoredNonStackingStatBuffByKey",
+										"key": {
+											"type": "rawString",
+											"value": "moveBuff"
 										}
 								}],
 								"onTickActions": [{
@@ -425,31 +413,6 @@
 										"unique": {
 											"type": "rawString",
 											"value": "slow"
-										}
-								}],
-								"onRemoveActions": [{
-										"type": "removeNonStackingStatBuff",
-										"targetUnit": {
-											"type": "getBuffedUnit"
-										},
-										"buff": {
-											"type": "getStoredNonStackingStatBuffByKey",
-											"key": {
-												"type": "rawString",
-												"value": "moveBuff"
-											}
-										}
-									},{
-										"type": "removeNonStackingStatBuff",
-										"targetUnit": {
-											"type": "getBuffedUnit"
-										},
-										"buff": {
-											"type": "getStoredNonStackingStatBuffByKey",
-											"key": {
-												"type": "rawString",
-												"value": "atkSpdBuff"
-											}
 										}
 								}]
 							},{

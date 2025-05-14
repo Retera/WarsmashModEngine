@@ -66,39 +66,16 @@
 						"type": "rawBoolean",
 						"value": "false"
 					},
-					"onAddActions": [{
-							"type": "addStateModBuff",
-							"targetUnit": {
-								"type": "getBuffedUnit"
-							},
-							"buff": {
-								"type": "getStoredStateModBuffByKey",
-								"instanceValue": {
-									"type": "rawBoolean",
-									"value": "false"
-								},
-								"key": {
-									"type": "rawString",
-									"value": "invuln"
-								}
-							}
-					}],
-					"onRemoveActions": [{
-							"type": "removeStateModBuff",
-							"targetUnit": {
-								"type": "getBuffedUnit"
-							},
-							"buff": {
-								"type": "getStoredStateModBuffByKey",
-								"instanceValue": {
-									"type": "rawBoolean",
-									"value": "false"
-								},
-								"key": {
-									"type": "rawString",
-									"value": "invuln"
-								}
-							}
+					"stateMods": [{
+						"type": "getStoredStateModBuffByKey",
+						"instanceValue": {
+							"type": "rawBoolean",
+							"value": "false"
+						},
+						"key": {
+							"type": "rawString",
+							"value": "invuln"
+						}
 					}]
 				},{
 					"type": "addBuff",
@@ -123,23 +100,18 @@
 						"type": "rawBoolean",
 						"value": "false"
 					},
+					"stateMods": [{
+						"type": "getStoredStateModBuffByKey",
+						"instanceValue": {
+							"type": "rawBoolean",
+							"value": "false"
+						},
+						"key": {
+							"type": "rawString",
+							"value": "sleep"
+						}
+					}],
 					"onAddActions": [{
-							"type": "addStateModBuff",
-							"targetUnit": {
-								"type": "getBuffedUnit"
-							},
-							"buff": {
-								"type": "getStoredStateModBuffByKey",
-								"instanceValue": {
-									"type": "rawBoolean",
-									"value": "false"
-								},
-								"key": {
-									"type": "rawString",
-									"value": "sleep"
-								}
-							}
-						},{
 							"type": "createDamageTakenListener",
 							"actions": [{
 									"type": "removeDamageTakenListener",
@@ -186,23 +158,7 @@
 							}
 					}],
 					"onRemoveActions": [{
-							"type": "removeStateModBuff",
-							"targetUnit": {
-								"type": "getBuffedUnit"
-							},
-							"buff": {
-								"type": "getStoredStateModBuffByKey",
-								"instanceValue": {
-									"type": "rawBoolean",
-									"value": "false"
-								},
-								"key": {
-									"type": "rawString",
-									"value": "sleep"
-								}
-							}
-						},{
-							"type": "cleanUpCastInstance"
+						"type": "cleanUpCastInstance"
 					}]
 				},{
 					"type": "addBuff",
@@ -901,6 +857,5 @@
 						}
 				}]
 		}]
-		
 	}]
 }

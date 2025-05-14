@@ -4,6 +4,8 @@ import java.util.EnumSet;
 import java.util.Map;
 
 import com.etheller.warsmash.util.WarsmashConstants;
+import com.etheller.warsmash.viewer5.handlers.w3x.SequenceUtils;
+import com.etheller.warsmash.viewer5.handlers.w3x.AnimationTokens.PrimaryTag;
 import com.etheller.warsmash.viewer5.handlers.w3x.AnimationTokens.SecondaryTag;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
@@ -37,6 +39,7 @@ public class CBehaviorAbilityBuilderNoTarget implements ABBehavior {
 	private boolean instant = false;
 	private CBehaviorCategory behaviorCategory = null;
 	private int castId = 0;
+	private EnumSet<SecondaryTag> channelTags;
 
 	public CBehaviorAbilityBuilderNoTarget(final CUnit unit, final Map<String, Object> localStore,
 			AbilityBuilderActiveAbility ability) {
@@ -87,6 +90,9 @@ public class CBehaviorAbilityBuilderNoTarget implements ABBehavior {
 		this.localStore.put(ABLocalStoreKeys.CHANNELING, false);
 		this.orderId = this.ability.getBaseOrderId();
 		this.autoOrder = autoOrder;
+
+		this.channelTags = this.ability.getCastingSecondaryTags().clone();
+		this.channelTags.add(SecondaryTag.CHANNEL);
 		return this;
 	}
 
@@ -104,6 +110,9 @@ public class CBehaviorAbilityBuilderNoTarget implements ABBehavior {
 		this.localStore.put(ABLocalStoreKeys.CHANNELING, false);
 		this.orderId = orderId;
 		this.autoOrder = autoOrder;
+
+		this.channelTags = this.ability.getCastingSecondaryTags().clone();
+		this.channelTags.add(SecondaryTag.CHANNEL);
 		return this;
 	}
 
@@ -116,13 +125,9 @@ public class CBehaviorAbilityBuilderNoTarget implements ABBehavior {
 			this.unit.fireSpellEvents(game, JassGameEventsWar3.EVENT_UNIT_SPELL_CHANNEL, this.ability, null);
 			// In war3, non-targeted spells cannot be interrupted by pausing on spell events
 
-			if (!instant) {
-				if (this.castPointTicks > this.castTimeEndTick) {
-					EnumSet<SecondaryTag> tags = this.ability.getCastingSecondaryTags().clone();
-					tags.add(SecondaryTag.CHANNEL);
-					this.unit.getUnitAnimationListener().playAnimation(false, this.ability.getCastingPrimaryTag(),
-							tags, 1.0f, true);
-				}
+			if (!instant && this.castTimeEndTick > 0) {
+				this.unit.getUnitAnimationListener().playAnimation(false, PrimaryTag.STAND,
+						EnumSet.of(SecondaryTag.CHANNEL), 1.0f, true);
 			}
 		}
 
@@ -134,7 +139,7 @@ public class CBehaviorAbilityBuilderNoTarget implements ABBehavior {
 					return this.unit.pollNextOrderBehavior(game);
 				}
 				this.ability.startCooldown(game, this.unit);
-	
+
 				this.ability.runBeginCastingActions(game, unit, orderId);
 				this.unit.fireSpellEvents(game, JassGameEventsWar3.EVENT_UNIT_SPELL_CAST, this.ability, null);
 				this.doneCastTime = true;
@@ -170,13 +175,20 @@ public class CBehaviorAbilityBuilderNoTarget implements ABBehavior {
 					localStore.remove(ABLocalStoreKeys.NEWBEHAVIOR);
 					return newBehavior;
 				}
-				
+
 				this.unit.fireSpellEvents(game, JassGameEventsWar3.EVENT_UNIT_SPELL_CAST, this.ability, null);
 
-				this.unit.getUnitAnimationListener().playAnimation(false, this.ability.getCastingPrimaryTag(),
-						this.ability.getCastingSecondaryTags(), 1.0f, true);
 				this.channeling = (boolean) localStore.get(ABLocalStoreKeys.CHANNELING);
+				if (!this.channeling) {
+					this.unit.getUnitAnimationListener().playAnimation(false, this.ability.getCastingPrimaryTag(),
+							this.ability.getCastingSecondaryTags(), 1.0f, true);
+					this.unit.getUnitAnimationListener().queueAnimation(PrimaryTag.STAND, SequenceUtils.EMPTY, true);
+				}
 				this.doneCastTime = true;
+			}
+			if (this.channeling) {
+				this.unit.getUnitAnimationListener().playAnimation(false, this.ability.getCastingPrimaryTag(),
+						this.channelTags, 1.0f, true);
 			}
 			if ((ticksSinceCast >= castPointTicks)) {
 				CBehavior beh = tryDoEffect(game, wasChanneling);
@@ -232,7 +244,7 @@ public class CBehaviorAbilityBuilderNoTarget implements ABBehavior {
 	@Override
 	public void end(final CSimulation game, boolean interrupted) {
 		checkEndChannel(game, interrupted);
-		Boolean preventEndEvents = (Boolean) this.localStore.get(ABLocalStoreKeys.PREVENTENDEVENTS+this.castId);
+		Boolean preventEndEvents = (Boolean) this.localStore.get(ABLocalStoreKeys.PREVENTENDEVENTS + this.castId);
 		if (preventEndEvents == null || !preventEndEvents) {
 			if (!interrupted) {
 				this.unit.fireSpellEvents(game, JassGameEventsWar3.EVENT_UNIT_SPELL_FINISH, this.ability, null);
@@ -254,7 +266,7 @@ public class CBehaviorAbilityBuilderNoTarget implements ABBehavior {
 		game.unitStopSoundEffectEvent(this.unit, this.ability.getAlias());
 		this.ability.runEndChannelActions(game, unit, orderId);
 	}
-	
+
 	private void cleanupInputs() {
 		this.ability.cleanupInputs(this.castId);
 	}
@@ -265,7 +277,7 @@ public class CBehaviorAbilityBuilderNoTarget implements ABBehavior {
 	}
 
 	public void setCastId(int castId) {
-		this.castId  = castId;
+		this.castId = castId;
 	}
 
 	@Override

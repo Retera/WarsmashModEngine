@@ -4,6 +4,8 @@ import java.util.EnumSet;
 import java.util.Map;
 
 import com.etheller.warsmash.util.WarsmashConstants;
+import com.etheller.warsmash.viewer5.handlers.w3x.SequenceUtils;
+import com.etheller.warsmash.viewer5.handlers.w3x.AnimationTokens.PrimaryTag;
 import com.etheller.warsmash.viewer5.handlers.w3x.AnimationTokens.SecondaryTag;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
@@ -41,6 +43,7 @@ public class CBehaviorAbilityBuilderBase extends CAbstractRangedBehavior impleme
 
 	private boolean instant = false;
 	private CBehaviorCategory behaviorCategory = null;
+	private EnumSet<SecondaryTag> channelTags;
 
 	public CBehaviorAbilityBuilderBase(final CUnit unit, final Map<String, Object> localStore,
 			AbilityBuilderActiveAbility ability) {
@@ -73,6 +76,9 @@ public class CBehaviorAbilityBuilderBase extends CAbstractRangedBehavior impleme
 		this.orderId = this.ability.getBaseOrderId();
 		this.preventReInterrupt = false;
 		this.autoOrder = autoOrder;
+
+		this.channelTags = this.ability.getCastingSecondaryTags().clone();
+		this.channelTags.add(SecondaryTag.CHANNEL);
 		return innerReset(game, target, false);
 	}
 
@@ -90,6 +96,9 @@ public class CBehaviorAbilityBuilderBase extends CAbstractRangedBehavior impleme
 		this.orderId = orderId;
 		this.preventReInterrupt = false;
 		this.autoOrder = autoOrder;
+
+		this.channelTags = this.ability.getCastingSecondaryTags().clone();
+		this.channelTags.add(SecondaryTag.CHANNEL);
 		return innerReset(game, target, false);
 	}
 
@@ -107,6 +116,9 @@ public class CBehaviorAbilityBuilderBase extends CAbstractRangedBehavior impleme
 		this.orderId = this.ability.getBaseOrderId();
 		this.preventReInterrupt = false;
 		this.autoOrder = autoOrder;
+
+		this.channelTags = this.ability.getCastingSecondaryTags().clone();
+		this.channelTags.add(SecondaryTag.CHANNEL);
 		return innerReset(game, target, false);
 	}
 
@@ -125,6 +137,9 @@ public class CBehaviorAbilityBuilderBase extends CAbstractRangedBehavior impleme
 		this.orderId = orderId;
 		this.preventReInterrupt = false;
 		this.autoOrder = autoOrder;
+
+		this.channelTags = this.ability.getCastingSecondaryTags().clone();
+		this.channelTags.add(SecondaryTag.CHANNEL);
 		return innerReset(game, target, false);
 	}
 
@@ -164,13 +179,9 @@ public class CBehaviorAbilityBuilderBase extends CAbstractRangedBehavior impleme
 				return this;
 			}
 
-			if (!instant) {
-				if (this.castPointTicks > this.castTimeEndTick) {
-					EnumSet<SecondaryTag> tags = this.ability.getCastingSecondaryTags().clone();
-					tags.add(SecondaryTag.CHANNEL);
-					this.unit.getUnitAnimationListener().playAnimation(false, this.ability.getCastingPrimaryTag(), tags,
-							1.0f, true);
-				}
+			if (!instant && this.castTimeEndTick > 0) {
+				this.unit.getUnitAnimationListener().playAnimation(false, PrimaryTag.STAND,
+						EnumSet.of(SecondaryTag.CHANNEL), 1.0f, true);
 			}
 		}
 
@@ -236,16 +247,16 @@ public class CBehaviorAbilityBuilderBase extends CAbstractRangedBehavior impleme
 				}
 
 				this.channeling = (boolean) localStore.get(ABLocalStoreKeys.CHANNELING);
+				if (!this.channeling) {
+					this.unit.getUnitAnimationListener().playAnimation(false, this.ability.getCastingPrimaryTag(),
+							this.ability.getCastingSecondaryTags(), 1.0f, true);
+					this.unit.getUnitAnimationListener().queueAnimation(PrimaryTag.STAND, SequenceUtils.EMPTY, true);
+				}
 				this.doneCastTime = true;
 			}
 			if (this.channeling) {
-				EnumSet<SecondaryTag> tags = this.ability.getCastingSecondaryTags().clone();
-				tags.add(SecondaryTag.CHANNEL);
-				this.unit.getUnitAnimationListener().playAnimation(false, this.ability.getCastingPrimaryTag(), tags,
-						1.0f, true);
-			} else {
 				this.unit.getUnitAnimationListener().playAnimation(false, this.ability.getCastingPrimaryTag(),
-						this.ability.getCastingSecondaryTags(), 1.0f, true);
+						this.channelTags, 1.0f, true);
 			}
 
 			if ((ticksSinceCast >= castPointTicks)) {

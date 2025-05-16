@@ -17,11 +17,18 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.effe
 public class ABActionCreateTerrainRippleAtLocation implements ABAction {
 
 	private ABLocationCallback location;
+	
 	private ABFloatCallback startRadius;
 	private ABFloatCallback finalRadius;
+	private ABFloatCallback radius;
+	
 	private ABFloatCallback depth;
+	
 	private ABFloatCallback duration;
+	private ABIntegerCallback rippleCount;
+	
 	private ABFloatCallback period;
+	
 	private ABIntegerCallback spaceWaves;
 	private ABIntegerCallback timeWaves;
 	private ABBooleanCallback onlyNegative;
@@ -30,18 +37,32 @@ public class ABActionCreateTerrainRippleAtLocation implements ABAction {
 	public void runAction(final CSimulation game, final CUnit caster, final Map<String, Object> localStore,
 			final int castId) {
 		final AbilityPointTarget loc = this.location.callback(game, caster, localStore, castId);
-		final float startRad = startRadius.callback(game, caster, localStore, castId);
-		final float endRad = finalRadius.callback(game, caster, localStore, castId);
+
+		float startRad = 0;
+		float endRad = 0;
+		if (radius != null) {
+			startRad = radius.callback(game, caster, localStore, castId);
+			endRad = startRad;
+		} else {
+			startRad = startRadius.callback(game, caster, localStore, castId);
+			endRad = finalRadius.callback(game, caster, localStore, castId);
+		}
 		final float theDepth = depth.callback(game, caster, localStore, castId);
 		final float thePeriod = period.callback(game, caster, localStore, castId);
 		final int swaves = spaceWaves.callback(game, caster, localStore, castId);
 		final int twaves = timeWaves.callback(game, caster, localStore, castId);
 		final boolean onlyNeg = onlyNegative.callback(game, caster, localStore, castId);
-		
-		final float dur = duration.callback(game, caster, localStore, castId);
-		final int intervals = (int)dur;
-		
-		ABTerrainEffect fx = new ABTerrainRippleEffect(game, loc, startRad, endRad, theDepth, thePeriod, 2 * intervals, swaves, twaves, onlyNeg);
+
+		int intervals = 0;
+		if (rippleCount != null) {
+			intervals = rippleCount.callback(game, caster, localStore, castId);
+		} else {
+			final float dur = duration.callback(game, caster, localStore, castId);
+			intervals = ((int) dur) * 2;
+		}
+
+		ABTerrainEffect fx = new ABTerrainRippleEffect(game, loc, startRad, endRad, theDepth, thePeriod, intervals,
+				swaves, twaves, onlyNeg);
 		game.registerTimer(fx);
 		localStore.put(ABLocalStoreKeys.LASTCREATEDFX, fx);
 	}

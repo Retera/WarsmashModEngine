@@ -316,7 +316,7 @@
 						},
 						"depth": {
 							"type": "rawFloat",
-							"value": 200
+							"value": 140
 						},
 						"duration": {
 							"type": "getAbilityDuration"
@@ -1997,5 +1997,265 @@
 						"elseActions": []
 					}]
 		}]
+	},{
+		"ids": [{"id":"AHtc", "castId": "thunderclap"}],
+		"type": "NORMAL_NOTARGET",
+		"reuseActions": {
+			"setupBuffs": [{
+					"type": "createNonStackingStatBuff",
+					"buffType": {
+						"type": "getNonStackingStatBuffTypeFromString",
+						"id": {
+							"type": "rawString",
+							"value": "ATKSPD"
+						}
+					},
+					"stackingKey": {
+						"type": "rawString",
+						"value": "slow"
+					},
+					"value": {
+						"type": "negativeFloat",
+						"value": {
+							"type": "getAbilityDataAsFloat",
+							"dataField": "D"
+						}
+					}
+				},{
+					"type": "storeValueLocally",
+					"key": {
+						"type": "rawString",
+						"value": "asbuff"
+					},
+					"instanceValue": {
+						"type": "rawBoolean",
+						"value": "false"
+					},
+					"valueToStore": {
+						"type": "getLastCreatedNonStackingStatBuff"
+					}
+				},{
+					"type": "createNonStackingStatBuff",
+					"buffType": {
+						"type": "getNonStackingStatBuffTypeFromString",
+						"id": {
+							"type": "rawString",
+							"value": "MVSPDPCT"
+						}
+					},
+					"stackingKey": {
+						"type": "rawString",
+						"value": "slow"
+					},
+					"value": {
+						"type": "negativeFloat",
+						"value": {
+							"type": "getAbilityDataAsFloat",
+							"dataField": "C"
+						}
+					}
+				},{
+					"type": "storeValueLocally",
+					"key": {
+						"type": "rawString",
+						"value": "mvbuff"
+					},
+					"instanceValue": {
+						"type": "rawBoolean",
+						"value": "false"
+					},
+					"valueToStore": {
+						"type": "getLastCreatedNonStackingStatBuff"
+					}
+			}],
+			"addBuff": [{
+					"type": "createTimedBuff",
+					"buffId": {
+						"type": "getFirstBuffId"
+					},
+					"duration": {
+						"type": "getAbilityDuration",
+						"target": {
+							"type": "getEnumUnit"
+						}
+					},
+					"magic": {
+						"type": "rawBoolean",
+						"value": "false"
+					},
+					"positive": {
+						"type": "rawBoolean",
+						"value": "false"
+					},
+					"statBuffs": [{
+							"type": "getStoredNonStackingStatBuffByKey",
+							"instanceValue": {
+								"type": "rawBoolean",
+								"value": "false"
+							},
+							"key": {
+								"type": "rawString",
+								"value": "mvbuff"
+							}
+						},{
+							"type": "getStoredNonStackingStatBuffByKey",
+							"instanceValue": {
+								"type": "rawBoolean",
+								"value": "false"
+							},
+							"key": {
+								"type": "rawString",
+								"value": "asbuff"
+							}
+					}]
+				},{
+					"type": "addBuff",
+					"target": {
+						"type": "getEnumUnit"
+					},
+					"buff": {
+						"type": "getLastCreatedBuff"
+					}
+			}]
+		},
+		"onAddDisabledAbility": [{
+			"type": "runReuseAction",
+			"name": {
+				"type": "rawString",
+				"value": "setupBuffs"
+			}
+		}],
+		"onLevelChange": [{
+			"type": "runReuseAction",
+			"name": {
+				"type": "rawString",
+				"value": "setupBuffs"
+			}
+		}],
+		"onEndCasting": [{
+				"type": "createTerrainRippleAtLocation",
+				"location": {
+					"type": "getUnitLocation",
+					"unit": {
+						"type": "getCastingUnit"
+					}
+				},
+				"radius": {
+					"type": "getAbilityArea"
+				},
+				"depth": {
+					"type": "rawFloat",
+					"value": 100
+				},
+				"rippleCount": {
+					"type": "rawInteger",
+					"value": 1
+				},
+				"period": {
+					"type": "rawFloat",
+					"value": 300
+				},
+				"spaceWaves": {
+					"type": "rawInteger",
+					"value": 1
+				},
+				"timeWaves": {
+					"type": "rawInteger",
+					"value": 2
+				},
+				"onlyNegative": {
+					"type": "rawBoolean",
+					"value": "true"
+				}
+			},{
+				"type": "createTemporarySpellEffectAtLocation",
+				"location": {
+					"type": "getUnitLocation",
+					"unit": {
+						"type": "getCastingUnit"
+					}
+				},
+				"id": {
+					"type": "getAlias"
+				},
+				"effectType": "CASTER"
+			},{
+				"type": "damageArea",
+				"source": {
+					"type": "getCastingUnit"
+				},
+				"target": {
+					"type": "getUnitLocation",
+					"unit": {
+						"type": "getCastingUnit"
+					}
+				},
+				"validTarget": {
+					"type": "and",
+					"conditions": [{
+						"type": "isUnitValidTarget",
+						"target": {
+							"type": "getEnumUnit"
+						}
+					},{
+						"type": "isUnitEnemy",
+						"unit": {
+							"type": "getEnumUnit"
+						}
+					}]
+				},
+				"damageType": {
+					"type": "getDamageTypeFromString",
+					"id": {
+						"type": "rawString",
+						"value": "SONIC"
+					}
+				},
+				"damage": {
+					"type": "getAbilityDataAsFloat",
+					"dataField": "A"
+				},
+				"radius": {
+					"type": "getAbilityArea"
+				},
+				"extraActions": [{
+					"type": "if",
+					"condition": {
+						"type": "isUnitBuilding",
+						"unit": {
+							"type": "getEnumUnit"
+						}
+					},
+					"elseActions": [{
+						"type": "runReuseAction",
+						"name": {
+							"type": "rawString",
+							"value": "addBuff"
+						}
+					}]
+				}]
+		}]
+	},{
+		"ids": [{"id":"AOws", "castId": "stomp"}],
+		"type": "INHERIT",
+		"parentId": "AHtc",
+		"reuseActions": {
+			"setupBuffs": [],
+			"addBuff": [{
+				"type": "addStunBuff",
+				"buffId": {
+					"type": "getFirstBuffId"
+				},
+				"unit": {
+					"type": "getEnumUnit"
+				},
+				"duration": {
+					"type": "getAbilityDuration",
+					"target": {
+						"type": "getEnumUnit"
+					}
+				}
+			}]
+		}
 	}]
 }

@@ -2,6 +2,7 @@ package com.etheller.warsmash.parsers.w3x.w3i;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import com.etheller.warsmash.util.ParseUtils;
@@ -393,7 +394,7 @@ public class War3MapW3i {
 		return this.gameDataSet;
 	}
 
-	public void setGameDataSet(int gameDataSet) {
+	public void setGameDataSet(final int gameDataSet) {
 		this.gameDataSet = gameDataSet;
 	}
 
@@ -457,11 +458,11 @@ public class War3MapW3i {
 		return this.gameDataVersion;
 	}
 
-	public void setSupportedModes(long supportedModes) {
+	public void setSupportedModes(final long supportedModes) {
 		this.supportedModes = supportedModes;
 	}
 
-	public void setGameDataVersion(long gameDataVersion) {
+	public void setGameDataVersion(final long gameDataVersion) {
 		this.gameDataVersion = gameDataVersion;
 	}
 
@@ -499,5 +500,168 @@ public class War3MapW3i {
 
 	public boolean hasFlag(final int mapFlag) {
 		return (this.flags & mapFlag) != 0;
+	}
+
+	public short[] getUnknown2ProbablyLua() {
+		return this.unknown2ProbablyLua;
+	}
+
+	public void setVersion(final int version) {
+		this.version = version;
+	}
+
+	public void setSaves(final int saves) {
+		this.saves = saves;
+	}
+
+	public void setEditorVersion(final int editorVersion) {
+		this.editorVersion = editorVersion;
+	}
+
+	public void setGameVersionMajor(final int gameVersionMajor) {
+		this.gameVersionMajor = gameVersionMajor;
+	}
+
+	public void setGameVersionMinor(final int gameVersionMinor) {
+		this.gameVersionMinor = gameVersionMinor;
+	}
+
+	public void setGameVersionPatch(final int gameVersionPatch) {
+		this.gameVersionPatch = gameVersionPatch;
+	}
+
+	public void setGameVersionBuild(final int gameVersionBuild) {
+		this.gameVersionBuild = gameVersionBuild;
+	}
+
+	public void setName(final String name) {
+		this.name = name;
+	}
+
+	public void setAuthor(final String author) {
+		this.author = author;
+	}
+
+	public void setDescription(final String description) {
+		this.description = description;
+	}
+
+	public void setRecommendedPlayers(final String recommendedPlayers) {
+		this.recommendedPlayers = recommendedPlayers;
+	}
+
+	public void setFlags(final long flags) {
+		this.flags = flags;
+	}
+
+	public void setTileset(final char tileset) {
+		this.tileset = tileset;
+	}
+
+	public void setCampaignBackground(final int campaignBackground) {
+		this.campaignBackground = campaignBackground;
+	}
+
+	public void setLoadingScreenModel(final String loadingScreenModel) {
+		this.loadingScreenModel = loadingScreenModel;
+	}
+
+	public void setLoadingScreenText(final String loadingScreenText) {
+		this.loadingScreenText = loadingScreenText;
+	}
+
+	public void setLoadingScreenTitle(final String loadingScreenTitle) {
+		this.loadingScreenTitle = loadingScreenTitle;
+	}
+
+	public void setLoadingScreenSubtitle(final String loadingScreenSubtitle) {
+		this.loadingScreenSubtitle = loadingScreenSubtitle;
+	}
+
+	public void setPrologueScreenModel(final String prologueScreenModel) {
+		this.prologueScreenModel = prologueScreenModel;
+	}
+
+	public void setPrologueScreenText(final String prologueScreenText) {
+		this.prologueScreenText = prologueScreenText;
+	}
+
+	public void setPrologueScreenTitle(final String prologueScreenTitle) {
+		this.prologueScreenTitle = prologueScreenTitle;
+	}
+
+	public void setPrologueScreenSubtitle(final String prologueScreenSubtitle) {
+		this.prologueScreenSubtitle = prologueScreenSubtitle;
+	}
+
+	public void setUseTerrainFog(final int useTerrainFog) {
+		this.useTerrainFog = useTerrainFog;
+	}
+
+	public void setFogDensity(final float fogDensity) {
+		this.fogDensity = fogDensity;
+	}
+
+	public void setGlobalWeather(final int globalWeather) {
+		this.globalWeather = globalWeather;
+	}
+
+	public void setSoundEnvironment(final String soundEnvironment) {
+		this.soundEnvironment = soundEnvironment;
+	}
+
+	public void setLightEnvironmentTileset(final char lightEnvironmentTileset) {
+		this.lightEnvironmentTileset = lightEnvironmentTileset;
+	}
+
+	public void generateDefaultEmpty() {
+		this.version = 26; // 26 is a good version
+		this.saves = 1;
+		this.editorVersion = 1337; // might need to change this
+
+		this.name = "Just another Warsmash map";
+		this.author = "Unknown";
+		this.description = "A dynamically generated map or something";
+		this.recommendedPlayers = "All";
+
+		this.cameraBounds[0] = -17066.656f;
+		this.cameraBounds[1] = -17066.656f;
+		this.cameraBounds[2] = 17066.656f;
+		this.cameraBounds[3] = 17066.656f;
+		this.cameraBoundsComplements[0] = 0;
+		this.cameraBoundsComplements[1] = 0;
+		this.cameraBoundsComplements[2] = 0;
+		this.cameraBoundsComplements[3] = 0;
+		this.playableSize[0] = 134;
+		this.playableSize[1] = 134;
+
+		this.flags = War3MapW3iFlags.SHOW_WATER_WAVES_ON_CLIFF_SHORES
+				| War3MapW3iFlags.SHOW_WATER_WAVES_ON_CLIFF_SHORES;
+		this.tileset = 'A'; // some default, idk
+		this.campaignBackground = 0;
+
+		this.loadingScreenModel = "";
+
+		this.loadingScreenText = "Generated from some WDT file or something.";
+		this.loadingScreenTitle = "Just another Warcraft III map";
+		this.loadingScreenSubtitle = "Generated map";
+		this.gameDataSet = 1; // custom
+
+		this.prologueScreenModel = "";
+
+		this.prologueScreenText = "";
+		this.prologueScreenTitle = "";
+		this.prologueScreenSubtitle = "";
+
+		this.useTerrainFog = 0; // disable for now
+//			ParseUtils.readFloatArray(stream, this.fogHeight);
+		this.fogDensity = 0;
+//			ParseUtils.readUInt8Array(stream, this.fogColor);
+		this.globalWeather = 0; //// TODO probably war3id, right?
+		this.soundEnvironment = "";
+		this.lightEnvironmentTileset = 'A';
+		Arrays.fill(this.waterVertexColor, (short) 255);
+
+		this.gameDataVersion = -1; // indicate to the outside that this was unspecified
 	}
 }

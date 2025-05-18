@@ -3,6 +3,8 @@ package com.etheller.warsmash.parsers.w3x.wpm;
 import java.io.IOException;
 
 import com.etheller.warsmash.parsers.w3x.w3i.War3MapW3i;
+import com.etheller.warsmash.parsers.wdt.WdtMap;
+import com.etheller.warsmash.parsers.wdt.WdtMap.TileHeader;
 import com.etheller.warsmash.util.ParseUtils;
 import com.etheller.warsmash.util.War3ID;
 import com.google.common.io.LittleEndianDataInputStream;
@@ -58,6 +60,22 @@ public class War3MapWpm {
 
 	public void setPathing(final short[] pathing) {
 		this.pathing = pathing;
+	}
+
+	public static War3MapWpm generateConverted(final WdtMap map, final TileHeader tileHeader) {
+		final War3MapWpm pathing;
+		try {
+			pathing = new War3MapWpm(null);
+			pathing.version = 0;
+			pathing.size[0] = 160 * 4;
+			pathing.size[1] = 160 * 4;
+			pathing.pathing = new short[pathing.size[0] * pathing.size[1]];
+		}
+		catch (final IOException e) {
+			throw new RuntimeException(e);
+		}
+
+		return pathing;
 	}
 
 }

@@ -30,6 +30,7 @@ import com.etheller.warsmash.WarsmashGdxMapScreen;
 import com.etheller.warsmash.WarsmashGdxMenuScreen;
 import com.etheller.warsmash.WarsmashGdxMultiScreenGame;
 import com.etheller.warsmash.datasources.DataSource;
+import com.etheller.warsmash.datasources.FolderDataSource;
 import com.etheller.warsmash.networking.GameTurnManager;
 import com.etheller.warsmash.networking.WarsmashClient;
 import com.etheller.warsmash.networking.WarsmashClientSendingOrderListener;
@@ -55,6 +56,7 @@ import com.etheller.warsmash.parsers.w3x.War3Map;
 import com.etheller.warsmash.parsers.w3x.objectdata.Warcraft3MapObjectData;
 import com.etheller.warsmash.parsers.w3x.w3i.War3MapW3i;
 import com.etheller.warsmash.parsers.w3x.w3i.War3MapW3iFlags;
+import com.etheller.warsmash.parsers.wdt.WdtMap;
 import com.etheller.warsmash.units.DataTable;
 import com.etheller.warsmash.units.Element;
 import com.etheller.warsmash.units.custom.WTS;
@@ -69,7 +71,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.AnimationTokens.PrimaryTag;
 import com.etheller.warsmash.viewer5.handlers.w3x.SequenceUtils;
 import com.etheller.warsmash.viewer5.handlers.w3x.UnitSound;
 import com.etheller.warsmash.viewer5.handlers.w3x.War3MapViewer;
-import com.etheller.warsmash.viewer5.handlers.w3x.War3MapViewer.MapLoader;
+import com.etheller.warsmash.viewer5.handlers.w3x.War3MapViewer.MapLoaderInterface;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.ai.AIDifficulty;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.config.CBasePlayer;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.config.War3MapConfig;
@@ -1654,52 +1656,61 @@ public class MenuUI {
 			viewer.enableAudio();
 		}
 		try {
-			final War3Map map = War3MapViewer.beginLoadingMap(codebase, mapFilename);
-			final War3MapW3i mapInfo = map.readMapInformation();
-			final DataTable worldEditData = viewer.loadWorldEditData(map);
-			final WTS wts = viewer.preloadWTS(map);
+			if (mapFilename.toLowerCase().endsWith(WdtMap.EXTENSION)) {
+				viewer.loadWorldEditData();
 
-			final int campaignBackground = mapInfo.getCampaignBackground();
-			int animationSequenceIndex;
-			final String campaignScreenModel;
-			if (campaignBackground == -1) {
-				animationSequenceIndex = 0;
-				String skinKey = "Default";
-				for (int j = 0; j < WarsmashConstants.RACE_MANAGER.getEntryCount(); j++) {
-					final CRaceManagerEntry entry = WarsmashConstants.RACE_MANAGER.get(j);
-					final CRacePreference racePreference = WarsmashConstants.RACE_MANAGER
-							.getRacePreferenceById(entry.getRacePrefId());
-					if (this.currentMapConfig.getPlayer(localPlayerIndex).isRacePrefSet(racePreference)) {
-						skinKey = entry.getKey();
-						break;
-					}
-				}
-				// NOTE: this is a heavy reload to get the user skin, because MeleeUI loads it
-				// again so much later in the map load pipeline. It's probably possible to
-				// optimize that, so that the stuff we load here is passed downstream to MeleeUI
-				// and only loaded once.
-				final GameSkin userSkin = GameUI.loadSkin(map, skinKey);
-				campaignScreenModel = userSkin.getSkin().getField("LoadingMeleeBackground");
+				final File file = new File(mapFilename);
+				final WdtMap map = new WdtMap(new FolderDataSource(file.getParentFile().toPath()).read(file.getName()));
+				this.loadingMap = new LoadingMap(viewer, map);
 			}
 			else {
-				final Element loadingScreens = worldEditData.get("LoadingScreens");
-				final String key = String.format("%2s", Integer.toString(campaignBackground)).replace(' ', '0');
-				animationSequenceIndex = loadingScreens.getFieldValue(key, 2);
-				campaignScreenModel = loadingScreens.getField(key, 3);
-			}
+				final War3Map map = War3MapViewer.beginLoadingMap(codebase, mapFilename);
+				final War3MapW3i mapInfo = map.readMapInformation();
+				final DataTable worldEditData = viewer.loadWorldEditData(map);
+				final WTS wts = viewer.preloadWTS(map);
 
-			this.menuScreen.setModel(null, null);
-			this.rootFrame.setSpriteFrameModel(this.loadingBackground, campaignScreenModel);
-			this.loadingBackground.setSequence(animationSequenceIndex);
-			this.rootFrame.setSpriteFrameModel(this.loadingBar, this.rootFrame.getSkinField("LoadingProgressBar"));
-			this.loadingBar.setSequence(0);
-			this.loadingBar.setFrameByRatio(0.0f);
-			this.loadingBar.setZDepth(0.25f);
-			this.rootFrame.setText(this.loadingTitleText, getStringWithWTS(wts, mapInfo.getLoadingScreenTitle()));
-			this.rootFrame.setText(this.loadingSubtitleText, getStringWithWTS(wts, mapInfo.getLoadingScreenSubtitle()));
-			this.loadingText.setJustifyV(TextJustify.TOP);
-			this.rootFrame.setText(this.loadingText, getStringWithWTS(wts, mapInfo.getLoadingScreenText()));
-			this.loadingMap = new LoadingMap(viewer, map, mapInfo);
+				final int campaignBackground = mapInfo.getCampaignBackground();
+				int animationSequenceIndex;
+				final String campaignScreenModel;
+				if (campaignBackground == -1) {
+					animationSequenceIndex = 0;
+					String skinKey = "Default";
+					for (int j = 0; j < WarsmashConstants.RACE_MANAGER.getEntryCount(); j++) {
+						final CRaceManagerEntry entry = WarsmashConstants.RACE_MANAGER.get(j);
+						final CRacePreference racePreference = WarsmashConstants.RACE_MANAGER
+								.getRacePreferenceById(entry.getRacePrefId());
+						if (this.currentMapConfig.getPlayer(localPlayerIndex).isRacePrefSet(racePreference)) {
+							skinKey = entry.getKey();
+							break;
+						}
+					}
+					// NOTE: this is a heavy reload to get the user skin, because MeleeUI loads it
+					// again so much later in the map load pipeline. It's probably possible to
+					// optimize that, so that the stuff we load here is passed downstream to MeleeUI
+					// and only loaded once.
+					final GameSkin userSkin = GameUI.loadSkin(map, skinKey);
+					campaignScreenModel = userSkin.getSkin().getField("LoadingMeleeBackground");
+				}
+				else {
+					final Element loadingScreens = worldEditData.get("LoadingScreens");
+					final String key = String.format("%2s", Integer.toString(campaignBackground)).replace(' ', '0');
+					animationSequenceIndex = loadingScreens.getFieldValue(key, 2);
+					campaignScreenModel = loadingScreens.getField(key, 3);
+				}
+				this.menuScreen.setModel(null, null);
+				this.rootFrame.setSpriteFrameModel(this.loadingBackground, campaignScreenModel);
+				this.loadingBackground.setSequence(animationSequenceIndex);
+				this.rootFrame.setSpriteFrameModel(this.loadingBar, this.rootFrame.getSkinField("LoadingProgressBar"));
+				this.loadingBar.setSequence(0);
+				this.loadingBar.setFrameByRatio(0.0f);
+				this.loadingBar.setZDepth(0.25f);
+				this.rootFrame.setText(this.loadingTitleText, getStringWithWTS(wts, mapInfo.getLoadingScreenTitle()));
+				this.rootFrame.setText(this.loadingSubtitleText,
+						getStringWithWTS(wts, mapInfo.getLoadingScreenSubtitle()));
+				this.loadingText.setJustifyV(TextJustify.TOP);
+				this.rootFrame.setText(this.loadingText, getStringWithWTS(wts, mapInfo.getLoadingScreenText()));
+				this.loadingMap = new LoadingMap(viewer, map, mapInfo);
+			}
 
 		}
 		catch (final IOException e) {
@@ -1718,7 +1729,18 @@ public class MenuUI {
 		this.mainMenuFrame.setVisible(false);
 
 		try {
-			loadAndCacheMapConfigs(mapFilename);
+			if (mapFilename.toLowerCase().endsWith(WdtMap.EXTENSION)) {
+				final War3MapConfig war3MapConfig = new War3MapConfig(WarsmashConstants.MAX_PLAYERS);
+				MenuUI.this.currentMapConfig = war3MapConfig;
+				for (int i = 0; i < WarsmashConstants.MAX_PLAYERS; i++) {
+					final CBasePlayer player = this.currentMapConfig.getPlayer(i);
+					player.setController(CMapControl.USER);
+					player.setRacePref(WarsmashConstants.RACE_MANAGER.getRacePreference(1));
+				}
+			}
+			else {
+				loadAndCacheMapConfigs(mapFilename);
+			}
 		}
 		catch (final IOException e) {
 			e.printStackTrace();
@@ -1930,8 +1952,32 @@ public class MenuUI {
 							}
 						}
 						else {
-							this.loadingMap.activeMapLoader = this.loadingMap.viewer
-									.createMapLoader(this.loadingMap.map, this.loadingMap.mapInfo, localPlayerIndex);
+							if (this.loadingMap.mapWdt != null) {
+								this.loadingMap.activeMapLoader = this.loadingMap.viewer
+										.createWdtMapLoader(this.loadingMap.mapWdt, localPlayerIndex);
+
+								this.loadingMap.activeMapLoader.addLoadTask(() -> {
+									this.loadingMap.viewer.simulation.setFogEnabled(false);
+									this.loadingMap.viewer.simulation.setFogMaskEnabled(false);
+
+									final DataTable worldEditData = this.loadingMap.viewer.getWorldEditData();
+
+									final Element unitLights = worldEditData.get("UnitLights");
+									final Element terrainLights = worldEditData.get("TerrainLights");
+									final String tilesetString = String
+											.valueOf(this.loadingMap.activeMapLoader.getTileset());
+									final String unitLightString = unitLights.getField(tilesetString);
+									final String terrainLightString = terrainLights.getField(tilesetString);
+									this.loadingMap.viewer.setDayNightModels(terrainLightString, unitLightString);
+
+									this.loadingMap.viewer.setSkyModel(
+											"Environment\\Sky\\LordaeronSummerSky\\LordaeronSummerSky.mdx");
+								});
+							}
+							else {
+								this.loadingMap.activeMapLoader = this.loadingMap.viewer.createMapLoader(
+										this.loadingMap.map, this.loadingMap.mapInfo, localPlayerIndex);
+							}
 						}
 					}
 					catch (final IOException e) {
@@ -2556,13 +2602,22 @@ public class MenuUI {
 		private final War3MapViewer viewer;
 		private final War3Map map;
 		private final War3MapW3i mapInfo;
+		private final WdtMap mapWdt;
 
-		private MapLoader activeMapLoader = null;
+		private MapLoaderInterface activeMapLoader = null;
 
 		public LoadingMap(final War3MapViewer viewer, final War3Map map, final War3MapW3i mapInfo) {
 			this.viewer = viewer;
 			this.map = map;
 			this.mapInfo = mapInfo;
+			this.mapWdt = null;
+		}
+
+		public LoadingMap(final War3MapViewer viewer, final WdtMap map) {
+			this.viewer = viewer;
+			this.mapWdt = map;
+			this.map = null;
+			this.mapInfo = null;
 		}
 
 	}

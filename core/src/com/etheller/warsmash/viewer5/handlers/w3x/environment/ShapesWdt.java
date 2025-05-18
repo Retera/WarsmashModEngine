@@ -4,8 +4,8 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.GL30;
 import com.etheller.warsmash.util.RenderMathUtils;
 
-public class Shapes {
-	public static Shapes INSTANCE = new Shapes();
+public class ShapesWdt {
+	public static ShapesWdt INSTANCE = new ShapesWdt();
 	static {
 		INSTANCE.init();
 	}
@@ -13,13 +13,9 @@ public class Shapes {
 	public int vertexBuffer;
 	public int indexBuffer;
 
-	float[][] quadVertices = { { 1, 1 }, { 0, 1 }, { 0, 0 }, { 1, 0 } };
+	float[][] quadVertices = { { 1, 1 }, { 0, 1 }, { 0, 0 }, { 1, 0 }, { 0.5f, 0.5f } };
 
-	int[][] quadIndices = { { 1, 3, 0 }, { 2, 3, 1 } };
-
-	float[][] wdtQuadVertices = { { 1, 1 }, { 0, 1 }, { 0, 0 }, { 1, 0 }, { 0.5f, 0.5f } };
-
-	int[][] wdtQuadIndices = { { 1, 4, 0 }, { 2, 4, 1 }, { 3, 4, 2 }, { 0, 4, 3 } };
+	int[][] quadIndices = { { 1, 4, 0 }, { 2, 4, 1 }, { 3, 4, 2 }, { 0, 4, 3 } };
 
 	public void init() {
 		this.vertexBuffer = Gdx.gl30.glGenBuffer();

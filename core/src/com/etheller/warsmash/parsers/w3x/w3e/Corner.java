@@ -11,6 +11,7 @@ import com.google.common.io.LittleEndianDataOutputStream;
  */
 public class Corner {
 	private float groundHeight;
+	private float wdtInterpolatedCenterHeight;
 	private float waterHeight;
 	private int mapEdge;
 	private int ramp;
@@ -40,6 +41,7 @@ public class Corner {
 		this.groundVariation = other.groundVariation;
 		this.cliffTexture = other.cliffTexture;
 		this.layerHeight = other.layerHeight;
+		this.wdtInterpolatedCenterHeight = other.wdtInterpolatedCenterHeight;
 	}
 
 	public void load(final LittleEndianDataInputStream stream) throws IOException {
@@ -86,6 +88,10 @@ public class Corner {
 
 	public float getGroundHeight() {
 		return this.groundHeight;
+	}
+
+	public float getWdtInterpolatedCenterHeight() {
+		return this.wdtInterpolatedCenterHeight;
 	}
 
 	public float getWaterHeight() {
@@ -164,8 +170,44 @@ public class Corner {
 	public void setWaterHeight(final float waterHeight) {
 		this.waterHeight = waterHeight;
 	}
-	
-	public void setGroundHeight(float groundHeight) {
+
+	public void setGroundHeight(final float groundHeight) {
 		this.groundHeight = groundHeight;
+	}
+
+	public void setWdtInterpolatedCenterHeight(final float wdtInterpolatedCenterHeight) {
+		this.wdtInterpolatedCenterHeight = wdtInterpolatedCenterHeight;
+	}
+
+	public void setMapEdge(final int mapEdge) {
+		this.mapEdge = mapEdge;
+	}
+
+	public void setBlight(final int blight) {
+		this.blight = blight;
+	}
+
+	public void setWater(final int water) {
+		this.water = water;
+	}
+
+	public void setBoundary(final int boundary) {
+		this.boundary = boundary;
+	}
+
+	public void setGroundTexture(final int groundTexture) {
+		this.groundTexture = groundTexture;
+	}
+
+	public void setCliffVariation(final int cliffVariation) {
+		this.cliffVariation = cliffVariation;
+	}
+
+	public void setGroundVariation(final int groundVariation) {
+		this.groundVariation = groundVariation;
+	}
+
+	public void setLayerHeight(final int layerHeight) {
+		this.layerHeight = layerHeight;
 	}
 }

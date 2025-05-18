@@ -14,39 +14,53 @@ public class MapChunkLayer implements MdlxBlock, MdlxChunk {
 	private int effectId;
 
 	@Override
-	public void readMdx(BinaryReader reader, int version) {
-		textureId = reader.readUInt32();
-		props = reader.readUInt32();
-		offsAlpha = reader.readUInt32();
-		effectId = reader.readInt32();
+	public void readMdx(final BinaryReader reader, final int version) {
+		this.textureId = reader.readUInt32();
+		this.props = reader.readUInt32();
+		this.offsAlpha = reader.readUInt32();
+		this.effectId = reader.readInt32();
 	}
 
 	@Override
-	public void writeMdx(BinaryWriter writer, int version) {
+	public void writeMdx(final BinaryWriter writer, final int version) {
 		throw new RuntimeException();
 	}
 
 	@Override
-	public void readMdl(MdlTokenInputStream stream, int version) {
+	public void readMdl(final MdlTokenInputStream stream, final int version) {
 		throw new RuntimeException();
 	}
 
 	@Override
-	public void writeMdl(MdlTokenOutputStream stream, int version) {
+	public void writeMdl(final MdlTokenOutputStream stream, final int version) {
 		throw new RuntimeException();
 	}
 
-
 	@Override
-	public long getByteLength(int version) {
+	public long getByteLength(final int version) {
 		return 4 * 4;
 	}
 
 	@Override
 	public String toString() {
-		return "MapChunkLayer [textureId=" + textureId + ", props=" + props + ", offsAlpha=" + offsAlpha + ", effectId="
-				+ effectId + "]";
+		return "MapChunkLayer [textureId=" + this.textureId + ", props=" + this.props + ", offsAlpha=" + this.offsAlpha
+				+ ", effectId=" + this.effectId + "]";
 	}
-	
+
+	public long getTextureId() {
+		return this.textureId;
+	}
+
+	public long getProps() {
+		return this.props;
+	}
+
+	public long getOffsAlpha() {
+		return this.offsAlpha;
+	}
+
+	public int getEffectId() {
+		return this.effectId;
+	}
 
 }

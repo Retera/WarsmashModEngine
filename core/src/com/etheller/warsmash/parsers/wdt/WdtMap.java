@@ -2,19 +2,18 @@ package com.etheller.warsmash.parsers.wdt;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
-import com.etheller.warsmash.util.ParseUtils;
 import com.etheller.warsmash.util.War3ID;
 import com.hiveworkshop.rms.parsers.mdlx.MdlxBlock;
 import com.hiveworkshop.rms.parsers.mdlx.MdlxBlockDescriptor;
 import com.hiveworkshop.rms.parsers.mdlx.MdlxChunk;
 import com.hiveworkshop.rms.parsers.mdlx.MdlxUnknownChunk;
 import com.hiveworkshop.rms.parsers.mdlx.mdl.MdlTokenInputStream;
-import com.hiveworkshop.rms.parsers.mdlx.mdl.MdlTokenOutputStream;
 import com.hiveworkshop.rms.parsers.mdlx.mdl.MdlUtils;
 import com.hiveworkshop.rms.util.BinaryReader;
-import com.hiveworkshop.rms.util.BinaryWriter;
 
 /**
  * A map.
@@ -31,6 +30,7 @@ public class WdtMap {
 	private static final int MTEX = ('M' << 24) | ('T' << 16) | ('E' << 8) | ('X');// War3ID.fromString("MDLX").getValue();
 	private static final int MDDF = ('M' << 24) | ('D' << 16) | ('D' << 8) | ('F');// War3ID.fromString("MDLX").getValue();
 	private static final int MCNK = ('M' << 24) | ('C' << 16) | ('N' << 8) | ('K');// War3ID.fromString("MDLX").getValue();
+	public static final String EXTENSION = ".wdt";
 
 	public int version = 0;
 	public List<MdlxUnknownChunk> unknownChunks = new ArrayList<>();
@@ -43,6 +43,8 @@ public class WdtMap {
 	public List<String> worldModelFileNames = new ArrayList<>();
 	public List<String> doodadModelFileNames = new ArrayList<>();
 	public List<TileHeader> tileHeaders = new ArrayList<>();
+	public List<Integer> usedIdx = new ArrayList<>();
+	public int usedIdxIdx = 0;
 
 	public WdtMap() {
 
@@ -56,7 +58,8 @@ public class WdtMap {
 		// WDT files start with "MVER" probably.
 		if ((buffer.get(0) == 'R') && (buffer.get(1) == 'E') && (buffer.get(2) == 'V') && (buffer.get(3) == 'M')) {
 			loadWdt(buffer);
-		} else {
+		}
+		else {
 			loadMdl(buffer);
 		}
 	}
@@ -74,9 +77,11 @@ public class WdtMap {
 	public void loadWdt(final ByteBuffer buffer) {
 		final BinaryReader reader = new BinaryReader(buffer);
 
+		final Map<War3ID, Integer> chunkToCount = new HashMap<>();
 		while (reader.remaining() > 0) {
 			final int tag = reader.readInt32();
 			final int size = reader.readInt32();
+			final War3ID readTag = new War3ID(tag);
 			switch (tag) {
 			case MVER:
 				loadVersionChunk(reader);
@@ -85,21 +90,27 @@ public class WdtMap {
 				loadHeaderChunk(reader);
 				break;
 			case MAIN:
-//				loadMainChunk(reader); 
+//				loadMainChunk(reader);
 				loadNDynamicObjects(this.smAreaInfos, SMAreaInfo::new, reader, size / 16);
+				int idx = 0;
+				for (final SMAreaInfo info : this.smAreaInfos) {
+					if (info.getSize() != 0) {
+						this.usedIdx.add(idx);
+					}
+					idx++;
+				}
 				break;
 			case MONM:
-				readStrings(reader, size, worldModelFileNames);
+				readStrings(reader, size, this.worldModelFileNames);
 				break;
 			case MDNM:
-				readStrings(reader, size, doodadModelFileNames);
+				readStrings(reader, size, this.doodadModelFileNames);
 				break;
 			case MHDR:
-				loadTileHeader(reader, size);
+				loadTileHeader(reader, size, this.usedIdx.get(this.usedIdxIdx++));
 				break;
 			case MCIN:
-				loadNDynamicObjects(getLastTileHeader().chunkInfos, ChunkInfo::new, reader,
-						16 * 16);
+				loadNDynamicObjects(getLastTileHeader().chunkInfos, ChunkInfo::new, reader, 16 * 16);
 				break;
 			case MTEX:
 				readStrings(reader, size, getLastTileHeader().textureFileNames);
@@ -111,7 +122,7 @@ public class WdtMap {
 				loadDynamicObjects(getLastTileHeader().mapObjectDefinitions, MapObjectDefinition::new, reader, size);
 				break;
 			case MCNK:
-				Chunk chunk = new Chunk();
+				final Chunk chunk = new Chunk();
 				chunk.readMdx(reader, size);
 				getLastTileHeader().chunks.add(chunk);
 				break;
@@ -269,15 +280,20 @@ public class WdtMap {
 //				loadBindPoseChunk(reader, size);
 //				break;
 			default:
-				this.unknownChunks.add(new MdlxUnknownChunk(reader, size, new War3ID(tag)));
+				this.unknownChunks.add(new MdlxUnknownChunk(reader, size, readTag));
 				break;
 			}
-			System.out.println("read chunk: " + new War3ID(tag));
+			Integer count = chunkToCount.get(readTag);
+			if (count == null) {
+				count = 0;
+			}
+			count++;
+			chunkToCount.put(readTag, count);
 		}
 	}
 
 	private TileHeader getLastTileHeader() {
-		return this.tileHeaders.get(tileHeaders.size() - 1);
+		return this.tileHeaders.get(this.tileHeaders.size() - 1);
 	}
 
 	public static final class TileHeader {
@@ -288,42 +304,44 @@ public class WdtMap {
 		private long sizeDoo;
 		private long offsMob; // MODF
 		private long sizeMob;
-		private byte[] pad = new byte[36];
+		private final byte[] pad = new byte[36];
 
 		public List<ChunkInfo> chunkInfos = new ArrayList<>();
 		public List<String> textureFileNames = new ArrayList<>();
 		public List<DoodadDefinition> doodads = new ArrayList<>();
 		public List<MapObjectDefinition> mapObjectDefinitions = new ArrayList<>();
-		
-		List<Chunk> chunks = new ArrayList<>();
 
-		public void read(BinaryReader reader, int size) {
-			offsInfo = reader.readUInt32();
-			offsTex = reader.readUInt32();
-			sizeTex = reader.readUInt32();
-			offsDoo = reader.readUInt32();
-			sizeDoo = reader.readUInt32();
-			offsMob = reader.readUInt32();
-			sizeMob = reader.readUInt32();
-			reader.readInt8Array(pad);
+		public List<Chunk> chunks = new ArrayList<>();
+		public int idx;
+
+		public void read(final BinaryReader reader, final int size) {
+			this.offsInfo = reader.readUInt32();
+			this.offsTex = reader.readUInt32();
+			this.sizeTex = reader.readUInt32();
+			this.offsDoo = reader.readUInt32();
+			this.sizeDoo = reader.readUInt32();
+			this.offsMob = reader.readUInt32();
+			this.sizeMob = reader.readUInt32();
+			reader.readInt8Array(this.pad);
 		}
 
 	}
 
-	private void loadTileHeader(BinaryReader reader, int size) {
-		int start = reader.position();
-		TileHeader tileHeader = new TileHeader();
+	private void loadTileHeader(final BinaryReader reader, final int size, final Integer idx) {
+		final int start = reader.position();
+		final TileHeader tileHeader = new TileHeader();
 		tileHeader.read(reader, size);
-		tileHeaders.add(tileHeader);
-		if (start + size != reader.position()) {
+		tileHeader.idx = idx;
+		this.tileHeaders.add(tileHeader);
+		if ((start + size) != reader.position()) {
 			throw new IllegalStateException(start + size + " != " + reader.position());
 		}
 	}
 
-	private void readStrings(final BinaryReader reader, final int size, List<String> output) {
+	private void readStrings(final BinaryReader reader, final int size, final List<String> output) {
 		int sizeRemaining = size;
 		while (sizeRemaining > 0) {
-			StringBuilder sb = new StringBuilder();
+			final StringBuilder sb = new StringBuilder();
 			byte x;
 			while ((x = reader.readInt8()) != 0) {
 				sb.append((char) x);
@@ -343,7 +361,7 @@ public class WdtMap {
 		this.offsDoodadNames = reader.readInt32();
 		this.nMapObjNames = reader.readInt32();
 		this.offsMapObjNames = reader.readInt32();
-		reader.readInt32Array(headerUnused);
+		reader.readInt32Array(this.headerUnused);
 	}
 
 	private void loadMainChunk(final BinaryReader reader) {

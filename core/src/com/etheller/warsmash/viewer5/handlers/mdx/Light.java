@@ -8,9 +8,9 @@ public class Light extends GenericObject {
 	private final Type type;
 	private final float[] attenuation;
 	private final float[] color;
-	private final float intensity;
+	private float intensity;
 	private final float[] ambientColor;
-	private final float ambientIntensity;
+	private float ambientIntensity;
 
 	public Light(final MdxModel model, final MdlxLight light, final int index) {
 		super(model, light, index);
@@ -78,5 +78,13 @@ public class Light extends GenericObject {
 		// Directional ambient light used for torches in the game world, and similar
 		// objects that "glow"
 		AMBIENT;
+	}
+
+	public void setIntensity(final float intensity) {
+		this.intensity = intensity;
+	}
+
+	public void setAmbientIntensity(final float ambientIntensity) {
+		this.ambientIntensity = ambientIntensity;
 	}
 }

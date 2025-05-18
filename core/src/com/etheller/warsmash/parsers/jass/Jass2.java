@@ -438,15 +438,15 @@ public class Jass2 {
 					(arguments, globalScope, triggerScope) -> {
 						final String skinArg = arguments.get(0).visit(StringJassValueVisitor.getInstance());
 						final GameSkin skin = GameUI.loadSkin(dataSource, skinArg);
-						if(true) {
+						if (true) {
 							throw new IllegalStateException();
 						}
 //						final GameUI gameUI = new GameUI(dataSource, skin, uiViewport, uiScene, war3MapViewer, 0,
 //								war3MapViewer.getAllObjectData().getWts());
-						JUIEnvironment.this.gameUI = gameUI;
+						JUIEnvironment.this.gameUI = this.gameUI;
 						JUIEnvironment.this.skin = skin.getSkin();
-						rootFrameListener.onCreate(gameUI);
-						return new HandleJassValue(frameHandleType, gameUI);
+						rootFrameListener.onCreate(this.gameUI);
+						return new HandleJassValue(frameHandleType, this.gameUI);
 					});
 			jassProgramVisitor.getJassNativeManager().createNative("LoadTOCFile",
 					(arguments, globalScope, triggerScope) -> {
@@ -3100,10 +3100,11 @@ public class Jass2 {
 						final CUnit whichUnit = nullable(arguments, 0, ObjectJassValueVisitor.getInstance());
 						final float positionX = arguments.get(1).visit(RealJassValueVisitor.getInstance()).floatValue();
 						if (whichUnit != null) {
-							CAbilityPlayerPawn playerPawn = whichUnit.getFirstAbilityOfType(CAbilityPlayerPawn.class);
+							final CAbilityPlayerPawn playerPawn = whichUnit
+									.getFirstAbilityOfType(CAbilityPlayerPawn.class);
 							if (playerPawn != null) {
 								playerPawn.setZ(positionX);
-								RenderUnit renderPeer = war3MapViewer.getRenderPeer(whichUnit);
+								final RenderUnit renderPeer = war3MapViewer.getRenderPeer(whichUnit);
 								renderPeer.location[2] = positionX;
 							}
 						}
@@ -5364,14 +5365,15 @@ public class Jass2 {
 						war3MapViewer.setBlight(whichLocationX, whichLocationY, radius, addBlight);
 						return null;
 					});
-			jassProgramVisitor.getJassNativeManager().createNative("SetDoodadAnimationRect", (arguments, globalScope, triggerScope) -> {
-				Rectangle rect = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());
-				int typeId = arguments.get(1).visit(IntegerJassValueVisitor.getInstance());
-				String animName = arguments.get(2).visit(StringJassValueVisitor.getInstance());
-				war3MapViewer.setDoodadAnimationRect(rect, typeId, animName);
-				
-				return null;
-			});
+			jassProgramVisitor.getJassNativeManager().createNative("SetDoodadAnimationRect",
+					(arguments, globalScope, triggerScope) -> {
+						final Rectangle rect = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());
+						final int typeId = arguments.get(1).visit(IntegerJassValueVisitor.getInstance());
+						final String animName = arguments.get(2).visit(StringJassValueVisitor.getInstance());
+						war3MapViewer.setDoodadAnimationRect(rect, typeId, animName);
+
+						return null;
+					});
 			jassProgramVisitor.getJassNativeManager().createNative("GetLocalPlayer",
 					(arguments, globalScope, triggerScope) -> {
 						return new HandleJassValue(playerType,
@@ -9248,8 +9250,17 @@ public class Jass2 {
 				this.jassProgramVisitor.getGlobals().queueThread(mainThread);
 			}
 			catch (final Exception exc) {
-				throw new JassException(this.jassProgramVisitor.getGlobals(),
-						"Exception on Line " + this.jassProgramVisitor.getGlobals().getLineNumber(), exc);
+//				throw new JassException(this.jassProgramVisitor.getGlobals(),
+//						"Exception on Line " + this.jassProgramVisitor.getGlobals().getLineNumber(), exc);
+				new JassException(this.jassProgramVisitor.getGlobals(),
+						"Exception on Line " + this.jassProgramVisitor.getGlobals().getLineNumber(), exc)
+						.printStackTrace();
+
+				// if we cannot "main" then we should probably "InitBlizzard":
+
+//				final JassThread mainThread = this.jassProgramVisitor.getGlobals().createThread("InitBlizzard",
+//						Collections.emptyList(), TriggerExecutionScope.EMPTY);
+//				this.jassProgramVisitor.getGlobals().queueThread(mainThread);
 			}
 		}
 	}

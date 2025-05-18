@@ -51,7 +51,9 @@ public class MeleeUIMinimap {
 		if (!this.visible) {
 			return;
 		}
-		batch.draw(this.minimapTexture, this.minimap.x, this.minimap.y, this.minimap.width, this.minimap.height);
+		if (this.minimapTexture != null) {
+			batch.draw(this.minimapTexture, this.minimap.x, this.minimap.y, this.minimap.width, this.minimap.height);
+		}
 		final Color og = batch.getColor();
 
 		final int minX = pathingGrid.getFogOfWarIndexX(this.playableMapArea.getX());
@@ -149,7 +151,7 @@ public class MeleeUIMinimap {
 		return this.minimapFilledArea.contains(x, y);
 	}
 
-	public void setVisible(boolean visible) {
+	public void setVisible(final boolean visible) {
 		this.visible = visible;
 	}
 }

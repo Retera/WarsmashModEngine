@@ -33,10 +33,8 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.thirdperson.CAbilityPlayerPawn;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.thirdperson.CBehaviorPlayerPawn;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.OrderIds;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.vision.CFogModifier;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayer;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayerUnitOrderListener;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CFogState;
 import com.etheller.warsmash.viewer5.handlers.w3x.ui.WarsmashToggleableUI;
 import com.etheller.warsmash.viewer5.handlers.w3x.ui.command.ClickableActionFrame;
 import com.etheller.warsmash.viewer5.handlers.w3x.ui.command.ClickableFrame;
@@ -102,16 +100,40 @@ public class ThirdPersonUI implements WarsmashToggleableUI {
 		final List<CUnit> pawnUnits = new ArrayList<>();
 		if (ALL_PLAYERS) {
 			for (int i = 0; i < WarsmashConstants.MAX_PLAYERS; i++) {
-				float[] startLocation = war3MapViewer.simulation.getPlayer(i).getStartLocation();
-				pawnUnits.add(this.war3MapViewer.simulation.createUnitSimple(this.pawnId, i, startLocation[0], startLocation[1], 0));
+				final float[] startLocation = this.war3MapViewer.simulation.getPlayer(i).getStartLocation();
+				pawnUnits.add(this.war3MapViewer.simulation.createUnitSimple(this.pawnId, i, startLocation[0],
+						startLocation[1], 0));
 			}
 
 			this.pawnUnit = pawnUnits.get(this.war3MapViewer.getLocalPlayerIndex());
 		}
 		else {
-			float[] startLocation = war3MapViewer.simulation.getPlayer(this.war3MapViewer.getLocalPlayerIndex()).getStartLocation();
+			final float[] startLocation = this.war3MapViewer.simulation
+					.getPlayer(this.war3MapViewer.getLocalPlayerIndex()).getStartLocation();
 			pawnUnits.add(this.war3MapViewer.simulation.createUnitSimple(this.pawnId,
 					this.war3MapViewer.getLocalPlayerIndex(), startLocation[0], startLocation[1], 0));
+//			this.war3MapViewer.simulation.createUnitSimple(War3ID.fromString("hwtw"),
+//			this.war3MapViewer.getLocalPlayerIndex(), startLocation[0], startLocation[1], 0);
+//			this.war3MapViewer.simulation.createUnitSimple(War3ID.fromString("hpea"),
+//					this.war3MapViewer.getLocalPlayerIndex(), startLocation[0], startLocation[1], 0);
+//			this.war3MapViewer.simulation.createUnitSimple(War3ID.fromString("hpea"),
+//					this.war3MapViewer.getLocalPlayerIndex(), startLocation[0], startLocation[1], 0);
+//			this.war3MapViewer.simulation.createUnitSimple(War3ID.fromString("hpea"),
+//					this.war3MapViewer.getLocalPlayerIndex(), startLocation[0], startLocation[1], 0);
+//			this.war3MapViewer.simulation.getPlayer(0).addGold(99999);
+//			this.war3MapViewer.simulation.getPlayer(0).addLumber(99999);
+
+			// for (int i = 0; i < 6; i++) {
+//				for (int k = 0; k < 7; k++) {
+//					this.war3MapViewer.simulation.createItem(War3ID.fromString("tkno"), i * 32, k * 32);
+//				}
+//			}
+//			for (int i = 0; i < 6; i++) {
+//				for (int k = 0; k < 7; k++) {
+//					this.war3MapViewer.simulation.createItem(War3ID.fromString("gold"), i * 32, k * 32);
+//					this.war3MapViewer.simulation.createItem(War3ID.fromString("lmbr"), i * 32, k * 32);
+//				}
+//			}
 
 			this.pawnUnit = pawnUnits.get(0);
 		}
@@ -144,14 +166,13 @@ public class ThirdPersonUI implements WarsmashToggleableUI {
 		catch (final IOException e) {
 			throw new IllegalStateException(e);
 		}
-		
+
 		final UIFrame mainMenuBarFixed = this.rootFrame.getFrameByName("MainMenuBar", 0);
 		mainMenuBarFixed.setVisible(true);
-		
+
 		this.tooltipFrame = this.rootFrame.createFrame("GameTooltip", this.rootFrame, 0, 0);
 //		this.uiParent.add(this.tooltipFrame);
 		this.tooltipFrame1 = (StringFrame) this.rootFrame.getFrameByName("$parentTextLeft1", 0);
-
 
 		this.cursorFrame = (SpriteFrame) this.rootFrame.createFrameByType("SPRITE", "SmashTPCursorFrame",
 				this.rootFrame, "", 0);
@@ -366,8 +387,9 @@ public class ThirdPersonUI implements WarsmashToggleableUI {
 			}
 			else {
 				this.mouseOverUIFrame = null;
-				if(tooltipFrame!=null)
-				this.tooltipFrame.setVisible(false);
+				if (this.tooltipFrame != null) {
+					this.tooltipFrame.setVisible(false);
+				}
 			}
 		}
 		if (mousedUIFrame == null) {
@@ -379,17 +401,19 @@ public class ThirdPersonUI implements WarsmashToggleableUI {
 		final String toolTip = mousedUIFrame.getToolTip();
 		final String uberTip = mousedUIFrame.getUberTip();
 		if ((toolTip == null) || (uberTip == null)) {
-			if(tooltipFrame!=null)
-			this.tooltipFrame.setVisible(false);
+			if (this.tooltipFrame != null) {
+				this.tooltipFrame.setVisible(false);
+			}
 		}
 		else {
-			if(tooltipFrame1!=null)
-			this.rootFrame.setText(this.tooltipFrame1, uberTip);
+			if (this.tooltipFrame1 != null) {
+				this.rootFrame.setText(this.tooltipFrame1, uberTip);
+			}
 		}
 	}
 
 	@Override
-	public boolean scrolled(float amountX, float amountY) {
+	public boolean scrolled(final float amountX, final float amountY) {
 		this.cameraManager.distance += amountY * 10;
 		return false;
 	}

@@ -42,7 +42,7 @@ public class WaveBuilder {
 		this.models = new HashMap<>();
 	}
 
-	public void createWaves(final Terrain terrain) {
+	public void createWaves(final TerrainInterface terrain) {
 		final int columns = this.mapSize[0];
 		final int rows = this.mapSize[1];
 		final float wavesDepth = 25f / 128f;
@@ -113,7 +113,7 @@ public class WaveBuilder {
 		}
 	}
 
-	private void addModelInstance(final Terrain terrain, final String path, final double rotation) {
+	private void addModelInstance(final TerrainInterface terrain, final String path, final double rotation) {
 		if (!this.models.containsKey(path)) {
 			this.models.put(path,
 					(MdxModel) this.viewer.load(path, this.viewer.wc3PathSolver, this.viewer.solverParams));

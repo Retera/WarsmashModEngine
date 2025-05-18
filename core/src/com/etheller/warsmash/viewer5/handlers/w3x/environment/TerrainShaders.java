@@ -306,6 +306,221 @@ public class TerrainShaders {
 				"}";
 	}
 
+	public static final class TerrainWdt {
+		private TerrainWdt() {
+		}
+
+		public static final String vert() {
+			return "#version 330 core\r\n" + //
+					"\r\n" + //
+					"in vec2 vPosition;\r\n" + //
+					"uniform mat4 MVP;\r\n" + //
+					"uniform mat4 DepthBiasMVP;\r\n" + //
+					"\r\n" + //
+					"uniform sampler2D height_texture;\r\n" + //
+					"uniform sampler2D height_cliff_texture;\r\n" + //
+					"uniform sampler2D height_cliff_texture_wdt;\r\n" + //
+					"uniform usampler2D terrain_alpha_list;\r\n" + //
+					"uniform float centerOffsetX;\r\n" + //
+					"uniform float centerOffsetY;\r\n" + //
+					"uniform int tileOffsetX;\r\n" + //
+					"uniform int tileOffsetY;\r\n" + //
+					"uniform sampler2D lightTexture;\r\n" + //
+					"uniform float lightCount;\r\n" + //
+					"uniform float lightTextureHeight;\r\n" + //
+					"\r\n" + //
+					"out vec2 UV;\r\n" + //
+					"flat out uvec4 texture_indices;\r\n" + //
+					"out vec2 pathing_map_uv;\r\n" + //
+					"out vec3 position;\r\n" + //
+					"out vec3 ShadowCoord;\r\n" + //
+					"out vec2 v_suv;\r\n" + //
+					"out vec2 v_auv;\r\n" + //
+					"out vec3 shadeColor;\r\n" + //
+					"\r\n" + //
+					"void main() { \r\n" + //
+					"	ivec2 size = textureSize(height_cliff_texture_wdt, 0);\r\n" + //
+					"	ivec2 size_world = textureSize(height_texture, 0) - ivec2(1, 1);\r\n" + //
+					"	ivec2 pos = ivec2(gl_InstanceID % size.x, gl_InstanceID / size.x);\r\n" + //
+					"\r\n" + //
+					"	vec4 height;\r\n" + //
+					"	ivec2 height_pos;\r\n" + //
+					"	if (vPosition.x > 0.25 && vPosition.x < 0.75) {\r\n" + // wdt interior
+					"		height_pos = pos;\r\n" + //
+					"		height = texelFetch(height_cliff_texture_wdt, height_pos, 0);\r\n" + //
+					"	} else {\r\n" + //
+					"		height_pos = ivec2(vPosition + pos);\r\n" + //
+					"		height = texelFetch(height_cliff_texture, height_pos, 0);\r\n" + //
+					"	}\r\n" + //
+					"	ivec3 off = ivec3(1, 1, 0);\r\n" + //
+					"	height_pos += ivec2(tileOffsetX, tileOffsetY);\r\n" + //
+					"	float hL = texelFetch(height_texture, height_pos - off.xz, 0).r;\r\n" + //
+					"	float hR = texelFetch(height_texture, height_pos + off.xz, 0).r;\r\n" + //
+					"	float hD = texelFetch(height_texture, height_pos - off.zy, 0).r;\r\n" + //
+					"	float hU = texelFetch(height_texture, height_pos + off.zy, 0).r;\r\n" + //
+					"	ivec2 pos_tile = pos + ivec2(tileOffsetX, tileOffsetY);\r\n" + //
+					"	vec3 normal = normalize(vec3(hL - hR, hD - hU, 2.0));\r\n" + //
+					"\r\n" + //
+					" UV = vec2(vPosition.x, 1 - vPosition.y);\r\n" + //
+					// " UV = vec2(vPosition.x==0?0.01:0.99, vPosition.y==0?0.99:0.01);\r\n" + //
+					"	texture_indices = texelFetch(terrain_alpha_list, pos, 0);\r\n" + //
+					"	pathing_map_uv = (vPosition + pos_tile) * 4;	\r\n" + //
+					"\r\n" + //
+					"	// Cliff culling\r\n" + //
+					"	vec3 positionWorld = vec3((vPosition.x + pos_tile.x)*128.0 + centerOffsetX, (vPosition.y + pos_tile.y)*128.0 + centerOffsetY, height.r*128.0);\r\n"
+					+ //
+					"	position = positionWorld;\r\n" + //
+//					"	gl_Position = ((texture_indices.a & 32768u) == 0u) ? MVP * vec4(position.xyz, 1) : vec4(2.0, 0.0, 0.0, 1.0);\r\n"
+//					+ //
+					"	gl_Position = MVP * vec4(position.xyz, 1);\r\n" + //
+					"	ShadowCoord = (((texture_indices.a & 32768u) == 0u) ? DepthBiasMVP * vec4(position.xyz, 1) : vec4(2.0, 0.0, 0.0, 1.0)).xyz;\r\n"
+					+ //
+					"   v_suv = (vPosition + pos_tile) / size_world;\r\n" + //
+					"   v_auv = vec2(vPosition.x + pos.x, 8.0 - (vPosition.y + pos.y)) / size;\r\n" + //
+					"	position.x = (position.x - centerOffsetX) / (size.x * 128.0);\r\n" + //
+					"	position.y = (position.y - centerOffsetY) / (size.y * 128.0);\r\n" + //
+					Shaders.lightSystem("normal", "positionWorld", "lightTexture", "lightTextureHeight", "lightCount",
+							true)
+					+ "\r\n" + //
+					"        shadeColor = clamp(lightFactor, 0.0, 1.0);\r\n" + //
+					"}";
+		}
+
+		public static final String frag = "#version 330 core\r\n" + //
+				"\r\n" + //
+				"uniform bool show_pathing_map;\r\n" + //
+				"uniform bool show_lighting;\r\n" + //
+				"\r\n" + //
+				"uniform sampler2D sample0;\r\n" + //
+				"uniform sampler2D sample1;\r\n" + //
+				"uniform sampler2D sample2;\r\n" + //
+				"uniform sampler2D sample3;\r\n" + //
+				"uniform sampler2D alpha1;\r\n" + //
+				"uniform sampler2D alpha2;\r\n" + //
+				"uniform sampler2D alpha3;\r\n" + //
+//				"uniform sampler2D sample4;\r\n" + //
+//				"uniform sampler2D sample5;\r\n" + //
+//				"uniform sampler2D sample6;\r\n" + //
+//				"uniform sampler2D sample7;\r\n" + //
+//				"uniform sampler2D sample8;\r\n" + //
+//				"uniform sampler2D sample9;\r\n" + //
+//				"uniform sampler2D sample10;\r\n" + //
+//				"uniform sampler2D sample11;\r\n" + //
+//				"uniform sampler2D sample12;\r\n" + //
+//				"uniform sampler2D sample13;\r\n" + //
+//				"uniform sampler2D sample14;\r\n" + //
+//				"uniform sampler2D sample15;\r\n" + //
+//				"uniform sampler2D sample16;\r\n" + //
+				"\r\n" + //
+//				"layout (binding = 20) uniform usampler2D pathing_map_static;\r\n" + //
+//				"layout (binding = 21) uniform usampler2D pathing_map_dynamic;\r\n" + //
+				"uniform sampler2D shadowMap;\r\n" + //
+				"uniform sampler2D fogOfWarMap;\r\n" + //
+				"    uniform vec4 u_fogColor;\r\n" + //
+				"    uniform vec4 u_fogParams;\r\n" + //
+				"uniform int layer_count;\r\n" + //
+				"\r\n" + //
+				"in vec2 UV;\r\n" + //
+				"flat in uvec4 texture_indices;\r\n" + //
+				"in vec2 pathing_map_uv;\r\n" + //
+				"in vec3 position;\r\n" + //
+				"in vec3 ShadowCoord;\r\n" + //
+				"in vec2 v_suv;\r\n" + //
+				"in vec2 v_auv;\r\n" + //
+				"in vec3 shadeColor;\r\n" + //
+				"\r\n" + //
+				"out vec4 color;\r\n" + //
+//				"layout (location = 1) out vec4 position;\r\n" + //
+				"\r\n" + //
+				"vec4 get_fragment(uint id, vec2 uv) {\r\n" + //
+				"	vec2 dx = dFdx(uv.xy);\r\n" + //
+				"	vec2 dy = dFdy(uv.xy);\r\n" + //
+				"\r\n" + //
+				"	switch(id) {\r\n" + //
+				"		case 0u:\r\n" + //
+				"			return texture(sample0, uv);\r\n" + //
+				"		case 1u:\r\n" + //
+				"			return texture(sample1, uv);\r\n" + //
+				"		case 2u:\r\n" + //
+				"			return texture(sample2, uv);\r\n" + //
+				"		case 3u:\r\n" + //
+				"			return texture(sample3, uv);\r\n" + //
+//				"		case 4u:\r\n" + //
+//				"			return textureGrad(sample4, vec2(uv), dx, dy);\r\n" + //
+//				"		case 5u:\r\n" + //
+//				"			return textureGrad(sample5, vec2(uv), dx, dy);\r\n" + //
+//				"		case 6u:\r\n" + //
+//				"			return textureGrad(sample6, vec2(uv), dx, dy);\r\n" + //
+//				"		case 7u:\r\n" + //
+//				"			return textureGrad(sample7, vec2(uv), dx, dy);\r\n" + //
+//				"		case 8u:\r\n" + //
+//				"			return textureGrad(sample8, vec2(uv), dx, dy);\r\n" + //
+//				"		case 9u:\r\n" + //
+//				"			return textureGrad(sample9, vec2(uv), dx, dy);\r\n" + //
+//				"		case 10u:\r\n" + //
+//				"			return textureGrad(sample10, vec2(uv), dx, dy);\r\n" + //
+//				"		case 11u:\r\n" + //
+//				"			return textureGrad(sample11, vec2(uv), dx, dy);\r\n" + //
+//				"		case 12u:\r\n" + //
+//				"			return textureGrad(sample12, vec2(uv), dx, dy);\r\n" + //
+//				"		case 13u:\r\n" + //
+//				"			return textureGrad(sample13, vec2(uv), dx, dy);\r\n" + //
+//				"		case 14u:\r\n" + //
+//				"			return textureGrad(sample14, vec2(uv), dx, dy);\r\n" + //
+//				"		case 15u:\r\n" + //
+//				"			return textureGrad(sample15, vec2(uv), dx, dy);\r\n" + //
+//				"		case 16u:\r\n" + //
+//				"			return textureGrad(sample16, vec2(uv), dx, dy);\r\n" + //
+				"		case 17u:\r\n" + //
+				"			return vec4(0, 0, 0, 0);\r\n" + //
+				"	}\r\n" + //
+				"}\r\n" + //
+				"\r\n" + //
+				"\r\n" + //
+				"void main() {\r\n" + //
+				"	vec4 layerFragment = texture(sample0, UV);\r\n" + //
+				"	color = layerFragment;\r\n" + //
+				"	if (layer_count > 1) {\r\n" + //
+				"		layerFragment = texture(sample1, UV);\r\n" + //
+				"		color = mix(color, layerFragment, texture(alpha1, v_auv).r);\r\n" + //
+				"	}\r\n" + //
+				"	if (layer_count > 2) {\r\n" + //
+				"		layerFragment = texture(sample2, UV);\r\n" + //
+				"		color = mix(color, layerFragment, texture(alpha2, v_auv).r);\r\n" + //
+				"	}\r\n" + //
+				"	if (layer_count > 3) {\r\n" + //
+				"		layerFragment = texture(sample3, UV);\r\n" + //
+				"		color = mix(color, layerFragment, texture(alpha3, v_auv).r);\r\n" + //
+				"	}\r\n" + //
+				"   float shadow = texture2D(shadowMap, v_suv).r;\r\n" + //
+				"   float fogOfWarData = texture2D(fogOfWarMap, v_suv).r;\r\n" + //
+				"   shadow = clamp(shadow + fogOfWarData, 0.0, 1.0);\r\n" + //
+//				"   float visibility = 1.0;\r\n" + //
+//				"   if ( texture2D(shadowMap, ShadowCoord.xy).z > ShadowCoord.z ) {\r\n" + //
+//				"       visibility = 0.5;\r\n" + //
+//				"   }\r\n" + //
+				"\r\n" + //
+				"	if (show_lighting) {\r\n" + //
+				"     color = vec4(color.xyz * (1.0 - shadow) * shadeColor, 1.0);\r\n" + //
+				"	} else {\r\n" + //
+				"     color = vec4(color.xyz * (1.0 - shadow), 1.0);\r\n" + //
+				"	}\r\n" + //
+				Shaders.fogSystem(false, null) + //
+//				"\r\n" + //
+//				"	if (show_pathing_map) {\r\n" + //
+//				"		uint byte_static = texelFetch(pathing_map_static, ivec2(pathing_map_uv), 0).r;\r\n" + //
+//				"		uint byte_dynamic = texelFetch(pathing_map_dynamic, ivec2(pathing_map_uv), 0).r;\r\n" + //
+//				"		uint final = byte_static.r | byte_dynamic.r;\r\n" + //
+//				"\r\n" + //
+//				"		vec4 pathing_static_color = vec4((final & 2) >> 1, (final & 4) >> 2, (final & 8) >> 3, 0.25);\r\n"
+//				+ //
+//				"\r\n" + //
+//				"		color = length(pathing_static_color.rgb) > 0 ? color * 0.75 + pathing_static_color * 0.5 : color;\r\n"
+//				+ //
+//				"	}\r\n" + //
+				"}";
+	}
+
 	public static final class Water {
 		private Water() {
 		}

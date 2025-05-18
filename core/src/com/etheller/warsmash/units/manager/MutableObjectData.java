@@ -356,24 +356,29 @@ public final class MutableObjectData {
 				|| (this.sourceSLKData.get(newId.toString()) != null) || !goodForId(newId.charAt(1))
 				|| !goodForId(newId.charAt(2)) || !goodForId(newId.charAt(3))) {
 			// TODO good code general solution
-			if (newId.charAt(3) == 'Z') {
-				if (newId.charAt(2) == 'Z') {
-					if (newId.charAt(1) == 'Z') {
-						newId = new War3ID(((newId.getValue() / (256 * 256 * 256)) * 256 * 256 * 256)
-								+ (256 * 256 * 256) + '0' + ('0' * 256) + ('0' * 256 * 256));
-					}
-					else {
-						newId = new War3ID(
-								((newId.getValue() / (256 * 256)) * 256 * 256) + (256 * 256) + '0' + ('0' * 256));
-					}
+			newId = advanceId(newId);
+		}
+		return newId;
+	}
+
+	public static War3ID advanceId(War3ID newId) {
+		if (newId.charAt(3) == 'Z') {
+			if (newId.charAt(2) == 'Z') {
+				if (newId.charAt(1) == 'Z') {
+					newId = new War3ID(((newId.getValue() / (256 * 256 * 256)) * 256 * 256 * 256) + (256 * 256 * 256)
+							+ '0' + ('0' * 256) + ('0' * 256 * 256));
 				}
 				else {
-					newId = new War3ID(((newId.getValue() / 256) * 256) + 256 + '0');
+					newId = new War3ID(
+							((newId.getValue() / (256 * 256)) * 256 * 256) + (256 * 256) + '0' + ('0' * 256));
 				}
 			}
 			else {
-				newId = new War3ID(newId.getValue() + 1);
+				newId = new War3ID(((newId.getValue() / 256) * 256) + 256 + '0');
 			}
+		}
+		else {
+			newId = new War3ID(newId.getValue() + 1);
 		}
 		return newId;
 	}
@@ -990,7 +995,7 @@ public final class MutableObjectData {
 		BUFFS_EFFECTS("w3h"),
 		UPGRADES("w3q");
 
-		private String extension;
+		private final String extension;
 
 		private WorldEditorDataType(final String extension) {
 			this.extension = extension;

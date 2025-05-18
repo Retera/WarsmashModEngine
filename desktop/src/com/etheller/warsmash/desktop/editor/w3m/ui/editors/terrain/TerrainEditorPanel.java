@@ -23,19 +23,21 @@ import com.badlogic.gdx.backends.lwjgl.LwjglCanvas;
 import com.etheller.warsmash.WarsmashGdxMapScreen;
 import com.etheller.warsmash.WarsmashGdxTerrainEditor;
 import com.etheller.warsmash.datasources.DataSource;
+import com.etheller.warsmash.datasources.FolderDataSource;
 import com.etheller.warsmash.desktop.editor.util.ExceptionPopup;
 import com.etheller.warsmash.desktop.editor.w3m.ui.AbstractWorldEditorPanel;
 import com.etheller.warsmash.desktop.editor.w3m.util.WorldEditArt;
 import com.etheller.warsmash.networking.GameTurnManager;
 import com.etheller.warsmash.parsers.w3x.War3Map;
 import com.etheller.warsmash.parsers.w3x.w3i.War3MapW3i;
+import com.etheller.warsmash.parsers.wdt.WdtMap;
 import com.etheller.warsmash.units.DataTable;
 import com.etheller.warsmash.units.Element;
 import com.etheller.warsmash.units.StandardObjectData;
 import com.etheller.warsmash.util.WarsmashConstants;
 import com.etheller.warsmash.viewer5.CanvasProvider;
 import com.etheller.warsmash.viewer5.handlers.w3x.War3MapViewer;
-import com.etheller.warsmash.viewer5.handlers.w3x.War3MapViewer.MapLoader;
+import com.etheller.warsmash.viewer5.handlers.w3x.War3MapViewer.MapLoaderInterface;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.config.War3MapConfig;
 
 public class TerrainEditorPanel extends AbstractWorldEditorPanel {
@@ -67,7 +69,7 @@ public class TerrainEditorPanel extends AbstractWorldEditorPanel {
 		add(BorderLayout.CENTER, this.lwjglCanvas.getCanvas());
 		setPreferredSize(new Dimension(640, 480));
 
-		this.userFileChooser.setFileFilter(new FileNameExtensionFilter("Map Files", "w3m", "w3x"));
+		this.userFileChooser.setFileFilter(new FileNameExtensionFilter("Map Files", "w3m", "w3x", "wdt"));
 
 	}
 
@@ -111,11 +113,23 @@ public class TerrainEditorPanel extends AbstractWorldEditorPanel {
 																.getHeight();
 													}
 												}, new War3MapConfig(WarsmashConstants.MAX_PLAYERS), turnManager);
-										final War3Map map = War3MapViewer.beginLoadingMap(
-												TerrainEditorPanel.this.dataSource, selectedFile.toString());
-										final DataTable worldEditData = viewer.loadWorldEditData(map);
-										final War3MapW3i mapInfo = map.readMapInformation();
-										final MapLoader mapLoader = viewer.createMapLoader(map, mapInfo, 0);
+										final String fileString = selectedFile.toString();
+										MapLoaderInterface mapLoader;
+										final DataTable worldEditData;
+										if (fileString.toLowerCase().endsWith(".wdt")) {
+											final WdtMap map = new WdtMap(
+													new FolderDataSource(selectedFile.getParentFile().toPath())
+															.read(selectedFile.getName()));
+											worldEditData = viewer.loadWorldEditData();
+											mapLoader = viewer.createWdtMapLoader(map, 0);
+										}
+										else {
+											final War3Map map = War3MapViewer
+													.beginLoadingMap(TerrainEditorPanel.this.dataSource, fileString);
+											worldEditData = viewer.loadWorldEditData(map);
+											final War3MapW3i mapInfo = map.readMapInformation();
+											mapLoader = viewer.createMapLoader(map, mapInfo, 0);
+										}
 
 										final int barMaxProgress = 100;
 										final ProgressMonitor progressMonitor = new ProgressMonitor(null, "Loading map",
@@ -140,9 +154,9 @@ public class TerrainEditorPanel extends AbstractWorldEditorPanel {
 										});
 										final Element unitLights = worldEditData.get("UnitLights");
 										final Element terrainLights = worldEditData.get("TerrainLights");
-										final String tilesetString = String.valueOf(mapInfo.getTileset());
+										final String tilesetString = String.valueOf(mapLoader.getTileset());
 										final String unitLightString = unitLights.getField(tilesetString);
-										final String terrainLightString = unitLights.getField(tilesetString);
+										final String terrainLightString = terrainLights.getField(tilesetString);
 										viewer.setDayNightModels(terrainLightString, unitLightString);
 										System.out.println("map loader finished");
 										TerrainEditorPanel.this.warsmashGdxTerrainEditor.loadViewer(viewer);

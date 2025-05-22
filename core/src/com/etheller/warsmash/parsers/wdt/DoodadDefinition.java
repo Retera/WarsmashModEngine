@@ -14,6 +14,7 @@ public class DoodadDefinition implements MdlxBlock, MdlxChunk {
 	private final float[] rotation = new float[3];
 	private float scale;
 	private int flags;
+	private int scaleShort;
 
 	@Override
 	public void readMdx(final BinaryReader reader, final int version) {
@@ -21,9 +22,8 @@ public class DoodadDefinition implements MdlxBlock, MdlxChunk {
 		this.uniqueId = reader.readInt32();
 		reader.readFloat32Array(this.position);
 		reader.readFloat32Array(this.rotation);
-		final int scaleShort = reader.readUInt16();
-//		this.scale = RenderMathUtils.toFloat(scaleShort);
-		this.scale = scaleShort / 1024f;
+		this.scaleShort = reader.readUInt16();
+		this.scale = this.scaleShort / 1024f;
 		this.flags = reader.readUInt16();
 	}
 

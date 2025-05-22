@@ -31,6 +31,7 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.math.Intersector;
 import com.badlogic.gdx.math.Plane;
+import com.badlogic.gdx.math.Quaternion;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
@@ -846,7 +847,11 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 		final float facingRadians = (float) Math.toRadians(rotation[1] - 90);
 		final RenderDoodad renderDoodad = new RenderDoodad(this, model, row, location, scale3D, facingRadians, maxPitch,
 				maxRoll, defScale, doodadVariation);
-		renderDoodad.instance.uniformScale(defScale);
+//		renderDoodad.instance.uniformScale(defScale);
+		renderDoodad.instance.rotate(
+				new Quaternion().setFromAxisRad(RenderMathUtils.VEC3_UNIT_Y, (float) Math.toRadians(rotation[0])));
+		renderDoodad.instance.rotate(
+				new Quaternion().setFromAxisRad(RenderMathUtils.VEC3_UNIT_X, (float) Math.toRadians(rotation[2])));
 		if (false) {
 			for (final Geoset geoset : model.getGeosets()) {
 				final MdlxExtent extent = geoset.mdlxGeoset.extent;
@@ -2960,7 +2965,17 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 
 	public final class MapLoaderWdt implements MapLoaderInterface {
 
-		private static final int SOME_ARBITRARY_BLOCK_INDEX = 381;
+		private static final int IRONFORGE_FRONT = 381;
+		private static final int ELWYNN_GOLDSHIRE = 511;
+		private static final int ZUL_GURUB_ENTRANCE = 600;
+		private static final int STRANGLETHORN_SOMEWHERE = ZUL_GURUB_ENTRANCE - 1;
+		private static final int SKY_FISH_HORDE_BASE = 615;
+		private static final int WESTFALL_SOMEWHERE = 543;
+		private static final int WESTFALL_GRYPHON_CAR_AREA = 544;
+		private static final int DUSKWOOD_SOMEWHERE = 545;
+		private static final int HINTERLANDS_TROLLS = 233;
+		private static final int WETLANDS_SOMEWHERE = 319;
+		private static final int SOME_ARBITRARY_BLOCK_INDEX = SKY_FISH_HORDE_BASE;
 		private final LinkedList<LoadMapTask> loadMapTasks = new LinkedList<>();
 		private final int startingTaskCount;
 
@@ -3099,9 +3114,9 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 					final float[] doodadMax = new float[3];
 					Arrays.fill(doodadMin, Integer.MAX_VALUE);
 					Arrays.fill(doodadMax, Integer.MIN_VALUE);
+					final Set<Long> usedSet = new HashSet<>();
 					for (final Chunk chunk : tileHeader.chunks) {
 						final long[] doodadReferences = chunk.getDoodadReferences();
-						final Set<Long> usedSet = new HashSet<>();
 						if (doodadReferences != null) {
 							for (final long ref : doodadReferences) {
 								if (ref < tileHeader.doodads.size()) {
@@ -3115,6 +3130,11 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 										final War3ID nameKey = doodadNameKeys.get((int) nameId);
 										final GameObject row = War3MapViewer.this.allObjectData.getDoodads()
 												.get(nameKey);
+										final float finalScale = scale * wowToWc3Factor;
+										if (row.getField("file").toLowerCase().contains("fish")) {
+											System.out.println("the fish is found: " + finalScale);
+											System.out.println(row.getField("file"));
+										}
 
 										final float[] location = {
 												(((position[0] - wowXOffset) * wowToWc3Factor)) + centerOffset[0],
@@ -3127,7 +3147,7 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 											doodadMin[i] = Math.min(location[i], doodadMin[i]);
 										}
 
-										createWdtDoodad(row, 0, location, rotation, (scale * wowToWc3Factor) / 5.3333f);
+										createWdtDoodad(row, 0, location, rotation, finalScale);
 										// ---
 									}
 								}

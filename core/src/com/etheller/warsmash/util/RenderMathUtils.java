@@ -703,10 +703,6 @@ public enum RenderMathUtils {
 	public static float toFloat(final int hbits) {
 		int mant = hbits & 0x03ff; // 10 bits mantissa
 		int exp = hbits & 0x7c00; // 5 bits exponent
-		final int sign = hbits & 0x8000;
-		if (true) {
-			return (sign != 0 ? -1 : 1) * (1.0f + (mant / 1024f)) * (float) Math.pow(2, (exp >> 10) - 1);
-		}
 		if (exp == 0x7c00) { // NaN/Inf
 			exp = 0x3fc00; // -> NaN/Inf
 		}

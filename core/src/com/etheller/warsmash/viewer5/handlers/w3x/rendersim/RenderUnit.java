@@ -31,14 +31,14 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbility;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.thirdperson.CAbilityPlayerPawn;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.AbilityGenericSingleIconPassiveAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.CBuff;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.thirdperson.CAbilityPlayerPawn;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.timers.CTimer;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CRarityControl;
 
 public class RenderUnit implements RenderWidget {
-	public static final War3ID PLAYER_PAWN_ID = War3ID.fromString("plyr");
+	public static final War3ID PLAYER_PAWN_ID = War3ID.fromString("Plyr");
 	public static final Color ETHEREAL = new Color(0.75f, 1, 0.5f, 0.5f);
 	public static final Color DEFAULT = new Color(1, 1, 1, 1);
 	public static final Quaternion tempQuat = new Quaternion();
@@ -103,8 +103,8 @@ public class RenderUnit implements RenderWidget {
 			this.instance.detach();
 		}
 		this.playerPawn = simulationUnit.getFirstAbilityOfType(CAbilityPlayerPawn.class);
-		MdxModel model = typeData.getModel();
-		boolean playerPawnFlag = simulationUnit.getTypeId().equals(PLAYER_PAWN_ID);
+		final MdxModel model = typeData.getModel();
+		final boolean playerPawnFlag = simulationUnit.getTypeId().equals(PLAYER_PAWN_ID);
 		final MdxComplexInstance instance = (MdxComplexInstance) (playerPawnFlag ? model.addInstance(2)
 				: model.addInstance());
 
@@ -830,7 +830,7 @@ public class RenderUnit implements RenderWidget {
 		this.unitAnimationListenerImpl.clearTurretFacing();
 	}
 
-	public void setupPlayerPawn(CAbilityPlayerPawn abilityPlayerPawn) {
+	public void setupPlayerPawn(final CAbilityPlayerPawn abilityPlayerPawn) {
 		this.playerPawn = abilityPlayerPawn;
 	}
 }

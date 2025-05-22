@@ -73,11 +73,11 @@ public class CBehaviorPlayerPawn implements CBehavior {
 		}
 		int walking = 0;
 		if (this.cameraPanControls.up) {
-			this.forwardSpeed = (18);
+			this.forwardSpeed = (50);
 			walking = 1;
 		}
 		else if (this.cameraPanControls.down) {
-			this.forwardSpeed = (-9);
+			this.forwardSpeed = (-10);
 			walking = -1;
 		}
 		else {
@@ -281,7 +281,7 @@ public class CBehaviorPlayerPawn implements CBehavior {
 	}
 
 	@Override
-	public <T> T visit(CBehaviorVisitor<T> visitor) {
+	public <T> T visit(final CBehaviorVisitor<T> visitor) {
 		return visitor.accept(this);
 	}
 }

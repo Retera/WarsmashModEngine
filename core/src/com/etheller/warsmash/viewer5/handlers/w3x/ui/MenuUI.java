@@ -65,6 +65,7 @@ import com.etheller.warsmash.util.StringBundle;
 import com.etheller.warsmash.util.WarsmashConstants;
 import com.etheller.warsmash.util.WorldEditStrings;
 import com.etheller.warsmash.viewer5.FogSettings;
+import com.etheller.warsmash.viewer5.FogStyle;
 import com.etheller.warsmash.viewer5.Scene;
 import com.etheller.warsmash.viewer5.handlers.mdx.MdxViewer;
 import com.etheller.warsmash.viewer5.handlers.w3x.AnimationTokens.PrimaryTag;
@@ -1972,6 +1973,26 @@ public class MenuUI {
 
 									this.loadingMap.viewer.setSkyModel(
 											"Environment\\Sky\\LordaeronSummerSky\\LordaeronSummerSky.mdx");
+									this.loadingMap.viewer.simulation
+											.setGameTimeOfDay((this.loadingMap.viewer.simulation.getGameplayConstants()
+													.getDawnTimeGameHours()
+													+ this.loadingMap.viewer.simulation.getGameplayConstants()
+															.getDuskTimeGameHours())
+													/ 2);
+//									this.loadingMap.viewer.worldScene.fogSettings.color = new Color(0.4f, 0.0f, 1.0f,
+//											1.0f);
+//									this.loadingMap.viewer.worldScene.fogSettings.density = 1;
+//									this.loadingMap.viewer.worldScene.fogSettings.start = 400;
+//									this.loadingMap.viewer.worldScene.fogSettings.end = 3000;
+//									this.loadingMap.viewer.worldScene.fogSettings
+//											.setStyleByIndex(FogStyle.LINEAR.ordinal());
+									this.loadingMap.viewer.worldScene.fogSettings.color = new Color(0.7f, 0.3f, 0.0f,
+											1.0f);
+									this.loadingMap.viewer.worldScene.fogSettings.density = 1;
+									this.loadingMap.viewer.worldScene.fogSettings.start = 9000;
+									this.loadingMap.viewer.worldScene.fogSettings.end = 10000;
+									this.loadingMap.viewer.worldScene.fogSettings
+											.setStyleByIndex(FogStyle.LINEAR.ordinal());
 								});
 							}
 							else {

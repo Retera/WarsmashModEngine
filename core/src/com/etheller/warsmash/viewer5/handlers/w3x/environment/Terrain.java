@@ -92,6 +92,7 @@ public class Terrain extends TerrainInterface {
 	public float[] maxShallowColorApplied = new float[4];
 	public float[] minShallowColorApplied = new float[4];
 
+	public List<GroundTexture> groundTextures = new ArrayList<>();
 	private final DataTable terrainTable;
 	private final DataTable cliffTable;
 	private final DataTable waterTable;

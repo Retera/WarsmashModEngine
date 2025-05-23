@@ -26,17 +26,20 @@ public class PathingGrid {
 		}
 	}
 
-	private final short[] pathingGrid;
-	private final short[] dynamicPathingOverlay; // for buildings and trees
+	private final short[][] pathingGrid;
+	private final short[][] dynamicPathingOverlay; // for buildings and trees
 	private final int[] pathingGridSizes;
 	private final float[] centerOffset;
 	private final List<RemovablePathingMapInstance> dynamicPathingInstances;
+	private final int dynamicPathingGroupSize;
 
 	public PathingGrid(final War3MapWpm terrainPathing, final float[] centerOffset) {
 		this.centerOffset = centerOffset;
 		this.pathingGrid = terrainPathing.getPathing();
 		this.pathingGridSizes = terrainPathing.getSize();
-		this.dynamicPathingOverlay = new short[this.pathingGrid.length];
+		final int pathingCellSize = this.pathingGrid.length;
+		this.dynamicPathingGroupSize = (int) Math.sqrt(pathingCellSize);
+		this.dynamicPathingOverlay = new short[this.dynamicPathingGroupSize][];
 		this.dynamicPathingInstances = new ArrayList<>();
 	}
 
@@ -44,7 +47,7 @@ public class PathingGrid {
 	// that in credits as well:
 	// https://github.com/stijnherfst/HiveWE/blob/master/Base/PathingMap.cpp
 	private void blitPathingOverlayTexture(final float positionX, final float positionY, final int rotationInput,
-			final BufferedImage pathingTextureTga, boolean blocksVision) {
+			final BufferedImage pathingTextureTga, final boolean blocksVision) {
 		final int rotation = (rotationInput + 450) % 360;
 		final int divW = ((rotation % 180) != 0) ? pathingTextureTga.getHeight() : pathingTextureTga.getWidth();
 		final int divH = ((rotation % 180) != 0) ? pathingTextureTga.getWidth() : pathingTextureTga.getHeight();
@@ -88,9 +91,56 @@ public class PathingGrid {
 					data |= PathingFlags.UNWALKABLE | PathingFlags.UNSWIMABLE
 							| (blocksVision ? PathingFlags.BLOCKVISION : 0);
 				}
-				this.dynamicPathingOverlay[(yy * this.pathingGridSizes[0]) + xx] |= data;
+				final int dynamicPathingIdx = (yy * this.pathingGridSizes[0]) + xx;
+				writeToDynamicPathing(data, dynamicPathingIdx);
 			}
 		}
+	}
+
+	private void writeToDynamicPathing(final byte data, final int dynamicPathingIdx) {
+		if (data != 0) {
+			final int dynamicPathingChunkIdx = dynamicPathingIdx / this.dynamicPathingGroupSize;
+			final int dynamicPathingIdxIntoChunk = dynamicPathingIdx % this.dynamicPathingGroupSize;
+			short[] dynamicPathingChunk = this.dynamicPathingOverlay[dynamicPathingChunkIdx];
+			if (dynamicPathingChunk == null) {
+				dynamicPathingChunk = new short[this.dynamicPathingGroupSize];
+				this.dynamicPathingOverlay[dynamicPathingChunkIdx] = dynamicPathingChunk;
+			}
+			dynamicPathingChunk[dynamicPathingIdxIntoChunk] |= data;
+		}
+	}
+
+	private short readDynamicPathing(final int dynamicPathingIdx) {
+		final int dynamicPathingChunkIdx = dynamicPathingIdx / this.dynamicPathingGroupSize;
+		final int dynamicPathingIdxIntoChunk = dynamicPathingIdx % this.dynamicPathingGroupSize;
+		final short[] dynamicPathingChunk = this.dynamicPathingOverlay[dynamicPathingChunkIdx];
+		if (dynamicPathingChunk == null) {
+			return 0;
+		}
+		return dynamicPathingChunk[dynamicPathingIdxIntoChunk];
+	}
+
+	private void writeToStaticPathing(final byte data, final int dynamicPathingIdx) {
+		if (data != 0) {
+			final int dynamicPathingChunkIdx = dynamicPathingIdx / this.dynamicPathingGroupSize;
+			final int dynamicPathingIdxIntoChunk = dynamicPathingIdx % this.dynamicPathingGroupSize;
+			short[] dynamicPathingChunk = this.pathingGrid[dynamicPathingChunkIdx];
+			if (dynamicPathingChunk == null) {
+				dynamicPathingChunk = new short[this.dynamicPathingGroupSize];
+				this.pathingGrid[dynamicPathingChunkIdx] = dynamicPathingChunk;
+			}
+			dynamicPathingChunk[dynamicPathingIdxIntoChunk] |= data;
+		}
+	}
+
+	private short readStaticPathing(final int dynamicPathingIdx) {
+		final int dynamicPathingChunkIdx = dynamicPathingIdx / this.dynamicPathingGroupSize;
+		final int dynamicPathingIdxIntoChunk = dynamicPathingIdx % this.dynamicPathingGroupSize;
+		final short[] dynamicPathingChunk = this.pathingGrid[dynamicPathingChunkIdx];
+		if (dynamicPathingChunk == null) {
+			return 0;
+		}
+		return dynamicPathingChunk[dynamicPathingIdxIntoChunk];
 	}
 
 	public boolean checkPathingTexture(final float positionX, final float positionY, final int rotationInput,
@@ -254,7 +304,7 @@ public class PathingGrid {
 		if (index >= this.pathingGrid.length) {
 			return 0;
 		}
-		return (short) (this.pathingGrid[index] | this.dynamicPathingOverlay[index]);
+		return (short) (this.readStaticPathing(index) | readDynamicPathing(index));
 	}
 
 	private short getCellPermanentPathing(final int cellX, final int cellY) {
@@ -262,7 +312,7 @@ public class PathingGrid {
 		if (index >= this.pathingGrid.length) {
 			return 0;
 		}
-		return (this.pathingGrid[index]);
+		return (this.readStaticPathing(index));
 	}
 
 	public void setCellPathing(final int cellX, final int cellY, final short pathingValue) {
@@ -270,7 +320,7 @@ public class PathingGrid {
 		if (index >= this.pathingGrid.length) {
 			return;
 		}
-		this.pathingGrid[index] = pathingValue;
+		writeToStaticPathing((byte) pathingValue, index);
 	}
 
 	public void setCellBlighted(final int cellX, final int cellY, final boolean blighted) {
@@ -378,7 +428,7 @@ public class PathingGrid {
 		return getFogOfWarDistance(d, false);
 	}
 
-	public static int getFogOfWarDistance(final float d, boolean roundUp) {
+	public static int getFogOfWarDistance(final float d, final boolean roundUp) {
 		final float userCellSpace = ((d + (16f * CPlayerFogOfWar.PATHING_RATIO)))
 				/ (32f * CPlayerFogOfWar.PATHING_RATIO);
 		if (roundUp) {
@@ -394,7 +444,7 @@ public class PathingGrid {
 		if ((index < 0) || (index >= this.pathingGrid.length)) {
 			return false;
 		}
-		return PathingFlags.isPathingFlag(this.dynamicPathingOverlay[index], PathingFlags.BLOCKVISION);
+		return PathingFlags.isPathingFlag(readDynamicPathing(index), PathingFlags.BLOCKVISION);
 	}
 
 	public boolean isBlockVision(final float x, final float y) {
@@ -548,7 +598,7 @@ public class PathingGrid {
 			blit();
 		}
 
-		public void setBlocksVision(boolean flag) {
+		public void setBlocksVision(final boolean flag) {
 			this.blocksVision = flag;
 			blit();
 		}

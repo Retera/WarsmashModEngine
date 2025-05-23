@@ -16,7 +16,6 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CFogMaskSettings;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.vision.CPlayerFogOfWar;
 
 public abstract class TerrainInterface {
-	public List<GroundTexture> groundTextures = new ArrayList<>();
 	public PathingGrid pathingGrid;
 	public DataTable uberSplatTable;
 	public float[] centerOffset;

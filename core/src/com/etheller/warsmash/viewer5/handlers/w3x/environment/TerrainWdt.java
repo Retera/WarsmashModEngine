@@ -8,14 +8,11 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.TreeSet;
 
 import org.apache.commons.compress.utils.IOUtils;
 
@@ -95,7 +92,6 @@ public class TerrainWdt extends TerrainInterface {
 	public RenderCorner[][] corners;
 	public int columns;
 	public int rows;
-	public int blightTextureIndex = -1;
 	public float[] maxDeepColor = new float[4];
 	public float[] minDeepColor = new float[4];
 	public float[] maxShallowColor = new float[4];
@@ -112,7 +108,6 @@ public class TerrainWdt extends TerrainInterface {
 	private int cliffTexturesSize;
 	private final List<CliffMesh> cliffMeshes = new ArrayList<>();
 	private final Map<String, Integer> pathToCliff = new HashMap<>();
-	private final Map<String, Integer> groundTextureToId = new HashMap<>();
 	private final List<Integer> cliffToGroundTexture = new ArrayList<>();
 	private final List<IVec3> cliffs = new ArrayList<>();
 	private final DataSource dataSource;
@@ -146,8 +141,6 @@ public class TerrainWdt extends TerrainInterface {
 	private final int[] mapBounds;
 	private final float[] shaderMapBounds;
 	private final int[] mapSize;
-	private final int testArrayBuffer;
-	private final int testElementBuffer;
 	private boolean initShadowsFinished = false;
 	private byte[] staticShadowData;
 	private byte[] shadowData;
@@ -157,9 +150,10 @@ public class TerrainWdt extends TerrainInterface {
 	private final Rectangle shaderMapBoundsRectangle;
 	private final Rectangle entireMapRectangle;
 	private final float[] defaultCameraBounds;
+	private final GroundTexture blightTexture;
 
-	public TerrainWdt(final WdtMap map, final TileHeader tileHeader, final War3MapW3e w3eFile,
-			final War3MapWpm terrainPathing, final War3MapW3i w3iFile, final WebGL webGL, final DataSource dataSource,
+	public TerrainWdt(final WdtMap map, final War3MapW3e w3eFile, final War3MapWpm terrainPathing,
+			final War3MapW3i w3iFile, final WebGL webGL, final DataSource dataSource,
 			final WorldEditStrings worldEditStrings, final War3MapViewer viewer, final DataTable worldEditData)
 			throws IOException {
 		this.webGL = webGL;
@@ -254,18 +248,10 @@ public class TerrainWdt extends TerrainInterface {
 			}
 		}
 
-		// Ground textures
-		for (final String fileName : tileHeader.textureFileNames) {
-			this.groundTextures.add(new GroundTextureWdt(fileName, null, dataSource, Gdx.gl30));
-			this.groundTextureToId.put(fileName, this.groundTextures.size() - 1);
-		}
-
 		final Element tilesets = worldEditData.get("TileSets");
 
-		this.blightTextureIndex = this.groundTextures.size();
-//		this.groundTextures
-//				.add(new GroundTexture(tilesets.getField(Character.toString(tileset)).split(",")[1] + texturesExt, null,
-//						dataSource, Gdx.gl30));
+		this.blightTexture = new GroundTexture(
+				tilesets.getField(Character.toString(tileset)).split(",")[1] + texturesExt, null, dataSource, Gdx.gl30);
 
 		// Cliff Textures
 		for (final War3ID cliffTile : w3eFile.getCliffTiles()) {
@@ -284,7 +270,7 @@ public class TerrainWdt extends TerrainInterface {
 							cliffInfo.getField("cliffModelDir"), cliffInfo.getField("rampModelDir")));
 			this.cliffTexturesSize = Math.max(this.cliffTexturesSize,
 					this.cliffTextures.get(this.cliffTextures.size() - 1).width);
-			this.cliffToGroundTexture.add(this.groundTextureToId.get(cliffInfo.getField("groundTile")));
+//			this.cliffToGroundTexture.add(this.groundTextureToId.get(cliffInfo.getField("groundTile")));
 		}
 
 		updateCliffMeshes(new Rectangle(0, 0, width - 1, height - 1));
@@ -459,12 +445,6 @@ public class TerrainWdt extends TerrainInterface {
 		this.softwareWaterAndGroundMesh = new SoftwareWaterAndGroundMesh(this.waterHeightOffset,
 				this.groundCornerHeights, this.waterHeights, this.waterExistsData, this.centerOffset, width, height);
 
-		this.testArrayBuffer = gl.glGenBuffer();
-		gl.glBindBuffer(GL30.GL_ARRAY_BUFFER, this.testArrayBuffer);
-		gl.glBufferData(GL30.GL_ARRAY_BUFFER, this.softwareGroundMesh.vertices.length,
-				RenderMathUtils.wrap(this.softwareGroundMesh.vertices), GL30.GL_STATIC_DRAW);
-
-		this.testElementBuffer = gl.glGenBuffer();
 //		gl.glBindBuffer(GL30.GL_ELEMENT_ARRAY_BUFFER, this.testElementBuffer);
 //		gl.glBufferData(GL30.GL_ELEMENT_ARRAY_BUFFER, this.softwareGroundMesh.indices.length,
 //				RenderMathUtils.wrap(this.softwareGroundMesh.indices), GL30.GL_STATIC_DRAW);
@@ -473,11 +453,16 @@ public class TerrainWdt extends TerrainInterface {
 				this.waterHeightOffset, w3eFile, w3iFile);
 		this.pathingGrid = new PathingGrid(terrainPathing, this.centerOffset);
 
-		final WdtChunkModel wdtChunkModel = new WdtChunkModel(null, viewer, "", PathSolver.DEFAULT, "", tileHeader);
-		wdtChunkModel.load(null, null);
-		for (int i = 0; i < tileHeader.chunks.size(); i++) {
-			final ModelInstance chunkInstance = wdtChunkModel.addInstance(i);
-			chunkInstance.setScene(viewer.worldScene);
+		for (final TileHeader tileHeader : map.tileHeaders) {
+			final WdtChunkModel wdtChunkModel = new WdtChunkModel(null, viewer, "", PathSolver.DEFAULT, "", tileHeader);
+			wdtChunkModel.load(null, null);
+			for (int i = 0; i < tileHeader.chunks.size(); i++) {
+				final Chunk chunk = tileHeader.chunks.get(i);
+				if (!chunk.getMapChunkLayers().isEmpty()) {
+					final ModelInstance chunkInstance = wdtChunkModel.addInstance(i);
+					chunkInstance.setScene(viewer.worldScene);
+				}
+			}
 		}
 	}
 
@@ -805,7 +790,6 @@ public class TerrainWdt extends TerrainInterface {
 
 		for (int j = (int) updateArea.getY(); j <= (int) ((updateArea.getY() + updateArea.getHeight()) - 1); j++) {
 			for (int i = (int) updateArea.getX(); i <= (int) ((updateArea.getX() + updateArea.getWidth()) - 1); i++) {
-				getTextureVariations(i, j, this.groundTextureList, ((j * (this.columns - 1)) + i) * 4);
 
 				if (this.corners[i][j].cliff || this.corners[i][j].romp) {
 					if (isCornerRampEntrance(i, j)) {
@@ -856,78 +840,6 @@ public class TerrainWdt extends TerrainInterface {
 		}
 	}
 
-	/// The 4 ground textures of the tilepoint. First 5 bits are which texture array
-	/// to use and the next 5 bits are which subtexture to use
-	private void getTextureVariations(final int x, final int y, final short[] out, final int outStartOffset) {
-		final int bottomLeft = realTileTexture(x, y);
-		final int bottomRight = realTileTexture(x + 1, y);
-		final int topLeft = realTileTexture(x, y + 1);
-		final int topRight = realTileTexture(x + 1, y + 1);
-
-		final TreeSet<Integer> set = new TreeSet<>();
-		set.add(bottomLeft);
-		set.add(bottomRight);
-		set.add(topLeft);
-		set.add(topRight);
-		Arrays.fill(out, outStartOffset, outStartOffset + 4, (short) 17);
-		int component = outStartOffset + 1;
-
-		final Iterator<Integer> iterator = set.iterator();
-		iterator.hasNext();
-		final short firstValue = iterator.next().shortValue();
-		out[outStartOffset] = (short) (firstValue
-				+ (getVariation(firstValue, this.corners[x][y].getGroundVariation()) << 5));
-
-		int index;
-		while (iterator.hasNext()) {
-			index = 0;
-			final int texture = iterator.next().intValue();
-			index |= (bottomRight == texture ? 1 : 0) << 0;
-			index |= (bottomLeft == texture ? 1 : 0) << 1;
-			index |= (topRight == texture ? 1 : 0) << 2;
-			index |= (topLeft == texture ? 1 : 0) << 3;
-
-			out[component++] = (short) (texture + (index << 5));
-		}
-	}
-
-	private int realTileTexture(final int x, final int y) {
-		ILoop: for (int i = -1; i < 1; i++) {
-			for (int j = -1; j < 1; j++) {
-				if (((x + i) >= 0) && ((x + i) < this.columns) && ((y + j) >= 0) && ((y + j) < this.rows)) {
-					if (this.corners[x + i][y + j].cliff) {
-						if (((x + i) < (this.columns - 1)) && ((y + j) < (this.rows - 1))) {
-							final RenderCorner bottomLeft = this.corners[x + i][y + j];
-							final RenderCorner bottomRight = this.corners[x + i + 1][y + j];
-							final RenderCorner topLeft = this.corners[x + i][y + j + 1];
-							final RenderCorner topRight = this.corners[x + i + 1][y + j + 1];
-
-							if (bottomLeft.isRamp() && topLeft.isRamp() && bottomRight.isRamp() && topRight.isRamp()
-									&& !bottomLeft.romp && !bottomRight.romp && !topLeft.romp && !topRight.romp) {
-								break ILoop;
-							}
-						}
-					}
-					if (this.corners[x + i][y + j].romp || this.corners[x + i][y + j].cliff) {
-						int texture = this.corners[x + i][y + j].getCliffTexture();
-						// Number 15 seems to be something
-						if (texture == 15) {
-							texture -= 14;
-						}
-
-						return this.cliffToGroundTexture.get(texture);
-					}
-				}
-			}
-		}
-
-		if (this.corners[x][y].getBlight() != 0) {
-			return this.blightTextureIndex;
-		}
-
-		return this.corners[x][y].getGroundTexture();
-	}
-
 	private boolean isCornerRampEntrance(final int x, final int y) {
 		if ((x == this.columns) || (y == this.rows)) {
 			return false;
@@ -951,28 +863,7 @@ public class TerrainWdt extends TerrainInterface {
 	}
 
 	public short getVariation(final int groundTexture, final int variation) {
-		final GroundTexture texture = this.groundTextures.get(groundTexture);
-
-		// Extended ?
-		if (texture.extended) {
-			if (variation <= 15) {
-				return (short) (16 + variation);
-			}
-			else if (variation == 16) {
-				return 15;
-			}
-			else {
-				return 0;
-			}
-		}
-		else {
-			if (variation == 0) {
-				return 0;
-			}
-			else {
-				return 15;
-			}
-		}
+		return 0; // TODO
 	}
 
 	@Override
@@ -1682,6 +1573,7 @@ public class TerrainWdt extends TerrainInterface {
 		public void renderOpaque(final Matrix4 mvp) {
 			// Render tiles
 
+			final WdtChunkModel model = (WdtChunkModel) this.model;
 			TerrainWdt.this.webGL.useShaderProgram(TerrainWdt.this.groundShader);
 
 			final GL30 gl = Gdx.gl30;
@@ -1747,7 +1639,7 @@ public class TerrainWdt extends TerrainInterface {
 			gl.glUniform1i(TerrainWdt.this.groundShader.getUniformLocation("fogOfWarMap"), 22);
 			int i = 0;
 			for (final MapChunkLayer layer : this.chunk.getMapChunkLayers()) {
-				final GroundTexture groundTexture = TerrainWdt.this.groundTextures.get((int) layer.getTextureId());
+				final GroundTexture groundTexture = model.groundTextures.get((int) layer.getTextureId());
 				gl.glActiveTexture(GL30.GL_TEXTURE3 + i);
 				gl.glBindTexture(GL30.GL_TEXTURE_2D, groundTexture.id);
 				i++;
@@ -1807,8 +1699,8 @@ public class TerrainWdt extends TerrainInterface {
 			final long indexX = this.chunk.getIndexX();
 			final long indexY = this.chunk.getIndexY();
 
-			final long war3ChunkIndexX = model.maxY - indexY;
-			final long war3ChunkIndexY = indexX - model.minX;
+			final long war3ChunkIndexX = ((model.blockX * 16) + 15) - indexY;
+			final long war3ChunkIndexY = (model.blockY * 16) + indexX;
 
 			final float[][] heightMap = this.chunk.getHeightMap();
 
@@ -1940,13 +1832,20 @@ public class TerrainWdt extends TerrainInterface {
 
 	}
 
+	private final Map<String, GroundTextureWdt> pathToTexture = new HashMap<>();
+
 	private class WdtChunkModel extends Model {
 
 		private final TileHeader tileHeader;
-		private long minX;
-		private long minY;
-		private long maxX;
-		private long maxY;
+
+		public List<GroundTexture> groundTextures = new ArrayList<>();
+		private final Map<String, Integer> groundTextureToId = new HashMap<>();
+		private float wowXOffset;
+		private float wowYOffset;
+
+		private int blockX;
+
+		private int blockY;
 
 		public WdtChunkModel(final ModelHandler handler, final ModelViewer viewer, final String extension,
 				final PathSolver pathSolver, final String fetchUrl, final TileHeader tileHeader) {
@@ -1967,25 +1866,33 @@ public class TerrainWdt extends TerrainInterface {
 
 		@Override
 		protected void load(final InputStream src, final Object options) {
-			this.minX = Integer.MAX_VALUE;
-			this.minY = Integer.MAX_VALUE;
-			this.maxX = Integer.MIN_VALUE;
-			this.maxY = Integer.MIN_VALUE;
-			for (final Chunk chunk : this.tileHeader.chunks) {
-				final long indexX = chunk.getIndexX();
-				final long indexY = chunk.getIndexY();
-
-				this.minX = Math.min(indexX, this.minX);
-				this.minY = Math.min(indexY, this.minY);
-				this.maxX = Math.max(indexX, this.maxX);
-				this.maxY = Math.max(indexY, this.maxY);
-			}
+			final int tileIdx = this.tileHeader.idx;
+			this.blockX = tileIdx % 64;
+			this.wowXOffset = this.blockX * WdtChunkModelInstance.tilesize;
+			this.blockY = tileIdx / 64;
+			this.wowYOffset = this.blockY * WdtChunkModelInstance.tilesize;
 
 			final float size = WdtChunkModelInstance.tilesize * WdtChunkModelInstance.wowToWc3Factor;
 			final float height = 18000 * WdtChunkModelInstance.wowToWc3Factor;
 			final float halfSize = size / 2;
 			this.bounds.fromExtents(new float[] { -halfSize, -halfSize, 0 }, new float[] { halfSize, halfSize, height },
 					0);
+
+			// Ground textures
+			for (final String fileName : this.tileHeader.textureFileNames) {
+				GroundTextureWdt groundTextureWdt = TerrainWdt.this.pathToTexture.get(fileName);
+				try {
+					if (groundTextureWdt == null) {
+						groundTextureWdt = new GroundTextureWdt(fileName, null, TerrainWdt.this.dataSource, Gdx.gl30);
+						TerrainWdt.this.pathToTexture.put(fileName, groundTextureWdt);
+					}
+					this.groundTextures.add(groundTextureWdt);
+				}
+				catch (final IOException e) {
+					throw new RuntimeException(e);
+				}
+				this.groundTextureToId.put(fileName, this.groundTextures.size() - 1);
+			}
 		}
 
 		@Override

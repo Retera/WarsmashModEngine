@@ -102,7 +102,6 @@ import com.etheller.warsmash.viewer5.handlers.tga.TgaFile;
 import com.etheller.warsmash.viewer5.handlers.w3x.AnimationTokens.SecondaryTag;
 import com.etheller.warsmash.viewer5.handlers.w3x.SplatModel.SplatMover;
 import com.etheller.warsmash.viewer5.handlers.w3x.environment.BuildingShadow;
-import com.etheller.warsmash.viewer5.handlers.w3x.environment.GroundTexture;
 import com.etheller.warsmash.viewer5.handlers.w3x.environment.PathingGrid;
 import com.etheller.warsmash.viewer5.handlers.w3x.environment.PathingGrid.PathingType;
 import com.etheller.warsmash.viewer5.handlers.w3x.environment.PathingGrid.RemovablePathingMapInstance;
@@ -2698,8 +2697,10 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 					if (corner == null) {
 						continue;
 					}
-					final GroundTexture currentTex = this.terrain.groundTextures.get(corner.getGroundTexture());
-					if (currentTex.isBuildable()) {
+					final boolean buildable = PathingGrid.isPathingFlag(
+							this.terrain.pathingGrid.getPathing(whichLocationX, whichLocationY),
+							PathingGrid.PathingType.BUILDABLE);
+					if (buildable) {
 						changedData |= corner.setBlight(blighted);
 					}
 					else {
@@ -2988,7 +2989,7 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 		private MapLoaderWdt(final WdtMap map, final War3MapW3i w3iFile, final int localPlayerIndex) {
 			final PathSolver wc3PathSolver = War3MapViewer.this.wc3PathSolver;
 
-			final TileHeader tileHeader = map.tileHeaders.get(SOME_ARBITRARY_BLOCK_INDEX);
+//			final TileHeader tileHeader = map.tileHeaders.get(SOME_ARBITRARY_BLOCK_INDEX);
 
 			this.loadMapTasks.add(() -> {
 				this.tileset = w3iFile.getTileset();
@@ -3006,11 +3007,11 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 			});
 
 			this.loadMapTasks.add(() -> {
-				this.terrainData = War3MapW3e.generateConverted(map, tileHeader);
+				this.terrainData = War3MapW3e.generateConverted(map, null);
 			});
 
 			this.loadMapTasks.add(() -> {
-				this.terrainPathing = War3MapWpm.generateConverted(map, tileHeader);
+				this.terrainPathing = War3MapWpm.generateConverted(map, this.terrainData);
 			});
 
 			this.loadMapTasks.add(() -> {
@@ -3026,9 +3027,9 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 			});
 
 			this.loadMapTasks.add(() -> {
-				War3MapViewer.this.terrain = new TerrainWdt(map, tileHeader, this.terrainData, this.terrainPathing,
-						w3iFile, War3MapViewer.this.webGL, War3MapViewer.this.dataSource,
-						War3MapViewer.this.worldEditStrings, War3MapViewer.this, War3MapViewer.this.worldEditData);
+				War3MapViewer.this.terrain = new TerrainWdt(map, this.terrainData, this.terrainPathing, w3iFile,
+						War3MapViewer.this.webGL, War3MapViewer.this.dataSource, War3MapViewer.this.worldEditStrings,
+						War3MapViewer.this, War3MapViewer.this.worldEditData);
 				War3MapViewer.this.terrainReady = true;
 			});
 
@@ -3076,86 +3077,88 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 //					loadDoodadsAndDestructibles(war3Map, War3MapViewer.this.allObjectData, w3iFile);
 
 					long minX = Integer.MAX_VALUE, minY = Integer.MAX_VALUE;
-					for (final Chunk chunk : tileHeader.chunks) {
-						final long indexX = chunk.getIndexX();
-						final long indexY = chunk.getIndexY();
+					for (final TileHeader tileHeader : map.tileHeaders) {
+						for (final Chunk chunk : tileHeader.chunks) {
+							final long indexX = chunk.getIndexX();
+							final long indexY = chunk.getIndexY();
 
-						minX = Math.min(indexX, minX);
-						minY = Math.min(indexY, minY);
-					}
-//					tileHeader.
+							minX = Math.min(indexX, minX);
+							minY = Math.min(indexY, minY);
+						}
+//						tileHeader.
 
-					int doodadIndex = 0;
-					final List<War3ID> doodadNameKeys = new ArrayList<>();
-					War3ID baseDoodadId = War3ID.fromString("0000");
-					for (final String name : map.doodadModelFileNames) {
-						final ObjectData war3Doodads = War3MapViewer.this.allObjectData.getDoodads();
-						final War3ID cloneIdBase = MutableObjectData.advanceId(baseDoodadId);
-						final String cloneId = cloneIdBase.toString();
-						war3Doodads.cloneUnit("YOtf", cloneId);
-						final GameObject createdDoodad = war3Doodads.get(cloneId);
-						createdDoodad.setField("file", name);
-						createdDoodad.setField("soundLoop", "_"); // YOtf has a sound we dont want
-						createdDoodad.setField("minScale", "0.0");
-						createdDoodad.setField("maxScale", "10000.0");
-						doodadNameKeys.add(cloneIdBase);
-						doodadIndex++;
-						baseDoodadId = cloneIdBase;
-					}
-					final float[] centerOffset = this.terrainData.getCenterOffset();
-					final float tilesize = 533.3333f;
-					final float wowToWc3Factor = 128.0f / ((tilesize / 16) / 8);
-					final int tileIdx = tileHeader.idx;
-					final float wowXOffset = (tileIdx % 64) * tilesize;
-					final float wowYOffset = (tileIdx / 64) * tilesize;
-					final float halfWorldSize = tilesize * 32;
-					final float worldSize = tilesize * 64;
-					final float[] doodadMin = new float[3];
-					final float[] doodadMax = new float[3];
-					Arrays.fill(doodadMin, Integer.MAX_VALUE);
-					Arrays.fill(doodadMax, Integer.MIN_VALUE);
-					final Set<Long> usedSet = new HashSet<>();
-					for (final Chunk chunk : tileHeader.chunks) {
-						final long[] doodadReferences = chunk.getDoodadReferences();
-						if (doodadReferences != null) {
-							for (final long ref : doodadReferences) {
-								if (ref < tileHeader.doodads.size()) {
-									if (usedSet.add(ref)) {
-										final DoodadDefinition doodad = tileHeader.doodads.get((int) ref);
-										final long nameId = doodad.getNameId();
-										final float[] position = doodad.getPosition();
-										final float[] rotation = doodad.getRotation();
-										final float scale = doodad.getScale();
+						int doodadIndex = 0;
+						final List<War3ID> doodadNameKeys = new ArrayList<>();
+						War3ID baseDoodadId = War3ID.fromString("0000");
+						for (final String name : map.doodadModelFileNames) {
+							final ObjectData war3Doodads = War3MapViewer.this.allObjectData.getDoodads();
+							final War3ID cloneIdBase = MutableObjectData.advanceId(baseDoodadId);
+							final String cloneId = cloneIdBase.toString();
+							war3Doodads.cloneUnit("YOtf", cloneId);
+							final GameObject createdDoodad = war3Doodads.get(cloneId);
+							createdDoodad.setField("file", name);
+							createdDoodad.setField("soundLoop", "_"); // YOtf has a sound we dont want
+							createdDoodad.setField("minScale", "0.0");
+							createdDoodad.setField("maxScale", "10000.0");
+							doodadNameKeys.add(cloneIdBase);
+							doodadIndex++;
+							baseDoodadId = cloneIdBase;
+						}
+						final float[] centerOffset = this.terrainData.getCenterOffset();
+						final float tilesize = 533.3333f;
+						final float wowToWc3Factor = 128.0f / ((tilesize / 16) / 8);
+//						final int tileIdx = tileHeader.idx;
+						final float wowXOffset = 0;// (tileIdx % 64) * tilesize;
+						final float wowYOffset = 0;// (tileIdx / 64) * tilesize;
+						final float halfWorldSize = tilesize * 32;
+						final float worldSize = tilesize * 64;
+						final float[] doodadMin = new float[3];
+						final float[] doodadMax = new float[3];
+						Arrays.fill(doodadMin, Integer.MAX_VALUE);
+						Arrays.fill(doodadMax, Integer.MIN_VALUE);
+						final Set<Long> usedSet = new HashSet<>();
+						for (final Chunk chunk : tileHeader.chunks) {
+							final long[] doodadReferences = chunk.getDoodadReferences();
+							if (doodadReferences != null) {
+								for (final long ref : doodadReferences) {
+									if (ref < tileHeader.doodads.size()) {
+										if (usedSet.add(ref)) {
+											final DoodadDefinition doodad = tileHeader.doodads.get((int) ref);
+											final long nameId = doodad.getNameId();
+											final float[] position = doodad.getPosition();
+											final float[] rotation = doodad.getRotation();
+											final float scale = doodad.getScale();
 
-										final War3ID nameKey = doodadNameKeys.get((int) nameId);
-										final GameObject row = War3MapViewer.this.allObjectData.getDoodads()
-												.get(nameKey);
-										final float finalScale = scale * wowToWc3Factor;
-										if (row.getField("file").toLowerCase().contains("fish")) {
-											System.out.println("the fish is found: " + finalScale);
-											System.out.println(row.getField("file"));
+											final War3ID nameKey = doodadNameKeys.get((int) nameId);
+											final GameObject row = War3MapViewer.this.allObjectData.getDoodads()
+													.get(nameKey);
+											final float finalScale = scale * wowToWc3Factor;
+											if (row.getField("file").toLowerCase().contains("fish")) {
+												System.out.println("the fish is found: " + finalScale);
+												System.out.println(row.getField("file"));
+											}
+
+											final float[] location = {
+													(((position[0] - wowXOffset) * wowToWc3Factor)) + centerOffset[0],
+													((tilesize - (position[2] - wowYOffset)) * wowToWc3Factor)
+															+ centerOffset[1],
+													position[1] * wowToWc3Factor };
+
+											for (int i = 0; i < 3; i++) {
+												doodadMax[i] = Math.max(location[i], doodadMax[i]);
+												doodadMin[i] = Math.min(location[i], doodadMin[i]);
+											}
+
+											createWdtDoodad(row, 0, location, rotation, finalScale);
+											// ---
 										}
-
-										final float[] location = {
-												(((position[0] - wowXOffset) * wowToWc3Factor)) + centerOffset[0],
-												((tilesize - (position[2] - wowYOffset)) * wowToWc3Factor)
-														+ centerOffset[1],
-												position[1] * wowToWc3Factor };
-
-										for (int i = 0; i < 3; i++) {
-											doodadMax[i] = Math.max(location[i], doodadMax[i]);
-											doodadMin[i] = Math.min(location[i], doodadMin[i]);
-										}
-
-										createWdtDoodad(row, 0, location, rotation, finalScale);
-										// ---
 									}
 								}
 							}
 						}
+						System.out.println("Min: " + Arrays.toString(doodadMin));
+						System.out.println("Max: " + Arrays.toString(doodadMax));
 					}
-					System.out.println("Min: " + Arrays.toString(doodadMin));
-					System.out.println("Max: " + Arrays.toString(doodadMax));
 
 					War3MapViewer.this.doodadsReady = true;
 					War3MapViewer.this.anyReady = true;

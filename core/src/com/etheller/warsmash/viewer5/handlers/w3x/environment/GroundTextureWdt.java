@@ -14,7 +14,12 @@ public class GroundTextureWdt extends GroundTexture {
 	public GroundTextureWdt(final String path, final Element terrainTileInfo, final DataSource dataSource,
 			final GL30 gl) throws IOException {
 		super(path, terrainTileInfo, dataSource, gl);
-		this.texture = ImageUtils.getAnyExtensionTexture(dataSource, path);
+		try {
+			this.texture = ImageUtils.getAnyExtensionTexture(dataSource, path);
+		}
+		catch (final Exception exc) {
+			this.texture = ImageUtils.getAnyExtensionTexture(dataSource, path.replace(".blp", "_s.blp")); // TODO
+		}
 		this.id = this.texture.getTextureObjectHandle();
 	}
 }

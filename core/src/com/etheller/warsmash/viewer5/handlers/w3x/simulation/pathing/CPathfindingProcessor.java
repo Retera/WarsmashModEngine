@@ -22,8 +22,8 @@ public class CPathfindingProcessor {
 	private final CWorldCollision worldCollision;
 	private final LinkedList<PathfindingJob> moveQueue = new LinkedList<>();
 	// things with modified state per current job:
-	private final Node[][] nodes;
-	private final Node[][] cornerNodes;
+//	private final Node[][] nodes;
+//	private final Node[][] cornerNodes;
 	private final Node[] goalSet = new Node[4];
 	private int goals = 0;
 	private int pathfindJobId = 0;
@@ -34,19 +34,19 @@ public class CPathfindingProcessor {
 	public CPathfindingProcessor(final PathingGrid pathingGrid, final CWorldCollision worldCollision) {
 		this.pathingGrid = pathingGrid;
 		this.worldCollision = worldCollision;
-		this.nodes = new Node[pathingGrid.getHeight()][pathingGrid.getWidth()];
-		this.cornerNodes = new Node[pathingGrid.getHeight() + 1][pathingGrid.getWidth() + 1];
-		for (int i = 0; i < this.nodes.length; i++) {
-			for (int j = 0; j < this.nodes[i].length; j++) {
-				this.nodes[i][j] = new Node(new Point2D.Float(pathingGrid.getWorldX(j), pathingGrid.getWorldY(i)));
-			}
-		}
-		for (int i = 0; i < this.cornerNodes.length; i++) {
-			for (int j = 0; j < this.cornerNodes[i].length; j++) {
-				this.cornerNodes[i][j] = new Node(
-						new Point2D.Float(pathingGrid.getWorldXFromCorner(j), pathingGrid.getWorldYFromCorner(i)));
-			}
-		}
+//		this.nodes = new Node[pathingGrid.getHeight()][pathingGrid.getWidth()];
+//		this.cornerNodes = new Node[pathingGrid.getHeight() + 1][pathingGrid.getWidth() + 1];
+//		for (int i = 0; i < this.nodes.length; i++) {
+//			for (int j = 0; j < this.nodes[i].length; j++) {
+//				this.nodes[i][j] = new Node(new Point2D.Float(pathingGrid.getWorldX(j), pathingGrid.getWorldY(i)));
+//			}
+//		}
+//		for (int i = 0; i < this.cornerNodes.length; i++) {
+//			for (int j = 0; j < this.cornerNodes[i].length; j++) {
+//				this.cornerNodes[i][j] = new Node(
+//						new Point2D.Float(pathingGrid.getWorldXFromCorner(j), pathingGrid.getWorldYFromCorner(i)));
+//			}
+//		}
 		this.pathingGridCellCount = pathingGrid.getWidth() * pathingGrid.getHeight();
 	}
 
@@ -163,8 +163,14 @@ public class CPathfindingProcessor {
 	}
 
 	private static enum Direction {
-		NORTH_WEST(-1, 1), NORTH(0, 1), NORTH_EAST(1, 1), EAST(1, 0), SOUTH_EAST(1, -1), SOUTH(0, -1),
-		SOUTH_WEST(-1, -1), WEST(-1, 0);
+		NORTH_WEST(-1, 1),
+		NORTH(0, 1),
+		NORTH_EAST(1, 1),
+		EAST(1, 0),
+		SOUTH_EAST(1, -1),
+		SOUTH(0, -1),
+		SOUTH_WEST(-1, -1),
+		WEST(-1, 0);
 
 		public static final Direction[] VALUES = values();
 
@@ -241,12 +247,14 @@ public class CPathfindingProcessor {
 				}
 				tempRect.set(0, 0, job.collisionSize * 2, job.collisionSize * 2);
 				if (isCollisionSizeBetterSuitedForCorners(job.collisionSize)) {
-					job.searchGraph = this.cornerNodes;
+					job.searchGraph = new Node[][] { { new Node(new Point2D.Float(job.startX, job.startY)),
+							new Node(new Point2D.Float(job.goalX, job.goalY)) } };
 					job.gridMapping = GridMapping.CORNERS;
 					System.out.println("using corners");
 				}
 				else {
-					job.searchGraph = this.nodes;
+					job.searchGraph = new Node[][] { { new Node(new Point2D.Float(job.startX, job.startY)),
+							new Node(new Point2D.Float(job.goalX, job.goalY)) } };
 					job.gridMapping = GridMapping.CELLS;
 					System.out.println("using cells");
 				}

@@ -154,13 +154,30 @@ public class War3MapW3e {
 
 	private static final float WC3_ASHENVALE_WATER_HEIGHT = 0.7f;
 
-	public static War3MapW3e generateConverted(final WdtMap map, final TileHeader tileHeader) {
+	public static War3MapW3e generateConverted(final WdtMap map, final TileHeader notused) {
 		War3MapW3e terrainFile;
 		try {
 			terrainFile = new War3MapW3e(null);
 		}
 		catch (final IOException e) {
 			throw new RuntimeException(e);
+		}
+
+		final float tilesize = 533.3333f;
+		final float wowToWc3Factor = 128.0f / ((tilesize / 16) / 8);
+		int minX = Integer.MAX_VALUE, minY = Integer.MAX_VALUE;
+		int maxX = Integer.MIN_VALUE, maxY = Integer.MIN_VALUE;
+		for (final TileHeader header : map.tileHeaders) {
+			final int tileIdx = header.idx;
+			final int blockX = tileIdx % 64;
+			final float wowXOffset = blockX * tilesize;
+			final int blockY = tileIdx / 64;
+			final float wowYOffset = blockY * tilesize;
+
+			minX = Math.min(blockX, minX);
+			minY = Math.min(blockY, minY);
+			maxX = Math.max(blockX, maxX);
+			maxY = Math.max(blockY, maxY);
 		}
 
 		terrainFile.version = 0; // TODO
@@ -170,10 +187,10 @@ public class War3MapW3e {
 		terrainFile.groundTiles.add(War3ID.fromString("Wsnw"));
 		terrainFile.cliffTiles.add(War3ID.fromString("CLdi"));
 
-		terrainFile.mapSize[0] = 160 + 1;
-		terrainFile.mapSize[1] = 160 + 1;
-		terrainFile.centerOffset[0] = -(160 * 128f) / 2.f;
-		terrainFile.centerOffset[1] = -(160 * 128f) / 2.f;
+		terrainFile.mapSize[0] = (((maxX - minX) + 1) * 16 * 8) + 1;
+		terrainFile.mapSize[1] = (((maxY - minY) + 1) * 16 * 8) + 1;
+		terrainFile.centerOffset[0] = -((terrainFile.mapSize[0] - 1) * 128f) / 2.f;
+		terrainFile.centerOffset[1] = -((terrainFile.mapSize[1] - 1) * 128f) / 2.f;
 
 		terrainFile.corners = new Corner[terrainFile.mapSize[1]][];
 		for (int row = 0, rows = terrainFile.mapSize[1]; row < rows; row++) {
@@ -187,74 +204,74 @@ public class War3MapW3e {
 				terrainFile.corners[row][column] = corner;
 			}
 		}
-		long minX = Integer.MAX_VALUE, minY = Integer.MAX_VALUE;
-		long maxX = Integer.MIN_VALUE, maxY = Integer.MIN_VALUE;
-		for (final Chunk chunk : tileHeader.chunks) {
-			final long indexX = chunk.getIndexX();
-			final long indexY = chunk.getIndexY();
 
-			minX = Math.min(indexX, minX);
-			minY = Math.min(indexY, minY);
-			maxX = Math.max(indexX, maxX);
-			maxY = Math.max(indexY, maxY);
-		}
+		for (final TileHeader header : map.tileHeaders) {
+			final int tileIdx = header.idx;
+			final int blockX = tileIdx % 64;
+			final int blockY = tileIdx / 64;
 
-		for (final Chunk chunk : tileHeader.chunks) {
-			// internet says: floor((32 - (axis / 533.33333)))
-			final long indexX = chunk.getIndexX();
-			final long indexY = chunk.getIndexY();
+			final int blockOffsetX = blockX * 16 * 8;
+			final int blockOffsetY = blockY * 16 * 8;
 
-			final long war3ChunkIndexX = maxY - indexY;
-			final long war3ChunkIndexY = indexX - minX;
+			for (final Chunk chunk : header.chunks) {
+				// internet says: floor((32 - (axis / 533.33333)))
+				final long indexX = chunk.getIndexX();
+				final long indexY = chunk.getIndexY();
 
-			final float[][] heightMap = chunk.getHeightMap();
-			final float tilesize = 533.3333f;
-			final float wowToWc3Factor = 1.0f / ((tilesize / 16) / 8);
-			for (int i = 0; i < 9; i++) {
-				for (int j = 0; j < 9; j++) {
-					final float height = heightMap[i][j];
+				final long war3ChunkIndexX = 15 - indexY;
+				final long war3ChunkIndexY = indexX;
 
-					final int war3IndexX = (int) ((war3ChunkIndexX * 8) + (9 - i - 1));
-					final int war3IndexY = (int) ((war3ChunkIndexY * 8) + j);
-					final Corner corner = terrainFile.corners[war3IndexX][war3IndexY];
-					corner.setGroundHeight((height * wowToWc3Factor) + 2.0f);
-
-				}
-			}
-			for (int i = 0; i < 8; i++) {
-				for (int j = 0; j < 8; j++) {
-					final float height = heightMap[i + 9][j];
-
-					final int war3IndexX = (int) ((war3ChunkIndexX * 8) + (8 - i - 1));
-					final int war3IndexY = (int) ((war3ChunkIndexY * 8) + j);
-					final Corner corner = terrainFile.corners[war3IndexX][war3IndexY];
-					corner.setWdtInterpolatedCenterHeight(height * wowToWc3Factor);
-
-				}
-			}
-			final List<MapChunkLiquidLayer> mapChunkLiquidLayers = chunk.getMapChunkLiquidLayers();
-			for (final MapChunkLiquidLayer layer : mapChunkLiquidLayers) {
+				final float[][] heightMap = chunk.getHeightMap();
 				for (int i = 0; i < 9; i++) {
 					for (int j = 0; j < 9; j++) {
-						final Object vert = layer.verts[i][j];
-						float height = 0;
-						byte depth = 0;
-						if (vert instanceof SOVert) {
-							final SOVert soVert = (SOVert) vert;
-							height = soVert.height;
-							depth = soVert.depth;
+						final float height = heightMap[i][j];
+
+						final int war3IndexX = blockOffsetY + (int) ((war3ChunkIndexX * 8) + (9 - i - 1));
+						final int war3IndexY = blockOffsetX + (int) ((war3ChunkIndexY * 8) + j);
+						if ((war3IndexX < 0) || (war3IndexY < 0) || (war3IndexX >= terrainFile.corners.length)
+								|| (war3IndexY >= terrainFile.corners[0].length)) {
+							System.out.println("bad");
 						}
-						else if (vert instanceof SWVert) {
-							final SWVert swVert = (SWVert) vert;
-							height = swVert.height;
-							depth = swVert.depth;
-						}
-						height = Math.max(layer.minHeight, Math.min(layer.maxHeight, height));
-						final int war3IndexX = (int) ((war3ChunkIndexX * 8) + (9 - i - 1));
-						final int war3IndexY = (int) ((war3ChunkIndexY * 8) + j);
 						final Corner corner = terrainFile.corners[war3IndexX][war3IndexY];
-						corner.setWaterHeight((height * wowToWc3Factor) + WC3_ASHENVALE_WATER_HEIGHT);
-						corner.setWater(1);
+						corner.setGroundHeight((height * wowToWc3Factor) + 2.0f);
+
+					}
+				}
+				for (int i = 0; i < 8; i++) {
+					for (int j = 0; j < 8; j++) {
+						final float height = heightMap[i + 9][j];
+
+						final int war3IndexX = blockOffsetY + (int) ((war3ChunkIndexX * 8) + (8 - i - 1));
+						final int war3IndexY = blockOffsetX + (int) ((war3ChunkIndexY * 8) + j);
+						final Corner corner = terrainFile.corners[war3IndexX][war3IndexY];
+						corner.setWdtInterpolatedCenterHeight(height * wowToWc3Factor);
+
+					}
+				}
+				final List<MapChunkLiquidLayer> mapChunkLiquidLayers = chunk.getMapChunkLiquidLayers();
+				for (final MapChunkLiquidLayer layer : mapChunkLiquidLayers) {
+					for (int i = 0; i < 9; i++) {
+						for (int j = 0; j < 9; j++) {
+							final Object vert = layer.verts[i][j];
+							float height = 0;
+							byte depth = 0;
+							if (vert instanceof SOVert) {
+								final SOVert soVert = (SOVert) vert;
+								height = soVert.height;
+								depth = soVert.depth;
+							}
+							else if (vert instanceof SWVert) {
+								final SWVert swVert = (SWVert) vert;
+								height = swVert.height;
+								depth = swVert.depth;
+							}
+							height = Math.max(layer.minHeight, Math.min(layer.maxHeight, height));
+							final int war3IndexX = blockOffsetY + (int) ((war3ChunkIndexX * 8) + (9 - i - 1));
+							final int war3IndexY = blockOffsetX + (int) ((war3ChunkIndexY * 8) + j);
+							final Corner corner = terrainFile.corners[war3IndexX][war3IndexY];
+							corner.setWaterHeight((height * wowToWc3Factor) + WC3_ASHENVALE_WATER_HEIGHT);
+							corner.setWater(1);
+						}
 					}
 				}
 			}

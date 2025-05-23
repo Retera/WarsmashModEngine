@@ -2,9 +2,9 @@ package com.etheller.warsmash.parsers.w3x.wpm;
 
 import java.io.IOException;
 
+import com.etheller.warsmash.parsers.w3x.w3e.War3MapW3e;
 import com.etheller.warsmash.parsers.w3x.w3i.War3MapW3i;
 import com.etheller.warsmash.parsers.wdt.WdtMap;
-import com.etheller.warsmash.parsers.wdt.WdtMap.TileHeader;
 import com.etheller.warsmash.util.ParseUtils;
 import com.etheller.warsmash.util.War3ID;
 import com.google.common.io.LittleEndianDataInputStream;
@@ -14,7 +14,7 @@ public class War3MapWpm {
 	private static final War3ID MAGIC_NUMBER = War3ID.fromString("MP3W");
 	private int version;
 	private final int[] size = new int[2];
-	private short[] pathing;
+	private short[][] pathing;
 
 	public War3MapWpm(final LittleEndianDataInputStream stream) throws IOException {
 		if (stream != null) {
@@ -30,7 +30,10 @@ public class War3MapWpm {
 
 		this.version = stream.readInt();
 		ParseUtils.readInt32Array(stream, this.size);
-		this.pathing = ParseUtils.readUInt8Array(stream, this.size[0] * this.size[1]);
+		this.pathing = new short[this.size[0]][];
+		for (int k = 0; k < this.size[0]; k++) {
+			this.pathing[k] = ParseUtils.readUInt8Array(stream, this.size[1]);
+		}
 
 		return true;
 	}
@@ -39,7 +42,9 @@ public class War3MapWpm {
 		ParseUtils.writeWar3ID(stream, MAGIC_NUMBER);
 		stream.writeInt(this.version);
 		ParseUtils.writeInt32Array(stream, this.size);
-		ParseUtils.writeUInt8Array(stream, this.pathing);
+		for (int k = 0; k < this.size[0]; k++) {
+			ParseUtils.writeUInt8Array(stream, this.pathing[k]);
+		}
 	}
 
 	public int getVersion() {
@@ -50,7 +55,7 @@ public class War3MapWpm {
 		return this.size;
 	}
 
-	public short[] getPathing() {
+	public short[][] getPathing() {
 		return this.pathing;
 	}
 
@@ -58,18 +63,18 @@ public class War3MapWpm {
 		this.version = version;
 	}
 
-	public void setPathing(final short[] pathing) {
+	public void setPathing(final short[][] pathing) {
 		this.pathing = pathing;
 	}
 
-	public static War3MapWpm generateConverted(final WdtMap map, final TileHeader tileHeader) {
+	public static War3MapWpm generateConverted(final WdtMap map, final War3MapW3e environFile) {
 		final War3MapWpm pathing;
 		try {
 			pathing = new War3MapWpm(null);
 			pathing.version = 0;
-			pathing.size[0] = 160 * 4;
-			pathing.size[1] = 160 * 4;
-			pathing.pathing = new short[pathing.size[0] * pathing.size[1]];
+			pathing.size[0] = environFile.getMapSize()[0] * 4;
+			pathing.size[1] = environFile.getMapSize()[1] * 4;
+			pathing.pathing = new short[pathing.size[0]][];
 		}
 		catch (final IOException e) {
 			throw new RuntimeException(e);

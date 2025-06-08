@@ -424,9 +424,14 @@ public abstract class CUnitAttack {
 		int damage = getTotalBaseDamage();
 		final int dice = getTotalDamageDice();
 		final int sidesPerDie = getDamageSidesPerDie();
-		for (int i = 0; i < dice; i++) {
+		if ( dice > 1000 ) {
 			final int singleRoll = sidesPerDie == 0 ? 0 : seededRandom.nextInt(sidesPerDie);
-			damage += singleRoll + 1;
+			damage += (singleRoll + 1) * dice;
+		} else {
+			for (int i = 0; i < dice; i++) {
+				final int singleRoll = sidesPerDie == 0 ? 0 : seededRandom.nextInt(sidesPerDie);
+				damage += singleRoll + 1;
+			}
 		}
 		return damage + getTotalTemporaryDamageBonus();
 	}

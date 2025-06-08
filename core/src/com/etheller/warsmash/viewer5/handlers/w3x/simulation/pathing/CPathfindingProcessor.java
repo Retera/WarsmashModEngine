@@ -250,8 +250,8 @@ public class CPathfindingProcessor {
 					job.gridMapping = GridMapping.CELLS;
 					System.out.println("using cells");
 				}
-				final int goalCellY = job.gridMapping.getY(this.pathingGrid, job.goalY);
-				final int goalCellX = job.gridMapping.getX(this.pathingGrid, job.goalX);
+				final int goalCellY = Math.min(Math.max(0, job.gridMapping.getY(this.pathingGrid, job.goalY)), job.searchGraph.length - 1);
+				final int goalCellX = Math.min(Math.max(0, job.gridMapping.getX(this.pathingGrid, job.goalX)), job.searchGraph[goalCellY].length - 1);
 				final Node mostLikelyGoal = job.searchGraph[goalCellY][goalCellX];
 				mostLikelyGoal.touch(this.pathfindJobId);
 				final double bestGoalDistance = mostLikelyGoal.point.distance(job.goalX, job.goalY);

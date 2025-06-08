@@ -15,7 +15,15 @@ public class ABActionRemoveBehaviorChangeListener implements ABAction {
 	private ABBehaviorChangeListenerCallback listener;
 
 	public void runAction(final CSimulation game, final CUnit caster, final Map<String, Object> localStore, final int castId) {
-		CUnit target = unit.callback(game, caster, localStore, castId);
+		CUnit target;
+		if (this.unit == null) {
+			target = caster;
+		} else {
+			target = unit.callback(game, caster, localStore, castId);
+		}
+		if (this.listener == null) {
+			return;
+		}
 		
 		target.removeBehaviorChangeListener(listener.callback(game, caster, localStore, castId));
 	}

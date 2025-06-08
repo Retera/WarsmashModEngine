@@ -257,7 +257,7 @@ public class CUnitData {
 		final float lifeRegen = unitTypeInstance.getLifeRegen();
 		final int manaInitial = unitTypeInstance.getManaInitial();
 		final int manaMaximum = unitTypeInstance.getManaMaximum();
-		final int speed = unitTypeInstance.getSpeed();
+		final int speed = (int)Math.min(simulation.getGameplayConstants().getMaxUnitSpeed(), Math.max(simulation.getGameplayConstants().getMinUnitSpeed(), unitTypeInstance.getSpeed()));
 
 		final CUnit unit = new CUnit(handleId, playerIndex, x, y, life, typeId, facing, manaInitial, life, lifeRegen,
 				manaMaximum, speed, unitTypeInstance);

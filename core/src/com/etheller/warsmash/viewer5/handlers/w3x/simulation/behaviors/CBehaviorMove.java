@@ -50,7 +50,7 @@ public class CBehaviorMove implements CBehavior {
 	public CBehaviorMove reset(final int highlightOrderId, final AbilityTarget target) {
 		target.visit(this.targetVisitingResetter.reset(highlightOrderId));
 		this.rangedBehavior = null;
-		this.disableCollision = false;
+		resetDisableCollision(false);
 		return this;
 	}
 
@@ -59,8 +59,19 @@ public class CBehaviorMove implements CBehavior {
 		final int highlightOrderId = rangedBehavior.getHighlightOrderId();
 		target.visit(this.targetVisitingResetter.reset(highlightOrderId));
 		this.rangedBehavior = rangedBehavior;
-		this.disableCollision = disableCollision;
+		resetDisableCollision(disableCollision);
 		return this;
+	}
+
+	private void resetDisableCollision(final boolean disableCollision) {
+		final boolean previousCollisionState = this.disableCollision;
+		this.disableCollision = disableCollision;
+		if ((previousCollisionState != this.disableCollision) && (this.unit.getCurrentBehavior() == this)) {
+			// begin() / end() are sometimes not called on behavior when it resets
+			// while it was already the active behavior. Until that design is fixed,
+			// need to ensure we can't leave unit stuck in "no collision" mode here
+			this.unit.setNoCollisionMovementType(this.disableCollision);
+		}
 	}
 
 	private void internalResetMove(final int highlightOrderId, final float targetX, final float targetY) {

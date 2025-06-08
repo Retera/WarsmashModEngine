@@ -18,6 +18,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.item.CAbi
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.item.CAbilityItemManaRegain;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.item.CAbilityItemPermanentLifeGain;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.mine.CAbilityEntangledMine;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.neutral.CAbilityWander;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.neutral.CAbilityWayGate;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.nightelf.eattree.CAbilityEatTree;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.nightelf.moonwell.CAbilityMoonWell;
@@ -274,6 +275,8 @@ public class CAbilityData {
 				new CAbilityTypeDefinitionSpellBase((handleId, alias) -> new CAbilityWayGate(handleId, alias)));
 		this.codeToAbilityTypeDefinition.put(War3ID.fromString("AOww"),
 				new CAbilityTypeDefinitionSpellBase((handleId, alias) -> new CAbilityWhirlWind(handleId, alias)));
+		this.codeToAbilityTypeDefinition.put(War3ID.fromString("Awan"),
+				new CAbilityTypeDefinitionSpellBase((handleId, alias) -> new CAbilityWander(handleId, alias)));
 
 		System.err.println("========================================================================");
 		System.err.println("Starting to load ability builder");
@@ -318,7 +321,11 @@ public class CAbilityData {
 			if (gameObject == null) {
 				return null;
 			}
-			final War3ID code = War3ID.fromString(gameObject.readSLKTag("code"));
+			final String codeSLKTag = gameObject.readSLKTag("code");
+			if ((codeSLKTag == null) || (codeSLKTag.length() != 4)) {
+				return null;
+			}
+			final War3ID code = War3ID.fromString(codeSLKTag);
 			final CAbilityTypeDefinition abilityTypeDefinition = this.codeToAbilityTypeDefinition.get(code);
 			if (abilityTypeDefinition != null) {
 				abilityType = abilityTypeDefinition.createAbilityType(alias, gameObject);

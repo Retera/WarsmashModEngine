@@ -121,7 +121,12 @@ public class MeleeUIMinimap {
 					if (simUnit.isBuilding()) {
 						dimensions = 10;
 					}
-					minimapIcon = this.teamColors[unit.getSimulationUnit().getPlayerIndex()];
+					if (simUnit.getPlayerIndex() == player.getId()) {
+						minimapIcon = this.specialIcons[5];
+					}
+					else {
+						minimapIcon = this.teamColors[unit.getSimulationUnit().getPlayerIndex()];
+					}
 				}
 				final int offset = dimensions / 2;
 				batch.draw(minimapIcon,
@@ -149,7 +154,7 @@ public class MeleeUIMinimap {
 		return this.minimapFilledArea.contains(x, y);
 	}
 
-	public void setVisible(boolean visible) {
+	public void setVisible(final boolean visible) {
 		this.visible = visible;
 	}
 }

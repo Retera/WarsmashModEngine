@@ -207,6 +207,7 @@ import com.hiveworkshop.rms.parsers.mdlx.MdlxLayer.FilterMode;
 
 public class MeleeUI implements CUnitStateListener, CommandButtonListener, CommandCardCommandListener,
 		QueueIconListener, CommandErrorListener, CPlayerStateListener, WarsmashUI, WarsmashToggleableUI {
+	private static final int UNIT_FORMATION_LINE_SIZE = 4;
 	private static final long WORLD_FRAME_MESSAGE_FADEOUT_MILLIS = TimeUnit.SECONDS.toMillis(9);
 	private static final long WORLD_FRAME_MESSAGE_EXPIRE_MILLIS = TimeUnit.SECONDS.toMillis(10);
 	private static final long WORLD_FRAME_MESSAGE_FADE_DURATION = WORLD_FRAME_MESSAGE_EXPIRE_MILLIS
@@ -508,7 +509,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 			teamColors[i] = ImageUtils.getAnyExtensionTexture(war3MapViewer.dataSource,
 					"ReplaceableTextures\\" + ReplaceableIds.getPathString(1) + ReplaceableIds.getIdString(i) + ".blp");
 		}
-		final Texture[] specialIcons = new Texture[5];
+		final Texture[] specialIcons = new Texture[6];
 		specialIcons[0] = ImageUtils.getAnyExtensionTexture(war3MapViewer.mapMpq, "UI\\MiniMap\\minimap-gold.blp");
 		specialIcons[1] = ImageUtils.getAnyExtensionTexture(war3MapViewer.mapMpq,
 				"UI\\MiniMap\\minimap-neutralbuilding.blp");
@@ -517,6 +518,8 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 				"UI\\MiniMap\\minimap-gold-entangled.blp");
 		specialIcons[4] = ImageUtils.getAnyExtensionTexture(war3MapViewer.mapMpq,
 				"UI\\MiniMap\\minimap-gold-haunted.blp");
+		specialIcons[5] = ImageUtils.getAnyExtensionTexture(war3MapViewer.mapMpq, "Textures\\white.blp");
+
 		final Rectangle playableMapArea = war3MapViewer.terrain.getPlayableMapArea();
 		return new MeleeUIMinimap(minimapDisplayArea, playableMapArea, minimapTexture, teamColors, specialIcons);
 	}
@@ -3825,7 +3828,15 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 		}
 		if (this.selectedUnit.getSimulationUnit().isHidden() || !this.selectedUnit.getSimulationUnit()
 				.isVisible(this.war3MapViewer.simulation, this.war3MapViewer.getLocalPlayerIndex())) {
-			removeSubGroupHighlightSelectedUnitFromSelection();
+			if (this.selectedUnit.getSimulationUnit().isPaused()
+					|| !this.war3MapViewer.simulation.getPlayer(this.selectedUnit.getSimulationUnit().getPlayerIndex())
+							.hasAlliance(this.localPlayer.getId(), CAllianceType.SHARED_CONTROL)) {
+				// use "not controllable or paused" as a proxy for whether to unselect a hidden
+				// unit. this tries to mimic the behavior on War3 that workers inside buildings,
+				// and units with 0 vision radius who walk into the fog of war, remain selected
+				removeSubGroupHighlightSelectedUnitFromSelection();
+			}
+
 		}
 	}
 
@@ -4385,6 +4396,23 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 		}
 	}
 
+	private Vector2 getSelectionGroupCenter() {
+		final Vector2 center = new Vector2();
+		for (final RenderUnit unit : this.selectedUnits) {
+			center.add(unit.getX(), unit.getY());
+		}
+		center.scl(1.f / this.selectedUnits.size());
+		return center;
+	}
+
+	private float getSelectionGroupMaxCollision() {
+		float maxCollision = 0.0f;
+		for (final RenderUnit unit : this.selectedUnits) {
+			maxCollision = Math.max(unit.getSimulationUnit().getUnitType().getCollisionSize(), maxCollision);
+		}
+		return maxCollision * 3.0f;
+	}
+
 	private void rightClickMove(final int screenX, final float worldScreenY) {
 		this.war3MapViewer.getClickLocation(clickLocationTemp, screenX, (int) worldScreenY,
 				(getSelectedUnit() != null) && getSelectedUnit().getSimulationUnit().isMovementOnWaterAllowed(), true);
@@ -4393,6 +4421,16 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 
 		boolean ordered = false;
 		boolean rallied = false;
+		final Vector2 selectionGroupCenter = getSelectionGroupCenter();
+		final float selectionGroupMaxCollision = getSelectionGroupMaxCollision();
+		final float distanceFromGroupToClick = clickLocationTemp2.dst(selectionGroupCenter);
+		final float dy = ((clickLocationTemp2.x - selectionGroupCenter.x) / distanceFromGroupToClick);
+		final float dx = ((-1 * (clickLocationTemp2.y - selectionGroupCenter.y)) / distanceFromGroupToClick);
+		final int unitLineWidth = Math.min(UNIT_FORMATION_LINE_SIZE, this.selectedUnits.size());
+		final int lastUnitLineWidth = this.selectedUnits.size() % UNIT_FORMATION_LINE_SIZE;
+		final float perpendicularDistance = (unitLineWidth - 1) * selectionGroupMaxCollision;
+		final float lastPerpendicularDistance = (lastUnitLineWidth - 1) * selectionGroupMaxCollision;
+		int unitIndex = 0;
 		for (final RenderUnit unit : this.selectedUnits) {
 			if (unit.getSimulationUnit().getPlayerIndex() == this.war3MapViewer.getLocalPlayerIndex()) {
 				for (final CAbility ability : unit.getSimulationUnit().getAbilities()) {
@@ -4404,11 +4442,25 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 								PointAbilityTargetCheckReceiver.INSTANCE);
 						final Vector2 target = PointAbilityTargetCheckReceiver.INSTANCE.getTarget();
 						if (target != null) {
+							float perpDistUsed = perpendicularDistance;
+							if ((unitIndex / UNIT_FORMATION_LINE_SIZE) == (this.selectedUnits.size()
+									/ UNIT_FORMATION_LINE_SIZE)) {
+								perpDistUsed = lastPerpendicularDistance;
+							}
+
+							final float targetX = (clickLocationTemp2.x + (dx * (perpDistUsed
+									- ((unitIndex % UNIT_FORMATION_LINE_SIZE) * selectionGroupMaxCollision * 2.0f))))
+									- (dy * ((unitIndex / UNIT_FORMATION_LINE_SIZE) * selectionGroupMaxCollision
+											* 2.0f));
+							final float targetY = clickLocationTemp2.y + (dy * (perpDistUsed
+									- ((unitIndex % UNIT_FORMATION_LINE_SIZE) * selectionGroupMaxCollision * 2.0f)))
+									+ (dx * ((unitIndex / UNIT_FORMATION_LINE_SIZE) * selectionGroupMaxCollision
+											* 2.0f));
 							this.unitOrderListener.issuePointOrder(unit.getSimulationUnit().getHandleId(),
-									ability.getHandleId(), OrderIds.smart, clickLocationTemp2.x, clickLocationTemp2.y,
-									isShiftDown());
+									ability.getHandleId(), OrderIds.smart, targetX, targetY, isShiftDown());
 							rallied |= ability instanceof CAbilityRally;
 							ordered = true;
+							unitIndex++;
 						}
 					}
 				}

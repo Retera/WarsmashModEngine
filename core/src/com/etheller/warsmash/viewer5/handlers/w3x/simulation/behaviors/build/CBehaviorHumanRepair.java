@@ -35,24 +35,23 @@ public class CBehaviorHumanRepair extends CAbstractRangedBehavior {
 		this.stillAliveVisitor = new AbilityTargetStillAliveAndTargetableVisitor();
 	}
 
-	public CBehavior reset(CSimulation game, final CWidget target) {
+	public CBehavior reset(final CSimulation game, final CWidget target) {
 		this.nextNotifyTick = 0;
 		this.totalGoldCharged = 0;
 		this.totalLumberCharged = 0;
 		if (target instanceof CUnit) {
 			final CUnit taru = (CUnit) target;
 			if (taru.isConstructing() && taru.isConstructingPaused()) {
-				this.goldPerUpdate = taru.getUnitType().getGoldRepairCost() * this.ability.getPowerBuildCostRatio()
-						* WarsmashConstants.SIMULATION_STEP_TIME
-						/ (taru.getUnitType().getBuildTime());
-				this.lumberPerUpdate = taru.getUnitType().getLumberRepairCost() * this.ability.getPowerBuildCostRatio()
-						* WarsmashConstants.SIMULATION_STEP_TIME
-						/ (taru.getUnitType().getBuildTime());
+				this.goldPerUpdate = (taru.getUnitType().getGoldRepairCost() * this.ability.getPowerBuildCostRatio()
+						* WarsmashConstants.SIMULATION_STEP_TIME) / (taru.getUnitType().getBuildTime());
+				this.lumberPerUpdate = (taru.getUnitType().getLumberRepairCost() * this.ability.getPowerBuildCostRatio()
+						* WarsmashConstants.SIMULATION_STEP_TIME) / (taru.getUnitType().getBuildTime());
 				this.hpPerUpdate = taru.getMaxLife()
 						* (WarsmashConstants.SIMULATION_STEP_TIME / taru.getUnitType().getBuildTime())
 						* (1.0f - WarsmashConstants.BUILDING_CONSTRUCT_START_LIFE)
 						* this.ability.getPowerBuildTimeRatio();
-			} else {
+			}
+			else {
 				this.goldPerUpdate = taru.getUnitType().getGoldRepairCost()
 						* (WarsmashConstants.SIMULATION_STEP_TIME / taru.getUnitType().getRepairTime())
 						* this.ability.getRepairCostRatio() * this.ability.getRepairTimeRatio();
@@ -63,7 +62,8 @@ public class CBehaviorHumanRepair extends CAbstractRangedBehavior {
 						* (WarsmashConstants.SIMULATION_STEP_TIME / taru.getUnitType().getRepairTime())
 						* this.ability.getRepairTimeRatio();
 			}
-		} else if (target instanceof CDestructable) {
+		}
+		else if (target instanceof CDestructable) {
 			final CDestructable tard = (CDestructable) target;
 			this.goldPerUpdate = tard.getDestType().getGoldRepairCost()
 					* (WarsmashConstants.SIMULATION_STEP_TIME / tard.getDestType().getRepairTime())
@@ -74,7 +74,8 @@ public class CBehaviorHumanRepair extends CAbstractRangedBehavior {
 			this.hpPerUpdate = tard.getMaxLife()
 					* (WarsmashConstants.SIMULATION_STEP_TIME / tard.getDestType().getRepairTime())
 					* this.ability.getRepairTimeRatio();
-		} else {
+		}
+		else {
 			this.goldPerUpdate = 0;
 			this.lumberPerUpdate = 0;
 			this.hpPerUpdate = 0;
@@ -96,17 +97,20 @@ public class CBehaviorHumanRepair extends CAbstractRangedBehavior {
 
 	@Override
 	protected CBehavior update(final CSimulation simulation, final boolean withinFacingWindow) {
+		final CUnit targetUnit = this.target.visit(AbilityTargetVisitor.UNIT);
+		final boolean validHumanBuildTarget = (targetUnit != null) && targetUnit.isConstructing()
+				&& targetUnit.isConstructingPaused();
 		if (this.target instanceof CWidget) {
 			final CWidget targetWidget = (CWidget) this.target;
-			if (targetWidget.getLife() >= targetWidget.getMaxLife()) {
+			if ((targetWidget.getLife() >= targetWidget.getMaxLife()) && !validHumanBuildTarget) {
 				return this.unit.pollNextOrderBehavior(simulation);
 			}
 		}
-		final CUnit targetUnit = this.target.visit(AbilityTargetVisitor.UNIT);
-		if (targetUnit == null || !targetUnit.isConstructing() || !targetUnit.isConstructingPaused()
-				|| targetUnit.getWorker() != this.unit) {
-			final float ng = this.totalGoldCharged + this.goldPerUpdate + this.goldPerUpdate*this.ability.getPowerBuildTimeRatio()*targetUnit.getPowerWorkers();
-			final float nl = this.totalLumberCharged + this.lumberPerUpdate + this.lumberPerUpdate*this.ability.getPowerBuildTimeRatio()*targetUnit.getPowerWorkers();
+		if (!validHumanBuildTarget || (targetUnit.getWorker() != this.unit)) {
+			final float ng = this.totalGoldCharged + this.goldPerUpdate
+					+ (this.goldPerUpdate * this.ability.getPowerBuildTimeRatio() * targetUnit.getPowerWorkers());
+			final float nl = this.totalLumberCharged + this.lumberPerUpdate
+					+ (this.lumberPerUpdate * this.ability.getPowerBuildTimeRatio() * targetUnit.getPowerWorkers());
 			final int gdx = (int) (ng) - (int) this.totalGoldCharged;
 			final int ldx = (int) (nl) - (int) this.totalLumberCharged;
 			this.totalGoldCharged = ng;
@@ -117,17 +121,18 @@ public class CBehaviorHumanRepair extends CAbstractRangedBehavior {
 		}
 		this.unit.getUnitAnimationListener().playAnimation(false, AnimationTokens.PrimaryTag.STAND, SequenceUtils.WORK,
 				1.0f, true);
-		if (this.nextNotifyTick == 0 || simulation.getGameTurnTick() >= this.nextNotifyTick) {
+		if ((this.nextNotifyTick == 0) || (simulation.getGameTurnTick() >= this.nextNotifyTick)) {
 			if (this.nextNotifyTick == 0) {
 				this.nextNotifyTick = (int) (simulation.getGameTurnTick()
-						+ 0.5 / WarsmashConstants.SIMULATION_STEP_TIME);
-			} else {
+						+ (0.5 / WarsmashConstants.SIMULATION_STEP_TIME));
+			}
+			else {
 				this.unit.fireBehaviorChangeEvent(simulation, this, true);
 			}
 		}
 		if (this.target instanceof CWidget) {
 			final CWidget targetWidget = (CWidget) this.target;
-			if ((targetUnit != null) && targetUnit.isConstructing() && targetUnit.isConstructingPaused()) {
+			if (validHumanBuildTarget) {
 				if (targetUnit.getWorker() == this.unit) {
 					targetUnit.setConstructionProgress(
 							targetUnit.getConstructionProgress() + WarsmashConstants.SIMULATION_STEP_TIME);
@@ -139,9 +144,10 @@ public class CBehaviorHumanRepair extends CAbstractRangedBehavior {
 					if (targetUnit.getConstructionProgress() >= buildTime) {
 						return this.unit.pollNextOrderBehavior(simulation);
 					}
-				} else {
+				}
+				else {
 					targetUnit.setConstructionProgress(targetUnit.getConstructionProgress()
-							+ WarsmashConstants.SIMULATION_STEP_TIME * this.ability.getPowerBuildTimeRatio());
+							+ (WarsmashConstants.SIMULATION_STEP_TIME * this.ability.getPowerBuildTimeRatio()));
 					final int buildTime = targetUnit.getUnitType().getBuildTime();
 					targetUnit.setLife(simulation,
 							Math.min(targetUnit.getLife() + this.hpPerUpdate, targetUnit.getMaximumLife()));
@@ -150,7 +156,8 @@ public class CBehaviorHumanRepair extends CAbstractRangedBehavior {
 					}
 				}
 
-			} else {
+			}
+			else {
 				float newLifeValue = targetWidget.getLife() + this.hpPerUpdate;
 				final boolean done = newLifeValue > targetWidget.getMaxLife();
 				if (done) {
@@ -181,12 +188,13 @@ public class CBehaviorHumanRepair extends CAbstractRangedBehavior {
 
 	@Override
 	public void begin(final CSimulation game) {
-		if (target instanceof CUnit) {
-			final CUnit taru = (CUnit) target;
+		if (this.target instanceof CUnit) {
+			final CUnit taru = (CUnit) this.target;
 			if (taru.isConstructing() && taru.isConstructingPaused()) {
 				if (taru.getWorker() == null) {
 					taru.setWorker(this.unit, false);
-				} else {
+				}
+				else {
 					taru.addPowerWorker();
 				}
 			}
@@ -195,12 +203,13 @@ public class CBehaviorHumanRepair extends CAbstractRangedBehavior {
 
 	@Override
 	public void end(final CSimulation game, final boolean interrupted) {
-		if (target instanceof CUnit) {
-			final CUnit taru = (CUnit) target;
+		if (this.target instanceof CUnit) {
+			final CUnit taru = (CUnit) this.target;
 			if (taru.isConstructing() && taru.isConstructingPaused()) {
 				if (taru.getWorker() == this.unit) {
 					taru.setWorker(null, false);
-				} else {
+				}
+				else {
 					taru.removePowerWorker();
 				}
 			}

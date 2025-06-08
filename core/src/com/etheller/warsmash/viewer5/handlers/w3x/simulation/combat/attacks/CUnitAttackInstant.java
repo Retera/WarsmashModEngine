@@ -2,6 +2,7 @@ package com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks;
 
 import java.util.EnumSet;
 
+import com.etheller.warsmash.viewer5.handlers.w3x.AnimationTokens.SecondaryTag;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
@@ -20,10 +21,10 @@ public class CUnitAttackInstant extends CUnitAttack {
 			final CAttackType attackType, final float cooldownTime, final int damageBase, final int damageDice,
 			final int damageSidesPerDie, final int damageUpgradeAmount, final int range, final float rangeMotionBuffer,
 			final boolean showUI, final EnumSet<CTargetType> targetsAllowed, final String weaponSound,
-			final CWeaponType weaponType, final String projectileArt) {
+			final CWeaponType weaponType, final EnumSet<SecondaryTag> animationTag, final String projectileArt) {
 		super(animationBackswingPoint, animationDamagePoint, attackType, cooldownTime, damageBase, damageDice,
 				damageSidesPerDie, damageUpgradeAmount, range, rangeMotionBuffer, showUI, targetsAllowed, weaponSound,
-				weaponType);
+				weaponType, animationTag);
 		this.projectileArt = projectileArt;
 	}
 
@@ -32,7 +33,7 @@ public class CUnitAttackInstant extends CUnitAttack {
 		return new CUnitAttackInstant(getAnimationBackswingPoint(), getAnimationDamagePoint(), getAttackType(),
 				getCooldownTime(), getDamageBase(), getDamageDice(), getDamageSidesPerDie(), getDamageUpgradeAmount(),
 				getRange(), getRangeMotionBuffer(), isShowUI(), getTargetsAllowed(), getWeaponSound(), getWeaponType(),
-				this.projectileArt);
+				getAnimationTag(), this.projectileArt);
 	}
 
 	public String getProjectileArt() {
@@ -50,9 +51,10 @@ public class CUnitAttackInstant extends CUnitAttack {
 		CWidget widget = target.visit(AbilityTargetWidgetVisitor.INSTANCE);
 		if (widget != null) {
 			simulation.createInstantAttackEffect(unit, this, widget);
-			CAttackProjectileInstant proj = new CAttackProjectileInstant(widget.getX(), widget.getY(), widget, unit, damage, this, attackListener);
+			final CAttackProjectileInstant proj = new CAttackProjectileInstant(widget.getX(), widget.getY(), widget,
+					unit, damage, this, attackListener);
 			int i = 0;
-			while (!proj.update(simulation) && i < 100) {
+			while (!proj.update(simulation) && (i < 100)) {
 				i++;
 				widget = proj.getTarget().visit(AbilityTargetWidgetVisitor.INSTANCE);
 				simulation.createInstantAttackEffect(unit, this, widget);
@@ -61,12 +63,14 @@ public class CUnitAttackInstant extends CUnitAttack {
 	}
 
 	public void doDamage(final CSimulation cSimulation, final CUnit source, final AbilityTarget target,
-			final float damage, final float x, final float y,
-			final CUnitAttackListener attackListener) {
+			final float damage, final float x, final float y, final CUnitAttackListener attackListener) {
 		final CWidget widget = target.visit(AbilityTargetWidgetVisitor.INSTANCE);
 		if (widget != null) {
-			CUnitAttackPreDamageListenerDamageModResult modDamage = runPreDamageListeners(cSimulation, source, target, damage);
-			float damageDealt = widget.damage(cSimulation, source, true, true, getAttackType(), getWeaponType().getDamageType(), getWeaponSound(), modDamage.computeFinalDamage(), modDamage.getBonusDamage());
+			final CUnitAttackPreDamageListenerDamageModResult modDamage = runPreDamageListeners(cSimulation, source,
+					target, damage);
+			final float damageDealt = widget.damage(cSimulation, source, true, true, getAttackType(),
+					getWeaponType().getDamageType(), getWeaponSound(), modDamage.computeFinalDamage(),
+					modDamage.getBonusDamage());
 			runPostDamageListeners(cSimulation, source, target, damageDealt);
 			attackListener.onHit(target, damage);
 		}

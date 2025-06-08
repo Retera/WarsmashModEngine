@@ -3,6 +3,7 @@ package com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks;
 import java.util.EnumSet;
 
 import com.badlogic.gdx.math.Rectangle;
+import com.etheller.warsmash.viewer5.handlers.w3x.AnimationTokens.SecondaryTag;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnitEnumFunction;
@@ -12,7 +13,6 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CAttackType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CTargetType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CWeaponType;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.BooleanAbilityTargetCheckReceiver;
 
 public class CUnitAttackMissileBounce extends CUnitAttackMissile {
 	private float damageLossFactor;
@@ -24,13 +24,13 @@ public class CUnitAttackMissileBounce extends CUnitAttackMissile {
 			final CAttackType attackType, final float cooldownTime, final int damageBase, final int damageDice,
 			final int damageSidesPerDie, final int damageUpgradeAmount, final int range, final float rangeMotionBuffer,
 			final boolean showUI, final EnumSet<CTargetType> targetsAllowed, final String weaponSound,
-			final CWeaponType weaponType, final float projectileArc, final String projectileArt,
-			final boolean projectileHomingEnabled, final int projectileSpeed, final float damageLossFactor,
-			final int maximumNumberOfTargets, final int areaOfEffectFullDamage,
+			final CWeaponType weaponType, final EnumSet<SecondaryTag> animationTag, final float projectileArc,
+			final String projectileArt, final boolean projectileHomingEnabled, final int projectileSpeed,
+			final float damageLossFactor, final int maximumNumberOfTargets, final int areaOfEffectFullDamage,
 			final EnumSet<CTargetType> areaOfEffectTargets) {
 		super(animationBackswingPoint, animationDamagePoint, attackType, cooldownTime, damageBase, damageDice,
 				damageSidesPerDie, damageUpgradeAmount, range, rangeMotionBuffer, showUI, targetsAllowed, weaponSound,
-				weaponType, projectileArc, projectileArt, projectileHomingEnabled, projectileSpeed);
+				weaponType, animationTag, projectileArc, projectileArt, projectileHomingEnabled, projectileSpeed);
 		this.damageLossFactor = damageLossFactor;
 		this.maximumNumberOfTargets = maximumNumberOfTargets;
 		this.areaOfEffectFullDamage = areaOfEffectFullDamage;
@@ -42,8 +42,8 @@ public class CUnitAttackMissileBounce extends CUnitAttackMissile {
 		return new CUnitAttackMissileBounce(getAnimationBackswingPoint(), getAnimationDamagePoint(), getAttackType(),
 				getCooldownTime(), getDamageBase(), getDamageDice(), getDamageSidesPerDie(), getDamageUpgradeAmount(),
 				getRange(), getRangeMotionBuffer(), isShowUI(), getTargetsAllowed(), getWeaponSound(), getWeaponType(),
-				getProjectileArc(), getProjectileArt(), isProjectileHomingEnabled(), getProjectileSpeed(),
-				this.damageLossFactor, this.maximumNumberOfTargets, this.areaOfEffectFullDamage,
+				getAnimationTag(), getProjectileArc(), getProjectileArt(), isProjectileHomingEnabled(),
+				getProjectileSpeed(), this.damageLossFactor, this.maximumNumberOfTargets, this.areaOfEffectFullDamage,
 				this.areaOfEffectTargets);
 	}
 

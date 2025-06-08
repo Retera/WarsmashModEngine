@@ -242,6 +242,7 @@ public class CUnit extends CWidget {
 	private boolean moveDisabled = false;
 	private boolean noUnitCollision = false;
 	private boolean noBuildingCollision = false;
+	private final boolean selectable = false;
 	private CBehavior defaultBehavior;
 	private CBehavior interruptedDefaultBehavior;
 	private CBehavior interruptedBehavior;
@@ -2349,7 +2350,7 @@ public class CUnit extends CWidget {
 		if ((this.worker != null) && this.workerInside) {
 			this.worker.setInvulnerable(false);
 			this.worker.setHidden(false);
-			this.worker.setPaused(false);
+			this.worker.setAcceptingOrders(true);
 			this.worker.nudgeAround(game, this);
 			if (this.constructionConsumesWorker) {
 				game.getPlayer(this.worker.getPlayerIndex()).setUnitFoodUsed(this.worker,

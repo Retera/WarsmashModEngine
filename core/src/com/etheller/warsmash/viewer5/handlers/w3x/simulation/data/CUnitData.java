@@ -16,6 +16,8 @@ import com.etheller.warsmash.units.GameObject;
 import com.etheller.warsmash.units.ObjectData;
 import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.util.WarsmashConstants;
+import com.etheller.warsmash.viewer5.handlers.w3x.AnimationTokens.SecondaryTag;
+import com.etheller.warsmash.viewer5.handlers.w3x.SequenceUtils;
 import com.etheller.warsmash.viewer5.handlers.w3x.environment.PathingGrid;
 import com.etheller.warsmash.viewer5.handlers.w3x.environment.PathingGrid.MovementType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CGameplayConstants;
@@ -175,8 +177,8 @@ public class CUnitData {
 	private static final String REVIVES_HEROES = "Revive"; // replaced from 'urev'
 	private static final String UNIT_RACE = "race"; // replaced from 'urac'
 
-	private static final String REQUIRES = "Requires"; // replaced from 'ureq'
-	private static final String REQUIRES_AMOUNT = "Requiresamount"; // replaced from 'urqa'
+	public static final String REQUIRES = "Requires"; // replaced from 'ureq'
+	public static final String REQUIRES_AMOUNT = "Requiresamount"; // replaced from 'urqa'
 	private static final String REQUIRES_TIER_COUNT = "Requirescount"; // replaced from 'urqc'
 	private static final String[] REQUIRES_TIER_X = { "Requires1", "Requires2", // replaced from 'urq1'
 			"Requires3", "Requires4", "Requires5", "Requires6", // replaced from 'urq3'
@@ -344,10 +346,10 @@ public class CUnitData {
 			unit.add(simulation, new CAbilityUpgrade(handleIdAllocator.createId(), upgradesTo));
 		}
 		if (!itemsSold.isEmpty()) {
-			unit.add(simulation, new CAbilitySellItems(handleIdAllocator.createId(), itemsSold));
+			unit.add(simulation, new CAbilitySellItems(handleIdAllocator.createId(), itemsSold, false));
 		}
 		if (!itemsMade.isEmpty()) {
-			unit.add(simulation, new CAbilitySellItems(handleIdAllocator.createId(), itemsMade));
+			unit.add(simulation, new CAbilitySellItems(handleIdAllocator.createId(), itemsMade, true));
 		}
 		if (unitTypeInstance.isRevivesHeroes()) {
 			unit.add(simulation, new CAbilityReviveHero(handleIdAllocator.createId()));
@@ -448,10 +450,10 @@ public class CUnitData {
 			unit.add(simulation, new CAbilityUpgrade(handleIdAllocator.createId(), upgradesTo));
 		}
 		if (!itemsSold.isEmpty()) {
-			unit.add(simulation, new CAbilitySellItems(handleIdAllocator.createId(), itemsSold));
+			unit.add(simulation, new CAbilitySellItems(handleIdAllocator.createId(), itemsSold, false));
 		}
 		if (!itemsMade.isEmpty()) {
-			unit.add(simulation, new CAbilitySellItems(handleIdAllocator.createId(), itemsMade));
+			unit.add(simulation, new CAbilitySellItems(handleIdAllocator.createId(), itemsMade, true));
 		}
 		if (unitTypeInstance.isRevivesHeroes()) {
 			unit.add(simulation, new CAbilityReviveHero(handleIdAllocator.createId()));
@@ -613,7 +615,7 @@ public class CUnitData {
 						cooldownTime, damageBase, damageFactorMedium, damageFactorSmall, damageLossFactor, damageDice,
 						damageSidesPerDie, damageSpillDistance, damageSpillRadius, damageUpgradeAmount,
 						maximumNumberOfTargets, projectileArc, projectileArt, projectileHomingEnabled, projectileSpeed,
-						range, rangeMotionBuffer, showUI, targetsAllowed, weaponSound, weaponType));
+						range, rangeMotionBuffer, showUI, targetsAllowed, weaponSound, weaponType, SequenceUtils.ONE));
 			}
 			catch (final Exception exc) {
 				System.err.println("Attack 1 failed to parse with: " + exc.getClass() + ":" + exc.getMessage());
@@ -677,7 +679,7 @@ public class CUnitData {
 						cooldownTime, damageBase, damageFactorMedium, damageFactorSmall, damageLossFactor, damageDice,
 						damageSidesPerDie, damageSpillDistance, damageSpillRadius, damageUpgradeAmount,
 						maximumNumberOfTargets, projectileArc, projectileArt, projectileHomingEnabled, projectileSpeed,
-						range, rangeMotionBuffer, showUI, targetsAllowed, weaponSound, weaponType));
+						range, rangeMotionBuffer, showUI, targetsAllowed, weaponSound, weaponType, SequenceUtils.TWO));
 			}
 			catch (final Exception exc) {
 				System.err.println("Attack 2 failed to parse with: " + exc.getClass() + ":" + exc.getMessage());
@@ -911,47 +913,48 @@ public class CUnitData {
 			final int maximumNumberOfTargets, final float projectileArc, final String projectileArt,
 			final boolean projectileHomingEnabled, final int projectileSpeed, final int range,
 			final float rangeMotionBuffer, final boolean showUI, final EnumSet<CTargetType> targetsAllowed,
-			final String weaponSound, final CWeaponType weaponType) {
+			final String weaponSound, final CWeaponType weaponType, final EnumSet<SecondaryTag> animationTags) {
 		final CUnitAttack attack;
 		switch (weaponType) {
 		case MISSILE:
 			attack = new CUnitAttackMissile(animationBackswingPoint, animationDamagePoint, attackType, cooldownTime,
 					damageBase, damageDice, damageSidesPerDie, damageUpgradeAmount, range, rangeMotionBuffer, showUI,
-					targetsAllowed, weaponSound, weaponType, projectileArc, projectileArt, projectileHomingEnabled,
-					projectileSpeed);
+					targetsAllowed, weaponSound, weaponType, animationTags, projectileArc, projectileArt,
+					projectileHomingEnabled, projectileSpeed);
 			break;
 		case MBOUNCE:
 			attack = new CUnitAttackMissileBounce(animationBackswingPoint, animationDamagePoint, attackType,
 					cooldownTime, damageBase, damageDice, damageSidesPerDie, damageUpgradeAmount, range,
-					rangeMotionBuffer, showUI, targetsAllowed, weaponSound, weaponType, projectileArc, projectileArt,
-					projectileHomingEnabled, projectileSpeed, damageLossFactor, maximumNumberOfTargets,
+					rangeMotionBuffer, showUI, targetsAllowed, weaponSound, weaponType, animationTags, projectileArc,
+					projectileArt, projectileHomingEnabled, projectileSpeed, damageLossFactor, maximumNumberOfTargets,
 					areaOfEffectFullDamage, areaOfEffectTargets);
 			break;
 		case MSPLASH:
 		case ARTILLERY:
 			attack = new CUnitAttackMissileSplash(animationBackswingPoint, animationDamagePoint, attackType,
 					cooldownTime, damageBase, damageDice, damageSidesPerDie, damageUpgradeAmount, range,
-					rangeMotionBuffer, showUI, targetsAllowed, weaponSound, weaponType, projectileArc, projectileArt,
-					projectileHomingEnabled, projectileSpeed, areaOfEffectFullDamage, areaOfEffectMediumDamage,
-					areaOfEffectSmallDamage, areaOfEffectTargets, damageFactorMedium, damageFactorSmall);
+					rangeMotionBuffer, showUI, targetsAllowed, weaponSound, weaponType, animationTags, projectileArc,
+					projectileArt, projectileHomingEnabled, projectileSpeed, areaOfEffectFullDamage,
+					areaOfEffectMediumDamage, areaOfEffectSmallDamage, areaOfEffectTargets, damageFactorMedium,
+					damageFactorSmall);
 			break;
 		case MLINE:
 		case ALINE:
 			attack = new CUnitAttackMissileLine(animationBackswingPoint, animationDamagePoint, attackType, cooldownTime,
 					damageBase, damageDice, damageSidesPerDie, damageUpgradeAmount, range, rangeMotionBuffer, showUI,
-					targetsAllowed, weaponSound, weaponType, projectileArc, projectileArt, projectileHomingEnabled,
-					projectileSpeed, damageSpillDistance, damageSpillRadius);
+					targetsAllowed, weaponSound, weaponType, animationTags, projectileArc, projectileArt,
+					projectileHomingEnabled, projectileSpeed, damageSpillDistance, damageSpillRadius);
 			break;
 		case INSTANT:
 			attack = new CUnitAttackInstant(animationBackswingPoint, animationDamagePoint, attackType, cooldownTime,
 					damageBase, damageDice, damageSidesPerDie, damageUpgradeAmount, range, rangeMotionBuffer, showUI,
-					targetsAllowed, weaponSound, weaponType, projectileArt);
+					targetsAllowed, weaponSound, weaponType, animationTags, projectileArt);
 			break;
 		default:
 		case NORMAL:
 			attack = new CUnitAttackNormal(animationBackswingPoint, animationDamagePoint, attackType, cooldownTime,
 					damageBase, damageDice, damageSidesPerDie, damageUpgradeAmount, range, rangeMotionBuffer, showUI,
-					targetsAllowed, weaponSound, weaponType);
+					targetsAllowed, weaponSound, weaponType, animationTags);
 			break;
 		}
 		return attack;

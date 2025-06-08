@@ -15,6 +15,8 @@ public class SequenceUtils {
 	private static final int SECONDARY_TAGS_DECLARED_COUNT = AnimationTokens.SecondaryTag.values().length;
 	public static final EnumSet<SecondaryTag> EMPTY = EnumSet.noneOf(SecondaryTag.class);
 	public static final EnumSet<SecondaryTag> READY = EnumSet.of(SecondaryTag.READY);
+	public static final EnumSet<SecondaryTag> ONE = EnumSet.of(SecondaryTag.ONE);
+	public static final EnumSet<SecondaryTag> TWO = EnumSet.of(SecondaryTag.TWO);
 	public static final EnumSet<SecondaryTag> FLESH = EnumSet.of(SecondaryTag.FLESH);
 	public static final EnumSet<SecondaryTag> TALK = EnumSet.of(SecondaryTag.TALK);
 	public static final EnumSet<SecondaryTag> BONE = EnumSet.of(SecondaryTag.BONE);

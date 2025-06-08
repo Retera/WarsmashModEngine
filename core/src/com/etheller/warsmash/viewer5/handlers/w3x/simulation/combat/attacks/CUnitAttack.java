@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
+import com.etheller.warsmash.viewer5.handlers.w3x.AnimationTokens.SecondaryTag;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTarget;
@@ -52,6 +53,7 @@ public abstract class CUnitAttack {
 	private EnumSet<CTargetType> targetsAllowed;
 	private String weaponSound;
 	private CWeaponType weaponType;
+	private EnumSet<SecondaryTag> animationTag;
 
 	private float agiAttackSpeedBonus;
 	private float attackSpeedBonus;
@@ -64,7 +66,7 @@ public abstract class CUnitAttack {
 
 	private Map<String, List<NonStackingStatBuff>> nonStackingFlatBuffs = new HashMap<>();
 	private Map<String, List<NonStackingStatBuff>> nonStackingPctBuffs = new HashMap<>();
-	
+
 	protected CUnitAttackReplacementEffect attackReplacement = null;
 
 	// calculate
@@ -79,7 +81,7 @@ public abstract class CUnitAttack {
 			final CAttackType attackType, final float cooldownTime, final int damageBase, final int damageDice,
 			final int damageSidesPerDie, final int damageUpgradeAmount, final int range, final float rangeMotionBuffer,
 			final boolean showUI, final EnumSet<CTargetType> targetsAllowed, final String weaponSound,
-			final CWeaponType weaponType) {
+			final CWeaponType weaponType, final EnumSet<SecondaryTag> animationTag) {
 		this.animationBackswingPointBase = animationBackswingPoint;
 		this.animationDamagePointBase = animationDamagePoint;
 		this.attackType = attackType;
@@ -94,6 +96,7 @@ public abstract class CUnitAttack {
 		this.targetsAllowed = targetsAllowed;
 		this.weaponSound = weaponSound;
 		this.weaponType = weaponType;
+		this.animationTag = animationTag;
 		computeDerivedFields();
 	}
 
@@ -182,9 +185,10 @@ public abstract class CUnitAttack {
 
 		this.totalTemporaryDamageBonus = this.primaryAttributeTemporaryDamageBonus + this.temporaryDamageBonus
 				+ totalNSAtkBuff + totalNSAtkPctBuff;
-		float totalAttackSpeedBonus = this.agiAttackSpeedBonus + this.attackSpeedBonus + this.attackSpeedModifier;
+		final float totalAttackSpeedBonus = this.agiAttackSpeedBonus + this.attackSpeedBonus + this.attackSpeedModifier;
 		float totalAttackSpeedPercent = 1.0f + Math.max(Math.min(totalAttackSpeedBonus, 4), -0.9f);
-		// TODO there might be a gameplay constants value for this instead of 0.0001, didn't look
+		// TODO there might be a gameplay constants value for this instead of 0.0001,
+		// didn't look
 		if (totalAttackSpeedPercent <= 0.0001f) {
 			totalAttackSpeedPercent = 0.0001f;
 		}
@@ -248,6 +252,10 @@ public abstract class CUnitAttack {
 
 	public CWeaponType getWeaponType() {
 		return this.weaponType;
+	}
+
+	public EnumSet<SecondaryTag> getAnimationTag() {
+		return this.animationTag;
 	}
 
 	public void setAnimationBackswingPoint(final float animationBackswingPoint) {
@@ -342,7 +350,7 @@ public abstract class CUnitAttack {
 		return this.attackSpeedModifier;
 	}
 
-	public void setAttackSpeedModifier(float attackSpeedModifier) {
+	public void setAttackSpeedModifier(final float attackSpeedModifier) {
 		this.attackSpeedModifier = attackSpeedModifier;
 		computeDerivedFields();
 	}
@@ -431,16 +439,22 @@ public abstract class CUnitAttack {
 
 		for (final CUnitAttackPreDamageListenerPriority priority : CUnitAttackPreDamageListenerPriority.values()) {
 			if (allowContinue.isAllowStacking()) {
-				if (priority == CUnitAttackPreDamageListenerPriority.ATTACKREPLACEMENT && this.attackReplacement != null && this.attackReplacement.getPreDamageListeners() != null) {
-					for (CUnitAttackPreDamageListener listener : this.attackReplacement.getPreDamageListeners()) {
+				if ((priority == CUnitAttackPreDamageListenerPriority.ATTACKREPLACEMENT)
+						&& (this.attackReplacement != null)
+						&& (this.attackReplacement.getPreDamageListeners() != null)) {
+					for (final CUnitAttackPreDamageListener listener : this.attackReplacement.getPreDamageListeners()) {
 						if (allowContinue.isAllowSamePriorityStacking()) {
-							allowContinue = listener.onAttack(simulation, attacker, target, weaponType, attackType, weaponType.getDamageType(), result);
+							allowContinue = listener.onAttack(simulation, attacker, target, this.weaponType,
+									this.attackType, this.weaponType.getDamageType(), result);
 						}
 					}
-				} else {
-					for (CUnitAttackPreDamageListener listener : attacker.getPreDamageListenersForPriority(priority)) {
+				}
+				else {
+					for (final CUnitAttackPreDamageListener listener : attacker
+							.getPreDamageListenersForPriority(priority)) {
 						if (allowContinue.isAllowSamePriorityStacking()) {
-							allowContinue = listener.onAttack(simulation, attacker, target, weaponType, attackType, weaponType.getDamageType(), result);
+							allowContinue = listener.onAttack(simulation, attacker, target, this.weaponType,
+									this.attackType, this.weaponType.getDamageType(), result);
 						}
 					}
 				}

@@ -215,6 +215,16 @@ local :
 		$$ = new JassLocalDefinitionStatement($3, $2, $4);
 	}
 	|
+	LOCAL type STRUCT
+	{
+		$$ = new JassLocalStatement("struct", $2);
+	}
+	|
+	LOCAL type STRUCT assignTail
+	{
+		$$ = new JassLocalDefinitionStatement("struct", $2, $4);
+	}
+	|
 	type ID
 	{
 		$$ = new JassLocalStatement($2, $1);
@@ -332,6 +342,11 @@ baseExpression:
 	ID // ReferenceExpression
 	{
 		$$ = new ReferenceJassExpression($1);
+	}
+	|
+	STRUCT // a ReferenceExpression for a variable named "struct" despite this being silly
+	{
+		$$ = new ReferenceJassExpression("struct");
 	}
 	|
 	STRING_LITERAL //StringLiteralExpression
@@ -488,6 +503,11 @@ setPart:
 	ID EQUALS expression //SetStatement
 	{
 		$$ = new JassSetStatement($1, $3);
+	}
+	|
+	STRUCT EQUALS expression //SetStatement
+	{
+		$$ = new JassSetStatement("struct", $3);
 	}
 	|
 	baseExpression OPEN_BRACKET expression CLOSE_BRACKET EQUALS expression // ArrayedAssignmentStatement

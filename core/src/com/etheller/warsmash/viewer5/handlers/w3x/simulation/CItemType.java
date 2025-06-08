@@ -30,6 +30,7 @@ public class CItemType {
 	private final boolean validTargetForTransformation;
 	private final boolean includeAsRandomChoice;
 	private final CItemTypeJass itemClass;
+	private final List<CUnitTypeRequirement> requirements;
 
 	public CItemType(final List<War3ID> abilityList, final War3ID cooldownGroup, final boolean ignoreCooldown,
 			final int numberOfCharges, final boolean activelyUsed, final boolean perishable,
@@ -38,7 +39,7 @@ public class CItemType {
 			final int level, final int levelUnclassified, final int priority, final boolean sellable,
 			final boolean pawnable, final boolean droppedWhenCarrierDies, final boolean canBeDropped,
 			final boolean validTargetForTransformation, final boolean includeAsRandomChoice,
-			final CItemTypeJass itemClass) {
+			final CItemTypeJass itemClass, final List<CUnitTypeRequirement> requirements) {
 		this.abilityList = abilityList;
 		this.cooldownGroup = cooldownGroup;
 		this.ignoreCooldown = ignoreCooldown;
@@ -63,6 +64,7 @@ public class CItemType {
 		this.validTargetForTransformation = validTargetForTransformation;
 		this.includeAsRandomChoice = includeAsRandomChoice;
 		this.itemClass = itemClass;
+		this.requirements = requirements;
 	}
 
 	public List<War3ID> getAbilityList() {
@@ -159,5 +161,9 @@ public class CItemType {
 
 	public CItemTypeJass getItemClass() {
 		return this.itemClass;
+	}
+
+	public List<CUnitTypeRequirement> getRequirements() {
+		return this.requirements;
 	}
 }

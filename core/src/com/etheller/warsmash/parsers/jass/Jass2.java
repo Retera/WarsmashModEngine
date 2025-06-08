@@ -9363,16 +9363,6 @@ public class Jass2 {
 		public void main() {
 			this.simulation.setGlobalScope(this.jassProgramVisitor.getGlobals());
 			try {
-				final JassThread abilitiesThread = this.jassProgramVisitor.getGlobals().createThread("abilities_main",
-						Collections.emptyList(), TriggerExecutionScope.EMPTY);
-				this.jassProgramVisitor.getGlobals().queueThread(abilitiesThread);
-			}
-			catch (final Exception exc) {
-				new JassException(this.jassProgramVisitor.getGlobals(),
-						"Exception on Line " + this.jassProgramVisitor.getGlobals().getLineNumber(), exc)
-						.printStackTrace();
-			}
-			try {
 				final JassThread mainThread = this.jassProgramVisitor.getGlobals().createThread("main",
 						Collections.emptyList(), TriggerExecutionScope.EMPTY);
 				this.jassProgramVisitor.getGlobals().queueThread(mainThread);
@@ -9645,7 +9635,8 @@ public class Jass2 {
 					System.out.println("ExecuteFunc (\"" + funcName + "\")");
 					if (functionByName != null) {
 						// TODO below TriggerExecutionScope.EMPTY is probably not correct
-						globalScope.queueThread(globalScope.createThread(functionByName, TriggerExecutionScope.EMPTY));
+						globalScope.runThreadUntilCompletion(
+								globalScope.createThread(functionByName, TriggerExecutionScope.EMPTY));
 					}
 					return null;
 				});

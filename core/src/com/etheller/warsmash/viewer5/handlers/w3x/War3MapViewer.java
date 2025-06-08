@@ -1087,7 +1087,7 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 		return null;
 	}
 
-	private SplatMover createUnitShadow(RenderShadowType renderShadowType, float unitX, float unitY) {
+	private SplatMover createUnitShadow(final RenderShadowType renderShadowType, final float unitX, final float unitY) {
 		if (renderShadowType != null) {
 			final float x = unitX - renderShadowType.getX();
 			final float y = unitY - renderShadowType.getY();
@@ -1391,7 +1391,10 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 
 	public void clearUnitMouseOverHighlight(final RenderWidget unit) {
 		this.mouseHighlightWidgets.remove(unit);
-		unit.getSelectionPreviewHighlight().destroy(Gdx.gl30, this.terrain.centerOffset);
+		final SplatMover selectionPreviewHighlight = unit.getSelectionPreviewHighlight();
+		if (selectionPreviewHighlight != null) {
+			selectionPreviewHighlight.destroy(Gdx.gl30, this.terrain.centerOffset);
+		}
 		unit.unassignSelectionPreviewHighlight();
 	}
 
@@ -2917,6 +2920,10 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 							public CDestructable createDestructableZ(final War3ID typeId, final float x, final float y,
 									final float z, final float facing, final float scale, final int variation) {
 								final GameObject row = War3MapViewer.this.allObjectData.getDestructibles().get(typeId);
+								if (row == null) {
+									throw new NullPointerException("createDestructableZ called on: " + typeId + "," + x
+											+ "," + y + "," + z + "," + facing + "," + scale + "," + variation);
+								}
 								final float[] location3d = { x, y, z };
 								final float[] scale3d = { scale, scale, scale };
 								final RenderDestructable newDestructable = createNewDestructable(typeId, row, variation,
@@ -3409,7 +3416,8 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 							}
 
 							@Override
-							public void changeUnitPlayerColor(CUnit unit, int previousColor, int newColor) {
+							public void changeUnitPlayerColor(final CUnit unit, final int previousColor,
+									final int newColor) {
 								final RenderUnit renderUnit = getRenderPeer(unit);
 								if (renderUnit.playerIndex == previousColor) {
 									renderUnit.setPlayerColor(newColor);

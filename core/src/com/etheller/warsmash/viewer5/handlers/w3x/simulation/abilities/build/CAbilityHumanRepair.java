@@ -48,33 +48,37 @@ public class CAbilityHumanRepair extends AbstractGenericSingleIconActiveAbility 
 	@Override
 	protected void innerCheckCanTarget(final CSimulation game, final CUnit unit, final int orderId,
 			final CWidget target, final AbilityTargetCheckReceiver<CWidget> receiver) {
-		if (target.getLife() < target.getMaxLife()) {
-			if (target.canBeTargetedBy(game, unit, this.targetsAllowed, receiver)) {
-				final CUnit targetUnit = target.visit(AbilityTargetVisitor.UNIT);
-				if ((targetUnit != null) && targetUnit.isConstructing()
-						&& ((this.powerBuildTimeRatio == 0) || !targetUnit.isConstructingPaused())) {
-					if (orderId == OrderIds.smart) {
-						receiver.orderIdNotAccepted();
-					}
-					else {
-						receiver.targetCheckFailed(
-								CommandStringErrorKeys.THAT_BUILDING_IS_CURRENTLY_UNDER_CONSTRUCTION);
-					}
+		if (target.canBeTargetedBy(game, unit, this.targetsAllowed, receiver)) {
+			final CUnit targetUnit = target.visit(AbilityTargetVisitor.UNIT);
+			final boolean underConstruction = (targetUnit != null) && targetUnit.isConstructing();
+			final boolean doHumanBuild = underConstruction && targetUnit.isConstructingPaused()
+					&& (this.powerBuildTimeRatio != 0);
+			if (doHumanBuild) {
+				// you can human build something even if it is mysteriously 100% hp somehow
+				receiver.targetOk(target);
+			}
+			else if (underConstruction) {
+				if (orderId == OrderIds.smart) {
+					receiver.orderIdNotAccepted();
 				}
 				else {
-					receiver.targetOk(target);
+					receiver.targetCheckFailed(CommandStringErrorKeys.THAT_BUILDING_IS_CURRENTLY_UNDER_CONSTRUCTION);
 				}
 			}
-			// else receiver called by canBeTargetedBy
-		}
-		else {
-			if (orderId == OrderIds.smart) {
-				receiver.orderIdNotAccepted();
+			else if (target.getLife() < target.getMaxLife()) {
+				receiver.targetOk(target);
 			}
 			else {
-				receiver.targetCheckFailed(CommandStringErrorKeys.TARGET_IS_NOT_DAMAGED);
+				if (orderId == OrderIds.smart) {
+					receiver.orderIdNotAccepted();
+				}
+				else {
+					receiver.targetCheckFailed(CommandStringErrorKeys.TARGET_IS_NOT_DAMAGED);
+				}
 			}
 		}
+		// else receiver called by canBeTargetedBy
+
 	}
 
 	@Override
@@ -102,8 +106,8 @@ public class CAbilityHumanRepair extends AbstractGenericSingleIconActiveAbility 
 	}
 
 	@Override
-	protected void innerCheckCanUse(final CSimulation game, final CUnit unit, int playerIndex,
-			final int orderId, final AbilityActivationReceiver receiver) {
+	protected void innerCheckCanUse(final CSimulation game, final CUnit unit, final int playerIndex, final int orderId,
+			final AbilityActivationReceiver receiver) {
 		receiver.useOk();
 	}
 

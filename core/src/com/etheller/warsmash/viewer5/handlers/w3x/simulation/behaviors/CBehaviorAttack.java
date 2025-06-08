@@ -106,7 +106,7 @@ public class CBehaviorAttack extends CAbstractRangedBehavior {
 				this.damagePointLaunchTime = currentTurnTick + a1DamagePointSteps;
 				this.backSwingTime = currentTurnTick + a1DamagePointSteps + a1BackswingSteps;
 				this.unit.getUnitAnimationListener().playAnimationWithDuration(true, PrimaryTag.ATTACK,
-						SequenceUtils.EMPTY, animationBackswingPoint + animationDamagePoint, true);
+						this.unitAttack.getAnimationTag(), animationBackswingPoint + animationDamagePoint, true);
 				this.unit.getUnitAnimationListener().queueAnimation(PrimaryTag.STAND, SequenceUtils.READY, false);
 			}
 			else if (currentTurnTick >= this.thisOrderCooldownEndTime) {

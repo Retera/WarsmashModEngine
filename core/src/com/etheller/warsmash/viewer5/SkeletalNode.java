@@ -203,7 +203,7 @@ public abstract class SkeletalNode extends GenericNode {
 			}
 		}
 
-		if (!Float.isNaN(blendTimeRatio) && (blendTimeRatio > 0)) {
+		if (!Float.isNaN(blendTimeRatio) && (blendTimeRatio > 0) && false) {
 			computedLocation = blendLocationHeap.set(this.localLocation).scl(inverseBlendRatio)
 					.add(blendHeap.set(this.localBlendLocation).scl(blendTimeRatio));
 		}

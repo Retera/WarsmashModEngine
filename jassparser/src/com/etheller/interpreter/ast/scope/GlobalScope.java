@@ -374,6 +374,7 @@ public final class GlobalScope {
 
 	public void resetGlobalInitialization() {
 		this.lastGlobalsBlockEndInstructionPtr = -1;
+		this.functionNameToInstructionPtr.remove(INIT_GLOBALS_AUTOGEN_FXN_NAME);
 	}
 
 	public void innerBeginDefiningGlobals(final int lineNo, final String sourceFile) {

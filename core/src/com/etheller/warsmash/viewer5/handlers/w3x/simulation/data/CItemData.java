@@ -12,6 +12,7 @@ import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CItem;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CItemType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnitTypeRequirement;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.item.CItemTypeJass;
 
 public class CItemData {
@@ -132,11 +133,16 @@ public class CItemData {
 				// do not bother to log this, means it didn't match constant (it's a user input)
 			}
 
+			final List<String> requirementsString = itemType.getFieldAsList(CUnitData.REQUIRES);
+			final List<String> requirementsLevelsString = itemType.getFieldAsList(CUnitData.REQUIRES_AMOUNT);
+			final List<CUnitTypeRequirement> requirements = CUnitData.parseRequirements(requirementsString,
+					requirementsLevelsString);
+
 			itemTypeInstance = new CItemType(abilityList, cooldownGroup, ignoreCooldown, numberOfCharges, activelyUsed,
 					perishable, useAutomaticallyWhenAcquired, goldCost, lumberCost, stockMax, stockReplenishInterval,
 					stockStartDelay, hitPoints, armorType, level, levelUnclassified, priority, sellable, pawnable,
 					droppedWhenCarrierDies, canBeDropped, validTargetForTransformation, includeAsRandomChoice,
-					itemClass);
+					itemClass, requirements);
 			this.itemIdToItemType.put(typeId, itemTypeInstance);
 
 			if (includeAsRandomChoice) {

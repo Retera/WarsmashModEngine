@@ -3,6 +3,7 @@ package com.etheller.interpreter.ast.util;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.etheller.interpreter.ast.debug.JassException;
 import com.etheller.interpreter.ast.definition.JassDefinitionBlock;
 import com.etheller.interpreter.ast.definition.JassLibraryDefinitionBlock;
 import com.etheller.interpreter.ast.definition.JassScopeDefinitionBlock;
@@ -35,8 +36,14 @@ public class JassProgram {
 			}
 			final Integer globalsInitializerFunctionPtr = this.globalScope
 					.getUserFunctionInstructionPtr(GlobalScope.INIT_GLOBALS_AUTOGEN_FXN_NAME);
-			if (globalsInitializerFunctionPtr != null) {
-				this.globalScope.runThreadUntilCompletion(this.globalScope.createThread(globalsInitializerFunctionPtr));
+			try {
+				if (globalsInitializerFunctionPtr != null) {
+					this.globalScope
+							.runThreadUntilCompletion(this.globalScope.createThread(globalsInitializerFunctionPtr));
+				}
+			}
+			catch (final JassException exc) {
+				exc.printStackTrace();
 			}
 			this.globalScope.resetGlobalInitialization();
 		}

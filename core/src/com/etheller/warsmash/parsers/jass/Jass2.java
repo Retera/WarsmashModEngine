@@ -95,6 +95,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.environment.PathingGrid;
 import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.RenderDestructable;
 import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.RenderSpellEffect;
 import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.RenderUnit;
+import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.RenderWidget;
 import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.ability.AbilityDataUI;
 import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.ability.IconUI;
 import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.ability.ItemUI;
@@ -979,6 +980,25 @@ public class Jass2 {
 									// TODO the trigger scope for evaluation here might need to be a clean one?
 									group.add(unit);
 								}
+							}
+						}
+						return null;
+					});
+			jassProgramVisitor.getJassNativeManager().createNative("GroupEnumUnitsSelected",
+					(arguments, globalScope, triggerScope) -> {
+						// TODO BIG DESYNC WITH THIS, TESTING ONLY!
+						final List<CUnit> group = arguments.get(0)
+								.visit(ObjectJassValueVisitor.<List<CUnit>>getInstance());
+						final CPlayerJass player = arguments.get(1)
+								.visit(ObjectJassValueVisitor.<CPlayerJass>getInstance());
+						final TriggerBooleanExpression filter = nullable(arguments, 2,
+								ObjectJassValueVisitor.<TriggerBooleanExpression>getInstance());
+						for (final RenderWidget render : war3MapViewer.selected) {
+							CUnit unit = render.getSimulationWidget().visit(AbilityTargetVisitor.UNIT);
+							if (unit != null && ((filter == null) || filter.evaluate(globalScope,
+									CommonTriggerExecutionScope.filterScope(triggerScope, unit)))) {
+								// TODO the trigger scope for evaluation here might need to be a clean one?
+								group.add(unit);
 							}
 						}
 						return null;

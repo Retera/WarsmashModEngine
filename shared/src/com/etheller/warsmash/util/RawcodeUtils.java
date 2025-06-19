@@ -59,4 +59,10 @@ public final class RawcodeUtils {
 
 		return result.toString();
 	}
+	
+	public static void main(String[] args) {
+//		System.out.println(RawcodeUtils.toString(1098084457));
+//		System.err.println("" + (1 << 2));
+		System.out.println(RawcodeUtils.toInt("APdi"));
+	}
 }

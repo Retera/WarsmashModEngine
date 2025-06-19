@@ -1998,8 +1998,14 @@
 					}]
 		}]
 	},{
-		"ids": [{"id":"AHtc", "castId": "thunderclap"}],
+		"ids": [{"id":"AHtc", "castId": "thunderclap"},{"id":"ACtc", "castId": "creepthunderclap"}],
 		"type": "NORMAL_NOTARGET",
+		"overrideFields": {
+			"extraTargetsAllowed": [{
+				"type": "rawTargetType",
+				"value": "ENEMIES"
+			}]
+		},
 		"reuseActions": {
 			"setupBuffs": [{
 					"type": "createNonStackingStatBuff",
@@ -2198,9 +2204,12 @@
 							"type": "getEnumUnit"
 						}
 					},{
-						"type": "isUnitEnemy",
-						"unit": {
-							"type": "getEnumUnit"
+						"type": "not",
+						"condition": {
+							"type": "isUnitFriend",
+							"unit": {
+								"type": "getEnumUnit"
+							}
 						}
 					}]
 				},

@@ -185,4 +185,6 @@ public interface SimulationRenderController {
 
 	void changeUnitScale(CUnit unit, float scale, boolean multiplier);
 
+	SimulationRenderComponent spawnAbilitySoundEffect(float x, float y, War3ID alias, boolean looping);
+
 }

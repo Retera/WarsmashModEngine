@@ -19,7 +19,7 @@ public class ABCallbackGetCompUnit1 extends ABUnitCallback {
 	@Override
 	public String generateJassEquivalent(final JassTextGenerator jassTextGenerator) {
 		return jassTextGenerator.getUserDataExpr(
-				"AB_LOCAL_STORE_KEY_COMPUNIT1 + I2S(" + jassTextGenerator.getCastId() + ")",
+				"AB_LOCAL_STORE_KEY_COMPUNIT1",
 				JassTextGeneratorType.UnitHandle);
 	}
 

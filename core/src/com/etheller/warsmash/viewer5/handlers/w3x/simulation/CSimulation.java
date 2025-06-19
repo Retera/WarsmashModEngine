@@ -878,6 +878,10 @@ public class CSimulation implements CPlayerAPI, CFogMaskSettings {
 		this.simulationRenderController.stopAbilitySoundEffect(caster, alias);
 	}
 
+	public SimulationRenderComponent locationSoundEffectEvent(final float x, final float y, final War3ID alias, final boolean looping) {
+		return this.simulationRenderController.spawnAbilitySoundEffect(x, y, alias, looping);
+	}
+
 	public void unitPreferredSelectionReplacement(final CUnit unit, final CUnit newUnit) {
 		this.simulationRenderController.unitPreferredSelectionReplacement(unit, newUnit);
 	}

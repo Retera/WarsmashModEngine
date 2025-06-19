@@ -31,6 +31,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.def
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.ABBehavior;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.CBehaviorAbilityBuilderBase;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.CBehaviorAbilityBuilderNoTarget;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.enumcallbacks.ABTargetTypeCallback;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.stringcallbacks.ABStringCallback;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABAction;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABCondition;
@@ -89,6 +90,7 @@ public abstract class CAbilityAbilityBuilderGenericActive extends AbstractGeneri
 	private War3ID onTooltipOverride = null;
 	private War3ID offTooltipOverride = null;
 	private EnumSet<CTargetType> targetsAllowed;
+	private boolean dispel = false;
 	private boolean physical = false;
 	private boolean magic = true;
 	private boolean universal = false;
@@ -328,6 +330,9 @@ public abstract class CAbilityAbilityBuilderGenericActive extends AbstractGeneri
 			if (this.config.getOverrideFields().getMagicSpell() != null) {
 				this.magic = this.config.getOverrideFields().getMagicSpell().callback(game, unit, localStore, castId);
 			}
+			if (this.config.getOverrideFields().getDispel() != null) {
+				this.dispel = this.config.getOverrideFields().getDispel().callback(game, unit, localStore, castId);
+			}
 			if (this.config.getOverrideFields().getUniversalSpell() != null) {
 				this.universal = this.config.getOverrideFields().getUniversalSpell().callback(game, unit, localStore,
 						castId);
@@ -340,9 +345,23 @@ public abstract class CAbilityAbilityBuilderGenericActive extends AbstractGeneri
 		if ((requiredLevel < 6 || game.getGameplayConstants().isMagicImmuneResistsUltimates()) && !isPhysical()
 				&& !isUniversal()) {
 			this.targetsAllowed.add(CTargetType.NON_MAGIC_IMMUNE);
+			if (isDispel()) {
+				this.targetsAllowed.add(CTargetType.LIMITED_MAGIC_IMMUNE);
+			}
 		}
 		if (isPhysical() && !isUniversal()) {
 			this.targetsAllowed.add(CTargetType.NON_ETHEREAL);
+		}
+
+		if (this.config.getOverrideFields() != null && this.config.getOverrideFields().getExtraTargetsAllowed() != null) {
+			for(ABTargetTypeCallback target : this.config.getOverrideFields().getExtraTargetsAllowed()) {
+				this.targetsAllowed.add(target.callback(game, unit, localStore, requiredLevel));
+			}
+		}
+		if (this.config.getOverrideFields() != null && this.config.getOverrideFields().getExcludedTargetsAllowed() != null) {
+			for(ABTargetTypeCallback target : this.config.getOverrideFields().getExcludedTargetsAllowed()) {
+				this.targetsAllowed.remove(target.callback(game, unit, localStore, requiredLevel));
+			}
 		}
 
 		if (this.config.getDisplayFields() != null && this.config.getDisplayFields().getHideAreaCursor() != null) {
@@ -1234,6 +1253,10 @@ public abstract class CAbilityAbilityBuilderGenericActive extends AbstractGeneri
 		}
 //		System.err.println("Returning "+requirementsMet+" for " + this.getAlias());
 		return requirementsMet;
+	}
+
+	public boolean isDispel() {
+		return dispel;
 	}
 
 	@Override

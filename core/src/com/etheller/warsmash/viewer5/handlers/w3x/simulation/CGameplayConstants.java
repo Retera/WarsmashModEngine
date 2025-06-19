@@ -42,6 +42,8 @@ public class CGameplayConstants {
 	private final float frostAttackSpeedDecrease;
 	private final float frostMoveSpeedDecrease;
 
+	private final boolean allowMultiBounce;
+	private final boolean abolishMagicSmartDispel;
 	private final boolean invulnerableSummonsTakeDispelDamage;
 	private final boolean magicImmuneResistsDamage;
 	private final boolean magicImmuneResistsLeech;
@@ -224,6 +226,8 @@ public class CGameplayConstants {
 		this.frostAttackSpeedDecrease = miscData.getFieldFloatValue("FrostAttackSpeedDecrease");
 		this.frostMoveSpeedDecrease = miscData.getFieldFloatValue("FrostMoveSpeedDecrease");
 
+		this.allowMultiBounce = miscData.getFieldValue("AllowMultiBounce") != 0;
+		this.abolishMagicSmartDispel = miscData.getFieldValue("AbolishMagicDispelSmart") != 0;
 		this.invulnerableSummonsTakeDispelDamage = miscData.getFieldValue("InvulnSummonDispelDamage") != 0;
 		this.magicImmuneResistsDamage = miscData.getFieldValue("MagicImmunesResistDamage") != 0;
 		this.magicImmuneResistsLeech = miscData.getFieldValue("MagicImmunesResistLeech") != 0;
@@ -424,6 +428,14 @@ public class CGameplayConstants {
 
 	public float getFrostMoveSpeedDecrease() {
 		return frostMoveSpeedDecrease;
+	}
+
+	public boolean isAllowMultiBounce() {
+		return allowMultiBounce;
+	}
+
+	public boolean isAbolishMagicSmartDispel() {
+		return abolishMagicSmartDispel;
 	}
 
 	public boolean isInvulnerableSummonsTakeDispelDamage() {

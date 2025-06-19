@@ -71,6 +71,8 @@ public class CUnitData {
 	private static final String HIT_POINT_REGEN = "regenHP"; // replaced from 'uhpr'
 	private static final String HIT_POINT_REGEN_TYPE = "regenType"; // replaced from 'uhrt'
 	private static final String MOVEMENT_SPEED_BASE = "spd"; // replaced from 'umvs'
+	private static final String MOVEMENT_SPEED_MAX = "maxSpd";
+	private static final String MOVEMENT_SPEED_MIN = "minSpd";
 	private static final String PROPULSION_WINDOW = "propWin"; // replaced from 'uprw'
 	private static final String TURN_RATE = "turnRate"; // replaced from 'umvr'
 	private static final String IS_BLDG = "isbldg"; // replaced from 'ubdg'
@@ -255,10 +257,18 @@ public class CUnitData {
 		final int manaInitial = unitTypeInstance.getManaInitial();
 		final int manaMaximum = unitTypeInstance.getManaMaximum();
 		final int speed = unitTypeInstance.getSpeed();
+		int maxSpeed = unitTypeInstance.getMaxSpeed();
+		if (maxSpeed == 0) {
+			maxSpeed = (int) simulation.getGameplayConstants().getMaxUnitSpeed();
+		}
+		int minSpeed = unitTypeInstance.getMinSpeed();
+		if (minSpeed == 0) {
+			minSpeed = (int) simulation.getGameplayConstants().getMinUnitSpeed();
+		}
 
 		final CUnit unit = new CUnit(handleId, playerIndex, x, y, life, typeId, facing,
 				editorConfigManaAmount >= 0 ? editorConfigManaAmount : manaInitial, unitTypeInstance.getMaxLife(),
-				lifeRegen, manaMaximum, speed, unitTypeInstance);
+				lifeRegen, manaMaximum, speed, maxSpeed, minSpeed, unitTypeInstance);
 		return unit;
 	}
 
@@ -531,6 +541,8 @@ public class CUnitData {
 			final int manaMaximum = unitType.getFieldAsInteger(MANA_MAXIMUM, 0);
 			final float manaRegen = unitType.getFieldAsFloat(MANA_REGEN, 0);
 			final int speed = unitType.getFieldAsInteger(MOVEMENT_SPEED_BASE, 0);
+			final int maxSpeed = unitType.getFieldAsInteger(MOVEMENT_SPEED_MAX, 0);
+			final int minSpeed = unitType.getFieldAsInteger(MOVEMENT_SPEED_MIN, 0);
 			final int defense = unitType.getFieldAsInteger(DEFENSE, 0);
 			final String defaultAutocastAbility = unitType.getFieldAsString(ABILITIES_DEFAULT_AUTO, 0);
 			final List<String> abilityListString = unitType.getFieldAsList(ABILITIES_NORMAL);
@@ -797,7 +809,7 @@ public class CUnitData {
 			final boolean neutralBuildingShowMinimapIcon = unitType.getFieldAsBoolean(NEUTRAL_BUILDING_SHOW_ICON, 0);
 
 			unitTypeInstance = new CUnitType(unitName, legacyName, typeId, life, lifeRegen, manaRegen, lifeRegenType,
-					manaInitial, manaMaximum, speed, defense, defaultAutocastAbilityId, abilityList, isBldg,
+					manaInitial, manaMaximum, speed, maxSpeed, minSpeed, defense, defaultAutocastAbilityId, abilityList, isBldg,
 					movementType, moveHeight, collisionSize, classifications, attacks, attacksEnabled, armorType, raise,
 					decay, defenseType, impactZ, buildingPathingPixelMap, deathTime, targetedAs, acquisitionRange,
 					minimumAttackRange, structuresBuilt, unitsTrained, researchesAvailable, upgradesUsed,

@@ -25,6 +25,8 @@ public interface CDestructableBuff extends CHandle, Aliased {
 	boolean isPositive();
 
 	boolean isHero();
+	
+	boolean isMagic();
 
 	boolean isPhysical();
 

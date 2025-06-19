@@ -142,8 +142,8 @@ public class CAbilityData {
 		// ----Orc----
 		this.codeToAbilityTypeDefinition.put(War3ID.fromString("AOsf"),
 				new CAbilityTypeDefinitionSpellBase((handleId, alias) -> new CAbilityFeralSpirit(handleId, alias)));
-		this.codeToAbilityTypeDefinition.put(War3ID.fromString("AOcl"),
-				new CAbilityTypeDefinitionSpellBase((handleId, alias) -> new CAbilityChainLightning(handleId, alias)));
+//		this.codeToAbilityTypeDefinition.put(War3ID.fromString("AOcl"),
+//				new CAbilityTypeDefinitionSpellBase((handleId, alias) -> new CAbilityChainLightning(handleId, alias)));
 
 		// Tauren Chieftain
 //		this.codeToAbilityTypeDefinition.put(War3ID.fromString("AOws"),

@@ -40,6 +40,7 @@ public class CBehaviorAbilityBuilderNoTarget implements ABBehavior {
 	private CBehaviorCategory behaviorCategory = null;
 	private int castId = 0;
 	private EnumSet<SecondaryTag> channelTags;
+	private boolean firstAnimation;
 
 	public CBehaviorAbilityBuilderNoTarget(final CUnit unit, final Map<String, Object> localStore,
 			AbilityBuilderActiveAbility ability) {
@@ -89,6 +90,7 @@ public class CBehaviorAbilityBuilderNoTarget implements ABBehavior {
 				+ (int) (this.unit.getUnitType().getCastBackswingPoint() / WarsmashConstants.SIMULATION_STEP_TIME);
 		this.localStore.put(ABLocalStoreKeys.CHANNELING, false);
 		this.orderId = this.ability.getBaseOrderId();
+		this.firstAnimation = true;
 		this.autoOrder = autoOrder;
 
 		this.channelTags = this.ability.getCastingSecondaryTags().clone();
@@ -109,6 +111,7 @@ public class CBehaviorAbilityBuilderNoTarget implements ABBehavior {
 				+ (int) (this.unit.getUnitType().getCastBackswingPoint() / WarsmashConstants.SIMULATION_STEP_TIME);
 		this.localStore.put(ABLocalStoreKeys.CHANNELING, false);
 		this.orderId = orderId;
+		this.firstAnimation = true;
 		this.autoOrder = autoOrder;
 
 		this.channelTags = this.ability.getCastingSecondaryTags().clone();
@@ -180,8 +183,9 @@ public class CBehaviorAbilityBuilderNoTarget implements ABBehavior {
 
 				this.channeling = (boolean) localStore.get(ABLocalStoreKeys.CHANNELING);
 				if (!this.channeling) {
-					this.unit.getUnitAnimationListener().playAnimation(false, this.ability.getCastingPrimaryTag(),
+					this.unit.getUnitAnimationListener().playAnimation(this.firstAnimation, this.ability.getCastingPrimaryTag(),
 							this.ability.getCastingSecondaryTags(), 1.0f, true);
+					this.firstAnimation = false;
 					this.unit.getUnitAnimationListener().queueAnimation(PrimaryTag.STAND, SequenceUtils.EMPTY, true);
 				}
 				this.doneCastTime = true;
@@ -234,6 +238,35 @@ public class CBehaviorAbilityBuilderNoTarget implements ABBehavior {
 
 	@Override
 	public void begin(final CSimulation game) {
+		if (ability.getItem() != null && ability.getItem().getItemType().isActivelyUsed()) {
+			// This is for runes/glyphs that use on pickup. We will never see an update loop
+			// for these
+
+			if (!this.unit.chargeMana(this.ability.getChargedManaCost())) {
+				cleanupInputs();
+				this.unit.beginBehavior(game, this.unit.pollNextOrderBehavior(game));
+				return;
+			}
+			this.ability.startCooldown(game, this.unit);
+
+			this.ability.runBeginCastingActions(game, unit, orderId);
+
+			CBehavior beh = tryDoEffect(game, false);
+			if (beh != null) {
+				cleanupInputs();
+				this.unit.beginBehavior(game, beh);
+				return;
+			}
+			CBehavior newBehavior = (CBehavior) localStore.get(ABLocalStoreKeys.NEWBEHAVIOR);
+			if (newBehavior != null) {
+				localStore.remove(ABLocalStoreKeys.NEWBEHAVIOR);
+				this.unit.beginBehavior(game, newBehavior);
+				return;
+			}
+
+			cleanupInputs();
+			this.unit.beginBehavior(game, this.unit.pollNextOrderBehavior(game));
+		}
 	}
 
 	public boolean doChannelTick(CSimulation game, CUnit caster) {

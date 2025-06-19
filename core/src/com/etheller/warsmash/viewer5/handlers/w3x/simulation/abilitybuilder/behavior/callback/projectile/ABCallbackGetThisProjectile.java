@@ -11,7 +11,7 @@ public class ABCallbackGetThisProjectile extends ABProjectileCallback {
 
 	@Override
 	public CProjectile callback(CSimulation game, CUnit caster, Map<String, Object> localStore, final int castId) {
-		return (CProjectile) localStore.get(ABLocalStoreKeys.THISPROJECTILE);
+		return (CProjectile) localStore.get(ABLocalStoreKeys.THISPROJECTILE+castId);
 	}
 
 }

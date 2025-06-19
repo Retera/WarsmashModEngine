@@ -55,6 +55,7 @@ public class ABLocalStoreKeys {
 	public static final String LASTCREATEDUNIT = "_lastCreatedUnit";
 	public static final String LASTADDEDUNIT = "_lastAddedUnit";
 	public static final String LASTREMOVEDDUNIT = "_lastRemovedUnit";
+	public static final String CHAINUNIT = "_chainUnit#";
 	public static final String COMPUNIT1 = "_compUnit1";
 	public static final String COMPUNIT2 = "_compUnit2";
 	
@@ -72,6 +73,8 @@ public class ABLocalStoreKeys {
 	public static final String LASTCREATEDUNITQUEUE = "_lastCreatedUnitQueue";
 
 	public static final String LASTCREATEDDESTBUFF = "_lastCreatedDestBuff";
+	public static final String ENUMDESTBUFF = "_enumDestBuff";
+	public static final String MATCHINGDESTBUFF = "_matchingDestBuff";
 	
 	// Buff Names
 	public static final String LASTCREATEDBUFF = "_lastCreatedBuff";

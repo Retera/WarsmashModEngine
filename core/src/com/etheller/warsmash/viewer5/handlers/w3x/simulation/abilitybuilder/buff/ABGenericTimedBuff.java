@@ -33,7 +33,7 @@ public abstract class ABGenericTimedBuff extends ABBuff {
 		if (getClass() != obj.getClass())
 			return false;
 		ABGenericTimedBuff other = (ABGenericTimedBuff) obj;
-		return this.getAlias() == other.getAlias() && this.getLevel() == other.getLevel() && !this.isStacks();
+		return this.getAlias() == other.getAlias() && this.getLevel() == other.getLevel() && !this.isStacks() && !other.isStacks();
 	}
 
 	@Override

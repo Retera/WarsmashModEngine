@@ -239,6 +239,10 @@ public class CDestructable extends CWidget {
 		this.buffs.remove(buff);
 		buff.onRemove(simulation, this);
 	}
+	
+	public List<CDestructableBuff> getBuffs() {
+		return this.buffs;
+	}
 
 	public void onRemove(CSimulation cSimulation) {
 		if (this.pathingInstance != null) {

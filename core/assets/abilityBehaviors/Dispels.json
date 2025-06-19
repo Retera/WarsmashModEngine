@@ -1,0 +1,1826 @@
+{
+	"abilityList": [{
+		"ids": [{"id":"Adis", "castId": "dispel"},{"id":"Adch", "castId": "disenchant"},{"id":"AIdi", "castId": "itemdispelaoe"}],
+		"type": "NORMAL_POINTTARGET",
+		"reuseActions": {
+			"dispelLoc": [{
+					"type": "createTemporarySpellEffectOnUnit",
+					"target": {
+						"type": "getCastingUnit"
+					},
+					"id": {
+						"type": "getAlias"
+					},
+					"effectType": "CASTER"
+				},{
+					"type": "createTemporarySpellEffectAtLocation",
+					"location": {
+						"type": "getTargetedLocation"
+					},
+					"id": {
+						"type": "getAlias"
+					},
+					"effectType": "EFFECT"
+				},{
+					"type": "createSoundEffectAtLocation",
+					"location": {
+						"type": "getTargetedLocation"
+					},
+					"id": {
+						"type": "getAlias"
+					}
+				},{
+					"type": "iterateUnitsInRangeOfLocationMatchingCondition",
+					"location": {
+						"type": "getTargetedLocation"
+					},
+					"range": {
+						"type": "getAbilityArea"
+					},
+					"condition": {
+						"type": "isUnitValidTarget",
+						"target": {
+							"type": "getMatchingUnit"
+						}
+					},
+					"iterationActions": [{
+							"type": "createTemporarySpellEffectOnUnit",
+							"target": {
+								"type": "getEnumUnit"
+							},
+							"id": {
+								"type": "getAlias"
+							},
+							"effectType": "TARGET"
+						},{
+							"type": "if",
+							"condition": {
+								"type": "isUnitEnemy",
+								"unit": {
+									"type": "getEnumUnit"
+								}
+							},
+							"thenActions": [{
+								"type": "damageTarget",
+								"source": {
+									"type": "getCastingUnit"
+								},
+								"target": {
+									"type": "getEnumUnit"
+								},
+								"onlyDamageSummons": {
+									"type": "rawBoolean",
+									"value": "true"
+								},
+								"damage": {
+									"type": "getAbilityDataAsFloat",
+									"dataField": "B"
+								}
+							}]
+						},{
+							"type": "if",
+							"condition": {
+								"type": "isUnitAlive",
+								"unit": {
+									"type": "getEnumUnit"
+								}
+							},
+							"thenActions": [{
+									"type": "if",
+									"condition": {
+										"type": "not",
+										"condition": {
+											"type": "isUnitMagicImmune",
+											"unit": {
+												"type": "getEnumUnit"
+											}
+										}
+									},
+									"thenActions": [{
+										"type": "subtractMp",
+										"unit": {
+											"type": "getEnumUnit"
+										},
+										"amount": {
+											"type": "getAbilityDataAsFloat",
+											"dataField": "A"
+										}
+									}]
+								},{
+									"type": "dispelBuffs",
+									"unit": {
+										"type": "getEnumUnit"
+									},
+									"filter": {
+										"type": "isBuffMagic",
+										"buff": {
+											"type": "enumBuff"
+										}
+									}
+							}]
+						}]
+				},{
+					"type": "iterateDestructablesInRangeOfLocation",
+					"location": {
+						"type": "getTargetedLocation"
+					},
+					"range": {
+						"type": "getAbilityArea"
+					},
+					"iterationActions": [{
+						"type": "if",
+						"condition": {
+							"type": "isDestructableValidTarget",
+							"target": {
+								"type": "getEnumDestructable"
+							}
+						},
+						"thenActions": [{
+							"type": "dispelDestructableBuffs",
+							"dest": {
+								"type": "getEnumDestructable"
+							},
+							"filter": {
+								"type": "isDestructableBuffMagic",
+								"buff": {
+									"type": "enumDestructableBuff"
+								}
+							}
+						}]
+					}]
+			}]
+		},
+		"onEndCasting": [{
+			"type": "runReuseAction",
+			"name": {
+				"type": "rawString",
+				"value": "dispelLoc"
+			}
+		}]
+	},{
+		"ids": [{"id":"Adtn", "castId": "detonate"}],
+		"type": "INHERIT",
+		"parentId": "Adch",
+		"onEndCasting": [{
+				"type": "runReuseAction",
+				"name": {
+					"type": "rawString",
+					"value": "dispelLoc"
+				}
+			},{
+				"type": "createTemporarySpellEffectAtLocation",
+				"location": {
+					"type": "getTargetedLocation"
+				},
+				"id": {
+					"type": "getAlias"
+				},
+				"effectType": "SPECIAL"
+			},{
+				"type": "killUnit",
+				"unit": {
+					"type": "getCastingUnit"
+				}
+		}]
+	},{
+		"ids": [{"id":"Aprg", "castId": "purge"}],
+		"type": "NORMAL_UNITTARGET",
+		"overrideFields": {
+			"dispel": {
+				"type": "rawBoolean",
+				"value": "true"
+			}
+		},
+		"extraTargetConditions": [{
+			"type": "or",
+			"conditions": [{
+					"type": "notNull",
+					"value": {
+						"type": "getAbilityTargetedUnit"
+					}
+				},{
+					"type": "and",
+					"conditions": [{
+							"type": "notNull",
+							"value": {
+								"type": "getAbilityTargetedDestructable"
+							}
+						},{
+							"type": "setCantUseReasonOnFailure",
+							"condition": {
+								"type": "doesDestructableHaveBuffMatchingCondition",
+								"dest": {
+									"type": "getAbilityTargetedDestructable"
+								},
+								"condition": {
+									"type": "isDestructableBuffMagic",
+									"buff": {
+										"type": "matchingDestructableBuff"
+									}
+								}
+							},
+							"reason": "THAT_TREE_IS_NOT_OCCUPIED_BY_AN_OWL"
+					}]
+			}]
+		}],
+		"reuseActions": {
+			"purgeUnit": [{
+				"type": "checkAbilityEffectReaction",
+				"target": {
+					"type": "getAbilityTargetedUnit"
+				},
+				"onHitActions": [{
+					"type": "runReuseAction",
+					"name": {
+						"type": "rawString",
+						"value": "purgeUnitBuffs"
+					}
+				}]
+			}],
+			"purgeUnitBuffs": [{
+					"type": "createTemporarySpellEffectAtLocation",
+					"location": {
+						"type": "getUnitLocation",
+						"unit": {
+							"type": "getAbilityTargetedUnit"
+						}
+					},
+					"id": {
+						"type": "getAlias"
+					},
+					"effectType": "SPECIAL"
+				},{
+					"type": "if",
+					"condition": {
+						"type": "isUnitEnemy",
+						"unit": {
+							"type": "getAbilityTargetedUnit"
+						}
+					},
+					"thenActions": [{
+							"type": "damageTarget",
+							"source": {
+								"type": "getCastingUnit"
+							},
+							"target": {
+								"type": "getAbilityTargetedUnit"
+							},
+							"onlyDamageSummons": {
+								"type": "rawBoolean",
+								"value": "true"
+							},
+							"damage": {
+								"type": "getAbilityDataAsFloat",
+								"dataField": "C"
+							}
+						},{
+							"type": "if",
+							"condition": {
+								"type": "isUnitAlive",
+								"unit": {
+									"type": "getAbilityTargetedUnit"
+								}
+							},
+							"thenActions": [{
+									"type": "if",
+									"condition": {
+										"type": "f>0",
+										"value": {
+											"type": "fMin",
+											"value1": {
+												"type": "inlineConditionFloat",
+												"condition": {
+													"type": "isUnitHero",
+													"unit": {
+														"type": "getAbilityTargetedUnit"
+													}
+												},
+												"pass": {
+													"type": "getAbilityDataAsFloat",
+													"dataField": "E"
+												},
+												"fail": {
+													"type": "getAbilityDataAsFloat",
+													"dataField": "D"
+												}
+											},
+											"value2": {
+												"type": "getAbilityDuration",
+												"target": {
+													"type": "getAbilityTargetedUnit"
+												}
+											}
+										}
+									},
+									"thenActions": [{
+											"type": "createTimedBuff",
+											"buffId": {
+												"type": "getFirstBuffId"
+											},
+											"visibilityGroup": {
+												"type": "id2s",
+												"value": {
+													"type": "getAlias"
+												}
+											},
+											"duration": {
+												"type": "fMin",
+												"value1": {
+													"type": "inlineConditionFloat",
+													"condition": {
+														"type": "isUnitHero",
+														"unit": {
+															"type": "getAbilityTargetedUnit"
+														}
+													},
+													"pass": {
+														"type": "getAbilityDataAsFloat",
+														"dataField": "E"
+													},
+													"fail": {
+														"type": "getAbilityDataAsFloat",
+														"dataField": "D"
+													}
+												},
+												"value2": {
+													"type": "getAbilityDuration",
+													"target": {
+														"type": "getAbilityTargetedUnit"
+													}
+												}
+											},
+											"positive": {
+												"type": "rawBoolean",
+												"value": "false"
+											},
+											"magic": {
+												"type": "rawBoolean",
+												"value": "false"
+											},
+											"stateMods": [{
+												"type": "getLastCreatedStateModBuff"
+											}]
+										},{
+											"type": "addBuff",
+											"target": {
+												"type": "getAbilityTargetedUnit"
+											},
+											"buff": {
+												"type": "getLastCreatedBuff"
+											}
+									}]
+								},{
+									"type": "if",
+									"condition": {
+										"type": "f>0",
+										"value": {
+											"type": "getAbilityDuration",
+											"target": {
+												"type": "getAbilityTargetedUnit"
+											}
+										}
+									},
+									"thenActions": [{
+											"type": "storeValueLocally",
+											"key": {
+												"type": "rawString",
+												"value": "atkSpdAmt"
+											},
+											"valueToStore": {
+												"type": "inlineConditionFloat",
+												"condition": {
+													"type": "i!=0",
+													"value": {
+														"type": "getAbilityDataAsInteger",
+														"dataField": "B"
+													}
+												},
+												"pass": {
+													"type": "rawFloat",
+													"value": -1
+												},
+												"fail": {
+													"type": "rawFloat",
+													"value": 0
+												}
+											}
+										},{
+											"type": "storeValueLocally",
+											"key": {
+												"type": "rawString",
+												"value": "atkSpdStep"
+											},
+											"valueToStore": {
+												"type": "inlineConditionFloat",
+												"condition": {
+													"type": "i!=0",
+													"value": {
+														"type": "getAbilityDataAsInteger",
+														"dataField": "B"
+													}
+												},
+												"pass": {
+													"type": "f/",
+													"value1": {
+														"type": "rawFloat",
+														"value": 1
+													},
+													"value2": {
+														"type": "getAbilityDataAsFloat",
+														"dataField": "B"
+													}
+												},
+												"fail": {
+													"type": "rawFloat",
+													"value": 0
+												}
+											}
+										},{
+											"type": "storeValueLocally",
+											"key": {
+												"type": "rawString",
+												"value": "atkSpdDelay"
+											},
+											"valueToStore": {
+												"type": "inlineConditionFloat",
+												"condition": {
+													"type": "i!=0",
+													"value": {
+														"type": "getAbilityDataAsInteger",
+														"dataField": "B"
+													}
+												},
+												"pass": {
+													"type": "f*",
+													"value1": {
+														"type": "getStoredFloatByKey",
+														"key": {
+															"type": "rawString",
+															"value": "atkSpdStep"
+														}
+													},
+													"value2": {
+														"type": "getAbilityDuration",
+														"target": {
+															"type": "getAbilityTargetedUnit"
+														}
+													}
+												},
+												"fail": {
+													"type": "rawFloat",
+													"value": 999999
+												}
+											}
+										},{
+											"type": "createNonStackingStatBuff",
+											"buffType": {
+												"type": "getNonStackingStatBuffTypeFromString",
+												"id": {
+													"type": "rawString",
+													"value": "ATKSPD"
+												}
+											},
+											"stackingKey": {
+												"type": "rawString",
+												"value": "purge"
+											},
+											"value": {
+												"type": "getStoredFloatByKey",
+												"key": {
+													"type": "rawString",
+													"value": "atkSpdAmt"
+												}
+											}
+										},{
+											"type": "storeValueLocally",
+											"key": {
+												"type": "rawString",
+												"value": "atkSpdBuff"
+											},
+											"valueToStore": {
+												"type": "getLastCreatedNonStackingStatBuff"
+											}
+										},{
+											"type": "storeValueLocally",
+											"key": {
+												"type": "rawString",
+												"value": "moveAmt"
+											},
+											"valueToStore": {
+												"type": "inlineConditionFloat",
+												"condition": {
+													"type": "i!=0",
+													"value": {
+														"type": "getAbilityDataAsInteger",
+														"dataField": "A"
+													}
+												},
+												"pass": {
+													"type": "rawFloat",
+													"value": -1
+												},
+												"fail": {
+													"type": "rawFloat",
+													"value": 0
+												}
+											}
+										},{
+											"type": "storeValueLocally",
+											"key": {
+												"type": "rawString",
+												"value": "moveStep"
+											},
+											"valueToStore": {
+												"type": "inlineConditionFloat",
+												"condition": {
+													"type": "i!=0",
+													"value": {
+														"type": "getAbilityDataAsInteger",
+														"dataField": "A"
+													}
+												},
+												"pass": {
+													"type": "f/",
+													"value1": {
+														"type": "rawFloat",
+														"value": 1
+													},
+													"value2": {
+														"type": "getAbilityDataAsFloat",
+														"dataField": "A"
+													}
+												},
+												"fail": {
+													"type": "rawFloat",
+													"value": 0
+												}
+											}
+										},{
+											"type": "storeValueLocally",
+											"key": {
+												"type": "rawString",
+												"value": "moveDelay"
+											},
+											"valueToStore": {
+												"type": "inlineConditionFloat",
+												"condition": {
+													"type": "i!=0",
+													"value": {
+														"type": "getAbilityDataAsInteger",
+														"dataField": "A"
+													}
+												},
+												"pass": {
+													"type": "f*",
+													"value1": {
+														"type": "getStoredFloatByKey",
+														"key": {
+															"type": "rawString",
+															"value": "moveStep"
+														}
+													},
+													"value2": {
+														"type": "getAbilityDuration",
+														"target": {
+															"type": "getAbilityTargetedUnit"
+														}
+													}
+												},
+												"fail": {
+													"type": "rawFloat",
+													"value": 999999
+												}
+											}
+										},{
+											"type": "createNonStackingStatBuff",
+											"buffType": {
+												"type": "getNonStackingStatBuffTypeFromString",
+												"id": {
+													"type": "rawString",
+													"value": "MVSPDPCT"
+												}
+											},
+											"stackingKey": {
+												"type": "rawString",
+												"value": "purge"
+											},
+											"value": {
+												"type": "getStoredFloatByKey",
+												"key": {
+													"type": "rawString",
+													"value": "moveAmt"
+												}
+											}
+										},{
+											"type": "storeValueLocally",
+											"key": {
+												"type": "rawString",
+												"value": "moveBuff"
+											},
+											"valueToStore": {
+												"type": "getLastCreatedNonStackingStatBuff"
+											}
+										},{
+											"type": "createTimedTickingBuff",
+											"buffId": {
+												"type": "getFirstBuffId"
+											},
+											"visibilityGroup": {
+												"type": "id2s",
+												"value": {
+													"type": "getAlias"
+												}
+											},
+											"duration": {
+												"type": "getAbilityDuration",
+												"target": {
+													"type": "getAbilityTargetedUnit"
+												}
+											},
+											"stacks": {
+												"type": "rawBoolean",
+												"value": "true"
+											},
+											"positive": {
+												"type": "rawBoolean",
+												"value": "false"
+											},
+											"magic": {
+												"type": "rawBoolean",
+												"value": "false"
+											},
+											"statBuffs": [{
+													"type": "getStoredNonStackingStatBuffByKey",
+													"key": {
+														"type": "rawString",
+														"value": "atkSpdBuff"
+													}
+												},{
+													"type": "getStoredNonStackingStatBuffByKey",
+													"key": {
+														"type": "rawString",
+														"value": "moveBuff"
+													}
+											}],
+											"onTickActions": [{
+													"type": "periodicExecute",
+													"periodicActions": [{
+															"type": "storeValueLocally",
+															"key": {
+																"type": "rawString",
+																"value": "moveAmt"
+															},
+															"valueToStore": {
+																"type": "f+",
+																"value1": {
+																	"type": "getStoredFloatByKey",
+																	"key": {
+																		"type": "rawString",
+																		"value": "moveAmt"
+																	}
+																},
+																"value2": {
+																	"type": "getStoredFloatByKey",
+																	"key": {
+																		"type": "rawString",
+																		"value": "moveStep"
+																	}
+																}
+															}
+														},{
+															"type": "updateNonStackingStatBuff",
+															"buff": {
+																"type": "getStoredNonStackingStatBuffByKey",
+																"key": {
+																	"type": "rawString",
+																	"value": "moveBuff"
+																}
+															},
+															"value": {
+																"type": "getStoredFloatByKey",
+																"key": {
+																	"type": "rawString",
+																	"value": "moveAmt"
+																}
+															}
+														},{
+															"type": "recomputeStatBuffsOnUnit",
+															"targetUnit": {
+																"type": "getBuffedUnit"
+															},
+															"buffType": {
+																"type": "getNonStackingStatBuffTypeFromString",
+																"id": {
+																	"type": "rawString",
+																	"value": "MVSPDPCT"
+																}
+															}
+													}],
+													"delaySeconds": {
+														"type": "getStoredFloatByKey",
+														"key": {
+															"type": "rawString",
+															"value": "moveDelay"
+														}
+													},
+													"unique": {
+														"type": "rawString",
+														"value": "move"
+													}
+												},{
+													"type": "periodicExecute",
+													"periodicActions": [{
+															"type": "storeValueLocally",
+															"key": {
+																"type": "rawString",
+																"value": "atkSpdAmt"
+															},
+															"valueToStore": {
+																"type": "f+",
+																"value1": {
+																	"type": "getStoredFloatByKey",
+																	"key": {
+																		"type": "rawString",
+																		"value": "atkSpdAmt"
+																	}
+																},
+																"value2": {
+																	"type": "getStoredFloatByKey",
+																	"key": {
+																		"type": "rawString",
+																		"value": "atkSpdStep"
+																	}
+																}
+															}
+														},{
+															"type": "updateNonStackingStatBuff",
+															"buff": {
+																"type": "getStoredNonStackingStatBuffByKey",
+																"key": {
+																	"type": "rawString",
+																	"value": "atkSpdBuff"
+																}
+															},
+															"value": {
+																"type": "getStoredFloatByKey",
+																"key": {
+																	"type": "rawString",
+																	"value": "atkSpdAmt"
+																}
+															}
+														},{
+															"type": "recomputeStatBuffsOnUnit",
+															"targetUnit": {
+																"type": "getBuffedUnit"
+															},
+															"buffType": {
+																"type": "getNonStackingStatBuffTypeFromString",
+																"id": {
+																	"type": "rawString",
+																	"value": "ATKSPD"
+																}
+															}
+													}],
+													"delaySeconds": {
+														"type": "getStoredFloatByKey",
+														"key": {
+															"type": "rawString",
+															"value": "atkSpdDelay"
+														}
+													},
+													"unique": {
+														"type": "rawString",
+														"value": "atk"
+													}
+											}]
+										},{
+											"type": "addBuff",
+											"target": {
+												"type": "getAbilityTargetedUnit"
+											},
+											"buff": {
+												"type": "getLastCreatedBuff"
+											}
+									}]
+							}]
+						}]
+				},{
+					"type": "if",
+					"condition": {
+						"type": "isUnitAlive",
+						"unit": {
+							"type": "getAbilityTargetedUnit"
+						}
+					},
+					"thenActions": [{
+							"type": "if",
+							"condition": {
+								"type": "not",
+								"condition": {
+									"type": "isUnitMagicImmune",
+									"unit": {
+										"type": "getAbilityTargetedUnit"
+									}
+								}
+							},
+							"thenActions": [{
+								"type": "subtractMp",
+								"unit": {
+									"type": "getAbilityTargetedUnit"
+								},
+								"amount": {
+									"type": "getAbilityDataAsFloat",
+									"dataField": "F"
+								}
+							}]
+						},{
+							"type": "dispelBuffs",
+							"unit": {
+								"type": "getAbilityTargetedUnit"
+							},
+							"filter": {
+								"type": "isBuffMagic",
+								"buff": {
+									"type": "enumBuff"
+								}
+							}
+					}]
+				}],
+			"purgeDest": [{
+				"type": "dispelDestructableBuffs",
+				"dest": {
+					"type": "getAbilityTargetedDestructable"
+				},
+				"filter": {
+					"type": "isDestructableBuffMagic",
+					"buff": {
+						"type": "enumDestructableBuff"
+					}
+				}
+			}]
+		},
+		"onAddDisabledAbility": [{
+			"type": "createStateModBuff",
+			"buffType": "SNARED"
+		}],
+		"onEndCasting": [{
+			"type": "if",
+			"condition": {
+				"type": "notNull",
+				"value": {
+					"type": "getAbilityTargetedUnit"
+				}
+			},
+			"thenActions": [{
+				"type": "runReuseAction",
+				"name": {
+					"type": "rawString",
+					"value": "purgeUnit"
+				}
+			}],
+			"elseActions": [{
+				"type": "runReuseAction",
+				"name": {
+					"type": "rawString",
+					"value": "purgeDest"
+				}
+			}]
+		}]
+	},{
+		"ids": [{"id":"AIlp", "castId": "itemlightningpurge"}],
+		"type": "INHERIT",
+		"parentId": "Aprg",
+		"overrideFields": {
+			"physicalSpell": {
+				"type": "rawBoolean",
+				"value": "false"
+			},
+			"magicSpell": {
+				"type": "rawBoolean",
+				"value": "false"
+			}
+		},
+		"reuseActions": {
+			"purgeUnit": [{
+				"type": "runReuseAction",
+				"name": {
+					"type": "rawString",
+					"value": "purgeUnitBuffs"
+				}
+			}]
+		}
+	},{
+		"ids": [{"id":"Aadm", "castId": "autodispel", "autoCastOnId": "autodispelon", "autoCastOffId": "autodispeloff", "autoCastType": "NEARESTVALID"}],
+		"type": "NORMAL_UNITTARGET",
+		"overrideFields": {
+			"dispel": {
+				"type": "rawBoolean",
+				"value": "true"
+			}
+		},
+		"extraTargetConditions": [{
+			"type": "or",
+			"conditions": [{
+					"type": "notNull",
+					"value": {
+						"type": "getAbilityTargetedUnit"
+					}
+				},{
+					"type": "and",
+					"conditions": [{
+							"type": "notNull",
+							"value": {
+								"type": "getAbilityTargetedDestructable"
+							}
+						},{
+							"type": "setCantUseReasonOnFailure",
+							"condition": {
+								"type": "doesDestructableHaveBuffMatchingCondition",
+								"dest": {
+									"type": "getAbilityTargetedDestructable"
+								},
+								"condition": {
+									"type": "isDestructableBuffMagic",
+									"buff": {
+										"type": "matchingDestructableBuff"
+									}
+								}
+							},
+							"reason": "THAT_TREE_IS_NOT_OCCUPIED_BY_AN_OWL"
+					}]
+			}]
+		}],
+		"extraAutoTargetConditions": [{
+			"type": "or",
+			"conditions": [{
+					"type": "and",
+					"conditions": [{
+							"type": "isUnitFriend",
+							"unit": {
+								"type": "getAbilityTargetedUnit"
+							}
+						},{
+							"type": "doesUnitHaveBuffMatchingCondition",
+							"unit": {
+								"type": "getAbilityTargetedUnit"
+							},
+							"condition": {
+								"type": "isBuffNegative",
+								"buff": {
+									"type": "getMatchingBuff"
+								}
+							}
+					}]
+				},{
+					"type": "and",
+					"conditions": [{
+							"type": "isUnitEnemy",
+							"unit": {
+								"type": "getAbilityTargetedUnit"
+							}
+						},{
+							"type": "doesUnitHaveBuffMatchingCondition",
+							"unit": {
+								"type": "getAbilityTargetedUnit"
+							},
+							"condition": {
+								"type": "isBuffPositive",
+								"buff": {
+									"type": "getMatchingBuff"
+								}
+							}
+					}]
+			}]
+		}],
+		"reuseActions": {
+			"purgeUnit": [{
+				"type": "checkAbilityEffectReaction",
+				"target": {
+					"type": "getAbilityTargetedUnit"
+				},
+				"onHitActions": [{
+					"type": "runReuseAction",
+					"name": {
+						"type": "rawString",
+						"value": "purgeUnitBuffs"
+					}
+				}]
+			}],
+			"purgeUnitBuffs": [{
+					"type": "createTemporarySpellEffectOnUnit",
+					"target": {
+						"type": "getAbilityTargetedUnit"
+					},
+					"id": {
+						"type": "getAlias"
+					},
+					"effectType": "TARGET"
+				},{
+					"type": "if",
+					"condition": {
+						"type": "isUnitEnemy",
+						"unit": {
+							"type": "getAbilityTargetedUnit"
+						}
+					},
+					"thenActions": [{
+							"type": "damageTarget",
+							"source": {
+								"type": "getCastingUnit"
+							},
+							"target": {
+								"type": "getAbilityTargetedUnit"
+							},
+							"onlyDamageSummons": {
+								"type": "rawBoolean",
+								"value": "true"
+							},
+							"damage": {
+								"type": "getAbilityDataAsFloat",
+								"dataField": "B"
+							}
+					}]
+				},{
+					"type": "if",
+					"condition": {
+						"type": "isUnitAlive",
+						"unit": {
+							"type": "getAbilityTargetedUnit"
+						}
+					},
+					"thenActions": [{
+							"type": "if",
+							"condition": {
+								"type": "not",
+								"condition": {
+									"type": "isUnitMagicImmune",
+									"unit": {
+										"type": "getAbilityTargetedUnit"
+									}
+								}
+							},
+							"thenActions": [{
+								"type": "subtractMp",
+								"unit": {
+									"type": "getAbilityTargetedUnit"
+								},
+								"amount": {
+									"type": "getAbilityDataAsFloat",
+									"dataField": "A"
+								}
+							}]
+						},{
+							"type": "if",
+							"condition": {
+								"type": "and",
+								"conditions": [{
+										"type": "wasAutoCast"
+									},{
+										"type": "gameplayConstantSmartAbolishMagic"
+								}]
+							},
+							"thenActions": [{
+								"type": "if",
+								"condition": {
+									"type": "isUnitEnemy",
+									"unit": {
+										"type": "getAbilityTargetedUnit"
+									}
+								},
+								"thenActions": [{
+									"type": "dispelBuffs",
+									"unit": {
+										"type": "getAbilityTargetedUnit"
+									},
+									"filter": {
+										"type": "and",
+										"conditions": [{
+												"type": "isBuffMagic",
+												"buff": {
+													"type": "enumBuff"
+												}
+											},{
+												"type": "isBuffPositive",
+												"buff": {
+													"type": "enumBuff"
+												}
+										}]
+									}
+								}],
+								"elseActions": [{
+									"type": "dispelBuffs",
+									"unit": {
+										"type": "getAbilityTargetedUnit"
+									},
+									"filter": {
+										"type": "and",
+										"conditions": [{
+												"type": "isBuffMagic",
+												"buff": {
+													"type": "enumBuff"
+												}
+											},{
+												"type": "isBuffNegative",
+												"buff": {
+													"type": "enumBuff"
+												}
+										}]
+									}
+								}]
+							}],
+							"elseActions": [{
+									"type": "dispelBuffs",
+									"unit": {
+										"type": "getAbilityTargetedUnit"
+									},
+									"filter": {
+										"type": "isBuffMagic",
+										"buff": {
+											"type": "enumBuff"
+										}
+								}
+							}]
+					}]
+				}],
+			"purgeDest": [{
+				"type": "dispelDestructableBuffs",
+				"dest": {
+					"type": "getAbilityTargetedDestructable"
+				},
+				"filter": {
+					"type": "isDestructableBuffMagic",
+					"buff": {
+						"type": "enumDestructableBuff"
+					}
+				}
+			}]
+		},
+		"onEndCasting": [{
+			"type": "if",
+			"condition": {
+				"type": "notNull",
+				"value": {
+					"type": "getAbilityTargetedUnit"
+				}
+			},
+			"thenActions": [{
+				"type": "runReuseAction",
+				"name": {
+					"type": "rawString",
+					"value": "purgeUnit"
+				}
+			}],
+			"elseActions": [{
+				"type": "runReuseAction",
+				"name": {
+					"type": "rawString",
+					"value": "purgeDest"
+				}
+			}]
+		}]
+	},{
+		"ids": [{"id":"Advm", "castId": "devourmagic"}],
+		"type": "NORMAL_POINTTARGET",
+		"reuseActions": {
+			"healProj": [{
+				"type": "if",
+				"condition": {
+					"type": "isUnitEqual",
+					"unit1": {
+						"type": "getCastingUnit"
+					},
+					"unit2": {
+						"type": "argumentUnit",
+						"name": {
+							"type": "rawString",
+							"value": "source"
+						}
+					}
+				},
+				"thenActions": [{
+					"type": "runReuseActionWithArguments",
+					"name": {
+						"type": "rawString",
+						"value": "healEffect"
+					},
+					"arguments": {
+						"buffCount": {
+							"type": "argumentFloat",
+							"name": {
+								"type": "rawString",
+								"value": "buffCnt"
+							}
+						},
+						"unitCount": {
+							"type": "argumentBoolean",
+							"name": {
+								"type": "rawString",
+								"value": "unitCnt"
+							}
+						}
+					}
+				}],
+				"elseActions": [{
+					"type": "if",
+					"condition": {
+						"type": "or",
+						"conditions": [{
+								"type": "argumentBoolean",
+								"name": {
+									"type": "rawString",
+									"value": "unitCnt"
+								}
+							},{
+								"type": "f>0",
+								"value": {
+									"type": "argumentFloat",
+									"name": {
+										"type": "rawString",
+										"value": "buffCnt"
+									}
+								}
+						}]
+					},
+					"thenActions": [{
+							"type": "createTemporarySpellEffectOnUnit",
+							"target": {
+								"type": "argumentUnit",
+								"name": {
+									"type": "rawString",
+									"value": "source"
+								}
+							},
+							"id": {
+								"type": "getAlias"
+							},
+							"effectType": "TARGET"
+						},{
+							"type": "createUnitTargetedProjectile",
+							"source": {
+								"type": "argumentUnit",
+								"name": {
+									"type": "rawString",
+									"value": "source"
+								}
+							},
+							"target": {
+								"type": "getCastingUnit"
+							},
+							"id": {
+								"type": "getAlias"
+							},
+							"onHit": [{
+									"type": "runReuseActionWithArguments",
+									"name": {
+										"type": "rawString",
+										"value": "healEffect"
+									},
+									"arguments": {
+										"buffCount": {
+											"type": "getStoredFloatByKey",
+											"key": {
+												"type": "catStrings",
+												"stringList": [{
+													"type": "rawString",
+													"value": "buffCnt"
+												},{
+													"type": "getUnitHandleAsString",
+													"unit": {
+														"type": "getProjectileSourceUnit",
+														"proj": {
+															"type": "getThisProjectile"
+														}
+													}
+												}]
+											}
+										},
+										"unitCount": {
+											"type": "getStoredBooleanByKey",
+											"key": {
+												"type": "catStrings",
+												"stringList": [{
+													"type": "rawString",
+													"value": "unitCnt"
+												},{
+													"type": "getUnitHandleAsString",
+													"unit": {
+														"type": "getProjectileSourceUnit",
+														"proj": {
+															"type": "getThisProjectile"
+														}
+													}
+												}]
+											}
+										}
+									}
+								},{
+									"type": "storeValueLocally",
+									"key": {
+										"type": "rawString",
+										"value": "fired"
+									},
+									"valueToStore": {
+										"type": "i-",
+										"value1": {
+											"type": "getStoredIntegerByKey",
+											"key": {
+												"type": "rawString",
+												"value": "fired"
+											}
+										},
+										"value2": {
+											"type": "rawInteger",
+											"value": 1
+										}
+									}
+								},{
+									"type": "if",
+									"condition": {
+										"type": "i=0",
+										"value": {
+											"type": "getStoredIntegerByKey",
+											"key": {
+												"type": "rawString",
+												"value": "fired"
+											}
+										}
+									},
+									"thenActions": [{
+										"type": "cleanUpCastInstance"
+									}]
+							}]
+						},{
+							"type": "storeValueLocally",
+							"key": {
+								"type": "catStrings",
+								"stringList": [{
+									"type": "rawString",
+									"value": "buffCnt"
+								},{
+									"type": "getUnitHandleAsString",
+									"unit": {
+										"type": "argumentUnit",
+										"name": {
+											"type": "rawString",
+											"value": "source"
+										}
+									}
+								}]
+							},
+							"valueToStore": {
+								"type": "argumentFloat",
+								"name": {
+									"type": "rawString",
+									"value": "buffCnt"
+								}
+							}
+						},{
+							"type": "storeValueLocally",
+							"key": {
+								"type": "catStrings",
+								"stringList": [{
+									"type": "rawString",
+									"value": "unitCnt"
+								},{
+									"type": "getUnitHandleAsString",
+									"unit": {
+										"type": "argumentUnit",
+										"name": {
+											"type": "rawString",
+											"value": "source"
+										}
+									}
+								}]
+							},
+							"valueToStore": {
+								"type": "argumentBoolean",
+								"name": {
+									"type": "rawString",
+									"value": "unitCnt"
+								}
+							}
+						},{
+							"type": "storeValueLocally",
+							"key": {
+								"type": "rawString",
+								"value": "fired"
+							},
+							"valueToStore": {
+								"type": "i+",
+								"value1": {
+									"type": "getStoredIntegerByKey",
+									"key": {
+										"type": "rawString",
+										"value": "fired"
+									}
+								},
+								"value2": {
+									"type": "rawInteger",
+									"value": 1
+								}
+							}
+					}]
+				}]
+			}],
+			"healEffect": [{
+					"type": "heal",
+					"target": {
+						"type": "getCastingUnit"
+					},
+					"amount": {
+						"type": "f*",
+						"value1": {
+							"type": "argumentFloat",
+							"name": {
+								"type": "rawString",
+								"value": "buffCount"
+							}
+						},
+						"value2": {
+							"type": "getAbilityDataAsFloat",
+							"dataField": "C"
+						}
+					}
+				},{
+					"type": "addMp",
+					"target": {
+						"type": "getCastingUnit"
+					},
+					"amount": {
+						"type": "f*",
+						"value1": {
+							"type": "argumentFloat",
+							"name": {
+								"type": "rawString",
+								"value": "buffCount"
+							}
+						},
+						"value2": {
+							"type": "getAbilityDataAsFloat",
+							"dataField": "D"
+						}
+					}
+				},{
+					"type": "if",
+					"condition": {
+						"type": "argumentBoolean",
+						"name": {
+							"type": "rawString",
+							"value": "unitCount"
+						}
+					},
+					"thenActions": [{
+							"type": "heal",
+							"target": {
+								"type": "getCastingUnit"
+							},
+							"amount": {
+								"type": "getAbilityDataAsFloat",
+								"dataField": "A"
+							}
+						},{
+							"type": "addMp",
+							"target": {
+								"type": "getCastingUnit"
+							},
+							"amount": {
+								"type": "getAbilityDataAsFloat",
+								"dataField": "B"
+							}
+					}]
+			}]
+		},
+		"onEndCasting": [{
+				"type": "storeValueLocally",
+				"key": {
+					"type": "rawString",
+					"value": "fired"
+				},
+				"valueToStore": {
+					"type": "rawInteger",
+					"value": 0
+				}
+			},{
+				"type": "createTemporarySpellEffectOnUnit",
+				"target": {
+					"type": "getCastingUnit"
+				},
+				"id": {
+					"type": "getAlias"
+				},
+				"effectType": "CASTER"
+			},{
+				"type": "createTemporarySpellEffectAtLocation",
+				"location": {
+					"type": "getTargetedLocation"
+				},
+				"id": {
+					"type": "getAlias"
+				},
+				"effectType": "EFFECT"
+			},{
+				"type": "createSoundEffectAtLocation",
+				"location": {
+					"type": "getTargetedLocation"
+				},
+				"id": {
+					"type": "getAlias"
+				}
+			},{
+				"type": "iterateUnitsInRangeOfLocationMatchingCondition",
+				"location": {
+					"type": "getTargetedLocation"
+				},
+				"range": {
+					"type": "getAbilityArea"
+				},
+				"condition": {
+					"type": "isUnitValidTarget",
+					"target": {
+						"type": "getMatchingUnit"
+					}
+				},
+				"iterationActions": [{
+						"type": "storeValueLocally",
+						"key": {
+							"type": "rawString",
+							"value": "buffCnt"
+						},
+						"valueToStore": {
+							"type": "inlineConditionFloat",
+							"condition": {
+								"type": "and",
+								"conditions": [{
+										"type": "isUnitSummoned",
+										"unit": {
+											"type": "getEnumUnit"
+										}
+									},{
+										"type": "isUnitEnemy",
+										"unit": {
+											"type": "getEnumUnit"
+										}
+								}]
+							},
+							"pass": {
+								"type": "rawFloat",
+								"value": 1
+							},
+							"fail": {
+								"type": "rawFloat",
+								"value": 0
+							}
+						}
+					},{
+						"type": "storeValueLocally",
+						"key": {
+							"type": "rawString",
+							"value": "allyBuffCnt"
+						},
+						"valueToStore": {
+							"type": "rawFloat",
+							"value": 0
+						}
+					},{
+						"type": "if",
+						"condition": {
+							"type": "isUnitEnemy",
+							"unit": {
+								"type": "getEnumUnit"
+							}
+						},
+						"thenActions": [{
+							"type": "damageTarget",
+							"source": {
+								"type": "getCastingUnit"
+							},
+							"target": {
+								"type": "getEnumUnit"
+							},
+							"onlyDamageSummons": {
+								"type": "rawBoolean",
+								"value": "true"
+							},
+							"damage": {
+								"type": "getAbilityDataAsFloat",
+								"dataField": "E"
+							}
+						}]
+					},{
+						"type": "if",
+						"condition": {
+							"type": "isUnitAlive",
+							"unit": {
+								"type": "getEnumUnit"
+							}
+						},
+						"thenActions": [{
+								"type": "storeValueLocally",
+								"key": {
+									"type": "rawString",
+									"value": "buffCnt"
+								},
+								"valueToStore": {
+									"type": "f+",
+									"value1": {
+										"type": "getStoredFloatByKey",
+										"key": {
+											"type": "rawString",
+											"value": "buffCnt"
+										}
+									},
+									"value2": {
+										"type": "i2f",
+										"value": {
+											"type": "countBuffsOnUnitMatchingCondition",
+											"unit": {
+												"type": "getEnumUnit"
+											},
+											"condition": {
+												"type": "and",
+												"conditions": [{
+														"type": "isBuffMagic",
+														"buff": {
+															"type": "getMatchingBuff"
+														}
+													},{
+														"type": "not",
+														"condition": {
+															"type": "isBuffAlly",
+															"buff": {
+																"type": "getMatchingBuff"
+															}
+														}
+												}]
+											}
+										}
+									}
+								}
+							},{
+								"type": "storeValueLocally",
+								"key": {
+									"type": "rawString",
+									"value": "allyBuffCnt"
+								},
+								"valueToStore": {
+									"type": "i2f",
+									"value": {
+										"type": "countBuffsOnUnitMatchingCondition",
+										"unit": {
+											"type": "getEnumUnit"
+										},
+										"condition": {
+											"type": "and",
+											"conditions": [{
+													"type": "isBuffMagic",
+													"buff": {
+														"type": "getMatchingBuff"
+													}
+												},{
+													"type": "isBuffAlly",
+													"buff": {
+														"type": "getMatchingBuff"
+													}
+											}]
+										}
+									}
+								}
+							},{
+								"type": "dispelBuffs",
+								"unit": {
+									"type": "getEnumUnit"
+								},
+								"filter": {
+									"type": "isBuffMagic",
+									"buff": {
+										"type": "enumBuff"
+									}
+								}
+						}]
+					},{
+						"type": "runReuseActionWithArguments",
+						"name": {
+							"type": "rawString",
+							"value": "healProj"
+						},
+						"arguments": {
+							"source": {
+								"type": "getEnumUnit"
+							},
+							"buffCnt": {
+								"type": "inlineConditionFloat",
+								"condition": {
+									"type": "getAbilityDataAsBoolean",
+									"dataField": "F"
+								},
+								"pass": {
+									"type": "getStoredFloatByKey",
+									"key": {
+										"type": "rawString",
+										"value": "buffCnt"
+									}
+								},
+								"fail": {
+									"type": "f+",
+									"value1": {
+										"type": "getStoredFloatByKey",
+										"key": {
+											"type": "rawString",
+											"value": "buffCnt"
+										}
+									},
+									"value2": {
+										"type": "getStoredFloatByKey",
+										"key": {
+											"type": "rawString",
+											"value": "allyBuffCnt"
+										}
+									}
+								}
+							},
+							"unitCnt": {
+								"type": "inlineConditionBoolean",
+								"condition": {
+									"type": "getAbilityDataAsBoolean",
+									"dataField": "F"
+								},
+								"pass": {
+									"type": "f>0",
+									"value": {
+										"type": "getStoredFloatByKey",
+										"key": {
+											"type": "rawString",
+											"value": "buffCnt"
+										}
+									}
+								},
+								"fail": {
+									"type": "f>0",
+									"value": {
+										"type": "f+",
+										"value1": {
+											"type": "getStoredFloatByKey",
+											"key": {
+												"type": "rawString",
+												"value": "buffCnt"
+											}
+										},
+										"value2": {
+											"type": "getStoredFloatByKey",
+											"key": {
+												"type": "rawString",
+												"value": "allyBuffCnt"
+											}
+										}
+									}
+								}
+							}
+						}
+				}]
+			},{
+				"type": "iterateDestructablesInRangeOfLocation",
+				"location": {
+					"type": "getTargetedLocation"
+				},
+				"range": {
+					"type": "getAbilityArea"
+				},
+				"iterationActions": [{
+					"type": "if",
+					"condition": {
+						"type": "isDestructableValidTarget",
+						"target": {
+							"type": "getEnumDestructable"
+						}
+					},
+					"thenActions": [{
+						"type": "dispelDestructableBuffs",
+						"dest": {
+							"type": "getEnumDestructable"
+						},
+						"filter": {
+							"type": "isDestructableBuffMagic",
+							"buff": {
+								"type": "enumDestructableBuff"
+							}
+						}
+					}]
+				}]
+			},{
+				"type": "if",
+				"condition": {
+					"type": "i=0",
+					"value": {
+						"type": "getStoredIntegerByKey",
+						"key": {
+							"type": "rawString",
+							"value": "fired"
+						}
+					}
+				},
+				"thenActions": [{
+					"type": "cleanUpCastInstance"
+				}]
+		}]
+	}]
+}

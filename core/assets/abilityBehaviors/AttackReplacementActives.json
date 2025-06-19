@@ -83,7 +83,7 @@
 		"onChangeAutoCast": [{
 			"type": "if",
 			"condition": {
-				"type": "isAutoCastOn"
+				"type": "isAutoCastCurrentlyActive"
 			},
 			"thenActions": [{
 				"type": "addAttackModifier",

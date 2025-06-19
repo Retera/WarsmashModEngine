@@ -140,7 +140,7 @@ public abstract class CUnitAttack {
 				if (key.equals(NonStackingStatBuff.ALLOW_STACKING_KEY)) {
 					buffForKey += buff.getValue();
 				} else {
-					buffForKey = Math.max(buffForKey, buff.getValue());
+					buffForKey = Math.abs(buffForKey) > Math.abs(buff.getValue()) ? buffForKey : buff.getValue();
 				}
 			}
 			totalNSAtkBuff += buffForKey;
@@ -155,7 +155,7 @@ public abstract class CUnitAttack {
 					if (key.equals(NonStackingStatBuff.ALLOW_STACKING_KEY)) {
 						buffForKey += buff.getValue();
 					} else {
-						buffForKey = Math.max(buffForKey, buff.getValue());
+						buffForKey = Math.abs(buffForKey) > Math.abs(buff.getValue()) ? buffForKey : buff.getValue();
 					}
 				}
 			}

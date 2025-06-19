@@ -163,6 +163,12 @@
 	},{
 		"ids": [{"id":"ANsi", "castId": "silence"}],
 		"type": "NORMAL_POINTTARGET",
+		"overrideFields": {
+			"extraTargetsAllowed": [{
+				"type": "rawTargetType",
+				"value": "NOTSELF"
+			}]
+		},
 		"reuseActions": {
 			"setupBuffs": [{
 					"type": "createNonStackingStatBuff",
@@ -325,9 +331,6 @@
 				"valueToStore": {
 					"type": "getLastCreatedStateModBuff"
 				}
-			},{
-				"type": "addTargetAllowed",
-				"targetType": "NOTSELF"
 		}],
 		"onEndCasting": [{
 				"type": "createTemporarySpellEffectAtLocation",
@@ -635,16 +638,6 @@
 						"type": "getLastCreatedBuff"
 					}
 			}]
-		}],
-		"onLevelChange": [{
-				"type": "runReuseAction",
-				"name": {
-					"type": "rawString",
-					"value": "setupBuffs"
-				}
-			},{
-				"type": "addTargetAllowed",
-				"targetType": "NOTSELF"
 		}]
 	}]
 }

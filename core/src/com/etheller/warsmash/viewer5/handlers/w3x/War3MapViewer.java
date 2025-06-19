@@ -2514,7 +2514,8 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 								final AbilityUI spellDataUI = War3MapViewer.this.abilityDataUI.getUI(spellAlias);
 								final EffectAttachmentUIMissile abilityMissileArt = spellDataUI.getMissileArt(0);
 								final float projectileArc = abilityMissileArt == null ? 0 : abilityMissileArt.getArc();
-								final float pSpeed = projectileSpeed == null ? abilityMissileArt.getSpeed() : projectileSpeed;
+								final float pSpeed = projectileSpeed == null ? abilityMissileArt.getSpeed()
+										: projectileSpeed;
 								final boolean pHome = homing == null ? abilityMissileArt.isHoming() : homing;
 								final String missileArt = abilityMissileArt == null ? ""
 										: abilityMissileArt.getModelPath();
@@ -2671,7 +2672,8 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 								final AbilityUI spellDataUI = War3MapViewer.this.abilityDataUI.getUI(spellAlias);
 								final EffectAttachmentUIMissile abilityMissileArt = spellDataUI.getMissileArt(0);
 								final float projectileArc = abilityMissileArt == null ? 0 : abilityMissileArt.getArc();
-								final float pSpeed = projectileSpeed == null ? abilityMissileArt.getSpeed() : projectileSpeed;
+								final float pSpeed = projectileSpeed == null ? abilityMissileArt.getSpeed()
+										: projectileSpeed;
 								final boolean pHome = homing == null ? abilityMissileArt.isHoming() : homing;
 								final String missileArt = abilityMissileArt == null ? ""
 										: abilityMissileArt.getModelPath();
@@ -2825,18 +2827,23 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 							}
 
 							@Override
-							public SimulationRenderComponent createStaticUberSplat(final float x, final float y, final War3ID uberId) {
+							public SimulationRenderComponent createStaticUberSplat(final float x, final float y,
+									final War3ID uberId) {
 								if (uberId != null) {
-									final Element uberSplatInfo = War3MapViewer.this.terrain.uberSplatTable.get(uberId.asStringValue());
+									final Element uberSplatInfo = War3MapViewer.this.terrain.uberSplatTable
+											.get(uberId.asStringValue());
 									if (uberSplatInfo != null) {
-										String uberSplatTexturePath = uberSplatInfo.getField("Dir") + "\\" + uberSplatInfo.getField("file") + ".blp";
+										String uberSplatTexturePath = uberSplatInfo.getField("Dir") + "\\"
+												+ uberSplatInfo.getField("file") + ".blp";
 										float uberSplatScaleValue = uberSplatInfo.getFieldFloatValue("Scale");
-										final SplatMover buildingUberSplatDynamicIngame = War3MapViewer.this.terrain.addUberSplat(uberSplatTexturePath, x, y,
-												1, uberSplatScaleValue, false, false, false, false);
+										final SplatMover buildingUberSplatDynamicIngame = War3MapViewer.this.terrain
+												.addUberSplat(uberSplatTexturePath, x, y, 1, uberSplatScaleValue, false,
+														false, false, false);
 										return new SimulationRenderComponent() {
 											@Override
 											public void remove() {
-												buildingUberSplatDynamicIngame.destroy(Gdx.gl30, War3MapViewer.this.terrain.centerOffset);
+												buildingUberSplatDynamicIngame.destroy(Gdx.gl30,
+														War3MapViewer.this.terrain.centerOffset);
 											}
 										};
 									}
@@ -3484,13 +3491,36 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 
 							@Override
 							public void stopAbilitySoundEffect(final CUnit caster, final War3ID alias) {
-								final RenderUnit renderPeer = War3MapViewer.this.unitToRenderPeer.get(caster);
 								final AbilityUI abilityUi = War3MapViewer.this.abilityDataUI.getUI(alias);
 								if (abilityUi.getEffectSoundLooped() != null) {
 									// TODO below this probably stops all instances of the sound, which is silly
 									// and busted. Would be better to keep a notion of sound instance
 									War3MapViewer.this.uiSounds.getSound(abilityUi.getEffectSoundLooped()).stop();
 								}
+							}
+
+							@Override
+							public SimulationRenderComponent spawnAbilitySoundEffect(final float x, float y,
+									final War3ID alias, final boolean looping) {
+								final AbilityUI abilityUi = War3MapViewer.this.abilityDataUI.getUI(alias);
+								final String soundName = looping ? abilityUi.getEffectSoundLooped()
+										: abilityUi.getEffectSound();
+								if ((abilityUi == null) || (soundName == null)) {
+									return SimulationRenderComponent.DO_NOTHING;
+								}
+								final long soundId = War3MapViewer.this.uiSounds.getSound(soundName).play(
+										War3MapViewer.this.worldScene.audioContext, x, y,
+										War3MapViewer.this.terrain.getGroundHeight(x, y));
+								if (soundId == -1) {
+									return SimulationRenderComponent.DO_NOTHING;
+								}
+								return new SimulationRenderComponent() {
+									@Override
+									public void remove() {
+										War3MapViewer.this.uiSounds.getSound(soundName).stop(soundId);
+										;
+									}
+								};
 							}
 
 							@Override

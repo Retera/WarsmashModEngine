@@ -1,5 +1,6 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.environment;
 
+import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.Buffer;
@@ -29,14 +30,20 @@ import com.etheller.warsmash.parsers.w3x.w3e.War3MapW3e;
 import com.etheller.warsmash.parsers.w3x.w3i.War3MapW3i;
 import com.etheller.warsmash.parsers.w3x.wpm.War3MapWpm;
 import com.etheller.warsmash.parsers.wdt.Chunk;
+import com.etheller.warsmash.parsers.wdt.Chunk.Vector3b;
 import com.etheller.warsmash.parsers.wdt.ChunkInfo;
 import com.etheller.warsmash.parsers.wdt.DoodadDefinition;
 import com.etheller.warsmash.parsers.wdt.MapChunkLayer;
+import com.etheller.warsmash.parsers.wdt.MapChunkLiquidLayer;
+import com.etheller.warsmash.parsers.wdt.MapChunkLiquidLayer.SOVert;
+import com.etheller.warsmash.parsers.wdt.MapChunkLiquidLayer.SWVert;
 import com.etheller.warsmash.parsers.wdt.WdtMap;
 import com.etheller.warsmash.parsers.wdt.WdtMap.TileHeader;
 import com.etheller.warsmash.units.DataTable;
 import com.etheller.warsmash.units.Element;
 import com.etheller.warsmash.units.GameObject;
+import com.etheller.warsmash.util.ImageUtils;
+import com.etheller.warsmash.util.ImageUtils.AnyExtensionImage;
 import com.etheller.warsmash.util.RenderMathUtils;
 import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.util.WorldEditStrings;
@@ -141,6 +148,7 @@ public class TerrainWdt extends TerrainInterface {
 	private final WorldGrid worldGrid;
 	private final List<Tile> activeTiles = new ArrayList<>();
 	private final Tile[][] tiles;
+	private final int waterTextureArray;
 
 	private final ArrayDeque<DynamicTask> tasks = new ArrayDeque<>();
 
@@ -213,12 +221,48 @@ public class TerrainWdt extends TerrainInterface {
 		System.out.println("updating heights");
 
 		final GL30 gl = Gdx.gl30;
-		// Ground
+
+		// Water textures
+		this.waterTextureArray = gl.glGenTexture();
+		gl.glBindTexture(GL30.GL_TEXTURE_2D_ARRAY, this.waterTextureArray);
+
+		if (waterInfo != null) {
+			final String fileName = waterInfo.getField("texFile");
+			final List<BufferedImage> waterTextures = new ArrayList<>();
+			boolean anyWaterTextureNeedsSRGB = false;
+			int waterImageDimension = 128;
+			for (int i = 0; i < this.waterTextureCount; i++) {
+				final AnyExtensionImage imageInfo = ImageUtils.getAnyExtensionImageFixRGB(dataSource,
+						fileName + (i < 10 ? "0" : "") + Integer.toString(i) + texturesExt, "water texture");
+				final BufferedImage image = imageInfo.getImageData();
+				if ((image.getWidth() != 128) || (image.getHeight() != 128)) {
+					System.err.println(
+							"Odd water texture size detected of " + image.getWidth() + " x " + image.getHeight());
+					waterImageDimension = image.getWidth();
+				}
+				anyWaterTextureNeedsSRGB |= imageInfo.isNeedsSRGBFix();
+				waterTextures.add(image);
+			}
+			gl.glTexImage3D(GL30.GL_TEXTURE_2D_ARRAY, 0,
+					anyWaterTextureNeedsSRGB ? GL30.GL_SRGB8_ALPHA8 : GL30.GL_RGBA8, waterImageDimension,
+					waterImageDimension, this.waterTextureCount, 0, GL30.GL_RGBA, GL30.GL_UNSIGNED_BYTE, null);
+			gl.glTexParameteri(GL30.GL_TEXTURE_2D_ARRAY, GL30.GL_TEXTURE_WRAP_S, GL30.GL_CLAMP_TO_EDGE);
+			gl.glTexParameteri(GL30.GL_TEXTURE_2D_ARRAY, GL30.GL_TEXTURE_WRAP_T, GL30.GL_CLAMP_TO_EDGE);
+			gl.glTexParameteri(GL30.GL_TEXTURE_2D_ARRAY, GL30.GL_TEXTURE_BASE_LEVEL, 0);
+
+			for (int i = 0; i < waterTextures.size(); i++) {
+				final BufferedImage image = waterTextures.get(i);
+				gl.glTexSubImage3D(GL30.GL_TEXTURE_2D_ARRAY, 0, 0, 0, i, image.getWidth(), image.getHeight(), 1,
+						GL30.GL_RGBA, GL30.GL_UNSIGNED_BYTE, ImageUtils.getTextureBuffer(image));
+			}
+		}
+
+		gl.glGenerateMipmap(GL30.GL_TEXTURE_2D_ARRAY);
 
 		System.out.println("creating shaders");
 		this.groundShader = webGL.createShaderProgram(TerrainShaders.TerrainWdt.vert(), TerrainShaders.TerrainWdt.frag);
 		this.cliffShader = webGL.createShaderProgram(TerrainShaders.Cliffs.vert(), TerrainShaders.Cliffs.frag);
-		this.waterShader = webGL.createShaderProgram(TerrainShaders.Water.vert(), TerrainShaders.Water.frag);
+		this.waterShader = webGL.createShaderProgram(TerrainShaders.WaterWdt.vert(), TerrainShaders.WaterWdt.frag);
 
 		this.uberSplatShader = webGL.createShaderProgram(W3xShaders.UberSplat.vert(), W3xShaders.UberSplat.frag);
 
@@ -278,6 +322,13 @@ public class TerrainWdt extends TerrainInterface {
 	public void intersectRayTerrain(final Ray gdxRayHeap, final Vector3 out, final boolean intersectWithWater) {
 //		out.set(gdxRayHeap.origin);
 //		out.add(gdxRayHeap.direction);
+		for (final Tile tile : this.activeTiles) {
+			if (tile.activeTile != null) {
+				if (tile.activeTile.intersectRayTerrain(gdxRayHeap, out, intersectWithWater)) {
+					return;
+				}
+			}
+		}
 	}
 
 	@Override
@@ -392,7 +443,7 @@ public class TerrainWdt extends TerrainInterface {
 		shader.setUniformi("u_shadowMap", 2);
 //		shader.setUniformi("u_waterHeightsMap", 3);
 		shader.setUniformi("u_fogOfWarMap", 4);
-		shader.setUniformf("u_waterHeightOffset", this.waterHeightOffset);
+		shader.setUniformf("u_waterHeightOffset", 0);// this.waterHeightOffset);
 
 		gl.glActiveTexture(GL30.GL_TEXTURE0);
 		gl.glBindTexture(GL30.GL_TEXTURE_2D, tile.activeTile.groundCornerHeightLinear);
@@ -433,6 +484,11 @@ public class TerrainWdt extends TerrainInterface {
 
 	@Override
 	public void renderWater() {
+		for (final Tile tile : this.activeTiles) {
+			if (tile.activeTile != null) {
+				tile.activeTile.renderWater();
+			}
+		}
 	}
 
 	@Override
@@ -602,7 +658,7 @@ public class TerrainWdt extends TerrainInterface {
 								}
 								else {
 									// left
-									height = bottomLeft + (((center * 2) - topRight - bottomLeft) * sqX)
+									height = bottomLeft + (((center * 2) - topLeft - bottomLeft) * sqX)
 											+ ((topLeft - bottomLeft) * sqY);
 								}
 							}
@@ -829,10 +885,14 @@ public class TerrainWdt extends TerrainInterface {
 
 		private float[] groundCornerHeights;
 		private float[] groundCornerHeightsWdtInterior;
+		private float[] groundCornerNormals;
+		private float[] groundCornerNormalsInterior;
 		private short[] groundTextureList;
 
 		private int groundCornerHeight;
 		private int groundCornerHeightWdtInterior;
+		private int groundCornerNormal;
+		private int groundCornerNormalWdtInterior;
 		private int groundTextureData = -1;
 		private int[] alphaMapHandleIds;
 		private AlphaMapDataValue[] alphaMapValues;
@@ -885,6 +945,8 @@ public class TerrainWdt extends TerrainInterface {
 					TerrainWdt.this.viewer.renderLighting);
 			gl.glUniform1i(TerrainWdt.this.groundShader.getUniformLocation("height_cliff_texture"), 1);
 			gl.glUniform1i(TerrainWdt.this.groundShader.getUniformLocation("height_cliff_texture_wdt"), 23);
+			gl.glUniform1i(TerrainWdt.this.groundShader.getUniformLocation("normal_texture"), 10);
+			gl.glUniform1i(TerrainWdt.this.groundShader.getUniformLocation("normal_texture_interior"), 11);
 			gl.glUniform1i(TerrainWdt.this.groundShader.getUniformLocation("terrain_alpha_list"), 2);
 //			gl.glUniform1i(TerrainWdt.this.groundShader.getUniformLocation("shadowMap"), 20);
 			gl.glUniform1f(TerrainWdt.this.groundShader.getUniformLocation("centerOffsetX"),
@@ -946,6 +1008,11 @@ public class TerrainWdt extends TerrainInterface {
 			}
 			gl.glUniform1i(TerrainWdt.this.groundShader.getUniformLocation("layer_count"),
 					this.chunk.getMapChunkLayers().size());
+			gl.glActiveTexture(GL30.GL_TEXTURE10);
+			gl.glBindTexture(GL30.GL_TEXTURE_2D, this.groundCornerNormal);
+
+			gl.glActiveTexture(GL30.GL_TEXTURE11);
+			gl.glBindTexture(GL30.GL_TEXTURE_2D, this.groundCornerNormalWdtInterior);
 
 //			gl.glActiveTexture(GL30.GL_TEXTURE20, /*pathingMap.getTextureStatic()*/);
 //			gl.glActiveTexture(GL30.GL_TEXTURE21, /*pathingMap.getTextureDynamic()*/);
@@ -997,9 +1064,12 @@ public class TerrainWdt extends TerrainInterface {
 			final long war3ChunkIndexY = ((model.blockY * 16) + 15) - indexY;
 
 			final float[][] heightMap = this.chunk.getHeightMap();
+			final Vector3b[][] normals = this.chunk.getNormals();
 
 			this.groundCornerHeights = new float[CHUNK_GRID_SIZE * CHUNK_GRID_SIZE];
 			this.groundCornerHeightsWdtInterior = new float[CHUNK_INTERIOR_GRID_SIZE * CHUNK_INTERIOR_GRID_SIZE];
+			this.groundCornerNormals = new float[CHUNK_GRID_SIZE * CHUNK_GRID_SIZE * 3];
+			this.groundCornerNormalsInterior = new float[CHUNK_INTERIOR_GRID_SIZE * CHUNK_INTERIOR_GRID_SIZE * 3];
 
 			final long war3BaseIndexX = (war3ChunkIndexX * 8);
 			final long war3BaseIndexY = (war3ChunkIndexY * 8);
@@ -1009,11 +1079,16 @@ public class TerrainWdt extends TerrainInterface {
 			for (int i = 0; i < CHUNK_GRID_SIZE; i++) {
 				for (int j = 0; j < CHUNK_GRID_SIZE; j++) {
 					final float height = heightMap[i][j];
+					final Vector3b normal = normals[i][j];
 
 					final int war3IndexX = (9 - i - 1);
 					final int war3IndexY = j;
 					final float convertedHeight = height * wowToHiveWEFactor;
 					this.groundCornerHeights[(war3IndexX * CHUNK_GRID_SIZE) + war3IndexY] = convertedHeight;
+					for (int k = 0; k < normal.components.length; k++) {
+						this.groundCornerNormals[(((war3IndexX * CHUNK_GRID_SIZE) + war3IndexY) * 3)
+								+ k] = (normal.components[k]) / 128f;
+					}
 					heightAvg += convertedHeight;
 				}
 			}
@@ -1023,12 +1098,17 @@ public class TerrainWdt extends TerrainInterface {
 			for (int i = 0; i < CHUNK_INTERIOR_GRID_SIZE; i++) {
 				for (int j = 0; j < CHUNK_INTERIOR_GRID_SIZE; j++) {
 					final float height = heightMap[i + 9][j];
+					final Vector3b normal = normals[i + 9][j];
 
 					final int war3IndexX = (8 - i - 1);
 					final int war3IndexY = j;
 					this.groundCornerHeightsWdtInterior[(war3IndexX * CHUNK_INTERIOR_GRID_SIZE) + war3IndexY] = height
 							* wowToHiveWEFactor;
 
+					for (int k = 0; k < normal.components.length; k++) {
+						this.groundCornerNormalsInterior[(((war3IndexX * CHUNK_INTERIOR_GRID_SIZE) + war3IndexY) * 3)
+								+ k] = (normal.components[k]) / 128f;
+					}
 				}
 			}
 			final GL30 gl = Gdx.gl30;
@@ -1114,6 +1194,26 @@ public class TerrainWdt extends TerrainInterface {
 			gl.glTexParameteri(GL30.GL_TEXTURE_2D, GL30.GL_TEXTURE_WRAP_S, GL30.GL_CLAMP_TO_EDGE);
 			gl.glTexParameteri(GL30.GL_TEXTURE_2D, GL30.GL_TEXTURE_WRAP_T, GL30.GL_CLAMP_TO_EDGE);
 
+			this.groundCornerNormal = gl.glGenTexture();
+			gl.glBindTexture(GL30.GL_TEXTURE_2D, this.groundCornerNormal);
+			gl.glTexParameteri(GL30.GL_TEXTURE_2D, GL30.GL_TEXTURE_MAG_FILTER, GL30.GL_NEAREST);
+			gl.glTexParameteri(GL30.GL_TEXTURE_2D, GL30.GL_TEXTURE_MIN_FILTER, GL30.GL_NEAREST);
+
+			gl.glTexImage2D(GL30.GL_TEXTURE_2D, 0, GL30.GL_RGB, CHUNK_GRID_SIZE, CHUNK_GRID_SIZE, 0, GL30.GL_RGB,
+					GL30.GL_FLOAT, RenderMathUtils.wrap(this.groundCornerNormals));
+			gl.glTexParameteri(GL30.GL_TEXTURE_2D, GL30.GL_TEXTURE_WRAP_S, GL30.GL_CLAMP_TO_EDGE);
+			gl.glTexParameteri(GL30.GL_TEXTURE_2D, GL30.GL_TEXTURE_WRAP_T, GL30.GL_CLAMP_TO_EDGE);
+
+			this.groundCornerNormalWdtInterior = gl.glGenTexture();
+			gl.glBindTexture(GL30.GL_TEXTURE_2D, this.groundCornerNormalWdtInterior);
+			gl.glTexParameteri(GL30.GL_TEXTURE_2D, GL30.GL_TEXTURE_MAG_FILTER, GL30.GL_NEAREST);
+			gl.glTexParameteri(GL30.GL_TEXTURE_2D, GL30.GL_TEXTURE_MIN_FILTER, GL30.GL_NEAREST);
+
+			gl.glTexImage2D(GL30.GL_TEXTURE_2D, 0, GL30.GL_RGB, CHUNK_INTERIOR_GRID_SIZE, CHUNK_INTERIOR_GRID_SIZE, 0,
+					GL30.GL_RGB, GL30.GL_FLOAT, RenderMathUtils.wrap(this.groundCornerNormalsInterior));
+			gl.glTexParameteri(GL30.GL_TEXTURE_2D, GL30.GL_TEXTURE_WRAP_S, GL30.GL_CLAMP_TO_EDGE);
+			gl.glTexParameteri(GL30.GL_TEXTURE_2D, GL30.GL_TEXTURE_WRAP_T, GL30.GL_CLAMP_TO_EDGE);
+
 		}
 
 		@Override
@@ -1128,6 +1228,8 @@ public class TerrainWdt extends TerrainInterface {
 			Gdx.gl30.glDeleteTexture(this.groundTextureData);
 			Gdx.gl30.glDeleteTexture(this.groundCornerHeight);
 			Gdx.gl30.glDeleteTexture(this.groundCornerHeightWdtInterior);
+			Gdx.gl30.glDeleteTexture(this.groundCornerNormal);
+			Gdx.gl30.glDeleteTexture(this.groundCornerNormalWdtInterior);
 		}
 
 		@Override
@@ -1320,6 +1422,14 @@ public class TerrainWdt extends TerrainInterface {
 		boolean disposed = false;
 		final Set<Long> usedSet = new HashSet<>();
 
+		public SoftwareGroundMesh softwareGroundMesh;
+		public SoftwareWaterAndGroundMesh softwareWaterAndGroundMesh;
+		private final int waterHeight;
+		private final int waterExists;
+		private float[] waterHeights;
+		private byte[] waterExistsData;
+		protected boolean loadingFinished;
+
 		public ActiveTile(final Tile tile) {
 			this.tile = tile;
 
@@ -1328,7 +1438,14 @@ public class TerrainWdt extends TerrainInterface {
 
 			TerrainWdt.this.tasks.add(new ChunkTask());
 
+			final int columns = (this.width - 1) * 4;
+			final int rows = (this.height - 1) * 4;
+
+			final int shadowSize = columns * rows;
+			this.staticShadowData = new byte[shadowSize];
 			this.groundCornerHeights = new float[this.width * this.height];
+			this.waterHeights = new float[this.width * this.height];
+			this.waterExistsData = new byte[this.width * this.height];
 
 			final GL30 gl = Gdx.gl30;
 			this.groundCornerHeightLinear = gl.glGenTexture();
@@ -1366,27 +1483,129 @@ public class TerrainWdt extends TerrainInterface {
 			TerrainWdt.this.tasks.add(new DynamicTask() {
 				@Override
 				public boolean run() {
-					final float tilesize = 533.3333f;
-					final float wowToWc3Factor = 128.0f / ((tilesize / 16) / 8);
-//					final int tileIdx = tileHeader.idx;
-					final float wowXOffset = 0;// (tileIdx % 64) * tilesize;
-					final float wowYOffset = 0;// (tileIdx / 64) * tilesize;
-					final float halfWorldSize = tilesize * 32;
-					final float worldSize = tilesize * 64;
-					final float[] doodadMin = new float[3];
-					final float[] doodadMax = new float[3];
-					Arrays.fill(doodadMin, Integer.MAX_VALUE);
-					Arrays.fill(doodadMax, Integer.MIN_VALUE);
-					for (final Chunk chunk : tile.tileHeader.chunks) {
+					ActiveTile.this.softwareGroundMesh = new SoftwareGroundMesh(ActiveTile.this.groundCornerHeights,
+							tile.myCornerXY, ActiveTile.this.width, ActiveTile.this.height);
+					ActiveTile.this.softwareWaterAndGroundMesh = new SoftwareWaterAndGroundMesh(0,
+							ActiveTile.this.groundCornerHeights, ActiveTile.this.waterHeights,
+							ActiveTile.this.waterExistsData, tile.myCornerXY, ActiveTile.this.width,
+							ActiveTile.this.height);
+					return true;
+				}
+			});
+			// Water
+			this.waterHeight = gl.glGenTexture();
+			TerrainWdt.this.tasks.add(new DynamicTask() {
+				@Override
+				public boolean run() {
+					if (!ActiveTile.this.disposed) {
+						gl.glBindTexture(GL30.GL_TEXTURE_2D, ActiveTile.this.waterHeight);
+						gl.glTexImage2D(GL30.GL_TEXTURE_2D, 0, GL30.GL_R16F, ActiveTile.this.width,
+								ActiveTile.this.height, 0, GL30.GL_RED, GL30.GL_FLOAT,
+								RenderMathUtils.wrap(ActiveTile.this.waterHeights));
+						gl.glTexParameteri(GL30.GL_TEXTURE_2D, GL30.GL_TEXTURE_MAG_FILTER, GL30.GL_NEAREST);
+						gl.glTexParameteri(GL30.GL_TEXTURE_2D, GL30.GL_TEXTURE_MIN_FILTER, GL30.GL_NEAREST);
 					}
+					return true;
+				}
+			});
+
+			this.waterExists = gl.glGenTexture();
+			TerrainWdt.this.tasks.add(new DynamicTask() {
+				@Override
+				public boolean run() {
+					if (!ActiveTile.this.disposed) {
+						gl.glBindTexture(GL30.GL_TEXTURE_2D, ActiveTile.this.waterExists);
+						gl.glPixelStorei(GL30.GL_UNPACK_ALIGNMENT, 1);
+						gl.glTexImage2D(GL30.GL_TEXTURE_2D, 0, GL30.GL_R8, ActiveTile.this.width,
+								ActiveTile.this.height, 0, GL30.GL_RED, GL30.GL_UNSIGNED_BYTE,
+								RenderMathUtils.wrap(ActiveTile.this.waterExistsData));
+						gl.glPixelStorei(GL30.GL_UNPACK_ALIGNMENT, 4);
+						gl.glTexParameteri(GL30.GL_TEXTURE_2D, GL30.GL_TEXTURE_MAG_FILTER, GL30.GL_NEAREST);
+						gl.glTexParameteri(GL30.GL_TEXTURE_2D, GL30.GL_TEXTURE_MIN_FILTER, GL30.GL_NEAREST);
+					}
+					return true;
+				}
+			});
+			TerrainWdt.this.tasks.add(new DynamicTask() {
+				@Override
+				public boolean run() {
+					ActiveTile.this.loadingFinished = true;
 					return true;
 				}
 			});
 		}
 
+		public void renderWater() {
+			if (!this.loadingFinished) {
+				return;
+			}
+			// Render water
+			TerrainWdt.this.webGL.useShaderProgram(TerrainWdt.this.waterShader);
+
+			final GL30 gl = Gdx.gl30;
+			gl.glDepthMask(false);
+			gl.glEnable(GL30.GL_CULL_FACE);
+			gl.glEnable(GL30.GL_BLEND);
+			gl.glBlendFunc(GL30.GL_SRC_ALPHA, GL30.GL_ONE_MINUS_SRC_ALPHA);
+
+			TerrainWdt.this.waterShader.setUniformMatrix4fv("MVP", TerrainWdt.this.camera.viewProjectionMatrix.val, 0,
+					16);
+			TerrainWdt.this.waterShader.setUniform4fv("shallow_color_min", TerrainWdt.this.minShallowColorApplied, 0,
+					4);
+			TerrainWdt.this.waterShader.setUniform4fv("shallow_color_max", TerrainWdt.this.maxShallowColorApplied, 0,
+					4);
+			TerrainWdt.this.waterShader.setUniform4fv("deep_color_min", TerrainWdt.this.minDeepColorApplied, 0, 4);
+			TerrainWdt.this.waterShader.setUniform4fv("deep_color_max", TerrainWdt.this.maxDeepColorApplied, 0, 4);
+			TerrainWdt.this.waterShader.setUniformf("water_offset", 0);
+			TerrainWdt.this.waterShader.setUniformi("current_texture", (int) TerrainWdt.this.waterIndex);
+			TerrainWdt.this.waterShader.setUniformf("centerOffsetX", this.tile.myCornerXY[0]);
+			TerrainWdt.this.waterShader.setUniformf("centerOffsetY", this.tile.myCornerXY[1]);
+			TerrainWdt.this.waterShader.setUniform4fv("mapBounds", TerrainWdt.this.shaderMapBounds, 0, 4);
+
+			final W3xSceneLightManager lightManager = (W3xSceneLightManager) TerrainWdt.this.viewer.worldScene
+					.getLightManager();
+			final DataTexture terrainLightsTexture = lightManager.getTerrainLightsTexture();
+
+			terrainLightsTexture.bind(3);
+			TerrainWdt.this.waterShader.setUniformi("lightTexture", 3);
+			TerrainWdt.this.waterShader.setUniformf("lightCount", lightManager.getTerrainLightCount());
+			TerrainWdt.this.waterShader.setUniformf("lightTextureHeight", terrainLightsTexture.getHeight());
+			TerrainWdt.this.waterShader.setUniformf("u_fogColor", TerrainWdt.this.viewer.worldScene.fogSettings.color);
+			TerrainWdt.this.waterShader.setUniformf("u_fogParams",
+					TerrainWdt.this.viewer.worldScene.fogSettings.style.ordinal(),
+					TerrainWdt.this.viewer.worldScene.fogSettings.start,
+					TerrainWdt.this.viewer.worldScene.fogSettings.end,
+					TerrainWdt.this.viewer.worldScene.fogSettings.density);
+
+			TerrainWdt.this.waterShader.setUniformi("water_height_texture", 0);
+			TerrainWdt.this.waterShader.setUniformi("ground_height_texture", 1);
+			TerrainWdt.this.waterShader.setUniformi("water_exists_texture", 2);
+			TerrainWdt.this.waterShader.setUniformi("water_textures", 4);
+			gl.glActiveTexture(GL30.GL_TEXTURE0);
+			gl.glBindTexture(GL30.GL_TEXTURE_2D, this.waterHeight);
+			gl.glActiveTexture(GL30.GL_TEXTURE1);
+			gl.glBindTexture(GL30.GL_TEXTURE_2D, this.groundCornerHeightLinear); // TODO was not the linear one
+			gl.glActiveTexture(GL30.GL_TEXTURE2);
+			gl.glBindTexture(GL30.GL_TEXTURE_2D, this.waterExists);
+			gl.glActiveTexture(GL30.GL_TEXTURE4);
+			gl.glBindTexture(GL30.GL_TEXTURE_2D_ARRAY, TerrainWdt.this.waterTextureArray);
+
+			gl.glBindBuffer(GL30.GL_ARRAY_BUFFER, Shapes.INSTANCE.vertexBuffer);
+			gl.glVertexAttribPointer(TerrainWdt.this.waterShader.getAttributeLocation("vPosition"), 2, GL30.GL_FLOAT,
+					false, 0, 0);
+
+			gl.glBindBuffer(GL30.GL_ELEMENT_ARRAY_BUFFER, Shapes.INSTANCE.indexBuffer);
+			gl.glDrawElementsInstanced(GL30.GL_TRIANGLES, Shapes.INSTANCE.quadIndices.length * 3, GL30.GL_UNSIGNED_INT,
+					0, (this.width - 1) * (this.height - 1));
+
+			gl.glEnable(GL30.GL_BLEND);
+		}
+
 		public void dispose() {
 			Gdx.gl30.glDeleteTexture(this.groundCornerHeightLinear);
 			Gdx.gl30.glDeleteTexture(this.shadowMap);
+			Gdx.gl30.glDeleteTexture(this.waterHeight);
+			Gdx.gl30.glDeleteTexture(this.waterExists);
 			this.disposed = true;
 			TerrainWdt.this.tasks.add(new DisposeTask());
 		}
@@ -1397,7 +1616,6 @@ public class TerrainWdt extends TerrainInterface {
 			final int rows = (this.height - 1) * 4;
 
 			final int shadowSize = columns * rows;
-			this.staticShadowData = new byte[columns * rows];
 			this.shadowData = new byte[columns * rows];
 
 			reloadShadowData(TerrainWdt.this.centerOffset, columns, rows);
@@ -1499,7 +1717,7 @@ public class TerrainWdt extends TerrainInterface {
 
 			@Override
 			public boolean run() {
-				for (int k = 0; (this.i < ActiveTile.this.tile.tileHeader.chunks.size()) && (k < 35); k++, this.i++) {
+				for (int k = 0; (this.i < ActiveTile.this.tile.tileHeader.chunks.size()) && (k < 30); k++, this.i++) {
 					final Chunk chunk = ActiveTile.this.tile.tileHeader.chunks.get(this.i);
 					if (!chunk.getMapChunkLayers().isEmpty()) {
 						final ModelInstance chunkInstance = ActiveTile.this.tile.terrainModel.addInstance(this.i);
@@ -1515,6 +1733,7 @@ public class TerrainWdt extends TerrainInterface {
 					final long war3ChunkIndexY = indexX;
 
 					final float[][] heightMap = chunk.getHeightMap();
+					final long[] shadowMap = chunk.getShadows();
 					for (int i = 0; i < 9; i++) {
 						for (int j = 0; j < 9; j++) {
 							final float heightValue = heightMap[i][j];
@@ -1524,6 +1743,47 @@ public class TerrainWdt extends TerrainInterface {
 
 							ActiveTile.this.groundCornerHeights[(war3IndexX * ActiveTile.this.width)
 									+ war3IndexY] = heightValue * WdtChunkModelInstance.wowToHiveWEFactor;
+						}
+					}
+					if (shadowMap != null) {
+						for (int i = 0; i < 9; i++) {
+							for (int j = 0; j < 9; j++) {
+//								final float heightValue = heightMap[i][j];
+//
+//								final int war3IndexX = (int) ((war3ChunkIndexX * 8) + (9 - i - 1));
+//								final int war3IndexY = (int) ((war3ChunkIndexY * 8) + j);
+//
+//								ActiveTile.this.groundCornerHeights[(war3IndexX * ActiveTile.this.width)
+//										+ war3IndexY] = heightValue * WdtChunkModelInstance.wowToHiveWEFactor;
+							}
+						}
+					}
+
+					final List<MapChunkLiquidLayer> mapChunkLiquidLayers = chunk.getMapChunkLiquidLayers();
+					for (final MapChunkLiquidLayer layer : mapChunkLiquidLayers) {
+						for (int i = 0; i < 9; i++) {
+							for (int j = 0; j < 9; j++) {
+								final Object vert = layer.verts[i][j];
+								float height = 0;
+								byte depth = 0;
+								if (vert instanceof SOVert) {
+									final SOVert soVert = (SOVert) vert;
+									height = soVert.height;
+									depth = soVert.depth;
+								}
+								else if (vert instanceof SWVert) {
+									final SWVert swVert = (SWVert) vert;
+									height = swVert.height;
+									depth = swVert.depth;
+								}
+								height = Math.max(layer.minHeight, Math.min(layer.maxHeight, height));
+								final int war3IndexX = (int) ((war3ChunkIndexX * 8) + (9 - i - 1));
+								final int war3IndexY = (int) ((war3ChunkIndexY * 8) + j);
+
+								ActiveTile.this.waterExistsData[(war3IndexX * ActiveTile.this.width) + war3IndexY] = 1;
+								ActiveTile.this.waterHeights[(war3IndexX * ActiveTile.this.width)
+										+ war3IndexY] = (height * WdtChunkModelInstance.wowToHiveWEFactor);
+							}
 						}
 					}
 
@@ -1555,7 +1815,7 @@ public class TerrainWdt extends TerrainInterface {
 											position[1] * WdtChunkModelInstance.wowToWc3Factor };
 
 									final RenderDoodad renderDoodad = TerrainWdt.this.viewer.createWdtDoodad(row, 0,
-											location, rotation, finalScale);
+											location, rotation, finalScale, (doodad.getFlags() & 0x2) != 0);
 									ActiveTile.this.renderDoodads.add(renderDoodad);
 									// ---
 								}
@@ -1564,6 +1824,20 @@ public class TerrainWdt extends TerrainInterface {
 					}
 				}
 				return this.i >= ActiveTile.this.tile.tileHeader.chunks.size();
+			}
+		}
+
+		public boolean intersectRayTerrain(final Ray gdxRayHeap, final Vector3 out, final boolean intersectWithWater) {
+			if ((this.softwareGroundMesh == null) || (this.softwareWaterAndGroundMesh == null)) {
+				return false;
+			}
+			if (intersectWithWater) {
+				return RenderMathUtils.intersectRayTriangles(gdxRayHeap, this.softwareWaterAndGroundMesh.vertices,
+						this.softwareWaterAndGroundMesh.indices, 3, out);
+			}
+			else {
+				return RenderMathUtils.intersectRayTriangles(gdxRayHeap, this.softwareGroundMesh.vertices,
+						this.softwareGroundMesh.indices, 3, out);
 			}
 		}
 	}

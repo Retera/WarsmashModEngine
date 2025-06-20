@@ -57,8 +57,8 @@ public class RenderUnitTypeData extends RenderWidgetTypeData<RenderUnitType> {
 	private final DataTable uberSplatTable;
 	private final Map<String, UnitSoundset> soundsetNameToSoundset = new HashMap<>();
 
-	public RenderUnitTypeData(ObjectData unitObjectData, DataSource dataSource, MdxAssetLoader mapViewer,
-			DataTable unitAckSoundsTable, DataTable uberSplatTable) {
+	public RenderUnitTypeData(final ObjectData unitObjectData, final DataSource dataSource,
+			final MdxAssetLoader mapViewer, final DataTable unitAckSoundsTable, final DataTable uberSplatTable) {
 		super(unitObjectData, dataSource, mapViewer);
 		this.unitAckSoundsTable = unitAckSoundsTable;
 		this.uberSplatTable = uberSplatTable;
@@ -89,7 +89,7 @@ public class RenderUnitTypeData extends RenderWidgetTypeData<RenderUnitType> {
 	}
 
 	@Override
-	protected final RenderUnitType createTypeData(War3ID key, GameObject row) {
+	protected final RenderUnitType createTypeData(final War3ID key, final GameObject row) {
 		final String path = getUnitModelPath(row);
 		final String unitSpecialArtPath = row.getFieldAsString(UNIT_SPECIAL, 0);
 		MdxModel specialArtModel;
@@ -160,18 +160,17 @@ public class RenderUnitTypeData extends RenderWidgetTypeData<RenderUnitType> {
 		final int orientationInterpolation = row.getFieldAsInteger(ORIENTATION_INTERPOLATION, 0);
 
 		final float blendTime = row.getFieldAsFloat(BLEND_TIME, 0);
-		
-		final String replaceablePaths = row.getFieldAsString(REPLACEABLE_TEXTURE_PATHS, 0);
-		final String replaceableIds = row.getFieldAsString(REPLACEABLE_TEXTURE_IDS, 0);
+
+		final List<String> replaceablePaths = row.getFieldAsList(REPLACEABLE_TEXTURE_PATHS);
+		final List<String> replaceableIds = row.getFieldAsList(REPLACEABLE_TEXTURE_IDS);
 
 		final List<RenderUnitReplaceableTex> replaceables = new ArrayList<>();
-		if ((replaceablePaths != null && !replaceablePaths.isEmpty()) && (replaceableIds != null && !replaceableIds.isEmpty())) {
-			final String[] replaceableTexPaths = replaceablePaths.split(",");
-			final String[] replaceableTexIds = replaceableIds.split(",");
-			for (int i = 0; (i < replaceableTexIds.length) && (i < replaceableTexPaths.length); i++) {
+		if (((replaceablePaths != null) && !replaceablePaths.isEmpty())
+				&& ((replaceableIds != null) && !replaceableIds.isEmpty())) {
+			for (int i = 0; (i < replaceableIds.size()) && (i < replaceablePaths.size()); i++) {
 				try {
-					replaceables.add(new RenderUnitReplaceableTex(Integer.parseInt(replaceableTexIds[i]),
-							replaceableTexPaths[i]));
+					replaceables.add(new RenderUnitReplaceableTex(Integer.parseInt(replaceableIds.get(i)),
+							replaceablePaths.get(i)));
 				}
 				catch (final NumberFormatException exc) {
 				}

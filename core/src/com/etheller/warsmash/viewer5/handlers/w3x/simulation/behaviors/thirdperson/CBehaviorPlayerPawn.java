@@ -19,7 +19,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehavior
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.OrderIds;
 
 public class CBehaviorPlayerPawn implements CBehavior {
-	private static final int SPEED = 50;
+	private static final int SPEED = 20;
 	private static final int HALF_SPEED = SPEED / 2;
 	private static final RenderUnit[] intersectingUnit = new RenderUnit[1];
 	private static final float ROOT_TWO = (float) Math.sqrt(2);

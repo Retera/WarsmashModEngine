@@ -1137,58 +1137,82 @@ public class MenuUI {
 					}
 					this.prevSelectedItem = newSelectedItem;
 
-					try {
-						final War3Map map = War3MapViewer.beginLoadingMap(MenuUI.this.dataSource, newSelectedItem);
-						if (this.lastMapListMap != null) {
-							try {
-								this.lastMapListMap.close();
-							}
-							catch (final IOException e) {
-								e.printStackTrace();
-							}
-							this.lastMapListMap = map;
-						}
-						final War3MapW3i mapInfo = map.readMapInformation();
-						final WTS wtsFile = Warcraft3MapObjectData.loadWTS(map);
-						MenuUI.this.rootFrame.setMapStrings(wtsFile);
+					if (newSelectedItem.toLowerCase().endsWith(WdtMap.EXTENSION)) {
 						final War3MapConfig war3MapConfig = new War3MapConfig(WarsmashConstants.MAX_PLAYERS);
-						for (int i = 0; (i < WarsmashConstants.MAX_PLAYERS) && (i < mapInfo.getPlayers().size()); i++) {
-							final CBasePlayer player = war3MapConfig.getPlayer(i);
-							player.setName(MenuUI.this.rootFrame.getTrigStr(mapInfo.getPlayers().get(i).getName()));
-						}
-						war3MapConfig.setMapName("NOTEXTERN: default name string");
-						war3MapConfig.setMapDescription("NOTEXTERN: default description string");
-						Jass2.loadConfig(map, MenuUI.this.uiViewport, MenuUI.this.uiScene, MenuUI.this.rootFrame,
-								war3MapConfig, WarsmashConstants.JASS_FILE_LIST).config();
-						boolean foundFirstHuman = false;
-						boolean foundFirstComp = false;
-						for (int i = 0; i < WarsmashConstants.MAX_PLAYERS; i++) {
-							final CBasePlayer player = war3MapConfig.getPlayer(i);
-							if (player.getController() == CMapControl.USER) {
-								if (!foundFirstHuman) {
-									player.setSlotState(CPlayerSlotState.PLAYING);
-									player.setName(MenuUI.this.profileManager.getCurrentProfile());
-									foundFirstHuman = true;
-								}
-							}
-							else if (player.getController() == CMapControl.COMPUTER) {
-								if (!foundFirstComp
-										|| mapInfo.hasFlag(War3MapW3iFlags.FIXED_PLAYER_SETTINGS_FOR_CUSTOM_FORCES)) {
-									player.setSlotState(CPlayerSlotState.PLAYING);
-									foundFirstComp = true;
-								}
-							}
-						}
-						MenuUI.this.skirmishMapInfoPane.setMap(MenuUI.this.rootFrame, MenuUI.this.uiViewport, map,
-								mapInfo, war3MapConfig);
-						teamSetupPane.setMap(MenuUI.this.rootFrame, MenuUI.this.uiViewport, war3MapConfig,
-								mapInfo.getPlayers().size(), mapInfo,
-								new PlayerSlotPaneListenerImplementation(teamSetupPane, war3MapConfig, mapInfo,
-										MenuUI.this.rootFrame, MenuUI.this.uiViewport));
 						MenuUI.this.currentMapConfig = war3MapConfig;
+						for (int i = 0; i < WarsmashConstants.MAX_PLAYERS; i++) {
+							final CBasePlayer player = MenuUI.this.currentMapConfig.getPlayer(i);
+							player.setController(CMapControl.USER);
+							player.setRacePref(WarsmashConstants.RACE_MANAGER.getRacePreference(1));
+						}
+						int localPlayerIndex = -1;
+						for (int i = 0; i < WarsmashConstants.MAX_PLAYERS; i++) {
+							final CBasePlayer player = MenuUI.this.currentMapConfig.getPlayer(i);
+							if (player.getController() == CMapControl.USER) {
+								player.setSlotState(CPlayerSlotState.PLAYING);
+//									player.setName(MenuUI.this.profileManager.getCurrentProfile());
+//									break;
+								if (localPlayerIndex == -1) {
+									localPlayerIndex = i;
+								}
+							}
+						}
 					}
-					catch (final IOException e) {
-						e.printStackTrace();
+					else {
+						try {
+							final War3Map map = War3MapViewer.beginLoadingMap(MenuUI.this.dataSource, newSelectedItem);
+							if (this.lastMapListMap != null) {
+								try {
+									this.lastMapListMap.close();
+								}
+								catch (final IOException e) {
+									e.printStackTrace();
+								}
+								this.lastMapListMap = map;
+							}
+							final War3MapW3i mapInfo = map.readMapInformation();
+							final WTS wtsFile = Warcraft3MapObjectData.loadWTS(map);
+							MenuUI.this.rootFrame.setMapStrings(wtsFile);
+							final War3MapConfig war3MapConfig = new War3MapConfig(WarsmashConstants.MAX_PLAYERS);
+							for (int i = 0; (i < WarsmashConstants.MAX_PLAYERS)
+									&& (i < mapInfo.getPlayers().size()); i++) {
+								final CBasePlayer player = war3MapConfig.getPlayer(i);
+								player.setName(MenuUI.this.rootFrame.getTrigStr(mapInfo.getPlayers().get(i).getName()));
+							}
+							war3MapConfig.setMapName("NOTEXTERN: default name string");
+							war3MapConfig.setMapDescription("NOTEXTERN: default description string");
+							Jass2.loadConfig(map, MenuUI.this.uiViewport, MenuUI.this.uiScene, MenuUI.this.rootFrame,
+									war3MapConfig, WarsmashConstants.JASS_FILE_LIST).config();
+							boolean foundFirstHuman = false;
+							boolean foundFirstComp = false;
+							for (int i = 0; i < WarsmashConstants.MAX_PLAYERS; i++) {
+								final CBasePlayer player = war3MapConfig.getPlayer(i);
+								if (player.getController() == CMapControl.USER) {
+									if (!foundFirstHuman) {
+										player.setSlotState(CPlayerSlotState.PLAYING);
+										player.setName(MenuUI.this.profileManager.getCurrentProfile());
+										foundFirstHuman = true;
+									}
+								}
+								else if (player.getController() == CMapControl.COMPUTER) {
+									if (!foundFirstComp || mapInfo
+											.hasFlag(War3MapW3iFlags.FIXED_PLAYER_SETTINGS_FOR_CUSTOM_FORCES)) {
+										player.setSlotState(CPlayerSlotState.PLAYING);
+										foundFirstComp = true;
+									}
+								}
+							}
+							MenuUI.this.skirmishMapInfoPane.setMap(MenuUI.this.rootFrame, MenuUI.this.uiViewport, map,
+									mapInfo, war3MapConfig);
+							teamSetupPane.setMap(MenuUI.this.rootFrame, MenuUI.this.uiViewport, war3MapConfig,
+									mapInfo.getPlayers().size(), mapInfo,
+									new PlayerSlotPaneListenerImplementation(teamSetupPane, war3MapConfig, mapInfo,
+											MenuUI.this.rootFrame, MenuUI.this.uiViewport));
+							MenuUI.this.currentMapConfig = war3MapConfig;
+						}
+						catch (final IOException e) {
+							e.printStackTrace();
+						}
 					}
 				}
 			}
@@ -1661,7 +1685,9 @@ public class MenuUI {
 				viewer.loadWorldEditData();
 
 				final File file = new File(mapFilename);
-				final WdtMap map = new WdtMap(new FolderDataSource(file.getParentFile().toPath()).read(file.getName()));
+				final WdtMap map = new WdtMap(
+						(file.exists() ? new FolderDataSource(file.getParentFile().toPath()) : this.dataSource)
+								.read(file.getName()));
 				this.loadingMap = new LoadingMap(viewer, map);
 			}
 			else {

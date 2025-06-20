@@ -837,7 +837,7 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 	}
 
 	public RenderDoodad createWdtDoodad(final GameObject row, final int doodadVariation, final float[] location,
-			final float[] rotation, final float scale) {
+			final float[] rotation, final float scale, final boolean shrubbery) {
 		final MdxModel model = getDoodadModel(doodadVariation, row);
 		final float maxPitch = row.readSLKTagFloat("maxPitch");
 		final float maxRoll = row.readSLKTagFloat("maxRoll");
@@ -851,18 +851,20 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 				new Quaternion().setFromAxisRad(RenderMathUtils.VEC3_UNIT_Y, (float) Math.toRadians(rotation[0])));
 		renderDoodad.instance.rotate(
 				new Quaternion().setFromAxisRad(RenderMathUtils.VEC3_UNIT_X, (float) Math.toRadians(rotation[2])));
-		final Rectangle entireMap = this.terrain.getEntireMap();
-		for (final Geoset geoset : model.getGeosets()) {
-			final MdlxExtent extent = geoset.mdlxGeoset.extent;
-			final Bounds bounds = new Bounds();
-			bounds.fromExtents(extent.getMin(), extent.getMax(), extent.getBoundsRadius());
-			final BoundingBox geosetBoundingBox = bounds.getBoundingBox();
-			final Rectangle geosetRotatedBounds = getRotatedBoundingBox(location[0], location[1], scale3D,
-					facingRadians, geosetBoundingBox);
-			if (entireMap.overlaps(geosetRotatedBounds)) {
-				final CollidableDoodadComponent collidableComponent = new CollidableDoodadComponent(
-						(MdxComplexInstance) renderDoodad.instance, geoset, geosetRotatedBounds, geosetBoundingBox);
-				this.walkableComponentTree.add(collidableComponent, geosetRotatedBounds);
+		if (model.hasMdx1300Collision) {
+			final Rectangle entireMap = this.terrain.getEntireMap();
+			for (final Geoset geoset : model.getGeosets()) {
+				final MdlxExtent extent = geoset.mdlxGeoset.extent;
+				final Bounds bounds = new Bounds();
+				bounds.fromExtents(extent.getMin(), extent.getMax(), extent.getBoundsRadius());
+				final BoundingBox geosetBoundingBox = bounds.getBoundingBox();
+				final Rectangle geosetRotatedBounds = getRotatedBoundingBox(location[0], location[1], scale3D,
+						facingRadians, geosetBoundingBox);
+				if (entireMap.overlaps(geosetRotatedBounds)) {
+					final CollidableDoodadComponent collidableComponent = new CollidableDoodadComponent(
+							(MdxComplexInstance) renderDoodad.instance, geoset, geosetRotatedBounds, geosetBoundingBox);
+					this.walkableComponentTree.add(collidableComponent, geosetRotatedBounds);
+				}
 			}
 		}
 		this.doodads.add(renderDoodad);
@@ -3189,7 +3191,8 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 												doodadMin[i] = Math.min(location[i], doodadMin[i]);
 											}
 
-											createWdtDoodad(row, 0, location, rotation, finalScale);
+											createWdtDoodad(row, 0, location, rotation, finalScale,
+													(doodad.getFlags() & 0x2) != 0);
 											// ---
 										}
 									}

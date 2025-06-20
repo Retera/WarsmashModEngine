@@ -222,8 +222,8 @@ public class Chunk {
 		}
 	}
 
-	private static final class Vector3b {
-		byte[] components = new byte[3];
+	public static final class Vector3b {
+		public byte[] components = new byte[3];
 	}
 
 	private List<Offset> getOffsets(final long relativeEnd, final boolean isAlpha) {

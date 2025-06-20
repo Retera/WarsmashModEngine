@@ -1,7 +1,5 @@
 package com.etheller.warsmash.util;
 
-import java.io.IOException;
-
 import com.etheller.warsmash.datasources.DataSource;
 import com.etheller.warsmash.parsers.fdf.GameUI;
 import com.etheller.warsmash.parsers.w3x.War3Map;
@@ -13,11 +11,12 @@ import com.etheller.warsmash.viewer5.handlers.w3x.War3MapViewer;
 
 public class ListItemMapProperty extends AbstractListItemProperty {
 
-	public final String mapName;
-	public final int playerCount;
-	public final MapType mapType;
+	public String mapName;
+	public int playerCount;
+	public MapType mapType;
 
-	public ListItemMapProperty(ListItemEnum dataType, String rawValue, GameUI gameUI, DataSource data) {
+	public ListItemMapProperty(final ListItemEnum dataType, final String rawValue, final GameUI gameUI,
+			final DataSource data) {
 		super(dataType, rawValue);
 
 		try {
@@ -31,13 +30,17 @@ public class ListItemMapProperty extends AbstractListItemProperty {
 			this.playerCount = mapInfo.getPlayers().size();
 			this.mapType = (mapInfo.hasFlag(War3MapW3iFlags.MELEE_MAP)) ? MapType.MELEE_MAP : MapType.CUSTOM_MAP;
 		}
-		catch (final IOException e) {
-			throw new RuntimeException(e);
+		catch (final Exception e) {
+			e.printStackTrace();
+//			throw new RuntimeException(e);
+			this.mapName = rawValue;
+			this.playerCount = 48;
+			this.mapType = MapType.CUSTOM_MAP;
 		}
 	}
 
 	@Override
-	public int compare(AbstractListItemProperty itemProperty) {
+	public int compare(final AbstractListItemProperty itemProperty) {
 		if (getItemType() != itemProperty.getItemType()) {
 			throw new RuntimeException("Cannot compare with mix items");
 		}

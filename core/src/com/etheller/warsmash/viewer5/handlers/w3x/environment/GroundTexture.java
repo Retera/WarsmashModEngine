@@ -27,10 +27,13 @@ public class GroundTexture {
 		else {
 			this.buildable = true;
 		}
-		if (dataSource.has(path)) {
+		try {
 			final AnyExtensionImage imageInfo = ImageUtils.getAnyExtensionImageFixRGB(dataSource, path,
 					"ground texture: " + this.tileId);
 			loadImage(path, gl, imageInfo.getImageData(), imageInfo.isNeedsSRGBFix());
+		}
+		catch (final Exception exc) {
+			// dont care
 		}
 	}
 

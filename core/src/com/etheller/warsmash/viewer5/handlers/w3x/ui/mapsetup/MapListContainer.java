@@ -9,11 +9,12 @@ import com.badlogic.gdx.utils.viewport.Viewport;
 import com.etheller.warsmash.datasources.DataSource;
 import com.etheller.warsmash.parsers.fdf.GameUI;
 import com.etheller.warsmash.parsers.fdf.frames.ListBoxFrame;
-import com.etheller.warsmash.parsers.fdf.frames.SimpleFrame;
 import com.etheller.warsmash.parsers.fdf.frames.ListBoxFrame.ListBoxSelelectionListener;
+import com.etheller.warsmash.parsers.fdf.frames.SimpleFrame;
 import com.etheller.warsmash.util.ListItemEnum;
 
 public class MapListContainer {
+	private static final boolean WDT_ONLY = true;
 	private final SimpleFrame mapListContainer;
 	private final ListBoxFrame mapListBox;
 
@@ -27,8 +28,8 @@ public class MapListContainer {
 		final Collection<String> listfile = dataSource.getListfile();
 		final List<String> displayItemPaths = new ArrayList<>();
 		for (final String file : listfile) {
-			if ((file.toLowerCase().endsWith(".w3x") || file.toLowerCase().endsWith(".w3m")) && !file.contains("/")
-					&& !file.contains("\\")) {
+			if ((((file.toLowerCase().endsWith(".w3x") || file.toLowerCase().endsWith(".w3m")) && !WDT_ONLY)
+					|| file.toLowerCase().endsWith(".wdt")) && !file.contains("/") && !file.contains("\\")) {
 				displayItemPaths.add(file);
 			}
 		}

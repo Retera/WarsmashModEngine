@@ -18,7 +18,12 @@ public class GroundTextureWdt extends GroundTexture {
 			this.texture = ImageUtils.getAnyExtensionTexture(dataSource, path);
 		}
 		catch (final Exception exc) {
-			this.texture = ImageUtils.getAnyExtensionTexture(dataSource, path.replace(".blp", "_s.blp")); // TODO
+			try {
+				this.texture = ImageUtils.getAnyExtensionTexture(dataSource, path.replace(".blp", "_s.blp")); // TODO
+			}
+			catch (final Exception exc2) {
+				this.texture = ImageUtils.getAnyExtensionTexture(dataSource, "Textures\\White.blp"); // TODO
+			}
 		}
 		this.id = this.texture.getTextureObjectHandle();
 	}

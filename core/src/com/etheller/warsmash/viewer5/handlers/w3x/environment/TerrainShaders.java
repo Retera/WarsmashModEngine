@@ -319,6 +319,8 @@ public class TerrainShaders {
 					"\r\n" + //
 					"uniform sampler2D height_cliff_texture;\r\n" + //
 					"uniform sampler2D height_cliff_texture_wdt;\r\n" + //
+					"uniform sampler2D normal_texture;\r\n" + //
+					"uniform sampler2D normal_texture_interior;\r\n" + //
 					"uniform usampler2D terrain_alpha_list;\r\n" + //
 					"uniform float centerOffsetX;\r\n" + //
 					"uniform float centerOffsetY;\r\n" + //
@@ -344,20 +346,18 @@ public class TerrainShaders {
 					"\r\n" + //
 					"	vec4 height;\r\n" + //
 					"	ivec2 height_pos;\r\n" + //
+					"	vec3 normal;\r\n" + //
 					"	if (vPosition.x > 0.25 && vPosition.x < 0.75) {\r\n" + // wdt interior
 					"		height_pos = pos;\r\n" + //
 					"		height = texelFetch(height_cliff_texture_wdt, height_pos, 0);\r\n" + //
+					"		normal = normalize(texelFetch(normal_texture_interior, height_pos, 0).xzy);\r\n" + //
 					"	} else {\r\n" + //
 					"		height_pos = ivec2(vPosition + pos);\r\n" + //
 					"		height = texelFetch(height_cliff_texture, height_pos, 0);\r\n" + //
+					"		normal = normalize(texelFetch(normal_texture, height_pos, 0).xzy);\r\n" + //
 					"	}\r\n" + //
-					"	ivec3 off = ivec3(1, 1, 0);\r\n" + //
-					"	float hL = texelFetch(height_cliff_texture, height_pos - off.xz, 0).r;\r\n" + //
-					"	float hR = texelFetch(height_cliff_texture, height_pos + off.xz, 0).r;\r\n" + //
-					"	float hD = texelFetch(height_cliff_texture, height_pos - off.zy, 0).r;\r\n" + //
-					"	float hU = texelFetch(height_cliff_texture, height_pos + off.zy, 0).r;\r\n" + //
+					"	normal.y *= -1.0;\r\n" + //
 					"	ivec2 pos_tile = pos + ivec2(tileOffsetX, tileOffsetY);\r\n" + //
-					"	vec3 normal = normalize(vec3(hL - hR, hD - hU, 2.0))* 0.0001 + vec3(0,0,1.0);\r\n" + //
 					"\r\n" + //
 					" UV = vec2(vPosition.x, 1 - vPosition.y);\r\n" + //
 					// " UV = vec2(vPosition.x==0?0.01:0.99, vPosition.y==0?0.99:0.01);\r\n" + //
@@ -611,6 +611,105 @@ public class TerrainShaders {
 				"   float d1 = clamp(min(d2.x, d2.y) / 64.0 + 1.0, 0.0, 1.0) * 0.8 + 0.2;;\r\n" + //
 				"   float fogOfWarData = texture2D(fogOfWarMap, v_suv).r;\r\n" + //
 				"	color = texture(water_textures, vec3(UV, current_texture)) * vec4(vertexColor.rgb * d1 * shadeColor * (1.0 - fogOfWarData), vertexColor.a);\r\n"
+				+ //
+				Shaders.fogSystem(false, null) + //
+				"}";
+	}
+
+	public static final class WaterWdt {
+		private WaterWdt() {
+		}
+
+		public static final String vert() {
+			return "#version 330 core\r\n" + //
+					"\r\n" + //
+					"in vec2 vPosition;\r\n" + //
+					"\r\n" + //
+					"uniform sampler2D water_height_texture;\r\n" + //
+					"uniform sampler2D ground_height_texture;\r\n" + //
+					"uniform sampler2D water_exists_texture;\r\n" + //
+					"uniform float centerOffsetX;\r\n" + //
+					"uniform float centerOffsetY;\r\n" + //
+					"\r\n" + //
+					"uniform mat4 MVP;\r\n" + //
+					"uniform vec4 shallow_color_min;\r\n" + //
+					"uniform vec4 shallow_color_max;\r\n" + //
+					"uniform vec4 deep_color_min;\r\n" + //
+					"uniform vec4 deep_color_max;\r\n" + //
+					"uniform float water_offset;\r\n" + //
+					"uniform sampler2D lightTexture;\r\n" + //
+					"uniform float lightCount;\r\n" + //
+					"uniform float lightTextureHeight;\r\n" + //
+					"\r\n" + //
+					"out vec2 UV;\r\n" + //
+					"out vec4 vertexColor;\r\n" + //
+					"out vec2 position;\r\n" + //
+					"out vec3 shadeColor;\r\n" + //
+					"out vec2 v_suv;\r\n" + //
+					"\r\n" + //
+					"const float min_depth = 10.f / 128;\r\n" + //
+					"const float deeplevel = 64.f / 128;\r\n" + //
+					"const float maxdepth = 72.f / 128;\r\n" + //
+					"\r\n" + //
+					"void main() { \r\n" + //
+					"	ivec2 size = textureSize(water_height_texture, 0) - 1;\r\n" + //
+					"	ivec2 pos = ivec2(gl_InstanceID % size.x, gl_InstanceID / size.x);\r\n" + //
+					"	ivec2 height_pos = ivec2(vPosition + pos);\r\n" + //
+					"	float water_height = texelFetch(water_height_texture, height_pos, 0).r + water_offset;\r\n" + //
+					"\r\n" + //
+					"	bool is_water = texelFetch(water_exists_texture, pos, 0).r > 0\r\n" + //
+					"	 || texelFetch(water_exists_texture, pos + ivec2(1, 0), 0).r > 0\r\n" + //
+					"	 || texelFetch(water_exists_texture, pos + ivec2(1, 1), 0).r > 0\r\n" + //
+					"	 || texelFetch(water_exists_texture, pos + ivec2(0, 1), 0).r > 0;\r\n" + //
+					"\r\n" + //
+					"   position = vec2((vPosition.x + pos.x)*128.0 + centerOffsetX, (vPosition.y + pos.y)*128.0 + centerOffsetY);\r\n"
+					+ //
+					"   vec4 myposition = vec4(position.xy, water_height*128.0, 1);\r\n" + //
+					"   vec3 Normal = vec3(0,0,1);\r\n" + //
+					"	gl_Position = is_water ? MVP * myposition : vec4(2.0, 0.0, 0.0, 1.0);\r\n" + //
+					"\r\n" + //
+					"	UV = vec2((vPosition.x + pos.x%2)/2.0, (vPosition.y + pos.y%2)/2.0);\r\n" + //
+					"\r\n" + //
+					"	float ground_height = texelFetch(ground_height_texture, height_pos, 0).r;\r\n" + //
+					"	float value = clamp(water_height - ground_height, 0.f, 1.f);\r\n" + //
+					"	if (value <= deeplevel) {\r\n" + //
+					"		value = max(0.f, value - min_depth) / (deeplevel - min_depth);\r\n" + //
+					"		vertexColor = shallow_color_min * (1.f - value) + shallow_color_max * value;\r\n" + //
+					"	} else {\r\n" + //
+					"		value = clamp(value - deeplevel, 0.f, maxdepth - deeplevel) / (maxdepth - deeplevel);\r\n" + //
+					"		vertexColor = deep_color_min * (1.f - value) + deep_color_max * value;\r\n" + //
+					"	}\r\n" + //
+					Shaders.lightSystem("Normal", "myposition.xyz", "lightTexture", "lightTextureHeight", "lightCount",
+							true)
+					+ "\r\n" + //
+					"        shadeColor = clamp(lightFactor, 0.0, 1.0);\r\n" + //
+					"        v_suv = (vPosition + pos) / size;\r\n" + //
+					" }";
+		}
+
+		public static final String frag = "#version 330 core\r\n" + //
+				"\r\n" + //
+				"uniform sampler2DArray water_textures;\r\n" + //
+				"uniform sampler2D water_exists_texture;\r\n" + //
+				"\r\n" + //
+				"\r\n" + //
+				"uniform int current_texture;\r\n" + //
+				"uniform vec4 mapBounds;\r\n" + //
+				"    uniform vec4 u_fogColor;\r\n" + //
+				"    uniform vec4 u_fogParams;\r\n" + //
+				"\r\n" + //
+				"in vec2 UV;\r\n" + //
+				"in vec4 vertexColor;\r\n" + //
+				"in vec2 position;\r\n" + //
+				"in vec3 shadeColor;\r\n" + //
+				"in vec2 v_suv;\r\n" + //
+				"\r\n" + //
+				"out vec4 color;\r\n" + //
+				"\r\n" + //
+				"void main() {\r\n" + //
+				"   vec2 d2 = min(position - mapBounds.xy, mapBounds.zw - position);\r\n" + //
+				"   float d1 = clamp(min(d2.x, d2.y) / 64.0 + 1.0, 0.0, 1.0) * 0.8 + 0.2;;\r\n" + //
+				"	color = texture(water_textures, vec3(UV, current_texture)) * vec4(vertexColor.rgb * d1 * shadeColor, vertexColor.a);\r\n"
 				+ //
 				Shaders.fogSystem(false, null) + //
 				"}";

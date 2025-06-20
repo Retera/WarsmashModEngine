@@ -152,7 +152,7 @@ public class War3MapW3e {
 		this.corners = corners;
 	}
 
-	private static final float WC3_ASHENVALE_WATER_HEIGHT = 0.7f;
+	public static final float WC3_ASHENVALE_WATER_HEIGHT = 0.7f;
 
 	public static War3MapW3e generateConverted(final WdtMap map, final TileHeader notused) {
 		War3MapW3e terrainFile;

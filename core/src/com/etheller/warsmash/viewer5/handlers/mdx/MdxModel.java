@@ -32,6 +32,7 @@ import com.hiveworkshop.rms.parsers.mdlx.MdlxSequence;
 import com.hiveworkshop.rms.parsers.mdlx.MdlxTexture;
 import com.hiveworkshop.rms.parsers.mdlx.MdlxTexture.WrapMode;
 import com.hiveworkshop.rms.parsers.mdlx.MdlxTextureAnimation;
+import com.hiveworkshop.rms.parsers.mdlx.MdlxUnknownChunk;
 
 public class MdxModel extends com.etheller.warsmash.viewer5.Model<MdxHandler> {
 	public boolean reforged = false;
@@ -60,6 +61,7 @@ public class MdxModel extends com.etheller.warsmash.viewer5.Model<MdxHandler> {
 	public List<CollisionShape> collisionShapes = new ArrayList<>();
 	public boolean hasLayerAnims = false;
 	public boolean hasGeosetAnims = false;
+	public boolean hasMdx1300Collision = false;
 	public List<Batch> batches = new ArrayList<>();
 	public List<GenericObject> genericObjects = new ArrayList<>();
 	public List<GenericObject> sortedGenericObjects = new ArrayList<>();
@@ -270,6 +272,12 @@ public class MdxModel extends com.etheller.warsmash.viewer5.Model<MdxHandler> {
 		// Collision shapes
 		for (final MdlxCollisionShape collisionShape : parser.getCollisionShapes()) {
 			this.collisionShapes.add(new CollisionShape(this, collisionShape, objectId++));
+		}
+
+		for (final MdlxUnknownChunk chunk : parser.getUnknownChunks()) {
+			if (chunk.tag.asStringValue().equals("CLID")) {
+				this.hasMdx1300Collision = true;
+			}
 		}
 
 		// One array for all generic objects.

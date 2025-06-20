@@ -7,6 +7,7 @@ import java.util.Set;
 
 import com.etheller.warsmash.datasources.DataSource;
 import com.etheller.warsmash.datasources.FolderDataSourceDescriptor;
+import com.etheller.warsmash.parsers.wdt.Chunk.Vector3b;
 
 public class TestsWithWDT {
 
@@ -14,9 +15,9 @@ public class TestsWithWDT {
 		System.out.println("Hello world");
 
 		final DataSource dataSource = new FolderDataSourceDescriptor(
-				"/home/etheller/WoW3_TheFrozenThrone/ModifiedMaps/Azeroth").createDataSource();
+				"/home/etheller/WoW3_TheFrozenThrone/ModifiedMaps/Kalimdor").createDataSource();
 		try {
-			final WdtMap map = new WdtMap(dataSource.read("Azeroth.wdt"));
+			final WdtMap map = new WdtMap(dataSource.read("Kalimdor.wdt"));
 
 			System.out.println(map.version);
 			System.out.println(map.nDoodadNames);
@@ -52,6 +53,22 @@ public class TestsWithWDT {
 					if (chunk.getAlphaMaps() != null) {
 						alphaSizes.add(chunk.getAlphaMaps().length);
 					}
+
+					final Vector3b[][] normals = chunk.getNormals();
+				}
+
+				for (final var x : header.doodads) {
+					final int flags = x.getFlags();
+					final String name = map.doodadModelFileNames.get((int) x.getNameId());
+					System.out.println(flags + ": " + name);
+					System.out.println(Arrays.toString(x.getPosition()));
+
+//					try {
+//						Thread.sleep(100);
+//					}
+//					catch (final InterruptedException e) {
+//						e.printStackTrace();
+//					}
 				}
 			}
 			System.out.println(duskwood);

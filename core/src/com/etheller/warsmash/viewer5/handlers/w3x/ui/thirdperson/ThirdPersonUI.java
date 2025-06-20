@@ -119,9 +119,23 @@ public class ThirdPersonUI implements WarsmashToggleableUI {
 //			this.war3MapViewer.simulation.createUnitSimple(War3ID.fromString("hpea"),
 //					this.war3MapViewer.getLocalPlayerIndex(), startLocation[0], startLocation[1], 0);
 //			this.war3MapViewer.simulation.createUnitSimple(War3ID.fromString("hpea"),
-//					this.war3MapViewer.getLocalPlayerIndex(), startLocation[0], startLocation[1], 0);
+//			this.war3MapViewer.getLocalPlayerIndex(), startLocation[0], startLocation[1], 0);
+			if (false) {
+				this.war3MapViewer.simulation.createUnitSimple(War3ID.fromString("Hart"),
+						this.war3MapViewer.getLocalPlayerIndex(), startLocation[0], startLocation[1], 0);
+				this.war3MapViewer.simulation.createUnitSimple(War3ID.fromString("H0sh"),
+						this.war3MapViewer.getLocalPlayerIndex(), startLocation[0], startLocation[1], 0);
+				this.war3MapViewer.simulation.createUnitSimple(War3ID.fromString("ocat"),
+						this.war3MapViewer.getLocalPlayerIndex(), startLocation[0], startLocation[1], 0);
+				this.war3MapViewer.simulation.createUnitSimple(War3ID.fromString("ocat"),
+						this.war3MapViewer.getLocalPlayerIndex(), startLocation[0], startLocation[1], 0);
+				for (int i = 0; i < 15; i++) {
+					this.war3MapViewer.simulation.createUnitSimple(War3ID.fromString("ocat"),
+							this.war3MapViewer.getLocalPlayerIndex(), startLocation[0], startLocation[1], 0);
+				}
 //			this.war3MapViewer.simulation.getPlayer(0).addGold(99999);
 //			this.war3MapViewer.simulation.getPlayer(0).addLumber(99999);
+			}
 
 			// for (int i = 0; i < 6; i++) {
 //				for (int k = 0; k < 7; k++) {

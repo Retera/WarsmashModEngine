@@ -1,6 +1,7 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.pathing;
 
 import java.awt.geom.Point2D;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
@@ -70,6 +71,7 @@ public class CPathfindingProcessor {
 			final CUnit ignoreIntersectionsWithThisSecondUnit, final float startX, final float startY,
 			final Point2D.Float goal, final PathingGrid.MovementType movementType, final float collisionSize,
 			final boolean allowSmoothing, final CBehaviorMove queueItem) {
+//		queueItem.pathFound(Collections.emptyList(), simulation);
 		this.moveQueue.offer(new PathfindingJob(ignoreIntersectionsWithThisUnit, ignoreIntersectionsWithThisSecondUnit,
 				startX, startY, goal, movementType, collisionSize, allowSmoothing, queueItem));
 	}
@@ -224,6 +226,14 @@ public class CPathfindingProcessor {
 			this.totalJobLoops++;
 			final PathfindingJob job = this.moveQueue.peek();
 			if (!job.jobStarted) {
+				if (true) {
+					job.queueItem.pathFound(new ArrayList<>(Arrays.asList()), simulation);
+					this.moveQueue.poll();
+					System.out.println("Task " + this.pathfindJobId + " took " + this.totalIterations
+							+ " iterations and " + this.totalJobLoops + " job loops!");
+					continue JobsLoop;
+				}
+
 				this.pathfindJobId++;
 				this.totalIterations = 0;
 				this.totalJobLoops = 0;

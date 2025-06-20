@@ -13,7 +13,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.mine.CAbi
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.mine.CAbilityOverlayedMine;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CAllianceType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayer;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.vision.CPlayerFogOfWar;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.vision.CPlayerFogOfWarInterface;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CFogState;
 
 public class MeleeUIMinimap {
@@ -47,7 +47,7 @@ public class MeleeUIMinimap {
 	}
 
 	public void render(final CSimulation game, final SpriteBatch batch, final Iterable<RenderUnit> units,
-			final PathingGrid pathingGrid, final CPlayerFogOfWar fogOfWar, final CPlayer player) {
+			final PathingGrid pathingGrid, final CPlayerFogOfWarInterface fogOfWar, final CPlayer player) {
 		if (!this.visible) {
 			return;
 		}

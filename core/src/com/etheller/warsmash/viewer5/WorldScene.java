@@ -57,13 +57,13 @@ public class WorldScene extends Scene {
 		this.visibleInstances = 0;
 
 		// Update and collect all of the visible instances.
-		instanceProcessor.reset(dt, frame);
+		this.instanceProcessor.reset(dt, frame);
 		for (final GridCell cell : this.grid.cells) {
-			if (cell.isVisible(this.camera) || true) {
+			if (cell.isVisible(this.camera)) {
 				this.visibleCells += 1;
 
 				for (final ModelInstance instance : new ArrayList<>(cell.instances)) {
-					instanceProcessor.call(instance);
+					this.instanceProcessor.call(instance);
 				}
 			}
 		}
@@ -82,11 +82,11 @@ public class WorldScene extends Scene {
 		@Override
 		public void call(final ModelInstance instance) {
 //			final ModelInstance instance = cell.instances.get(i);
-			if (instance.rendered && (instance.cullFrame < frame) && instance.isVisible(camera)) {
-				instance.cullFrame = frame;
+			if (instance.rendered && (instance.cullFrame < this.frame) && instance.isVisible(WorldScene.this.camera)) {
+				instance.cullFrame = this.frame;
 
-				if (instance.updateFrame < frame) {
-					instance.update(dt, WorldScene.this);
+				if (instance.updateFrame < this.frame) {
+					instance.update(this.dt, WorldScene.this);
 					if (!instance.rendered) {
 						// it became hidden while it updated
 						return;
@@ -94,25 +94,25 @@ public class WorldScene extends Scene {
 				}
 
 				if (instance.isBatched()) {
-					if (currentBatchedInstance < batchedInstances.size()) {
-						batchedInstances.set(currentBatchedInstance++, instance);
+					if (WorldScene.this.currentBatchedInstance < WorldScene.this.batchedInstances.size()) {
+						WorldScene.this.batchedInstances.set(WorldScene.this.currentBatchedInstance++, instance);
 					}
 					else {
-						batchedInstances.add(instance);
-						currentBatchedInstance++;
+						WorldScene.this.batchedInstances.add(instance);
+						WorldScene.this.currentBatchedInstance++;
 					}
 				}
 				else {
-					if (currentInstance < instances.size()) {
-						instances.set(currentInstance++, instance);
+					if (WorldScene.this.currentInstance < WorldScene.this.instances.size()) {
+						WorldScene.this.instances.set(WorldScene.this.currentInstance++, instance);
 					}
 					else {
-						instances.add(instance);
-						currentInstance++;
+						WorldScene.this.instances.add(instance);
+						WorldScene.this.currentInstance++;
 					}
 				}
 
-				visibleInstances += 1;
+				WorldScene.this.visibleInstances += 1;
 				for (int i = 0, l = instance.childrenInstances.size(); i < l; i++) {
 					call(instance.childrenInstances.get(i));
 				}

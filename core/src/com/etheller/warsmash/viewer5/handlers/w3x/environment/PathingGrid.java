@@ -2,11 +2,11 @@ package com.etheller.warsmash.viewer5.handlers.w3x.environment;
 
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 
 import com.badlogic.gdx.math.Rectangle;
 import com.etheller.warsmash.parsers.w3x.wpm.War3MapWpm;
@@ -26,20 +26,17 @@ public class PathingGrid {
 		}
 	}
 
-	private final short[][] pathingGrid;
-	private final short[][] dynamicPathingOverlay; // for buildings and trees
+	private final TreeMap<Integer, TreeMap<Integer, Byte>> pathingGrid;
+	private final TreeMap<Integer, TreeMap<Integer, Byte>> dynamicPathingOverlay; // for buildings and trees
 	private final int[] pathingGridSizes;
 	private final float[] centerOffset;
 	private final List<RemovablePathingMapInstance> dynamicPathingInstances;
-	private final int dynamicPathingGroupSize;
 
 	public PathingGrid(final War3MapWpm terrainPathing, final float[] centerOffset) {
 		this.centerOffset = centerOffset;
-		this.pathingGrid = terrainPathing.getPathing();
 		this.pathingGridSizes = terrainPathing.getSize();
-		final int pathingCellSize = this.pathingGrid.length;
-		this.dynamicPathingGroupSize = (int) Math.sqrt(pathingCellSize);
-		this.dynamicPathingOverlay = new short[this.dynamicPathingGroupSize][];
+		this.pathingGrid = new TreeMap<>(new TreeMap<>());
+		this.dynamicPathingOverlay = new TreeMap<>(new TreeMap<>());
 		this.dynamicPathingInstances = new ArrayList<>();
 	}
 
@@ -91,56 +88,57 @@ public class PathingGrid {
 					data |= PathingFlags.UNWALKABLE | PathingFlags.UNSWIMABLE
 							| (blocksVision ? PathingFlags.BLOCKVISION : 0);
 				}
-				final int dynamicPathingIdx = (yy * this.pathingGridSizes[0]) + xx;
-				writeToDynamicPathing(data, dynamicPathingIdx);
+				writeToDynamicPathing(data, xx, yy);
 			}
 		}
 	}
 
-	private void writeToDynamicPathing(final byte data, final int dynamicPathingIdx) {
-		if (data != 0) {
-			final int dynamicPathingChunkIdx = dynamicPathingIdx / this.dynamicPathingGroupSize;
-			final int dynamicPathingIdxIntoChunk = dynamicPathingIdx % this.dynamicPathingGroupSize;
-			short[] dynamicPathingChunk = this.dynamicPathingOverlay[dynamicPathingChunkIdx];
-			if (dynamicPathingChunk == null) {
-				dynamicPathingChunk = new short[this.dynamicPathingGroupSize];
-				this.dynamicPathingOverlay[dynamicPathingChunkIdx] = dynamicPathingChunk;
+	private void writeToDynamicPathing(final byte data, final int xx, final int yy) {
+		TreeMap<Integer, Byte> yMap = this.dynamicPathingOverlay.get(xx);
+		if (yMap == null) {
+			yMap = new TreeMap<>();
+			this.dynamicPathingOverlay.put(xx, yMap);
+		}
+		Byte priorData = yMap.get(yy);
+		if (priorData == null) {
+			priorData = 0;
+		}
+		yMap.put(yy, (byte) (priorData | data));
+	}
+
+	private short readDynamicPathing(final int xx, final int yy) {
+		final TreeMap<Integer, Byte> yMap = this.dynamicPathingOverlay.get(xx);
+		if (yMap != null) {
+			final Byte value = yMap.get(yy);
+			if (value != null) {
+				return value;
 			}
-			dynamicPathingChunk[dynamicPathingIdxIntoChunk] |= data;
 		}
+		return 0;
 	}
 
-	private short readDynamicPathing(final int dynamicPathingIdx) {
-		final int dynamicPathingChunkIdx = dynamicPathingIdx / this.dynamicPathingGroupSize;
-		final int dynamicPathingIdxIntoChunk = dynamicPathingIdx % this.dynamicPathingGroupSize;
-		final short[] dynamicPathingChunk = this.dynamicPathingOverlay[dynamicPathingChunkIdx];
-		if (dynamicPathingChunk == null) {
-			return 0;
+	private void writeToStaticPathing(final byte data, final int xx, final int yy) {
+		TreeMap<Integer, Byte> yMap = this.pathingGrid.get(xx);
+		if (yMap == null) {
+			yMap = new TreeMap<>();
+			this.pathingGrid.put(xx, yMap);
 		}
-		return dynamicPathingChunk[dynamicPathingIdxIntoChunk];
+		Byte priorData = yMap.get(yy);
+		if (priorData == null) {
+			priorData = 0;
+		}
+		yMap.put(yy, (byte) (priorData | data));
 	}
 
-	private void writeToStaticPathing(final byte data, final int dynamicPathingIdx) {
-		if (data != 0) {
-			final int dynamicPathingChunkIdx = dynamicPathingIdx / this.dynamicPathingGroupSize;
-			final int dynamicPathingIdxIntoChunk = dynamicPathingIdx % this.dynamicPathingGroupSize;
-			short[] dynamicPathingChunk = this.pathingGrid[dynamicPathingChunkIdx];
-			if (dynamicPathingChunk == null) {
-				dynamicPathingChunk = new short[this.dynamicPathingGroupSize];
-				this.pathingGrid[dynamicPathingChunkIdx] = dynamicPathingChunk;
+	private short readStaticPathing(final int xx, final int yy) {
+		final TreeMap<Integer, Byte> yMap = this.pathingGrid.get(xx);
+		if (yMap != null) {
+			final Byte value = yMap.get(yy);
+			if (value != null) {
+				return value;
 			}
-			dynamicPathingChunk[dynamicPathingIdxIntoChunk] |= data;
 		}
-	}
-
-	private short readStaticPathing(final int dynamicPathingIdx) {
-		final int dynamicPathingChunkIdx = dynamicPathingIdx / this.dynamicPathingGroupSize;
-		final int dynamicPathingIdxIntoChunk = dynamicPathingIdx % this.dynamicPathingGroupSize;
-		final short[] dynamicPathingChunk = this.pathingGrid[dynamicPathingChunkIdx];
-		if (dynamicPathingChunk == null) {
-			return 0;
-		}
-		return dynamicPathingChunk[dynamicPathingIdxIntoChunk];
+		return 0;
 	}
 
 	public boolean checkPathingTexture(final float positionX, final float positionY, final int rotationInput,
@@ -300,27 +298,15 @@ public class PathingGrid {
 	}
 
 	public short getCellPathing(final int cellX, final int cellY) {
-		final int index = (cellY * this.pathingGridSizes[0]) + cellX;
-		if (index >= this.pathingGrid.length) {
-			return 0;
-		}
-		return (short) (this.readStaticPathing(index) | readDynamicPathing(index));
+		return (short) (this.readStaticPathing(cellX, cellY) | readDynamicPathing(cellX, cellY));
 	}
 
 	private short getCellPermanentPathing(final int cellX, final int cellY) {
-		final int index = (cellY * this.pathingGridSizes[0]) + cellX;
-		if (index >= this.pathingGrid.length) {
-			return 0;
-		}
-		return (this.readStaticPathing(index));
+		return (this.readStaticPathing(cellX, cellY));
 	}
 
 	public void setCellPathing(final int cellX, final int cellY, final short pathingValue) {
-		final int index = (cellY * this.pathingGridSizes[0]) + cellX;
-		if (index >= this.pathingGrid.length) {
-			return;
-		}
-		writeToStaticPathing((byte) pathingValue, index);
+		writeToStaticPathing((byte) pathingValue, cellX, cellY);
 	}
 
 	public void setCellBlighted(final int cellX, final int cellY, final boolean blighted) {
@@ -440,11 +426,7 @@ public class PathingGrid {
 	}
 
 	public boolean isCellBlockVision(final int cellX, final int cellY) {
-		final int index = (cellY * this.pathingGridSizes[0]) + cellX;
-		if ((index < 0) || (index >= this.pathingGrid.length)) {
-			return false;
-		}
-		return PathingFlags.isPathingFlag(readDynamicPathing(index), PathingFlags.BLOCKVISION);
+		return PathingFlags.isPathingFlag(readDynamicPathing(cellX, cellY), PathingFlags.BLOCKVISION);
 	}
 
 	public boolean isBlockVision(final float x, final float y) {
@@ -587,7 +569,7 @@ public class PathingGrid {
 
 		public void remove() {
 			PathingGrid.this.dynamicPathingInstances.remove(this);
-			Arrays.fill(PathingGrid.this.dynamicPathingOverlay, (short) 0);
+			PathingGrid.this.dynamicPathingOverlay.clear(); // TODO will this be very slow?
 			for (final RemovablePathingMapInstance instance : PathingGrid.this.dynamicPathingInstances) {
 				instance.blit();
 			}

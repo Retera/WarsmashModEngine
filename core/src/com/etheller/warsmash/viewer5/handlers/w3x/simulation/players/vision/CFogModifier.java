@@ -14,7 +14,7 @@ public abstract class CFogModifier {
 	public static float ATTACKING_UNIT_VISION_RADIUS = 0;
 	public static float ATTACKING_UNIT_VISION_RADIUS_SQ = 0;
 
-	public static void setConstants(CGameplayConstants constants) {
+	public static void setConstants(final CGameplayConstants constants) {
 		DYING_UNIT_VISION_RADIUS = constants.getDyingRevealRadius();
 		DYING_UNIT_VISION_RADIUS_SQ = (DYING_UNIT_VISION_RADIUS * DYING_UNIT_VISION_RADIUS)
 				/ (CPlayerFogOfWar.GRID_STEP * CPlayerFogOfWar.GRID_STEP);
@@ -34,5 +34,5 @@ public abstract class CFogModifier {
 	}
 
 	public abstract void update(final CSimulation game, final CPlayer player, final PathingGrid pathingGrid,
-			final CPlayerFogOfWar fogOfWar);
+			final CPlayerFogOfWarInterface fogOfWar);
 }

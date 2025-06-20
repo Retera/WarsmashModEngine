@@ -1041,4 +1041,12 @@ public class MdxComplexInstance extends ModelInstance {
 		}
 		return null;
 	}
+
+	@Override
+	public void unload() {
+		if (this.boneTexture != null) {
+			this.boneTexture.delete();
+		}
+		this.boneTexture = null;
+	}
 }

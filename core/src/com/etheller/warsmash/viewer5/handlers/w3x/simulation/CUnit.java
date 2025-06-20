@@ -108,6 +108,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CAllianceTy
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayer;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayerState;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.vision.CPlayerFogOfWar;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.vision.CPlayerFogOfWarInterface;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.vision.CUnitAttackVisionFogModifier;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.vision.CUnitDeathVisionFogModifier;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.region.CRegion;
@@ -4123,7 +4124,10 @@ public class CUnit extends CWidget {
 	}
 
 	public static enum QueueItemType {
-		UNIT, RESEARCH, HERO_REVIVE, SACRIFICE;
+		UNIT,
+		RESEARCH,
+		HERO_REVIVE,
+		SACRIFICE;
 	}
 
 	public void setRallyPoint(final AbilityTarget target) {
@@ -4458,7 +4462,8 @@ public class CUnit extends CWidget {
 	}
 
 	private static enum StateListenerUpdateType {
-		ADD, REMOVE;
+		ADD,
+		REMOVE;
 	}
 
 	private static final class StateListenerUpdate {
@@ -5222,7 +5227,7 @@ public class CUnit extends CWidget {
 			if (sightRadius > 0) {
 				final float radSq = (sightRadius * sightRadius)
 						/ (CPlayerFogOfWar.GRID_STEP * CPlayerFogOfWar.GRID_STEP);
-				final CPlayerFogOfWar fogOfWar = game.getPlayer(this.playerIndex).getFogOfWar();
+				final CPlayerFogOfWarInterface fogOfWar = game.getPlayer(this.playerIndex).getFogOfWar();
 				final boolean flying = getMovementType() == MovementType.FLY;
 				final float myX = getX();
 				final float myY = getY();

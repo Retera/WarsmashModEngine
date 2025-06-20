@@ -23,7 +23,7 @@ public class CRectFogModifier extends CFogModifier {
 
 	@Override
 	public void update(final CSimulation game, final CPlayer player, final PathingGrid pathingGrid,
-			final CPlayerFogOfWar fogOfWar) {
+			final CPlayerFogOfWarInterface fogOfWar) {
 		if (!this.enabled) {
 			return;
 		}

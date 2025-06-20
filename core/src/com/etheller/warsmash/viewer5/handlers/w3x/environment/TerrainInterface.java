@@ -8,24 +8,24 @@ import java.util.Map;
 import java.util.function.Consumer;
 
 import com.badlogic.gdx.math.Rectangle;
+import com.badlogic.gdx.math.Vector3;
+import com.badlogic.gdx.math.collision.Ray;
 import com.etheller.warsmash.units.DataTable;
 import com.etheller.warsmash.viewer5.handlers.w3x.DynamicShadowManager;
 import com.etheller.warsmash.viewer5.handlers.w3x.SplatModel;
 import com.etheller.warsmash.viewer5.handlers.w3x.SplatModel.SplatMover;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CFogMaskSettings;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.vision.CPlayerFogOfWar;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.vision.CPlayerFogOfWarInterface;
 
 public abstract class TerrainInterface {
 	public PathingGrid pathingGrid;
 	public DataTable uberSplatTable;
 	public float[] centerOffset;
 	public final Map<String, Splat> splats = new HashMap<>();
-	public SoftwareGroundMesh softwareGroundMesh;
-	public SoftwareWaterAndGroundMesh softwareWaterAndGroundMesh;
 
 	public abstract void initShadows() throws IOException;
 
-	public abstract void setFogOfWarData(final CFogMaskSettings fogMaskSettings, CPlayerFogOfWar fogOfWar);
+	public abstract void setFogOfWarData(final CFogMaskSettings fogMaskSettings, CPlayerFogOfWarInterface fogOfWar);
 
 	public abstract void reloadFogOfWarDataToGPU(final CFogMaskSettings fogMaskSettings);
 
@@ -88,12 +88,14 @@ public abstract class TerrainInterface {
 
 	public abstract boolean inPlayableArea(float x, float y);
 
+	public abstract void intersectRayTerrain(Ray gdxRayHeap, final Vector3 out, final boolean intersectWithWater);
+
 	public static final class SoftwareGroundMesh {
 		public final float[] vertices;
 		public final int[] indices;
 
-		protected SoftwareGroundMesh(final float[] groundHeights, final float[] groundCornerHeights,
-				final float[] centerOffset, final int columns, final int rows) {
+		protected SoftwareGroundMesh(final float[] groundCornerHeights, final float[] centerOffset, final int columns,
+				final int rows) {
 			this.vertices = new float[(columns - 1) * (rows - 1) * Shapes.INSTANCE.quadVertices.length * 3];
 			this.indices = new int[(columns - 1) * (rows - 1) * Shapes.INSTANCE.quadIndices.length * 3];
 			for (int y = 0; y < (rows - 1); y++) {

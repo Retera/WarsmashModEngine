@@ -19,6 +19,8 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehavior
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.OrderIds;
 
 public class CBehaviorPlayerPawn implements CBehavior {
+	private static final int SPEED = 50;
+	private static final int HALF_SPEED = SPEED / 2;
 	private static final RenderUnit[] intersectingUnit = new RenderUnit[1];
 	private static final float ROOT_TWO = (float) Math.sqrt(2);
 	private static final Quaternion tempQuat = new Quaternion();
@@ -73,7 +75,7 @@ public class CBehaviorPlayerPawn implements CBehavior {
 		}
 		int walking = 0;
 		if (this.cameraPanControls.up) {
-			this.forwardSpeed = (50);
+			this.forwardSpeed = SPEED;
 			walking = 1;
 		}
 		else if (this.cameraPanControls.down) {
@@ -98,7 +100,7 @@ public class CBehaviorPlayerPawn implements CBehavior {
 			this.playerPawn.setZ(tempVec2.z);
 		}
 		final float prevZBeneath = this.viewerWorldAccess.getNearestIntersectingZBeneath(this.unit.getX(),
-				this.unit.getY(), this.playerPawn.getZ() + 9, intersectingUnit);
+				this.unit.getY(), this.playerPawn.getZ() + HALF_SPEED, intersectingUnit);
 		this.lastIntersectedUnit = intersectingUnit[0];
 		if (this.lastIntersectedUnit != null) {
 			this.lastIntersectedUnitLocation.set(intersectingUnit[0].location);
@@ -122,21 +124,21 @@ public class CBehaviorPlayerPawn implements CBehavior {
 			this.velocity.z = 0;
 			tempVec.set(this.unit.getX(), this.unit.getY(), this.playerPawn.getZ()).add(this.velocity);
 			final float nextZBeneath = this.viewerWorldAccess.getNearestIntersectingZBeneath(tempVec.x, tempVec.y,
-					tempVec.z + 9, intersectingUnit);
+					tempVec.z + HALF_SPEED, intersectingUnit);
 			this.velocity.z = Math.max(-absForwardSpeed,
 					Math.min(absForwardSpeed, nextZBeneath - this.playerPawn.getZ()));
 			this.velocity.nor();
 			this.velocity.scl(this.forwardSpeed);
 		}
-		this.wasFalling = (prevZBeneath + 9) < this.playerPawn.getZ();
+		this.wasFalling = (prevZBeneath + HALF_SPEED) < this.playerPawn.getZ();
 		final float speed = this.velocity.len();
 		tempVec.set(this.unit.getX(), this.unit.getY(), this.playerPawn.getZ()).add(this.velocity);
-		final float stairsHeight = 9;
+		final float stairsHeight = HALF_SPEED;
 		if ((speed > 0) && !this.viewerWorldAccess.is3DTravelBlocked(
 				tempVec2.set(this.unit.getX(), this.unit.getY(), this.playerPawn.getZ()), tempVec, stairsHeight,
 				getHeight(), tempVec)) {
 			final float nextZBeneath = this.viewerWorldAccess.getNearestIntersectingZBeneath(tempVec.x, tempVec.y,
-					tempVec.z + 9, intersectingUnit);
+					tempVec.z + HALF_SPEED, intersectingUnit);
 			this.lastIntersectedUnit = intersectingUnit[0];
 			if (this.lastIntersectedUnit != null) {
 				this.lastIntersectedUnitLocation.set(intersectingUnit[0].location);
@@ -162,8 +164,8 @@ public class CBehaviorPlayerPawn implements CBehavior {
 			}
 		}
 		final float zBeneath = this.viewerWorldAccess.getNearestIntersectingZBeneath(this.unit.getX(), this.unit.getY(),
-				this.playerPawn.getZ() + 9, intersectingUnit);
-		if ((zBeneath + 9) < this.playerPawn.getZ()) {
+				this.playerPawn.getZ() + HALF_SPEED, intersectingUnit);
+		if ((zBeneath + HALF_SPEED) < this.playerPawn.getZ()) {
 			this.wasAirborn = true;
 			if (this.characterModelInstance.sequenceEnded) {
 				this.unit.getUnitAnimationListener().playAnimation(false,

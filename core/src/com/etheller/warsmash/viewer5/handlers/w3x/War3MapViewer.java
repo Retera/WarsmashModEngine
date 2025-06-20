@@ -158,7 +158,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.projectile.C
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.config.War3MapConfig;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CAllianceType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayer;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.vision.CPlayerFogOfWar;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.vision.CPlayerFogOfWarInterface;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.timers.CTimer;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CEffectType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.unit.CUnitTypeJass;
@@ -836,7 +836,7 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 		this.decals.add(renderDoodad);
 	}
 
-	private void createWdtDoodad(final GameObject row, final int doodadVariation, final float[] location,
+	public RenderDoodad createWdtDoodad(final GameObject row, final int doodadVariation, final float[] location,
 			final float[] rotation, final float scale) {
 		final MdxModel model = getDoodadModel(doodadVariation, row);
 		final float maxPitch = row.readSLKTagFloat("maxPitch");
@@ -851,6 +851,7 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 				new Quaternion().setFromAxisRad(RenderMathUtils.VEC3_UNIT_Y, (float) Math.toRadians(rotation[0])));
 		renderDoodad.instance.rotate(
 				new Quaternion().setFromAxisRad(RenderMathUtils.VEC3_UNIT_X, (float) Math.toRadians(rotation[2])));
+		final Rectangle entireMap = this.terrain.getEntireMap();
 		for (final Geoset geoset : model.getGeosets()) {
 			final MdlxExtent extent = geoset.mdlxGeoset.extent;
 			final Bounds bounds = new Bounds();
@@ -858,8 +859,7 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 			final BoundingBox geosetBoundingBox = bounds.getBoundingBox();
 			final Rectangle geosetRotatedBounds = getRotatedBoundingBox(location[0], location[1], scale3D,
 					facingRadians, geosetBoundingBox);
-			final Rectangle entireMap = this.terrain.getEntireMap();
-			if (geosetRotatedBounds.overlaps(entireMap)) {
+			if (entireMap.overlaps(geosetRotatedBounds)) {
 				final CollidableDoodadComponent collidableComponent = new CollidableDoodadComponent(
 						(MdxComplexInstance) renderDoodad.instance, geoset, geosetRotatedBounds, geosetBoundingBox);
 				this.walkableComponentTree.add(collidableComponent, geosetRotatedBounds);
@@ -867,6 +867,31 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 		}
 		this.doodads.add(renderDoodad);
 		this.decals.add(renderDoodad);
+		return renderDoodad;
+	}
+
+	public void removeWdtDoodad(final RenderDoodad renderDoodad) {
+		final Rectangle entireMap = this.terrain.getEntireMap();
+		this.doodads.remove(renderDoodad);
+		this.decals.remove(renderDoodad);
+		final MdxModel model = (MdxModel) renderDoodad.instance.model;
+		for (final Geoset geoset : model.getGeosets()) {
+			final MdlxExtent extent = geoset.mdlxGeoset.extent;
+			final Bounds bounds = new Bounds();
+			bounds.fromExtents(extent.getMin(), extent.getMax(), extent.getBoundsRadius());
+			final BoundingBox geosetBoundingBox = bounds.getBoundingBox();
+			final Rectangle geosetRotatedBounds = getRotatedBoundingBox(renderDoodad.getX(), renderDoodad.getY(),
+					renderDoodad.instance.localScale.x, renderDoodad.instance.localScale.y,
+					renderDoodad.getFacingRadians(), geosetBoundingBox);
+			if (entireMap.overlaps(geosetRotatedBounds)) {
+				final CollidableDoodadComponent collidableComponent = new CollidableDoodadComponent(
+						(MdxComplexInstance) renderDoodad.instance, geoset, geosetRotatedBounds, geosetBoundingBox);
+				this.walkableComponentTree.remove(collidableComponent, geosetRotatedBounds);
+			}
+		}
+
+		renderDoodad.instance.detach();
+		renderDoodad.instance.unload();
 	}
 
 	private RenderDestructable createNewDestructable(final War3ID doodadId, final GameObject row,
@@ -1009,6 +1034,11 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 
 	private Rectangle getRotatedBoundingBox(final float x, final float y, final float[] scale, final float angle,
 			final BoundingBox boundingBox) {
+		return getRotatedBoundingBox(x, y, scale[0], scale[1], angle, boundingBox);
+	}
+
+	private Rectangle getRotatedBoundingBox(final float x, final float y, final float scaleX, final float scaleY,
+			final float angle, final BoundingBox boundingBox) {
 		final float x1 = boundingBox.min.x;
 		final float y1 = boundingBox.min.y;
 		final float x2 = boundingBox.min.x + boundingBox.getWidth();
@@ -1034,13 +1064,13 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 		final double y3prime = StrictMath.sin(angle3) * len3;
 		final double y4prime = StrictMath.sin(angle4) * len4;
 		final float minX = (float) StrictMath.min(StrictMath.min(x1prime, x2prime), StrictMath.min(x3prime, x4prime))
-				* scale[0];
+				* scaleX;
 		final float minY = (float) StrictMath.min(StrictMath.min(y1prime, y2prime), StrictMath.min(y3prime, y4prime))
-				* scale[1];
+				* scaleY;
 		final float maxX = (float) StrictMath.max(StrictMath.max(x1prime, x2prime), StrictMath.max(x3prime, x4prime))
-				* scale[0];
+				* scaleX;
 		final float maxY = (float) StrictMath.max(StrictMath.max(y1prime, y2prime), StrictMath.max(y3prime, y4prime))
-				* scale[1];
+				* scaleY;
 		return new Rectangle(x + minX, y + minY, maxX - minX, maxY - minY);
 	}
 
@@ -1638,14 +1668,7 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 		this.worldScene.camera.screenToWorldRay(ray, mousePosHeap);
 		gdxRayHeap.set(ray[0], ray[1], ray[2], ray[3] - ray[0], ray[4] - ray[1], ray[5] - ray[2]);
 		gdxRayHeap.direction.nor();// needed for libgdx
-		if (intersectWithWater) {
-			RenderMathUtils.intersectRayTriangles(gdxRayHeap, this.terrain.softwareWaterAndGroundMesh.vertices,
-					this.terrain.softwareWaterAndGroundMesh.indices, 3, out);
-		}
-		else {
-			RenderMathUtils.intersectRayTriangles(gdxRayHeap, this.terrain.softwareGroundMesh.vertices,
-					this.terrain.softwareGroundMesh.indices, 3, out);
-		}
+		this.terrain.intersectRayTerrain(gdxRayHeap, out, intersectWithWater);
 		rectangleHeap.set(Math.min(out.x, gdxRayHeap.origin.x), Math.min(out.y, gdxRayHeap.origin.y),
 				Math.abs(out.x - gdxRayHeap.origin.x), Math.abs(out.y - gdxRayHeap.origin.y));
 		this.walkableComponentTree.intersect(rectangleHeap,
@@ -2736,7 +2759,7 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 		}
 	}
 
-	public CPlayerFogOfWar getFogOfWar() {
+	public CPlayerFogOfWarInterface getFogOfWar() {
 		return this.simulation.getPlayer(this.localPlayerIndex).getFogOfWar();
 	}
 
@@ -2907,7 +2930,7 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 						War3MapViewer.this.allObjectData.getStandardUpgradeEffectMeta(),
 						new SimulationRenderControllerImplementation(localPlayerIndex),
 						War3MapViewer.this.terrain.pathingGrid, War3MapViewer.this.terrain.getEntireMap(),
-						War3MapViewer.this.seededRandom, War3MapViewer.this.commandErrorListener);
+						War3MapViewer.this.seededRandom, War3MapViewer.this.commandErrorListener, false);
 			});
 
 			this.loadMapTasks.add(() -> {
@@ -2987,6 +3010,8 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 
 		private War3MapWpm terrainPathing;
 
+		TerrainWdt terrainWdt;
+
 		private MapLoaderWdt(final WdtMap map, final War3MapW3i w3iFile, final int localPlayerIndex) {
 			final PathSolver wc3PathSolver = War3MapViewer.this.wc3PathSolver;
 
@@ -3008,7 +3033,7 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 			});
 
 			this.loadMapTasks.add(() -> {
-				this.terrainData = War3MapW3e.generateConverted(map, null);
+				this.terrainData = War3MapW3e.generateConverted(map);
 			});
 
 			this.loadMapTasks.add(() -> {
@@ -3024,17 +3049,20 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 
 				// Override the grid based on the map.
 				War3MapViewer.this.worldScene.grid = new Grid(centerOffset[0], centerOffset[1],
-						(mapSize[0] * 128) - 128, (mapSize[1] * 128) - 128, 16 * 128, 16 * 128);
+						(mapSize[0] * 128) - 128, (mapSize[1] * 128) - 128, 16 * 8 * 128, 16 * 8 * 128);
 			});
 
 			this.loadMapTasks.add(() -> {
-				War3MapViewer.this.terrain = new TerrainWdt(map, this.terrainData, this.terrainPathing, w3iFile,
+				System.out.println("Reading terrain");
+				this.terrainWdt = new TerrainWdt(map, this.terrainData, this.terrainPathing, w3iFile,
 						War3MapViewer.this.webGL, War3MapViewer.this.dataSource, War3MapViewer.this.worldEditStrings,
 						War3MapViewer.this, War3MapViewer.this.worldEditData);
+				War3MapViewer.this.terrain = this.terrainWdt;
 				War3MapViewer.this.terrainReady = true;
 			});
 
 			this.loadMapTasks.add(() -> {
+				System.out.println("Configuring confirmation instance");
 				final MdxModel confirmation = (MdxModel) load("UI\\Feedback\\Confirmation\\Confirmation.mdx",
 						PathSolver.DEFAULT, null);
 				War3MapViewer.this.confirmationInstance = (MdxComplexInstance) confirmation.addInstance();
@@ -3045,6 +3073,7 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 			});
 
 			this.loadMapTasks.add(() -> {
+				System.out.println("Loading all object data");
 				if (War3MapViewer.this.preloadedWTS != null) {
 					War3MapViewer.this.allObjectData = Warcraft3MapRuntimeObjectData.load(War3MapViewer.this.dataSource,
 							true, War3MapViewer.this.preloadedWTS);
@@ -3055,6 +3084,7 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 				}
 			});
 			this.loadMapTasks.add(() -> {
+				System.out.println("creating CSimulation");
 				War3MapViewer.this.simulation = new CSimulation(War3MapViewer.this.mapConfig, w3iFile.getVersion(),
 						War3MapViewer.this.miscData, War3MapViewer.this.allObjectData.getUnits(),
 						War3MapViewer.this.allObjectData.getItems(),
@@ -3063,10 +3093,12 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 						War3MapViewer.this.allObjectData.getStandardUpgradeEffectMeta(),
 						new SimulationRenderControllerImplementation(localPlayerIndex),
 						War3MapViewer.this.terrain.pathingGrid, War3MapViewer.this.terrain.getEntireMap(),
-						War3MapViewer.this.seededRandom, War3MapViewer.this.commandErrorListener);
+						War3MapViewer.this.seededRandom, War3MapViewer.this.commandErrorListener, true);
+				System.out.println("finished creating CSimulation");
 			});
 
 			this.loadMapTasks.add(() -> {
+				System.out.println("creating doodads");
 				final Rectangle entireMap = War3MapViewer.this.terrain.getEntireMap();
 				War3MapViewer.this.walkableObjectsTree = new Quadtree<>(War3MapViewer.this.terrain.getEntireMap());
 				final Vector2 center = entireMap.getCenter(mousePosHeap);
@@ -3078,7 +3110,10 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 //					loadDoodadsAndDestructibles(war3Map, War3MapViewer.this.allObjectData, w3iFile);
 
 					long minX = Integer.MAX_VALUE, minY = Integer.MAX_VALUE;
+					final Map<String, War3ID> doodadNameToId = new HashMap<>();
+					War3ID baseDoodadId = War3ID.fromString("0000");
 					for (final TileHeader tileHeader : map.tileHeaders) {
+						System.out.println("loading doodads from tile header: " + tileHeader.idx);
 						for (final Chunk chunk : tileHeader.chunks) {
 							final long indexX = chunk.getIndexX();
 							final long indexY = chunk.getIndexY();
@@ -3088,23 +3123,24 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 						}
 //						tileHeader.
 
-						int doodadIndex = 0;
 						final List<War3ID> doodadNameKeys = new ArrayList<>();
-						War3ID baseDoodadId = War3ID.fromString("0000");
 						for (final String name : map.doodadModelFileNames) {
-							final ObjectData war3Doodads = War3MapViewer.this.allObjectData.getDoodads();
-							final War3ID cloneIdBase = MutableObjectData.advanceId(baseDoodadId);
-							final String cloneId = cloneIdBase.toString();
-							war3Doodads.cloneUnit("YOtf", cloneId);
-							final GameObject createdDoodad = war3Doodads.get(cloneId);
-							createdDoodad.setField("file", name);
-							createdDoodad.setField("soundLoop", "_"); // YOtf has a sound we dont want
-							createdDoodad.setField("minScale", "0.0");
-							createdDoodad.setField("maxScale", "10000.0");
+							War3ID cloneIdBase = doodadNameToId.get(name);
+							if (cloneIdBase == null) {
+								final ObjectData war3Doodads = War3MapViewer.this.allObjectData.getDoodads();
+								cloneIdBase = MutableObjectData.advanceId(baseDoodadId);
+								final String cloneId = cloneIdBase.toString();
+								war3Doodads.cloneUnit("YOtf", cloneId);
+								final GameObject createdDoodad = war3Doodads.get(cloneId);
+								createdDoodad.setField("file", name);
+								createdDoodad.setField("soundLoop", "_"); // YOtf has a sound we dont want
+								createdDoodad.setField("minScale", "0.0");
+								createdDoodad.setField("maxScale", "10000.0");
+								baseDoodadId = cloneIdBase;
+							}
 							doodadNameKeys.add(cloneIdBase);
-							doodadIndex++;
-							baseDoodadId = cloneIdBase;
 						}
+						this.terrainWdt.tileHeaderToDoodadIds.put(tileHeader, doodadNameKeys);
 						final float[] centerOffset = this.terrainData.getCenterOffset();
 						final float tilesize = 533.3333f;
 						final float wowToWc3Factor = 128.0f / ((tilesize / 16) / 8);
@@ -3119,6 +3155,9 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 						Arrays.fill(doodadMax, Integer.MIN_VALUE);
 						final Set<Long> usedSet = new HashSet<>();
 						for (final Chunk chunk : tileHeader.chunks) {
+							if (true) {
+								continue;
+							}
 							final long[] doodadReferences = chunk.getDoodadReferences();
 							if (doodadReferences != null) {
 								for (final long ref : doodadReferences) {

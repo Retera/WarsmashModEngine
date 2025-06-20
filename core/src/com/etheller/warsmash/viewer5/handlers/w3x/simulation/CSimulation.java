@@ -72,6 +72,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CRaceManage
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CRacePreference;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.vision.CFogModifier;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.vision.CPlayerFogOfWar;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.vision.CPlayerFogOfWarEmpty;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.region.CRegionManager;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.state.FalseTimeOfDay;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.timers.CTimer;
@@ -143,7 +144,7 @@ public class CSimulation implements CPlayerAPI, CFogMaskSettings {
 			final ObjectData parsedAbilityData, final ObjectData parsedUpgradeData,
 			final DataTable standardUpgradeEffectMeta, final SimulationRenderController simulationRenderController,
 			final PathingGrid pathingGrid, final Rectangle entireMapBounds, final Random seededRandom,
-			final CommandErrorListener commandErrorListener) {
+			final CommandErrorListener commandErrorListener, final boolean disableFogOfWar) {
 		this.mapVersion = mapVersion;
 		this.gameplayConstants = new CGameplayConstants(miscData);
 		CFogModifier.setConstants(this.gameplayConstants);
@@ -173,6 +174,7 @@ public class CSimulation implements CPlayerAPI, CFogMaskSettings {
 		this.seededRandom = seededRandom;
 		this.players = new ArrayList<>();
 		this.defaultPlayerUnitOrderExecutors = new ArrayList<>();
+		System.out.println("CSimulation ran constructors");
 		final List<CPlayer> neutralPlayers = new ArrayList<>();
 		for (int i = 0; i < WarsmashConstants.MAX_PLAYERS; i++) {
 			final CBasePlayer configPlayer = config.getPlayer(i);
@@ -196,7 +198,7 @@ public class CSimulation implements CPlayerAPI, CFogMaskSettings {
 				}
 			}
 			final CPlayer newPlayer = new CPlayer(defaultRace, new float[] { startLoc.getX(), startLoc.getY() },
-					configPlayer, new CPlayerFogOfWar(pathingGrid));
+					configPlayer, disableFogOfWar ? new CPlayerFogOfWarEmpty() : new CPlayerFogOfWar(pathingGrid));
 			newPlayer.setAIDifficulty(configPlayer.getAIDifficulty());
 			this.players.add(newPlayer);
 			this.defaultPlayerUnitOrderExecutors.add(new CPlayerUnitOrderExecutor(this, i));
@@ -204,6 +206,7 @@ public class CSimulation implements CPlayerAPI, CFogMaskSettings {
 				neutralPlayers.add(newPlayer);
 			}
 		}
+		System.out.println("CSimulation created players");
 		final CPlayer neutralAggressive = this.players.get(this.players.size() - 4);
 		neutralAggressive.setName(miscData.getLocalizedString("WESTRING_PLAYER_NA"));
 		neutralAggressive.setPlayerState(this, CPlayerState.GIVES_BOUNTY, 1);
@@ -221,6 +224,7 @@ public class CSimulation implements CPlayerAPI, CFogMaskSettings {
 				otherNeutral.setAlliance(cPlayer, CAllianceType.PASSIVE, true);
 			}
 		}
+		System.out.println("CSimulation set alliances");
 
 		this.commandErrorListener = commandErrorListener;
 
@@ -233,6 +237,7 @@ public class CSimulation implements CPlayerAPI, CFogMaskSettings {
 		fogUpdateTimer.setRepeats(true);
 		fogUpdateTimer.setTimeoutTime(1.0f);
 		fogUpdateTimer.start(this);
+		System.out.println("CSimulation created players");
 	}
 
 	public CUnitData getUnitData() {

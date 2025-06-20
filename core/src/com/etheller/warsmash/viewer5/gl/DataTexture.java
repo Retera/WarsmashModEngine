@@ -67,4 +67,9 @@ public class DataTexture {
 	public int getHeight() {
 		return this.height;
 	}
+
+	public void delete() {
+		final GL20 gl = this.gl;
+		gl.glDeleteTexture(this.texture);
+	}
 }

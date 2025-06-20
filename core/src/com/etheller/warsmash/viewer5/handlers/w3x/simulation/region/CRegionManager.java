@@ -1,7 +1,10 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.region;
 
+import java.awt.Point;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import com.badlogic.gdx.math.Rectangle;
 import com.etheller.warsmash.util.Quadtree;
@@ -13,12 +16,12 @@ public class CRegionManager {
 	private static Rectangle tempRect = new Rectangle();
 	private final Quadtree<CRegion> regionTree;
 	private final RegionChecker regionChecker = new RegionChecker();
-	private final List<CRegion>[][] cellRegions;
+	private final Map<Point, List<CRegion>> cellRegions;
 	private final PathingGrid pathingGrid;
 
 	public CRegionManager(final Rectangle entireMapBounds, final PathingGrid pathingGrid) {
 		this.regionTree = new Quadtree<>(entireMapBounds);
-		this.cellRegions = new List[pathingGrid.getHeight()][pathingGrid.getWidth()];
+		this.cellRegions = new HashMap<>();
 		this.pathingGrid = pathingGrid;
 	}
 
@@ -46,7 +49,8 @@ public class CRegionManager {
 			final int maxY = this.pathingGrid.getCellY(area.y + area.height);
 			for (int x = minX; x <= maxX; x++) {
 				for (int y = minY; y <= maxY; y++) {
-					final List<CRegion> cellRegionsAtPoint = this.cellRegions[y][x];
+
+					final List<CRegion> cellRegionsAtPoint = this.cellRegions.get(new Point(x, y));
 					if (cellRegionsAtPoint != null) {
 						for (final CRegion region : cellRegionsAtPoint) {
 							if (enumFunction.call(region)) {
@@ -87,9 +91,10 @@ public class CRegionManager {
 		final int maxY = this.pathingGrid.getCellY(currentBounds.y + currentBounds.height);
 		for (int x = minX; x <= maxX; x++) {
 			for (int y = minY; y <= maxY; y++) {
-				List<CRegion> list = this.cellRegions[y][x];
+				final Point xy = new Point(x, y);
+				List<CRegion> list = this.cellRegions.get(xy);
 				if (list == null) {
-					this.cellRegions[y][x] = list = new ArrayList<>();
+					this.cellRegions.put(xy, list = new ArrayList<>());
 				}
 				list.add(region);
 			}
@@ -103,9 +108,13 @@ public class CRegionManager {
 		final int maxY = this.pathingGrid.getCellY(currentBounds.y + currentBounds.height);
 		for (int x = minX; x <= maxX; x++) {
 			for (int y = minY; y <= maxY; y++) {
-				final List<CRegion> list = this.cellRegions[y][x];
+				final Point xy = new Point(x, y);
+				final List<CRegion> list = this.cellRegions.get(xy);
 				if (list != null) {
 					list.remove(region);
+				}
+				if (list.isEmpty()) {
+					this.cellRegions.remove(xy);
 				}
 			}
 		}
@@ -122,7 +131,8 @@ public class CRegionManager {
 		float newMaxY = this.pathingGrid.getWorldY(0);
 		for (int x = minX; x <= maxX; x++) {
 			for (int y = minY; y <= maxY; y++) {
-				final List<CRegion> list = this.cellRegions[y][x];
+				final Point xy = new Point(x, y);
+				final List<CRegion> list = this.cellRegions.get(xy);
 				if (list != null) {
 					if (list.contains(region)) {
 						final float worldX = this.pathingGrid.getWorldX(x);
@@ -154,9 +164,10 @@ public class CRegionManager {
 			final Rectangle boundsToUpdate) {
 		final int cellX = this.pathingGrid.getCellX(x);
 		final int cellY = this.pathingGrid.getCellY(y);
-		List<CRegion> list = this.cellRegions[cellY][cellX];
+		final Point cellXY = new Point(cellX, cellY);
+		List<CRegion> list = this.cellRegions.get(cellXY);
 		if (list == null) {
-			this.cellRegions[cellY][cellX] = list = new ArrayList<>();
+			this.cellRegions.put(cellXY, list = new ArrayList<>());
 		}
 		list.add(region);
 		final float worldX = this.pathingGrid.getWorldX(cellX);
@@ -170,7 +181,8 @@ public class CRegionManager {
 			final Rectangle boundsToUpdate) {
 		final int cellX = this.pathingGrid.getCellX(x);
 		final int cellY = this.pathingGrid.getCellY(y);
-		final List<CRegion> list = this.cellRegions[cellY][cellX];
+		final Point cellXY = new Point(cellX, cellY);
+		final List<CRegion> list = this.cellRegions.get(cellXY);
 		if (list != null) {
 			list.remove(region);
 		}
@@ -180,7 +192,8 @@ public class CRegionManager {
 	public boolean isPointInComplexRegion(final CRegion region, final float x, final float y) {
 		final int cellX = this.pathingGrid.getCellX(x);
 		final int cellY = this.pathingGrid.getCellY(y);
-		final List<CRegion> list = this.cellRegions[cellY][cellX];
+		final Point cellXY = new Point(cellX, cellY);
+		final List<CRegion> list = this.cellRegions.get(cellXY);
 		if (list != null) {
 			return list.contains(region);
 		}

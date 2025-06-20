@@ -11,7 +11,7 @@ import com.etheller.warsmash.viewer5.handlers.mdx.SequenceLoopMode;
 import com.etheller.warsmash.viewer5.handlers.w3x.AnimationTokens.PrimaryTag;
 import com.etheller.warsmash.viewer5.handlers.w3x.War3MapViewer;
 import com.etheller.warsmash.viewer5.handlers.w3x.environment.PathingGrid;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.vision.CPlayerFogOfWar;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.vision.CPlayerFogOfWarInterface;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CFogState;
 
 public class RenderDoodad {
@@ -35,12 +35,14 @@ public class RenderDoodad {
 	private byte lastFogStateColor = -1;
 	private final float[] vertexColorBase;
 	private final float[] vertexColorFogged;
-	
-	private War3ID typeId;
+
+	private final War3ID typeId;
+	private final float facingRadians;
 
 	public RenderDoodad(final War3MapViewer map, final MdxModel model, final GameObject row, final float[] location3D,
 			final float[] scale3D, final float facingRadians, final float maxPitch, final float maxRoll,
 			final float selectionScale, final int doodadVariation) {
+		this.facingRadians = facingRadians;
 		this.maxPitch = maxPitch;
 		this.maxRoll = maxRoll;
 		final boolean isSimple = row.readSLKTagBoolean("lightweight");
@@ -106,10 +108,10 @@ public class RenderDoodad {
 		this.row = row;
 
 		this.fogState = CFogState.MASKED;
-		this.lastFogStateColor = fogState.getMask();
+		this.lastFogStateColor = this.fogState.getMask();
 		((MdxComplexInstance) instance).setVertexColor(VERTEX_COLOR_BLACK);
-		
-		typeId = War3ID.fromString( row.getId());
+
+		this.typeId = War3ID.fromString(row.getId());
 
 	}
 
@@ -128,9 +130,8 @@ public class RenderDoodad {
 		return PrimaryTag.STAND;
 	}
 
-
-	public void updateFog(final War3MapViewer war3MapViewer, boolean fade) {
-		final CPlayerFogOfWar fogOfWar = war3MapViewer.getFogOfWar();
+	public void updateFog(final War3MapViewer war3MapViewer, final boolean fade) {
+		final CPlayerFogOfWarInterface fogOfWar = war3MapViewer.getFogOfWar();
 		final PathingGrid pathingGrid = war3MapViewer.simulation.getPathingGrid();
 		final int fogOfWarIndexX = pathingGrid.getFogOfWarIndexX(this.x);
 		final int fogOfWarIndexY = pathingGrid.getFogOfWarIndexY(this.y);
@@ -139,7 +140,9 @@ public class RenderDoodad {
 			this.fogState = newFogState;
 		}
 		if (newFogState.getMask() != this.lastFogStateColor) {
-			this.lastFogStateColor = fade ? War3MapViewer.fadeLineOfSightColor(this.lastFogStateColor, newFogState.getMask()) : newFogState.getMask();
+			this.lastFogStateColor = fade
+					? War3MapViewer.fadeLineOfSightColor(this.lastFogStateColor, newFogState.getMask())
+					: newFogState.getMask();
 			for (int i = 0; i < this.vertexColorBase.length; i++) {
 				VERTEX_COLOR_HEAP[i] = (this.vertexColorBase[i] * (255 - (this.lastFogStateColor & 0xFF))) / 255f;
 			}
@@ -150,16 +153,20 @@ public class RenderDoodad {
 	public float[] getVertexColor() {
 		return ((MdxComplexInstance) this.instance).vertexColor;
 	}
-	
+
 	public float getX() {
-		return x;
+		return this.x;
 	}
-	
+
 	public float getY() {
-		return y;
+		return this.y;
 	}
-	
+
 	public War3ID getTypeId() {
-		return typeId;
+		return this.typeId;
+	}
+
+	public float getFacingRadians() {
+		return this.facingRadians;
 	}
 }

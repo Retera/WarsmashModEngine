@@ -13,7 +13,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.environment.PathingGrid;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CItem;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.vision.CPlayerFogOfWar;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.vision.CPlayerFogOfWarInterface;
 
 public class RenderItem implements RenderWidget {
 	private final CItem simulationItem;
@@ -27,8 +27,8 @@ public class RenderItem implements RenderWidget {
 	private boolean hidden;
 	private boolean dead;
 
-	public RenderItem(final War3MapViewer map, RenderItemType itemType, final float x, final float y, final float z,
-			final float angle, final CItem simulationItem) {
+	public RenderItem(final War3MapViewer map, final RenderItemType itemType, final float x, final float y,
+			final float z, final float angle, final CItem simulationItem) {
 		this.portraitModel = itemType.getPortraitModel();
 		this.simulationItem = simulationItem;
 		final MdxComplexInstance instance = (MdxComplexInstance) itemType.getModel().addInstance();
@@ -64,7 +64,7 @@ public class RenderItem implements RenderWidget {
 
 	@Override
 	public void updateAnimations(final War3MapViewer map) {
-		final CPlayerFogOfWar fogOfWar = map.getFogOfWar();
+		final CPlayerFogOfWarInterface fogOfWar = map.getFogOfWar();
 		final PathingGrid pathingGrid = map.simulation.getPathingGrid();
 		final int fogOfWarIndexX = pathingGrid.getFogOfWarIndexX(this.location[0]);
 		final int fogOfWarIndexY = pathingGrid.getFogOfWarIndexY(this.location[1]);

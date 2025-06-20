@@ -1,43 +1,42 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.environment;
 
-import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
-import java.nio.FloatBuffer;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-
-import org.apache.commons.compress.utils.IOUtils;
+import java.util.Set;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.GL30;
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
-import com.badlogic.gdx.math.Intersector;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector3;
+import com.badlogic.gdx.math.collision.Ray;
 import com.etheller.warsmash.datasources.DataSource;
-import com.etheller.warsmash.parsers.w3x.w3e.Corner;
 import com.etheller.warsmash.parsers.w3x.w3e.War3MapW3e;
 import com.etheller.warsmash.parsers.w3x.w3i.War3MapW3i;
 import com.etheller.warsmash.parsers.w3x.wpm.War3MapWpm;
 import com.etheller.warsmash.parsers.wdt.Chunk;
 import com.etheller.warsmash.parsers.wdt.ChunkInfo;
+import com.etheller.warsmash.parsers.wdt.DoodadDefinition;
 import com.etheller.warsmash.parsers.wdt.MapChunkLayer;
 import com.etheller.warsmash.parsers.wdt.WdtMap;
 import com.etheller.warsmash.parsers.wdt.WdtMap.TileHeader;
 import com.etheller.warsmash.units.DataTable;
 import com.etheller.warsmash.units.Element;
-import com.etheller.warsmash.util.ImageUtils;
-import com.etheller.warsmash.util.ImageUtils.AnyExtensionImage;
+import com.etheller.warsmash.units.GameObject;
 import com.etheller.warsmash.util.RenderMathUtils;
 import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.util.WorldEditStrings;
@@ -58,14 +57,16 @@ import com.etheller.warsmash.viewer5.handlers.ModelHandler;
 import com.etheller.warsmash.viewer5.handlers.w3x.DynamicShadowManager;
 import com.etheller.warsmash.viewer5.handlers.w3x.SplatModel;
 import com.etheller.warsmash.viewer5.handlers.w3x.SplatModel.SplatMover;
-import com.etheller.warsmash.viewer5.handlers.w3x.Variations;
 import com.etheller.warsmash.viewer5.handlers.w3x.W3xSceneLightManager;
 import com.etheller.warsmash.viewer5.handlers.w3x.W3xShaders;
 import com.etheller.warsmash.viewer5.handlers.w3x.War3MapViewer;
+import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.RenderDoodad;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CFogMaskSettings;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.vision.CPlayerFogOfWar;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.vision.CPlayerFogOfWarInterface;
 
 public class TerrainWdt extends TerrainInterface {
+	private static final int LOAD_RADIUS = 1;
 	public static final float CELL_SIZE = 128f;
 	private static final String[] colorTags = { "R", "G", "B", "A" };
 	private static final float[] sizeHeap = new float[2];
@@ -89,7 +90,6 @@ public class TerrainWdt extends TerrainInterface {
 
 	//
 	public List<UnloadedTexture> cliffTextures = new ArrayList<>();
-	public RenderCorner[][] corners;
 	public int columns;
 	public int rows;
 	public float[] maxDeepColor = new float[4];
@@ -111,22 +111,7 @@ public class TerrainWdt extends TerrainInterface {
 	private final List<Integer> cliffToGroundTexture = new ArrayList<>();
 	private final List<IVec3> cliffs = new ArrayList<>();
 	private final DataSource dataSource;
-	private final float[] groundHeights;
-	private final float[] groundCornerHeights;
-	private final float[] groundCornerHeightsWdtInterior;
-	private final short[] groundTextureList;
-	private final float[] waterHeights;
-	private final byte[] waterExistsData;
 
-	private int groundTextureData = -1;
-	private final int groundHeight;
-	private final int groundCornerHeight;
-	private final int groundCornerHeightLinear;
-	private final int groundCornerHeightWdtInterior;
-	private final int cliffTextureArray;
-	private final int waterHeight;
-	private final int waterExists;
-	private final int waterTextureArray;
 	private final Camera camera;
 	private final War3MapViewer viewer;
 	private final WebGL webGL;
@@ -134,23 +119,30 @@ public class TerrainWdt extends TerrainInterface {
 
 	private final Map<String, SplatModel> uberSplatModels;
 	private final List<SplatModel> uberSplatModelsList;
-	private int shadowMap;
 	private int fogOfWarMap;
 	public final Map<String, List<float[]>> shadows = new HashMap<>();
 	public final Map<String, Texture> shadowTextures = new HashMap<>();
 	private final int[] mapBounds;
 	private final float[] shaderMapBounds;
 	private final int[] mapSize;
-	private boolean initShadowsFinished = false;
-	private byte[] staticShadowData;
-	private byte[] shadowData;
 	private CPlayerFogOfWar fogOfWarData;
 	private ByteBuffer visualFogData;
-	private final WaveBuilder waveBuilder;
 	private final Rectangle shaderMapBoundsRectangle;
 	private final Rectangle entireMapRectangle;
 	private final float[] defaultCameraBounds;
 	private final GroundTexture blightTexture;
+
+	public final Map<TileHeader, List<War3ID>> tileHeaderToDoodadIds = new HashMap<>();
+	private int lastCameraCellX;
+	private int lastCameraCellY;
+
+	private final Map<String, GroundTextureWdt> pathToTexture = new HashMap<>();
+	private final Map<AlphaMapData, AlphaMapDataValue> alphaDataToId = new HashMap<>();
+	private final WorldGrid worldGrid;
+	private final List<Tile> activeTiles = new ArrayList<>();
+	private final Tile[][] tiles;
+
+	private final ArrayDeque<DynamicTask> tasks = new ArrayDeque<>();
 
 	public TerrainWdt(final WdtMap map, final War3MapW3e w3eFile, final War3MapWpm terrainPathing,
 			final War3MapW3i w3iFile, final WebGL webGL, final DataSource dataSource,
@@ -161,30 +153,12 @@ public class TerrainWdt extends TerrainInterface {
 		this.camera = viewer.worldScene.camera;
 		this.dataSource = dataSource;
 		final String texturesExt = ".blp";
-		final Corner[][] corners = w3eFile.getCorners();
-		this.corners = new RenderCorner[corners[0].length][corners.length];
-		for (int i = 0; i < corners.length; i++) {
-			for (int j = 0; j < corners[i].length; j++) {
-				this.corners[j][i] = new RenderCorner(corners[i][j]);
-			}
-		}
 		final int width = w3eFile.getMapSize()[0];
 		final int height = w3eFile.getMapSize()[1];
 		this.columns = width;
 		this.rows = height;
-		for (int i = 0; i < (width - 1); i++) {
-			for (int j = 0; j < (height - 1); j++) {
-				final RenderCorner bottomLeft = this.corners[i][j];
-				final RenderCorner bottomRight = this.corners[i + 1][j];
-				final RenderCorner topLeft = this.corners[i][j + 1];
-				final RenderCorner topRight = this.corners[i + 1][j + 1];
 
-				bottomLeft.cliff = (bottomLeft.getLayerHeight() != bottomRight.getLayerHeight())
-						|| (bottomLeft.getLayerHeight() != topLeft.getLayerHeight())
-						|| (bottomLeft.getLayerHeight() != topRight.getLayerHeight());
-			}
-		}
-
+		System.out.println("reading SLKs for terrain");
 		this.terrainTable = new DataTable(worldEditStrings);
 		try (InputStream terrainSlkStream = dataSource.getResourceAsStream("TerrainArt\\Terrain.slk")) {
 			this.terrainTable.readSLK(terrainSlkStream);
@@ -202,6 +176,7 @@ public class TerrainWdt extends TerrainInterface {
 			this.uberSplatTable.readSLK(uberSlkStream);
 		}
 
+		System.out.println("reading water info");
 		final char tileset = w3eFile.getTileset();
 		final Element waterInfo = this.waterTable.get(tileset + "Sha");
 		if (waterInfo != null) {
@@ -228,196 +203,19 @@ public class TerrainWdt extends TerrainInterface {
 
 		// Cliff Meshes
 
-		Map<String, Integer> cliffVars = Variations.CLIFF_VARS;
-		for (final Map.Entry<String, Integer> cliffVar : cliffVars.entrySet()) {
-			final Integer maxVariations = cliffVar.getValue();
-			for (int variation = 0; variation <= maxVariations; variation++) {
-				final String fileName = "Doodads\\Terrain\\Cliffs\\Cliffs" + cliffVar.getKey() + variation + ".mdx";
-				this.cliffMeshes.add(new CliffMesh(fileName, dataSource, Gdx.gl30));
-				this.pathToCliff.put("Cliffs" + cliffVar.getKey() + variation, this.cliffMeshes.size() - 1);
-			}
-		}
-		cliffVars = Variations.CITY_CLIFF_VARS;
-		for (final Map.Entry<String, Integer> cliffVar : cliffVars.entrySet()) {
-			final Integer maxVariations = cliffVar.getValue();
-			for (int variation = 0; variation <= maxVariations; variation++) {
-				final String fileName = "Doodads\\Terrain\\CityCliffs\\CityCliffs" + cliffVar.getKey() + variation
-						+ ".mdx";
-				this.cliffMeshes.add(new CliffMesh(fileName, dataSource, Gdx.gl30));
-				this.pathToCliff.put("CityCliffs" + cliffVar.getKey() + variation, this.cliffMeshes.size() - 1);
-			}
-		}
-
 		final Element tilesets = worldEditData.get("TileSets");
 
 		this.blightTexture = new GroundTexture(
 				tilesets.getField(Character.toString(tileset)).split(",")[1] + texturesExt, null, dataSource, Gdx.gl30);
 
 		// Cliff Textures
-		for (final War3ID cliffTile : w3eFile.getCliffTiles()) {
-			final Element cliffInfo = this.cliffTable.get(cliffTile.asStringValue());
-			if (cliffInfo == null) {
-				System.err.println("Missing cliff type: " + cliffTile.asStringValue());
-				continue;
-			}
-			final String texDir = cliffInfo.getField("texDir");
-			final String texFile = cliffInfo.getField("texFile");
-			final AnyExtensionImage imageInfo = ImageUtils.getAnyExtensionImageFixRGB(dataSource,
-					texDir + "\\" + texFile + texturesExt, "cliff texture");
-			final BufferedImage image = imageInfo.getRGBCorrectImageData();
-			this.cliffTextures
-					.add(new UnloadedTexture(image.getWidth(), image.getHeight(), ImageUtils.getTextureBuffer(image),
-							cliffInfo.getField("cliffModelDir"), cliffInfo.getField("rampModelDir")));
-			this.cliffTexturesSize = Math.max(this.cliffTexturesSize,
-					this.cliffTextures.get(this.cliffTextures.size() - 1).width);
-//			this.cliffToGroundTexture.add(this.groundTextureToId.get(cliffInfo.getField("groundTile")));
-		}
 
-		updateCliffMeshes(new Rectangle(0, 0, width - 1, height - 1));
-
-		// prepare GPU data
-		this.groundHeights = new float[width * height];
-		this.groundCornerHeights = new float[width * height];
-		this.groundCornerHeightsWdtInterior = new float[(width - 1) * (height - 1)];
-		this.groundTextureList = new short[(width - 1) * (height - 1) * 4];
-		this.waterHeights = new float[width * height];
-		this.waterExistsData = new byte[width * height];
-
-		updateGroundTextures(new Rectangle(0, 0, width - 1, height - 1));
-		for (int i = 0; i < width; i++) {
-			for (int j = 0; j < height; j++) {
-				this.groundCornerHeights[(j * width) + i] = this.corners[i][j].computeFinalGroundHeight();
-				this.waterExistsData[(j * width) + i] = (byte) this.corners[i][j].getWater();
-				this.groundHeights[(j * width) + i] = this.corners[i][j].getGroundHeight();
-				this.waterHeights[(j * width) + i] = this.corners[i][j].getWaterHeight();
-				if ((i < (width - 1)) && (j < (height - 1))) {
-					this.groundCornerHeightsWdtInterior[(j * (width - 1)) + i] = this.corners[i][j]
-							.getWdtInterpolatedCenterHeight();
-				}
-			}
-		}
+		System.out.println("updating heights");
 
 		final GL30 gl = Gdx.gl30;
 		// Ground
-		this.groundTextureData = gl.glGenTexture();
-		gl.glBindTexture(GL30.GL_TEXTURE_2D, this.groundTextureData);
-		gl.glTexImage2D(GL30.GL_TEXTURE_2D, 0, GL30.GL_RGBA16UI, width - 1, height - 1, 0, GL30.GL_RGBA_INTEGER,
-				GL30.GL_UNSIGNED_SHORT, RenderMathUtils.wrapShort(this.groundTextureList));
-		gl.glTexParameteri(GL30.GL_TEXTURE_2D, GL30.GL_TEXTURE_MAG_FILTER, GL30.GL_NEAREST);
-		gl.glTexParameteri(GL30.GL_TEXTURE_2D, GL30.GL_TEXTURE_MIN_FILTER, GL30.GL_NEAREST);
 
-		this.groundHeight = gl.glGenTexture();
-		gl.glBindTexture(GL30.GL_TEXTURE_2D, this.groundHeight);
-		gl.glTexParameteri(GL30.GL_TEXTURE_2D, GL30.GL_TEXTURE_MAG_FILTER, GL30.GL_LINEAR);
-		gl.glTexParameteri(GL30.GL_TEXTURE_2D, GL30.GL_TEXTURE_MIN_FILTER, GL30.GL_LINEAR);
-
-		gl.glTexImage2D(GL30.GL_TEXTURE_2D, 0, GL30.GL_R16F, width, height, 0, GL30.GL_RED, GL30.GL_FLOAT,
-				RenderMathUtils.wrap(this.groundHeights));
-		gl.glTexParameteri(GL30.GL_TEXTURE_2D, GL30.GL_TEXTURE_WRAP_S, GL30.GL_CLAMP_TO_EDGE);
-		gl.glTexParameteri(GL30.GL_TEXTURE_2D, GL30.GL_TEXTURE_WRAP_T, GL30.GL_CLAMP_TO_EDGE);
-
-		this.groundCornerHeight = gl.glGenTexture();
-		gl.glBindTexture(GL30.GL_TEXTURE_2D, this.groundCornerHeight);
-		gl.glTexParameteri(GL30.GL_TEXTURE_2D, GL30.GL_TEXTURE_MAG_FILTER, GL30.GL_NEAREST);
-		gl.glTexParameteri(GL30.GL_TEXTURE_2D, GL30.GL_TEXTURE_MIN_FILTER, GL30.GL_NEAREST);
-
-		gl.glTexImage2D(GL30.GL_TEXTURE_2D, 0, GL30.GL_R16F, width, height, 0, GL30.GL_RED, GL30.GL_FLOAT,
-				RenderMathUtils.wrap(this.groundCornerHeights));
-		gl.glTexParameteri(GL30.GL_TEXTURE_2D, GL30.GL_TEXTURE_WRAP_S, GL30.GL_CLAMP_TO_EDGE);
-		gl.glTexParameteri(GL30.GL_TEXTURE_2D, GL30.GL_TEXTURE_WRAP_T, GL30.GL_CLAMP_TO_EDGE);
-
-		this.groundCornerHeightLinear = gl.glGenTexture();
-		gl.glBindTexture(GL30.GL_TEXTURE_2D, this.groundCornerHeightLinear);
-		gl.glTexParameteri(GL30.GL_TEXTURE_2D, GL30.GL_TEXTURE_MAG_FILTER, GL30.GL_LINEAR);
-		gl.glTexParameteri(GL30.GL_TEXTURE_2D, GL30.GL_TEXTURE_MIN_FILTER, GL30.GL_LINEAR);
-
-		gl.glTexImage2D(GL30.GL_TEXTURE_2D, 0, GL30.GL_R16F, width, height, 0, GL30.GL_RED, GL30.GL_FLOAT,
-				RenderMathUtils.wrap(this.groundCornerHeights));
-		gl.glTexParameteri(GL30.GL_TEXTURE_2D, GL30.GL_TEXTURE_WRAP_S, GL30.GL_CLAMP_TO_EDGE);
-		gl.glTexParameteri(GL30.GL_TEXTURE_2D, GL30.GL_TEXTURE_WRAP_T, GL30.GL_CLAMP_TO_EDGE);
-
-		this.groundCornerHeightWdtInterior = gl.glGenTexture();
-		gl.glBindTexture(GL30.GL_TEXTURE_2D, this.groundCornerHeightWdtInterior);
-		gl.glTexParameteri(GL30.GL_TEXTURE_2D, GL30.GL_TEXTURE_MAG_FILTER, GL30.GL_NEAREST);
-		gl.glTexParameteri(GL30.GL_TEXTURE_2D, GL30.GL_TEXTURE_MIN_FILTER, GL30.GL_NEAREST);
-
-		gl.glTexImage2D(GL30.GL_TEXTURE_2D, 0, GL30.GL_R16F, width - 1, height - 1, 0, GL30.GL_RED, GL30.GL_FLOAT,
-				RenderMathUtils.wrap(this.groundCornerHeightsWdtInterior));
-		gl.glTexParameteri(GL30.GL_TEXTURE_2D, GL30.GL_TEXTURE_WRAP_S, GL30.GL_CLAMP_TO_EDGE);
-		gl.glTexParameteri(GL30.GL_TEXTURE_2D, GL30.GL_TEXTURE_WRAP_T, GL30.GL_CLAMP_TO_EDGE);
-
-		// Cliff
-		this.cliffTextureArray = gl.glGenTexture();
-		gl.glBindTexture(GL30.GL_TEXTURE_2D_ARRAY, this.cliffTextureArray);
-		gl.glTexImage3D(GL30.GL_TEXTURE_2D_ARRAY, 0, GL30.GL_RGBA8, this.cliffTexturesSize, this.cliffTexturesSize,
-				this.cliffTextures.size(), 0, GL30.GL_RGBA, GL30.GL_UNSIGNED_BYTE, null);
-		gl.glTexParameteri(GL30.GL_TEXTURE_2D_ARRAY, GL30.GL_TEXTURE_MIN_FILTER, GL30.GL_LINEAR_MIPMAP_LINEAR);
-		gl.glTexParameteri(GL30.GL_TEXTURE_2D_ARRAY, GL30.GL_TEXTURE_BASE_LEVEL, 0);
-
-		int sub = 0;
-		for (final UnloadedTexture i : this.cliffTextures) {
-			gl.glTexSubImage3D(GL30.GL_TEXTURE_2D_ARRAY, 0, 0, 0, sub, i.width, i.height, 1, GL30.GL_RGBA,
-					GL30.GL_UNSIGNED_BYTE, i.data);
-			sub += 1;
-		}
-		gl.glGenerateMipmap(GL30.GL_TEXTURE_2D_ARRAY);
-
-		// Water
-		this.waterHeight = gl.glGenTexture();
-		gl.glBindTexture(GL30.GL_TEXTURE_2D, this.waterHeight);
-		gl.glTexImage2D(GL30.GL_TEXTURE_2D, 0, GL30.GL_R16F, width, height, 0, GL30.GL_RED, GL30.GL_FLOAT,
-				RenderMathUtils.wrap(this.waterHeights));
-		gl.glTexParameteri(GL30.GL_TEXTURE_2D, GL30.GL_TEXTURE_MAG_FILTER, GL30.GL_NEAREST);
-		gl.glTexParameteri(GL30.GL_TEXTURE_2D, GL30.GL_TEXTURE_MIN_FILTER, GL30.GL_NEAREST);
-
-		this.waterExists = gl.glGenTexture();
-		gl.glBindTexture(GL30.GL_TEXTURE_2D, this.waterExists);
-		gl.glPixelStorei(GL30.GL_UNPACK_ALIGNMENT, 1);
-		gl.glTexImage2D(GL30.GL_TEXTURE_2D, 0, GL30.GL_R8, width, height, 0, GL30.GL_RED, GL30.GL_UNSIGNED_BYTE,
-				RenderMathUtils.wrap(this.waterExistsData));
-		gl.glPixelStorei(GL30.GL_UNPACK_ALIGNMENT, 4);
-		gl.glTexParameteri(GL30.GL_TEXTURE_2D, GL30.GL_TEXTURE_MAG_FILTER, GL30.GL_NEAREST);
-		gl.glTexParameteri(GL30.GL_TEXTURE_2D, GL30.GL_TEXTURE_MIN_FILTER, GL30.GL_NEAREST);
-
-		// Water textures
-		this.waterTextureArray = gl.glGenTexture();
-		gl.glBindTexture(GL30.GL_TEXTURE_2D_ARRAY, this.waterTextureArray);
-
-		if (waterInfo != null) {
-			final String fileName = waterInfo.getField("texFile");
-			final List<BufferedImage> waterTextures = new ArrayList<>();
-			boolean anyWaterTextureNeedsSRGB = false;
-			int waterImageDimension = 128;
-			for (int i = 0; i < this.waterTextureCount; i++) {
-				final AnyExtensionImage imageInfo = ImageUtils.getAnyExtensionImageFixRGB(dataSource,
-						fileName + (i < 10 ? "0" : "") + Integer.toString(i) + texturesExt, "water texture");
-				final BufferedImage image = imageInfo.getImageData();
-				if ((image.getWidth() != 128) || (image.getHeight() != 128)) {
-					System.err.println(
-							"Odd water texture size detected of " + image.getWidth() + " x " + image.getHeight());
-					waterImageDimension = image.getWidth();
-				}
-				anyWaterTextureNeedsSRGB |= imageInfo.isNeedsSRGBFix();
-				waterTextures.add(image);
-			}
-			gl.glTexImage3D(GL30.GL_TEXTURE_2D_ARRAY, 0,
-					anyWaterTextureNeedsSRGB ? GL30.GL_SRGB8_ALPHA8 : GL30.GL_RGBA8, waterImageDimension,
-					waterImageDimension, this.waterTextureCount, 0, GL30.GL_RGBA, GL30.GL_UNSIGNED_BYTE, null);
-			gl.glTexParameteri(GL30.GL_TEXTURE_2D_ARRAY, GL30.GL_TEXTURE_WRAP_S, GL30.GL_CLAMP_TO_EDGE);
-			gl.glTexParameteri(GL30.GL_TEXTURE_2D_ARRAY, GL30.GL_TEXTURE_WRAP_T, GL30.GL_CLAMP_TO_EDGE);
-			gl.glTexParameteri(GL30.GL_TEXTURE_2D_ARRAY, GL30.GL_TEXTURE_BASE_LEVEL, 0);
-
-			for (int i = 0; i < waterTextures.size(); i++) {
-				final BufferedImage image = waterTextures.get(i);
-				gl.glTexSubImage3D(GL30.GL_TEXTURE_2D_ARRAY, 0, 0, 0, i, image.getWidth(), image.getHeight(), 1,
-						GL30.GL_RGBA, GL30.GL_UNSIGNED_BYTE, ImageUtils.getTextureBuffer(image));
-			}
-		}
-
-		gl.glGenerateMipmap(GL30.GL_TEXTURE_2D_ARRAY);
-
-		updateGroundHeights(new Rectangle(0, 0, width - 1, height - 1));
-
+		System.out.println("creating shaders");
 		this.groundShader = webGL.createShaderProgram(TerrainShaders.TerrainWdt.vert(), TerrainShaders.TerrainWdt.frag);
 		this.cliffShader = webGL.createShaderProgram(TerrainShaders.Cliffs.vert(), TerrainShaders.Cliffs.frag);
 		this.waterShader = webGL.createShaderProgram(TerrainShaders.Water.vert(), TerrainShaders.Water.frag);
@@ -440,419 +238,62 @@ public class TerrainWdt extends TerrainInterface {
 		this.mapSize = w3eFile.getMapSize();
 		this.entireMapRectangle = new Rectangle(this.centerOffset[0], this.centerOffset[1],
 				(this.mapSize[0] * 128f) - 128, (this.mapSize[1] * 128f) - 128);
-		this.softwareGroundMesh = new SoftwareGroundMesh(this.groundHeights, this.groundCornerHeights,
-				this.centerOffset, width, height);
-		this.softwareWaterAndGroundMesh = new SoftwareWaterAndGroundMesh(this.waterHeightOffset,
-				this.groundCornerHeights, this.waterHeights, this.waterExistsData, this.centerOffset, width, height);
+		System.out.println("creating software ground mesh");
+		// TODO
+//		this.softwareGroundMesh = new SoftwareGroundMesh(this.groundCornerHeights, this.centerOffset, width, height);
+//		this.softwareWaterAndGroundMesh = new SoftwareWaterAndGroundMesh(this.waterHeightOffset,
+//				this.groundCornerHeights, this.waterHeights, this.waterExistsData, this.centerOffset, width, height);
 
 //		gl.glBindBuffer(GL30.GL_ELEMENT_ARRAY_BUFFER, this.testElementBuffer);
 //		gl.glBufferData(GL30.GL_ELEMENT_ARRAY_BUFFER, this.softwareGroundMesh.indices.length,
 //				RenderMathUtils.wrap(this.softwareGroundMesh.indices), GL30.GL_STATIC_DRAW);
 
-		this.waveBuilder = new WaveBuilder(this.mapSize, this.waterTable, viewer, this.corners, this.centerOffset,
-				this.waterHeightOffset, w3eFile, w3iFile);
+		System.out.println("creating wave builder");
+		System.out.println("creating pathing grid");
 		this.pathingGrid = new PathingGrid(terrainPathing, this.centerOffset);
 
+		System.out.println("Spawning tiles");
+		this.tiles = new Tile[64][64];
+
+		System.out.println("Beginning to load chunk models");
+		final int totalTileHeaderCount = map.tileHeaders.size();
+		int currentTileHeaderIndex = 0;
+		this.worldGrid = new WorldGrid(this.centerOffset,
+				WdtChunkModelInstance.tilesize * WdtChunkModelInstance.wowToWc3Factor);
 		for (final TileHeader tileHeader : map.tileHeaders) {
+
 			final WdtChunkModel wdtChunkModel = new WdtChunkModel(null, viewer, "", PathSolver.DEFAULT, "", tileHeader);
 			wdtChunkModel.load(null, null);
-			for (int i = 0; i < tileHeader.chunks.size(); i++) {
-				final Chunk chunk = tileHeader.chunks.get(i);
-				if (!chunk.getMapChunkLayers().isEmpty()) {
-					final ModelInstance chunkInstance = wdtChunkModel.addInstance(i);
-					chunkInstance.setScene(viewer.worldScene);
-				}
-			}
+			final Tile tile = new Tile(tileHeader, wdtChunkModel, this.worldGrid.getCornerX(wdtChunkModel.blockX),
+					this.worldGrid.getCornerY(wdtChunkModel.blockY));
+			this.tiles[wdtChunkModel.blockX][wdtChunkModel.blockY] = tile;
+			System.out.println("Created chunk models for " + currentTileHeaderIndex + " / " + totalTileHeaderCount);
+			currentTileHeaderIndex++;
 		}
+		System.out.println("Ending loading chunk models");
+
+	}
+
+	@Override
+	public void intersectRayTerrain(final Ray gdxRayHeap, final Vector3 out, final boolean intersectWithWater) {
+//		out.set(gdxRayHeap.origin);
+//		out.add(gdxRayHeap.direction);
 	}
 
 	@Override
 	public void createWaves() {
-		this.waveBuilder.createWaves(this);
-	}
-
-	private void updateGroundHeights(final Rectangle area) {
-		for (int j = (int) area.y; j < (area.y + area.height); j++) {
-			for (int i = (int) area.x; i < (area.x + area.width); i++) {
-				this.groundHeights[(j * this.columns) + i] = this.corners[i][j].getGroundHeight();
-
-				float rampHeight = 0f;
-				// Check if in one of the configurations the bottom_left is a ramp
-				XLoop: for (int xOffset = -1; xOffset <= 0; xOffset++) {
-					for (int yOffset = -1; yOffset <= 0; yOffset++) {
-						if (((i + xOffset) >= 0) && ((i + xOffset) < (this.columns - 1)) && ((j + yOffset) >= 0)
-								&& ((j + yOffset) < (this.rows - 1))) {
-							final RenderCorner bottomLeft = this.corners[i + xOffset][j + yOffset];
-							final RenderCorner bottomRight = this.corners[i + 1 + xOffset][j + yOffset];
-							final RenderCorner topLeft = this.corners[i + xOffset][j + 1 + yOffset];
-							final RenderCorner topRight = this.corners[i + 1 + xOffset][j + 1 + yOffset];
-
-							final int base = Math.min(
-									Math.min(bottomLeft.getLayerHeight(), bottomRight.getLayerHeight()),
-									Math.min(topLeft.getLayerHeight(), topRight.getLayerHeight()));
-							if (this.corners[i][j].getLayerHeight() != base) {
-								continue;
-							}
-
-							if (isCornerRampEntrance(i + xOffset, j + yOffset)) {
-								rampHeight = 0.5f;
-								break XLoop;
-							}
-						}
-					}
-				}
-
-				final RenderCorner corner = this.corners[i][j];
-				final float newGroundCornerHeight = corner.computeFinalGroundHeight() + rampHeight;
-				this.groundCornerHeights[(j * this.columns) + i] = newGroundCornerHeight;
-				corner.depth = corner.getWater() != 0
-						? (this.waterHeightOffset + corner.getWaterHeight()) - newGroundCornerHeight
-						: 0;
-			}
-		}
-		updateGroundHeights();
-		updateCornerHeights();
-	}
-
-	private void updateGroundHeights() {
-		Gdx.gl30.glBindTexture(GL30.GL_TEXTURE_2D, this.groundHeight);
-		Gdx.gl30.glTexSubImage2D(GL30.GL_TEXTURE_2D, 0, 0, 0, this.columns, this.rows, GL30.GL_RED, GL30.GL_FLOAT,
-				RenderMathUtils.wrap(this.groundHeights));
-	}
-
-	private void updateCornerHeights() {
-		final FloatBuffer groundCornerHeightsWrapped = RenderMathUtils.wrap(this.groundCornerHeights);
-		Gdx.gl30.glBindTexture(GL30.GL_TEXTURE_2D, this.groundCornerHeight);
-		Gdx.gl30.glTexSubImage2D(GL30.GL_TEXTURE_2D, 0, 0, 0, this.columns, this.rows, GL30.GL_RED, GL30.GL_FLOAT,
-				groundCornerHeightsWrapped);
-		Gdx.gl30.glBindTexture(GL30.GL_TEXTURE_2D, this.groundCornerHeightLinear);
-		Gdx.gl30.glTexSubImage2D(GL30.GL_TEXTURE_2D, 0, 0, 0, this.columns, this.rows, GL30.GL_RED, GL30.GL_FLOAT,
-				groundCornerHeightsWrapped);
-	}
-
-	/**
-	 * calculateRamps() is copied from Riv whereas a lot of the rest of the terrain
-	 * was copied from HiveWE
-	 */
-	private void calculateRamps() {
-		final int columns = this.mapSize[0];
-		final int rows = this.mapSize[1];
-
-		final String[] ramps = { "AAHL", "AALH", "ABHL", "AHLA", "ALHA", "ALHB", "BALH", "BHLA", "HAAL", "HBAL", "HLAA",
-				"HLAB", "LAAH", "LABH", "LHAA", "LHBA" };
-
-		// Adjust terrain height inside ramps (set rampAdjust)
-		for (int y = 1; y < (rows - 1); ++y) {
-			for (int x = 1; x < (columns - 1); ++x) {
-				final RenderCorner o = this.corners[x][y];
-				if (!o.isRamp()) {
-					continue;
-				}
-				final RenderCorner a = this.corners[x - 1][y - 1];
-				final RenderCorner b = this.corners[x - 1][y];
-				final RenderCorner c = this.corners[x - 1][y + 1];
-				final RenderCorner d = this.corners[x][y + 1];
-				final RenderCorner e = this.corners[x + 1][y + 1];
-				final RenderCorner f = this.corners[x + 1][y];
-				final RenderCorner g = this.corners[x + 1][y - 1];
-				final RenderCorner h = this.corners[x][y - 1];
-				final int base = o.getLayerHeight();
-				if ((b.isRamp() && f.isRamp()) || (d.isRamp() && h.isRamp())) {
-					float adjust = 0;
-					if (b.isRamp() && f.isRamp()) {
-						adjust = Math.max(adjust, ((b.getLayerHeight() + f.getLayerHeight()) / 2) - base);
-					}
-					if (d.isRamp() && h.isRamp()) {
-						adjust = Math.max(adjust, ((d.getLayerHeight() + h.getLayerHeight()) / 2) - base);
-					}
-					if (a.isRamp() && e.isRamp()) {
-						adjust = Math.max(adjust, (((a.getLayerHeight() + e.getLayerHeight()) / 2) - base) / 2);
-					}
-					if (c.isRamp() && g.isRamp()) {
-						adjust = Math.max(adjust, (((c.getLayerHeight() + g.getLayerHeight()) / 2) - base) / 2);
-					}
-					o.rampAdjust = adjust;
-				}
-			}
-		}
-	}
-
-	/// TODO clean
-	/// Function is a bit of a mess
-	/// Updates the cliff and ramp meshes for an area
-	private void updateCliffMeshes(final Rectangle area) throws IOException {
-		// Remove all existing cliff meshes in area
-		for (int i = this.cliffs.size(); i-- > 0;) {
-			final IVec3 pos = this.cliffs.get(i);
-			if (area.contains(pos.x, pos.y)) {
-				this.cliffs.remove(i);
-			}
-		}
-
-		for (int i = (int) area.getX(); i < (int) (area.getX() + area.getWidth()); i++) {
-			for (int j = (int) area.getY(); j < (int) (area.getY() + area.getHeight()); j++) {
-				this.corners[i][j].romp = false;
-			}
-		}
-
-		final Rectangle adjusted = new Rectangle(area.x - 2, area.y - 2, area.width + 4, area.height + 4);
-		final Rectangle rampArea = new Rectangle();
-		Intersector.intersectRectangles(new Rectangle(0, 0, this.columns, this.rows), adjusted, rampArea);
-
-		// Add new cliff meshes
-		final int xLimit = (int) ((rampArea.getX() + rampArea.getWidth()) - 1);
-		for (int i = (int) rampArea.getX(); i < xLimit; i++) {
-			final int yLimit = (int) ((rampArea.getY() + rampArea.getHeight()) - 1);
-			for (int j = (int) rampArea.getY(); j < yLimit; j++) {
-				final RenderCorner bottomLeft = this.corners[i][j];
-				final RenderCorner bottomRight = this.corners[i + 1][j];
-				final RenderCorner topLeft = this.corners[i][j + 1];
-				final RenderCorner topRight = this.corners[i + 1][j + 1];
-
-				if (bottomLeft.cliff && !bottomLeft.hideCliff) {
-					final int base = Math.min(Math.min(bottomLeft.getLayerHeight(), bottomRight.getLayerHeight()),
-							Math.min(topLeft.getLayerHeight(), topRight.getLayerHeight()));
-
-					final boolean facingDown = (topLeft.getLayerHeight() >= bottomLeft.getLayerHeight())
-							&& (topRight.getLayerHeight() >= bottomRight.getLayerHeight());
-					final boolean facingLeft = (bottomRight.getLayerHeight() >= bottomLeft.getLayerHeight())
-							&& (topRight.getLayerHeight() >= topLeft.getLayerHeight());
-
-					int bottomLeftCliffTex = bottomLeft.getCliffTexture();
-					if (bottomLeftCliffTex == 15) {
-						boolean foundTexture = false;
-						final int topLeftCliffTex = topLeft.getCliffTexture();
-						if (topLeftCliffTex == 15) {
-							final int topRightCliffTex = topRight.getCliffTexture();
-							if (topRightCliffTex == 15) {
-								final int bottomRightCliffTex = bottomRight.getCliffTexture();
-								if (bottomRightCliffTex == 15) {
-									bottomLeftCliffTex -= 14;
-								}
-								else {
-									bottomLeftCliffTex = bottomRightCliffTex;
-									foundTexture = true;
-								}
-							}
-							else {
-								bottomLeftCliffTex = topRightCliffTex;
-								foundTexture = true;
-							}
-						}
-						else {
-							bottomLeftCliffTex = topLeftCliffTex;
-							foundTexture = true;
-						}
-						if (foundTexture) {
-							bottomLeft.setCliffTexture(bottomLeftCliffTex);
-						}
-					}
-					if (!(facingDown && (j == 0)) && !(!facingDown && (j >= (this.rows - 2)))
-							&& !(facingLeft && (i == 0)) && !(!facingLeft && (i >= (this.columns - 2)))) {
-						final boolean verticalRamp = (bottomLeft.isRamp() != bottomRight.isRamp())
-								&& (topLeft.isRamp() != topRight.isRamp());
-
-						final boolean horizontalRamp = (bottomLeft.isRamp() != topLeft.isRamp())
-								&& (bottomRight.isRamp() != topRight.isRamp());
-
-						if (verticalRamp || horizontalRamp) {
-							final boolean rampBlockedByCliff = (verticalRamp
-									&& this.corners[i][j + (facingDown ? -1 : 1)].cliff)
-									|| (horizontalRamp && this.corners[i + (facingLeft ? -1 : 1)][j].cliff);
-							final int topLeftHeight = topLeft.getLayerHeight() - base;
-							final int topRightHeight = topRight.getLayerHeight() - base;
-							final int bottomRightHeight = bottomRight.getLayerHeight() - base;
-							final int bottomLeftHeight = bottomLeft.getLayerHeight() - base;
-							boolean invalidRamp = false;
-							if (DISALLOW_HEIGHT_3_RAMPS) {
-								if (rampBlockedByCliff) {
-									invalidRamp = true;
-								}
-								else if (topLeftHeight > 1) {
-									invalidRamp = true;
-									topLeft.setRamp(0);
-								}
-								else if (topRightHeight > 1) {
-									invalidRamp = true;
-									topRight.setRamp(0);
-								}
-								else if (bottomRightHeight > 1) {
-									invalidRamp = true;
-									bottomRight.setRamp(0);
-								}
-								else if (bottomLeftHeight > 1) {
-									invalidRamp = true;
-									bottomLeft.setRamp(0);
-								}
-							}
-							if (!invalidRamp) {
-								String fileName = "" + getRampLetter(topLeftHeight, topLeft.isRamp())
-										+ getRampLetter(topRightHeight, topRight.isRamp())
-										+ getRampLetter(bottomRightHeight, bottomRight.isRamp())
-										+ getRampLetter(bottomLeftHeight, bottomLeft.isRamp());
-
-								final String rampModelDir = this.cliffTextures.get(bottomLeftCliffTex).rampModelDir;
-								fileName = "Doodads\\Terrain\\" + rampModelDir + "\\" + rampModelDir + fileName
-										+ "0.mdx";
-
-								if (this.dataSource.has(fileName)) {
-									if (!this.pathToCliff.containsKey(fileName)) {
-										this.cliffMeshes.add(new CliffMesh(fileName, this.dataSource, Gdx.gl30));
-										this.pathToCliff.put(fileName, this.cliffMeshes.size() - 1);
-									}
-
-									for (int ji = this.cliffs.size(); ji-- > 0;) {
-										final IVec3 pos = this.cliffs.get(ji);
-										if ((pos.x == (i + ((horizontalRamp ? 1 : 0) * (facingLeft ? -1 : 0))))
-												&& (pos.y == (j - ((verticalRamp ? 1 : 0) * (facingDown ? 1 : 0))))) {
-											this.cliffs.remove(ji);
-											break;
-										}
-									}
-
-									this.cliffs.add(new IVec3(i + ((horizontalRamp ? 1 : 0) * (facingLeft ? -1 : 0)),
-											j - ((verticalRamp ? 1 : 0) * (facingDown ? 1 : 0)),
-											this.pathToCliff.get(fileName)));
-									bottomLeft.romp = true;
-									bottomLeft.setCliffTexture(bottomLeftCliffTex);
-									bottomRight.setCliffTexture(bottomLeftCliffTex);
-									topLeft.setCliffTexture(bottomLeftCliffTex);
-									topRight.setCliffTexture(bottomLeftCliffTex);
-									this.corners[i + ((facingLeft ? -1 : 1) * (horizontalRamp ? 1 : 0))][j
-											+ ((facingDown ? -1 : 1) * (verticalRamp ? 1 : 0))]
-											.setCliffTexture(bottomLeftCliffTex);
-
-									this.corners[i + ((facingLeft ? -1 : 1) * (horizontalRamp ? 1 : 0))][j
-											+ ((facingDown ? -1 : 1) * (verticalRamp ? 1 : 0))].romp = true;
-
-									continue;
-								}
-							}
-						}
-					}
-
-					if (isCornerRampEntrance(i, j)) {
-						continue;
-					}
-
-					// Ramps move 1 right/down in some cases and thus their area is one bigger to
-					// the top and left.
-					if (!area.contains(i, j)) {
-						continue;
-					}
-
-					// Cliff model path
-
-					String fileName = "" + (char) (('A' + topLeft.getLayerHeight()) - base)
-							+ (char) (('A' + topRight.getLayerHeight()) - base)
-							+ (char) (('A' + bottomRight.getLayerHeight()) - base)
-							+ (char) (('A' + bottomLeft.getLayerHeight()) - base);
-
-					if ("AAAA".equals(fileName)) {
-						continue;
-					}
-
-					// Clamp to within max variations
-
-					fileName = this.cliffTextures.get(bottomLeftCliffTex).cliffModelDir + fileName
-							+ Variations.getCliffVariation(this.cliffTextures.get(bottomLeftCliffTex).cliffModelDir,
-									fileName, bottomLeft.getCliffVariation());
-					if (!this.pathToCliff.containsKey(fileName)) {
-						throw new IllegalArgumentException("No such pathToCliff entry: " + fileName);
-					}
-					this.cliffs.add(new IVec3(i, j, this.pathToCliff.get(fileName)));
-				}
-			}
-		}
-		for (int i = (int) rampArea.getX(); i < xLimit; i++) {
-			final int yLimit = (int) ((rampArea.getY() + rampArea.getHeight()) - 1);
-			for (int j = (int) rampArea.getY(); j < yLimit; j++) {
-				final RenderCorner bottomLeft = this.corners[i][j];
-				if (bottomLeft.isRamp() && !bottomLeft.romp) {
-					bottomLeft.hideCliff = false;
-				}
-			}
-		}
-
-	}
-
-	public void logRomp(final int x, final int y) {
-		System.out.println("romp: " + this.corners[x][y].romp);
-		System.out.println("ramp: " + this.corners[x][y].isRamp());
-		System.out.println("cliff: " + this.corners[x][y].cliff);
 	}
 
 	@Override
 	public void updateGroundTextures(final Rectangle area) {
-		final Rectangle adjusted = new Rectangle(area.x - 1, area.y - 1, area.width + 2, area.height + 2);
-		final Rectangle updateArea = new Rectangle();
-		Intersector.intersectRectangles(new Rectangle(0, 0, this.columns - 1, this.rows - 1), adjusted, updateArea);
-
-		for (int j = (int) updateArea.getY(); j <= (int) ((updateArea.getY() + updateArea.getHeight()) - 1); j++) {
-			for (int i = (int) updateArea.getX(); i <= (int) ((updateArea.getX() + updateArea.getWidth()) - 1); i++) {
-
-				if (this.corners[i][j].cliff || this.corners[i][j].romp) {
-					if (isCornerRampEntrance(i, j)) {
-						continue;
-					}
-					this.groundTextureList[(((j * (this.columns - 1)) + i) * 4) + 3] |= 0b1000000000000000;
-				}
-			}
-		}
-
-		uploadGroundTexture();
-	}
-
-	public void removeTerrainCell(final int i, final int j) {
-		this.groundTextureList[(((j * (this.columns - 1)) + i) * 4) + 3] |= 0b1000000000000000;
-		this.corners[i][j].hideCliff = true;
-		uploadGroundTexture();
-		try {
-			updateCliffMeshes(new Rectangle(i - 1, j - 1, 1, 1)); // TODO does this work?
-		}
-		catch (final IOException e) {
-			throw new RuntimeException(e);
-		}
 	}
 
 	@Override
 	public void removeTerrainCellWithoutFlush(final int i, final int j) {
-		this.groundTextureList[(((j * (this.columns - 1)) + i) * 4) + 3] |= 0b1000000000000000;
-		this.corners[i][j].hideCliff = true;
 	}
 
 	@Override
 	public void flushRemovedTerrainCells() {
-		uploadGroundTexture();
-		try {
-			updateCliffMeshes(new Rectangle(0, 0, this.columns - 1, this.rows - 1));
-		}
-		catch (final IOException e) {
-			throw new RuntimeException(e);
-		}
-	}
-
-	private void uploadGroundTexture() {
-		if (this.groundTextureData != -1) {
-			Gdx.gl30.glBindTexture(GL30.GL_TEXTURE_2D, this.groundTextureData);
-			Gdx.gl30.glTexSubImage2D(GL30.GL_TEXTURE_2D, 0, 0, 0, this.columns - 1, this.rows - 1, GL30.GL_RGBA_INTEGER,
-					GL30.GL_UNSIGNED_SHORT, RenderMathUtils.wrapShort(this.groundTextureList));
-		}
-	}
-
-	private boolean isCornerRampEntrance(final int x, final int y) {
-		if ((x == this.columns) || (y == this.rows)) {
-			return false;
-		}
-
-		final RenderCorner bottomLeft = this.corners[x][y];
-		final RenderCorner bottomRight = this.corners[x + 1][y];
-		final RenderCorner topLeft = this.corners[x][y + 1];
-		final RenderCorner topRight = this.corners[x + 1][y + 1];
-
-		return bottomLeft.isRamp() && topLeft.isRamp() && bottomRight.isRamp() && topRight.isRamp()
-				&& !((bottomLeft.getLayerHeight() == topRight.getLayerHeight())
-						&& (topLeft.getLayerHeight() == bottomRight.getLayerHeight()));
 	}
 
 	private static void loadWaterColor(final float[] out, final String prefix, final Element waterInfo) {
@@ -873,6 +314,48 @@ public class TerrainWdt extends TerrainInterface {
 		if (this.waterIndex >= this.waterTextureCount) {
 			this.waterIndex = 0;
 		}
+
+		final Vector3 cameraLocation = this.camera.location;
+		final int cellX = this.worldGrid.getCellX(cameraLocation.x);
+		final int cellY = this.worldGrid.getCellY(cameraLocation.y);
+		this.lastCameraCellX = cellX;
+		this.lastCameraCellY = cellY;
+		for (int k = this.activeTiles.size() - 1; k >= 0; k--) {
+			final Tile tile = this.activeTiles.get(k);
+			final int dx = Math.abs(tile.terrainModel.blockX - cellX);
+			final int dy = Math.abs(tile.terrainModel.blockY - cellY);
+			if ((dx > LOAD_RADIUS) || (dy > LOAD_RADIUS)) {
+				tile.deactivate();
+				this.activeTiles.remove(k);
+			}
+		}
+		for (int i = -LOAD_RADIUS; i <= LOAD_RADIUS; i++) {
+			for (int j = -LOAD_RADIUS; j <= LOAD_RADIUS; j++) {
+				final int x = cellX + i;
+				final int y = cellY + j;
+
+				if ((x >= 0) && (x < this.tiles.length)) {
+					if ((y >= 0) && (y < this.tiles[x].length)) {
+						final Tile tile = this.tiles[x][y];
+						if (tile != null) {
+							if (tile.activate()) {
+								this.activeTiles.add(this.tiles[x][y]);
+							}
+						}
+					}
+				}
+			}
+		}
+
+		if (!this.tasks.isEmpty()) {
+			final DynamicTask nextTask = this.tasks.peek();
+			if (nextTask.run()) {
+				this.tasks.poll();
+			}
+			if (this.tasks.isEmpty()) {
+				System.out.println("finished all tasks for now!!");
+			}
+		}
 	}
 
 	@Override
@@ -881,6 +364,10 @@ public class TerrainWdt extends TerrainInterface {
 
 	@Override
 	public void renderUberSplats(final boolean onTopLayer) {
+		final Tile tile = getCurrentTile();
+		if ((tile == null) || (tile.activeTile == null)) {
+			return;
+		}
 		final GL30 gl = Gdx.gl30;
 		final WebGL webGL = this.webGL;
 		final ShaderProgram shader = this.uberSplatShader;
@@ -900,21 +387,21 @@ public class TerrainWdt extends TerrainInterface {
 		sizeHeap[0] = 1 / (float) this.columns;
 		sizeHeap[1] = 1 / (float) this.rows;
 		shader.setUniform2fv("u_pixel", sizeHeap, 0, 2);
-		shader.setUniform2fv("u_centerOffset", this.centerOffset, 0, 2);
+		shader.setUniform2fv("u_centerOffset", tile.myCornerXY, 0, 2);
 		shader.setUniformi("u_texture", 1);
 		shader.setUniformi("u_shadowMap", 2);
-		shader.setUniformi("u_waterHeightsMap", 3);
+//		shader.setUniformi("u_waterHeightsMap", 3);
 		shader.setUniformi("u_fogOfWarMap", 4);
 		shader.setUniformf("u_waterHeightOffset", this.waterHeightOffset);
 
 		gl.glActiveTexture(GL30.GL_TEXTURE0);
-		gl.glBindTexture(GL30.GL_TEXTURE_2D, this.groundCornerHeightLinear);
+		gl.glBindTexture(GL30.GL_TEXTURE_2D, tile.activeTile.groundCornerHeightLinear);
 
 		gl.glActiveTexture(GL30.GL_TEXTURE2);
-		gl.glBindTexture(GL30.GL_TEXTURE_2D, this.shadowMap);
+		gl.glBindTexture(GL30.GL_TEXTURE_2D, tile.activeTile.shadowMap);
 
-		gl.glActiveTexture(GL30.GL_TEXTURE3);
-		gl.glBindTexture(GL30.GL_TEXTURE_2D, this.waterHeight);
+//		gl.glActiveTexture(GL30.GL_TEXTURE3);
+//		gl.glBindTexture(GL30.GL_TEXTURE_2D, this.waterHeight);
 
 		gl.glActiveTexture(GL30.GL_TEXTURE4);
 		gl.glBindTexture(GL30.GL_TEXTURE_2D, this.fogOfWarMap);
@@ -939,128 +426,17 @@ public class TerrainWdt extends TerrainInterface {
 		}
 	}
 
+	private Tile getCurrentTile() {
+		final Tile tile = this.tiles[this.lastCameraCellX][this.lastCameraCellY];
+		return tile;
+	}
+
 	@Override
 	public void renderWater() {
-		// Render water
-		this.webGL.useShaderProgram(this.waterShader);
-
-		final GL30 gl = Gdx.gl30;
-		gl.glDepthMask(false);
-		gl.glEnable(GL30.GL_CULL_FACE);
-		gl.glEnable(GL30.GL_BLEND);
-		gl.glBlendFunc(GL30.GL_SRC_ALPHA, GL30.GL_ONE_MINUS_SRC_ALPHA);
-
-		this.waterShader.setUniformMatrix4fv("MVP", this.camera.viewProjectionMatrix.val, 0, 16);
-		this.waterShader.setUniform4fv("shallow_color_min", this.minShallowColorApplied, 0, 4);
-		this.waterShader.setUniform4fv("shallow_color_max", this.maxShallowColorApplied, 0, 4);
-		this.waterShader.setUniform4fv("deep_color_min", this.minDeepColorApplied, 0, 4);
-		this.waterShader.setUniform4fv("deep_color_max", this.maxDeepColorApplied, 0, 4);
-		this.waterShader.setUniformf("water_offset", this.waterHeightOffset);
-		this.waterShader.setUniformi("current_texture", (int) this.waterIndex);
-		this.waterShader.setUniformf("centerOffsetX", this.centerOffset[0]);
-		this.waterShader.setUniformf("centerOffsetY", this.centerOffset[1]);
-		this.waterShader.setUniform4fv("mapBounds", this.shaderMapBounds, 0, 4);
-
-		final W3xSceneLightManager lightManager = (W3xSceneLightManager) this.viewer.worldScene.getLightManager();
-		final DataTexture terrainLightsTexture = lightManager.getTerrainLightsTexture();
-
-		terrainLightsTexture.bind(3);
-		this.waterShader.setUniformi("lightTexture", 3);
-		this.waterShader.setUniformf("lightCount", lightManager.getTerrainLightCount());
-		this.waterShader.setUniformf("lightTextureHeight", terrainLightsTexture.getHeight());
-		this.waterShader.setUniformf("u_fogColor", this.viewer.worldScene.fogSettings.color);
-		this.waterShader.setUniformf("u_fogParams", this.viewer.worldScene.fogSettings.style.ordinal(),
-				this.viewer.worldScene.fogSettings.start, this.viewer.worldScene.fogSettings.end,
-				this.viewer.worldScene.fogSettings.density);
-
-		this.waterShader.setUniformi("water_height_texture", 0);
-		this.waterShader.setUniformi("ground_height_texture", 1);
-		this.waterShader.setUniformi("water_exists_texture", 2);
-		this.waterShader.setUniformi("water_textures", 4);
-		this.waterShader.setUniformi("fogOfWarMap", 5);
-		gl.glActiveTexture(GL30.GL_TEXTURE0);
-		gl.glBindTexture(GL30.GL_TEXTURE_2D, this.waterHeight);
-		gl.glActiveTexture(GL30.GL_TEXTURE1);
-		gl.glBindTexture(GL30.GL_TEXTURE_2D, this.groundCornerHeight);
-		gl.glActiveTexture(GL30.GL_TEXTURE2);
-		gl.glBindTexture(GL30.GL_TEXTURE_2D, this.waterExists);
-		gl.glActiveTexture(GL30.GL_TEXTURE4);
-		gl.glBindTexture(GL30.GL_TEXTURE_2D_ARRAY, this.waterTextureArray);
-		gl.glActiveTexture(GL30.GL_TEXTURE5);
-		gl.glBindTexture(GL30.GL_TEXTURE_2D, this.fogOfWarMap);
-
-		gl.glBindBuffer(GL30.GL_ARRAY_BUFFER, ShapesWdt.INSTANCE.vertexBuffer);
-		gl.glVertexAttribPointer(this.waterShader.getAttributeLocation("vPosition"), 2, GL30.GL_FLOAT, false, 0, 0);
-
-		gl.glBindBuffer(GL30.GL_ELEMENT_ARRAY_BUFFER, ShapesWdt.INSTANCE.indexBuffer);
-		gl.glDrawElementsInstanced(GL30.GL_TRIANGLES, ShapesWdt.INSTANCE.quadIndices.length * 3, GL30.GL_UNSIGNED_INT,
-				0, (this.columns - 1) * (this.rows - 1));
-
-		gl.glEnable(GL30.GL_BLEND);
 	}
 
 	@Override
 	public void renderCliffs() {
-
-		// Render cliffs
-		for (final IVec3 i : this.cliffs) {
-			final RenderCorner bottomLeft = this.corners[i.x][i.y];
-			final RenderCorner bottomRight = this.corners[i.x + 1][i.y];
-			final RenderCorner topLeft = this.corners[i.x][i.y + 1];
-			final RenderCorner topRight = this.corners[i.x + 1][i.y + 1];
-
-			final float min = Math.min(Math.min(bottomLeft.getLayerHeight() - 2, bottomRight.getLayerHeight() - 2),
-					Math.min(topLeft.getLayerHeight() - 2, topRight.getLayerHeight() - 2));
-
-			fourComponentHeap[0] = i.x;
-			fourComponentHeap[1] = i.y;
-			fourComponentHeap[2] = min;
-			fourComponentHeap[3] = bottomLeft.getCliffTexture();
-			this.cliffMeshes.get(i.z).renderQueue(fourComponentHeap);
-		}
-
-		this.webGL.useShaderProgram(this.cliffShader);
-
-		final GL30 gl = Gdx.gl30;
-		gl.glDisable(GL30.GL_BLEND);
-
-		// WC3 models are 128x too large
-		tempMatrix.set(this.camera.viewProjectionMatrix);
-		gl.glUniformMatrix4fv(this.cliffShader.getUniformLocation("MVP"), 1, false, tempMatrix.val, 0);
-		gl.glUniform1i(this.cliffShader.getUniformLocation("show_lighting"), this.viewer.renderLighting);
-
-		final W3xSceneLightManager lightManager = (W3xSceneLightManager) this.viewer.worldScene.getLightManager();
-		final DataTexture unitLightsTexture = lightManager.getTerrainLightsTexture();
-
-		unitLightsTexture.bind(21);
-		gl.glUniform1i(this.cliffShader.getUniformLocation("lightTexture"), 21);
-		gl.glUniform1f(this.cliffShader.getUniformLocation("lightCount"), lightManager.getTerrainLightCount());
-		gl.glUniform1f(this.cliffShader.getUniformLocation("lightTextureHeight"), unitLightsTexture.getHeight());
-		this.cliffShader.setUniformf("u_fogColor", this.viewer.worldScene.fogSettings.color);
-		this.cliffShader.setUniformf("u_fogParams", this.viewer.worldScene.fogSettings.style.ordinal(),
-				this.viewer.worldScene.fogSettings.start, this.viewer.worldScene.fogSettings.end,
-				this.viewer.worldScene.fogSettings.density);
-
-		this.cliffShader.setUniformi("shadowMap", 2);
-		gl.glActiveTexture(GL30.GL_TEXTURE2);
-		gl.glBindTexture(GL30.GL_TEXTURE_2D, this.shadowMap);
-
-		this.cliffShader.setUniformi("fogOfWarMap", 3);
-		gl.glActiveTexture(GL30.GL_TEXTURE3);
-		gl.glBindTexture(GL30.GL_TEXTURE_2D, this.fogOfWarMap);
-
-		this.cliffShader.setUniformi("cliff_textures", 0);
-		gl.glActiveTexture(GL30.GL_TEXTURE0);
-		gl.glBindTexture(GL30.GL_TEXTURE_2D_ARRAY, this.cliffTextureArray);
-		this.cliffShader.setUniformi("height_texture", 1);
-		gl.glActiveTexture(GL30.GL_TEXTURE1);
-		gl.glBindTexture(GL30.GL_TEXTURE_2D, this.groundHeight);
-//		gl.glActiveTexture(GL30.GL_TEXTURE2);
-		for (final CliffMesh i : this.cliffMeshes) {
-			gl.glUniform1f(this.cliffShader.getUniformLocation("centerOffsetX"), this.centerOffset[0]);
-			gl.glUniform1f(this.cliffShader.getUniformLocation("centerOffsetY"), this.centerOffset[1]);
-			i.render(this.cliffShader);
-		}
 	}
 
 	@Override
@@ -1073,143 +449,43 @@ public class TerrainWdt extends TerrainInterface {
 		final List<float[]> shadowList = this.shadows.get(file);
 		final float[] shadowPositionArray = new float[] { shadowX, shadowY };
 		shadowList.add(shadowPositionArray);
-		if (this.initShadowsFinished) {
+		final Tile tile = getCurrentTile();
+		if ((tile != null) && (tile.activeTile != null)) {
 			final Texture texture = this.shadowTextures.get(file);
 
-			final int columns = (this.columns - 1) * 4;
-			final int rows = (this.rows - 1) * 4;
-			blitShadowData(columns, rows, shadowX, shadowY, texture);
-			final GL30 gl = Gdx.gl30;
-			gl.glBindTexture(GL30.GL_TEXTURE_2D, this.shadowMap);
-			gl.glTexImage2D(GL30.GL_TEXTURE_2D, 0, GL30.GL_R8, columns, rows, 0, GL30.GL_RED, GL30.GL_UNSIGNED_BYTE,
-					RenderMathUtils.wrap(this.shadowData));
+			final int columns = (tile.activeTile.width - 1) * 4;
+			final int rows = (tile.activeTile.height - 1) * 4;
+			if (tile.activeTile.blitShadowData(columns, rows, shadowX, shadowY, texture)) {
+				final GL30 gl = Gdx.gl30;
+				gl.glBindTexture(GL30.GL_TEXTURE_2D, tile.activeTile.shadowMap);
+				gl.glTexImage2D(GL30.GL_TEXTURE_2D, 0, GL30.GL_R8, columns, rows, 0, GL30.GL_RED, GL30.GL_UNSIGNED_BYTE,
+						RenderMathUtils.wrap(tile.activeTile.shadowData));
+			}
 		}
 		return new BuildingShadow() {
 			@Override
 			public void remove() {
 				shadowList.remove(shadowPositionArray);
-				reloadShadowDataToGPU();
+				final Tile tile = getCurrentTile();
+				if ((tile != null) && (tile.activeTile != null)) {
+					tile.activeTile.reloadShadowDataToGPU();
+				}
 			}
 
 			@Override
 			public void move(final float x, final float y) {
 				shadowPositionArray[0] = x;
 				shadowPositionArray[1] = y;
-				reloadShadowDataToGPU();
+				final Tile tile = getCurrentTile();
+				if ((tile != null) && (tile.activeTile != null)) {
+					tile.activeTile.reloadShadowDataToGPU();
+				}
 			}
 		};
 	}
 
-	public void blitShadowData(final int columns, final int rows, final float shadowX, final float shadowY,
-			final Texture texture) {
-		final int width = texture.getWidth();
-		final int height = texture.getHeight();
-		final int ox = (int) Math.round(width * 0.3);
-		final int oy = (int) Math.round(height * 0.7);
-		blitShadowDataLocation(columns, rows, (RawOpenGLTextureResource) texture, width, height, ox, oy,
-				this.centerOffset, shadowX, shadowY, this.shadowData);
-	}
-
 	@Override
 	public void initShadows() throws IOException {
-		final GL30 gl = Gdx.gl30;
-		final float[] centerOffset = this.centerOffset;
-		final int columns = (this.columns - 1) * 4;
-		final int rows = (this.rows - 1) * 4;
-
-		final int shadowSize = columns * rows;
-		this.staticShadowData = new byte[columns * rows];
-		this.shadowData = new byte[columns * rows];
-		if (this.viewer.mapMpq.has("war3map.shd")) {
-			final byte[] buffer;
-
-			try (final InputStream shadowSource = this.viewer.mapMpq.getResourceAsStream("war3map.shd")) {
-				buffer = IOUtils.toByteArray(shadowSource);
-			}
-
-			for (int i = 0; i < shadowSize; i++) {
-				this.staticShadowData[i] = (byte) ((buffer[i] & 0xFF) / 2f);
-			}
-		}
-
-		final byte outsideArea = (byte) 204;
-		final int x0 = this.mapBounds[0] * 4, x1 = (this.mapSize[0] - this.mapBounds[1] - 1) * 4,
-				y0 = this.mapBounds[2] * 4, y1 = (this.mapSize[1] - this.mapBounds[3] - 1) * 4;
-		for (int y = y0; y < y1; ++y) {
-			for (int x = x0; x < x1; ++x) {
-				final RenderCorner c = this.corners[x >> 2][y >> 2];
-				if (c.getBoundary() != 0) {
-					this.staticShadowData[(y * columns) + x] = outsideArea;
-				}
-			}
-		}
-		for (int y = 0; y < rows; ++y) {
-			for (int x = 0; x < x0; ++x) {
-				this.staticShadowData[(y * columns) + x] = outsideArea;
-			}
-			for (int x = x1; x < columns; ++x) {
-				this.staticShadowData[(y * columns) + x] = outsideArea;
-			}
-		}
-		for (int x = x0; x < x1; ++x) {
-			for (int y = 0; y < y0; ++y) {
-				this.staticShadowData[(y * columns) + x] = outsideArea;
-			}
-			for (int y = y1; y < rows; ++y) {
-				this.staticShadowData[(y * columns) + x] = outsideArea;
-			}
-		}
-		reloadShadowData(centerOffset, columns, rows);
-
-		this.shadowMap = gl.glGenTexture();
-		gl.glBindTexture(GL30.GL_TEXTURE_2D, this.shadowMap);
-		gl.glTexParameteri(GL30.GL_TEXTURE_2D, GL30.GL_TEXTURE_MAG_FILTER, GL30.GL_LINEAR);
-		gl.glTexParameteri(GL30.GL_TEXTURE_2D, GL30.GL_TEXTURE_MIN_FILTER, GL30.GL_LINEAR);
-		gl.glTexParameteri(GL30.GL_TEXTURE_2D, GL30.GL_TEXTURE_WRAP_S, GL30.GL_CLAMP_TO_EDGE);
-		gl.glTexParameteri(GL30.GL_TEXTURE_2D, GL30.GL_TEXTURE_WRAP_T, GL30.GL_CLAMP_TO_EDGE);
-		gl.glTexImage2D(GL30.GL_TEXTURE_2D, 0, GL30.GL_R8, columns, rows, 0, GL30.GL_RED, GL30.GL_UNSIGNED_BYTE,
-				RenderMathUtils.wrap(this.shadowData));
-		this.initShadowsFinished = true;
-
-		this.fogOfWarMap = gl.glGenTexture();
-		gl.glBindTexture(GL30.GL_TEXTURE_2D, this.fogOfWarMap);
-	}
-
-	private void reloadShadowData(final float[] centerOffset, final int columns, final int rows) {
-		System.arraycopy(this.staticShadowData, 0, this.shadowData, 0, this.staticShadowData.length);
-		for (final Map.Entry<String, Texture> fileAndTexture : this.shadowTextures.entrySet()) {
-			final String file = fileAndTexture.getKey();
-			final Texture texture = fileAndTexture.getValue();
-
-			final int width = texture.getWidth();
-			final int height = texture.getHeight();
-			final int ox = (int) Math.round(width * 0.3);
-			final int oy = (int) Math.round(height * 0.7);
-			for (final float[] location : this.shadows.get(file)) {
-				blitShadowDataLocation(columns, rows, (RawOpenGLTextureResource) texture, width, height, ox, oy,
-						centerOffset, location[0], location[1], this.shadowData);
-			}
-		}
-	}
-
-	public void blitShadowDataLocation(final int columns, final int rows, final RawOpenGLTextureResource texture,
-			final int width, final int height, final int x01, final int y01, final float[] centerOffset, final float v,
-			final float v2, final byte[] shadowData) {
-		final int x0 = (int) Math.floor((v - centerOffset[0]) / 32.0) - x01;
-		final int y0 = (int) Math.floor((v2 - centerOffset[1]) / 32.0) + y01;
-		for (int y = 0; y < height; ++y) {
-			if (((y0 - y) < 0) || ((y0 - y) >= rows)) {
-				continue;
-			}
-			for (int x = 0; x < width; ++x) {
-				if (((x0 + x) < 0) || ((x0 + x) >= columns)) {
-					continue;
-				}
-				if (texture.getData().get((((y * width) + x) * 4) + 3) != 0) {
-					shadowData[((y0 - y) * columns) + x0 + x] = (byte) 128;
-				}
-			}
-		}
 	}
 
 //	public Vector3 groundNormal(final Vector3 out, int x, int y) {
@@ -1272,28 +548,82 @@ public class TerrainWdt extends TerrainInterface {
 
 	@Override
 	public float getGroundHeight(final float x, final float y) {
-		final float userCellSpaceX = (x - this.centerOffset[0]) / 128.0f;
-		final float userCellSpaceY = (y - this.centerOffset[1]) / 128.0f;
-		final int cellX = (int) userCellSpaceX;
-		final int cellY = (int) userCellSpaceY;
+		final float userCellSpaceXWc3 = (x - this.centerOffset[0]) / 128.0f;
+		final float userCellSpaceYWc3 = (y - this.centerOffset[1]) / 128.0f;
+		final int cellXWc3 = (int) userCellSpaceXWc3;
+		final int cellYWc3 = (int) userCellSpaceYWc3;
 
-		if ((cellX >= 0) && (cellX < (this.mapSize[0] - 1)) && (cellY >= 0) && (cellY < (this.mapSize[1] - 1))) {
-			final float bottomLeft = this.groundCornerHeights[(cellY * this.columns) + cellX];
-			final float bottomRight = this.groundCornerHeights[(cellY * this.columns) + cellX + 1];
-			final float topLeft = this.groundCornerHeights[((cellY + 1) * this.columns) + cellX];
-			final float topRight = this.groundCornerHeights[((cellY + 1) * this.columns) + cellX + 1];
-			final float sqX = userCellSpaceX - cellX;
-			final float sqY = userCellSpaceY - cellY;
-			float height;
+		if ((cellXWc3 >= 0) && (cellXWc3 < (this.mapSize[0] - 1)) && (cellYWc3 >= 0)
+				&& (cellYWc3 < (this.mapSize[1] - 1))) {
+			final int worldGridCellX = this.worldGrid.getCellX(x);
+			final int worldGridCellY = this.worldGrid.getCellY(y);
+			if ((worldGridCellX >= 0) && (worldGridCellX < this.tiles.length)) {
+				final Tile[] column = this.tiles[worldGridCellX];
+				if ((worldGridCellY >= 0) && (worldGridCellY < column.length)) {
+					final Tile tile = column[worldGridCellY];
+					if (tile != null) {
+						final float cornerX = this.worldGrid.getCornerX(worldGridCellX);
+						final float cornerY = this.worldGrid.getCornerY(worldGridCellY);
+						final float xWithinBlock = x - cornerX;
+						final float yWithinBlock = y - cornerY;
 
-			if ((sqX + sqY) < 1) {
-				height = bottomLeft + ((bottomRight - bottomLeft) * sqX) + ((topLeft - bottomLeft) * sqY);
+						final float chunkSize = 128.0f * 8;
+						final int chunkX = (int) (xWithinBlock / chunkSize);
+						final int chunkY = (int) (yWithinBlock / chunkSize);
+						final Chunk chunk = tile.chunks[chunkX][chunkY];
+						if (chunk != null) {
+							final float userCellSpaceX = (xWithinBlock - (chunkX * chunkSize)) / 128.0f;
+							final float userCellSpaceY = (yWithinBlock - (chunkY * chunkSize)) / 128.0f;
+							final int cellX = (int) userCellSpaceX;
+							final int cellY = (int) userCellSpaceY;
+
+							final float[][] heightMap = chunk.getHeightMap();
+							final float bottomLeft = heightMap[8 - cellY][cellX]
+									* WdtChunkModelInstance.wowToHiveWEFactor;
+							final float bottomRight = heightMap[8 - cellY][cellX + 1]
+									* WdtChunkModelInstance.wowToHiveWEFactor;
+							final float topLeft = heightMap[8 - cellY - 1][cellX]
+									* WdtChunkModelInstance.wowToHiveWEFactor;
+							final float topRight = heightMap[8 - cellY - 1][cellX + 1]
+									* WdtChunkModelInstance.wowToHiveWEFactor;
+							final float center = heightMap[16 - cellY][cellX] * WdtChunkModelInstance.wowToHiveWEFactor;
+
+							final float sqX = userCellSpaceXWc3 - cellXWc3;
+							final float sqY = userCellSpaceYWc3 - cellYWc3;
+							final float sqXinv = 1 - sqX;
+							final float sqYinv = 1 - sqY;
+							float height;
+
+							if ((sqX + sqY) < 1) {
+								if ((sqX + sqYinv) >= 1) {
+									// bottom
+									height = bottomLeft + ((bottomRight - bottomLeft) * sqX)
+											+ (((center * 2) - bottomRight - bottomLeft) * sqY);
+								}
+								else {
+									// left
+									height = bottomLeft + (((center * 2) - topRight - bottomLeft) * sqX)
+											+ ((topLeft - bottomLeft) * sqY);
+								}
+							}
+							else {
+								if ((sqX + sqYinv) >= 1) {
+									// right
+									height = topRight + ((bottomRight - topRight) * sqYinv)
+											+ (((center * 2) - bottomRight - topRight) * sqXinv);
+								}
+								else {
+									// top
+									height = topRight + (((center * 2) - topLeft - topRight) * sqYinv)
+											+ ((topLeft - topRight) * sqXinv);
+								}
+							}
+
+							return height * 128.0f;
+						}
+					}
+				}
 			}
-			else {
-				height = topRight + ((bottomRight - topRight) * (1 - sqY)) + ((topLeft - topRight) * (1 - sqX));
-			}
-
-			return height * 128.0f;
 		}
 
 		return 0;
@@ -1325,43 +655,32 @@ public class TerrainWdt extends TerrainInterface {
 
 	@Override
 	public RenderCorner getCorner(final float x, final float y) {
-		final float userCellSpaceX = (x - this.centerOffset[0]) / 128.0f;
-		final float userCellSpaceY = (y - this.centerOffset[1]) / 128.0f;
-		final int cellX = (int) userCellSpaceX;
-		final int cellY = (int) userCellSpaceY;
-
-		if ((cellX >= 0) && (cellX < (this.mapSize[0] - 1)) && (cellY >= 0) && (cellY < (this.mapSize[1] - 1))) {
-			return this.corners[cellX][cellY];
-		}
-
 		return null;
 	}
 
 	@Override
 	public float getWaterHeight(final float x, final float y) {
-		final float userCellSpaceX = (x - this.centerOffset[0]) / 128.0f;
-		final float userCellSpaceY = (y - this.centerOffset[1]) / 128.0f;
-		final int cellX = (int) userCellSpaceX;
-		final int cellY = (int) userCellSpaceY;
-
-		if ((cellX >= 0) && (cellX < (this.mapSize[0] - 1)) && (cellY >= 0) && (cellY < (this.mapSize[1] - 1))) {
-			final float bottomLeft = this.waterHeights[(cellY * this.columns) + cellX];
-			final float bottomRight = this.waterHeights[(cellY * this.columns) + cellX + 1];
-			final float topLeft = this.waterHeights[((cellY + 1) * this.columns) + cellX];
-			final float topRight = this.waterHeights[((cellY + 1) * this.columns) + cellX + 1];
-			final float sqX = userCellSpaceX - cellX;
-			final float sqY = userCellSpaceY - cellY;
-			float height;
-
-			if ((sqX + sqY) < 1) {
-				height = bottomLeft + ((bottomRight - bottomLeft) * sqX) + ((topLeft - bottomLeft) * sqY);
-			}
-			else {
-				height = topRight + ((bottomRight - topRight) * (1 - sqY)) + ((topLeft - topRight) * (1 - sqX));
-			}
-
-			return (height + this.waterHeightOffset) * 128.0f;
-		}
+		/*
+		 * final float userCellSpaceX = (x - this.centerOffset[0]) / 128.0f; final float
+		 * userCellSpaceY = (y - this.centerOffset[1]) / 128.0f; final int cellX = (int)
+		 * userCellSpaceX; final int cellY = (int) userCellSpaceY;
+		 *
+		 * if ((cellX >= 0) && (cellX < (this.mapSize[0] - 1)) && (cellY >= 0) && (cellY
+		 * < (this.mapSize[1] - 1))) { final float bottomLeft = this.waterHeights[(cellY
+		 * * this.columns) + cellX]; final float bottomRight = this.waterHeights[(cellY
+		 * * this.columns) + cellX + 1]; final float topLeft = this.waterHeights[((cellY
+		 * + 1) * this.columns) + cellX]; final float topRight =
+		 * this.waterHeights[((cellY + 1) * this.columns) + cellX + 1]; final float sqX
+		 * = userCellSpaceX - cellX; final float sqY = userCellSpaceY - cellY; float
+		 * height;
+		 *
+		 * if ((sqX + sqY) < 1) { height = bottomLeft + ((bottomRight - bottomLeft) *
+		 * sqX) + ((topLeft - bottomLeft) * sqY); } else { height = topRight +
+		 * ((bottomRight - topRight) * (1 - sqY)) + ((topLeft - topRight) * (1 - sqX));
+		 * }
+		 *
+		 * return (height + this.waterHeightOffset) * 128.0f; }
+		 */
 
 		return this.waterHeightOffset * 128.0f;
 	}
@@ -1439,7 +758,7 @@ public class TerrainWdt extends TerrainInterface {
 		if (y >= (this.mapSize[1] - this.mapBounds[3] - 1)) {
 			return false;
 		} // TODO why do we use floor if we can use int cast?
-		return this.corners[(int) Math.floor(x)][(int) Math.floor(y)].getBoundary() == 0;
+		return true;
 	}
 
 	@Override
@@ -1450,16 +769,6 @@ public class TerrainWdt extends TerrainInterface {
 	@Override
 	public Rectangle getEntireMap() {
 		return this.entireMapRectangle;
-	}
-
-	private void reloadShadowDataToGPU() {
-		final int columns = (TerrainWdt.this.columns - 1) * 4;
-		final int rows = (TerrainWdt.this.rows - 1) * 4;
-		reloadShadowData(TerrainWdt.this.centerOffset, columns, rows);
-		final GL30 gl = Gdx.gl30;
-		gl.glBindTexture(GL30.GL_TEXTURE_2D, TerrainWdt.this.shadowMap);
-		gl.glTexImage2D(GL30.GL_TEXTURE_2D, 0, GL30.GL_R8, columns, rows, 0, GL30.GL_RED, GL30.GL_UNSIGNED_BYTE,
-				RenderMathUtils.wrap(TerrainWdt.this.shadowData));
 	}
 
 	private static char getRampLetter(final int layerHeightOffset, final boolean isRamp) {
@@ -1486,27 +795,11 @@ public class TerrainWdt extends TerrainInterface {
 	}
 
 	@Override
-	public void setFogOfWarData(final CFogMaskSettings fogMaskSettings, final CPlayerFogOfWar fogOfWarData) {
-		this.fogOfWarData = fogOfWarData;
-		this.visualFogData = ByteBuffer.allocateDirect(fogOfWarData.getFogOfWarBuffer().capacity());
-		reloadFogOfWarDataToGPU(fogMaskSettings);
+	public void setFogOfWarData(final CFogMaskSettings fogMaskSettings, final CPlayerFogOfWarInterface fogOfWarData) {
 	}
 
 	@Override
 	public void reloadFogOfWarDataToGPU(final CFogMaskSettings fogMaskSettings) {
-		final GL30 gl = Gdx.gl30;
-		final ByteBuffer fogOfWarBuffer = this.fogOfWarData.getFogOfWarBuffer();
-		for (int i = 0; i < this.visualFogData.capacity(); i++) {
-			this.visualFogData.put(i, War3MapViewer.fadeLineOfSightColor(this.visualFogData.get(i),
-					fogMaskSettings.getFogStateFromSettings(fogOfWarBuffer.get(i))));
-		}
-		gl.glBindTexture(GL30.GL_TEXTURE_2D, TerrainWdt.this.fogOfWarMap);
-		gl.glTexParameteri(GL30.GL_TEXTURE_2D, GL30.GL_TEXTURE_MAG_FILTER, GL30.GL_LINEAR);
-		gl.glTexParameteri(GL30.GL_TEXTURE_2D, GL30.GL_TEXTURE_MIN_FILTER, GL30.GL_LINEAR);
-		gl.glTexParameteri(GL30.GL_TEXTURE_2D, GL30.GL_TEXTURE_WRAP_S, GL30.GL_CLAMP_TO_EDGE);
-		gl.glTexParameteri(GL30.GL_TEXTURE_2D, GL30.GL_TEXTURE_WRAP_T, GL30.GL_CLAMP_TO_EDGE);
-		gl.glTexImage2D(GL30.GL_TEXTURE_2D, 0, GL30.GL_R8, this.fogOfWarData.getWidth(), this.fogOfWarData.getHeight(),
-				0, GL30.GL_RED, GL30.GL_UNSIGNED_BYTE, this.visualFogData);
 	}
 
 	public int getFogOfWarMap() {
@@ -1528,7 +821,8 @@ public class TerrainWdt extends TerrainInterface {
 		public static final int CHUNK_GRID_SIZE = 9;
 		public static final int CHUNK_INTERIOR_GRID_SIZE = CHUNK_GRID_SIZE - 1;
 		public static final float tilesize = 533.3333f;
-		public static final float wowToWc3Factor = 1.0f / ((tilesize / 16) / 8);
+		public static final float wowToHiveWEFactor = 1.0f / ((tilesize / 16) / 8);
+		public static final float wowToWc3Factor = 128.0f * wowToHiveWEFactor;
 
 		private final ChunkInfo chunkInfo;
 		private final Chunk chunk;
@@ -1541,6 +835,7 @@ public class TerrainWdt extends TerrainInterface {
 		private int groundCornerHeightWdtInterior;
 		private int groundTextureData = -1;
 		private int[] alphaMapHandleIds;
+		private AlphaMapDataValue[] alphaMapValues;
 		private final int[] tileOffset = new int[2];
 
 		public WdtChunkModelInstance(final Model model, final ChunkInfo chunkInfo, final Chunk chunk) {
@@ -1588,17 +883,18 @@ public class TerrainWdt extends TerrainInterface {
 					TerrainWdt.this.viewer.renderPathing);
 			gl.glUniform1i(TerrainWdt.this.groundShader.getUniformLocation("show_lighting"),
 					TerrainWdt.this.viewer.renderLighting);
-			gl.glUniform1i(TerrainWdt.this.groundShader.getUniformLocation("height_texture"), 0);
 			gl.glUniform1i(TerrainWdt.this.groundShader.getUniformLocation("height_cliff_texture"), 1);
 			gl.glUniform1i(TerrainWdt.this.groundShader.getUniformLocation("height_cliff_texture_wdt"), 23);
 			gl.glUniform1i(TerrainWdt.this.groundShader.getUniformLocation("terrain_alpha_list"), 2);
-			gl.glUniform1i(TerrainWdt.this.groundShader.getUniformLocation("shadowMap"), 20);
+//			gl.glUniform1i(TerrainWdt.this.groundShader.getUniformLocation("shadowMap"), 20);
 			gl.glUniform1f(TerrainWdt.this.groundShader.getUniformLocation("centerOffsetX"),
 					TerrainWdt.this.centerOffset[0]);
 			gl.glUniform1f(TerrainWdt.this.groundShader.getUniformLocation("centerOffsetY"),
 					TerrainWdt.this.centerOffset[1]);
 			gl.glUniform1i(TerrainWdt.this.groundShader.getUniformLocation("tileOffsetX"), this.tileOffset[0]);
 			gl.glUniform1i(TerrainWdt.this.groundShader.getUniformLocation("tileOffsetY"), this.tileOffset[1]);
+			gl.glUniform2f(TerrainWdt.this.groundShader.getUniformLocation("size_world"), TerrainWdt.this.columns,
+					TerrainWdt.this.rows);
 
 			final W3xSceneLightManager lightManager = (W3xSceneLightManager) TerrainWdt.this.viewer.worldScene
 					.getLightManager();
@@ -1618,8 +914,6 @@ public class TerrainWdt extends TerrainInterface {
 					TerrainWdt.this.viewer.worldScene.fogSettings.density);
 
 			gl.glUniform1i(TerrainWdt.this.groundShader.getUniformLocation("cliff_textures"), 0);
-			gl.glActiveTexture(GL30.GL_TEXTURE0);
-			gl.glBindTexture(GL30.GL_TEXTURE_2D, TerrainWdt.this.groundHeight);
 
 			gl.glActiveTexture(GL30.GL_TEXTURE1);
 			gl.glBindTexture(GL30.GL_TEXTURE_2D, this.groundCornerHeight);
@@ -1656,11 +950,11 @@ public class TerrainWdt extends TerrainInterface {
 //			gl.glActiveTexture(GL30.GL_TEXTURE20, /*pathingMap.getTextureStatic()*/);
 //			gl.glActiveTexture(GL30.GL_TEXTURE21, /*pathingMap.getTextureDynamic()*/);
 
-			gl.glActiveTexture(GL30.GL_TEXTURE20);
-			gl.glBindTexture(GL30.GL_TEXTURE_2D, TerrainWdt.this.shadowMap);
+//			gl.glActiveTexture(GL30.GL_TEXTURE20);
+//			gl.glBindTexture(GL30.GL_TEXTURE_2D, TerrainWdt.this.shadowMap);
 
-			gl.glActiveTexture(GL30.GL_TEXTURE22);
-			gl.glBindTexture(GL30.GL_TEXTURE_2D, TerrainWdt.this.fogOfWarMap);
+//			gl.glActiveTexture(GL30.GL_TEXTURE22);
+//			gl.glBindTexture(GL30.GL_TEXTURE_2D, TerrainWdt.this.fogOfWarMap);
 
 			gl.glActiveTexture(GL30.GL_TEXTURE23);
 			gl.glBindTexture(GL30.GL_TEXTURE_2D, this.groundCornerHeightWdtInterior);
@@ -1699,8 +993,8 @@ public class TerrainWdt extends TerrainInterface {
 			final long indexX = this.chunk.getIndexX();
 			final long indexY = this.chunk.getIndexY();
 
-			final long war3ChunkIndexX = ((model.blockX * 16) + 15) - indexY;
-			final long war3ChunkIndexY = (model.blockY * 16) + indexX;
+			final long war3ChunkIndexX = (model.blockX * 16) + indexX;
+			final long war3ChunkIndexY = ((model.blockY * 16) + 15) - indexY;
 
 			final float[][] heightMap = this.chunk.getHeightMap();
 
@@ -1709,20 +1003,23 @@ public class TerrainWdt extends TerrainInterface {
 
 			final long war3BaseIndexX = (war3ChunkIndexX * 8);
 			final long war3BaseIndexY = (war3ChunkIndexY * 8);
-			setLocation((war3BaseIndexY * 128f) + TerrainWdt.this.centerOffset[0],
-					(war3BaseIndexX * 128f) + TerrainWdt.this.centerOffset[1], 0);
-			this.tileOffset[0] = (int) war3BaseIndexY;
-			this.tileOffset[1] = (int) war3BaseIndexX;
+			this.tileOffset[0] = (int) war3BaseIndexX;
+			this.tileOffset[1] = (int) war3BaseIndexY;
+			double heightAvg = 0;
 			for (int i = 0; i < CHUNK_GRID_SIZE; i++) {
 				for (int j = 0; j < CHUNK_GRID_SIZE; j++) {
 					final float height = heightMap[i][j];
 
 					final int war3IndexX = (9 - i - 1);
 					final int war3IndexY = j;
-					this.groundCornerHeights[(war3IndexX * CHUNK_GRID_SIZE) + war3IndexY] = height * wowToWc3Factor;
-
+					final float convertedHeight = height * wowToHiveWEFactor;
+					this.groundCornerHeights[(war3IndexX * CHUNK_GRID_SIZE) + war3IndexY] = convertedHeight;
+					heightAvg += convertedHeight;
 				}
 			}
+			setLocation((war3BaseIndexX * 128f) + TerrainWdt.this.centerOffset[0],
+					(war3BaseIndexY * 128f) + TerrainWdt.this.centerOffset[1],
+					(float) (heightAvg / (CHUNK_GRID_SIZE * CHUNK_GRID_SIZE)));
 			for (int i = 0; i < CHUNK_INTERIOR_GRID_SIZE; i++) {
 				for (int j = 0; j < CHUNK_INTERIOR_GRID_SIZE; j++) {
 					final float height = heightMap[i + 9][j];
@@ -1730,49 +1027,61 @@ public class TerrainWdt extends TerrainInterface {
 					final int war3IndexX = (8 - i - 1);
 					final int war3IndexY = j;
 					this.groundCornerHeightsWdtInterior[(war3IndexX * CHUNK_INTERIOR_GRID_SIZE) + war3IndexY] = height
-							* wowToWc3Factor;
+							* wowToHiveWEFactor;
 
 				}
 			}
 			final GL30 gl = Gdx.gl30;
 			this.alphaMapHandleIds = new int[this.chunk.getMapChunkLayers().size() - 1];
+			this.alphaMapValues = new AlphaMapDataValue[this.chunk.getMapChunkLayers().size() - 1];
 			for (int layerId = 1; layerId < this.chunk.getMapChunkLayers().size(); layerId++) {
-				final int idx = layerId - 1;
-				final int glGenTexture = gl.glGenTexture();
-				this.alphaMapHandleIds[idx] = glGenTexture;
-
-				final ByteBuffer wrapper = ByteBuffer.allocateDirect(4096 * 4).order(ByteOrder.nativeOrder());
 				final MapChunkLayer mapChunkLayer = this.chunk.getMapChunkLayers().get(layerId);
 				int offset = (int) mapChunkLayer.getOffsAlpha();
 				final short[] alphaMaps = this.chunk.getAlphaMaps();
-				while (wrapper.hasRemaining()) {
-					final short data = alphaMaps[offset];
-					final byte nibbleA = (byte) (data & 0xF);
-					final byte nibbleB = (byte) ((data & 0xF0) >> 4);
-					wrapper.putFloat(nibbleA / 15f);
-					wrapper.putFloat(nibbleB / 15f);
-					offset++;
-				}
-				for (int x = 0; x < 64; x++) {
-					// the internet said to copy the last row into the one next to it if some map
-					// header
-					// was set, and we don't even have that header on alpha. So, here's assuming
-					// we have to always do that:
-//					alpha_map[x][63] == alpha_map[x][62]
-//					alpha_map[63][x] == alpha_map[62][x]
-//					alpha_map[63][63] == alpha_map[62][62]
-					wrapper.putFloat(4 * ((x * 64) + 63), wrapper.getFloat(4 * ((x * 64) + 62)));
-					wrapper.putFloat(4 * ((63 * 64) + x), wrapper.getFloat(4 * ((62 * 64) + x)));
-				}
-				wrapper.putFloat(4 * ((63 * 64) + 63), wrapper.getFloat(4 * ((62 * 64) + 62)));
+				final AlphaMapData alphaMapData = new AlphaMapData(offset, alphaMaps);
+				AlphaMapDataValue alphaMapDataValue = TerrainWdt.this.alphaDataToId.get(alphaMapData);
+				final int idx = layerId - 1;
+				if (alphaMapDataValue == null) {
+					alphaMapDataValue = new AlphaMapDataValue(alphaMapData);
+					alphaMapDataValue.glTextureHandle = gl.glGenTexture();
 
-				gl.glBindTexture(GL30.GL_TEXTURE_2D, glGenTexture);
-				wrapper.clear();
-				gl.glTexImage2D(GL30.GL_TEXTURE_2D, 0, GL30.GL_R32F, 64, 64, 0, GL30.GL_RED, GL30.GL_FLOAT, wrapper);
-				gl.glTexParameteri(GL30.GL_TEXTURE_2D, GL30.GL_TEXTURE_MAG_FILTER, GL30.GL_LINEAR);
-				gl.glTexParameteri(GL30.GL_TEXTURE_2D, GL30.GL_TEXTURE_MIN_FILTER, GL30.GL_LINEAR);
-				gl.glTexParameteri(GL30.GL_TEXTURE_2D, GL30.GL_TEXTURE_WRAP_S, GL30.GL_CLAMP_TO_EDGE);
-				gl.glTexParameteri(GL30.GL_TEXTURE_2D, GL30.GL_TEXTURE_WRAP_T, GL30.GL_CLAMP_TO_EDGE);
+					final ByteBuffer wrapper = ByteBuffer.allocateDirect(4096 * 4).order(ByteOrder.nativeOrder());
+					while (wrapper.hasRemaining()) {
+						final short data = alphaMaps[offset];
+						final byte nibbleA = (byte) (data & 0xF);
+						final byte nibbleB = (byte) ((data & 0xF0) >> 4);
+						wrapper.putFloat(nibbleA / 15f);
+						wrapper.putFloat(nibbleB / 15f);
+						offset++;
+					}
+					for (int x = 0; x < 64; x++) {
+						// the internet said to copy the last row into the one next to it if some map
+						// header
+						// was set, and we don't even have that header on alpha. So, here's assuming
+						// we have to always do that:
+//						alpha_map[x][63] == alpha_map[x][62]
+//						alpha_map[63][x] == alpha_map[62][x]
+//						alpha_map[63][63] == alpha_map[62][62]
+						wrapper.putFloat(4 * ((x * 64) + 63), wrapper.getFloat(4 * ((x * 64) + 62)));
+						wrapper.putFloat(4 * ((63 * 64) + x), wrapper.getFloat(4 * ((62 * 64) + x)));
+					}
+					wrapper.putFloat(4 * ((63 * 64) + 63), wrapper.getFloat(4 * ((62 * 64) + 62)));
+
+					gl.glBindTexture(GL30.GL_TEXTURE_2D, alphaMapDataValue.glTextureHandle);
+					wrapper.clear();
+					gl.glTexImage2D(GL30.GL_TEXTURE_2D, 0, GL30.GL_R32F, 64, 64, 0, GL30.GL_RED, GL30.GL_FLOAT,
+							wrapper);
+					gl.glTexParameteri(GL30.GL_TEXTURE_2D, GL30.GL_TEXTURE_MAG_FILTER, GL30.GL_LINEAR);
+					gl.glTexParameteri(GL30.GL_TEXTURE_2D, GL30.GL_TEXTURE_MIN_FILTER, GL30.GL_LINEAR);
+					gl.glTexParameteri(GL30.GL_TEXTURE_2D, GL30.GL_TEXTURE_WRAP_S, GL30.GL_CLAMP_TO_EDGE);
+					gl.glTexParameteri(GL30.GL_TEXTURE_2D, GL30.GL_TEXTURE_WRAP_T, GL30.GL_CLAMP_TO_EDGE);
+
+					TerrainWdt.this.alphaDataToId.put(alphaMapData, alphaMapDataValue);
+				}
+				this.alphaMapHandleIds[idx] = alphaMapDataValue.glTextureHandle;
+				this.alphaMapValues[idx] = alphaMapDataValue;
+				alphaMapDataValue.referenceCount++;
+
 			}
 			this.groundTextureList = new short[CHUNK_INTERIOR_GRID_SIZE * CHUNK_INTERIOR_GRID_SIZE * 4];
 
@@ -1808,6 +1117,20 @@ public class TerrainWdt extends TerrainInterface {
 		}
 
 		@Override
+		public void unload() {
+			for (final AlphaMapDataValue alphaMapDataValue : this.alphaMapValues) {
+				alphaMapDataValue.referenceCount--;
+				if (alphaMapDataValue.referenceCount <= 0) {
+					Gdx.gl30.glDeleteTexture(alphaMapDataValue.glTextureHandle);
+					TerrainWdt.this.alphaDataToId.remove(alphaMapDataValue.key);
+				}
+			}
+			Gdx.gl30.glDeleteTexture(this.groundTextureData);
+			Gdx.gl30.glDeleteTexture(this.groundCornerHeight);
+			Gdx.gl30.glDeleteTexture(this.groundCornerHeightWdtInterior);
+		}
+
+		@Override
 		protected RenderBatch getBatch(final TextureMapper textureMapper) {
 			throw new UnsupportedOperationException("NOT API");
 		}
@@ -1831,8 +1154,6 @@ public class TerrainWdt extends TerrainInterface {
 		}
 
 	}
-
-	private final Map<String, GroundTextureWdt> pathToTexture = new HashMap<>();
 
 	private class WdtChunkModel extends Model {
 
@@ -1869,14 +1190,14 @@ public class TerrainWdt extends TerrainInterface {
 			final int tileIdx = this.tileHeader.idx;
 			this.blockX = tileIdx % 64;
 			this.wowXOffset = this.blockX * WdtChunkModelInstance.tilesize;
-			this.blockY = tileIdx / 64;
+			this.blockY = 63 - (tileIdx / 64);
 			this.wowYOffset = this.blockY * WdtChunkModelInstance.tilesize;
 
-			final float size = WdtChunkModelInstance.tilesize * WdtChunkModelInstance.wowToWc3Factor;
+			final float size = 8 * WdtChunkModelInstance.wowToWc3Factor;
 			final float height = 18000 * WdtChunkModelInstance.wowToWc3Factor;
 			final float halfSize = size / 2;
-			this.bounds.fromExtents(new float[] { -halfSize, -halfSize, 0 }, new float[] { halfSize, halfSize, height },
-					0);
+			this.bounds.fromExtents(new float[] { -halfSize, -halfSize, -halfSize },
+					new float[] { halfSize, halfSize, halfSize }, 0);
 
 			// Ground textures
 			for (final String fileName : this.tileHeader.textureFileNames) {
@@ -1899,5 +1220,356 @@ public class TerrainWdt extends TerrainInterface {
 		protected void error(final Exception e) {
 		}
 
+	}
+
+	private static final class AlphaMapData {
+		private static final int ALPHA_SEG_LENGTH = 2048;
+		private final int offset;
+		private final short[] data;
+
+		public AlphaMapData(final int offset, final short[] data) {
+			this.offset = offset;
+			this.data = data;
+		}
+
+		@Override
+		public int hashCode() {
+			final int prime = 31;
+			int result = 1;
+			for (int i = 0; i < ALPHA_SEG_LENGTH; i++) {
+				result = (prime * result) + Short.hashCode(this.data[this.offset + i]);
+			}
+			return result;
+		}
+
+		@Override
+		public boolean equals(final Object obj) {
+			if (this == obj) {
+				return true;
+			}
+			if (obj == null) {
+				return false;
+			}
+			if (getClass() != obj.getClass()) {
+				return false;
+			}
+			final AlphaMapData other = (AlphaMapData) obj;
+			return Arrays.equals(this.data, this.offset, this.offset + ALPHA_SEG_LENGTH, other.data, other.offset,
+					other.offset + ALPHA_SEG_LENGTH);
+		}
+	}
+
+	private static final class AlphaMapDataValue {
+		private final AlphaMapData key;
+		public int glTextureHandle;
+		public int referenceCount;
+
+		public AlphaMapDataValue(final AlphaMapData key) {
+			this.key = key;
+		}
+	}
+
+	private final class Tile {
+		private final TileHeader tileHeader;
+		private final WdtChunkModel terrainModel;
+		private final float[] myCornerXY;
+		private ActiveTile activeTile;
+		private final Chunk[][] chunks;
+
+		public Tile(final TileHeader tileHeader, final WdtChunkModel wdtChunkModel, final float myCornerX,
+				final float myCornerY) {
+			this.tileHeader = tileHeader;
+			this.terrainModel = wdtChunkModel;
+			this.myCornerXY = new float[] { myCornerX, myCornerY };
+			this.chunks = new Chunk[16][16];
+			for (final Chunk chunk : tileHeader.chunks) {
+				final long war3ChunkIndexY = 15 - chunk.getIndexY();
+				final long war3ChunkIndexX = chunk.getIndexX();
+				this.chunks[(int) war3ChunkIndexX][(int) war3ChunkIndexY] = chunk;
+			}
+		}
+
+		public boolean activate() {
+			if (this.activeTile == null) {
+				this.activeTile = new ActiveTile(this);
+				return true;
+			}
+			return false;
+		}
+
+		public void deactivate() {
+			this.activeTile.dispose();
+			this.activeTile = null;
+		}
+	}
+
+	private final class ActiveTile {
+		List<ModelInstance> modelInstances = new ArrayList<>();
+		List<RenderDoodad> renderDoodads = new ArrayList<>();
+
+		private int shadowMap;
+		private final int groundCornerHeightLinear;
+		private byte[] staticShadowData;
+		private byte[] shadowData;
+		private final int width;
+		private final int height;
+
+		private final Tile tile;
+
+		final float[] groundCornerHeights;
+		boolean disposed = false;
+		final Set<Long> usedSet = new HashSet<>();
+
+		public ActiveTile(final Tile tile) {
+			this.tile = tile;
+
+			this.width = (16 * 8) + 1;
+			this.height = this.width;
+
+			TerrainWdt.this.tasks.add(new ChunkTask());
+
+			this.groundCornerHeights = new float[this.width * this.height];
+
+			final GL30 gl = Gdx.gl30;
+			this.groundCornerHeightLinear = gl.glGenTexture();
+			gl.glBindTexture(GL30.GL_TEXTURE_2D, this.groundCornerHeightLinear);
+			gl.glTexParameteri(GL30.GL_TEXTURE_2D, GL30.GL_TEXTURE_MAG_FILTER, GL30.GL_LINEAR);
+			gl.glTexParameteri(GL30.GL_TEXTURE_2D, GL30.GL_TEXTURE_MIN_FILTER, GL30.GL_LINEAR);
+
+			gl.glTexImage2D(GL30.GL_TEXTURE_2D, 0, GL30.GL_R16F, this.width, this.height, 0, GL30.GL_RED, GL30.GL_FLOAT,
+					RenderMathUtils.wrap(this.groundCornerHeights));
+			gl.glTexParameteri(GL30.GL_TEXTURE_2D, GL30.GL_TEXTURE_WRAP_S, GL30.GL_CLAMP_TO_EDGE);
+			gl.glTexParameteri(GL30.GL_TEXTURE_2D, GL30.GL_TEXTURE_WRAP_T, GL30.GL_CLAMP_TO_EDGE);
+
+			TerrainWdt.this.tasks.add(new DynamicTask() {
+				@Override
+				public boolean run() {
+					if (!ActiveTile.this.disposed) {
+						gl.glBindTexture(GL30.GL_TEXTURE_2D, ActiveTile.this.groundCornerHeightLinear);
+						gl.glTexImage2D(GL30.GL_TEXTURE_2D, 0, GL30.GL_R16F, ActiveTile.this.width,
+								ActiveTile.this.height, 0, GL30.GL_RED, GL30.GL_FLOAT,
+								RenderMathUtils.wrap(ActiveTile.this.groundCornerHeights));
+					}
+					return true;
+				}
+			});
+			this.shadowMap = gl.glGenTexture();
+			TerrainWdt.this.tasks.add(new DynamicTask() {
+				@Override
+				public boolean run() {
+					if (!ActiveTile.this.disposed) {
+						initShadows();
+					}
+					return true;
+				}
+			});
+			TerrainWdt.this.tasks.add(new DynamicTask() {
+				@Override
+				public boolean run() {
+					final float tilesize = 533.3333f;
+					final float wowToWc3Factor = 128.0f / ((tilesize / 16) / 8);
+//					final int tileIdx = tileHeader.idx;
+					final float wowXOffset = 0;// (tileIdx % 64) * tilesize;
+					final float wowYOffset = 0;// (tileIdx / 64) * tilesize;
+					final float halfWorldSize = tilesize * 32;
+					final float worldSize = tilesize * 64;
+					final float[] doodadMin = new float[3];
+					final float[] doodadMax = new float[3];
+					Arrays.fill(doodadMin, Integer.MAX_VALUE);
+					Arrays.fill(doodadMax, Integer.MIN_VALUE);
+					for (final Chunk chunk : tile.tileHeader.chunks) {
+					}
+					return true;
+				}
+			});
+		}
+
+		public void dispose() {
+			Gdx.gl30.glDeleteTexture(this.groundCornerHeightLinear);
+			Gdx.gl30.glDeleteTexture(this.shadowMap);
+			this.disposed = true;
+			TerrainWdt.this.tasks.add(new DisposeTask());
+		}
+
+		private void initShadows() {
+			final GL30 gl = Gdx.gl30;
+			final int columns = (this.width - 1) * 4;
+			final int rows = (this.height - 1) * 4;
+
+			final int shadowSize = columns * rows;
+			this.staticShadowData = new byte[columns * rows];
+			this.shadowData = new byte[columns * rows];
+
+			reloadShadowData(TerrainWdt.this.centerOffset, columns, rows);
+
+			gl.glBindTexture(GL30.GL_TEXTURE_2D, this.shadowMap);
+			gl.glTexParameteri(GL30.GL_TEXTURE_2D, GL30.GL_TEXTURE_MAG_FILTER, GL30.GL_LINEAR);
+			gl.glTexParameteri(GL30.GL_TEXTURE_2D, GL30.GL_TEXTURE_MIN_FILTER, GL30.GL_LINEAR);
+			gl.glTexParameteri(GL30.GL_TEXTURE_2D, GL30.GL_TEXTURE_WRAP_S, GL30.GL_CLAMP_TO_EDGE);
+			gl.glTexParameteri(GL30.GL_TEXTURE_2D, GL30.GL_TEXTURE_WRAP_T, GL30.GL_CLAMP_TO_EDGE);
+			gl.glTexImage2D(GL30.GL_TEXTURE_2D, 0, GL30.GL_R8, columns, rows, 0, GL30.GL_RED, GL30.GL_UNSIGNED_BYTE,
+					RenderMathUtils.wrap(this.shadowData));
+
+//			this.fogOfWarMap = gl.glGenTexture();
+//			gl.glBindTexture(GL30.GL_TEXTURE_2D, this.fogOfWarMap);
+		}
+
+		private void reloadShadowData(final float[] centerOffset, final int columns, final int rows) {
+			System.arraycopy(this.staticShadowData, 0, this.shadowData, 0, this.staticShadowData.length);
+			for (final Map.Entry<String, Texture> fileAndTexture : TerrainWdt.this.shadowTextures.entrySet()) {
+				final String file = fileAndTexture.getKey();
+				final Texture texture = fileAndTexture.getValue();
+
+				final int width = texture.getWidth();
+				final int height = texture.getHeight();
+				final int ox = (int) Math.round(width * 0.3);
+				final int oy = (int) Math.round(height * 0.7);
+				for (final float[] location : TerrainWdt.this.shadows.get(file)) {
+					blitShadowDataLocation(columns, rows, (RawOpenGLTextureResource) texture, width, height, ox, oy,
+							centerOffset, location[0], location[1], this.shadowData);
+				}
+			}
+		}
+
+		public boolean blitShadowDataLocation(final int columns, final int rows, final RawOpenGLTextureResource texture,
+				final int width, final int height, final int x01, final int y01, final float[] centerOffset,
+				final float v, final float v2, final byte[] shadowData) {
+			final int x0 = (int) Math.floor((v - centerOffset[0]) / 32.0) - x01;
+			final int y0 = (int) Math.floor((v2 - centerOffset[1]) / 32.0) + y01;
+			boolean anyDataWritten = false;
+			for (int y = 0; y < height; ++y) {
+				if (((y0 - y) < 0) || ((y0 - y) >= rows)) {
+					continue;
+				}
+				for (int x = 0; x < width; ++x) {
+					if (((x0 + x) < 0) || ((x0 + x) >= columns)) {
+						continue;
+					}
+					if (texture.getData().get((((y * width) + x) * 4) + 3) != 0) {
+						shadowData[((y0 - y) * columns) + x0 + x] = (byte) 128;
+						anyDataWritten = true;
+					}
+				}
+			}
+			return anyDataWritten;
+		}
+
+		public boolean blitShadowData(final int columns, final int rows, final float shadowX, final float shadowY,
+				final Texture texture) {
+			final int width = texture.getWidth();
+			final int height = texture.getHeight();
+			final int ox = (int) Math.round(width * 0.3);
+			final int oy = (int) Math.round(height * 0.7);
+			return blitShadowDataLocation(columns, rows, (RawOpenGLTextureResource) texture, width, height, ox, oy,
+					this.tile.myCornerXY, shadowX, shadowY, this.shadowData);
+		}
+
+		private void reloadShadowDataToGPU() {
+			final int columns = (TerrainWdt.this.columns - 1) * 4;
+			final int rows = (TerrainWdt.this.rows - 1) * 4;
+			reloadShadowData(TerrainWdt.this.centerOffset, columns, rows);
+			final GL30 gl = Gdx.gl30;
+			gl.glBindTexture(GL30.GL_TEXTURE_2D, this.shadowMap);
+			gl.glTexImage2D(GL30.GL_TEXTURE_2D, 0, GL30.GL_R8, columns, rows, 0, GL30.GL_RED, GL30.GL_UNSIGNED_BYTE,
+					RenderMathUtils.wrap(this.shadowData));
+		}
+
+		private class DisposeTask implements DynamicTask {
+			@Override
+			public boolean run() {
+				for (int i = ActiveTile.this.modelInstances.size() - 1, k = 35; (i >= 0) && (k >= 0); i--, k--) {
+					final ModelInstance modelInstance = ActiveTile.this.modelInstances.get(i);
+					modelInstance.detach();
+					((WdtChunkModelInstance) modelInstance).unload();
+					ActiveTile.this.modelInstances.remove(i);
+				}
+				for (int i = ActiveTile.this.renderDoodads.size() - 1, k = 20; (i >= 0) && (k >= 0); i--, k--) {
+					final RenderDoodad renderDoodad = ActiveTile.this.renderDoodads.get(i);
+					TerrainWdt.this.viewer.removeWdtDoodad(renderDoodad);
+					ActiveTile.this.renderDoodads.remove(i);
+				}
+				final boolean empty = ActiveTile.this.modelInstances.isEmpty()
+						&& ActiveTile.this.renderDoodads.isEmpty();
+				return empty;
+			}
+		}
+
+		private class ChunkTask implements DynamicTask {
+			int i;
+
+			@Override
+			public boolean run() {
+				for (int k = 0; (this.i < ActiveTile.this.tile.tileHeader.chunks.size()) && (k < 35); k++, this.i++) {
+					final Chunk chunk = ActiveTile.this.tile.tileHeader.chunks.get(this.i);
+					if (!chunk.getMapChunkLayers().isEmpty()) {
+						final ModelInstance chunkInstance = ActiveTile.this.tile.terrainModel.addInstance(this.i);
+						chunkInstance.setScene(TerrainWdt.this.viewer.worldScene);
+						ActiveTile.this.modelInstances.add(chunkInstance);
+					}
+
+					// internet says: floor((32 - (axis / 533.33333)))
+					final long indexX = chunk.getIndexX();
+					final long indexY = chunk.getIndexY();
+
+					final long war3ChunkIndexX = 15 - indexY;
+					final long war3ChunkIndexY = indexX;
+
+					final float[][] heightMap = chunk.getHeightMap();
+					for (int i = 0; i < 9; i++) {
+						for (int j = 0; j < 9; j++) {
+							final float heightValue = heightMap[i][j];
+
+							final int war3IndexX = (int) ((war3ChunkIndexX * 8) + (9 - i - 1));
+							final int war3IndexY = (int) ((war3ChunkIndexY * 8) + j);
+
+							ActiveTile.this.groundCornerHeights[(war3IndexX * ActiveTile.this.width)
+									+ war3IndexY] = heightValue * WdtChunkModelInstance.wowToHiveWEFactor;
+						}
+					}
+
+					final long[] doodadReferences = chunk.getDoodadReferences();
+					if (doodadReferences != null) {
+						for (final long ref : doodadReferences) {
+							if (ref < ActiveTile.this.tile.tileHeader.doodads.size()) {
+								if (ActiveTile.this.usedSet.add(ref)) {
+									final DoodadDefinition doodad = ActiveTile.this.tile.tileHeader.doodads
+											.get((int) ref);
+									final long nameId = doodad.getNameId();
+									final float[] position = doodad.getPosition();
+									final float[] rotation = doodad.getRotation();
+									final float scale = doodad.getScale();
+
+									final List<War3ID> doodadNameKeys = TerrainWdt.this.tileHeaderToDoodadIds
+											.get(ActiveTile.this.tile.tileHeader);
+									final War3ID nameKey = doodadNameKeys.get((int) nameId);
+									final GameObject row = TerrainWdt.this.viewer.getAllObjectData().getDoodads()
+											.get(nameKey);
+									final float finalScale = scale * WdtChunkModelInstance.wowToWc3Factor;
+
+									final float[] location = {
+											(((position[0]) * WdtChunkModelInstance.wowToWc3Factor))
+													+ TerrainWdt.this.centerOffset[0],
+											(((WdtChunkModelInstance.tilesize * 64) - (position[2]))
+													* WdtChunkModelInstance.wowToWc3Factor)
+													+ TerrainWdt.this.centerOffset[1],
+											position[1] * WdtChunkModelInstance.wowToWc3Factor };
+
+									final RenderDoodad renderDoodad = TerrainWdt.this.viewer.createWdtDoodad(row, 0,
+											location, rotation, finalScale);
+									ActiveTile.this.renderDoodads.add(renderDoodad);
+									// ---
+								}
+							}
+						}
+					}
+				}
+				return this.i >= ActiveTile.this.tile.tileHeader.chunks.size();
+			}
+		}
+	}
+
+	public static interface DynamicTask {
+		/* return true if complete */
+		boolean run();
 	}
 }

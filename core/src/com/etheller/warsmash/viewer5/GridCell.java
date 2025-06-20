@@ -37,7 +37,16 @@ public class GridCell {
 	}
 
 	public boolean isVisible(final Camera camera) {
-		this.plane = RenderMathUtils.testCell(camera.planes, this.left, this.right, this.bottom, this.top, this.plane);
+		final int planeAtZero = RenderMathUtils.testCell(camera.planes, this.left, this.right, this.bottom, this.top,
+				this.plane, 0);
+		final int planeAtCamera = RenderMathUtils.testCell(camera.planes, this.left, this.right, this.bottom, this.top,
+				this.plane, camera.location.z);
+		if ((planeAtCamera == -1) || (planeAtZero == -1)) {
+			this.plane = -1;
+		}
+		else {
+			this.plane = planeAtCamera;
+		}
 
 		return this.plane == -1;
 	}

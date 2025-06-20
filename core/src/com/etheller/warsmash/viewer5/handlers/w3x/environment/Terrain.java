@@ -26,6 +26,7 @@ import com.badlogic.gdx.math.Intersector;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector3;
+import com.badlogic.gdx.math.collision.Ray;
 import com.etheller.warsmash.datasources.DataSource;
 import com.etheller.warsmash.parsers.w3x.w3e.Corner;
 import com.etheller.warsmash.parsers.w3x.w3e.War3MapW3e;
@@ -53,7 +54,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.W3xSceneLightManager;
 import com.etheller.warsmash.viewer5.handlers.w3x.W3xShaders;
 import com.etheller.warsmash.viewer5.handlers.w3x.War3MapViewer;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CFogMaskSettings;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.vision.CPlayerFogOfWar;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.vision.CPlayerFogOfWarInterface;
 
 public class Terrain extends TerrainInterface {
 	public static final float CELL_SIZE = 128f;
@@ -137,12 +138,14 @@ public class Terrain extends TerrainInterface {
 	private boolean initShadowsFinished = false;
 	private byte[] staticShadowData;
 	private byte[] shadowData;
-	private CPlayerFogOfWar fogOfWarData;
+	private CPlayerFogOfWarInterface fogOfWarData;
 	private ByteBuffer visualFogData;
 	private final WaveBuilder waveBuilder;
 	private final Rectangle shaderMapBoundsRectangle;
 	private final Rectangle entireMapRectangle;
 	private final float[] defaultCameraBounds;
+	public SoftwareGroundMesh softwareGroundMesh;
+	public SoftwareWaterAndGroundMesh softwareWaterAndGroundMesh;
 
 	public Terrain(final War3MapW3e w3eFile, final War3MapWpm terrainPathing, final War3MapW3i w3iFile,
 			final WebGL webGL, final DataSource dataSource, final WorldEditStrings worldEditStrings,
@@ -431,8 +434,7 @@ public class Terrain extends TerrainInterface {
 		this.mapSize = w3eFile.getMapSize();
 		this.entireMapRectangle = new Rectangle(this.centerOffset[0], this.centerOffset[1],
 				(this.mapSize[0] * 128f) - 128, (this.mapSize[1] * 128f) - 128);
-		this.softwareGroundMesh = new SoftwareGroundMesh(this.groundHeights, this.groundCornerHeights,
-				this.centerOffset, width, height);
+		this.softwareGroundMesh = new SoftwareGroundMesh(this.groundCornerHeights, this.centerOffset, width, height);
 		this.softwareWaterAndGroundMesh = new SoftwareWaterAndGroundMesh(this.waterHeightOffset,
 				this.groundCornerHeights, this.waterHeights, this.waterExistsData, this.centerOffset, width, height);
 
@@ -1664,7 +1666,7 @@ public class Terrain extends TerrainInterface {
 	}
 
 	@Override
-	public void setFogOfWarData(final CFogMaskSettings fogMaskSettings, final CPlayerFogOfWar fogOfWarData) {
+	public void setFogOfWarData(final CFogMaskSettings fogMaskSettings, final CPlayerFogOfWarInterface fogOfWarData) {
 		this.fogOfWarData = fogOfWarData;
 		this.visualFogData = ByteBuffer.allocateDirect(fogOfWarData.getFogOfWarBuffer().capacity());
 		reloadFogOfWarDataToGPU(fogMaskSettings);
@@ -1699,6 +1701,18 @@ public class Terrain extends TerrainInterface {
 			this.minDeepColorApplied[i] = this.minDeepColor[i] * rgba[i];
 			this.maxShallowColorApplied[i] = this.maxShallowColor[i] * rgba[i];
 			this.minShallowColorApplied[i] = this.minShallowColor[i] * rgba[i];
+		}
+	}
+
+	@Override
+	public void intersectRayTerrain(final Ray gdxRayHeap, final Vector3 out, final boolean intersectWithWater) {
+		if (intersectWithWater) {
+			RenderMathUtils.intersectRayTriangles(gdxRayHeap, this.softwareWaterAndGroundMesh.vertices,
+					this.softwareWaterAndGroundMesh.indices, 3, out);
+		}
+		else {
+			RenderMathUtils.intersectRayTriangles(gdxRayHeap, this.softwareGroundMesh.vertices,
+					this.softwareGroundMesh.indices, 3, out);
 		}
 	}
 }

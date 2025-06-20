@@ -326,7 +326,7 @@ public enum RenderMathUtils {
 	}
 
 	public static int testCell(final Vector4[] planes, final float left, final float right, final float bottom,
-			final float top, int first) {
+			final float top, int first, final float estimatedZ) {
 		if (first == -1) {
 			first = 0;
 		}
@@ -335,8 +335,10 @@ public enum RenderMathUtils {
 			final int index = (first + i) % 6;
 			final Vector4 plane = planes[index];
 
-			if ((distance2Plane2(plane, left, bottom) < 0) && (distance2Plane2(plane, left, top) < 0)
-					&& (distance2Plane2(plane, right, top) < 0) && (distance2Plane2(plane, right, bottom) < 0)) {
+			if ((distanceToPlane3(plane, left, bottom, estimatedZ) < 0)
+					&& (distanceToPlane3(plane, left, top, estimatedZ) < 0)
+					&& (distanceToPlane3(plane, right, top, estimatedZ) < 0)
+					&& (distanceToPlane3(plane, right, bottom, estimatedZ) < 0)) {
 				return index;
 			}
 		}

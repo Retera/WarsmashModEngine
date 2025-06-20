@@ -317,7 +317,6 @@ public class TerrainShaders {
 					"uniform mat4 MVP;\r\n" + //
 					"uniform mat4 DepthBiasMVP;\r\n" + //
 					"\r\n" + //
-					"uniform sampler2D height_texture;\r\n" + //
 					"uniform sampler2D height_cliff_texture;\r\n" + //
 					"uniform sampler2D height_cliff_texture_wdt;\r\n" + //
 					"uniform usampler2D terrain_alpha_list;\r\n" + //
@@ -325,6 +324,7 @@ public class TerrainShaders {
 					"uniform float centerOffsetY;\r\n" + //
 					"uniform int tileOffsetX;\r\n" + //
 					"uniform int tileOffsetY;\r\n" + //
+					"uniform vec2 size_world;\r\n" + //
 					"uniform sampler2D lightTexture;\r\n" + //
 					"uniform float lightCount;\r\n" + //
 					"uniform float lightTextureHeight;\r\n" + //
@@ -340,7 +340,6 @@ public class TerrainShaders {
 					"\r\n" + //
 					"void main() { \r\n" + //
 					"	ivec2 size = textureSize(height_cliff_texture_wdt, 0);\r\n" + //
-					"	ivec2 size_world = textureSize(height_texture, 0) - ivec2(1, 1);\r\n" + //
 					"	ivec2 pos = ivec2(gl_InstanceID % size.x, gl_InstanceID / size.x);\r\n" + //
 					"\r\n" + //
 					"	vec4 height;\r\n" + //
@@ -353,13 +352,12 @@ public class TerrainShaders {
 					"		height = texelFetch(height_cliff_texture, height_pos, 0);\r\n" + //
 					"	}\r\n" + //
 					"	ivec3 off = ivec3(1, 1, 0);\r\n" + //
-					"	height_pos += ivec2(tileOffsetX, tileOffsetY);\r\n" + //
-					"	float hL = texelFetch(height_texture, height_pos - off.xz, 0).r;\r\n" + //
-					"	float hR = texelFetch(height_texture, height_pos + off.xz, 0).r;\r\n" + //
-					"	float hD = texelFetch(height_texture, height_pos - off.zy, 0).r;\r\n" + //
-					"	float hU = texelFetch(height_texture, height_pos + off.zy, 0).r;\r\n" + //
+					"	float hL = texelFetch(height_cliff_texture, height_pos - off.xz, 0).r;\r\n" + //
+					"	float hR = texelFetch(height_cliff_texture, height_pos + off.xz, 0).r;\r\n" + //
+					"	float hD = texelFetch(height_cliff_texture, height_pos - off.zy, 0).r;\r\n" + //
+					"	float hU = texelFetch(height_cliff_texture, height_pos + off.zy, 0).r;\r\n" + //
 					"	ivec2 pos_tile = pos + ivec2(tileOffsetX, tileOffsetY);\r\n" + //
-					"	vec3 normal = normalize(vec3(hL - hR, hD - hU, 2.0));\r\n" + //
+					"	vec3 normal = normalize(vec3(hL - hR, hD - hU, 2.0))* 0.0001 + vec3(0,0,1.0);\r\n" + //
 					"\r\n" + //
 					" UV = vec2(vPosition.x, 1 - vPosition.y);\r\n" + //
 					// " UV = vec2(vPosition.x==0?0.01:0.99, vPosition.y==0?0.99:0.01);\r\n" + //
@@ -414,8 +412,6 @@ public class TerrainShaders {
 				"\r\n" + //
 //				"layout (binding = 20) uniform usampler2D pathing_map_static;\r\n" + //
 //				"layout (binding = 21) uniform usampler2D pathing_map_dynamic;\r\n" + //
-				"uniform sampler2D shadowMap;\r\n" + //
-				"uniform sampler2D fogOfWarMap;\r\n" + //
 				"    uniform vec4 u_fogColor;\r\n" + //
 				"    uniform vec4 u_fogParams;\r\n" + //
 				"uniform int layer_count;\r\n" + //
@@ -492,9 +488,7 @@ public class TerrainShaders {
 				"		layerFragment = texture(sample3, UV);\r\n" + //
 				"		color = mix(color, layerFragment, texture(alpha3, v_auv).r);\r\n" + //
 				"	}\r\n" + //
-				"   float shadow = texture2D(shadowMap, v_suv).r;\r\n" + //
-				"   float fogOfWarData = texture2D(fogOfWarMap, v_suv).r;\r\n" + //
-				"   shadow = clamp(shadow + fogOfWarData, 0.0, 1.0);\r\n" + //
+				"   float shadow = 0.0;\r\n" + //
 //				"   float visibility = 1.0;\r\n" + //
 //				"   if ( texture2D(shadowMap, ShadowCoord.xy).z > ShadowCoord.z ) {\r\n" + //
 //				"       visibility = 0.5;\r\n" + //
@@ -505,7 +499,7 @@ public class TerrainShaders {
 				"	} else {\r\n" + //
 				"     color = vec4(color.xyz * (1.0 - shadow), 1.0);\r\n" + //
 				"	}\r\n" + //
-				Shaders.fogSystem(false, null) + //
+//				Shaders.fogSystem(false, null) + //
 //				"\r\n" + //
 //				"	if (show_pathing_map) {\r\n" + //
 //				"		uint byte_static = texelFetch(pathing_map_static, ivec2(pathing_map_uv), 0).r;\r\n" + //

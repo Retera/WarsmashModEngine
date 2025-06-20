@@ -14,7 +14,7 @@ import org.gradle.internal.os.OperatingSystem
 if(project.hasProperty("args")) {
     ext.cmdargs = project.getProperty("args")
 } else {
-    ext.cmdargs = myArgs
+    ext.cmdargs = ""
 }
 
 application {

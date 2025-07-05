@@ -5637,126 +5637,7 @@ public class Jass2 {
 			/// These are getting declared in Jass2 here so that you can magically use them
 			////// from outside
 			// common ai, maybe, sometimes
-			jassProgramVisitor.getJassNativeManager().createNative("Sleep", new JassFunction() {
-				@Override
-				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
-						final TriggerExecutionScope triggerScope) {
-					final Double seconds = arguments.get(0).visit(RealJassValueVisitor.getInstance());
-					final JassThread currentThread = globalScope.getCurrentThread();
-					if (currentThread != null) {
-						currentThread.setSleeping(true);
-						final CTimerSleepAction timer = new CTimerSleepAction(currentThread);
-						timer.setRepeats(false);
-						timer.setTimeoutTime(seconds.floatValue());
-						timer.start(CommonEnvironment.this.simulation);
-					}
-					else {
-						throw new JassException(globalScope, "Needs to sleep " + seconds + " but no thread was found",
-								null);
-					}
-					return null;
-				}
-			});
-			jassProgramVisitor.getJassNativeManager().createNative("DebugS", new JassFunction() {
-				@Override
-				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
-						final TriggerExecutionScope triggerScope) {
-					final String str = nullable(arguments, 0, StringJassValueVisitor.getInstance());
-					final String value = "DebugS: " + str;
-					meleeUI.displayTimedText(0, 0, 20, value);
-					System.err.println(value);
-					return null;
-				}
-			});
-			jassProgramVisitor.getJassNativeManager().createNative("DebugFI", new JassFunction() {
-				@Override
-				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
-						final TriggerExecutionScope triggerScope) {
-					final String str = nullable(arguments, 0, StringJassValueVisitor.getInstance());
-					final int val = arguments.get(1).visit(IntegerJassValueVisitor.getInstance());
-
-					final String value = "DebugFI: " + String.format(str, val);
-					meleeUI.displayTimedText(0, 0, 20, value);
-					System.err.println(value);
-					return null;
-				}
-			});
-			jassProgramVisitor.getJassNativeManager().createNative("DebugUnitID", new JassFunction() {
-				@Override
-				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
-						final TriggerExecutionScope triggerScope) {
-					final String str = nullable(arguments, 0, StringJassValueVisitor.getInstance());
-					final int valRawcode = arguments.get(1).visit(IntegerJassValueVisitor.getInstance());
-					final War3ID valId = new War3ID(valRawcode);
-
-					final String value = "DebugUnitID: " + String.format(str, valId);
-					meleeUI.displayTimedText(0, 0, 20, value);
-					System.err.println(value);
-					return null;
-				}
-			});
-			jassProgramVisitor.getJassNativeManager().createNative("DisplayText", new JassFunction() {
-				@Override
-				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
-						final TriggerExecutionScope triggerScope) {
-					final int p = arguments.get(0).visit(IntegerJassValueVisitor.getInstance());
-					final String str = nullable(arguments, 1, StringJassValueVisitor.getInstance());
-
-					if (war3MapViewer.getLocalPlayerIndex() == p) {
-						meleeUI.displayTimedText(0, 0, 20, str);
-					}
-					System.err.println(p + ": " + str);
-					return null;
-				}
-			});
-			jassProgramVisitor.getJassNativeManager().createNative("DisplayTextI", new JassFunction() {
-				@Override
-				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
-						final TriggerExecutionScope triggerScope) {
-					final int p = arguments.get(0).visit(IntegerJassValueVisitor.getInstance());
-					final String str = nullable(arguments, 1, StringJassValueVisitor.getInstance());
-					final int v1 = arguments.get(2).visit(IntegerJassValueVisitor.getInstance());
-					final String value = String.format(str, v1);
-					if (war3MapViewer.getLocalPlayerIndex() == p) {
-						meleeUI.displayTimedText(0, 0, 20, value);
-					}
-					System.err.println(p + ": " + value);
-					return null;
-				}
-			});
-			jassProgramVisitor.getJassNativeManager().createNative("DisplayTextII", new JassFunction() {
-				@Override
-				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
-						final TriggerExecutionScope triggerScope) {
-					final int p = arguments.get(0).visit(IntegerJassValueVisitor.getInstance());
-					final String str = nullable(arguments, 1, StringJassValueVisitor.getInstance());
-					final int v1 = arguments.get(2).visit(IntegerJassValueVisitor.getInstance());
-					final int v2 = arguments.get(3).visit(IntegerJassValueVisitor.getInstance());
-					final String value = String.format(str, v1, v2);
-					if (war3MapViewer.getLocalPlayerIndex() == p) {
-						meleeUI.displayTimedText(0, 0, 20, value);
-					}
-					System.err.println(p + ": " + value);
-					return null;
-				}
-			});
-			jassProgramVisitor.getJassNativeManager().createNative("DisplayTextIII", new JassFunction() {
-				@Override
-				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
-						final TriggerExecutionScope triggerScope) {
-					final int p = arguments.get(0).visit(IntegerJassValueVisitor.getInstance());
-					final String str = nullable(arguments, 1, StringJassValueVisitor.getInstance());
-					final int v1 = arguments.get(2).visit(IntegerJassValueVisitor.getInstance());
-					final int v2 = arguments.get(3).visit(IntegerJassValueVisitor.getInstance());
-					final int v3 = arguments.get(4).visit(IntegerJassValueVisitor.getInstance());
-					final String value = String.format(str, v1, v2, v3);
-					if (war3MapViewer.getLocalPlayerIndex() == p) {
-						meleeUI.displayTimedText(0, 0, 20, value);
-					}
-					System.err.println(p + ": " + value);
-					return null;
-				}
-			});
+			registerSharedCommonAIFunctions(jassProgramVisitor, war3MapViewer, meleeUI, this.simulation);
 
 			// Warsmash Ability API
 			jassProgramVisitor.getJassNativeManager().createNative("GetUnitMoveFollowBehavior",
@@ -8696,6 +8577,17 @@ public class Jass2 {
 					});
 			jassProgramVisitor.getJassNativeManager().createNative("GetUnitGoldCost",
 					(arguments, globalScope, triggerScope) -> {
+						if (arguments.get(0) instanceof IntegerJassValue) {
+							// Something dumb happened here, there seems to be a SmashJass version of this
+							// and a CommonAI version of this both
+							final Integer typeId = arguments.get(0).visit(IntegerJassValueVisitor.getInstance());
+							final CUnitType unitTypeData = this.simulation.getUnitData()
+									.getUnitType(new War3ID(typeId));
+							if (unitTypeData != null) {
+								return IntegerJassValue.of(unitTypeData.getGoldCost());
+							}
+							return IntegerJassValue.ZERO;
+						}
 						final CUnit targetUnit = nullable(arguments, 0, ObjectJassValueVisitor.getInstance());
 						if (targetUnit != null) {
 							return IntegerJassValue.of(targetUnit.getUnitType().getGoldCost());
@@ -8704,6 +8596,17 @@ public class Jass2 {
 					});
 			jassProgramVisitor.getJassNativeManager().createNative("GetUnitWoodCost",
 					(arguments, globalScope, triggerScope) -> {
+						if (arguments.get(0) instanceof IntegerJassValue) {
+							// Something dumb happened here, there seems to be a SmashJass version of this
+							// and a CommonAI version of this both
+							final Integer typeId = arguments.get(0).visit(IntegerJassValueVisitor.getInstance());
+							final CUnitType unitTypeData = this.simulation.getUnitData()
+									.getUnitType(new War3ID(typeId));
+							if (unitTypeData != null) {
+								return IntegerJassValue.of(unitTypeData.getLumberCost());
+							}
+							return IntegerJassValue.ZERO;
+						}
 						final CUnit targetUnit = nullable(arguments, 0, ObjectJassValueVisitor.getInstance());
 						if (targetUnit != null) {
 							return IntegerJassValue.of(targetUnit.getUnitType().getLumberCost());
@@ -9557,6 +9460,139 @@ public class Jass2 {
 
 	}
 
+	private static void registerSharedCommonAIFunctions(final JassProgram jassProgramVisitor,
+			final War3MapViewer war3MapViewer, final WarsmashUI meleeUI, final CSimulation simulation) {
+		jassProgramVisitor.getJassNativeManager().createNative("Sleep", new JassFunction() {
+			@Override
+			public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+					final TriggerExecutionScope triggerScope) {
+				final Double seconds = arguments.get(0).visit(RealJassValueVisitor.getInstance());
+				final JassThread currentThread = globalScope.getCurrentThread();
+				if (currentThread != null) {
+					currentThread.setSleeping(true);
+					final CTimerSleepAction timer = new CTimerSleepAction(currentThread);
+					timer.setRepeats(false);
+					timer.setTimeoutTime(seconds.floatValue());
+					timer.start(simulation);
+				}
+				else {
+					throw new JassException(globalScope, "Needs to sleep " + seconds + " but no thread was found",
+							null);
+				}
+				return null;
+			}
+		});
+		jassProgramVisitor.getJassNativeManager().createNative("DebugS", new JassFunction() {
+			@Override
+			public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+					final TriggerExecutionScope triggerScope) {
+				final String str = nullable(arguments, 0, StringJassValueVisitor.getInstance());
+				final String value = "DebugS: " + str;
+				meleeUI.displayTimedText(0, 0, 20, value);
+				System.err.println(value);
+				return null;
+			}
+		});
+		jassProgramVisitor.getJassNativeManager().createNative("DebugFI", new JassFunction() {
+			@Override
+			public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+					final TriggerExecutionScope triggerScope) {
+				final String str = nullable(arguments, 0, StringJassValueVisitor.getInstance());
+				final int val = arguments.get(1).visit(IntegerJassValueVisitor.getInstance());
+
+				final String value = "DebugFI: " + String.format(str, val);
+				meleeUI.displayTimedText(0, 0, 20, value);
+				System.err.println(value);
+				return null;
+			}
+		});
+		jassProgramVisitor.getJassNativeManager().createNative("DebugUnitID", new JassFunction() {
+			@Override
+			public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+					final TriggerExecutionScope triggerScope) {
+				final String str = nullable(arguments, 0, StringJassValueVisitor.getInstance());
+				final int valRawcode = arguments.get(1).visit(IntegerJassValueVisitor.getInstance());
+				final War3ID valId = new War3ID(valRawcode);
+
+				final String value = "DebugUnitID: " + String.format(str, valId);
+				meleeUI.displayTimedText(0, 0, 20, value);
+				System.err.println(value);
+				return null;
+			}
+		});
+		jassProgramVisitor.getJassNativeManager().createNative("DisplayText", new JassFunction() {
+			@Override
+			public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+					final TriggerExecutionScope triggerScope) {
+				final int p = arguments.get(0).visit(IntegerJassValueVisitor.getInstance());
+				final String str = nullable(arguments, 1, StringJassValueVisitor.getInstance());
+
+				if (war3MapViewer.getLocalPlayerIndex() == p) {
+					meleeUI.displayTimedText(0, 0, 20, str);
+				}
+				System.err.println(p + ": " + str);
+				return null;
+			}
+		});
+		jassProgramVisitor.getJassNativeManager().createNative("DisplayTextI", new JassFunction() {
+			@Override
+			public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+					final TriggerExecutionScope triggerScope) {
+				final int p = arguments.get(0).visit(IntegerJassValueVisitor.getInstance());
+				final String str = nullable(arguments, 1, StringJassValueVisitor.getInstance());
+				final int v1 = arguments.get(2).visit(IntegerJassValueVisitor.getInstance());
+				final String value = String.format(str, v1);
+				if (war3MapViewer.getLocalPlayerIndex() == p) {
+					meleeUI.displayTimedText(0, 0, 20, value);
+				}
+				System.err.println(p + ": " + value);
+				return null;
+			}
+		});
+		jassProgramVisitor.getJassNativeManager().createNative("DisplayTextII", new JassFunction() {
+			@Override
+			public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+					final TriggerExecutionScope triggerScope) {
+				final int p = arguments.get(0).visit(IntegerJassValueVisitor.getInstance());
+				final String str = nullable(arguments, 1, StringJassValueVisitor.getInstance());
+				final int v1 = arguments.get(2).visit(IntegerJassValueVisitor.getInstance());
+				final int v2 = arguments.get(3).visit(IntegerJassValueVisitor.getInstance());
+				final String value = String.format(str, v1, v2);
+				if (war3MapViewer.getLocalPlayerIndex() == p) {
+					meleeUI.displayTimedText(0, 0, 20, value);
+				}
+				System.err.println(p + ": " + value);
+				return null;
+			}
+		});
+		jassProgramVisitor.getJassNativeManager().createNative("DisplayTextIII", new JassFunction() {
+			@Override
+			public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+					final TriggerExecutionScope triggerScope) {
+				final int p = arguments.get(0).visit(IntegerJassValueVisitor.getInstance());
+				final String str = nullable(arguments, 1, StringJassValueVisitor.getInstance());
+				final int v1 = arguments.get(2).visit(IntegerJassValueVisitor.getInstance());
+				final int v2 = arguments.get(3).visit(IntegerJassValueVisitor.getInstance());
+				final int v3 = arguments.get(4).visit(IntegerJassValueVisitor.getInstance());
+				final String value = String.format(str, v1, v2, v3);
+				if (war3MapViewer.getLocalPlayerIndex() == p) {
+					meleeUI.displayTimedText(0, 0, 20, value);
+				}
+				System.err.println(p + ": " + value);
+				return null;
+			}
+		});
+		jassProgramVisitor.getJassNativeManager().createNative("GetUnitBuildTime",
+				(arguments, globalScope, triggerScope) -> {
+					final Integer typeId = arguments.get(0).visit(IntegerJassValueVisitor.getInstance());
+					final CUnitType unitTypeData = simulation.getUnitData().getUnitType(new War3ID(typeId));
+					if (unitTypeData != null) {
+						return IntegerJassValue.of(unitTypeData.getBuildTime());
+					}
+					return IntegerJassValue.ZERO;
+				});
+	}
+
 	private static void setupTriggerAPI(final JassProgram jassProgramVisitor, final HandleJassType triggerType,
 			final HandleJassType triggeractionType, final HandleJassType triggerconditionType,
 			final HandleJassType boolexprType, final HandleJassType conditionfuncType,
@@ -9800,8 +9836,10 @@ public class Jass2 {
 			final String mainFunction) {
 		final JassProgram jassProgram = new JassProgram();
 		jassProgram.inheritFrom(jassProgramVisitor);
+		// NOTE: the above "inheritFrom" does same as:
+		// registerSharedCommonAIFunctions(jassProgram, war3MapViewer, meleeUI, game);
 		final JassAIEnvironment jassAIEnvironment = new JassAIEnvironment(jassProgram, dataSource, uiViewport, uiScene,
-				game, player.getId());
+				game, player.getId(), meleeUI);
 		final Integer prevPtr = jassProgram.getGlobals().getUserFunctionInstructionPtr(mainFunction);
 		try {
 			try (InputStreamReader reader = new InputStreamReader(dataSource.getResourceAsStream(filename))) {

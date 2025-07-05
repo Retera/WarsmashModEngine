@@ -24,7 +24,7 @@ public class CBehaviorOrcBuild extends CAbstractRangedBehavior {
 	private final BuildOnBuildingIntersector buildOnBuildingIntersector;
 	private int highlightOrderId;
 	private War3ID orderId;
-	private boolean unitCreated = false;
+	private CUnit constructedStructure = null;
 
 	public CBehaviorOrcBuild(final CUnit unit) {
 		super(unit);
@@ -35,7 +35,7 @@ public class CBehaviorOrcBuild extends CAbstractRangedBehavior {
 			final int highlightOrderId) {
 		this.highlightOrderId = highlightOrderId;
 		this.orderId = new War3ID(orderId);
-		this.unitCreated = false;
+		this.constructedStructure = null;
 		return innerReset(game, target);
 	}
 
@@ -59,8 +59,7 @@ public class CBehaviorOrcBuild extends CAbstractRangedBehavior {
 
 	@Override
 	protected CBehavior update(final CSimulation simulation, final boolean withinFacingWindow) {
-		if (!this.unitCreated) {
-			this.unitCreated = true;
+		if (this.constructedStructure == null) {
 			final CUnitType unitTypeToCreate = simulation.getUnitData().getUnitType(this.orderId);
 			final BufferedImage buildingPathingPixelMap = unitTypeToCreate.getBuildingPathingPixelMap();
 			final boolean canBeBuiltOnThem = unitTypeToCreate.isCanBeBuiltOnThem();
@@ -71,6 +70,7 @@ public class CBehaviorOrcBuild extends CAbstractRangedBehavior {
 			if (!buildLocationObstructed) {
 				final CUnit constructedStructure = simulation.createUnit(this.orderId, playerIndex, this.target.getX(),
 						this.target.getY(), simulation.getGameplayConstants().getBuildingAngle());
+				this.constructedStructure = constructedStructure;
 				if (canBeBuiltOnThem) {
 					CAbilityGoldMinable abilityGoldMine = null;
 					if (this.buildOnBuildingIntersector.getUnitToBuildOn() != null) {
@@ -117,9 +117,15 @@ public class CBehaviorOrcBuild extends CAbstractRangedBehavior {
 				refund(player, unitTypeToCreate);
 				simulation.getCommandErrorListener().showInterfaceError(playerIndex,
 						CommandStringErrorKeys.UNABLE_TO_BUILD_THERE);
+				return this.unit.pollNextOrderBehavior(simulation);
 			}
 		}
-		return this.unit.pollNextOrderBehavior(simulation);
+		if ((this.constructedStructure != null) && this.constructedStructure.isConstructing()) {
+			return this;
+		}
+		else {
+			return this.unit.pollNextOrderBehavior(simulation);
+		}
 	}
 
 	protected void onStructureCreated(final CSimulation game, final CUnit constructedStructure,
@@ -148,7 +154,7 @@ public class CBehaviorOrcBuild extends CAbstractRangedBehavior {
 
 	@Override
 	public void end(final CSimulation game, final boolean interrupted) {
-		if (!this.unitCreated && interrupted) {
+		if ((this.constructedStructure == null) && interrupted) {
 			final CPlayer player = game.getPlayer(this.unit.getPlayerIndex());
 			final CUnitType unitTypeToCreate = game.getUnitData().getUnitType(this.orderId);
 			refund(player, unitTypeToCreate);
@@ -162,7 +168,7 @@ public class CBehaviorOrcBuild extends CAbstractRangedBehavior {
 
 	@Override
 	public void endMove(final CSimulation game, final boolean interrupted) {
-		if (!this.unitCreated && interrupted) {
+		if ((this.constructedStructure == null) && interrupted) {
 			final CPlayer player = game.getPlayer(this.unit.getPlayerIndex());
 			final CUnitType unitTypeToCreate = game.getUnitData().getUnitType(this.orderId);
 			refund(player, unitTypeToCreate);

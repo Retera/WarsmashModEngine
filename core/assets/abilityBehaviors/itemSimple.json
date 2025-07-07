@@ -40,7 +40,7 @@
 							"dataField": "A"
 						}
 					},
-					"player": {
+					"playerDetectedData": {
 						"type": "playerToStateModValue",
 						"player": {
 							"type": "getOwnerOfUnit",

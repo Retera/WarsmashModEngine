@@ -328,6 +328,12 @@
 				"modifier": {
 					"type": "getLastCreatedAttackModifier"
 				}
+			},{
+				"type": "runReuseAction",
+				"name": {
+					"type": "rawString",
+					"value": "enable"
+				}
 		}],
 		"onLevelChange": [{
 				"type": "updateNonStackingStatBuff",
@@ -427,8 +433,15 @@
 				"type": "runReuseAction",
 				"name": {
 					"type": "rawString",
-					"value": "cleanup"
+					"value": "disable"
 				}
+		}],
+		"onRemoveDisabledAbility": [{
+			"type": "runReuseAction",
+			"name": {
+				"type": "rawString",
+				"value": "cleanup"
+			}
 		}]
 	},{
 		"ids": [{"id":"AIcb"}],
@@ -739,7 +752,7 @@
 					"type": "getLastCreatedAbility"
 				}
 			}],
-			"setup": [{
+			"enable": [{
 				"type": "runReuseAction",
 				"name": {
 					"type": "rawString",
@@ -759,7 +772,7 @@
 						"value": "addAbility"
 					}
 			}],
-			"cleanup": [{
+			"disable": [{
 				"type": "runReuseAction",
 				"name": {
 					"type": "rawString",

@@ -9,7 +9,6 @@ public class ABConditionGameplayConstantSmartAbolishMagic extends ABCondition {
 
 	@Override
 	public Boolean callback(CSimulation game, CUnit caster, Map<String, Object> localStore, final int castId) {
-		System.err.println("Checking Abolish Constant " + game.getGameplayConstants().isAbolishMagicSmartDispel());
 		return game.getGameplayConstants().isAbolishMagicSmartDispel();
 	}
 

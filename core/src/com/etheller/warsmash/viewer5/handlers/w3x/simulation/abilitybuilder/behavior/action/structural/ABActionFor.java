@@ -16,7 +16,7 @@ public class ABActionFor implements ABAction {
 
 	private ABIntegerCallback times;
 	private List<ABAction> actions;
-	
+
 	private ABCallback unique;
 
 	@Override
@@ -25,9 +25,10 @@ public class ABActionFor implements ABAction {
 		final int max = this.times.callback(game, caster, localStore, castId);
 		for (int i = 0; i < max; i++) {
 			if (this.unique != null) {
-				localStore.put(ABLocalStoreKeys.combineKey(ABLocalStoreKeys.ITERATORCOUNT+"$"+this.unique.callback(game, caster, localStore, castId), castId), i);
-			}
-			else {
+				localStore.put(ABLocalStoreKeys.combineKey(
+						ABLocalStoreKeys.ITERATORCOUNT + "$" + this.unique.callback(game, caster, localStore, castId),
+						castId), i);
+			} else {
 				localStore.put(ABLocalStoreKeys.combineKey(ABLocalStoreKeys.ITERATORCOUNT, castId), i);
 			}
 			for (final ABAction iterationAction : this.actions) {

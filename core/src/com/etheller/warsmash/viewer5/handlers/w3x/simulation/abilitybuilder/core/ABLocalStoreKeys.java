@@ -68,6 +68,7 @@ public class ABLocalStoreKeys {
 	// Ability Names
 	public static final String LASTCREATEDABILITY = "_lastCreatedAbility";
 	public static final String LASTADDEDABILITY = "_lastAddedAbility";
+	public static final String MATCHINGABILITY = "_matchingAbility";
 	
 	public static final String LASTCREATEDUNITGROUP = "_lastCreatedUnitGroup";
 	public static final String LASTCREATEDUNITQUEUE = "_lastCreatedUnitQueue";
@@ -86,6 +87,8 @@ public class ABLocalStoreKeys {
 	//Generic Targeting
 	public static final String ATTACKINGUNIT = "_attackingUnit#";
 	public static final String ATTACKTARGET = "_attackTarget#";
+	public static final String DAMAGINGUNIT = "_damagingUnit#";
+	public static final String DAMAGEDUNIT = "_damagedUnit#";
 	public static final String ATTACKIMPACTLOCATION = "_attackImpactLocation#";
 	public static final String ABILITYTARGETEDUNIT = "_abilityTargetedUnit#";
 	public static final String ABILITYTARGETEDDESTRUCTABLE = "_abilityTargetedDestructable#";

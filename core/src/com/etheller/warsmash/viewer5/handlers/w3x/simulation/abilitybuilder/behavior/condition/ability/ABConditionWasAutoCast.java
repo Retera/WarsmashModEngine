@@ -13,7 +13,6 @@ public class ABConditionWasAutoCast extends ABCondition {
 
 	@Override
 	public Boolean callback(CSimulation game, CUnit caster, Map<String, Object> localStore, final int castId) {
-		System.err.println("Was ability Auto Cast " + localStore.get(ABLocalStoreKeys.combineKey(ABLocalStoreKeys.ISAUTOCAST, castId)) + " castId " + castId);
 		return (Boolean) localStore.get(ABLocalStoreKeys.combineKey(ABLocalStoreKeys.ISAUTOCAST, castId));
 	}
 

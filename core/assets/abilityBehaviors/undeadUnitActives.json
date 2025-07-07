@@ -353,7 +353,7 @@
 			"range": {
 				"type": "getAbilityArea"
 			},
-			"conditions": [{
+			"condition": {
 				"type": "and",
 				"conditions": [{
 					"type": "isUnitValidTarget",
@@ -367,7 +367,7 @@
 						"value": "checkValidTarget"
 					}
 				}]
-			}]
+			}
 		}],
 		"onEndCasting": [{
 				"type": "createTemporarySpellEffectOnUnit",

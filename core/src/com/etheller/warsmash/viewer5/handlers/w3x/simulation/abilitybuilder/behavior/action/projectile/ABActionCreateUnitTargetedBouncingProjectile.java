@@ -58,7 +58,10 @@ public class ABActionCreateUnitTargetedBouncingProjectile implements ABAction {
 	@Override
 	public void runAction(final CSimulation game, final CUnit caster, final Map<String, Object> localStore,
 			final int castId) {
-		final CUnit theSource = this.source.callback(game, caster, localStore, castId);
+		CUnit theSource = caster;
+		if (source != null) {
+			theSource = this.source.callback(game, caster, localStore, castId);
+		}
 		AbilityTarget sourceLocation = theSource;
 
 		if (this.sourceLoc != null) {
@@ -154,13 +157,14 @@ public class ABActionCreateUnitTargetedBouncingProjectile implements ABAction {
 			CTimer runner = new CTimer() {
 				@Override
 				public void onFire(CSimulation simulation) {
-					performJump(game, originUnitTarget, localStore, castId, originUnitTarget, multiBounce, hitUnits,
+					performJump(game, caster, localStore, castId, originUnitTarget, multiBounce, hitUnits,
 							remainingJumps);
 				}
 			};
-			game.registerTimer(runner);
+			runner.setTimeoutTime(delay);
+			runner.start(game);
 		} else {
-			performJump(game, originUnitTarget, localStore, castId, originUnitTarget, multiBounce, hitUnits,
+			performJump(game, caster, localStore, castId, originUnitTarget, multiBounce, hitUnits,
 					remainingJumps);
 		}
 	}
@@ -257,12 +261,12 @@ public class ABActionCreateUnitTargetedBouncingProjectile implements ABAction {
 				if (this.homing != null) {
 					isHoming = this.homing.callback(game, caster, localStore, castId);
 				}
-				proj = game.createProjectile(originUnitTarget, this.id.callback(game, caster, localStore, castId),
+				proj = game.createProjectile(caster, this.id.callback(game, caster, localStore, castId),
 						originUnitTarget.getX(), originUnitTarget.getY(),
 						(float) AbilityTarget.angleBetween(originUnitTarget, jumpUnit), theSpeed, isHoming, jumpUnit,
 						listener);
 			} else if (settings != null) {
-				proj = game.createProjectile(originUnitTarget, this.settings.callback(game, caster, localStore, castId),
+				proj = game.createProjectile(caster, this.settings.callback(game, caster, localStore, castId),
 						originUnitTarget.getX(), originUnitTarget.getY(),
 						(float) AbilityTarget.angleBetween(originUnitTarget, jumpUnit), jumpUnit, listener);
 			}

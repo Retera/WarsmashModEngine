@@ -223,6 +223,11 @@
 				}
 			}
 		},
+		"reuseCallbacks": {
+			"defaultBuffId": {
+				"type": "null"
+			}
+		},
 		"reuseActions": {
 			"storeBaseType": [{
 				"type": "if",
@@ -469,7 +474,14 @@
 							"type": "getAbilityHeroDuration"
 						},
 						"buffId": {
-							"type": "getFirstBuffId"
+							"type": "getFirstBuffId",
+							"defaultId": {
+								"type": "reuseID",
+								"name": {
+									"type": "rawString",
+									"value": "defaultBuffId"
+								}
+							}
 						},
 						"onTransformActions": [{
 								"type": "runReuseAction",
@@ -671,7 +683,14 @@
 					"type": "getAbilityHeroDuration"
 				},
 				"buffId": {
-					"type": "getFirstBuffId"
+					"type": "getFirstBuffId",
+					"defaultId": {
+						"type": "reuseID",
+						"name": {
+							"type": "rawString",
+							"value": "defaultBuffId"
+						}
+					}
 				},
 				"onTransformActions": [{
 						"type": "runReuseAction",
@@ -971,7 +990,14 @@
 						"type": "getAbilityHeroDuration"
 					},
 					"buffId": {
-						"type": "getFirstBuffId"
+						"type": "getFirstBuffId",
+						"defaultId": {
+							"type": "reuseID",
+							"name": {
+								"type": "rawString",
+								"value": "defaultBuffId"
+							}
+						}
 					},
 					"onTransformActions": [{
 							"type": "runReuseAction",
@@ -1102,6 +1128,12 @@
 		"ids": [{"id":"ANcr", "castId": "chemicalrage"}],
 		"type": "INHERIT",
 		"parentId": "Arav",
+		"reuseCallbacks": {
+			"defaultBuffId": {
+				"type": "getWar3IDFromString",
+				"id": "BNcr"
+			}
+		},
 		"reuseActions": {
 			"onTransform": [{
 				"type": "disableAbility"
@@ -1230,7 +1262,14 @@
 					"type": "getAbilityHeroDuration"
 				},
 				"buffId": {
-					"type": "getFirstBuffId"
+					"type": "getFirstBuffId",
+					"defaultId": {
+						"type": "reuseID",
+						"name": {
+							"type": "rawString",
+							"value": "defaultBuffId"
+						}
+					}
 				},
 				"instantTransformAtDurationEnd": {
 					"type": "rawBoolean",
@@ -1267,6 +1306,12 @@
 		"ids": [{"id":"AEme", "castId": "metamorphosis"}],
 		"type": "INHERIT",
 		"parentId": "Arav",
+		"reuseCallbacks": {
+			"defaultBuffId": {
+				"type": "getWar3IDFromString",
+				"id": "BEme"
+			}
+		},
 		"displayFields": {
 			"toggleable": {
 				"type": "rawBoolean",
@@ -1432,7 +1477,14 @@
 					"type": "getAbilityHeroDuration"
 				},
 				"buffId": {
-					"type": "getFirstBuffId"
+					"type": "getFirstBuffId",
+					"defaultId": {
+						"type": "reuseID",
+						"name": {
+							"type": "rawString",
+							"value": "defaultBuffId"
+						}
+					}
 				},
 				"onTransformActions": [{
 						"type": "runReuseAction",
@@ -2226,30 +2278,30 @@
 				}]
 		}],
 		"onAddAbility": [{
-				"type": "addDeathReplacementEffect",
-				"target": {
-					"type": "getCastingUnit"
-				},
-				"priority": {
-					"type": "rawPriority",
-					"priority": "PHOENIXREVIVE"
-				},
-				"listener": {
-					"type": "getLastCreatedDeathReplacement"
-				}
+			"type": "addDeathReplacementEffect",
+			"target": {
+				"type": "getCastingUnit"
+			},
+			"priority": {
+				"type": "rawPriority",
+				"priority": "PHOENIXREVIVE"
+			},
+			"listener": {
+				"type": "getLastCreatedDeathReplacement"
+			}
 		}],
 		"onRemoveAbility": [{
-				"type": "removeDeathReplacementEffect",
-				"target": {
-					"type": "getCastingUnit"
-				},
-				"priority": {
-					"type": "rawPriority",
-					"priority": "PHOENIXREVIVE"
-				},
-				"listener": {
-					"type": "getLastCreatedDeathReplacement"
-				}
+			"type": "removeDeathReplacementEffect",
+			"target": {
+				"type": "getCastingUnit"
+			},
+			"priority": {
+				"type": "rawPriority",
+				"priority": "PHOENIXREVIVE"
+			},
+			"listener": {
+				"type": "getLastCreatedDeathReplacement"
+			}
 		}]
 	}]
 }

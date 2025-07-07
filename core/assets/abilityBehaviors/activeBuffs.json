@@ -672,7 +672,7 @@
 								"condition": {
 									"type": "isUnitMagicImmune",
 									"unit": {
-										"type": "getAttackingUnit"
+										"type": "getDamagingUnit"
 									}
 								}
 						}]
@@ -680,12 +680,12 @@
 					"thenActions": [{
 						"type": "addSlowBuff",
 						"unit": {
-							"type": "getAttackingUnit"
+							"type": "getDamagingUnit"
 						},
 						"duration": {
 							"type": "getAbilityDuration",
 							"target": {
-								"type": "getAttackingUnit"
+								"type": "getDamagingUnit"
 							}
 						}
 					}]
@@ -915,6 +915,142 @@
 						"type": "getLastCreatedBuff"
 					}
 			}]
+		}],
+		"onLevelChange": [{
+			"type": "runReuseAction",
+			"name": {
+				"type": "rawString",
+				"value": "setupBuffs"
+			}
+		}]
+	},{
+		"ids": [{"id":"Afzy", "castId": "frenzy", "autoCastOnId": "frenzyon", "autoCastOffId": "frenzyoff", "autoCastType": "NOTARGET"}],
+		"type": "NORMAL_NOTARGET",
+		"extraAutoNoTargetConditions": [{
+				"type": "isCurrentBehaviorCategoryInList",
+				"list": ["ATTACK"]
+			},{
+				"type": "not",
+				"condition": {
+					"type": "doesUnitHaveBuff",
+					"unit": {
+						"type": "getAbilityTargetedUnit"
+					},
+					"id": {
+						"type": "getFirstBuffId"
+					}
+				}
+		}],
+		"reuseActions": {
+			"setupBuffs": [{
+					"type": "createNonStackingStatBuff",
+					"buffType": {
+						"type": "getNonStackingStatBuffTypeFromString",
+						"id": {
+							"type": "rawString",
+							"value": "ATKSPD"
+						}
+					},
+					"stackingKey": {
+						"type": "rawString",
+						"value": "bloodlust"
+					},
+					"value": {
+						"type": "getAbilityDataAsFloat",
+						"dataField": "A"
+					}
+				},{
+					"type": "storeValueLocally",
+					"key": {
+						"type": "rawString",
+						"value": "asbuff"
+					},
+					"instanceValue": {
+						"type": "rawBoolean",
+						"value": "false"
+					},
+					"valueToStore": {
+						"type": "getLastCreatedNonStackingStatBuff"
+					}
+				},{
+					"type": "createNonStackingStatBuff",
+					"buffType": {
+						"type": "getNonStackingStatBuffTypeFromString",
+						"id": {
+							"type": "rawString",
+							"value": "MVSPDPCT"
+						}
+					},
+					"stackingKey": {
+						"type": "rawString",
+						"value": "bloodlust"
+					},
+					"value": {
+						"type": "getAbilityDataAsFloat",
+						"dataField": "B"
+					}
+				},{
+					"type": "storeValueLocally",
+					"key": {
+						"type": "rawString",
+						"value": "mvbuff"
+					},
+					"instanceValue": {
+						"type": "rawBoolean",
+						"value": "false"
+					},
+					"valueToStore": {
+						"type": "getLastCreatedNonStackingStatBuff"
+					}
+			}]
+		},
+		"onAddDisabledAbility": [{
+			"type": "runReuseAction",
+			"name": {
+				"type": "rawString",
+				"value": "setupBuffs"
+			}
+		}],
+		"onEndCasting": [{
+				"type": "createTimedBuff",
+				"buffId": {
+					"type": "getFirstBuffId"
+				},
+				"duration": {
+					"type": "getAbilityDuration",
+					"target": {
+						"type": "getAbilityTargetedUnit"
+					}
+				},
+				"statBuffs": [{
+						"type": "getStoredNonStackingStatBuffByKey",
+						"instanceValue": {
+							"type": "rawBoolean",
+							"value": "false"
+						},
+						"key": {
+							"type": "rawString",
+							"value": "asbuff"
+						}
+					},{
+						"type": "getStoredNonStackingStatBuffByKey",
+						"instanceValue": {
+							"type": "rawBoolean",
+							"value": "false"
+						},
+						"key": {
+							"type": "rawString",
+							"value": "mvbuff"
+						}
+				}]
+			},{
+				"type": "addBuff",
+				"target": {
+					"type": "getAbilityTargetedUnit"
+				},
+				"buff": {
+					"type": "getLastCreatedBuff"
+				}
 		}],
 		"onLevelChange": [{
 			"type": "runReuseAction",

@@ -41,7 +41,8 @@ public class ABTimer extends CTimer {
 					action.runAction(simulation, caster, localStore, castId);
 				}
 			}
-			localStore.remove(ABLocalStoreKeys.FIRINGTIMER);
+			if (localStore != null)
+				localStore.remove(ABLocalStoreKeys.FIRINGTIMER);
 		}
 	}
 	

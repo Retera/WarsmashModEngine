@@ -1288,11 +1288,13 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 					path += ".blp";
 				}
 				if (unit instanceof RenderUnit) {
-					final int selectedUnitPlayerIndex = ((RenderUnit) unit).getSimulationUnit().getPlayerIndex();
+					final int selectedUnitPlayerIndex = ((RenderUnit) unit).getSimulationUnit().getFakePlayerIndex();
 					final CPlayer localPlayer = this.simulation.getPlayer(this.localPlayerIndex);
 					if (!localPlayer.hasAlliance(selectedUnitPlayerIndex, CAllianceType.PASSIVE)) {
 						allyKey = "e:";
-					} else if (localPlayer.hasAlliance(selectedUnitPlayerIndex, CAllianceType.SHARED_CONTROL)) {
+					} else if (localPlayer.hasAlliance(((RenderUnit) unit).getSimulationUnit().getPlayerIndex(),
+							CAllianceType.SHARED_CONTROL)
+							|| localPlayer.hasAlliance(selectedUnitPlayerIndex, CAllianceType.SHARED_CONTROL)) {
 						allyKey = "f:";
 					}
 				}
@@ -1406,11 +1408,12 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 			}
 			if (unit instanceof RenderUnit) {
 				final CUnit simulationUnit = ((RenderUnit) unit).getSimulationUnit();
-				final int selectedUnitPlayerIndex = simulationUnit.getPlayerIndex();
+				final int selectedUnitPlayerIndex = simulationUnit.getFakePlayerIndex();
 				final CPlayer localPlayer = this.simulation.getPlayer(this.localPlayerIndex);
 				if (!localPlayer.hasAlliance(selectedUnitPlayerIndex, CAllianceType.PASSIVE)) {
 					allyKey = "e:";
-				} else if (localPlayer.hasAlliance(selectedUnitPlayerIndex, CAllianceType.SHARED_CONTROL)) {
+				} else if (localPlayer.hasAlliance(simulationUnit.getPlayerIndex(), CAllianceType.SHARED_CONTROL)
+						|| localPlayer.hasAlliance(selectedUnitPlayerIndex, CAllianceType.SHARED_CONTROL)) {
 					allyKey = "f:";
 				}
 			}
@@ -2449,6 +2452,11 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 							private final Map<String, UnitSound> keyToCombatSound = new HashMap<>();
 
 							@Override
+							public char getTileset() {
+								return War3MapViewer.this.solverParams.tileset;
+							}
+
+							@Override
 							public CAttackProjectile createAttackProjectile(final CSimulation simulation,
 									final float launchX, final float launchY, final float launchFacing,
 									final CUnit source, final CUnitAttackMissile unitAttack, final AbilityTarget target,
@@ -3037,6 +3045,15 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 							}
 
 							@Override
+							public void updateItemModel(CItem item) {
+								RenderItem ri = War3MapViewer.this.getRenderPeer(item);
+								RenderItemType rit = War3MapViewer.this.renderItemTypeData.get(item.getTypeId());
+								if (ri != null && rit != null) {
+									ri.updateItemModel(War3MapViewer.this, rit);
+								}
+							}
+
+							@Override
 							public void spawnDeathExplodeEffect(final CUnit source,
 									final War3ID explodesOnDeathBuffId) {
 								final RenderUnit renderUnit = War3MapViewer.this.unitToRenderPeer.get(source);
@@ -3253,7 +3270,8 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 							}
 
 							@Override
-							public void unitUpdatedType(final CUnit simulationUnit, final War3ID typeId) {
+							public void unitUpdatedType(final CUnit simulationUnit, final War3ID typeId,
+									final boolean updatePortrait) {
 								final RenderUnit renderPeer = War3MapViewer.this.unitToRenderPeer.get(simulationUnit);
 
 								final RenderUnitType typeData = getUnitTypeData(typeId);
@@ -3280,9 +3298,9 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 
 								renderPeer.resetRenderUnit(War3MapViewer.this, unitX, unitY, unitZ,
 										customTeamColor /* renderPeer.playerIndex */, simulationUnit, typeData,
-										buildingShadowInstance, War3MapViewer.this.selectionCircleScaleFactor,
-										typeData.getAnimationWalkSpeed(), typeData.getAnimationRunSpeed(),
-										typeData.getScalingValue());
+										updatePortrait, buildingShadowInstance,
+										War3MapViewer.this.selectionCircleScaleFactor, typeData.getAnimationWalkSpeed(),
+										typeData.getAnimationRunSpeed(), typeData.getScalingValue());
 							}
 
 							@Override
@@ -3445,7 +3463,8 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 									final War3ID alias) {
 								final RenderUnit renderPeer = War3MapViewer.this.unitToRenderPeer.get(caster);
 								final AbilityUI abilityUi = War3MapViewer.this.abilityDataUI.getUI(alias);
-								if ((abilityUi == null) || (abilityUi.getEffectSound() == null)) {
+								if ((renderPeer == null) || (abilityUi == null)
+										|| (abilityUi.getEffectSound() == null)) {
 									return SimulationRenderComponent.DO_NOTHING;
 								}
 								final long soundId = War3MapViewer.this.uiSounds.getSound(abilityUi.getEffectSound())
@@ -3469,7 +3488,8 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 									final War3ID alias) {
 								final RenderUnit renderPeer = War3MapViewer.this.unitToRenderPeer.get(caster);
 								final AbilityUI abilityUi = War3MapViewer.this.abilityDataUI.getUI(alias);
-								if ((abilityUi == null) || (abilityUi.getEffectSound() == null)) {
+								if ((renderPeer == null) || (abilityUi == null)
+										|| (abilityUi.getEffectSound() == null)) {
 									return SimulationRenderComponent.DO_NOTHING;
 								}
 								final long soundId = War3MapViewer.this.uiSounds

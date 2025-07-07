@@ -246,7 +246,11 @@
 								},{
 									"type": "createTimedLifeBuff",
 									"buffId": {
-										"type": "getSecondBuffId"
+										"type": "getSecondBuffId",
+										"defaultId": {
+											"type": "getWar3IDFromString",
+											"id": "BNdm"
+										}
 									},
 									"duration": {
 										"type": "getAbilityDataAsFloat",

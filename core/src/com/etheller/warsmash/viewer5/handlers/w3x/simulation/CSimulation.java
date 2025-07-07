@@ -31,7 +31,6 @@ import com.etheller.warsmash.util.WarsmashConstants;
 import com.etheller.warsmash.viewer5.handlers.w3x.AnimationTokens.PrimaryTag;
 import com.etheller.warsmash.viewer5.handlers.w3x.SequenceUtils;
 import com.etheller.warsmash.viewer5.handlers.w3x.TextTag;
-import com.etheller.warsmash.viewer5.handlers.w3x.War3MapViewer;
 import com.etheller.warsmash.viewer5.handlers.w3x.environment.PathingGrid;
 import com.etheller.warsmash.viewer5.handlers.w3x.environment.PathingGrid.RemovablePathingMapInstance;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbility;
@@ -153,6 +152,7 @@ public class CSimulation implements CPlayerAPI, CFogMaskSettings {
 		this.upgradeData = new CUpgradeData(this.gameplayConstants, parsedUpgradeData, standardUpgradeEffectMeta);
 		this.unitData = new CUnitData(this.gameplayConstants, parsedUnitData, this.abilityData, this.upgradeData,
 				this.simulationRenderController);
+		this.unitData.getAllUnitTypesLightweight(); // Quick hack to avoid lag on first cast of Mech Critter
 		this.destructableData = new CDestructableData(parsedDestructableData, simulationRenderController);
 		this.itemData = new CItemData(parsedItemData);
 		this.units = new ArrayList<>();
@@ -232,6 +232,10 @@ public class CSimulation implements CPlayerAPI, CFogMaskSettings {
 		fogUpdateTimer.setRepeats(true);
 		fogUpdateTimer.setTimeoutTime(1.0f);
 		fogUpdateTimer.start(this);
+	}
+	
+	public char getTileset() {
+		return this.simulationRenderController.getTileset();
 	}
 
 	public CUnitData getUnitData() {
@@ -323,6 +327,10 @@ public class CSimulation implements CPlayerAPI, CFogMaskSettings {
 		return this.simulationRenderController.createItem(this, alias, unitX, unitY);
 	}
 
+	public void updateItemModel(CItem item) {
+		this.simulationRenderController.updateItemModel(item);
+	}
+
 	public CUnit createUnit(final War3ID typeId, final int playerIndex, final float x, final float y,
 			final float facing) {
 		return this.createUnit(typeId, playerIndex, x, y, facing, false);
@@ -351,12 +359,8 @@ public class CSimulation implements CPlayerAPI, CFogMaskSettings {
 		if (newUnit != null) {
 			final CPlayer player = getPlayer(playerIndex);
 			final CUnitType newUnitType = newUnit.getUnitType();
-			final int foodUsed = newUnitType.getFoodUsed();
-			newUnit.setFoodUsed(foodUsed);
-			player.setFoodUsed(player.getFoodUsed() + foodUsed);
-			if (newUnitType.getFoodMade() != 0) {
-				player.setFoodCap(player.getFoodCap() + newUnitType.getFoodMade());
-			}
+			player.setUnitFoodUsed(newUnit, newUnitType.getFoodUsed());
+			player.setUnitFoodMade(newUnit, newUnitType.getFoodMade());
 			player.addTechtreeUnlocked(this, typeId);
 			// nudge unit
 			newUnit.setPointAndCheckUnstuck(x, y, this);
@@ -1121,8 +1125,8 @@ public class CSimulation implements CPlayerAPI, CFogMaskSettings {
 		this.simulationRenderController.setBlight(x, y, radius, blighted);
 	}
 
-	public void unitUpdatedType(final CUnit unit, final War3ID typeId) {
-		this.simulationRenderController.unitUpdatedType(unit, typeId);
+	public void unitUpdatedType(final CUnit unit, final War3ID typeId, final boolean updatePortrait) {
+		this.simulationRenderController.unitUpdatedType(unit, typeId, updatePortrait);
 	}
 
 	private void setupCreatedUnit(final CUnit unit) {

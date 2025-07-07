@@ -25,6 +25,8 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.projectile.C
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CEffectType;
 
 public interface SimulationRenderController {
+	char getTileset();
+	
 	CAttackProjectile createAttackProjectile(CSimulation simulation, float launchX, float launchY, float launchFacing,
 			CUnit source, CUnitAttackMissile attack, AbilityTarget target, float damage, int bounceIndex,
 			CUnitAttackListener attackListener, CUnitAttackSettings settings);
@@ -69,6 +71,8 @@ public interface SimulationRenderController {
 			final float facing);
 
 	CItem createItem(CSimulation simulation, final War3ID typeId, final float x, final float y);
+
+	void updateItemModel(CItem item);
 
 	CDestructable createDestructable(War3ID typeId, float x, float y, float facing, float scale, int variation);
 
@@ -151,7 +155,7 @@ public interface SimulationRenderController {
 
 	void setBlight(float x, float y, float radius, boolean blighted);
 
-	void unitUpdatedType(CUnit unit, War3ID typeId);
+	void unitUpdatedType(CUnit unit, War3ID typeId, boolean updatePortrait);
 
 	void changeUnitColor(CUnit unit, int playerIndex);
 

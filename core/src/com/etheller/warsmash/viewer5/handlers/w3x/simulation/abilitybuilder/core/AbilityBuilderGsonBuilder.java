@@ -82,6 +82,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.beha
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.condition.projectile.*;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.condition.timer.*;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.condition.unit.*;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.condition.unit.behavior.*;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.condition.unittype.*;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -96,6 +97,7 @@ public abstract class AbilityBuilderGsonBuilder {
 				.registerSubtype(ABCallbackGetPartnerAbility.class, "getPartnerAbility")
 				.registerSubtype(ABCallbackGetReactionAbility.class, "getReactionAbility")
 				.registerSubtype(ABCallbackGetLastCreatedAbility.class, "getLastCreatedAbility")
+				.registerSubtype(ABCallbackGetMatchingAbility.class, "getMatchingAbility")
 				.registerSubtype(ABCallbackGetThisAbility.class, "getThisAbility")
 				.registerSubtype(ABCallbackGetAbilityById.class, "getAbilityById")
 
@@ -364,9 +366,13 @@ public abstract class AbilityBuilderGsonBuilder {
 				.registerSubtype(ABCallbackInlineConditionID.class, "inlineConditionID")
 				.registerSubtype(ABCallbackGetAbilityUniqueValueId.class, "getAbilityUniqueValueId")
 				.registerSubtype(ABCallbackGetAbilityDataAsID.class, "getAbilityDataAsID")
+				.registerSubtype(ABCallbackGetAbilityDataAsIDFromList.class, "getAbilityDataAsIDFromList")
+				.registerSubtype(ABCallbackGetAbilityDataAsRandomIDFromList.class, "getAbilityDataAsRandomIDFromList")
 				.registerSubtype(ABCallbackGetAbilityUnitId.class, "getAbilityUnitId")
 				.registerSubtype(ABCallbackGetWar3IDFromString.class, "getWar3IDFromString")
 				.registerSubtype(ABCallbackGetAlias.class, "getAlias")
+				.registerSubtype(ABCallbackGetCode.class, "getCode")
+				.registerSubtype(ABCallbackGetBuffIdFromCode.class, "getBuffIdFromCode")
 				.registerSubtype(ABCallbackGetParentAlias.class, "getParentAlias")
 				.registerSubtype(ABCallbackGetFirstBuffId.class, "getFirstBuffId")
 				.registerSubtype(ABCallbackGetSecondBuffId.class, "getSecondBuffId")
@@ -376,6 +382,9 @@ public abstract class AbilityBuilderGsonBuilder {
 
 				.registerSubtype(ABCallbackGetUnitType.class, "getUnitType")
 				.registerSubtype(ABCallbackGetNonCurrentTransformType.class, "getNonCurrentTransformType")
+
+				.registerSubtype(ABCallbackRandomMechanicalCritterId.class, "randomMechanicalCritterId")
+				.registerSubtype(ABCallbackRandomItemId.class, "randomItemId")
 				
 				.registerSubtype(ABCallbackNullIfFalse.class, "nullIfFalse")
 
@@ -417,8 +426,11 @@ public abstract class AbilityBuilderGsonBuilder {
 				.registerSubtype(ABCallbackGetUnitTypeGoldCost.class, "getUnitTypeGoldCost")
 				.registerSubtype(ABCallbackGetUnitTypeLumberCost.class, "getUnitTypeLumberCost")
 				.registerSubtype(ABCallbackGetUnitTypeFoodCost.class, "getUnitTypeFoodCost")
+				.registerSubtype(ABCallbackGetUnitTypeSpeed.class, "getUnitTypeSpeed")
 
 				.registerSubtype(ABCallbackGetAttackMaximumSplashRadius.class, "getAttackMaximumSplashRadius")
+
+				.registerSubtype(ABCallbackRandomInteger.class, "randomInteger")
 				
 				.registerSubtype(ABCallbackAddInteger.class, "i+")
 				.registerSubtype(ABCallbackSubtractInteger.class, "i-")
@@ -443,6 +455,8 @@ public abstract class AbilityBuilderGsonBuilder {
 				.registerSubtype(ABCallbackGetUnitQueueSize.class, "getUnitQueueSize")
 
 				.registerSubtype(ABCallbackGetPlayerId.class, "getPlayerId")
+				.registerSubtype(ABCallbackGetNeutralHostilePlayerId.class, "getNeutralHostilePlayerId")
+				.registerSubtype(ABCallbackGetNeutralPassivePlayerId.class, "getNeutralPassivePlayerId")
 
 				.registerSubtype(ABCallbackGetItemSlot.class, "getItemSlot")
 
@@ -461,6 +475,7 @@ public abstract class AbilityBuilderGsonBuilder {
 				.registerSubtype(ABCallbackReuseItem.class, "reuseItem")
 				.registerSubtype(ABCallbackReuseItemWithArguments.class, "reuseItemWithArguments")
 				.registerSubtype(ABCallbackGetStoredItemByKey.class, "getStoredItemByKey")
+				.registerSubtype(ABCallbackGetAbilityTargetedItem.class, "getAbilityTargetedItem")
 				.registerSubtype(ABCallbackGetLastCreatedItem.class, "getLastCreatedItem")
 				.registerSubtype(ABCallbackGetAttackedItem.class, "getAttackedItem");
 	}
@@ -502,6 +517,7 @@ public abstract class AbilityBuilderGsonBuilder {
 				.registerSubtype(ABCallbackCreateLocationFromXYOffset.class, "createLocationFromXYOffset")
 				.registerSubtype(ABCallbackModifyLocationWithOffset.class, "modifyLocationWithOffset")
 				.registerSubtype(ABCallbackModifyLocationWithXYOffset.class, "modifyLocationWithXYOffset")
+				.registerSubtype(ABCallbackRandomLocationInRange.class, "randomLocationInRange")
 				.registerSubtype(ABCallbackGetStoredLocationByKey.class, "getStoredLocationByKey")
 				.registerSubtype(ABCallbackInlineConditionLocation.class, "inlineConditionLocation")
 				.registerSubtype(ABCallbackGetTargetedLocation.class, "getTargetedLocation")
@@ -538,6 +554,8 @@ public abstract class AbilityBuilderGsonBuilder {
 				.registerSubtype(ABCallbackCreateDetectorData.class, "createDetectorData")
 				.registerSubtype(ABCallbackCreateDetectedData.class, "createDetectedData")
 
+				.registerSubtype(ABCallbackCreateOwnershipData.class, "createOwnershipData")
+
 				.registerSubtype(ABCallbackPlayerMaskIncludePlayers.class, "playerMaskIncludePlayers")
 				.registerSubtype(ABCallbackPlayerMaskExcludePlayers.class, "playerMaskExcludePlayers")
 				.registerSubtype(ABCallbackPlayerMaskAllPlayers.class, "playerMaskAllPlayers")
@@ -560,6 +578,7 @@ public abstract class AbilityBuilderGsonBuilder {
 
 	private static void registerPlayerCallbacks(RuntimeTypeAdapterFactory callbackTypeFactory) {
 		callbackTypeFactory.registerSubtype(ABCallbackGetPlayerById.class, "getPlayerById")
+				.registerSubtype(ABCallbackGetCastingPlayer.class, "getCastingPlayer")
 				.registerSubtype(ABCallbackGetStoredPlayerByKey.class, "getStoredPlayerByKey")
 				.registerSubtype(ABCallbackInlineConditionPlayer.class, "inlineConditionPlayer")
 				.registerSubtype(ABCallbackGetOwnerOfUnit.class, "getOwnerOfUnit")
@@ -684,6 +703,8 @@ public abstract class AbilityBuilderGsonBuilder {
 				.registerSubtype(ABCallbackGetMatchingUnit.class, "getMatchingUnit")
 				.registerSubtype(ABCallbackGetAttackedUnit.class, "getAttackedUnit")
 				.registerSubtype(ABCallbackGetAttackingUnit.class, "getAttackingUnit")
+				.registerSubtype(ABCallbackGetDamagedUnit.class, "getDamagedUnit")
+				.registerSubtype(ABCallbackGetDamagingUnit.class, "getDamagingUnit")
 				.registerSubtype(ABCallbackGetDyingUnit.class, "getDyingUnit")
 				.registerSubtype(ABCallbackGetKillingUnit.class, "getKillingUnit")
 				.registerSubtype(ABCallbackGetAbilityTargetedUnit.class, "getAbilityTargetedUnit")
@@ -822,6 +843,7 @@ public abstract class AbilityBuilderGsonBuilder {
 				.registerSubtype(ABConditionIsAttackTypeEqual.class, "isAttackTypeEqual")
 				.registerSubtype(ABConditionIsDamageTypeEqual.class, "isDamageTypeEqual")
 				.registerSubtype(ABConditionIsWeaponTypeEqual.class, "isWeaponTypeEqual")
+				.registerSubtype(ABConditionIsMovementTypeEqual.class, "isMovementTypeEqual")
 				.registerSubtype(ABConditionIsIdEqual.class, "isIdEqual")
 				.registerSubtype(ABConditionIsDefenseTypeEqual.class, "isDefenseTypeEqual")
 				.registerSubtype(ABConditionIsDefenseTypeInList.class, "isDefenseTypeInList")
@@ -841,6 +863,7 @@ public abstract class AbilityBuilderGsonBuilder {
 				
 
 				.registerSubtype(ABConditionIsUnitType.class, "isUnitType")
+				.registerSubtype(ABConditionDoesUnitHaveAbilityMatchingCondition.class, "doesUnitHaveAbilityMatchingCondition")
 				.registerSubtype(ABConditionDoesUnitHaveBuff.class, "doesUnitHaveBuff")
 				.registerSubtype(ABConditionDoesUnitHaveBuffMatchingCondition.class, "doesUnitHaveBuffMatchingCondition")
 				.registerSubtype(ABConditionIsUnitMaxHp.class, "isUnitMaxHp")
@@ -861,12 +884,16 @@ public abstract class AbilityBuilderGsonBuilder {
 				.registerSubtype(ABConditionIsUnitConstructingOrUpgrading.class, "isUnitConstructingOrUpgrading")
 				.registerSubtype(ABConditionIsUnitMagicImmune.class, "isUnitMagicImmune")
 				.registerSubtype(ABConditionIsUnitSleeping.class, "isUnitSleeping")
+				.registerSubtype(ABConditionIsUnitMorphImmune.class, "isUnitMorphImmune")
+				.registerSubtype(ABConditionIsUnitPolymorphed.class, "isUnitPolymorphed")
 				.registerSubtype(ABConditionIsUnitShareSpells.class, "isUnitShareSpells")
 				.registerSubtype(ABConditionIsUnitHeroDuration.class, "isUnitHeroDuration")
+				.registerSubtype(ABConditionIsCurrentBehaviorCategoryInList.class, "isCurrentBehaviorCategoryInList")
 
 				.registerSubtype(ABConditionIsItemAbility.class, "isItemAbility")
 				.registerSubtype(ABConditionItemHasCharges.class, "itemHasCharges")
 
+				.registerSubtype(ABConditionIsTree.class, "isTree")
 				.registerSubtype(ABConditionDoesDestructableHaveBuff.class, "doesDestructableHaveBuff")
 				.registerSubtype(ABConditionDoesDestructableHaveBuffMatchingCondition.class, "doesDestructableHaveBuffMatchingCondition")
 
@@ -968,6 +995,7 @@ public abstract class AbilityBuilderGsonBuilder {
 				.registerSubtype(ABActionDeleteStoredKey.class, "deleteStoredKey")
 				.registerSubtype(ABActionRemoveEffect.class, "removeEffect")
 				.registerSubtype(ABActionCreateAbilityFromId.class, "createAbilityFromId")
+				.registerSubtype(ABActionPrepUnownedAbilityForUse.class, "prepUnownedAbilityForUse")
 				.registerSubtype(ABActionAddDefenseBonus.class, "addDefenseBonus")
 				.registerSubtype(ABActionRemoveDefenseBonus.class, "removeDefenseBonus")
 				.registerSubtype(ABActionAddRallyAbility.class, "addRallyAbility")
@@ -994,6 +1022,7 @@ public abstract class AbilityBuilderGsonBuilder {
 				.registerSubtype(ABActionSetMp.class, "setMp")
 				.registerSubtype(ABActionAddMp.class, "addMp")
 				.registerSubtype(ABActionSubtractMp.class, "subtractMp")
+				.registerSubtype(ABActionSetSpeed.class, "setSpeed")
 				.registerSubtype(ABActionMultiplyUnitScale.class, "multiplyUnitScale")
 				.registerSubtype(ABActionAddStunBuff.class, "addStunBuff")
 				.registerSubtype(ABActionAddSlowBuff.class, "addSlowBuff")
@@ -1006,6 +1035,7 @@ public abstract class AbilityBuilderGsonBuilder {
 				.registerSubtype(ABActionTransformUnitInstant.class, "transformUnitInstant")
 				.registerSubtype(ABActionTransformedUnitAbilityAdd.class, "transformedUnitAbilityAdd")
 				.registerSubtype(ABActionTransformedUnitAbilityRemove.class, "transformedUnitAbilityRemove")
+				.registerSubtype(ABActionTransformUnitAppearance.class, "transformUnitAppearance")
 				.registerSubtype(ABActionSetExplodesOnDeath.class, "setExplodesOnDeath")
 				.registerSubtype(ABActionIssueStopOrder.class, "issueStopOrder")
 				.registerSubtype(ABActionSendUnitBackToWork.class, "sendUnitBackToWork")
@@ -1050,6 +1080,7 @@ public abstract class AbilityBuilderGsonBuilder {
 				.registerSubtype(ABActionAddTargetAllowed.class, "addTargetAllowed")
 				.registerSubtype(ABActionRemoveTargetAllowed.class, "removeTargetAllowed")
 				.registerSubtype(ABActionAbilityAttemptToApplyEffect.class, "abilityAttemptToApplyEffect")
+				.registerSubtype(ABActionAbilityRunEndCastingActions.class, "abilityRunEndCastingActions")
 				.registerSubtype(ABActionSendStartCastingEvents.class, "sendStartCastingEvents")
 				.registerSubtype(ABActionSetPreventEndEvents.class, "setPreventEndEvents")
 				
@@ -1192,6 +1223,7 @@ public abstract class AbilityBuilderGsonBuilder {
 				
 
 				.registerSubtype(ABActionChargeItem.class, "chargeItem")
+				.registerSubtype(ABActionTransformItem.class, "transformItem")
 				
 				
 				
@@ -1602,6 +1634,14 @@ public abstract class AbilityBuilderGsonBuilder {
 				.registerSubtype(ABCallbackGetStoredTargetTypeByKey.class, "getStoredTargetTypeByKey")
 				.registerSubtype(ABCallbackRawTargetType.class, "rawTargetType");
 		gsonBuilder.registerTypeAdapterFactory(ttTypeFactory);
+
+		final RuntimeTypeAdapterFactory<ABMovementTypeCallback> moveTypeFactory = RuntimeTypeAdapterFactory
+				.of(ABMovementTypeCallback.class, "type");
+		moveTypeFactory.registerSubtype(ABCallbackGetMovementTypeFromString.class, "getMovementTypeFromString")
+				.registerSubtype(ABCallbackGetStoredMovementTypeByKey.class, "getStoredMovementTypeByKey")
+				.registerSubtype(ABCallbackGetUnitMovementType.class, "getUnitMovementType")
+				.registerSubtype(ABCallbackGetUnitTypeMovementType.class, "getUnitTypeMovementType");
+		gsonBuilder.registerTypeAdapterFactory(moveTypeFactory);
 
 		final RuntimeTypeAdapterFactory<ABAttackPreDamageListenerPriorityCallback> pdlpTypeFactory = RuntimeTypeAdapterFactory
 				.of(ABAttackPreDamageListenerPriorityCallback.class, "type");

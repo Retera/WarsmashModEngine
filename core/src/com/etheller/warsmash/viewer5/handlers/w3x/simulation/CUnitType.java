@@ -112,6 +112,8 @@ public class CUnitType {
 	private final int lumberBountyAwardedDice;
 	private final int lumberBountyAwardedSides;
 	private final boolean neutralBuildingShowMinimapIcon;
+	private final String tilesets;
+	private boolean special;
 
 	public CUnitType(final String name, final String legacyName, final War3ID typeId, final int maxLife,
 			final float lifeRegen, final float manaRegen, final CRegenType lifeRegenType, final int manaInitial,
@@ -139,7 +141,7 @@ public class CUnitType {
 			final int sightRadiusDay, final int sightRadiusNight, final boolean extendedLineOfSight,
 			final int goldBountyAwardedBase, final int goldBountyAwardedDice, final int goldBountyAwardedSides,
 			final int lumberBountyAwardedBase, final int lumberBountyAwardedDice, final int lumberBountyAwardedSides,
-			boolean neutralBuildingShowMinimapIcon) {
+			boolean neutralBuildingShowMinimapIcon, final String tilesets, final boolean special) {
 		this.name = name;
 		this.legacyName = legacyName;
 		this.typeId = typeId;
@@ -226,6 +228,8 @@ public class CUnitType {
 		this.lumberBountyAwardedDice = lumberBountyAwardedDice;
 		this.lumberBountyAwardedSides = lumberBountyAwardedSides;
 		this.neutralBuildingShowMinimapIcon = neutralBuildingShowMinimapIcon;
+		this.tilesets = tilesets;
+		this.special = special;
 	}
 
 	public String getName() {
@@ -583,5 +587,13 @@ public class CUnitType {
 
 	public boolean isNeutralBuildingShowMinimapIcon() {
 		return this.neutralBuildingShowMinimapIcon;
+	}
+
+	public String getTilesets() {
+		return this.tilesets;
+	}
+
+	public boolean isSpecial() {
+		return this.special;
 	}
 }

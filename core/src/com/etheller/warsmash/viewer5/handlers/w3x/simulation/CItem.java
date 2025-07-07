@@ -17,8 +17,8 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.CommandStringE
 
 public class CItem extends CWidget {
 	private final static int COLLISION_SIZE = 16;
-	private final War3ID typeId;
-	private final CItemType itemType;
+	private War3ID typeId;
+	private CItemType itemType;
 	private boolean hidden;
 	private boolean invulnerable;
 	private int charges;
@@ -40,6 +40,26 @@ public class CItem extends CWidget {
 		this.dropOnDeath = itemTypeInstance.isDroppedWhenCarrierDies();
 		this.droppable = itemTypeInstance.isCanBeDropped();
 		this.pawnable = itemTypeInstance.isPawnable();
+	}
+	
+	public void setTypeId(CSimulation game, War3ID typeId) {
+		int slot = 0;
+		if (this.containedInventory != null) {
+			slot = this.getContainedInventory().getSlot(this);
+			this.forceDropIfHeld(game);
+		}
+		this.typeId = typeId;
+		this.itemType = game.getItemData().getItemType(typeId);
+		this.charges = this.itemType.getNumberOfCharges();
+		this.dropOnDeath = this.itemType.isDroppedWhenCarrierDies();
+		this.droppable = this.itemType.isCanBeDropped();
+		this.pawnable = this.itemType.isPawnable();
+		
+		game.updateItemModel(this);
+		if (this.containedInventory != null) {
+			this.containedInventory.giveItem(game, this.containedUnit, this, slot, false);
+		}
+		
 	}
 
 	@Override

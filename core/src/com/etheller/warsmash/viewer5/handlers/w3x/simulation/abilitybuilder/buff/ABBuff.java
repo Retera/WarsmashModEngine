@@ -20,15 +20,15 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityActivat
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetCheckReceiver;
 
 public abstract class ABBuff extends AbstractCBuff {
-	protected static int TIMEDLIFE = 0b1;
-	protected static int NEGATIVE = 0b10;
-	protected static int DISPELLABLE = 0b100;
-	protected static int LEVELED = 0b1000;
-	protected static int HERO = 0b10000;
-	protected static int PHYSICAL = 0b100000;
-	protected static int MAGIC = 0b1000000;
-	protected static int AURA = 0b10000000;
-	protected static int STACKS = 0b100000000;
+	protected final static int TIMEDLIFE = 0b1;
+	protected final static int NEGATIVE = 0b10;
+	protected final static int DISPELLABLE = 0b100;
+	protected final static int LEVELED = 0b1000;
+	protected final static int HERO = 0b10000;
+	protected final static int PHYSICAL = 0b100000;
+	protected final static int MAGIC = 0b1000000;
+	protected final static int AURA = 0b10000000;
+	protected final static int STACKS = 0b100000000;
 
 	protected int flags = DISPELLABLE;
 

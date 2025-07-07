@@ -265,7 +265,7 @@ public class CBehaviorAbilityBuilderNoTarget implements ABBehavior {
 			}
 
 			cleanupInputs();
-			this.unit.beginBehavior(game, this.unit.pollNextOrderBehavior(game));
+			//this.unit.beginBehavior(game, this.unit.pollNextOrderBehavior(game));
 		}
 	}
 

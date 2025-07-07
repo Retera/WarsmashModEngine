@@ -11,15 +11,15 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CAllianceTy
 
 public class ABConditionIsUnitEnemy extends ABCondition {
 
-	private ABUnitCallback caster;
+	private ABUnitCallback self;
 	private ABUnitCallback unit;
 
 	@Override
 	public Boolean callback(CSimulation game, CUnit casterUnit, Map<String, Object> localStore, final int castId) {
 		CUnit theUnit = unit.callback(game, casterUnit, localStore, castId);
 		CUnit theCaster = casterUnit;
-		if (this.caster != null) {
-			theCaster = this.caster.callback(game, casterUnit, localStore, castId);
+		if (this.self != null) {
+			theCaster = this.self.callback(game, casterUnit, localStore, castId);
 		}
 
 		if (theUnit != null) {
@@ -32,11 +32,11 @@ public class ABConditionIsUnitEnemy extends ABCondition {
 	@Override
 	public String generateJassEquivalent(JassTextGenerator jassTextGenerator) {
 		String casterExpr;
-		if (this.caster == null) {
+		if (this.self == null) {
 			casterExpr = jassTextGenerator.getCaster();
 		}
 		else {
-			casterExpr = this.caster.generateJassEquivalent(jassTextGenerator);
+			casterExpr = this.self.generateJassEquivalent(jassTextGenerator);
 		}
 		return "IsUnitEnemy(" + this.unit.generateJassEquivalent(jassTextGenerator) + ", GetOwningPlayer(" + casterExpr
 				+ "))";

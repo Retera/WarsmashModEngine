@@ -68,8 +68,7 @@ public class MeleeUIMinimap {
 					batch.setColor(0f, 0f, 0f, 0.5f);
 					batch.draw(this.teamColors[0], this.minimapFilledArea.x + (x * mapXMod),
 							this.minimapFilledArea.y + (y * mapYMod), mapXMod, mapYMod);
-				}
-				else if (CFogState.MASKED.equals(state)) {
+				} else if (CFogState.MASKED.equals(state)) {
 					batch.setColor(0f, 0f, 0f, 1f);
 					batch.draw(this.teamColors[0], this.minimapFilledArea.x + (x * mapXMod),
 							this.minimapFilledArea.y + (y * mapYMod), mapXMod, mapYMod);
@@ -85,43 +84,38 @@ public class MeleeUIMinimap {
 		for (final RenderUnit unit : units) {
 			final CUnit simUnit = unit.getSimulationUnit();
 			int dimensions = 4;
-			if (!simUnit.isHidden() && !simUnit.isDead() && simUnit.isVisible(game, player.getId())) {
+			if (!(simUnit.isHidden() || simUnit.isHideMinimapIcon() || simUnit.isDead())
+					&& simUnit.isVisible(game, player.getId())) {
 				batch.setColor(1, 1, 1, 1);
 				final Texture minimapIcon;
 				if (simUnit.getGoldMineData() != null) {
 					minimapIcon = this.specialIcons[0];
 					dimensions = 21;
-				}
-				else if (simUnit.getOverlayedGoldMineData() != null) {
+				} else if (simUnit.getOverlayedGoldMineData() != null) {
 					final CAbilityOverlayedMine overlayedGoldMineData = simUnit.getOverlayedGoldMineData();
 					if (overlayedGoldMineData instanceof CAbilityEntangledMine) {
 						minimapIcon = this.specialIcons[3];
-					}
-					else {
+					} else {
 						minimapIcon = this.specialIcons[4];
 					}
 					dimensions = 21;
-				}
-				else if (simUnit.getUnitType().isNeutralBuildingShowMinimapIcon()) {
+				} else if (simUnit.getUnitType().isNeutralBuildingShowMinimapIcon()) {
 					minimapIcon = this.specialIcons[1];
 					dimensions = 21;
-				}
-				else if (simUnit.isHero()) {
-					if (player.hasAlliance(simUnit.getPlayerIndex(), CAllianceType.PASSIVE)) {
+				} else if (simUnit.isHero()) {
+					if (player.hasAlliance(simUnit.getFakePlayerIndex(), CAllianceType.PASSIVE)) {
 						batch.setColor(1f, 1f, 1f, this.heroAlpha);
-					}
-					else {
+					} else {
 //						Color pc = new Color(game.getPlayer(simUnit.getPlayerIndex()).getColor());
 						batch.setColor(1f, 0.2f, 0.2f, this.heroAlpha);
 					}
 					minimapIcon = this.specialIcons[2];
 					dimensions = 28;
-				}
-				else {
+				} else {
 					if (simUnit.isBuilding()) {
 						dimensions = 10;
 					}
-					minimapIcon = this.teamColors[unit.getSimulationUnit().getPlayerIndex()];
+					minimapIcon = this.teamColors[unit.getSimulationUnit().getFakePlayerIndex()];
 				}
 				final int offset = dimensions / 2;
 				batch.draw(minimapIcon,

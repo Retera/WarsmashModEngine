@@ -1,6 +1,5 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.condition;
 
-import java.util.List;
 import java.util.Map;
 
 import com.badlogic.gdx.math.Rectangle;
@@ -18,7 +17,7 @@ public class ABConditionMatchingUnitExistsInRangeOfUnit extends ABCondition {
 
 	private ABUnitCallback originUnit;
 	private ABFloatCallback range;
-	private List<ABCondition> conditions;
+	private ABCondition condition;
 
 	@Override
 	public Boolean callback(CSimulation game, CUnit caster, Map<String, Object> localStore, final int castId) {
@@ -34,12 +33,9 @@ public class ABConditionMatchingUnitExistsInRangeOfUnit extends ABCondition {
 			public boolean call(final CUnit enumUnit) {
 				if (originUnitTarget.canReach(enumUnit, rangeVal)) {
 					if (ur.getUnit() == null) {
-						if (conditions != null) {
-							boolean result = true;
+						if (condition != null) {
 							localStore.put(ABLocalStoreKeys.MATCHINGUNIT+castId, enumUnit);
-							for (ABCondition condition : conditions) {
-								result = result && condition.callback(game, caster, localStore, castId);
-							}
+							boolean result = condition.callback(game, caster, localStore, castId);
 							localStore.remove(ABLocalStoreKeys.MATCHINGUNIT+castId);
 							if (result) {
 								ur.setUnit(enumUnit);

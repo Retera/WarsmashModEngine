@@ -965,10 +965,18 @@
 								"type": "getAbilityTargetedUnit"
 							},
 							"condition": {
-								"type": "isBuffNegative",
-								"buff": {
-									"type": "getMatchingBuff"
-								}
+								"type": "and",
+								"conditions": [{
+										"type": "isBuffMagic",
+										"buff": {
+											"type": "getMatchingBuff"
+										}
+									},{
+										"type": "isBuffNegative",
+										"buff": {
+											"type": "getMatchingBuff"
+										}
+								}]
 							}
 					}]
 				},{
@@ -984,10 +992,18 @@
 								"type": "getAbilityTargetedUnit"
 							},
 							"condition": {
-								"type": "isBuffPositive",
-								"buff": {
-									"type": "getMatchingBuff"
-								}
+								"type": "and",
+								"conditions": [{
+										"type": "isBuffMagic",
+										"buff": {
+											"type": "getMatchingBuff"
+										}
+									},{
+										"type": "isBuffPositive",
+										"buff": {
+											"type": "getMatchingBuff"
+										}
+								}]
 							}
 					}]
 			}]
@@ -1072,7 +1088,7 @@
 						},{
 							"type": "if",
 							"condition": {
-								"type": "and",
+								"type": "or",
 								"conditions": [{
 										"type": "wasAutoCast"
 									},{
@@ -1820,6 +1836,364 @@
 				},
 				"thenActions": [{
 					"type": "cleanUpCastInstance"
+				}]
+		}]
+	},{
+		"ids": [{"id":"AIdc", "castId": "itemchaindispel"}],
+		"type": "NORMAL_UNITTARGET",
+		"displayFields": {
+			"hideAreaCursor": {
+				"type": "rawBoolean",
+				"value": "true"
+			}
+		},
+		"extraTargetConditions": [{
+			"type": "reuseBooleanWithArguments",
+			"name": {
+				"type": "rawString",
+				"value": "targetCondition"
+			},
+			"arguments": {
+				"checkUnit": {
+					"type": "getAbilityTargetedUnit"
+				}
+			}
+		}],
+		"reuseCallbacks": {
+			"targetCondition": {
+				"type": "or",
+				"conditions": [{
+						"type": "and",
+						"conditions": [{
+								"type": "isUnitFriend",
+								"unit": {
+									"type": "argumentUnit",
+									"name": {
+										"type": "rawString",
+										"value": "checkUnit"
+									}
+								}
+							},{
+								"type": "setCantUseReasonOnFailure",
+								"condition": {
+									"type": "doesUnitHaveBuffMatchingCondition",
+									"unit": {
+										"type": "argumentUnit",
+										"name": {
+											"type": "rawString",
+											"value": "checkUnit"
+										}
+									},
+									"condition": {
+										"type": "and",
+										"conditions": [{
+												"type": "isBuffMagic",
+												"buff": {
+													"type": "getMatchingBuff"
+												}
+											},{
+												"type": "isBuffNegative",
+												"buff": {
+													"type": "getMatchingBuff"
+												}
+										}]
+									}
+								},
+								"reason": "MUST_TARGET_A_FRIENDLY_UNIT_WITH_NEGATIVE_BUFFS"
+							}]
+					},{
+						"type": "and",
+						"conditions": [{
+								"type": "isUnitEnemy",
+								"unit": {
+									"type": "argumentUnit",
+									"name": {
+										"type": "rawString",
+										"value": "checkUnit"
+									}
+								}
+							},{
+								"type": "or",
+								"conditions": [{
+										"type": "and",
+										"conditions": [{
+												"type": "f>0",
+												"value": {
+													"type": "getAbilityDataAsFloat",
+													"dataField": "B"
+												}
+											},{
+												"type": "setCantUseReasonOnFailure",
+												"condition": {
+													"type": "or",
+													"conditions": [{
+															"type": "isUnitSummoned",
+															"unit": {
+																"type": "argumentUnit",
+																"name": {
+																	"type": "rawString",
+																	"value": "checkUnit"
+																}
+															}
+														},{
+															"type": "doesUnitHaveBuffMatchingCondition",
+															"unit": {
+																"type": "argumentUnit",
+																"name": {
+																	"type": "rawString",
+																	"value": "checkUnit"
+																}
+															},
+															"condition": {
+																"type": "and",
+																"conditions": [{
+																		"type": "isBuffMagic",
+																		"buff": {
+																			"type": "getMatchingBuff"
+																		}
+																	},{
+																		"type": "isBuffPositive",
+																		"buff": {
+																			"type": "getMatchingBuff"
+																		}
+																}]
+															}
+													}]
+												},
+												"reason": "MUST_TARGET_AN_ENEMY_UNIT_WITH_POSITIVE_BUFFS_OR_A_SUMMONED_UNIT"
+										}]
+									},{
+										"type": "and",
+										"conditions": [{
+												"type": "not",
+												"condition": {
+													"type": "f>0",
+													"value": {
+														"type": "getAbilityDataAsFloat",
+														"dataField": "B"
+													}
+												}
+											},{
+												"type": "setCantUseReasonOnFailure",
+												"condition": {
+													"type": "doesUnitHaveBuffMatchingCondition",
+													"unit": {
+														"type": "argumentUnit",
+														"name": {
+															"type": "rawString",
+															"value": "checkUnit"
+														}
+													},
+													"condition": {
+														"type": "and",
+														"conditions": [{
+																"type": "isBuffMagic",
+																"buff": {
+																	"type": "getMatchingBuff"
+																}
+															},{
+																"type": "isBuffPositive",
+																"buff": {
+																	"type": "getMatchingBuff"
+																}
+														}]
+													}
+												},
+												"reason": "MUST_TARGET_AN_ENEMY_UNIT_WITH_POSITIVE_BUFFS"
+										}]
+								}]
+							}]
+				}]
+			},
+			"jumpCondition": {
+				"type": "and",
+				"conditions": [{
+						"type": "isUnitValidTarget",
+						"target": {
+							"type": "getMatchingUnit"
+						}
+					},{
+						"type": "reuseBooleanWithArguments",
+						"name": {
+							"type": "rawString",
+							"value": "targetCondition"
+						},
+						"arguments": {
+							"checkUnit": {
+								"type": "getMatchingUnit"
+							}
+						}
+					},{
+						"type": "isUnitVisible",
+						"unit": {
+							"type": "getMatchingUnit"
+						}
+				}]
+			}
+		},
+		"reuseActions": {
+			"onHit": [{
+					"type": "if",
+					"condition": {
+						"type": "isUnitEnemy",
+						"unit": {
+							"type": "getProjectileHitUnit"
+						}
+					},
+					"thenActions": [{
+							"type": "damageTarget",
+							"source": {
+								"type": "getCastingUnit"
+							},
+							"target": {
+								"type": "getProjectileHitUnit"
+							},
+							"onlyDamageSummons": {
+								"type": "rawBoolean",
+								"value": "true"
+							},
+							"damage": {
+								"type": "getAbilityDataAsFloat",
+								"dataField": "B"
+							}
+					}]
+				},{
+					"type": "if",
+					"condition": {
+						"type": "isUnitAlive",
+						"unit": {
+							"type": "getProjectileHitUnit"
+						}
+					},
+					"thenActions": [{
+							"type": "if",
+							"condition": {
+								"type": "not",
+								"condition": {
+									"type": "isUnitMagicImmune",
+									"unit": {
+										"type": "getProjectileHitUnit"
+									}
+								}
+							},
+							"thenActions": [{
+								"type": "subtractMp",
+								"unit": {
+									"type": "getProjectileHitUnit"
+								},
+								"amount": {
+									"type": "getAbilityDataAsFloat",
+									"dataField": "A"
+								}
+							}]
+						},{
+							"type": "if",
+							"condition": {
+								"type": "isUnitEnemy",
+								"unit": {
+									"type": "getProjectileHitUnit"
+								}
+							},
+							"thenActions": [{
+								"type": "dispelBuffs",
+								"unit": {
+									"type": "getProjectileHitUnit"
+								},
+								"filter": {
+									"type": "and",
+									"conditions": [{
+											"type": "isBuffMagic",
+											"buff": {
+												"type": "enumBuff"
+											}
+										},{
+											"type": "isBuffPositive",
+											"buff": {
+												"type": "enumBuff"
+											}
+									}]
+								}
+							}],
+							"elseActions": [{
+								"type": "dispelBuffs",
+								"unit": {
+									"type": "getProjectileHitUnit"
+								},
+								"filter": {
+									"type": "and",
+									"conditions": [{
+											"type": "isBuffMagic",
+											"buff": {
+												"type": "enumBuff"
+											}
+										},{
+											"type": "isBuffNegative",
+											"buff": {
+												"type": "enumBuff"
+											}
+									}]
+								}
+							}]
+					}]
+				}]
+		},
+		"onEndCasting": [{
+				"type": "createTemporarySpellEffectOnUnit",
+				"target": {
+					"type": "getCastingUnit"
+				},
+				"id": {
+					"type": "getAlias"
+				},
+				"effectType": "CASTER"
+			},{
+				"type": "createTemporarySpellEffectOnUnit",
+				"target": {
+					"type": "getAbilityTargetedUnit"
+				},
+				"id": {
+					"type": "getAlias"
+				},
+				"effectType": "TARGET"
+			},{
+				"type": "createUnitTargetedBouncingProjectile",
+				"target": {
+					"type": "getAbilityTargetedUnit"
+				},
+				"id": {
+					"type": "getAlias"
+				},
+				"bounces": {
+					"type": "i-",
+					"value1": {
+						"type": "getAbilityDataAsInteger",
+						"dataField": "C"
+					},
+					"value2": {
+						"type": "rawInteger",
+						"value": 1
+					}
+				},
+				"range": {
+					"type": "getAbilityArea"
+				},
+				"allowMultipleBouncesPerUnit": {
+					"type": "rawBoolean",
+					"value": "false"
+				},
+				"condition": {
+					"type": "reuseBoolean",
+					"name": {
+						"type": "rawString",
+						"value": "jumpCondition"
+					}
+				},
+				"onHit": [{
+					"type": "runReuseAction",
+					"name": {
+						"type": "rawString",
+						"value": "onHit"
+					}
 				}]
 		}]
 	}]

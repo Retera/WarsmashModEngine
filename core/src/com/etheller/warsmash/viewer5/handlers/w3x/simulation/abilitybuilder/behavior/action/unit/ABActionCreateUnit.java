@@ -3,6 +3,7 @@ package com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.beh
 import java.util.Map;
 
 import com.etheller.warsmash.parsers.jass.JassTextGenerator;
+import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnitClassification;
@@ -24,9 +25,15 @@ public class ABActionCreateUnit implements ABSingleAction {
 	private ABFloatCallback facing;
 	
 	private ABBooleanCallback addSummonedTag;
+	private ABBooleanCallback removeFood;
 
 	@Override
 	public void runAction(CSimulation game, CUnit caster, Map<String, Object> localStore, final int castId) {
+		War3ID theId = id.callback(game, caster, localStore, castId);
+		if (theId == null) {
+			return;
+		}
+		
 		CPlayer thePlayer = null;
 		float theFacing = 0;
 		if (this.owner != null) {
@@ -38,11 +45,16 @@ public class ABActionCreateUnit implements ABSingleAction {
 			theFacing = this.facing.callback(game, caster, localStore, castId);
 		}
 		final AbilityPointTarget location = this.loc.callback(game, caster, localStore, castId);
-		final CUnit createdUnit = game.createUnitSimple(this.id.callback(game, caster, localStore, castId), thePlayer.getId(),
+		final CUnit createdUnit = game.createUnitSimple(theId, thePlayer.getId(),
 				location.getX(), location.getY(), theFacing);
 		
 		if (addSummonedTag == null || addSummonedTag.callback(game, caster, localStore, castId)) {
 			createdUnit.addClassification(CUnitClassification.SUMMONED);
+		}
+		
+		if (removeFood != null && removeFood.callback(game, caster, localStore, castId)) {
+			thePlayer.setUnitFoodUsed(createdUnit, 0);
+			thePlayer.setUnitFoodMade(createdUnit, 0);
 		}
 
 		localStore.put(ABLocalStoreKeys.LASTCREATEDUNIT, createdUnit);

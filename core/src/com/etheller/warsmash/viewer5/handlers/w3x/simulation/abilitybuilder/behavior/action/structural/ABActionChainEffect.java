@@ -95,7 +95,8 @@ public class ABActionChainEffect implements ABAction {
 							remainingJumps - 1);
 				}
 			};
-			game.registerTimer(runner);
+			runner.setTimeoutTime(delay);
+			runner.start(game);
 		} else {
 			performJump(game, caster, localStore, castId, originUnitTarget, multiBounce, hitUnits, remainingJumps - 1);
 		}

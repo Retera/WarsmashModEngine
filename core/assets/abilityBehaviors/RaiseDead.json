@@ -61,7 +61,11 @@
 		"onEndCasting": [{
 				"type": "createTimedLifeBuff",
 				"buffId": {
-					"type": "getFirstBuffId"
+					"type": "getFirstBuffId",
+					"defaultId": {
+						"type": "getWar3IDFromString",
+						"id": "Brai"
+					}
 				},
 				"duration": {
 					"type": "getAbilityDuration"

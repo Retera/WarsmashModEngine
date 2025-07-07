@@ -1194,6 +1194,105 @@ public class Jass2 {
 								orderId, false);
 						return BooleanJassValue.of(abilityHandleId != 0);
 					});
+
+			jassProgramVisitor.getJassNativeManager().createNative("UnitUseItem",
+					(arguments, globalScope, triggerScope) -> {
+						final CUnit whichUnit = nullable(arguments, 0, ObjectJassValueVisitor.getInstance());
+						if (whichUnit == null) {
+							return BooleanJassValue.FALSE;
+						}
+						final CItem item = arguments.get(1).visit(ObjectJassValueVisitor.getInstance());
+						final CPlayerUnitOrderExecutor defaultPlayerUnitOrderExecutor = CommonEnvironment.this.simulation
+								.getDefaultPlayerUnitOrderExecutor(whichUnit.getPlayerIndex());
+						final BooleanAbilityActivationReceiver activationReceiver = BooleanAbilityActivationReceiver.INSTANCE;
+						final int orderId = OrderIdUtils.getOrderId("itemuse" + String.format("%02d", item.getContainedInventory().getSlot(item)));
+						int abilityHandleId = 0;
+						for (final CAbility ability : whichUnit.getAbilities()) {
+							ability.checkCanUse(CommonEnvironment.this.simulation, whichUnit, orderId, false,
+									activationReceiver);
+							if (activationReceiver.isOk()) {
+								final BooleanAbilityTargetCheckReceiver<Void> targetReceiver = BooleanAbilityTargetCheckReceiver
+										.<Void>getInstance();
+								ability.checkCanTargetNoTarget(CommonEnvironment.this.simulation, whichUnit, orderId,
+										false, targetReceiver.reset());
+								if (targetReceiver.isTargetable()) {
+									abilityHandleId = ability.getHandleId();
+								}
+							}
+						}
+						defaultPlayerUnitOrderExecutor.issueImmediateOrder(whichUnit.getHandleId(), abilityHandleId,
+								orderId, false);
+						return BooleanJassValue.of(abilityHandleId != 0);
+					});
+			final JassFunction unitUseItemTarget = (arguments, globalScope, triggerScope) -> {
+				final CUnit whichUnit = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());
+				if (whichUnit == null) {
+					return BooleanJassValue.FALSE;
+				}
+				final CItem item = arguments.get(1).visit(ObjectJassValueVisitor.getInstance());
+				CWidget whichTarget = arguments.get(2).visit(ObjectJassValueVisitor.getInstance());
+				final CPlayerUnitOrderExecutor defaultPlayerUnitOrderExecutor = CommonEnvironment.this.simulation
+						.getDefaultPlayerUnitOrderExecutor(whichUnit.getPlayerIndex());
+				final BooleanAbilityActivationReceiver activationReceiver = BooleanAbilityActivationReceiver.INSTANCE;
+				final int orderId = OrderIdUtils.getOrderId("itemuse" + String.format("%02d", item.getContainedInventory().getSlot(item)));
+				int abilityHandleId = 0;
+				for (final CAbility ability : whichUnit.getAbilities()) {
+					ability.checkCanUse(CommonEnvironment.this.simulation, whichUnit, orderId, false,
+							activationReceiver);
+					if (activationReceiver.isOk()) {
+						final CWidgetAbilityTargetCheckReceiver targetReceiver = CWidgetAbilityTargetCheckReceiver.INSTANCE;
+						ability.checkCanTarget(CommonEnvironment.this.simulation, whichUnit, orderId, false,
+								whichTarget, targetReceiver.reset());
+						if (targetReceiver.getTarget() != null) {
+							whichTarget = targetReceiver.getTarget();
+							abilityHandleId = ability.getHandleId();
+						}
+					}
+				}
+				if (abilityHandleId != 0) {
+					defaultPlayerUnitOrderExecutor.issueTargetOrder(whichUnit.getHandleId(), abilityHandleId,
+							orderId, whichTarget.getHandleId(), false);
+				}
+				return BooleanJassValue.of(abilityHandleId != 0);
+			};
+			jassProgramVisitor.getJassNativeManager().createNative("UnitUseItemTarget", unitUseItemTarget);
+			jassProgramVisitor.getJassNativeManager().createNative("UnitUseItemDestructable", unitUseItemTarget);
+			jassProgramVisitor.getJassNativeManager().createNative("UnitUseItemPointLoc",
+					(arguments, globalScope, triggerScope) -> {
+						final CUnit whichUnit = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());
+						if (whichUnit == null) {
+							return BooleanJassValue.FALSE;
+						}
+						final CItem item = arguments.get(1).visit(ObjectJassValueVisitor.getInstance());
+						final AbilityPointTarget whichLocation = arguments.get(2)
+								.visit(ObjectJassValueVisitor.getInstance());
+						final CPlayerUnitOrderExecutor defaultPlayerUnitOrderExecutor = CommonEnvironment.this.simulation
+								.getDefaultPlayerUnitOrderExecutor(whichUnit.getPlayerIndex());
+						final BooleanAbilityActivationReceiver activationReceiver = BooleanAbilityActivationReceiver.INSTANCE;
+						final int orderId = OrderIdUtils.getOrderId("itemuse" + String.format("%02d", item.getContainedInventory().getSlot(item)));
+						int abilityHandleId = 0;
+						AbilityPointTarget targetAsPoint = new AbilityPointTarget(whichLocation.x, whichLocation.y);
+						for (final CAbility ability : whichUnit.getAbilities()) {
+							ability.checkCanUse(CommonEnvironment.this.simulation, whichUnit, orderId, false,
+									activationReceiver);
+							if (activationReceiver.isOk()) {
+								final PointAbilityTargetCheckReceiver targetReceiver = PointAbilityTargetCheckReceiver.INSTANCE;
+								ability.checkCanTarget(CommonEnvironment.this.simulation, whichUnit, orderId, false,
+										targetAsPoint, targetReceiver.reset());
+								if (targetReceiver.getTarget() != null) {
+									targetAsPoint = targetReceiver.getTarget();
+									abilityHandleId = ability.getHandleId();
+								}
+							}
+						}
+						if (abilityHandleId != 0) {
+							defaultPlayerUnitOrderExecutor.issuePointOrder(whichUnit.getHandleId(), abilityHandleId,
+									orderId, targetAsPoint.x, targetAsPoint.y, false);
+						}
+						return BooleanJassValue.of(abilityHandleId != 0);
+					});
+			
+			
 			jassProgramVisitor.getJassNativeManager().createNative("UnitDamageTarget",
 					(arguments, globalScope, triggerScope) -> {
 						final CUnit whichUnit = nullable(arguments, 0, ObjectJassValueVisitor.getInstance());

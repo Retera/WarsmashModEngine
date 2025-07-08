@@ -48,7 +48,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.projectile.C
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.projectile.CCollisionProjectile;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.projectile.CEffect;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.projectile.CJassProjectile;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.projectile.CPsuedoProjectile;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.projectile.CPseudoProjectile;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.config.CBasePlayer;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.config.CPlayerAPI;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.config.War3MapConfig;
@@ -152,6 +152,7 @@ public class CSimulation implements CPlayerAPI, CFogMaskSettings {
 		this.upgradeData = new CUpgradeData(this.gameplayConstants, parsedUpgradeData, standardUpgradeEffectMeta);
 		this.unitData = new CUnitData(this.gameplayConstants, parsedUnitData, this.abilityData, this.upgradeData,
 				this.simulationRenderController);
+		this.unitData.getAllUnitTypesLightweight(); // Quick hack to avoid lag on first cast of Mech Critter
 		this.destructableData = new CDestructableData(parsedDestructableData, simulationRenderController);
 		this.itemData = new CItemData(parsedItemData);
 		this.units = new ArrayList<>();
@@ -231,6 +232,10 @@ public class CSimulation implements CPlayerAPI, CFogMaskSettings {
 		fogUpdateTimer.setRepeats(true);
 		fogUpdateTimer.setTimeoutTime(1.0f);
 		fogUpdateTimer.start(this);
+	}
+	
+	public char getTileset() {
+		return this.simulationRenderController.getTileset();
 	}
 
 	public CUnitData getUnitData() {
@@ -322,6 +327,10 @@ public class CSimulation implements CPlayerAPI, CFogMaskSettings {
 		return this.simulationRenderController.createItem(this, alias, unitX, unitY);
 	}
 
+	public void updateItemModel(CItem item) {
+		this.simulationRenderController.updateItemModel(item);
+	}
+
 	public CUnit createUnit(final War3ID typeId, final int playerIndex, final float x, final float y,
 			final float facing) {
 		return this.createUnit(typeId, playerIndex, x, y, facing, false);
@@ -350,12 +359,8 @@ public class CSimulation implements CPlayerAPI, CFogMaskSettings {
 		if (newUnit != null) {
 			final CPlayer player = getPlayer(playerIndex);
 			final CUnitType newUnitType = newUnit.getUnitType();
-			final int foodUsed = newUnitType.getFoodUsed();
-			newUnit.setFoodUsed(foodUsed);
-			player.setFoodUsed(player.getFoodUsed() + foodUsed);
-			if (newUnitType.getFoodMade() != 0) {
-				player.setFoodCap(player.getFoodCap() + newUnitType.getFoodMade());
-			}
+			player.setUnitFoodUsed(newUnit, newUnitType.getFoodUsed());
+			player.setUnitFoodMade(newUnit, newUnitType.getFoodMade());
 			player.addTechtreeUnlocked(this, typeId);
 			// nudge unit
 			newUnit.setPointAndCheckUnstuck(x, y, this);
@@ -404,7 +409,7 @@ public class CSimulation implements CPlayerAPI, CFogMaskSettings {
 	}
 
 	public CAbilityProjectile createProjectile(final CUnit source, final War3ID spellAlias, final float launchX,
-			final float launchY, final float launchFacing, final float speed, final boolean homing,
+			final float launchY, final float launchFacing, final Float speed, final Boolean homing,
 			final AbilityTarget target, final CAbilityProjectileListener projectileListener) {
 		final CAbilityProjectile projectile = this.simulationRenderController.createProjectile(this, launchX, launchY,
 				launchFacing, speed, homing, source, spellAlias, target, projectileListener);
@@ -424,7 +429,7 @@ public class CSimulation implements CPlayerAPI, CFogMaskSettings {
 	}
 
 	public CJassProjectile createProjectile(final CUnit source, final War3ID spellAlias, final float launchX,
-			final float launchY, final float launchFacing, final float speed, final boolean homing,
+			final float launchY, final float launchFacing, final Float speed, final Boolean homing,
 			final AbilityTarget target) {
 		final CJassProjectile projectile = this.simulationRenderController.createJassProjectile(this, launchX, launchY,
 				launchFacing, speed, homing, source, spellAlias, target);
@@ -433,7 +438,7 @@ public class CSimulation implements CPlayerAPI, CFogMaskSettings {
 	}
 
 	public CCollisionProjectile createCollisionProjectile(final CUnit source, final War3ID spellAlias,
-			final float launchX, final float launchY, final float launchFacing, final float speed, final boolean homing,
+			final float launchX, final float launchY, final float launchFacing, final Float speed, final Boolean homing,
 			final AbilityTarget target, final int maxHits, final int hitsPerTarget, final float startingRadius,
 			final float finalRadius, final float collisionInterval,
 			final CAbilityCollisionProjectileListener projectileListener, final boolean provideCounts) {
@@ -445,13 +450,13 @@ public class CSimulation implements CPlayerAPI, CFogMaskSettings {
 		return projectile;
 	}
 
-	public CPsuedoProjectile createPseudoProjectile(final CUnit source, final War3ID spellAlias,
+	public CPseudoProjectile createPseudoProjectile(final CUnit source, final War3ID spellAlias,
 			final CEffectType effectType, final int effectArtIndex, final float launchX, final float launchY,
 			final float launchFacing, final float speed, final float projectileStepInterval,
 			final int projectileArtSkip, final boolean homing, final AbilityTarget target, final int maxHits,
 			final int hitsPerTarget, final float startingRadius, final float finalRadius,
 			final CAbilityCollisionProjectileListener projectileListener, final boolean provideCounts) {
-		final CPsuedoProjectile projectile = this.simulationRenderController.createPseudoProjectile(this, launchX,
+		final CPseudoProjectile projectile = this.simulationRenderController.createPseudoProjectile(this, launchX,
 				launchY, launchFacing, speed, projectileStepInterval, projectileArtSkip, homing, source, spellAlias,
 				effectType, effectArtIndex, target, maxHits, hitsPerTarget, startingRadius, finalRadius,
 				projectileListener, provideCounts);
@@ -484,6 +489,10 @@ public class CSimulation implements CPlayerAPI, CFogMaskSettings {
 			final int lightningIndex, final CUnit target, final Float duration) {
 		return this.simulationRenderController.createAbilityLightning(this, lightningId, source, target, lightningIndex,
 				duration);
+	}
+
+	public SimulationRenderComponent createStaticUberSplat(float x, float y, War3ID id) {
+		return this.simulationRenderController.createStaticUberSplat(x, y, id);
 	}
 
 	public void createInstantAttackEffect(final CUnit source, final CUnitAttackInstant attack, final CWidget target) {
@@ -873,6 +882,10 @@ public class CSimulation implements CPlayerAPI, CFogMaskSettings {
 		this.simulationRenderController.stopAbilitySoundEffect(caster, alias);
 	}
 
+	public SimulationRenderComponent locationSoundEffectEvent(final float x, final float y, final War3ID alias, final boolean looping) {
+		return this.simulationRenderController.spawnAbilitySoundEffect(x, y, alias, looping);
+	}
+
 	public void unitPreferredSelectionReplacement(final CUnit unit, final CUnit newUnit) {
 		this.simulationRenderController.unitPreferredSelectionReplacement(unit, newUnit);
 	}
@@ -1112,8 +1125,8 @@ public class CSimulation implements CPlayerAPI, CFogMaskSettings {
 		this.simulationRenderController.setBlight(x, y, radius, blighted);
 	}
 
-	public void unitUpdatedType(final CUnit unit, final War3ID typeId) {
-		this.simulationRenderController.unitUpdatedType(unit, typeId);
+	public void unitUpdatedType(final CUnit unit, final War3ID typeId, final boolean updatePortrait) {
+		this.simulationRenderController.unitUpdatedType(unit, typeId, updatePortrait);
 	}
 
 	private void setupCreatedUnit(final CUnit unit) {
@@ -1159,6 +1172,30 @@ public class CSimulation implements CPlayerAPI, CFogMaskSettings {
 
 	public GlobalScope getGlobalScope() {
 		return this.globalScope;
+	}
+
+	public int[] getTerrainModBufferSize(float x, float y, float width, float height) {
+		return this.simulationRenderController.getTerrainModBufferSize(x, y, width, height);
+	}
+
+	public int[] getTerrainModBufferSize(float centerX, float centerY, float radius) {
+		return this.simulationRenderController.getTerrainModBufferSize(centerX, centerY, radius);
+	}
+
+	public void adjustTerrain(int[] rect, float[] modBuffer) {
+		this.simulationRenderController.adjustTerrain(rect, modBuffer);
+	}
+
+	public void adjustTerrain(float x, float y, float i) {
+		this.simulationRenderController.adjustTerrain(x, y, i);
+	}
+
+	public float getTerrainSpaceX(final float x) {
+		return this.simulationRenderController.getTerrainSpaceX(x);
+	}
+
+	public float getTerrainSpaceY(final float y) {
+		return this.simulationRenderController.getTerrainSpaceY(y);
 	}
 
 	public int getTerrainHeight(final float x, final float y) {

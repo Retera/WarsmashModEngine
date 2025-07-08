@@ -12,6 +12,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.hand
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.timers.CTimer;
 
 public class DelayInstantTransformationTimer extends CTimer {
+	private CUnit sourceUnit;
 	private Map<String, Object> localStore;
 	private OnTransformationActions actions;
 	private CUnit unit;
@@ -25,11 +26,12 @@ public class DelayInstantTransformationTimer extends CTimer {
 	private float transTime;
 	private float dur;
 
-	public DelayInstantTransformationTimer(CSimulation game, Map<String, Object> localStore, CUnit unit,
+	public DelayInstantTransformationTimer(CSimulation game, CUnit sourceUnit, Map<String, Object> localStore, CUnit unit,
 			OnTransformationActions actions, boolean addAlternateTagAfter, float delay, CUnitType baseType,
 			CUnitType targetType, final boolean keepRatios, AbilityBuilderAbility ability, War3ID buffId,
 			float transformationTime, float duration) {
 		super();
+		this.sourceUnit = sourceUnit;
 		this.localStore = localStore;
 		this.unit = unit;
 		this.actions = actions;
@@ -49,7 +51,7 @@ public class DelayInstantTransformationTimer extends CTimer {
 		TransformationHandler.instantTransformation(game, localStore, unit, targetType, keepRatios, actions, abil,
 				addAlternateTagAfter, perm, false);
 		if (dur > 0) {
-			TransformationHandler.createInstantTransformBackBuff(game, localStore, unit, baseType, keepRatios,
+			TransformationHandler.createInstantTransformBackBuff(game, sourceUnit, localStore, unit, baseType, keepRatios,
 					actions.createUntransformActions(), abil, theBuffId, addAlternateTagAfter, transTime, dur, perm);
 		}
 	}

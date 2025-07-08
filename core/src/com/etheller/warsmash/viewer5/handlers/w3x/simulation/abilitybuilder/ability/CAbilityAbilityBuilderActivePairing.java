@@ -183,7 +183,7 @@ public class CAbilityAbilityBuilderActivePairing extends CAbilityAbilityBuilderG
 	@Override
 	public void internalBegin(CSimulation game, CUnit caster, int orderId, boolean autoOrder, AbilityTarget noTarget) {
 		this.castId++;
-		this.localStore.put(ABLocalStoreKeys.combineKey(ABLocalStoreKeys.ISAUTOCAST, orderId), autoOrder);
+		this.localStore.put(ABLocalStoreKeys.combineKey(ABLocalStoreKeys.ISAUTOCAST, castId), autoOrder);
 		//Just don't do this
 	}
 
@@ -192,7 +192,7 @@ public class CAbilityAbilityBuilderActivePairing extends CAbilityAbilityBuilderG
 	@Override
 	public CBehavior beginNoTarget(CSimulation game, CUnit caster, int orderId, boolean autoOrder) {
 		if (checkNoTargetOrderId(game, caster, orderId)) {
-			this.localStore.put(ABLocalStoreKeys.combineKey(ABLocalStoreKeys.ISAUTOCAST, orderId), autoOrder);
+			this.localStore.put(ABLocalStoreKeys.combineKey(ABLocalStoreKeys.ISAUTOCAST, castId), autoOrder);
 
 //			System.err.println(caster.getUnitType().getName() + " Beginning NoTarget: " + orderId);
 			boolean isOffId = orderId == this.getOffOrderId();
@@ -266,7 +266,7 @@ public class CAbilityAbilityBuilderActivePairing extends CAbilityAbilityBuilderG
 	@Override
 	public CBehavior begin(CSimulation game, CUnit caster, int orderId, boolean autoOrder, CWidget target) {
 		this.castId++;
-		this.localStore.put(ABLocalStoreKeys.combineKey(ABLocalStoreKeys.ISAUTOCAST, orderId), autoOrder);
+		this.localStore.put(ABLocalStoreKeys.combineKey(ABLocalStoreKeys.ISAUTOCAST, castId), autoOrder);
 //		System.err.println(caster.getUnitType().getName() + " Received pair target order: " + orderId + " (Base: "
 //				+ this.getBaseOrderId() + ", Internal: " + this.getPairOrderId(game, caster) + ")");
 		if (checkTargetPrimeOrderId(game, caster, orderId)) {
@@ -288,21 +288,23 @@ public class CAbilityAbilityBuilderActivePairing extends CAbilityAbilityBuilderG
 			}
 			this.localStore.put(ABLocalStoreKeys.ABILITYTARGETEDUNIT + castId, targetUnit);
 			this.localStore.put(ABLocalStoreKeys.ABILITYPAIREDUNIT + castId, targetUnit);
+			this.localStore.put(ABLocalStoreKeys.PREVIOUSBEHAVIOR, caster.getCurrentBehavior());
 //			System.out.println("Starting targeted behavior");
 
 			this.runOnOrderIssuedActions(game, caster, orderId);
 			this.behavior.setCastId(castId);
-			return this.behavior.reset(game, target);
+			return this.behavior.reset(game, target, autoOrder);
 		} else if (checkTargetInternalOrderId(game, caster, orderId)) {
 //			System.err.println(caster.getUnitType().getName() + " Got internal order");
 			final CUnit targetUnit = target.visit(AbilityTargetVisitor.UNIT);
 			this.localStore.put(ABLocalStoreKeys.ABILITYTARGETEDUNIT + castId, targetUnit);
 			this.localStore.put(ABLocalStoreKeys.ABILITYPAIREDUNIT + castId, targetUnit);
+			this.localStore.put(ABLocalStoreKeys.PREVIOUSBEHAVIOR, caster.getCurrentBehavior());
 //			System.out.println("Starting internal targeted behavior with target: " + targetUnit);
 
 			this.runOnOrderIssuedActions(game, caster, orderId);
 			this.behavior.setCastId(castId);
-			return this.behavior.reset(game, target, orderId);
+			return this.behavior.reset(game, target, orderId, autoOrder);
 		} else {
 			return null;
 		}

@@ -24,14 +24,14 @@ public class ABActionChangeAttackActionToMovement implements ABAction {
 		if (targetUnit.getCurrentBehavior().getBehaviorCategory() == CBehaviorCategory.ATTACK) {
 			targetUnit.beginBehavior(game,
 					targetUnit.getMoveBehavior().reset(targetUnit.getMoveBehavior().getHighlightOrderId(),
-							targetUnit.getCurrentBehavior().visit(BehaviorTargetVisitor.INSTANCE)));
+							targetUnit.getCurrentBehavior().visit(BehaviorTargetVisitor.INSTANCE)), true);
 		} else 
 			if (targetUnit.getCurrentBehavior().getBehaviorCategory() == CBehaviorCategory.MOVEMENT) {
 				CRangedBehavior next = targetUnit.getCurrentBehavior().visit(BehaviorNextBehaviorVisitor.INSTANCE);
 				if (next != null && next.getBehaviorCategory() == CBehaviorCategory.ATTACK) {
 					targetUnit.beginBehavior(game,
 							targetUnit.getMoveBehavior().reset(targetUnit.getMoveBehavior().getHighlightOrderId(),
-									next.visit(BehaviorTargetVisitor.INSTANCE)));
+									next.visit(BehaviorTargetVisitor.INSTANCE)), true);
 				}
 			}
 	}

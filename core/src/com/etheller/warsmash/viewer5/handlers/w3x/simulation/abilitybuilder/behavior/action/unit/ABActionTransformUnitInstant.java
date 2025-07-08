@@ -81,7 +81,7 @@ public class ABActionTransformUnitInstant implements ABAction {
 		if (onlyTransformToAlternate != null) {
 			onlyToAlt = onlyTransformToAlternate.callback(game, caster, localStore, castId);
 		}
-		
+
 		if (!onlyToAlt && u1.getTypeId().equals(altId)) {
 			// Transforming back
 			targetType = baseType;
@@ -122,9 +122,9 @@ public class ABActionTransformUnitInstant implements ABAction {
 			}
 		}
 		OnTransformationActions actions = new OnTransformationActions(goldCost, lumberCost, foodCost,
-				onTransformActions, onUntransformActions);
+				onTransformActions, onUntransformActions, castId);
 		OnTransformationActions unActions = new OnTransformationActions(-goldCost, -lumberCost, null, null,
-				onUntransformActions);
+				onUntransformActions, castId);
 
 		boolean isKeepRatios = true;
 		float dur = 0;
@@ -149,14 +149,14 @@ public class ABActionTransformUnitInstant implements ABAction {
 		localStore.put(ABLocalStoreKeys.TRANSFORMINGTOALT + castId, addAlternateTagAfter);
 		if (transTime > 0) {
 			TransformationHandler.playMorphAnimation(u1, addAlternateTagAfter);
-			new DelayInstantTransformationTimer(game, localStore, u1, actions, addAlternateTagAfter, transTime,
+			new DelayInstantTransformationTimer(game, caster, localStore, u1, actions, addAlternateTagAfter, transTime,
 					baseType, targetType, isKeepRatios, abil, theBuffId, transTime, dur).start(game);
 		} else {
 			TransformationHandler.instantTransformation(game, localStore, u1, targetType, isKeepRatios, actions, abil,
 					addAlternateTagAfter, perm, true);
 			if (dur > 0) {
-				TransformationHandler.createInstantTransformBackBuff(game, localStore, u1, baseType, isKeepRatios, unActions, abil,
-						theBuffId, addAlternateTagAfter, transTime, dur, perm);
+				TransformationHandler.createInstantTransformBackBuff(game, caster, localStore, u1, baseType, isKeepRatios,
+						unActions, abil, theBuffId, addAlternateTagAfter, transTime, dur, perm);
 			}
 		}
 

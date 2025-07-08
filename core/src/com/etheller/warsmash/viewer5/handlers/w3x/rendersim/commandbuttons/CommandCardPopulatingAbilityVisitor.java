@@ -426,8 +426,10 @@ public class CommandCardPopulatingAbilityVisitor implements CAbilityVisitor<Void
 					if (group != null && this.buffVisibleGroups.contains(group)) {
 						return;
 					}
-					this.commandButtonListener.buff(iconUI.getIcon(), buff.getLevel(), iconUI.getToolTip(),
-							iconUI.getUberTip(), buff.isPositive(), buff.isLeveled());
+					if (iconUI != null) {
+						this.commandButtonListener.buff(iconUI.getIcon(), buff.getLevel(), iconUI.getToolTip(),
+								iconUI.getUberTip(), buff.isPositive(), buff.isLeveled());
+					}
 					this.buffVisibleGroups.add(group);
 				}
 			}

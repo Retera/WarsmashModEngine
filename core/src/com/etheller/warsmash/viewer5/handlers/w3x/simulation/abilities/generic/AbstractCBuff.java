@@ -1,6 +1,8 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic;
 
 import com.etheller.warsmash.util.War3ID;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityCategory;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityVisitor;
 
@@ -62,6 +64,18 @@ public abstract class AbstractCBuff extends AbstractGenericAliasedAbility implem
 	
 	@Override
 	public String getVisibilityGroup() {
+		return null;
+	}
+
+	@Override
+	public CAbility getSourceAbility() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public CUnit getSourceUnit() {
+		// TODO Auto-generated method stub
 		return null;
 	}
 

@@ -1,7 +1,10 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.parser;
 
+import java.util.List;
+
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.booleancallbacks.ABBooleanCallback;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.enumcallbacks.ABAutocastTypeCallback;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.enumcallbacks.ABTargetTypeCallback;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.floatcallbacks.ABFloatCallback;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.idcallbacks.ABIDCallback;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.integercallbacks.ABIntegerCallback;
@@ -13,6 +16,8 @@ public class AbilityBuilderOverrideFields {
 	private ABFloatCallback castTimeOverride;
 	private ABFloatCallback cooldownOverride;
 	private ABIntegerCallback manaCostOverride;
+
+	private ABBooleanCallback ignoreCastTime;
 	
 	private ABAutocastTypeCallback autocastTypeOverride;
 	
@@ -22,6 +27,10 @@ public class AbilityBuilderOverrideFields {
 	private ABBooleanCallback physicalSpell;
 	private ABBooleanCallback magicSpell;
 	private ABBooleanCallback universalSpell;
+	private ABBooleanCallback dispel;
+	
+	List<ABTargetTypeCallback> extraTargetsAllowed;
+	List<ABTargetTypeCallback> excludedTargetsAllowed;
 
 	public void updateFromParent(AbilityBuilderOverrideFields parent) {
 		if (this.areaOverride == null)
@@ -34,6 +43,9 @@ public class AbilityBuilderOverrideFields {
 			this.cooldownOverride = parent.cooldownOverride;
 		if (this.manaCostOverride == null)
 			this.manaCostOverride = parent.manaCostOverride;
+
+		if (this.ignoreCastTime == null)
+			this.ignoreCastTime = parent.ignoreCastTime;
 
 		if (this.autocastTypeOverride == null)
 			this.autocastTypeOverride = parent.autocastTypeOverride;
@@ -81,6 +93,12 @@ public class AbilityBuilderOverrideFields {
 	public void setManaCostOverride(ABIntegerCallback manaCostOverride) {
 		this.manaCostOverride = manaCostOverride;
 	}
+	public ABBooleanCallback getIgnoreCastTime() {
+		return ignoreCastTime;
+	}
+	public void setIgnoreCastTime(ABBooleanCallback ignoreCastTime) {
+		this.ignoreCastTime = ignoreCastTime;
+	}
 	public ABAutocastTypeCallback getAutocastTypeOverride() {
 		return autocastTypeOverride;
 	}
@@ -116,6 +134,25 @@ public class AbilityBuilderOverrideFields {
 	}
 	public void setUniversalSpell(ABBooleanCallback universalSpell) {
 		this.universalSpell = universalSpell;
+	}
+	public ABBooleanCallback getDispel() {
+		return dispel;
+	}
+	public void setDispel(ABBooleanCallback dispel) {
+		this.dispel = dispel;
+	}
+
+	public List<ABTargetTypeCallback> getExtraTargetsAllowed() {
+		return extraTargetsAllowed;
+	}
+	public void setExtraTargetsAllowed(List<ABTargetTypeCallback> extraTargetsAllowed) {
+		this.extraTargetsAllowed = extraTargetsAllowed;
+	}
+	public List<ABTargetTypeCallback> getExcludedTargetsAllowed() {
+		return excludedTargetsAllowed;
+	}
+	public void setExcludedTargetsAllowed(List<ABTargetTypeCallback> excludedTargetsAllowed) {
+		this.excludedTargetsAllowed = excludedTargetsAllowed;
 	}
 
 }

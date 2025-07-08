@@ -1,25 +1,29 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.buff;
 
+import java.util.Map;
+
 import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.util.WarsmashConstants;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbility;
 
 public abstract class ABGenericTimedBuff extends ABBuff {
 	private final float duration;
 	private int currentTick = 0;
 	private int expireTick;
 
-	public ABGenericTimedBuff(int handleId, War3ID alias, float duration, boolean showTimedLifeBar, boolean leveled,
-			boolean positive, boolean dispellable) {
-		super(handleId, alias, alias);
+	public ABGenericTimedBuff(int handleId, War3ID alias, Map<String, Object> localStore, CAbility sourceAbility,
+			CUnit sourceUnit, float duration, boolean showTimedLifeBar, boolean leveled, boolean positive,
+			boolean dispellable) {
+		super(handleId, alias, alias, localStore, sourceAbility, sourceUnit);
 		this.setTimedLifeBar(showTimedLifeBar);
 		this.duration = duration;
 		this.setLeveled(leveled);
 		this.setPositive(positive);
 		this.setDispellable(dispellable);
 	}
-	
+
 	@Override
 	public boolean equals(Object obj) {
 		if (this == obj)
@@ -29,7 +33,7 @@ public abstract class ABGenericTimedBuff extends ABBuff {
 		if (getClass() != obj.getClass())
 			return false;
 		ABGenericTimedBuff other = (ABGenericTimedBuff) obj;
-		return this.getAlias() == other.getAlias() && this.getLevel() == other.getLevel() && !this.isStacks();
+		return this.getAlias() == other.getAlias() && this.getLevel() == other.getLevel() && !this.isStacks() && !other.isStacks();
 	}
 
 	@Override
@@ -49,10 +53,6 @@ public abstract class ABGenericTimedBuff extends ABBuff {
 	public void onRemove(CSimulation game, CUnit unit) {
 		this.onBuffRemove(game, unit);
 		this.cleanUpUniqueValues();
-	}
-
-	protected void cleanUpUniqueValues() {
-		// Do nothing
 	}
 
 	protected abstract void onBuffRemove(CSimulation game, CUnit unit);

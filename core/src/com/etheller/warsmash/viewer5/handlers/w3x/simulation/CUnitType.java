@@ -33,6 +33,8 @@ public class CUnitType {
 	private final int manaInitial;
 	private final int manaMaximum;
 	private final int speed;
+	private final int maxSpeed;
+	private final int minSpeed;
 	private final int defense;
 	private final War3ID defaultAutocastAbility;
 	private final List<War3ID> abilityList;
@@ -110,10 +112,12 @@ public class CUnitType {
 	private final int lumberBountyAwardedDice;
 	private final int lumberBountyAwardedSides;
 	private final boolean neutralBuildingShowMinimapIcon;
+	private final String tilesets;
+	private boolean special;
 
 	public CUnitType(final String name, final String legacyName, final War3ID typeId, final int maxLife,
 			final float lifeRegen, final float manaRegen, final CRegenType lifeRegenType, final int manaInitial,
-			final int manaMaximum, final int speed, final int defense, final War3ID defaultAutocastAbility,
+			final int manaMaximum, final int speed, final int maxSpeed, final int minSpeed, final int defense, final War3ID defaultAutocastAbility,
 			final List<War3ID> abilityList, final boolean isBldg, final MovementType movementType,
 			final float defaultFlyingHeight, final float collisionSize,
 			final EnumSet<CUnitClassification> classifications, final List<CUnitAttack> attacks,
@@ -137,7 +141,7 @@ public class CUnitType {
 			final int sightRadiusDay, final int sightRadiusNight, final boolean extendedLineOfSight,
 			final int goldBountyAwardedBase, final int goldBountyAwardedDice, final int goldBountyAwardedSides,
 			final int lumberBountyAwardedBase, final int lumberBountyAwardedDice, final int lumberBountyAwardedSides,
-			boolean neutralBuildingShowMinimapIcon) {
+			boolean neutralBuildingShowMinimapIcon, final String tilesets, final boolean special) {
 		this.name = name;
 		this.legacyName = legacyName;
 		this.typeId = typeId;
@@ -148,6 +152,8 @@ public class CUnitType {
 		this.manaInitial = manaInitial;
 		this.manaMaximum = manaMaximum;
 		this.speed = speed;
+		this.maxSpeed = maxSpeed;
+		this.minSpeed = minSpeed;
 		this.defense = defense;
 		this.defaultAutocastAbility = defaultAutocastAbility;
 		this.abilityList = abilityList;
@@ -222,6 +228,8 @@ public class CUnitType {
 		this.lumberBountyAwardedDice = lumberBountyAwardedDice;
 		this.lumberBountyAwardedSides = lumberBountyAwardedSides;
 		this.neutralBuildingShowMinimapIcon = neutralBuildingShowMinimapIcon;
+		this.tilesets = tilesets;
+		this.special = special;
 	}
 
 	public String getName() {
@@ -262,6 +270,14 @@ public class CUnitType {
 
 	public int getSpeed() {
 		return this.speed;
+	}
+
+	public int getMaxSpeed() {
+		return this.maxSpeed;
+	}
+
+	public int getMinSpeed() {
+		return this.minSpeed;
 	}
 
 	public int getDefense() {
@@ -571,5 +587,13 @@ public class CUnitType {
 
 	public boolean isNeutralBuildingShowMinimapIcon() {
 		return this.neutralBuildingShowMinimapIcon;
+	}
+
+	public String getTilesets() {
+		return this.tilesets;
+	}
+
+	public boolean isSpecial() {
+		return this.special;
 	}
 }

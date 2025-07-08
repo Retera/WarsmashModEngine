@@ -1,13 +1,17 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.action.buff;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.booleancallbacks.ABBooleanCallback;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.floatcallbacks.ABFloatCallback;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.idcallbacks.ABIDCallback;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.statbuffcallbacks.ABNonStackingStatBuffCallback;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.statemodcallbacks.ABStateModBuffCallback;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.stringcallbacks.ABStringCallback;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.buff.ABTimedBuff;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.buff.ABTimedPausedExpirationBuff;
@@ -15,6 +19,8 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABCallback;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABLocalStoreKeys;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CEffectType;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.unit.NonStackingStatBuff;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.unit.StateModBuff;
 
 public class ABActionCreateTimedPausedExpirationBuff implements ABAction {
 
@@ -24,6 +30,10 @@ public class ABActionCreateTimedPausedExpirationBuff implements ABAction {
 	private List<ABAction> onAddActions;
 	private List<ABAction> onRemoveActions;
 	private List<ABAction> onExpireActions;
+
+	private List<ABNonStackingStatBuffCallback> statBuffs;
+	private List<ABStateModBuffCallback> stateMods;
+
 	private ABBooleanCallback showIcon;
 	private CEffectType artType;
 	private ABBooleanCallback hideArt;
@@ -36,7 +46,7 @@ public class ABActionCreateTimedPausedExpirationBuff implements ABAction {
 
 	private ABBooleanCallback stacks;
 	private ABStringCallback visibilityGroup;
-	
+
 	private List<ABStringCallback> uniqueFlags;
 	private Map<String, ABCallback> uniqueValues;
 
@@ -63,7 +73,7 @@ public class ABActionCreateTimedPausedExpirationBuff implements ABAction {
 		} else {
 			isDispellable = ((boolean) localStore.getOrDefault(ABLocalStoreKeys.ISABILITYMAGIC, true));
 		}
-		
+
 		boolean isMagic = ((boolean) localStore.getOrDefault(ABLocalStoreKeys.ISABILITYMAGIC, true));
 		boolean isPhysical = ((boolean) localStore.getOrDefault(ABLocalStoreKeys.ISABILITYPHYSICAL, false));
 		if (magic != null) {
@@ -76,17 +86,35 @@ public class ABActionCreateTimedPausedExpirationBuff implements ABAction {
 		ABTimedBuff ability;
 		if (showIcon != null) {
 			ability = new ABTimedPausedExpirationBuff(game.getHandleIdAllocator().createId(),
-					buffId.callback(game, caster, localStore, castId),
-					duration.callback(game, caster, localStore, castId), showTimedLife, localStore, onAddActions,
-					onRemoveActions, onExpireActions, showIcon.callback(game, caster, localStore, castId), castId,
-					isLeveled, isPositive, isDispellable);
-			
+					buffId.callback(game, caster, localStore, castId), localStore,
+					(CAbility) localStore.get(ABLocalStoreKeys.ABILITY), caster,
+					duration.callback(game, caster, localStore, castId), showTimedLife, onAddActions, onRemoveActions,
+					onExpireActions, showIcon.callback(game, caster, localStore, castId), castId, isLeveled, isPositive,
+					isDispellable);
+
 		} else {
 			ability = new ABTimedPausedExpirationBuff(game.getHandleIdAllocator().createId(),
-					buffId.callback(game, caster, localStore, castId),
-					duration.callback(game, caster, localStore, castId), showTimedLife, localStore, onAddActions,
-					onRemoveActions, onExpireActions, castId, isLeveled, isPositive, isDispellable);
+					buffId.callback(game, caster, localStore, castId), localStore,
+					(CAbility) localStore.get(ABLocalStoreKeys.ABILITY), caster,
+					duration.callback(game, caster, localStore, castId), showTimedLife, onAddActions, onRemoveActions,
+					onExpireActions, castId, isLeveled, isPositive, isDispellable);
 		}
+
+		if (stateMods != null) {
+			List<StateModBuff> buffMods = new ArrayList<>();
+			for (ABStateModBuffCallback mod : stateMods) {
+				buffMods.add(mod.callback(game, caster, localStore, castId));
+			}
+			ability.setStateMods(buffMods);
+		}
+		if (statBuffs != null) {
+			List<NonStackingStatBuff> buffStats = new ArrayList<>();
+			for (ABNonStackingStatBuffCallback mod : statBuffs) {
+				buffStats.add(mod.callback(game, caster, localStore, castId));
+			}
+			ability.setStatBuffs(buffStats);
+		}
+
 		if (artType != null) {
 			ability.setArtType(artType);
 		}
@@ -103,7 +131,7 @@ public class ABActionCreateTimedPausedExpirationBuff implements ABAction {
 		if (visibilityGroup != null) {
 			ability.setVisibilityGroup(visibilityGroup.callback(game, caster, localStore, castId));
 		}
-		
+
 		localStore.put(ABLocalStoreKeys.LASTCREATEDBUFF, ability);
 		if (uniqueFlags != null) {
 			for (ABStringCallback flag : uniqueFlags) {
@@ -112,8 +140,7 @@ public class ABActionCreateTimedPausedExpirationBuff implements ABAction {
 		}
 		if (uniqueValues != null) {
 			for (String key : uniqueValues.keySet()) {
-				ability.addUniqueValue(uniqueValues.get(key).callback(game, caster, localStore, castId),
-						key);
+				ability.addUniqueValue(uniqueValues.get(key).callback(game, caster, localStore, castId), key);
 			}
 		}
 		if (!localStore.containsKey(ABLocalStoreKeys.BUFFCASTINGUNIT)) {

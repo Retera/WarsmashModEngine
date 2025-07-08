@@ -34,8 +34,8 @@ public class ABDamageTakenModificationListener implements CUnitAttackDamageTaken
 	public CUnitAttackDamageTakenModificationListenerDamageModResult onDamage(CSimulation simulation, CUnit attacker,
 			CUnit target, final CDamageFlags flags, CAttackType attackType, CDamageType damageType,
 			CUnitAttackDamageTakenModificationListenerDamageModResult previousDamage) {
-		localStore.put(ABLocalStoreKeys.ATTACKINGUNIT+triggerId, attacker);
-		localStore.put(ABLocalStoreKeys.ATTACKTARGET+triggerId, target);
+		localStore.put(ABLocalStoreKeys.DAMAGINGUNIT+triggerId, attacker);
+		localStore.put(ABLocalStoreKeys.DAMAGEDUNIT+triggerId, target);
 		localStore.put(ABLocalStoreKeys.DAMAGEISATTACK+triggerId, flags.isAttack());
 		localStore.put(ABLocalStoreKeys.DAMAGEISRANGED+triggerId, flags.isRanged());
 		localStore.put(ABLocalStoreKeys.ATTACKTYPE+triggerId, attackType);
@@ -48,8 +48,8 @@ public class ABDamageTakenModificationListener implements CUnitAttackDamageTaken
 				action.runAction(simulation, target, localStore, triggerId);
 			}
 		}
-		localStore.remove(ABLocalStoreKeys.ATTACKINGUNIT+triggerId);
-		localStore.remove(ABLocalStoreKeys.ATTACKTARGET+triggerId);
+		localStore.remove(ABLocalStoreKeys.DAMAGINGUNIT+triggerId);
+		localStore.remove(ABLocalStoreKeys.DAMAGEDUNIT+triggerId);
 		localStore.remove(ABLocalStoreKeys.DAMAGEISATTACK+triggerId);
 		localStore.remove(ABLocalStoreKeys.DAMAGEISRANGED+triggerId);
 		localStore.remove(ABLocalStoreKeys.ATTACKTYPE+triggerId);

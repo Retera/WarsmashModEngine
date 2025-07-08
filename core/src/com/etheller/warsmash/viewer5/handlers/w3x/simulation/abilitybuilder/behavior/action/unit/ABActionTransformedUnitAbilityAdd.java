@@ -144,20 +144,21 @@ public class ABActionTransformedUnitAbilityAdd implements ABAction {
 					goldCost = baseType.getGoldCost();
 					lumberCost = baseType.getLumberCost();
 				}
-				actions = new OnTransformationActions(goldCost, lumberCost, foodCost, null, onUntransformActions);
+				actions = new OnTransformationActions(goldCost, lumberCost, foodCost, null, onUntransformActions,
+						castId);
 			} else {
-				actions = new OnTransformationActions(onUntransformActions);
+				actions = new OnTransformationActions(onUntransformActions, castId);
 			}
 
 			if (instant) {
-				TransformationHandler.createInstantTransformBackBuff(game, localStore, u1, baseType, isKeepRatios,
+				TransformationHandler.createInstantTransformBackBuff(game, caster, localStore, u1, baseType, isKeepRatios,
 						actions, abil, theBuffId, true, transTime, dur, perm);
 			} else {
 				boolean takingOff = u1.getMovementType() != MovementType.FLY
 						&& baseType.getMovementType() == MovementType.FLY;
 				boolean landing = u1.getMovementType() == MovementType.FLY
 						&& baseType.getMovementType() != MovementType.FLY;
-				TransformationHandler.createSlowTransformBackBuff(game, localStore, u1, baseType, isKeepRatios, actions,
+				TransformationHandler.createSlowTransformBackBuff(game, caster, localStore, u1, baseType, isKeepRatios, actions,
 						abil, theBuffId, true, transTime, dur, perm, takingOff, landing, imTakeOff, imLand, atlAdDelay,
 						landTime, altAdTime);
 			}

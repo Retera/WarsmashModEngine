@@ -40,7 +40,7 @@
 							"dataField": "A"
 						}
 					},
-					"player": {
+					"playerDetectedData": {
 						"type": "playerToStateModValue",
 						"player": {
 							"type": "getOwnerOfUnit",
@@ -92,31 +92,22 @@
 							"type": "rawBoolean",
 							"value": "false"
 						},
-						"onAddActions": [{
-								"type": "addStateModBuff",
-								"targetUnit": {
-									"type": "getBuffedUnit"
-								},
-								"buff": {
-									"type": "getStoredStateModBuffByKey",
-									"key": {
-										"type": "rawString",
-										"value": "detected"
-									}
-								}
-							}],
-						"onRemoveActions": [{
-								"type": "removeStateModBuff",
-								"targetUnit": {
-									"type": "getBuffedUnit"
-								},
-								"buff": {
-									"type": "getStoredStateModBuffByKey",
-									"key": {
-										"type": "rawString",
-										"value": "detected"
-									}
-								}
+						"stacks": {
+							"type": "rawBoolean",
+							"value": "true"
+						},
+						"visibilityGroup": {
+							"type": "id2s",
+							"value": {
+								"type": "getAlias"
+							}
+						},
+						"stateMods": [{
+							"type": "getStoredStateModBuffByKey",
+							"key": {
+								"type": "rawString",
+								"value": "detected"
+							}
 						}]
 					},{
 						"type": "addBuff",

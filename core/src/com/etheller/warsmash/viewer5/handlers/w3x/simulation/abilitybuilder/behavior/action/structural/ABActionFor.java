@@ -9,6 +9,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.integercallbacks.ABIntegerCallback;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABAction;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABCallback;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABLocalStoreKeys;
 
 public class ABActionFor implements ABAction {
@@ -16,12 +17,20 @@ public class ABActionFor implements ABAction {
 	private ABIntegerCallback times;
 	private List<ABAction> actions;
 
+	private ABCallback unique;
+
 	@Override
 	public void runAction(final CSimulation game, final CUnit caster, final Map<String, Object> localStore,
 			final int castId) {
 		final int max = this.times.callback(game, caster, localStore, castId);
 		for (int i = 0; i < max; i++) {
-			localStore.put(ABLocalStoreKeys.combineKey(ABLocalStoreKeys.ITERATORCOUNT, castId), i);
+			if (this.unique != null) {
+				localStore.put(ABLocalStoreKeys.combineKey(
+						ABLocalStoreKeys.ITERATORCOUNT + "$" + this.unique.callback(game, caster, localStore, castId),
+						castId), i);
+			} else {
+				localStore.put(ABLocalStoreKeys.combineKey(ABLocalStoreKeys.ITERATORCOUNT, castId), i);
+			}
 			for (final ABAction iterationAction : this.actions) {
 				iterationAction.runAction(game, caster, localStore, castId);
 			}

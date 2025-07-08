@@ -43,7 +43,7 @@ public class TransformationHandler {
 			if (!addAlternateTagAfter) {
 				if (actions.onUntransformActions != null) {
 					for (final ABAction action : actions.onUntransformActions) {
-						action.runAction(game, unit, localStore, 0);
+						action.runAction(game, unit, localStore, actions.castId);
 					}
 				}
 			}
@@ -66,7 +66,7 @@ public class TransformationHandler {
 		if (addAlternateTagAfter && (actions != null)) {
 			if (actions.onTransformActions != null) {
 				for (final ABAction action : actions.onTransformActions) {
-					action.runAction(game, unit, localStore, 0);
+					action.runAction(game, unit, localStore, actions.castId);
 				}
 			}
 		}
@@ -200,7 +200,7 @@ public class TransformationHandler {
 		}
 	}
 
-	public static void createSlowTransformBackBuff(final CSimulation game, final Map<String, Object> localStore,
+	public static void createSlowTransformBackBuff(final CSimulation game, CUnit sourceUnit, final Map<String, Object> localStore,
 			final CUnit unit, final CUnitType newType, final boolean keepRatios, final OnTransformationActions actions,
 			final AbilityBuilderAbility ability, final War3ID buffId, final boolean addAlternateTagAfter,
 			final float transformationTime, final float duration, final boolean permanent, final boolean takingOff,
@@ -208,21 +208,21 @@ public class TransformationHandler {
 			final float altitudeAdjustmentDelay, final float landingDelay, final float altitudeAdjustmentDuration) {
 		if (addAlternateTagAfter && (duration > 0)) {
 			unit.add(game,
-					new ABTimedTransformationBuff(game.getHandleIdAllocator().createId(), localStore, actions,
+					new ABTimedTransformationBuff(game.getHandleIdAllocator().createId(), localStore, ability, sourceUnit, actions,
 							buffId == null ? ability.getAlias() : buffId, duration, ability, newType, keepRatios,
 							!addAlternateTagAfter, permanent, duration, transformationTime, landingDelay,
 							altitudeAdjustmentDelay, altitudeAdjustmentDuration, immediateLanding, immediateTakeoff));
 		}
 	}
 
-	public static void createInstantTransformBackBuff(final CSimulation game, final Map<String, Object> localStore,
+	public static void createInstantTransformBackBuff(final CSimulation game, CUnit sourceUnit, final Map<String, Object> localStore,
 			final CUnit unit, final CUnitType newType, final boolean keepRatios, final OnTransformationActions actions,
 			final AbilityBuilderAbility ability, final War3ID buffId, final boolean addAlternateTagAfter,
 			final float transformationTime, final float duration, final boolean permanent) {
 		if (addAlternateTagAfter && (duration > 0)) {
-			final ABBuff thebuff = ability
-					.visit(GetInstantTransformationBuffVisitor.getInstance().reset(game, localStore, newType, keepRatios, actions,
-							buffId, addAlternateTagAfter, transformationTime, duration, permanent));
+			final ABBuff thebuff = ability.visit(
+					GetInstantTransformationBuffVisitor.getInstance().reset(game, sourceUnit, localStore, newType, keepRatios,
+							actions, buffId, addAlternateTagAfter, transformationTime, duration, permanent));
 			if (thebuff != null) {
 				unit.add(game, thebuff);
 			}
@@ -235,27 +235,34 @@ public class TransformationHandler {
 		private Integer foodCost;
 		private List<ABAction> onTransformActions;
 		private List<ABAction> onUntransformActions;
+		private int castId;
 
-		public OnTransformationActions(final List<ABAction> onUntransformActions) {
+		public OnTransformationActions(final List<ABAction> onUntransformActions, int castId) {
 			this.onUntransformActions = onUntransformActions;
+			this.castId = castId;
 		}
 
 		public OnTransformationActions(final int goldCost, final int lumberCost, final Integer foodCost,
-				final List<ABAction> onTransformActions, final List<ABAction> onUntransformActions) {
+				final List<ABAction> onTransformActions, final List<ABAction> onUntransformActions, int castId) {
 			this.goldCost = goldCost;
 			this.lumberCost = lumberCost;
 			this.foodCost = foodCost;
 			this.onTransformActions = onTransformActions;
 			this.onUntransformActions = onUntransformActions;
+			this.castId = castId;
 		}
 
 		public OnTransformationActions createUntransformActions() {
 			return new OnTransformationActions(-this.goldCost, -this.lumberCost,
-					this.foodCost != null ? -this.foodCost : null, null, this.onUntransformActions);
+					this.foodCost != null ? -this.foodCost : null, null, this.onUntransformActions, this.castId);
 		}
 
 		public void setOnUntransformActions(final List<ABAction> onUntransformActions) {
 			this.onUntransformActions = onUntransformActions;
+		}
+
+		public int getCastId() {
+			return this.castId;
 		}
 	}
 

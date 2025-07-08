@@ -315,9 +315,9 @@
 										"value": "true"
 									}
 								},{
-									"type": "removeSpellEffect",
-									"effectToRemove": {
-										"type": "getLastCreatedSpellEffect"
+									"type": "removeEffect",
+									"effect": {
+										"type": "getLastCreatedFX"
 									}
 								}, {
 									"type": "finishReincarnating"
@@ -443,9 +443,9 @@
 									}],
 									"elseActions": []
 								},{
-									"type": "removeSpellEffect",
-									"effectToRemove": {
-										"type": "getLastCreatedSpellEffect"
+									"type": "removeEffect",
+									"effect": {
+										"type": "getLastCreatedFX"
 									}
 								}, {
 									"type": "finishReincarnating"
@@ -950,9 +950,9 @@
 				}]
 		}],
 		"onRemoveAbility": [{
-				"type": "removeSpellEffect",
-				"effectToRemove": {
-					"type": "getLastCreatedSpellEffect"
+				"type": "removeEffect",
+				"effect": {
+					"type": "getLastCreatedFX"
 				}
 			},{
 				"type": "removeBuff",
@@ -1556,9 +1556,9 @@
 					}
 			}],
 			"undetect": [{
-					"type": "removeSpellEffect",
-					"effectToRemove": {
-						"type": "getLastCreatedSpellEffect"
+					"type": "removeEffect",
+					"effect": {
+						"type": "getLastCreatedFX"
 					}
 				},{
 					"type": "removeStateModBuff",
@@ -1685,7 +1685,7 @@
 							"value": "false"
 						},
 						"valueToStore": {
-							"type": "getLastCreatedSpellEffect"
+							"type": "getLastCreatedFX"
 						}
 				}]
 			},{
@@ -1750,8 +1750,8 @@
 										"value": "false"
 									}
 								},{
-									"type": "removeSpellEffect",
-									"effectToRemove": {
+									"type": "removeEffect",
+									"effect": {
 										"type": "getStoredFXByKey",
 										"key": {
 											"type": "catStrings",
@@ -1905,7 +1905,7 @@
 										"value": "false"
 									},
 									"valueToStore": {
-										"type": "getLastCreatedSpellEffect"
+										"type": "getLastCreatedFX"
 									}
 								},{
 									"type": "break"
@@ -1924,7 +1924,7 @@
 							}
 						},
 						"thenActions": [{
-							"type": "removeTimer",
+							"type": "killTimer",
 							"timer": {
 								"type": "getStoredTimerByKey",
 								"key": {
@@ -2080,7 +2080,7 @@
 				}
 		}],
 		"onRemoveAbility": [{
-				"type": "removeTimer",
+				"type": "killTimer",
 				"timer": {
 					"type": "getStoredTimerByKey",
 					"key": {

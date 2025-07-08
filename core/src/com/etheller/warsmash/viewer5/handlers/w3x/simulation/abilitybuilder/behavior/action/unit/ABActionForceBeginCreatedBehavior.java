@@ -21,9 +21,8 @@ public class ABActionForceBeginCreatedBehavior implements ABAction {
 		}
 		CBehavior newBehavior = (CBehavior) localStore.get(ABLocalStoreKeys.NEWBEHAVIOR);
 		if (newBehavior != null) {
-			System.err.println("Forcing start of new behavior");
 			localStore.remove(ABLocalStoreKeys.NEWBEHAVIOR);
-			targetUnit.beginBehavior(game, newBehavior);
+			targetUnit.beginBehavior(game, newBehavior, true);
 		}
 	}
 

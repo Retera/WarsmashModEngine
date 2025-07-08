@@ -11,6 +11,10 @@
 				"type": "rawBoolean",
 				"value": "true"
 			},
+			"instantCast": {
+				"type": "rawBoolean",
+				"value": "true"
+			},
 			"alternateUnitId": {
 				"type": "getAbilityUnitId"
 			},
@@ -217,6 +221,11 @@
 				"value": {
 					"type": "getAbilityUnitId"
 				}
+			}
+		},
+		"reuseCallbacks": {
+			"defaultBuffId": {
+				"type": "null"
 			}
 		},
 		"reuseActions": {
@@ -465,14 +474,23 @@
 							"type": "getAbilityHeroDuration"
 						},
 						"buffId": {
-							"type": "getFirstBuffId"
+							"type": "getFirstBuffId",
+							"defaultId": {
+								"type": "reuseID",
+								"name": {
+									"type": "rawString",
+									"value": "defaultBuffId"
+								}
+							}
 						},
 						"onTransformActions": [{
-							"type": "runReuseAction",
-							"name": {
-								"type": "rawString",
-								"value": "onTransform"
-							}
+								"type": "runReuseAction",
+								"name": {
+									"type": "rawString",
+									"value": "onTransform"
+								}
+							},{
+								"type": "attemptToReOrderPreviousBehavior"
 						}],
 						"onUntransformActions": [{
 								"type": "runReuseAction",
@@ -486,6 +504,17 @@
 									"type": "rawString",
 									"value": "clearBaseType"
 								}
+							},{
+								"type": "if",
+								"condition": {
+									"type": "f!=0",
+									"value": {
+										"type": "getAbilityDuration"
+									}
+								},
+								"thenActions": [{
+									"type": "attemptToReOrderPreviousBehavior"
+								}]
 						}]
 				}],
 				"elseActions": []
@@ -544,7 +573,7 @@
 				"value": "onLevelChange"
 			}
 		}],
-		"onBeginCasting": [{
+		"onEndCasting": [{
 				"type": "runReuseAction",
 				"name": {
 					"type": "rawString",
@@ -559,6 +588,8 @@
 					"type": "getAlias"
 				},
 				"effectType": "CASTER"
+			},{
+				"type": "setPreventEndEvents"
 			},{
 				"type": "transformUnit",
 				"unit": {
@@ -652,14 +683,23 @@
 					"type": "getAbilityHeroDuration"
 				},
 				"buffId": {
-					"type": "getFirstBuffId"
+					"type": "getFirstBuffId",
+					"defaultId": {
+						"type": "reuseID",
+						"name": {
+							"type": "rawString",
+							"value": "defaultBuffId"
+						}
+					}
 				},
 				"onTransformActions": [{
-					"type": "runReuseAction",
-					"name": {
-						"type": "rawString",
-						"value": "onTransform"
-					}
+						"type": "runReuseAction",
+						"name": {
+							"type": "rawString",
+							"value": "onTransform"
+						}
+					},{
+						"type": "attemptToReOrderPreviousBehavior"
 				}],
 				"onUntransformActions": [{
 						"type": "runReuseAction",
@@ -673,6 +713,17 @@
 							"type": "rawString",
 							"value": "clearBaseType"
 						}
+					},{
+						"type": "if",
+						"condition": {
+							"type": "f!=0",
+							"value": {
+								"type": "getAbilityDuration"
+							}
+						},
+						"thenActions": [{
+							"type": "attemptToReOrderPreviousBehavior"
+						}]
 				}]
 			},{
 				"type": "if",
@@ -939,14 +990,23 @@
 						"type": "getAbilityHeroDuration"
 					},
 					"buffId": {
-						"type": "getFirstBuffId"
+						"type": "getFirstBuffId",
+						"defaultId": {
+							"type": "reuseID",
+							"name": {
+								"type": "rawString",
+								"value": "defaultBuffId"
+							}
+						}
 					},
 					"onTransformActions": [{
-						"type": "runReuseAction",
-						"name": {
-							"type": "rawString",
-							"value": "onTransform"
-						}
+							"type": "runReuseAction",
+							"name": {
+								"type": "rawString",
+								"value": "onTransform"
+							}
+						},{
+							"type": "attemptToReOrderPreviousBehavior"
 					}],
 					"onUntransformActions": [{
 							"type": "runReuseAction",
@@ -960,6 +1020,17 @@
 								"type": "rawString",
 								"value": "clearBaseType"
 							}
+						},{
+							"type": "if",
+							"condition": {
+								"type": "f!=0",
+								"value": {
+									"type": "getAbilityDuration"
+								}
+							},
+							"thenActions": [{
+								"type": "attemptToReOrderPreviousBehavior"
+							}]
 					}]
 				}],
 				"elseActions": [{
@@ -1057,6 +1128,12 @@
 		"ids": [{"id":"ANcr", "castId": "chemicalrage"}],
 		"type": "INHERIT",
 		"parentId": "Arav",
+		"reuseCallbacks": {
+			"defaultBuffId": {
+				"type": "getWar3IDFromString",
+				"id": "BNcr"
+			}
+		},
 		"reuseActions": {
 			"onTransform": [{
 				"type": "disableAbility"
@@ -1075,7 +1152,7 @@
 			}
 		},
 		"onAddDisabledAbility": [],
-		"onBeginCasting": [{
+		"onEndCasting": [{
 				"type": "runReuseAction",
 				"name": {
 					"type": "rawString",
@@ -1090,6 +1167,8 @@
 					"type": "getAlias"
 				},
 				"effectType": "CASTER"
+			},{
+				"type": "setPreventEndEvents"
 			},{
 				"type": "transformUnit",
 				"unit": {
@@ -1183,7 +1262,14 @@
 					"type": "getAbilityHeroDuration"
 				},
 				"buffId": {
-					"type": "getFirstBuffId"
+					"type": "getFirstBuffId",
+					"defaultId": {
+						"type": "reuseID",
+						"name": {
+							"type": "rawString",
+							"value": "defaultBuffId"
+						}
+					}
 				},
 				"instantTransformAtDurationEnd": {
 					"type": "rawBoolean",
@@ -1194,11 +1280,13 @@
 					"value": "true"
 				},
 				"onTransformActions": [{
-					"type": "runReuseAction",
-					"name": {
-						"type": "rawString",
-						"value": "onTransform"
-					}
+						"type": "runReuseAction",
+						"name": {
+							"type": "rawString",
+							"value": "onTransform"
+						}
+					},{
+						"type": "attemptToReOrderPreviousBehavior"
 				}],
 				"onUntransformActions": [{
 						"type": "runReuseAction",
@@ -1218,6 +1306,12 @@
 		"ids": [{"id":"AEme", "castId": "metamorphosis"}],
 		"type": "INHERIT",
 		"parentId": "Arav",
+		"reuseCallbacks": {
+			"defaultBuffId": {
+				"type": "getWar3IDFromString",
+				"id": "BEme"
+			}
+		},
 		"displayFields": {
 			"toggleable": {
 				"type": "rawBoolean",
@@ -1273,7 +1367,7 @@
 				}
 			}]
 		},
-		"onBeginCasting": [{
+		"onEndCasting": [{
 				"type": "runReuseAction",
 				"name": {
 					"type": "rawString",
@@ -1288,6 +1382,8 @@
 					"type": "getAlias"
 				},
 				"effectType": "CASTER"
+			},{
+				"type": "setPreventEndEvents"
 			},{
 				"type": "transformUnit",
 				"unit": {
@@ -1381,18 +1477,23 @@
 					"type": "getAbilityHeroDuration"
 				},
 				"buffId": {
-					"type": "getFirstBuffId"
-				},
-				"instantTransformAtDurationEnd": {
-					"type": "rawBoolean",
-					"value": "true"
+					"type": "getFirstBuffId",
+					"defaultId": {
+						"type": "reuseID",
+						"name": {
+							"type": "rawString",
+							"value": "defaultBuffId"
+						}
+					}
 				},
 				"onTransformActions": [{
-					"type": "runReuseAction",
-					"name": {
-						"type": "rawString",
-						"value": "onTransform"
-					}
+						"type": "runReuseAction",
+						"name": {
+							"type": "rawString",
+							"value": "onTransform"
+						}
+					},{
+						"type": "attemptToReOrderPreviousBehavior"
 				}],
 				"onUntransformActions": [{
 						"type": "runReuseAction",
@@ -1406,6 +1507,17 @@
 							"type": "rawString",
 							"value": "clearBaseType"
 						}
+					},{
+						"type": "if",
+						"condition": {
+							"type": "f!=0",
+							"value": {
+								"type": "getAbilityDuration"
+							}
+						},
+						"thenActions": [{
+							"type": "attemptToReOrderPreviousBehavior"
+						}]
 				}]
 		}]
 	},{
@@ -1435,6 +1547,10 @@
 						"type": "rawString",
 						"value": "strbuff"
 					},
+					"instanceValue": {
+						"type": "rawBoolean",
+						"value": "false"
+					},
 					"valueToStore": {
 						"type": "getLastCreatedNonStackingStatBuff"
 					}
@@ -1460,6 +1576,10 @@
 						"type": "rawString",
 						"value": "defbuff"
 					},
+					"instanceValue": {
+						"type": "rawBoolean",
+						"value": "false"
+					},
 					"valueToStore": {
 						"type": "getLastCreatedNonStackingStatBuff"
 					}
@@ -1474,6 +1594,10 @@
 						"key": {
 							"type": "rawString",
 							"value": "strbuff"
+						},
+						"instanceValue": {
+							"type": "rawBoolean",
+							"value": "false"
 						}
 					}
 				},{
@@ -1486,6 +1610,10 @@
 						"key": {
 							"type": "rawString",
 							"value": "defbuff"
+						},
+						"instanceValue": {
+							"type": "rawBoolean",
+							"value": "false"
 						}
 					}
 			}],
@@ -1499,6 +1627,10 @@
 						"key": {
 							"type": "rawString",
 							"value": "strbuff"
+						},
+						"instanceValue": {
+							"type": "rawBoolean",
+							"value": "false"
 						}
 					}
 				},{
@@ -1511,6 +1643,10 @@
 						"key": {
 							"type": "rawString",
 							"value": "defbuff"
+						},
+						"instanceValue": {
+							"type": "rawBoolean",
+							"value": "false"
 						}
 					}
 			}],
@@ -1521,6 +1657,10 @@
 						"key": {
 							"type": "rawString",
 							"value": "strbuff"
+						},
+						"instanceValue": {
+							"type": "rawBoolean",
+							"value": "false"
 						}
 					},
 					"value": {
@@ -1534,6 +1674,10 @@
 						"key": {
 							"type": "rawString",
 							"value": "defbuff"
+						},
+						"instanceValue": {
+							"type": "rawBoolean",
+							"value": "false"
 						}
 					},
 					"value": {
@@ -1884,6 +2028,8 @@
 							},
 							"effectType": "CASTER"
 						},{
+							"type": "sendStartCastingEvents"
+						},{
 							"type": "transformUnit",
 							"unit": {
 								"type": "getCastingUnit"
@@ -2132,30 +2278,30 @@
 				}]
 		}],
 		"onAddAbility": [{
-				"type": "addDeathReplacementEffect",
-				"target": {
-					"type": "getCastingUnit"
-				},
-				"priority": {
-					"type": "rawPriority",
-					"priority": "PHOENIXREVIVE"
-				},
-				"listener": {
-					"type": "getLastCreatedDeathReplacement"
-				}
+			"type": "addDeathReplacementEffect",
+			"target": {
+				"type": "getCastingUnit"
+			},
+			"priority": {
+				"type": "rawPriority",
+				"priority": "PHOENIXREVIVE"
+			},
+			"listener": {
+				"type": "getLastCreatedDeathReplacement"
+			}
 		}],
 		"onRemoveAbility": [{
-				"type": "removeDeathReplacementEffect",
-				"target": {
-					"type": "getCastingUnit"
-				},
-				"priority": {
-					"type": "rawPriority",
-					"priority": "PHOENIXREVIVE"
-				},
-				"listener": {
-					"type": "getLastCreatedDeathReplacement"
-				}
+			"type": "removeDeathReplacementEffect",
+			"target": {
+				"type": "getCastingUnit"
+			},
+			"priority": {
+				"type": "rawPriority",
+				"priority": "PHOENIXREVIVE"
+			},
+			"listener": {
+				"type": "getLastCreatedDeathReplacement"
+			}
 		}]
 	}]
 }

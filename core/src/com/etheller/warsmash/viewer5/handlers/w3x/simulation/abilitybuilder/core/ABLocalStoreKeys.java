@@ -12,13 +12,15 @@ public class ABLocalStoreKeys {
 	public static final String GAME = "_game";
 	public static final String THISUNIT = "_thisUnit";
 	public static final String ABILITY = "_ability";
+	public static final String CURRENTLEVEL = "_currentLevel";
 	public static final String BUFF = "_buff";
 	public static final String ITEM = "_item";
 	public static final String ITEMSLOT = "_itemSlot";
 	public static final String ITERATORCOUNT = "_i";
 	public static final String BREAK = "_break";
 	public static final String BUFFCASTINGUNIT = "_buffCastingUnit";
-	
+
+	public static final String PREVIOUSBEHAVIOR = "_previousBehavior";
 	public static final String NEWBEHAVIOR = "_newBehavior";
 
 	public static final String FAILEDTOCAST = "_failedToCast#";
@@ -26,10 +28,11 @@ public class ABLocalStoreKeys {
 	public static final String CHANNELING = "_channeling#";
 	public static final String INTERRUPTED = "_interrupted#";
 	public static final String PERIODICNEXTTICK = "_periodicNextTick#";
+	public static final String PREVENTENDEVENTS = "_preventEndEvents#";
 
 	public static final String CANTUSEREASON = "_cantUseReason";
 
-	public static final String ISAUTOCAST = "_isAutoCast";
+	public static final String ISAUTOCAST = "_isAutoCast#";
 
 	public static final String ISTOGGLEDABILITY = "_toggledAbility";
 	public static final String ISFLEXABILITY = "_flexAbility";
@@ -52,29 +55,40 @@ public class ABLocalStoreKeys {
 	public static final String LASTCREATEDUNIT = "_lastCreatedUnit";
 	public static final String LASTADDEDUNIT = "_lastAddedUnit";
 	public static final String LASTREMOVEDDUNIT = "_lastRemovedUnit";
+	public static final String CHAINUNIT = "_chainUnit#";
 	public static final String COMPUNIT1 = "_compUnit1";
 	public static final String COMPUNIT2 = "_compUnit2";
 	
 	// Item Names
-	public static final Object LASTCREATEDITEM = "_lastCreatedItem";
+	public static final String LASTCREATEDITEM = "_lastCreatedItem";
+	
+	// Destructable Names
+	public static final String LASTCREATEDDESTRUCTABLE = "_lastCreatedDest";
 	
 	// Ability Names
 	public static final String LASTCREATEDABILITY = "_lastCreatedAbility";
-	public static final String LASTCREATEDBUFF = "_lastCreatedBuff";
 	public static final String LASTADDEDABILITY = "_lastAddedAbility";
-	public static final String LASTADDEDBUFF = "_lastAddedBuff";
-	public static final String CURRENTLEVEL = "_currentLevel";
-
-	public static final String ENUMBUFF = "_enumBuff";
+	public static final String MATCHINGABILITY = "_matchingAbility";
 	
 	public static final String LASTCREATEDUNITGROUP = "_lastCreatedUnitGroup";
 	public static final String LASTCREATEDUNITQUEUE = "_lastCreatedUnitQueue";
 
 	public static final String LASTCREATEDDESTBUFF = "_lastCreatedDestBuff";
+	public static final String ENUMDESTBUFF = "_enumDestBuff";
+	public static final String MATCHINGDESTBUFF = "_matchingDestBuff";
+	
+	// Buff Names
+	public static final String LASTCREATEDBUFF = "_lastCreatedBuff";
+	public static final String LASTADDEDBUFF = "_lastAddedBuff";
+
+	public static final String ENUMBUFF = "_enumBuff";
+	public static final String MATCHINGBUFF = "_matchingBuff";
 	
 	//Generic Targeting
 	public static final String ATTACKINGUNIT = "_attackingUnit#";
 	public static final String ATTACKTARGET = "_attackTarget#";
+	public static final String DAMAGINGUNIT = "_damagingUnit#";
+	public static final String DAMAGEDUNIT = "_damagedUnit#";
 	public static final String ATTACKIMPACTLOCATION = "_attackImpactLocation#";
 	public static final String ABILITYTARGETEDUNIT = "_abilityTargetedUnit#";
 	public static final String ABILITYTARGETEDDESTRUCTABLE = "_abilityTargetedDestructable#";

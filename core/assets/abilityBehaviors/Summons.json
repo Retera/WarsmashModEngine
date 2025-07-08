@@ -1,0 +1,1627 @@
+{
+	"abilityList": [{
+		"ids": [{"id":"AHwe", "castId": "waterelemental"},
+				{"id":"ANwm", "castId": "wateryminion"},
+				{"id":"AEsv", "castId": "spiritofvengeance"},
+				{"id":"AEst", "castId": "scout"},
+				{"id":"ANsw", "castId": "summonwareagle"},
+				{"id":"ANsq", "castId": "summonquillbeast"},
+				{"id":"ANsg", "castId": "summongrizzly"}],
+		"type": "NORMAL_NOTARGET",
+		"onEndCasting": [{
+				"type": "createTemporarySpellEffectOnUnit",
+				"target": {
+					"type": "getCastingUnit"
+				},
+				"id": {
+					"type": "getAlias"
+				},
+				"effectType": "CASTER"
+		},{
+			"type": "for",
+			"times": {
+				"type": "getAbilityDataAsInteger",
+				"dataField": "A"
+			},
+			"actions": [{
+					"type": "createUnit",
+					"id": {
+						"type": "getAbilityUnitId"
+					},
+					"loc": {
+						"type": "createLocationFromOffset",
+						"origin": {
+							"type": "getUnitLocation",
+							"unit": {
+								"type": "getCastingUnit"
+							}
+						},
+						"dist": {
+							"type": "getAbilityArea"
+						},
+						"angle": {
+							"type": "getUnitFacing",
+							"unit": {
+								"type": "getCastingUnit"
+							}
+						},
+						"angleInDegrees": {
+							"type": "rawBoolean",
+							"value": "true"
+						}
+					},
+					"facing": {
+						"type": "getUnitFacing",
+						"unit": {
+							"type": "getCastingUnit"
+						}
+					}
+				},{
+					"type": "if",
+					"condition": {
+						"type": "f>0",
+						"value": {
+							"type": "getAbilityDuration"
+						}
+					},
+					"thenActions": [{
+							"type": "createTimedLifeBuff",
+							"buffId": {
+								"type": "getFirstBuffId",
+								"defaultId": {
+									"type": "getBuffIdFromCode"
+								}
+							},
+							"duration": {
+								"type": "getAbilityDuration"
+							},
+							"explode": {
+								"type": "rawBoolean",
+								"value": "false"
+							}
+						},{
+							"type": "addBuff",
+							"target": {
+								"type": "getLastCreatedUnit"
+							},
+							"buff": {
+								"type": "getLastCreatedBuff"
+							}
+					}]
+				},{
+					"type": "createTemporarySpellEffectOnUnit",
+					"target": {
+						"type": "getLastCreatedUnit"
+					},
+					"id": {
+						"type": "getAlias"
+					},
+					"effectType": "TARGET"
+			}]
+		}]
+	},{
+		"ids": [{"id":"Amec", "castId": "mechanicalcritter"}],
+		"type": "NORMAL_NOTARGET",
+		"onAddDisabledAbility": [{
+				"type": "createStateModBuff",
+				"buffType": "UNAUTOATTACKABLE"
+			},{
+				"type": "storeValueLocally",
+				"key": {
+					"type": "rawString",
+					"value": "unauto"
+				},
+				"instanceValue": {
+					"type": "rawBoolean",
+					"value": "false"
+				},
+				"valueToStore": {
+					"type": "getLastCreatedStateModBuff"
+				}
+			},{
+				"type": "createStateModBuff",
+				"buffType": "HIDE_MINIMAP_ICON"
+			},{
+				"type": "storeValueLocally",
+				"key": {
+					"type": "rawString",
+					"value": "minim"
+				},
+				"instanceValue": {
+					"type": "rawBoolean",
+					"value": "false"
+				},
+				"valueToStore": {
+					"type": "getLastCreatedStateModBuff"
+				}
+			},{
+				"type": "createStateModBuff",
+				"buffType": "FALSE_OWNERSHIP",
+				"value": {
+					"type": "createOwnershipData",
+					"playerId": {
+						"type": "getNeutralPassivePlayerId"
+					},
+					"priority": {
+						"type": "rawInteger",
+						"value": 15
+					}
+				}
+			},{
+				"type": "storeValueLocally",
+				"key": {
+					"type": "rawString",
+					"value": "owner"
+				},
+				"instanceValue": {
+					"type": "rawBoolean",
+					"value": "false"
+				},
+				"valueToStore": {
+					"type": "getLastCreatedStateModBuff"
+				}
+		}],
+		"onEndCasting": [{
+				"type": "createTemporarySpellEffectOnUnit",
+				"target": {
+					"type": "getCastingUnit"
+				},
+				"id": {
+					"type": "getAlias"
+				},
+				"effectType": "CASTER"
+		},{
+			"type": "for",
+			"times": {
+				"type": "getAbilityDataAsInteger",
+				"dataField": "A"
+			},
+			"actions": [{
+					"type": "createUnit",
+					"id": {
+						"type": "randomMechanicalCritterId"
+					},
+					"loc": {
+						"type": "createLocationFromOffset",
+						"origin": {
+							"type": "getUnitLocation",
+							"unit": {
+								"type": "getCastingUnit"
+							}
+						},
+						"dist": {
+							"type": "getAbilityArea"
+						},
+						"angle": {
+							"type": "getUnitFacing",
+							"unit": {
+								"type": "getCastingUnit"
+							}
+						},
+						"angleInDegrees": {
+							"type": "rawBoolean",
+							"value": "true"
+						}
+					},
+					"facing": {
+						"type": "getUnitFacing",
+						"unit": {
+							"type": "getCastingUnit"
+						}
+					}
+				},{
+					"type": "addStateModBuff",
+					"targetUnit": {
+						"type": "getLastCreatedUnit"
+					},
+					"buff": {
+						"type": "getStoredStateModBuffByKey",
+						"key": {
+							"type": "rawString",
+							"value": "unauto"
+						},
+						"instanceValue": {
+							"type": "rawBoolean",
+							"value": "false"
+						}
+					}
+				},{
+					"type": "addStateModBuff",
+					"targetUnit": {
+						"type": "getLastCreatedUnit"
+					},
+					"buff": {
+						"type": "getStoredStateModBuffByKey",
+						"key": {
+							"type": "rawString",
+							"value": "minim"
+						},
+						"instanceValue": {
+							"type": "rawBoolean",
+							"value": "false"
+						}
+					}
+				},{
+					"type": "addStateModBuff",
+					"targetUnit": {
+						"type": "getLastCreatedUnit"
+					},
+					"buff": {
+						"type": "getStoredStateModBuffByKey",
+						"key": {
+							"type": "rawString",
+							"value": "owner"
+						},
+						"instanceValue": {
+							"type": "rawBoolean",
+							"value": "false"
+						}
+					}
+				},{
+					"type": "if",
+					"condition": {
+						"type": "f>0",
+						"value": {
+							"type": "getAbilityDuration"
+						}
+					},
+					"thenActions": [{
+							"type": "createTimedLifeBuff",
+							"buffId": {
+								"type": "getFirstBuffId",
+								"defaultId": {
+									"type": "getBuffIdFromCode"
+								}
+							},
+							"duration": {
+								"type": "getAbilityDuration"
+							},
+							"explode": {
+								"type": "rawBoolean",
+								"value": "false"
+							}
+						},{
+							"type": "addBuff",
+							"target": {
+								"type": "getLastCreatedUnit"
+							},
+							"buff": {
+								"type": "getLastCreatedBuff"
+							}
+					}]
+				},{
+					"type": "createTemporarySpellEffectOnUnit",
+					"target": {
+						"type": "getLastCreatedUnit"
+					},
+					"id": {
+						"type": "getAlias"
+					},
+					"effectType": "TARGET"
+			}]
+		}]
+	},{
+		"ids": [{"id":"AOsf", "castId": "spiritwolf"},{"id":"AIsh", "castId": "spirittroll"}],
+		"type": "NORMAL_NOTARGET",
+		"onAddAbility": [{
+			"type": "createUnitGroup",
+			"name": "summons"
+		}],
+		"onEndCasting": [{
+				"type": "createTemporarySpellEffectOnUnit",
+				"target": {
+					"type": "getCastingUnit"
+				},
+				"id": {
+					"type": "getAlias"
+				},
+				"effectType": "CASTER"
+		},{
+			"type": "iterateUnitsInGroup",
+			"unitGroup": {
+				"type": "getUnitGroupByName",
+				"name": "summons"
+			},
+			"iterationActions": [{
+				"type": "killUnit",
+				"unit": {
+					"type": "getEnumUnit"
+				}
+			}]
+		},{
+			"type": "for",
+			"times": {
+				"type": "getAbilityDataAsInteger",
+				"dataField": "B"
+			},
+			"actions": [{
+					"type": "createUnit",
+					"id": {
+						"type": "getAbilityUnitId"
+					},
+					"loc": {
+						"type": "createLocationFromOffset",
+						"origin": {
+							"type": "getUnitLocation",
+							"unit": {
+								"type": "getCastingUnit"
+							}
+						},
+						"dist": {
+							"type": "getAbilityArea"
+						},
+						"angle": {
+							"type": "getUnitFacing",
+							"unit": {
+								"type": "getCastingUnit"
+							}
+						},
+						"angleInDegrees": {
+							"type": "rawBoolean",
+							"value": "true"
+						}
+					},
+					"facing": {
+						"type": "getUnitFacing",
+						"unit": {
+							"type": "getCastingUnit"
+						}
+					}
+				},{
+					"type": "if",
+					"condition": {
+						"type": "f>0",
+						"value": {
+							"type": "getAbilityDuration"
+						}
+					},
+					"thenActions": [{
+							"type": "createTimedLifeBuff",
+							"buffId": {
+								"type": "getFirstBuffId",
+								"defaultId": {
+									"type": "getBuffIdFromCode"
+								}
+							},
+							"duration": {
+								"type": "getAbilityDuration"
+							},
+							"explode": {
+								"type": "rawBoolean",
+								"value": "false"
+							}
+						},{
+							"type": "addBuff",
+							"target": {
+								"type": "getLastCreatedUnit"
+							},
+							"buff": {
+								"type": "getLastCreatedBuff"
+							}
+					}]
+				},{
+					"type": "addUnitToGroup",
+					"group": {
+						"type": "getUnitGroupByName",
+						"name": "summons"
+					},
+					"unit": {
+						"type": "getLastCreatedUnit"
+					}
+				},{
+					"type": "createTemporarySpellEffectOnUnit",
+					"target": {
+						"type": "getLastCreatedUnit"
+					},
+					"id": {
+						"type": "getAlias"
+					},
+					"effectType": "SPECIAL"
+			}]
+		}]
+	},{
+		"ids": [{"id":"AHpx", "castId": "summonphoenix"}],
+		"type": "NORMAL_NOTARGET",
+		"onAddDisabledAbility": [{
+			"type": "createUnitGroup",
+			"name": "summons"
+		}],
+		"onEndCasting": [{
+				"type": "createTemporarySpellEffectOnUnit",
+				"target": {
+					"type": "getCastingUnit"
+				},
+				"id": {
+					"type": "getAlias"
+				},
+				"effectType": "CASTER"
+		},{
+			"type": "iterateUnitsInGroup",
+			"unitGroup": {
+				"type": "getUnitGroupByName",
+				"name": "summons"
+			},
+			"iterationActions": [{
+				"type": "if",
+				"condition": {
+					"type": "doesUnitHaveAbilityMatchingCondition",
+					"unit": {
+						"type": "getEnumUnit"
+					},
+					"condition": {
+						"type": "isIdEqual",
+						"id1": {
+							"type": "getCode",
+							"ability": {
+								"type": "getMatchingAbility"
+							}
+						},
+						"id2": {
+							"type": "getWar3IDFromString",
+							"id": "Aphx"
+						}
+					}
+				},
+				"thenActions": [{
+						"type": "removeAbility",
+						"unit": {
+							"type": "getEnumUnit"
+						},
+						"ability": {
+							"type": "getAbilityById",
+							"unit": {
+								"type": "getEnumUnit"
+							},
+							"id": {
+								"type": "getWar3IDFromString",
+								"id": "Aphx"
+							}
+						}
+					},{
+						"type": "killUnit",
+						"unit": {
+							"type": "getEnumUnit"
+						}
+				}]
+			}]
+		},{
+			"type": "for",
+			"times": {
+				"type": "getAbilityDataAsInteger",
+				"dataField": "A"
+			},
+			"actions": [{
+					"type": "createUnit",
+					"id": {
+						"type": "getAbilityUnitId"
+					},
+					"loc": {
+						"type": "createLocationFromOffset",
+						"origin": {
+							"type": "getUnitLocation",
+							"unit": {
+								"type": "getCastingUnit"
+							}
+						},
+						"dist": {
+							"type": "getAbilityArea"
+						},
+						"angle": {
+							"type": "getUnitFacing",
+							"unit": {
+								"type": "getCastingUnit"
+							}
+						},
+						"angleInDegrees": {
+							"type": "rawBoolean",
+							"value": "true"
+						}
+					},
+					"facing": {
+						"type": "getUnitFacing",
+						"unit": {
+							"type": "getCastingUnit"
+						}
+					}
+				},{
+					"type": "setHp",
+					"target": {
+						"type": "getLastCreatedUnit"
+					},
+					"amount": {
+						"type": "rawFloat",
+						"value": 100
+					},
+					"isPercent": {
+						"type": "rawBoolean",
+						"value": "true"
+					}
+				},{
+					"type": "addUnitToGroup",
+					"group": {
+						"type": "getUnitGroupByName",
+						"name": "summons"
+					},
+					"unit": {
+						"type": "getLastCreatedUnit"
+					}
+				},{
+					"type": "createTemporarySpellEffectOnUnit",
+					"target": {
+						"type": "getLastCreatedUnit"
+					},
+					"id": {
+						"type": "getAlias"
+					},
+					"effectType": "TARGET"
+			}]
+		}]
+	},{
+		"ids": [{"id":"AIpm", "castId": "itemplacemine"}],
+		"type": "NORMAL_POINTTARGET",
+		"onEndCasting": [{
+				"type": "createTemporarySpellEffectOnUnit",
+				"target": {
+					"type": "getCastingUnit"
+				},
+				"id": {
+					"type": "getAlias"
+				},
+				"effectType": "CASTER"
+			},{
+				"type": "createTemporarySpellEffectAtLocation",
+				"location": {
+					"type": "getTargetedLocation"
+				},
+				"id": {
+					"type": "getAlias"
+				},
+				"effectType": "EFFECT"
+			},{
+				"type": "createUnit",
+				"id": {
+					"type": "getAbilityUnitId"
+				},
+				"loc": {
+					"type": "getTargetedLocation"
+				},
+				"addSummonedTag": {
+					"type": "rawBoolean",
+					"value": "false"
+				},
+				"removeFood":  {
+					"type": "rawBoolean",
+					"value": "true"
+				}
+		}]
+	},{
+		"ids": [{"id":"Ahwd", "castId": "healingward"}],
+		"type": "NORMAL_POINTTARGET",
+		"onEndCasting": [{
+				"type": "createTemporarySpellEffectOnUnit",
+				"target": {
+					"type": "getCastingUnit"
+				},
+				"id": {
+					"type": "getAlias"
+				},
+				"effectType": "CASTER"
+			},{
+				"type": "createTemporarySpellEffectAtLocation",
+				"location": {
+					"type": "getTargetedLocation"
+				},
+				"id": {
+					"type": "getAlias"
+				},
+				"effectType": "EFFECT"
+			},{
+				"type": "createUnit",
+				"id": {
+					"type": "getAbilityUnitId"
+				},
+				"loc": {
+					"type": "getTargetedLocation"
+				}
+			},{
+				"type": "if",
+				"condition": {
+					"type": "f>0",
+					"value": {
+						"type": "getAbilityDuration"
+					}
+				},
+				"thenActions": [{
+						"type": "createTimedLifeBuff",
+						"buffId": {
+							"type": "getFirstBuffId",
+							"defaultId": {
+								"type": "getBuffIdFromCode"
+							}
+						},
+						"duration": {
+							"type": "getAbilityDuration"
+						},
+						"explode": {
+							"type": "rawBoolean",
+							"value": "false"
+						}
+					},{
+						"type": "addBuff",
+						"target": {
+							"type": "getLastCreatedUnit"
+						},
+						"buff": {
+							"type": "getLastCreatedBuff"
+						}
+				}]
+		}]
+	},{
+		"ids": [{"id":"AOwd", "castId": "ward"}],
+		"type": "NORMAL_POINTTARGET",
+		"onEndCasting": [{
+				"type": "createTemporarySpellEffectOnUnit",
+				"target": {
+					"type": "getCastingUnit"
+				},
+				"id": {
+					"type": "getAlias"
+				},
+				"effectType": "CASTER"
+			},{
+				"type": "createTemporarySpellEffectAtLocation",
+				"location": {
+					"type": "getTargetedLocation"
+				},
+				"id": {
+					"type": "getAlias"
+				},
+				"effectType": "EFFECT"
+			},{
+				"type": "for",
+				"times": {
+					"type": "getAbilityDataAsInteger",
+					"dataField": "A"
+				},
+				"actions": [{
+						"type": "createUnit",
+						"id": {
+							"type": "getAbilityUnitId"
+						},
+						"loc": {
+							"type": "getTargetedLocation"
+						}
+					},{
+						"type": "if",
+						"condition": {
+							"type": "f>0",
+							"value": {
+								"type": "getAbilityDuration"
+							}
+						},
+						"thenActions": [{
+								"type": "createTimedLifeBuff",
+								"buffId": {
+									"type": "getFirstBuffId",
+									"defaultId": {
+										"type": "getBuffIdFromCode"
+									}
+								},
+								"duration": {
+									"type": "getAbilityDuration"
+								},
+								"explode": {
+									"type": "rawBoolean",
+									"value": "false"
+								}
+							},{
+								"type": "addBuff",
+								"target": {
+									"type": "getLastCreatedUnit"
+								},
+								"buff": {
+									"type": "getLastCreatedBuff"
+								}
+						}]
+				}]
+		}]
+	},{
+		"ids": [{"id":"Aeye", "castId": "evileye"}],
+		"type": "NORMAL_POINTTARGET",
+		"onAddDisabledAbility": [{
+			"type": "createStateModBuff",
+			"buffType": "INVISIBLE"
+		}],
+		"onEndCasting": [{
+				"type": "createTemporarySpellEffectOnUnit",
+				"target": {
+					"type": "getCastingUnit"
+				},
+				"id": {
+					"type": "getAlias"
+				},
+				"effectType": "CASTER"
+			},{
+				"type": "createTemporarySpellEffectAtLocation",
+				"location": {
+					"type": "getTargetedLocation"
+				},
+				"id": {
+					"type": "getAlias"
+				},
+				"effectType": "EFFECT"
+			},{
+				"type": "createUnit",
+				"id": {
+					"type": "getAbilityUnitId"
+				},
+				"loc": {
+					"type": "getTargetedLocation"
+				}
+			},{
+				"type": "addStateModBuff",
+				"targetUnit": {
+					"type": "getLastCreatedUnit"
+				},
+				"buff": {
+					"type": "getLastCreatedStateModBuff"
+				}
+			},{
+				"type": "if",
+				"condition": {
+					"type": "f>0",
+					"value": {
+						"type": "getAbilityDuration"
+					}
+				},
+				"thenActions": [{
+						"type": "createTimedLifeBuff",
+						"buffId": {
+							"type": "getFirstBuffId",
+							"defaultId": {
+								"type": "getBuffIdFromCode"
+							}
+						},
+						"duration": {
+							"type": "getAbilityDuration"
+						},
+						"explode": {
+							"type": "rawBoolean",
+							"value": "false"
+						}
+					},{
+						"type": "addBuff",
+						"target": {
+							"type": "getLastCreatedUnit"
+						},
+						"buff": {
+							"type": "getLastCreatedBuff"
+						}
+				}]
+		}]
+	},{
+		"ids": [{"id":"Asta", "castId": "stasistrap"}],
+		"type": "NORMAL_POINTTARGET",
+		"onAddDisabledAbility": [{
+			"type": "createStateModBuff",
+			"buffType": "INVISIBLE"
+		}],
+		"onEndCasting": [{
+				"type": "createTemporarySpellEffectOnUnit",
+				"target": {
+					"type": "getCastingUnit"
+				},
+				"id": {
+					"type": "getAlias"
+				},
+				"effectType": "CASTER"
+			},{
+				"type": "createTemporarySpellEffectAtLocation",
+				"location": {
+					"type": "getTargetedLocation"
+				},
+				"id": {
+					"type": "getAlias"
+				},
+				"effectType": "EFFECT"
+			},{
+				"type": "createUnit",
+				"id": {
+					"type": "getAbilityUnitId"
+				},
+				"loc": {
+					"type": "getTargetedLocation"
+				}
+			},{
+				"type": "storeValueLocally",
+				"key": {
+					"type": "rawString",
+					"value": "unit"
+				},
+				"valueToStore": {
+					"type": "getLastCreatedUnit"
+				}
+			},{
+				"type": "createTimer",
+				"timeout": {
+					"type": "getAbilityDataAsFloat",
+					"dataField": "A"
+				},
+				"actions": [{
+					"type": "if",
+					"condition": {
+						"type": "isUnitAlive",
+						"unit": {
+							"type": "getStoredUnitByKey",
+							"key": {
+								"type": "rawString",
+								"value": "unit"
+							}
+						}
+					},
+					"thenActions": [{
+							"type": "addStateModBuff",
+							"targetUnit": {
+								"type": "getStoredUnitByKey",
+								"key": {
+									"type": "rawString",
+									"value": "unit"
+								}
+							},
+							"buff": {
+								"type": "getLastCreatedStateModBuff"
+							}
+						},{
+							"type": "createTimer",
+							"timeout": {
+								"type": "rawFloat",
+								"value": 1.0
+							},
+							"repeats": {
+								"type": "rawBoolean",
+								"value": "true"
+							},
+							"actions": [{
+								"type": "if",
+								"condition": {
+									"type": "isUnitAlive",
+									"unit": {
+										"type": "getStoredUnitByKey",
+										"key": {
+											"type": "rawString",
+											"value": "unit"
+										}
+									}
+								},
+								"thenActions": [{
+									"type": "if",
+									"condition": {
+										"type": "matchingUnitExistsInRangeOfUnit",
+										"originUnit": {
+											"type": "getStoredUnitByKey",
+											"key": {
+												"type": "rawString",
+												"value": "unit"
+											}
+										},
+										"range": {
+											"type": "getAbilityDataAsFloat",
+											"dataField": "B"
+										},
+										"condition": {
+											"type": "isUnitValidTarget",
+											"target": {
+												"type": "getMatchingUnit"
+											}
+										}
+									},
+									"thenActions": [{
+											"type": "removeStateModBuff",
+											"targetUnit": {
+												"type": "getStoredUnitByKey",
+												"key": {
+													"type": "rawString",
+													"value": "unit"
+												}
+											},
+											"buff": {
+												"type": "getLastCreatedStateModBuff"
+											}
+										},{
+											"type": "createTimer",
+											"timeout": {
+												"type": "rawFloat",
+												"value": 1.0
+											},
+											"actions": [{
+													"type": "if",
+													"condition": {
+														"type": "isUnitAlive",
+														"unit": {
+															"type": "getStoredUnitByKey",
+															"key": {
+																"type": "rawString",
+																"value": "unit"
+															}
+														}
+													},
+													"thenActions": [{
+															"type": "killUnit",
+															"unit": {
+																"type": "getStoredUnitByKey",
+																"key": {
+																	"type": "rawString",
+																	"value": "unit"
+																}
+															}
+														},{
+															"type": "iterateUnitsInRangeOfUnitMatchingCondition",
+															"originUnit": {
+																"type": "getStoredUnitByKey",
+																"key": {
+																	"type": "rawString",
+																	"value": "unit"
+																}
+															},
+															"range": {
+																"type": "getAbilityDataAsFloat",
+																"dataField": "C"
+															},
+															"condition": {
+																"type": "isUnitValidTarget",
+																"target": {
+																	"type": "getMatchingUnit"
+																}
+															},
+															"iterationActions": [{
+																"type": "addStunBuff",
+																"buffId": {
+																	"type": "getFirstBuffId"
+																},
+																"unit": {
+																	"type": "getEnumUnit"
+																},
+																"duration": {
+																	"type": "inlineConditionFloat",
+																	"condition": {
+																		"type": "isUnitHero",
+																		"unit": {
+																			"type": "getEnumUnit"
+																		}
+																	},
+																	"pass": {
+																		"type": "getAbilityDataAsFloat",
+																		"dataField": "D"
+																	},
+																	"fail": {
+																		"type": "getAbilityHeroDuration"
+																	}
+																}
+															}]
+													}]
+												},{
+													"type": "cleanUpCastInstance"
+											}]
+										},{
+											"type": "killTimer",
+											"timer": {
+												"type": "getFiringTimer"
+											}
+									}]
+								}],
+								"elseActions": [{
+										"type": "killTimer",
+										"timer": {
+											"type": "getFiringTimer"
+										}
+									},{
+										"type": "cleanUpCastInstance"
+								}]
+							}]
+					}],
+					"elseActions": [{
+						"type": "cleanUpCastInstance"
+					}]
+				}]
+			},{
+				"type": "if",
+				"condition": {
+					"type": "f>0",
+					"value": {
+						"type": "getAbilityDuration"
+					}
+				},
+				"thenActions": [{
+						"type": "createTimedLifeBuff",
+						"buffId": {
+							"type": "getWar3IDFromString",
+							"id": "Bstt"
+						},
+						"duration": {
+							"type": "getAbilityDuration"
+						},
+						"explode": {
+							"type": "rawBoolean",
+							"value": "false"
+						}
+					},{
+						"type": "addBuff",
+						"target": {
+							"type": "getLastCreatedUnit"
+						},
+						"buff": {
+							"type": "getLastCreatedBuff"
+						}
+				}]
+		}]
+	},{
+		"ids": [{"id":"ANin", "castId": "inferno"},{"id":"AUin", "castId": "dreadlordinferno"}],
+		"type": "NORMAL_POINTTARGET",
+		"onEndCasting": [{
+				"type": "createTemporarySpellEffectOnUnit",
+				"target": {
+					"type": "getCastingUnit"
+				},
+				"id": {
+					"type": "getAlias"
+				},
+				"effectType": "CASTER"
+			},{
+				"type": "createTemporarySpellEffectAtLocation",
+				"location": {
+					"type": "getTargetedLocation"
+				},
+				"id": {
+					"type": "getAlias"
+				},
+				"effectType": "EFFECT"
+			},{
+				"type": "storeValueLocally",
+				"key": {
+					"type": "rawString",
+					"value": "targetLoc"
+				},
+				"valueToStore": {
+					"type": "getTargetedLocation"
+				}
+			},{
+				"type": "createTimer",
+				"timeout": {
+					"type": "getAbilityDataAsFloat",
+					"dataField": "C"
+				},
+				"actions": [{
+						"type": "iterateDestructablesInRangeOfLocation",
+						"location": {
+							"type": "getStoredLocationByKey",
+							"key": {
+								"type": "rawString",
+								"value": "targetLoc"
+							}
+						},
+						"range": {
+							"type": "getAbilityArea"
+						},
+						"iterationActions": [{
+							"type": "if",
+							"condition": {
+								"type": "isTree",
+								"dest": {
+									"type": "getEnumDestructable"
+								}
+							},
+							"thenActions": [{
+								"type": "killDestructable",
+								"dest": {
+									"type": "getEnumDestructable"
+								}
+							}]
+						}]
+					},{
+						"type": "damageArea",
+						"source": {
+							"type": "getCastingUnit"
+						},
+						"target": {
+							"type": "getStoredLocationByKey",
+							"key": {
+								"type": "rawString",
+								"value": "targetLoc"
+							}
+						},
+						"validTarget": {
+							"type": "isUnitValidTarget",
+							"target": {
+								"type": "getEnumUnit"
+							}
+						},
+						"damageType": {
+							"type": "getDamageTypeFromString",
+							"id": {
+								"type": "rawString",
+								"value": "FORCE"
+							}
+						},
+						"damage": {
+							"type": "getAbilityDataAsFloat",
+							"dataField": "A"
+						},
+						"radius": {
+							"type": "getAbilityArea"
+						},
+						"extraActions": [{
+							"type": "addStunBuff",
+							"unit": {
+								"type": "getEnumUnit"
+							},
+							"duration": {
+								"type": "getAbilityDuration",
+								"target": {
+									"type": "getEnumUnit"
+								}
+							}
+						}]
+					},{
+						"type": "iterateUnitsInRangeOfLocationMatchingCondition",
+						"location": {
+							"type": "getStoredLocationByKey",
+							"key": {
+								"type": "rawString",
+								"value": "targetLoc"
+							}
+						},
+						"range": {
+							"type": "getAbilityArea"
+						},
+						"condition": {
+							"type": "isUnitValidTarget",
+							"target": {
+								"type": "getMatchingUnit"
+							}
+						},
+						"iterationActions": []
+					},{
+						"type": "createUnit",
+						"id": {
+							"type": "getAbilityUnitId"
+						},
+						"loc": {
+							"type": "getStoredLocationByKey",
+							"key": {
+								"type": "rawString",
+								"value": "targetLoc"
+							}
+						}
+					},{
+						"type": "if",
+						"condition": {
+							"type": "f>0",
+							"value": {
+								"type": "getAbilityDataAsFloat",
+								"dataField": "B"
+							}
+						},
+						"thenActions": [{
+								"type": "createTimedLifeBuff",
+								"buffId": {
+									"type": "getFirstBuffId",
+									"defaultId": {
+										"type": "getWar3IDFromString",
+										"id": "BNin"
+									}
+								},
+								"duration": {
+									"type": "getAbilityDataAsFloat",
+									"dataField": "B"
+								},
+								"explode": {
+									"type": "rawBoolean",
+									"value": "false"
+								}
+							},{
+								"type": "addBuff",
+								"target": {
+									"type": "getLastCreatedUnit"
+								},
+								"buff": {
+									"type": "getLastCreatedBuff"
+								}
+						}]
+				}]
+			}]
+	},{
+		"ids": [{"id":"ANdp", "castId": "darkportal"}],
+		"type": "NORMAL_POINTTARGET",
+		"onEndCasting": [{
+				"type": "createTemporarySpellEffectOnUnit",
+				"target": {
+					"type": "getCastingUnit"
+				},
+				"id": {
+					"type": "getAlias"
+				},
+				"effectType": "CASTER"
+			},{
+				"type": "createTemporarySpellEffectAtLocation",
+				"location": {
+					"type": "getTargetedLocation"
+				},
+				"id": {
+					"type": "getAlias"
+				},
+				"effectType": "EFFECT"
+			},{
+				"type": "storeValueLocally",
+				"key": {
+					"type": "rawString",
+					"value": "targetLoc"
+				},
+				"valueToStore": {
+					"type": "getTargetedLocation"
+				}
+			},{
+				"type": "createTimer",
+				"timeout": {
+					"type": "getAbilityDuration"
+				},
+				"actions": [{
+						"type": "for",
+						"times": {
+							"type": "randomInteger",
+							"lowerBound": {
+								"type": "getAbilityDataAsInteger",
+								"dataField": "B"
+							},
+							"upperBound": {
+								"type": "i+",
+								"value1": {
+									"type": "getAbilityDataAsInteger",
+									"dataField": "C"
+								},
+								"value2": {
+									"type": "rawInteger",
+									"value": 1
+								}
+							}
+						},
+						"actions": [{
+							"type": "createUnit",
+							"id": {
+								"type": "getAbilityDataAsRandomIDFromList",
+								"dataField": "A"
+							},
+							"loc": {
+								"type": "getStoredLocationByKey",
+								"key": {
+									"type": "rawString",
+									"value": "targetLoc"
+								}
+							}
+						}]
+				}]
+			}]
+	},{
+		"ids": [{"id":"ANrc", "castId": "rainofchaos"}],
+		"type": "NORMAL_POINTTARGET",
+		"onAddDisabledAbility": [{
+				"type": "createAbilityFromId",
+				"id": {
+					"type": "getAbilityDataAsID",
+					"dataField": "A"
+				}
+			},{
+				"type": "prepUnownedAbilityForUse",
+				"ability": {
+					"type": "getLastCreatedAbility"
+				}
+		}],
+		"onEndCasting": [{
+				"type": "createTemporarySpellEffectOnUnit",
+				"target": {
+					"type": "getCastingUnit"
+				},
+				"id": {
+					"type": "getAlias"
+				},
+				"effectType": "CASTER"
+			},{
+				"type": "createTemporarySpellEffectAtLocation",
+				"location": {
+					"type": "getTargetedLocation"
+				},
+				"id": {
+					"type": "getAlias"
+				},
+				"effectType": "EFFECT"
+			},{
+				"type": "storeValueLocally",
+				"key": {
+					"type": "rawString",
+					"value": "targetLoc"
+				},
+				"valueToStore": {
+					"type": "getTargetedLocation"
+				}
+			},{
+				"type": "storeValueLocally",
+				"key": {
+					"type": "rawString",
+					"value": "iter"
+				},
+				"valueToStore": {
+					"type": "rawInteger",
+					"value": 0
+				}
+			},{
+				"type": "beginChanneling"
+		}],
+		"onChannelTick": [{
+			"type": "periodicExecute",
+			"periodicActions": [{
+					"type": "storeValueLocally",
+					"key": {
+						"type": "rawString",
+						"value": "iter"
+					},
+					"valueToStore": {
+						"type": "i+",
+						"value1": {
+							"type": "getStoredIntegerByKey",
+							"key": {
+								"type": "rawString",
+								"value": "iter"
+							}
+						},
+						"value2": {
+							"type": "rawInteger",
+							"value": 1
+						}
+					}
+				},{
+					"type": "if",
+					"condition": {
+						"type": "i>",
+						"value1": {
+							"type": "getStoredIntegerByKey",
+							"key": {
+								"type": "rawString",
+								"value": "iter"
+							}
+						},
+						"value2": {
+							"type": "getAbilityDataAsInteger",
+							"dataField": "B"
+						}
+					},
+					"thenActions": [{
+						"type": "finishChanneling"
+					}],
+					"elseActions": [{
+						"type": "abilityRunEndCastingActions",
+						"ability": {
+							"type": "getLastCreatedAbility"
+						},
+						"targetLoc": {
+							"type": "randomLocationInRange",
+							"origin": {
+								"type": "getStoredLocationByKey",
+								"key": {
+									"type": "rawString",
+									"value": "targetLoc"
+								}
+							},
+							"range": {
+								"type": "getAbilityArea"
+							}
+						}
+					}]
+			}],
+			"delaySeconds": {
+				"type": "getAbilityDuration"
+			},
+			"initialTick": {
+				"type": "rawBoolean",
+				"value": "true"
+			}
+		}],
+		"onEndChannel": [{
+			"type": "cleanUpCastInstance"
+		}]
+	},{
+		"ids": [{"id":"ANto", "castId": "tornado"}],
+		"type": "NORMAL_POINTTARGET",
+		"onAddDisabledAbility": [{
+				"type": "createStateModBuff",
+				"buffType": "INVULNERABLE"
+			},{
+				"type": "storeValueLocally",
+				"key": {
+					"type": "rawString",
+					"value": "invuln"
+				},
+				"instanceValue": {
+					"type": "rawBoolean",
+					"value": "false"
+				},
+				"valueToStore": {
+					"type": "getLastCreatedStateModBuff"
+				}
+			},{
+				"type": "createStateModBuff",
+				"buffType": "UNSELECTABLE",
+				"value": {
+					"type": "playerMaskExcludePlayers",
+					"players": [{
+						"type": "getCastingPlayer"
+					}]
+				}
+			},{
+				"type": "storeValueLocally",
+				"key": {
+					"type": "rawString",
+					"value": "unsel"
+				},
+				"instanceValue": {
+					"type": "rawBoolean",
+					"value": "false"
+				},
+				"valueToStore": {
+					"type": "getLastCreatedStateModBuff"
+				}
+			},{
+				"type": "createStateModBuff",
+				"buffType": "UNTARGETABLE",
+				"value": {
+					"type": "playerMaskAllPlayers"
+				}
+			},{
+				"type": "storeValueLocally",
+				"key": {
+					"type": "rawString",
+					"value": "untar"
+				},
+				"instanceValue": {
+					"type": "rawBoolean",
+					"value": "false"
+				},
+				"valueToStore": {
+					"type": "getLastCreatedStateModBuff"
+				}
+		}],
+		"onEndCasting": [{
+				"type": "createTemporarySpellEffectOnUnit",
+				"target": {
+					"type": "getCastingUnit"
+				},
+				"id": {
+					"type": "getAlias"
+				},
+				"effectType": "CASTER"
+			},{
+				"type": "createTemporarySpellEffectAtLocation",
+				"location": {
+					"type": "getTargetedLocation"
+				},
+				"id": {
+					"type": "getAlias"
+				},
+				"effectType": "EFFECT"
+			},{
+				"type": "storeValueLocally",
+				"key": {
+					"type": "rawString",
+					"value": "targetLoc"
+				},
+				"valueToStore": {
+					"type": "getTargetedLocation"
+				}
+			},{
+				"type": "createUnit",
+				"id": {
+					"type": "getAbilityUnitId"
+				},
+				"loc": {
+					"type": "getTargetedLocation"
+				}
+			},{
+				"type": "if",
+				"condition": {
+					"type": "f>0",
+					"value": {
+						"type": "getAbilityDuration"
+					}
+				},
+				"thenActions": [{
+						"type": "createTimedLifeBuff",
+						"buffId": {
+							"type": "getFirstBuffId",
+							"defaultId": {
+								"type": "getBuffIdFromCode"
+							}
+						},
+						"duration": {
+							"type": "getAbilityDuration"
+						},
+						"explode": {
+							"type": "rawBoolean",
+							"value": "false"
+						}
+					},{
+						"type": "addBuff",
+						"target": {
+							"type": "getLastCreatedUnit"
+						},
+						"buff": {
+							"type": "getLastCreatedBuff"
+						}
+				}]
+			},{
+				"type": "addStateModBuff",
+				"targetUnit": {
+					"type": "getLastCreatedUnit"
+				},
+				"buff": {
+					"type": "getStoredStateModBuffByKey",
+					"key": {
+						"type": "rawString",
+						"value": "invuln"
+					},
+					"instanceValue": {
+						"type": "rawBoolean",
+						"value": "false"
+					}
+				}
+			},{
+				"type": "addStateModBuff",
+				"targetUnit": {
+					"type": "getLastCreatedUnit"
+				},
+				"buff": {
+					"type": "getStoredStateModBuffByKey",
+					"key": {
+						"type": "rawString",
+						"value": "unsel"
+					},
+					"instanceValue": {
+						"type": "rawBoolean",
+						"value": "false"
+					}
+				}
+			},{
+				"type": "addStateModBuff",
+				"targetUnit": {
+					"type": "getLastCreatedUnit"
+				},
+				"buff": {
+					"type": "getStoredStateModBuffByKey",
+					"key": {
+						"type": "rawString",
+						"value": "untar"
+					},
+					"instanceValue": {
+						"type": "rawBoolean",
+						"value": "false"
+					}
+				}
+			},{
+				"type": "beginChanneling"
+		}],
+		"onChannelTick": [{
+			"type": "periodicExecute",
+			"periodicActions": [{
+				"type": "finishChanneling"
+			}],
+			"delaySeconds": {
+				"type": "getAbilityDuration"
+			}
+		}],
+		"onEndChannel": [{
+				"type": "killUnit",
+				"unit": {
+					"type": "getLastCreatedUnit"
+				}
+			},{
+				"type": "cleanUpCastInstance"
+		}]
+	}]
+}

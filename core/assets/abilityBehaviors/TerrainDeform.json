@@ -1,0 +1,2270 @@
+{
+	"abilityList": [{
+		"ids": [{"id":"AOeq", "castId": "earthquake"}],
+		"type": "NORMAL_POINTTARGET",
+		"displayFields": {
+			"areaCursorOverride": {
+				"type": "getAbilityDataAsFloat",
+				"dataField": "D"
+			}
+		},
+		"reuseActions": {
+			"onTick": [{
+					"type": "storeValueLocally",
+					"key": {
+						"type": "rawString",
+						"value": "radius"
+					},
+					"valueToStore": {
+						"type": "f+",
+						"value1": {
+							"type": "getAbilityArea"
+						},
+						"value2": {
+							"type": "f*",
+							"value1": {
+								"type": "f-",
+								"value1": {
+									"type": "getAbilityDataAsFloat",
+									"dataField": "D"
+								},
+								"value2": {
+									"type": "getAbilityArea"
+								}
+							},
+							"value2": {
+								"type": "f/",
+								"value1": {
+									"type": "getStoredFloatByKey",
+									"key": {
+										"type": "rawString",
+										"value": "icnt"
+									}
+								},
+								"value2": {
+									"type": "getAbilityDuration"
+								}
+							}
+						}
+					}
+				},{
+					"type": "storeValueLocally",
+					"key": {
+						"type": "rawString",
+						"value": "icnt"
+					},
+					"valueToStore": {
+						"type": "f+",
+						"value1": {
+							"type": "getStoredFloatByKey",
+							"key": {
+								"type": "rawString",
+								"value": "icnt"
+							}
+						},
+						"value2": {
+							"type": "rawFloat",
+							"value": 1
+						}
+					}
+				},{
+					"type": "iterateDestructablesInRangeOfLocation",
+					"location": {
+						"type": "getTargetedLocation"
+					},
+					"range": {
+						"type": "getStoredFloatByKey",
+						"key": {
+							"type": "rawString",
+							"value": "radius"
+						}
+					},
+					"iterationActions": [{
+						"type": "if",
+						"condition": {
+							"type": "isDestructableValidTarget",
+							"target": {
+								"type": "getEnumDestructable"
+							}
+						},
+						"thenActions": [{
+							"type": "damageDestructable",
+							"source": {
+								"type": "getCastingUnit"
+							},
+							"target": {
+								"type": "getEnumDestructable"
+							},
+							"damage": {
+								"type": "getAbilityDataAsFloat",
+								"dataField": "B"
+							}
+						}]
+					}]
+				},{
+					"type": "iterateUnitsInRangeOfLocationMatchingCondition",
+					"location": {
+						"type": "getTargetedLocation"
+					},
+					"range": {
+						"type": "getStoredFloatByKey",
+						"key": {
+							"type": "rawString",
+							"value": "radius"
+						}
+					},
+					"condition": {
+						"type": "isUnitValidTarget",
+						"target": {
+							"type": "getMatchingUnit"
+						}
+					},
+					"iterationActions": [{
+						"type": "if",
+						"condition": {
+							"type": "isUnitBuilding",
+							"unit": {
+								"type": "getEnumUnit"
+							}
+						},
+						"thenActions": [{
+							"type": "damageTarget",
+							"source": {
+								"type": "getCastingUnit"
+							},
+							"target": {
+								"type": "getEnumUnit"
+							},
+							"damageType": {
+								"type": "getDamageTypeFromString",
+								"id": {
+									"type": "rawString",
+									"value": "UNIVERSAL"
+								}
+							},
+							"damage": {
+								"type": "getAbilityDataAsFloat",
+								"dataField": "B"
+							}
+						}],
+						"elseActions": [{
+								"type": "createTimedBuff",
+								"buffId": {
+									"type": "getFirstBuffId"
+								},
+								"duration": {
+									"type": "rawFloat",
+									"value": 2
+								},
+								"statBuffs": [{
+									"type": "getLastCreatedNonStackingStatBuff"
+								}]
+							},{
+								"type": "addBuff",
+								"target": {
+									"type": "getEnumUnit"
+								},
+								"buff": {
+									"type": "getLastCreatedBuff"
+								}
+						}]
+					}]
+			}]
+		},
+		"onEndCasting": [{
+			"type": "if",
+			"condition": {
+				"type": "f!=0",
+				"value": {
+					"type": "getAbilityDuration"
+				}
+			},
+			"thenActions": [{
+					"type": "beginChanneling"
+				},{
+					"type": "createNonStackingStatBuff",
+					"buffType": {
+						"type": "getNonStackingStatBuffTypeFromString",
+						"id": {
+							"type": "rawString",
+							"value": "MVSPDPCT"
+						}
+					},
+					"stackingKey": {
+						"type": "rawString",
+						"value": "earthquake"
+					},
+					"value": {
+						"type": "negativeFloat",
+						"value": {
+							"type": "getAbilityDataAsFloat",
+							"dataField": "C"
+						}
+					}
+				},{
+					"type": "storeValueLocally",
+					"key": {
+						"type": "rawString",
+						"value": "radius"
+					},
+					"valueToStore": {
+						"type": "getAbilityArea"
+					}
+				},{
+					"type": "storeValueLocally",
+					"key": {
+						"type": "rawString",
+						"value": "icnt"
+					},
+					"valueToStore": {
+						"type": "rawFloat",
+						"value": 0
+					}
+				},{
+					"type": "storeValueLocally",
+					"key": {
+						"type": "rawString",
+						"value": "begun"
+					},
+					"valueToStore": {
+						"type": "rawBoolean",
+						"value": "false"
+					}
+				},{
+					"type": "storeValueLocally",
+					"key": {
+						"type": "rawString",
+						"value": "delay"
+					},
+					"valueToStore": {
+						"type": "getAbilityDataAsFloat",
+						"dataField": "A"
+					}
+			}]
+		}],
+		"onChannelTick": [{
+			"type": "periodicExecute",
+			"periodicActions": [{
+				"type": "if",
+				"condition": {
+					"type": "getStoredBooleanByKey",
+					"key": {
+						"type": "rawString",
+						"value": "begun"
+					}
+				},
+				"thenActions": [{
+					"type": "runReuseAction",
+					"name": {
+						"type": "rawString",
+						"value": "onTick"
+					}
+				}],
+				"elseActions": [{
+						"type": "storeValueLocally",
+						"key": {
+							"type": "rawString",
+							"value": "begun"
+						},
+						"valueToStore": {
+							"type": "rawBoolean",
+							"value": "true"
+						}
+					},{
+						"type": "storeValueLocally",
+						"key": {
+							"type": "rawString",
+							"value": "delay"
+						},
+						"valueToStore": {
+							"type": "rawFloat",
+							"value": 1
+						}
+					},{
+						"type": "createSpellEffectAtLocation",
+						"location": {
+							"type": "getTargetedLocation"
+						},
+						"id": {
+							"type": "getFirstEffectId"
+						},
+						"effectType": "EFFECT"
+					},{
+						"type": "storeValueLocally",
+						"instanceValue": {
+							"type": "rawBoolean",
+							"value": "false"
+						},
+						"key": {
+							"type": "rawString",
+							"value": "center"
+						},
+						"valueToStore": {
+							"type": "getLastCreatedFX"
+						}
+					},{
+						"type": "createTerrainRippleAtLocation",
+						"location": {
+							"type": "getTargetedLocation"
+						},
+						"startRadius": {
+							"type": "getAbilityArea"
+						},
+						"finalRadius": {
+							"type": "getAbilityDataAsFloat",
+							"dataField": "D"
+						},
+						"depth": {
+							"type": "rawFloat",
+							"value": 140
+						},
+						"duration": {
+							"type": "getAbilityDuration"
+						},
+						"period": {
+							"type": "rawFloat",
+							"value": 500
+						},
+						"spaceWaves": {
+							"type": "rawInteger",
+							"value": 3
+						},
+						"timeWaves": {
+							"type": "rawInteger",
+							"value": 2
+						},
+						"onlyNegative": {
+							"type": "rawBoolean",
+							"value": "true"
+						}
+					},{
+						"type": "storeValueLocally",
+						"instanceValue": {
+							"type": "rawBoolean",
+							"value": "false"
+						},
+						"key": {
+							"type": "rawString",
+							"value": "deform"
+						},
+						"valueToStore": {
+							"type": "getLastCreatedFX"
+						}
+					},{
+						"type": "runReuseAction",
+						"name": {
+							"type": "rawString",
+							"value": "onTick"
+						}
+					}]
+			}],
+			"delaySeconds": {
+				"type": "getStoredFloatByKey",
+				"key": {
+					"type": "rawString",
+					"value": "delay"
+				}
+			},
+			"unique": {
+				"type": "rawString",
+				"value": "iter"
+			}
+		},{
+			"type": "periodicExecute",
+			"periodicActions": [{
+					"type": "finishChanneling"
+			}],
+			"delaySeconds": {
+				"type": "getAbilityDuration"
+			},
+			"unique": {
+				"type": "rawString",
+				"value": "end"
+			}
+		}],
+		"onEndChannel": [{
+				"type": "if",
+				"condition": {
+					"type": "notNull",
+					"value": {
+						"type": "getStoredFXByKey",
+						"instanceValue": {
+							"type": "rawBoolean",
+							"value": "false"
+						},
+						"key": {
+							"type": "rawString",
+							"value": "center"
+						}
+					}
+				},
+				"thenActions": [{
+					"type": "removeEffect",
+					"effect": {
+						"type": "getStoredFXByKey",
+						"instanceValue": {
+							"type": "rawBoolean",
+							"value": "false"
+						},
+						"key": {
+							"type": "rawString",
+							"value": "center"
+						}
+					}
+				}]
+			},{
+				"type": "if",
+				"condition": {
+					"type": "notNull",
+					"value": {
+						"type": "getStoredFXByKey",
+						"instanceValue": {
+							"type": "rawBoolean",
+							"value": "false"
+						},
+						"key": {
+							"type": "rawString",
+							"value": "deform"
+						}
+					}
+				},
+				"thenActions": [{
+					"type": "removeEffect",
+					"effect": {
+						"type": "getStoredFXByKey",
+						"instanceValue": {
+							"type": "rawBoolean",
+							"value": "false"
+						},
+						"key": {
+							"type": "rawString",
+							"value": "deform"
+						}
+					}
+				}]
+			},{
+				"type": "cleanUpCastInstance"
+		}]
+	},{
+		"ids": [{"id":"ANvc", "castId": "volcano"}],
+		"type": "NORMAL_POINTTARGET",
+		"reuseActions": {
+			"fireRock": [{
+					"type": "storeValueLocally",
+					"key": {
+						"type": "rawString",
+						"value": "flyingRocks"
+					},
+					"valueToStore": {
+						"type": "i+",
+						"value1": {
+							"type": "getStoredIntegerByKey",
+							"key": {
+								"type": "rawString",
+								"value": "flyingRocks"
+							}
+						},
+						"value2": {
+							"type": "rawInteger",
+							"value": 1
+						}
+					}
+				},{
+					"type": "createLocationTargetedProjectile",
+					"source": {
+						"type": "getCastingUnit"
+					},
+					"sourceLoc": {
+						"type": "getTargetedLocation"
+					},
+					"target": {
+						"type": "argumentLocation",
+						"name": {
+							"type": "rawString",
+							"value": "rockTar"
+						}
+					},
+					"id": {
+						"type": "getFirstEffectId"
+					},
+					"onHit": [{
+							"type": "iterateDestructablesInRangeOfLocation",
+							"location": {
+								"type": "getProjectileCurrentLocation"
+							},
+							"range": {
+								"type": "getAbilityArea"
+							},
+							"iterationActions": [{
+								"type": "if",
+								"condition": {
+									"type": "isDestructableValidTarget",
+									"target": {
+										"type": "getEnumDestructable"
+									}
+								},
+								"thenActions": [{
+									"type": "damageDestructable",
+									"source": {
+										"type": "getCastingUnit"
+									},
+									"target": {
+										"type": "getEnumDestructable"
+									},
+									"damage": {
+										"type": "getAbilityDataAsFloat",
+										"dataField": "E"
+									}
+								}]
+							}]
+						},{
+							"type": "damageBurst",
+							"source": {
+								"type": "getCastingUnit"
+							},
+							"target": {
+								"type": "getProjectileCurrentLocation"
+							},
+							"validTarget": {
+								"type": "isUnitValidTarget",
+								"target": {
+									"type": "getEnumUnit"
+								}
+							},
+							"damageType": {
+								"type": "getDamageTypeFromString",
+								"id": {
+									"type": "rawString",
+									"value": "NORMAL"
+								}
+							},
+							"damage": {
+								"type": "getAbilityDataAsFloat",
+								"dataField": "E"
+							},
+							"fullDamageRadius": {
+								"type": "getStoredFloatByKey",
+								"key": {
+									"type": "rawString",
+									"value": "fullDamageRadius"
+								}
+							},
+							"partialDamage": {
+								"type": "f*",
+								"value1": {
+									"type": "getAbilityDataAsFloat",
+									"dataField": "E"
+								},
+								"value2": {
+									"type": "getAbilityDataAsFloat",
+									"dataField": "F"
+								}
+							},
+							"partialDamageRadius": {
+								"type": "getStoredFloatByKey",
+								"key": {
+									"type": "rawString",
+									"value": "partialDamageRadius"
+								}
+							},
+							"extraActions": [{
+									"type": "if",
+									"condition": {
+										"type": "doesUnitHaveBuff",
+										"unit": {
+											"type": "getEnumUnit"
+										},
+										"id": {
+											"type": "getSecondBuffId"
+										}
+									},
+									"thenActions": [{
+										"type": "storeValueLocally",
+										"key": {
+											"type": "rawString",
+											"value": "mod"
+										},
+										"valueToStore": {
+											"type": "rawFloat",
+											"value": 0
+										}
+									}],
+									"elseActions": [{
+										"type": "if",
+										"condition": {
+											"type": "isUnitBuilding",
+											"unit": {
+												"type": "getEnumUnit"
+											}
+										},
+										"thenActions": [{
+											"type": "storeValueLocally",
+											"key": {
+												"type": "rawString",
+												"value": "mod"
+											},
+											"valueToStore": {
+												"type": "getAbilityDataAsFloat",
+												"dataField": "D"
+											}
+										}],
+										"elseActions": [{
+												"type": "storeValueLocally",
+												"key": {
+													"type": "rawString",
+													"value": "mod"
+												},
+												"valueToStore": {
+													"type": "rawFloat",
+													"value": 1
+												}
+											},{
+												"type": "addStunBuff",
+												"unit": {
+													"type": "getEnumUnit"
+												},
+												"duration": {
+													"type": "getAbilityDuration",
+													"target": {
+														"type": "getEnumUnit"
+													}
+												}
+										}]
+									},{
+										"type": "createTimedTargetingBuff",
+										"buffId": {
+											"type": "getSecondBuffId"
+										},
+										"duration": {
+											"type": "getAbilityDataAsFloat",
+											"dataField": "C"
+										}
+									},{
+										"type": "addBuff",
+										"target": {
+											"type": "getEnumUnit"
+										},
+										"buff": {
+											"type": "getLastCreatedBuff"
+										}
+								}]
+							}],
+							"unitSpecificDamageMod": {
+								"type": "getStoredFloatByKey",
+								"key": {
+									"type": "rawString",
+									"value": "mod"
+								}
+							}
+					},{
+						"type": "storeValueLocally",
+						"key": {
+							"type": "rawString",
+							"value": "flyingRocks"
+						},
+						"valueToStore": {
+							"type": "i-",
+							"value1": {
+								"type": "getStoredIntegerByKey",
+								"key": {
+									"type": "rawString",
+									"value": "flyingRocks"
+								}
+							},
+							"value2": {
+								"type": "rawInteger",
+								"value": 1
+							}
+						}
+					},{
+						"type": "if",
+						"condition": {
+							"type": "and",
+							"conditions": [{
+									"type": "getStoredBooleanByKey",
+									"key": {
+										"type": "rawString",
+										"value": "finished"
+									}
+								},{
+									"type": "i=0",
+									"value": {
+										"type": "getStoredIntegerByKey",
+										"key": {
+											"type": "rawString",
+											"value": "flyingRocks"
+										}
+									}
+							}]
+						},
+						"thenActions": [{
+							"type": "cleanUpCastInstance"
+						}]
+				}]
+			}],
+			"calculateRockCount": [{
+					"type": "storeValueLocally",
+					"key": {
+						"type": "rawString",
+						"value": "rockCount"
+					},
+					"valueToStore": {
+						"type": "rawInteger",
+						"value": 1
+					}
+				},{
+					"type": "storeValueLocally",
+					"key": {
+						"type": "rawString",
+						"value": "rocksPerRing"
+					},
+					"valueToStore": {
+						"type": "rawInteger",
+						"value": 5
+					}
+				},{
+					"type": "for",
+					"times": {
+						"type": "getAbilityDataAsInteger",
+						"dataField": "A"
+					},
+					"actions": [{
+							"type": "storeValueLocally",
+							"key": {
+								"type": "rawString",
+								"value": "rockCount"
+							},
+							"valueToStore": {
+								"type": "i+",
+								"value1": {
+									"type": "getStoredIntegerByKey",
+									"key": {
+										"type": "rawString",
+										"value": "rockCount"
+									}
+								},
+								"value2": {
+									"type": "getStoredIntegerByKey",
+									"key": {
+										"type": "rawString",
+										"value": "rocksPerRing"
+									}
+								}
+							}
+						},{
+							"type": "storeValueLocally",
+							"key": {
+								"type": "rawString",
+								"value": "rocksPerRing"
+							},
+							"valueToStore": {
+								"type": "i+",
+								"value1": {
+									"type": "getStoredIntegerByKey",
+									"key": {
+										"type": "rawString",
+										"value": "rocksPerRing"
+									}
+								},
+								"value2": {
+									"type": "rawInteger",
+									"value": 2
+								}
+							}
+					}]
+				},{
+					"type": "storeValueLocally",
+					"key": {
+						"type": "rawString",
+						"value": "rockCount"
+					},
+					"valueToStore": {
+						"type": "iMin",
+						"value1": {
+							"type": "getStoredIntegerByKey",
+							"key": {
+								"type": "rawString",
+								"value": "rockCount"
+							}
+						},
+						"value2": {
+							"type": "rawInteger",
+							"value": 32
+						}
+					}
+			}],
+			"generateRockLists": [{
+					"type": "storeValueLocally",
+					"key": {
+						"type": "rawString",
+						"value": "indexList"
+					},
+					"valueToStore": {
+						"type": "listSorted",
+						"list": {
+							"type": "integerListOfRange",
+							"end": {
+								"type": "getStoredIntegerByKey",
+								"key": {
+									"type": "rawString",
+									"value": "rockCount"
+								}
+							}
+						},
+						"sort": "RAND"
+					}
+				},{
+					"type": "storeValueLocally",
+					"key": {
+						"type": "rawString",
+						"value": "locList"
+					},
+					"valueToStore": {
+						"type": "emptyLocationList"
+					}
+				},{
+					"type": "locationListAdd",
+					"list": {
+						"type": "getStoredListByKey",
+						"key": {
+							"type": "rawString",
+							"value": "locList"
+						}
+					},
+					"location": {
+						"type": "createLocationFromXYOffset",
+						"origin": {
+							"type": "getTargetedLocation"
+						},
+						"xdist": {
+							"type": "f*",
+							"value1": {
+								"type": "getStoredFloatByKey",
+								"key": {
+									"type": "rawString",
+									"value": "maxJitter"
+								}
+							},
+							"value2": {
+								"type": "f-",
+								"value1": {
+									"type": "randomFloat"
+								},
+								"value2": {
+									"type": "rawFloat",
+									"value": 0.5
+								}
+							}
+						},
+						"ydist": {
+							"type": "f*",
+							"value1": {
+								"type": "getStoredFloatByKey",
+								"key": {
+									"type": "rawString",
+									"value": "maxJitter"
+								}
+							},
+							"value2": {
+								"type": "f-",
+								"value1": {
+									"type": "randomFloat"
+								},
+								"value2": {
+									"type": "rawFloat",
+									"value": 0.5
+								}
+							}
+						}
+					}
+				},{
+					"type": "storeValueLocally",
+					"key": {
+						"type": "rawString",
+						"value": "rocksPerRing"
+					},
+					"valueToStore": {
+						"type": "rawInteger",
+						"value": 5
+					}
+				},{
+					"type": "for",
+					"times": {
+						"type": "getAbilityDataAsInteger",
+						"dataField": "A"
+					},
+					"actions": [{
+						"type": "if",
+						"condition": {
+							"type": "i<",
+							"value1": {
+								"type": "getListSize",
+								"list": {
+									"type": "getStoredListByKey",
+									"key": {
+										"type": "rawString",
+										"value": "locList"
+									}
+								}
+							},
+							"value2": {
+								"type": "getStoredIntegerByKey",
+								"key": {
+									"type": "rawString",
+									"value": "rockCount"
+								}
+							}
+						},
+						"thenActions": [{
+								"type": "for",
+								"times": {
+									"type": "getStoredIntegerByKey",
+									"key": {
+										"type": "rawString",
+										"value": "rocksPerRing"
+									}
+								},
+								"unique": {
+									"type": "rawString",
+									"value": "rock"
+								},
+								"actions": [{
+									"type": "locationListAdd",
+									"list": {
+										"type": "getStoredListByKey",
+										"key": {
+											"type": "rawString",
+											"value": "locList"
+										}
+									},
+									"location": {
+										"type": "modifyLocationWithXYOffset",
+										"origin": {
+											"type": "createLocationFromOffset",
+											"origin": {
+												"type": "getTargetedLocation"
+											},
+											"dist": {
+												"type": "f*",
+												"value1": {
+													"type": "getStoredFloatByKey",
+													"key": {
+														"type": "rawString",
+														"value": "partialDamageRadius"
+													}
+												},
+												"value2": {
+													"type": "f+",
+													"value1": {
+														"type": "f+",
+														"value1": {
+															"type": "rawFloat",
+															"value": 0.5
+														},
+														"value2": {
+															"type": "i2f",
+															"value": {
+																"type": "iterator"
+															}
+														}
+													},
+													"value2": {
+														"type": "f*",
+														"value1": {
+															"type": "rawFloat",
+															"value": 0.5
+														},
+														"value2": {
+															"type": "f+",
+															"value1": {
+																"type": "rawFloat",
+																"value": 0.95
+															},
+															"value2": {
+																"type": "randomBoundedFloat",
+																"bound": {
+																	"type": "rawFloat",
+																	"value": 0.1
+																}
+															}
+														}
+													}
+												}
+											},
+											"angle": {
+												"type": "f+",
+												"value1": {
+													"type": "getStoredFloatByKey",
+													"key": {
+														"type": "rawString",
+														"value": "waveAngle"
+													}
+												},
+												"value2": {
+													"type": "f*",
+													"value1": {
+														"type": "pi"
+													},
+													"value2": {
+														"type": "f+",
+														"value1": {
+															"type": "i2f",
+															"value": {
+																"type": "iterator"
+															}
+														},
+														"value2": {
+															"type": "f/",
+															"value1": {
+																"type": "f*",
+																"value1": {
+																	"type": "i2f",
+																	"value": {
+																		"type": "iterator",
+																		"unique": {
+																			"type": "rawString",
+																			"value": "rock"
+																		}
+																	}
+																},
+																"value2": {
+																	"type": "rawFloat",
+																	"value": 2
+																}
+															},
+															"value2": {
+																"type": "i2f",
+																"value": {
+																	"type": "getStoredIntegerByKey",
+																	"key": {
+																		"type": "rawString",
+																		"value": "rocksPerRing"
+																	}
+																}
+															}
+														}
+													}
+												}
+											}
+										},
+										"xdist": {
+											"type": "f*",
+											"value1": {
+												"type": "getStoredFloatByKey",
+												"key": {
+													"type": "rawString",
+													"value": "maxJitter"
+												}
+											},
+											"value2": {
+												"type": "f-",
+												"value1": {
+													"type": "randomFloat"
+												},
+												"value2": {
+													"type": "rawFloat",
+													"value": 0.5
+												}
+											}
+										},
+										"ydist": {
+											"type": "f*",
+											"value1": {
+												"type": "getStoredFloatByKey",
+												"key": {
+													"type": "rawString",
+													"value": "maxJitter"
+												}
+											},
+											"value2": {
+												"type": "f-",
+												"value1": {
+													"type": "randomFloat"
+												},
+												"value2": {
+													"type": "rawFloat",
+													"value": 0.5
+												}
+											}
+										}
+									}
+								}]
+							},{
+								"type": "storeValueLocally",
+								"key": {
+									"type": "rawString",
+									"value": "rocksPerRing"
+								},
+								"valueToStore": {
+									"type": "i+",
+									"value1": {
+										"type": "getStoredIntegerByKey",
+										"key": {
+											"type": "rawString",
+											"value": "rocksPerRing"
+										}
+									},
+									"value2": {
+										"type": "rawInteger",
+										"value": 2
+									}
+								}
+						}]
+					}]
+				},{
+					"type": "storeValueLocally",
+					"key": {
+						"type": "rawString",
+						"value": "rocksLeft"
+					},
+					"valueToStore": {
+						"type": "getStoredIntegerByKey",
+						"key": {
+							"type": "rawString",
+							"value": "rockCount"
+						}
+					}
+			}]
+		},
+		"onEndCasting": [{
+				"type": "createTerrainBowlAtLocation",
+				"location": {
+					"type": "getTargetedLocation"
+				},
+				"radius": {
+					"type": "f*",
+					"value1": {
+						"type": "getAbilityArea"
+					},
+					"value2": {
+						"type": "rawFloat",
+						"value": 0.5
+					}
+				},
+				"depth": {
+					"type": "negativeFloat",
+					"value": {
+						"type": "f*",
+						"value1": {
+							"type": "f*",
+							"value1": {
+								"type": "getAbilityArea"
+							},
+							"value2": {
+								"type": "tan",
+								"angle": {
+									"type": "degToRad",
+									"angle": {
+										"type": "rawFloat",
+										"value": 30
+									}
+								}
+							}
+						},
+						"value2": {
+							"type": "rawFloat",
+							"value": 2
+						}
+					}
+				},
+				"sinkTime": {
+					"type": "rawFloat",
+					"value": 5000
+				},
+				"staticTime": {
+					"type": "f*",
+					"value1": {
+						"type": "f*",
+						"value1": {
+							"type": "getAbilityDataAsFloat",
+							"dataField": "B"
+						},
+						"value2": {
+							"type": "getAbilityDataAsFloat",
+							"dataField": "C"
+						}
+					},
+					"value2": {
+						"type": "rawFloat",
+						"value": 1000
+					}
+				},
+				"stopDuration": {
+					"type": "rawFloat",
+					"value": 500
+				}
+			},{
+				"type": "storeValueLocally",
+				"key": {
+					"type": "rawString",
+					"value": "deform"
+				},
+				"valueToStore": {
+					"type": "getLastCreatedFX"
+				}
+			},{
+				"type": "createDestructable",
+				"id": {
+					"type": "getAbilityUnitId"
+				},
+				"location": {
+					"type": "getTargetedLocation"
+				}
+			},{
+				"type": "createUberSplat",
+				"id": {
+					"type": "getWar3IDFromString",
+					"id": "NVOL"
+				},
+				"location": {
+					"type": "getTargetedLocation"
+				}
+			},{
+				"type": "storeValueLocally",
+				"key": {
+					"type": "rawString",
+					"value": "splat"
+				},
+				"valueToStore": {
+					"type": "getLastCreatedFX"
+				}
+			},{
+				"type": "runReuseAction",
+				"name": {
+					"type": "rawString",
+					"value": "calculateRockCount"
+				}
+			},{
+				"type": "storeValueLocally",
+				"key": {
+					"type": "rawString",
+					"value": "rockBaseDelay"
+				},
+				"valueToStore": {
+					"type": "f-",
+					"value1": {
+						"type": "f/",
+						"value1": {
+							"type": "f/",
+							"value1": {
+								"type": "getAbilityDataAsFloat",
+								"dataField": "C"
+							},
+							"value2": {
+								"type": "rawFloat",
+								"value": 2
+							}
+						},
+						"value2": {
+							"type": "i2f",
+							"value": {
+								"type": "getStoredIntegerByKey",
+								"key": {
+									"type": "rawString",
+									"value": "rockCount"
+								}
+							}
+						}
+					},
+					"value2": {
+						"type": "rawFloat",
+						"value": 0.01
+					}
+				}
+			},{
+				"type": "storeValueLocally",
+				"key": {
+					"type": "rawString",
+					"value": "waveDelay"
+				},
+				"valueToStore": {
+					"type": "rawFloat",
+					"value": 1
+				}
+			},{
+				"type": "storeValueLocally",
+				"key": {
+					"type": "rawString",
+					"value": "rockDelay"
+				},
+				"valueToStore": {
+					"type": "rawFloat",
+					"value": 0
+				}
+			},{
+				"type": "storeValueLocally",
+				"key": {
+					"type": "rawString",
+					"value": "finished"
+				},
+				"valueToStore": {
+					"type": "rawBoolean",
+					"value": "false"
+				}
+			},{
+				"type": "storeValueLocally",
+				"key": {
+					"type": "rawString",
+					"value": "flyingRocks"
+				},
+				"valueToStore": {
+					"type": "rawInteger",
+					"value": 0
+				}
+			},{
+				"type": "storeValueLocally",
+				"key": {
+					"type": "rawString",
+					"value": "rocksLeft"
+				},
+				"valueToStore": {
+					"type": "rawInteger",
+					"value": 0
+				}
+			},{
+				"type": "storeValueLocally",
+				"key": {
+					"type": "rawString",
+					"value": "partialDamageRadius"
+				},
+				"valueToStore": {
+					"type": "f/",
+					"value1": {
+						"type": "getAbilityArea"
+					},
+					"value2": {
+						"type": "f+",
+						"value1": {
+							"type": "getAbilityDataAsFloat",
+							"dataField": "A"
+						},
+						"value2": {
+							"type": "rawFloat",
+							"value": 0.5
+						}
+					}
+				}
+			},{
+				"type": "storeValueLocally",
+				"key": {
+					"type": "rawString",
+					"value": "fullDamageRadius"
+				},
+				"valueToStore": {
+					"type": "f/",
+					"value1": {
+						"type": "getStoredFloatByKey",
+						"key": {
+							"type": "rawString",
+							"value": "partialDamageRadius"
+						}
+					},
+					"value2": {
+						"type": "rawFloat",
+						"value": 2
+					}
+				}
+			},{
+				"type": "storeValueLocally",
+				"key": {
+					"type": "rawString",
+					"value": "maxJitter"
+				},
+				"valueToStore": {
+					"type": "f*",
+					"value1": {
+						"type": "getStoredFloatByKey",
+						"key": {
+							"type": "rawString",
+							"value": "fullDamageRadius"
+						}
+					},
+					"value2": {
+						"type": "rawFloat",
+						"value": 0.3
+					}
+				}
+			},{
+				"type": "beginChanneling"
+		}],
+		"onChannelTick": [{
+				"type": "periodicExecute",
+				"periodicActions": [{
+						"type": "storeValueLocally",
+						"key": {
+							"type": "rawString",
+							"value": "waveAngle"
+						},
+						"valueToStore": {
+							"type": "f*",
+							"value1": {
+								"type": "f*",
+								"value1": {
+									"type": "pi"
+								},
+								"value2": {
+									"type": "rawFloat",
+									"value": 2
+								}
+							},
+							"value2": {
+								"type": "randomFloat"
+							}
+						}
+					},{
+						"type": "runReuseAction",
+						"name": {
+							"type": "rawString",
+							"value": "generateRockLists"
+						}
+					},{
+						"type": "resetPeriodicExecute",
+						"unique": {
+							"type": "rawString",
+							"value": "rock"
+						}
+					},{
+						"type": "storeValueLocally",
+						"key": {
+							"type": "rawString",
+							"value": "waveDelay"
+						},
+						"valueToStore": {
+							"type": "getAbilityDataAsFloat",
+							"dataField": "C"
+						}
+				}],
+				"delaySeconds": {
+					"type": "getStoredFloatByKey",
+					"key": {
+						"type": "rawString",
+						"value": "waveDelay"
+					}
+				},
+				"unique": {
+					"type": "rawString",
+					"value": "wave"
+				}
+			},{
+				"type": "if",
+				"condition": {
+					"type": "i!=0",
+					"value": {
+						"type": "getStoredIntegerByKey",
+						"key": {
+							"type": "rawString",
+							"value": "rocksLeft"
+						}
+					}
+				},
+				"thenActions": [{
+					"type": "periodicExecute",
+					"periodicActions": [{
+							"type": "if",
+							"condition": {
+								"type": "i=0",
+								"value": {
+									"type": "getStoredIntegerByKey",
+									"key": {
+										"type": "rawString",
+										"value": "rocksLeft"
+									}
+								}
+							},
+							"thenActions": [{
+								"type": "break"
+							}]
+						},{
+							"type": "storeValueLocally",
+							"key": {
+								"type": "rawString",
+								"value": "rocksLeft"
+							},
+							"valueToStore": {
+								"type": "i-",
+								"value1": {
+									"type": "getStoredIntegerByKey",
+									"key": {
+										"type": "rawString",
+										"value": "rocksLeft"
+									}
+								},
+								"value2": {
+									"type": "rawInteger",
+									"value": 1
+								}
+							}
+						},{
+							"type": "runReuseActionWithArguments",
+							"name": {
+								"type": "rawString",
+								"value": "fireRock"
+							},
+							"arguments": {
+								"rockTar": {
+									"type": "getLocationFromList",
+									"list": {
+										"type": "getStoredListByKey",
+										"key": {
+											"type": "rawString",
+											"value": "locList"
+										}
+									},
+									"index": {
+										"type": "getIntegerFromList",
+										"list": {
+											"type": "getStoredSortableListByKey",
+											"key": {
+												"type": "rawString",
+												"value": "indexList"
+											}
+										},
+										"index": {
+											"type": "rawInteger",
+											"value": 0
+										}
+									}
+								}
+							}
+						},{
+							"type": "sortableListRemove",
+							"list": {
+								"type": "getStoredSortableListByKey",
+								"key": {
+									"type": "rawString",
+									"value": "indexList"
+								}
+							},
+							"index": {
+								"type": "rawInteger",
+								"value": 0
+							}
+						},{
+							"type": "storeValueLocally",
+							"key": {
+								"type": "rawString",
+								"value": "rockDelay"
+							},
+							"valueToStore": {
+								"type": "f*",
+								"value1": {
+									"type": "getStoredFloatByKey",
+									"key": {
+										"type": "rawString",
+										"value": "rockBaseDelay"
+									}
+								},
+								"value2": {
+									"type": "f+",
+									"value1": {
+										"type": "randomBoundedFloat",
+										"bound": {
+											"type": "rawFloat",
+											"value": 0.5
+										}
+									},
+									"value2": {
+										"type": "rawFloat",
+										"value": 0.5
+									}
+								}
+							}
+					}],
+					"delaySeconds": {
+						"type": "getStoredFloatByKey",
+						"key": {
+							"type": "rawString",
+							"value": "rockDelay"
+						}
+					},
+					"initialTick": {
+						"type": "rawBoolean",
+						"value": "true"
+					},
+					"unique": {
+						"type": "rawString",
+						"value": "rock"
+					}
+				}]
+			},{
+				"type": "periodicExecute",
+				"periodicActions": [{
+						"type": "finishChanneling"
+				}],
+				"delaySeconds": {
+					"type": "f*",
+					"value1": {
+						"type": "getAbilityDataAsFloat",
+						"dataField": "B"
+					},
+					"value2": {
+						"type": "getAbilityDataAsFloat",
+						"dataField": "C"
+					}
+				},
+				"unique": {
+					"type": "rawString",
+					"value": "end"
+				}
+		}],
+		"onEndChannel": [{
+				"type": "removeEffect",
+				"effect": {
+					"type": "getStoredFXByKey",
+					"key": {
+						"type": "rawString",
+						"value": "deform"
+					}
+				}
+			},{
+				"type": "removeEffect",
+				"effect": {
+					"type": "getStoredFXByKey",
+					"key": {
+						"type": "rawString",
+						"value": "splat"
+					}
+				}
+			},{
+				"type": "killDestructable",
+				"dest": {
+					"type": "getLastCreatedDestructable"
+				}
+			},{
+				"type": "storeValueLocally",
+				"instanceValue": {
+					"type": "rawBoolean",
+					"value": "false"
+				},
+				"key": {
+					"type": "catStrings",
+					"stringList": [{
+						"type": "rawString",
+						"value": "volc"
+					},{
+						"type": "i2s",
+						"value": {
+							"type": "getCastId"
+						}
+					}]
+				},
+				"valueToStore": {
+					"type": "getLastCreatedDestructable"
+				}
+			},{
+				"type": "createTimer",
+				"timeout": {
+					"type": "rawFloat",
+					"value": 5
+				},
+				"actions": [{
+						"type": "removeDestructable",
+						"dest": {
+							"type": "getStoredDestructableByKey",
+							"instanceValue": {
+								"type": "rawBoolean",
+								"value": "false"
+							},
+							"key": {
+								"type": "catStrings",
+								"stringList": [{
+									"type": "rawString",
+									"value": "volc"
+								},{
+									"type": "i2s",
+									"value": {
+										"type": "getCastId"
+									}
+								}]
+							}
+						}
+					},{
+						"type": "deleteStoredKey",
+						"key": {
+							"type": "catStrings",
+							"stringList": [{
+								"type": "rawString",
+								"value": "volc"
+							},{
+								"type": "i2s",
+								"value": {
+									"type": "getCastId"
+								}
+							}]
+						}
+				}]
+			},{
+				"type": "createTemporarySpellEffectAtLocation",
+				"location": {
+					"type": "getTargetedLocation"
+				},
+				"id": {
+					"type": "getFirstEffectId"
+				},
+				"effectType": "SPECIAL"
+			},{
+				"type": "if",
+				"condition": {
+					"type": "i=0",
+					"value": {
+						"type": "getStoredIntegerByKey",
+						"key": {
+							"type": "rawString",
+							"value": "flyingRocks"
+						}
+					}
+				},
+				"thenActions": [{
+					"type": "cleanUpCastInstance"
+				}],
+				"elseActions": [{
+					"type": "storeValueLocally",
+					"key": {
+						"type": "rawString",
+						"value": "finished"
+					},
+					"valueToStore": {
+						"type": "rawBoolean",
+						"value": "true"
+					}
+				}]
+		}]
+	},{
+		"ids": [{"id":"AOsh", "castId": "shockwave"}],
+		"type": "NORMAL_POINTTARGET",
+		"displayFields": {
+			"hideAreaCursor": {
+				"type": "rawBoolean",
+				"value": "true"
+			}
+		},
+		"onEndCasting": [{
+				"type": "createTerrainWaveAtLocation",
+				"startLocation": {
+					"type": "createLocationFromOffset",
+					"origin": {
+						"type": "getUnitLocation",
+						"unit": {
+							"type": "getCastingUnit"
+						}
+					},
+					"dist": {
+						"type": "getAbilityArea"
+					},
+					"angle": {
+						"type": "getAngleBetweenLocations",
+						"origin": {
+							"type": "getUnitLocation",
+							"unit": {
+								"type": "getCastingUnit"
+							}
+						},
+						"target": {
+							"type": "getTargetedLocation"
+						}
+					}
+				},
+				"targetLocation": {
+					"type": "getTargetedLocation"
+				},
+				"radius": {
+					"type": "getAbilityArea"
+				},
+				"depth": {
+					"type": "rawFloat",
+					"value": 100
+				},
+				"distance": {
+					"type": "getAbilityDataAsFloat",
+					"dataField": "C"
+				},
+				"speed": {
+					"type": "getAbilityProjectileSpeed"
+				},
+				"trailTime": {
+					"type": "rawInteger",
+					"value": 200
+				}
+			},{
+				"type": "createLocationTargetedCollisionProjectile",
+				"source": {
+					"type": "getCastingUnit"
+				},
+				"sourceLoc": {
+					"type": "createLocationFromOffset",
+					"origin": {
+						"type": "getUnitLocation",
+						"unit": {
+							"type": "getCastingUnit"
+						}
+					},
+					"dist": {
+						"type": "getAbilityArea"
+					},
+					"angle": {
+						"type": "getAngleBetweenLocations",
+						"origin": {
+							"type": "getUnitLocation",
+							"unit": {
+								"type": "getCastingUnit"
+							}
+						},
+						"target": {
+							"type": "getTargetedLocation"
+						}
+					}
+				},
+				"target": {
+					"type": "createLocationFromOffset",
+					"origin": {
+						"type": "getUnitLocation",
+						"unit": {
+							"type": "getCastingUnit"
+						}
+					},
+					"dist": {
+						"type": "f+",
+						"value1": {
+							"type": "getAbilityDataAsFloat",
+							"dataField": "C"
+						},
+						"value2": {
+							"type": "getAbilityArea"
+						}
+					},
+					"angle": {
+						"type": "getAngleBetweenLocations",
+						"origin": {
+							"type": "getUnitLocation",
+							"unit": {
+								"type": "getCastingUnit"
+							}
+						},
+						"target": {
+							"type": "getTargetedLocation"
+						}
+					}
+				},
+				"id": {
+					"type": "getAlias"
+				},
+				"startingRadius": {
+					"type": "getAbilityArea"
+				},
+				"endingRadius": {
+					"type": "getAbilityDataAsFloat",
+					"dataField": "D"
+				},
+				"provideCounts": {
+					"type": "rawBoolean",
+					"value": "true"
+				},
+				"onLaunch": [{
+					"type": "storeValueLocally",
+					"key": {
+						"type": "rawString",
+						"value": "remainDmg"
+					},
+					"valueToStore": {
+						"type": "getAbilityDataAsFloat",
+						"dataField": "B"
+					}
+				}],
+				"onPreHits": [{
+						"type": "storeValueLocally",
+						"key": {
+							"type": "rawString",
+							"value": "dpt"
+						},
+						"valueToStore": {
+							"type": "fMin",
+							"value1": {
+								"type": "getAbilityDataAsFloat",
+								"dataField": "A"
+							},
+							"value2": {
+								"type": "f/",
+								"value1": {
+									"type": "getStoredFloatByKey",
+									"key": {
+										"type": "rawString",
+										"value": "remainDmg"
+									}
+								},
+								"value2": {
+									"type": "i2f",
+									"value": {
+										"type": "getProjectileUnitTargets"
+									}
+								}
+							}
+						}
+				}],
+				"canHitTarget": [{
+					"type": "and",
+					"conditions": [{
+						"type": "isValidTarget",
+						"target": {
+							"type": "getProjectileHitWidget"
+						}
+					},{
+						"type": "isUnitEnemy",
+						"unit": {
+							"type": "getProjectileHitUnit"
+						}
+					}]
+				}],
+				"onHit": [{
+						"type": "storeValueLocally",
+						"key": {
+							"type": "rawString",
+							"value": "remainDmg"
+						},
+						"valueToStore": {
+							"type": "f-",
+							"value1": {
+								"type": "getStoredFloatByKey",
+								"key": {
+									"type": "rawString",
+									"value": "remainDmg"
+								}
+							},
+							"value2": {
+								"type": "fMin",
+								"value1": {
+									"type": "getUnitCurrentHp",
+									"unit": {
+										"type": "getProjectileHitUnit"
+									}
+								},
+								"value2": {
+									"type": "getStoredFloatByKey",
+									"key": {
+										"type": "rawString",
+										"value": "dpt"
+									}
+								}
+							}
+						}
+					},{
+						"type": "if",
+						"condition": {
+							"type": "f>",
+							"value1": {
+								"type": "getStoredFloatByKey",
+								"key": {
+									"type": "rawString",
+									"value": "dpt"
+								}
+							},
+							"value2": {
+								"type": "rawFloat",
+								"value": 1
+							}
+						},
+						"thenActions": [{
+								"type": "createTemporarySpellEffectOnUnit",
+								"target": {
+									"type": "getProjectileHitUnit"
+								},
+								"id": {
+									"type": "getAlias"
+								},
+								"effectType": "SPECIAL"
+							},{
+								"type": "damageTarget",
+								"source": {
+									"type": "getCastingUnit"
+								},
+								"target": {
+									"type": "getProjectileHitUnit"
+								},
+								"damageType": {
+									"type": "getDamageTypeFromString",
+									"id": {
+										"type": "rawString",
+										"value": "DISEASE"
+									}
+								},
+								"damage": {
+									"type": "getStoredFloatByKey",
+									"key": {
+										"type": "rawString",
+										"value": "dpt"
+									}
+								}
+						}],
+						"elseActions": []
+					}]
+		}]
+	},{
+		"ids": [{"id":"AHtc", "castId": "thunderclap"},{"id":"ACtc", "castId": "creepthunderclap"}],
+		"type": "NORMAL_NOTARGET",
+		"overrideFields": {
+			"extraTargetsAllowed": [{
+				"type": "rawTargetType",
+				"value": "ENEMIES"
+			}]
+		},
+		"reuseActions": {
+			"setupBuffs": [{
+					"type": "createNonStackingStatBuff",
+					"buffType": {
+						"type": "getNonStackingStatBuffTypeFromString",
+						"id": {
+							"type": "rawString",
+							"value": "ATKSPD"
+						}
+					},
+					"stackingKey": {
+						"type": "rawString",
+						"value": "slow"
+					},
+					"value": {
+						"type": "negativeFloat",
+						"value": {
+							"type": "getAbilityDataAsFloat",
+							"dataField": "D"
+						}
+					}
+				},{
+					"type": "storeValueLocally",
+					"key": {
+						"type": "rawString",
+						"value": "asbuff"
+					},
+					"instanceValue": {
+						"type": "rawBoolean",
+						"value": "false"
+					},
+					"valueToStore": {
+						"type": "getLastCreatedNonStackingStatBuff"
+					}
+				},{
+					"type": "createNonStackingStatBuff",
+					"buffType": {
+						"type": "getNonStackingStatBuffTypeFromString",
+						"id": {
+							"type": "rawString",
+							"value": "MVSPDPCT"
+						}
+					},
+					"stackingKey": {
+						"type": "rawString",
+						"value": "slow"
+					},
+					"value": {
+						"type": "negativeFloat",
+						"value": {
+							"type": "getAbilityDataAsFloat",
+							"dataField": "C"
+						}
+					}
+				},{
+					"type": "storeValueLocally",
+					"key": {
+						"type": "rawString",
+						"value": "mvbuff"
+					},
+					"instanceValue": {
+						"type": "rawBoolean",
+						"value": "false"
+					},
+					"valueToStore": {
+						"type": "getLastCreatedNonStackingStatBuff"
+					}
+			}],
+			"addBuff": [{
+					"type": "createTimedBuff",
+					"buffId": {
+						"type": "getFirstBuffId"
+					},
+					"duration": {
+						"type": "getAbilityDuration",
+						"target": {
+							"type": "getEnumUnit"
+						}
+					},
+					"magic": {
+						"type": "rawBoolean",
+						"value": "false"
+					},
+					"positive": {
+						"type": "rawBoolean",
+						"value": "false"
+					},
+					"statBuffs": [{
+							"type": "getStoredNonStackingStatBuffByKey",
+							"instanceValue": {
+								"type": "rawBoolean",
+								"value": "false"
+							},
+							"key": {
+								"type": "rawString",
+								"value": "mvbuff"
+							}
+						},{
+							"type": "getStoredNonStackingStatBuffByKey",
+							"instanceValue": {
+								"type": "rawBoolean",
+								"value": "false"
+							},
+							"key": {
+								"type": "rawString",
+								"value": "asbuff"
+							}
+					}]
+				},{
+					"type": "addBuff",
+					"target": {
+						"type": "getEnumUnit"
+					},
+					"buff": {
+						"type": "getLastCreatedBuff"
+					}
+			}]
+		},
+		"onAddDisabledAbility": [{
+			"type": "runReuseAction",
+			"name": {
+				"type": "rawString",
+				"value": "setupBuffs"
+			}
+		}],
+		"onLevelChange": [{
+			"type": "runReuseAction",
+			"name": {
+				"type": "rawString",
+				"value": "setupBuffs"
+			}
+		}],
+		"onEndCasting": [{
+				"type": "createTerrainRippleAtLocation",
+				"location": {
+					"type": "getUnitLocation",
+					"unit": {
+						"type": "getCastingUnit"
+					}
+				},
+				"radius": {
+					"type": "getAbilityArea"
+				},
+				"depth": {
+					"type": "rawFloat",
+					"value": 100
+				},
+				"rippleCount": {
+					"type": "rawInteger",
+					"value": 1
+				},
+				"period": {
+					"type": "rawFloat",
+					"value": 300
+				},
+				"spaceWaves": {
+					"type": "rawInteger",
+					"value": 1
+				},
+				"timeWaves": {
+					"type": "rawInteger",
+					"value": 2
+				},
+				"onlyNegative": {
+					"type": "rawBoolean",
+					"value": "true"
+				}
+			},{
+				"type": "createTemporarySpellEffectAtLocation",
+				"location": {
+					"type": "getUnitLocation",
+					"unit": {
+						"type": "getCastingUnit"
+					}
+				},
+				"id": {
+					"type": "getAlias"
+				},
+				"effectType": "CASTER"
+			},{
+				"type": "damageArea",
+				"source": {
+					"type": "getCastingUnit"
+				},
+				"target": {
+					"type": "getUnitLocation",
+					"unit": {
+						"type": "getCastingUnit"
+					}
+				},
+				"validTarget": {
+					"type": "and",
+					"conditions": [{
+						"type": "isUnitValidTarget",
+						"target": {
+							"type": "getEnumUnit"
+						}
+					},{
+						"type": "not",
+						"condition": {
+							"type": "isUnitFriend",
+							"unit": {
+								"type": "getEnumUnit"
+							}
+						}
+					}]
+				},
+				"damageType": {
+					"type": "getDamageTypeFromString",
+					"id": {
+						"type": "rawString",
+						"value": "SONIC"
+					}
+				},
+				"damage": {
+					"type": "getAbilityDataAsFloat",
+					"dataField": "A"
+				},
+				"radius": {
+					"type": "getAbilityArea"
+				},
+				"extraActions": [{
+					"type": "if",
+					"condition": {
+						"type": "isUnitBuilding",
+						"unit": {
+							"type": "getEnumUnit"
+						}
+					},
+					"elseActions": [{
+						"type": "runReuseAction",
+						"name": {
+							"type": "rawString",
+							"value": "addBuff"
+						}
+					}]
+				}]
+		}]
+	},{
+		"ids": [{"id":"AOws", "castId": "stomp"}],
+		"type": "INHERIT",
+		"parentId": "AHtc",
+		"reuseActions": {
+			"setupBuffs": [],
+			"addBuff": [{
+				"type": "addStunBuff",
+				"buffId": {
+					"type": "getFirstBuffId"
+				},
+				"unit": {
+					"type": "getEnumUnit"
+				},
+				"duration": {
+					"type": "getAbilityDuration",
+					"target": {
+						"type": "getEnumUnit"
+					}
+				}
+			}]
+		}
+	}]
+}

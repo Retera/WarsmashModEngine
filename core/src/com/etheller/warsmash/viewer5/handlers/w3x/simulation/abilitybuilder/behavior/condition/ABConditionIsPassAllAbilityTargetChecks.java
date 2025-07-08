@@ -20,7 +20,7 @@ public class ABConditionIsPassAllAbilityTargetChecks extends ABCondition {
 	@Override
 	public Boolean callback(CSimulation game, CUnit casterUnit, Map<String, Object> localStore, final int castId) {
 		CUnit theCaster = casterUnit;
-		
+
 		if (caster != null) {
 			theCaster = caster.callback(game, casterUnit, localStore, castId);
 		}
@@ -28,8 +28,10 @@ public class ABConditionIsPassAllAbilityTargetChecks extends ABCondition {
 		AbilityBuilderActiveAbility abil = (AbilityBuilderActiveAbility) localStore.get(ABLocalStoreKeys.ABILITY);
 		final BooleanAbilityTargetCheckReceiver<CWidget> booleanTargetReceiver = BooleanAbilityTargetCheckReceiver
 				.<CWidget>getInstance().reset();
-		
-		abil.checkCanTarget(game, theCaster, abil.getBaseOrderId(), false, target.callback(game, casterUnit, localStore, castId), booleanTargetReceiver);
+
+		abil.checkCanTarget(game, theCaster, abil.getBaseOrderId(),
+				((Boolean) localStore.get(ABLocalStoreKeys.combineKey(ABLocalStoreKeys.ISAUTOCAST, castId))),
+				target.callback(game, casterUnit, localStore, castId), booleanTargetReceiver);
 
 		if (booleanTargetReceiver.isTargetable()) {
 			return true;

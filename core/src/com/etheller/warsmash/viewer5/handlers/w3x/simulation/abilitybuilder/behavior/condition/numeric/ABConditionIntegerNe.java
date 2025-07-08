@@ -16,7 +16,7 @@ public class ABConditionIntegerNe extends ABCondition {
 	public Boolean callback(CSimulation game, CUnit caster, Map<String, Object> localStore, final int castId) {
 		Integer v1 = value1.callback(game, caster, localStore, castId);
 		Integer v2 = value2.callback(game, caster, localStore, castId);
-		return v1!=v2;
+		return !v1.equals(v2);
 	}
 
 }

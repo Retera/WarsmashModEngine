@@ -1,6 +1,7 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.parser;
 
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.booleancallbacks.ABBooleanCallback;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.floatcallbacks.ABFloatCallback;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.idcallbacks.ABIDCallback;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.integercallbacks.ABIntegerCallback;
 
@@ -13,6 +14,7 @@ public class AbilityBuilderSpecialDisplayFields {
 	private ABIntegerCallback lumberCost;
 	
 	private ABBooleanCallback hideAreaCursor;
+	private ABFloatCallback areaCursorOverride;
 	private ABBooleanCallback instantCast;
 	private ABBooleanCallback castlessNoTarget;
 	
@@ -37,6 +39,8 @@ public class AbilityBuilderSpecialDisplayFields {
 
 		if (this.hideAreaCursor == null)
 			this.hideAreaCursor = parent.hideAreaCursor;
+		if (this.areaCursorOverride == null)
+			this.areaCursorOverride = parent.areaCursorOverride;
 		if (this.instantCast == null)
 			this.instantCast = parent.instantCast;
 		if (this.castlessNoTarget == null)
@@ -81,6 +85,12 @@ public class AbilityBuilderSpecialDisplayFields {
 	}
 	public void setHideAreaCursor(ABBooleanCallback hideAreaCursor) {
 		this.hideAreaCursor = hideAreaCursor;
+	}
+	public ABFloatCallback getAreaCursorOverride() {
+		return areaCursorOverride;
+	}
+	public void setAreaCursorOverride(ABFloatCallback areaCursorOverride) {
+		this.areaCursorOverride = areaCursorOverride;
 	}
 	public ABBooleanCallback getInstantCast() {
 		return instantCast;

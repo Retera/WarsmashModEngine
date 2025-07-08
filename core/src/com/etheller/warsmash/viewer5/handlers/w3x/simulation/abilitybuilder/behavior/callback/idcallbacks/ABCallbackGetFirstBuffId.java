@@ -12,6 +12,8 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.type
 
 public class ABCallbackGetFirstBuffId extends ABIDCallback {
 
+	private ABIDCallback defaultId;
+	
 	@SuppressWarnings("unchecked")
 	@Override
 	public War3ID callback(final CSimulation game, final CUnit caster, final Map<String, Object> localStore,
@@ -21,6 +23,9 @@ public class ABCallbackGetFirstBuffId extends ABIDCallback {
 				.getBuffs();
 		if ((buffs != null) && !buffs.isEmpty()) {
 			return buffs.get(0);
+		}
+		if (defaultId != null) {
+			return defaultId.callback(game, caster, localStore, castId);
 		}
 		return null;
 	}

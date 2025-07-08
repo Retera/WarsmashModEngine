@@ -8,11 +8,11 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CWeaponType;
 
 public class ABCallbackRawWeaponType extends ABWeaponTypeCallback {
 
-	private CWeaponType type;
+	private CWeaponType value;
 	
 	@Override
 	public CWeaponType callback(CSimulation game, CUnit caster, Map<String, Object> localStore, final int castId) {
-		return type;
+		return value;
 	}
 
 }

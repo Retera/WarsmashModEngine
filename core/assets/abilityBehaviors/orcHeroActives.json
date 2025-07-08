@@ -9,6 +9,24 @@
 			}
 		},
 		"reuseActions": {
+			"setupBuffs": [{
+				"type": "createNonStackingStatBuff",
+				"buffType": {
+					"type": "getNonStackingStatBuffTypeFromString",
+					"id": {
+						"type": "rawString",
+						"value": "MVSPDPCT"
+					}
+				},
+				"stackingKey": {
+					"type": "rawString",
+					"value": "windwalk"
+				},
+				"value": {
+					"type": "getAbilityDataAsFloat",
+					"dataField": "B"
+				}
+			}],
 			"addStateMods": [{
 					"type": "changeAttackActionToMovement"
 				},{
@@ -127,6 +145,12 @@
 			}]
 		},
 		"onAddDisabledAbility": [{
+				"type": "runReuseAction",
+				"name": {
+					"type": "rawString",
+					"value": "setupBuffs"
+				}
+			},{
 				"type": "createStateModBuff",
 				"buffType": "INVISIBLE"
 			},{
@@ -173,23 +197,6 @@
 				},
 				"valueToStore": {
 					"type": "getLastCreatedStateModBuff"
-				}
-			},{
-				"type": "createNonStackingStatBuff",
-				"buffType": {
-					"type": "getNonStackingStatBuffTypeFromString",
-					"id": {
-						"type": "rawString",
-						"value": "MVSPDPCT"
-					}
-				},
-				"stackingKey": {
-					"type": "rawString",
-					"value": "windwalk"
-				},
-				"value": {
-					"type": "getAbilityDataAsFloat",
-					"dataField": "B"
 				}
 			},{
 				"type": "createAttackPreDamageListener",
@@ -315,13 +322,10 @@
 				}]
 		}],
 		"onLevelChange": [{
-			"type": "updateNonStackingStatBuff",
-			"buff": {
-				"type": "getLastCreatedNonStackingStatBuff"
-			},
-			"value": {
-				"type": "getAbilityDataAsFloat",
-				"dataField": "B"
+			"type": "runReuseAction",
+			"name": {
+				"type": "rawString",
+				"value": "setupBuffs"
 			}
 		}],
 		"onEndCasting": [{
@@ -332,20 +336,15 @@
 				"duration": {
 					"type": "getAbilityHeroDuration"
 				},
+				"statBuffs": [{
+					"type": "getLastCreatedNonStackingStatBuff"
+				}],
 				"onAddActions": [{
 						"type": "disableAbility"
 					},{
 						"type": "setUnitMovementTypeNoCollision",
 						"unit": {
 							"type": "getBuffedUnit"
-						}
-					},{
-						"type": "addNonStackingStatBuff",
-						"targetUnit": {
-							"type": "getBuffedUnit"
-						},
-						"buff": {
-							"type": "getLastCreatedNonStackingStatBuff"
 						}
 					},{
 						"type": "addAttackModifier",
@@ -433,14 +432,6 @@
 						"active": {
 							"type": "rawBoolean",
 							"value": "false"
-						}
-					},{
-						"type": "removeNonStackingStatBuff",
-						"targetUnit": {
-							"type": "getBuffedUnit"
-						},
-						"buff": {
-							"type": "getLastCreatedNonStackingStatBuff"
 						}
 					},{
 						"type": "removeAttackModifier",

@@ -46,6 +46,7 @@ public class CBehaviorMove implements CBehavior {
 	private boolean firstPathfindJob = false;
 	private boolean pathfindingFailedGiveUp;
 	private int giveUpUntilTurnTick;
+	private int prevSpeed = 0;
 
 	public CBehaviorMove reset(final int highlightOrderId, final AbilityTarget target) {
 		target.visit(this.targetVisitingResetter.reset(highlightOrderId));
@@ -187,6 +188,8 @@ public class CBehaviorMove implements CBehavior {
 		final float propulsionWindow = this.unit.getPropWindow();
 		final float turnRate = this.unit.getTurnRate();
 		final int speed = this.unit.getSpeed();
+		final boolean speedChange = speed != prevSpeed;
+		this.prevSpeed = speed;
 
 		if (delta < -180) {
 			delta = 360 + delta;
@@ -325,7 +328,12 @@ public class CBehaviorMove implements CBehavior {
 						return this;
 					}
 				}
-				this.unit.getUnitAnimationListener().playWalkAnimation(false, this.unit.getSpeed(), true);
+				if (speed > 0) {
+					this.unit.getUnitAnimationListener().playWalkAnimation(speedChange, speed, true);
+				} else {
+					this.unit.getUnitAnimationListener().playAnimation(false, PrimaryTag.STAND,
+							SequenceUtils.EMPTY, 1.0f, true);
+				}
 				this.wasWithinPropWindow = true;
 			}
 			while (continueDistance > 0);
@@ -503,5 +511,14 @@ public class CBehaviorMove implements CBehavior {
 	@Override
 	public CBehaviorCategory getBehaviorCategory() {
 		return CBehaviorCategory.MOVEMENT;
+	}
+	
+	public AbilityTarget getTarget() {
+		if (this.rangedBehavior != null) {
+			return this.rangedBehavior.getTarget();
+		} else if (this.followUnit != null) {
+			return this.followUnit;
+		}
+		return new AbilityPointTarget(this.target.x, this.target.y);
 	}
 }

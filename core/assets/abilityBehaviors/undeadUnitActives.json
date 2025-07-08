@@ -298,9 +298,9 @@
 		"ids": [{"id":"Arpl", "castId": "replenishlife", "autoCastOnId": "replenishlifeon", "autoCastOffId": "replenishlifeoff", "autoCastType": "NOTARGET"}],
 		"type": "NORMAL_NOTARGET",
 		"overrideFields": {
-			"castTimeOverride": {
-				"type": "rawFloat",
-				"value": 0.0
+			"ignoreCastTime": {
+				"type": "rawBoolean",
+				"value": "true"
 			}
 		},
 		"specialFields": {
@@ -353,7 +353,7 @@
 			"range": {
 				"type": "getAbilityArea"
 			},
-			"conditions": [{
+			"condition": {
 				"type": "and",
 				"conditions": [{
 					"type": "isUnitValidTarget",
@@ -367,7 +367,7 @@
 						"value": "checkValidTarget"
 					}
 				}]
-			}]
+			}
 		}],
 		"onEndCasting": [{
 				"type": "createTemporarySpellEffectOnUnit",

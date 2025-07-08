@@ -21,16 +21,18 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.projectile.C
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.projectile.CAttackProjectile;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.projectile.CCollisionProjectile;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.projectile.CJassProjectile;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.projectile.CPsuedoProjectile;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.projectile.CPseudoProjectile;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CEffectType;
 
 public interface SimulationRenderController {
+	char getTileset();
+	
 	CAttackProjectile createAttackProjectile(CSimulation simulation, float launchX, float launchY, float launchFacing,
 			CUnit source, CUnitAttackMissile attack, AbilityTarget target, float damage, int bounceIndex,
 			CUnitAttackListener attackListener, CUnitAttackSettings settings);
 
 	CAbilityProjectile createProjectile(CSimulation cSimulation, float launchX, float launchY, float launchFacing,
-			float speed, boolean homing, CUnit source, War3ID spellAlias, AbilityTarget target,
+			Float speed, Boolean homing, CUnit source, War3ID spellAlias, AbilityTarget target,
 			CAbilityProjectileListener projectileListener);
 
 	CAbilityProjectile createProjectile(CSimulation cSimulation, float launchX, float launchY, float launchFacing,
@@ -41,11 +43,11 @@ public interface SimulationRenderController {
 			float speed, boolean homing, CUnit source, War3ID spellAlias, AbilityTarget target);
 
 	CCollisionProjectile createCollisionProjectile(CSimulation cSimulation, float launchX, float launchY,
-			float launchFacing, float projectileSpeed, boolean homing, CUnit source, War3ID spellAlias,
+			float launchFacing, Float projectileSpeed, Boolean homing, CUnit source, War3ID spellAlias,
 			AbilityTarget target, int maxHits, int hitsPerTarget, float startingRadius, float finalRadius,
 			float collisionInterval, CAbilityCollisionProjectileListener projectileListener, boolean provideCounts);
 
-	CPsuedoProjectile createPseudoProjectile(CSimulation cSimulation, float launchX, float launchY, float launchFacing,
+	CPseudoProjectile createPseudoProjectile(CSimulation cSimulation, float launchX, float launchY, float launchFacing,
 			float projectileSpeed, float projectileStepInterval, int projectileArtSkip, boolean homing, CUnit source,
 			War3ID spellAlias, CEffectType effectType, int effectArtIndex, AbilityTarget target, int maxHits,
 			int hitsPerTarget, float startingRadius, float finalRadius,
@@ -63,10 +65,14 @@ public interface SimulationRenderController {
 	SimulationRenderComponentLightning createAbilityLightning(CSimulation simulation, War3ID lightningId, CUnit source,
 			CUnit target, int index, Float duration);
 
+	SimulationRenderComponent createStaticUberSplat(float x, float y, War3ID id);
+
 	CUnit createUnit(CSimulation simulation, final War3ID typeId, final int playerIndex, final float x, final float y,
 			final float facing);
 
 	CItem createItem(CSimulation simulation, final War3ID typeId, final float x, final float y);
+
+	void updateItemModel(CItem item);
 
 	CDestructable createDestructable(War3ID typeId, float x, float y, float facing, float scale, int variation);
 
@@ -149,7 +155,7 @@ public interface SimulationRenderController {
 
 	void setBlight(float x, float y, float radius, boolean blighted);
 
-	void unitUpdatedType(CUnit unit, War3ID typeId);
+	void unitUpdatedType(CUnit unit, War3ID typeId, boolean updatePortrait);
 
 	void changeUnitColor(CUnit unit, int playerIndex);
 
@@ -163,6 +169,18 @@ public interface SimulationRenderController {
 
 	float[] getUnitVertexColor(CUnit unit);
 
+	int[] getTerrainModBufferSize(float x, float y, float width, float height);
+
+	int[] getTerrainModBufferSize(float centerX, float centerY, float radius);
+
+	void adjustTerrain(float x, float y, float i);
+
+	void adjustTerrain(int[] rect, float[] modBuffer);
+
+	float getTerrainSpaceX(float x);
+
+	float getTerrainSpaceY(float y);
+	
 	int getTerrainHeight(float x, float y);
 
 	boolean isTerrainRomp(float x, float y);
@@ -170,5 +188,7 @@ public interface SimulationRenderController {
 	boolean isTerrainWater(float x, float y);
 
 	void changeUnitScale(CUnit unit, float scale, boolean multiplier);
+
+	SimulationRenderComponent spawnAbilitySoundEffect(float x, float y, War3ID alias, boolean looping);
 
 }

@@ -9,13 +9,17 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnitType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.ability.AbilityBuilderAbility;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.ability.AbilityBuilderActiveAbility;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABLocalStoreKeys;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.handler.TransformationHandler;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.handler.TransformationHandler.OnTransformationActions;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehavior;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehaviorCategory;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehaviorVisitor;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.JassGameEventsWar3;
 
 public class CBehaviorFinishTransformation implements CBehavior {
+	private CUnit sourceUnit;
 	private Map<String, Object> localStore;
 	private OnTransformationActions actions;
 	private CUnit unit;
@@ -45,12 +49,13 @@ public class CBehaviorFinishTransformation implements CBehavior {
 
 	private int castStartTick = 0;
 
-	public CBehaviorFinishTransformation(Map<String, Object> localStore, final CUnit unit,
-			AbilityBuilderAbility ability, CUnitType newType, final boolean keepRatios,
-			OnTransformationActions actions, boolean addAlternateTagAfter, final int visibleOrderId, boolean permanent,
-			float duration, float transformationTime, float landingDelay, float altitudeAdjustmentDelay,
+	public CBehaviorFinishTransformation(CUnit sourceUnit, Map<String, Object> localStore, final CUnit unit,
+			AbilityBuilderAbility ability, CUnitType newType, final boolean keepRatios, OnTransformationActions actions,
+			boolean addAlternateTagAfter, final int visibleOrderId, boolean permanent, float duration,
+			float transformationTime, float landingDelay, float altitudeAdjustmentDelay,
 			float altitudeAdjustmentDuration, boolean immediateLanding, boolean immediateTakeoff, War3ID buffId,
 			CUnitType baseTypeForDuration, boolean instantTransformAtDurationEnd) {
+		this.sourceUnit = sourceUnit;
 		this.localStore = localStore;
 		this.actions = actions;
 		this.unit = unit;
@@ -61,7 +66,8 @@ public class CBehaviorFinishTransformation implements CBehavior {
 		this.permanent = permanent;
 		this.duration = duration;
 		this.transformationTime = transformationTime;
-		this.transformationTickDuration = Math.round(transformationTime / WarsmashConstants.SIMULATION_STEP_TIME);
+		// Minus one tick, as we need to wait one tick to start this behavior
+		this.transformationTickDuration = Math.round(transformationTime / WarsmashConstants.SIMULATION_STEP_TIME) - 1;
 		this.altitudeAdjustmentDelay = altitudeAdjustmentDelay;
 		this.altitudeAdjustmentDuration = altitudeAdjustmentDuration;
 		this.landingDelay = landingDelay;
@@ -95,24 +101,42 @@ public class CBehaviorFinishTransformation implements CBehavior {
 		}
 
 		final int ticksSinceCast = game.getGameTurnTick() - this.castStartTick;
-		if (ticksSinceCast > this.transformationTickDuration) {
+		if (ticksSinceCast >= this.transformationTickDuration) {
 			TransformationHandler.finishSlowTransformation(game, localStore, unit, newType, keepRatios, actions,
 					ability, addAlternateTagAfter, permanent, takingOff);
 
 			if (instantTransformAtDurationEnd) {
-				TransformationHandler.createInstantTransformBackBuff(game, localStore, unit, baseTypeForDuration,
+				TransformationHandler.createInstantTransformBackBuff(game, sourceUnit, localStore, unit, baseTypeForDuration,
 						keepRatios, actions.createUntransformActions(), ability, buffId, addAlternateTagAfter,
 						transformationTime, duration, permanent);
 			} else {
-				TransformationHandler.createSlowTransformBackBuff(game, localStore, unit, baseTypeForDuration,
+				TransformationHandler.createSlowTransformBackBuff(game, sourceUnit, localStore, unit, baseTypeForDuration,
 						keepRatios, actions.createUntransformActions(), ability, buffId, addAlternateTagAfter,
 						transformationTime, duration, permanent, takingOff, landing, immediateTakeoff, immediateLanding,
 						altitudeAdjustmentDelay, landingDelay, altitudeAdjustmentDuration);
 			}
 
+			this.unit.fireSpellEvents(game, JassGameEventsWar3.EVENT_UNIT_SPELL_FINISH, this.ability, null);
+			this.unit.fireSpellEvents(game, JassGameEventsWar3.EVENT_UNIT_SPELL_ENDCAST, this.ability, null);
+			CBehavior newBehavior = (CBehavior) localStore.get(ABLocalStoreKeys.NEWBEHAVIOR);
+			if (this.equals(newBehavior)) {
+			}
+			localStore.remove(ABLocalStoreKeys.PREVIOUSBEHAVIOR);
+			if (newBehavior != null) {
+				localStore.remove(ABLocalStoreKeys.NEWBEHAVIOR);
+				cleanupInputs();
+				return newBehavior;
+			}
+			cleanupInputs();
 			return this.unit.pollNextOrderBehavior(game);
 		}
 		return this;
+	}
+
+	private void cleanupInputs() {
+		if (this.ability instanceof AbilityBuilderActiveAbility) {
+			((AbilityBuilderActiveAbility) this.ability).cleanupInputs(this.actions.getCastId());
+		}
 	}
 
 	@Override

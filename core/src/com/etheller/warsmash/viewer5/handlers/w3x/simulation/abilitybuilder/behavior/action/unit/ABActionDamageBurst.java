@@ -1,5 +1,6 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.action.unit;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -31,6 +32,9 @@ public class ABActionDamageBurst implements ABAction {
 	private ABFloatCallback partialDamage;
 	private ABBooleanCallback validTarget;
 
+	private ABFloatCallback unitSpecificDamageMod;
+	private ABFloatCallback maxDamage;
+
 	private ABBooleanCallback isAttack;
 	private ABBooleanCallback isRanged;
 	private ABAttackTypeCallback attackType;
@@ -41,7 +45,7 @@ public class ABActionDamageBurst implements ABAction {
 	private ABBooleanCallback explodeOnDeath;
 	private ABBooleanCallback onlyDamageSummons;
 	private ABBooleanCallback nonlethal;
-	
+
 	private List<ABAction> extraActions;
 
 	@Override
@@ -81,6 +85,7 @@ public class ABActionDamageBurst implements ABAction {
 			float pfullRad = 0;
 			float parRad = 0;
 			float parDam = 0;
+			float theMaxDamage = 0;
 			CUnit theSource = caster;
 			if (this.fullDamageRadius != null) {
 				pfullRad = this.fullDamageRadius.callback(game, caster, localStore, castId);
@@ -90,6 +95,9 @@ public class ABActionDamageBurst implements ABAction {
 			}
 			if (this.partialDamage != null) {
 				parDam = this.partialDamage.callback(game, caster, localStore, castId);
+			}
+			if (this.maxDamage != null) {
+				theMaxDamage = this.maxDamage.callback(game, caster, localStore, castId);
 			}
 			if (this.source != null) {
 				theSource = this.source.callback(game, caster, localStore, castId);
@@ -103,34 +111,125 @@ public class ABActionDamageBurst implements ABAction {
 			final CUnit ftheSource = theSource;
 			final float baseDamage = damage.callback(game, caster, localStore, castId);
 
-			game.getWorldCollision().enumUnitsInRange(loc.getX(), loc.getY(), Math.max(pfullRad, partialRad),
-					new CUnitEnumFunction() {
-						@Override
-						public boolean call(final CUnit enumUnit) {
-							localStore.put(ABLocalStoreKeys.ENUMUNIT + castId, enumUnit);
-							if (validTarget == null || validTarget.callback(game, caster, localStore, castId)) {
-								if (enumUnit.canReach(loc, fullRad)) {
-									enumUnit.damage(game, ftheSource, flags, ftheAttackType, ftheDamageType,
-											CWeaponSoundTypeJass.WHOKNOWS.name(), baseDamage);
-									if (extraActions != null) {
-										for (ABAction action : extraActions) {
-											action.runAction(game, caster, localStore, castId);
+			if (theMaxDamage > 0) {
+				List<CUnit> fullhits = new ArrayList<>();
+				List<CUnit> partialhits = new ArrayList<>();
+				List<Float> counts = new ArrayList<>();
+				float partialRatio = partialDam / baseDamage;
+				game.getWorldCollision().enumUnitsInRange(loc.getX(), loc.getY(), Math.max(pfullRad, partialRad),
+						new CUnitEnumFunction() {
+							@Override
+							public boolean call(final CUnit enumUnit) {
+								localStore.put(ABLocalStoreKeys.ENUMUNIT + castId, enumUnit);
+								if (validTarget == null || validTarget.callback(game, caster, localStore, castId)) {
+									if (enumUnit.canReach(loc, fullRad)) {
+										fullhits.add(enumUnit);
+										if (unitSpecificDamageMod != null) {
+											counts.add(
+													unitSpecificDamageMod.callback(game, caster, localStore, castId));
+										} else {
+											counts.add(1f);
 										}
-									}
-								} else if (enumUnit.canReach(loc, partialRad)) {
-									enumUnit.damage(game, ftheSource, flags, ftheAttackType, ftheDamageType,
-											CWeaponSoundTypeJass.WHOKNOWS.name(), partialDam);
-									if (extraActions != null) {
-										for (ABAction action : extraActions) {
-											action.runAction(game, caster, localStore, castId);
+									} else if (enumUnit.canReach(loc, partialRad)) {
+										partialhits.add(enumUnit);
+										if (unitSpecificDamageMod != null) {
+											counts.add(partialRatio
+													* unitSpecificDamageMod.callback(game, caster, localStore, castId));
+										} else {
+											counts.add(partialRatio);
 										}
 									}
 								}
+								localStore.remove(ABLocalStoreKeys.ENUMUNIT + castId);
+								return false;
 							}
-							localStore.remove(ABLocalStoreKeys.ENUMUNIT + castId);
-							return false;
+						});
+
+				float count = 0;
+				for (float c : counts) {
+					count += c;
+				}
+				float damPerTar = baseDamage * count > theMaxDamage
+						? theMaxDamage / (fullhits.size() + partialRatio * partialhits.size())
+						: baseDamage;
+				for (CUnit hit : fullhits) {
+					localStore.put(ABLocalStoreKeys.ENUMUNIT + castId, hit);
+					if (extraActions != null) {
+						for (ABAction action : extraActions) {
+							action.runAction(game, caster, localStore, castId);
 						}
-					});
+					}
+					if (unitSpecificDamageMod != null) {
+						hit.damage(game, ftheSource, flags, ftheAttackType, ftheDamageType,
+								CWeaponSoundTypeJass.WHOKNOWS.name(),
+								damPerTar * unitSpecificDamageMod.callback(game, caster, localStore, castId));
+					} else {
+						hit.damage(game, ftheSource, flags, ftheAttackType, ftheDamageType,
+								CWeaponSoundTypeJass.WHOKNOWS.name(), damPerTar);
+					}
+				}
+				for (CUnit hit : partialhits) {
+					localStore.put(ABLocalStoreKeys.ENUMUNIT + castId, hit);
+					if (extraActions != null) {
+						for (ABAction action : extraActions) {
+							action.runAction(game, caster, localStore, castId);
+						}
+					}
+					if (unitSpecificDamageMod != null) {
+						hit.damage(game, ftheSource, flags, ftheAttackType, ftheDamageType,
+								CWeaponSoundTypeJass.WHOKNOWS.name(), damPerTar * partialRatio
+										* unitSpecificDamageMod.callback(game, caster, localStore, castId));
+					} else {
+						hit.damage(game, ftheSource, flags, ftheAttackType, ftheDamageType,
+								CWeaponSoundTypeJass.WHOKNOWS.name(), damPerTar * partialRatio);
+					}
+				}
+				localStore.remove(ABLocalStoreKeys.ENUMUNIT + castId);
+
+			} else {
+				game.getWorldCollision().enumUnitsInRange(loc.getX(), loc.getY(), Math.max(pfullRad, partialRad),
+						new CUnitEnumFunction() {
+							@Override
+							public boolean call(final CUnit enumUnit) {
+								localStore.put(ABLocalStoreKeys.ENUMUNIT + castId, enumUnit);
+								if (validTarget == null || validTarget.callback(game, caster, localStore, castId)) {
+									if (enumUnit.canReach(loc, fullRad)) {
+										if (extraActions != null) {
+											for (ABAction action : extraActions) {
+												action.runAction(game, caster, localStore, castId);
+											}
+										}
+										if (unitSpecificDamageMod != null) {
+											enumUnit.damage(game, ftheSource, flags, ftheAttackType, ftheDamageType,
+													CWeaponSoundTypeJass.WHOKNOWS.name(),
+													baseDamage * unitSpecificDamageMod.callback(game, caster,
+															localStore, castId));
+										} else {
+											enumUnit.damage(game, ftheSource, flags, ftheAttackType, ftheDamageType,
+													CWeaponSoundTypeJass.WHOKNOWS.name(), baseDamage);
+										}
+									} else if (enumUnit.canReach(loc, partialRad)) {
+										if (extraActions != null) {
+											for (ABAction action : extraActions) {
+												action.runAction(game, caster, localStore, castId);
+											}
+										}
+										if (unitSpecificDamageMod != null) {
+											enumUnit.damage(game, ftheSource, flags, ftheAttackType, ftheDamageType,
+													CWeaponSoundTypeJass.WHOKNOWS.name(),
+													partialDam * unitSpecificDamageMod.callback(game, caster,
+															localStore, castId));
+										} else {
+											enumUnit.damage(game, ftheSource, flags, ftheAttackType, ftheDamageType,
+													CWeaponSoundTypeJass.WHOKNOWS.name(), partialDam);
+										}
+									}
+								}
+								localStore.remove(ABLocalStoreKeys.ENUMUNIT + castId);
+								return false;
+							}
+						});
+			}
 
 		}
 	}

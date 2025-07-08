@@ -17,8 +17,9 @@ public class ABDestructableBuff implements CDestructableBuff {
 	protected static int NEGATIVE = 0b10;
 	protected static int DISPELLABLE = 0b100;
 	protected static int HERO = 0b1000;
-	protected static int PHYSICAL = 0b10000;
-	protected static int AURA = 0b100000;
+	protected static int MAGIC = 0b10000;
+	protected static int PHYSICAL = 0b100000;
+	protected static int AURA = 0b1000000;
 	protected int flags = 0b0;
 
 	private int handleId;
@@ -135,6 +136,15 @@ public class ABDestructableBuff implements CDestructableBuff {
 	@Override
 	public boolean isHero() {
 		return ((this.flags & HERO) != 0);
+	}
+	
+	public void setMagic(boolean magic) {
+		this.flags = magic ? this.flags | MAGIC : this.flags & ~MAGIC;
+	}
+
+	@Override
+	public boolean isMagic() {
+		return  ((this.flags & MAGIC) != 0);
 	}
 	
 	public void setPhysical(boolean physical) {

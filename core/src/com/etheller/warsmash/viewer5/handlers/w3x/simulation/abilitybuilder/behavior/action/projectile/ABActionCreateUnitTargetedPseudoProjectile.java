@@ -52,7 +52,7 @@ public class ABActionCreateUnitTargetedPseudoProjectile implements ABSingleActio
 	public void runAction(final CSimulation game, final CUnit caster, final Map<String, Object> localStore,
 			final int castId) {
 		float theSpeed = 0;
-		boolean isHoming = true;
+		boolean isHoming = false;
 		int theMaxHits = 0;
 		int theHitsPerTarget = 1;
 		float theStartingRadius = 0;
@@ -85,13 +85,11 @@ public class ABActionCreateUnitTargetedPseudoProjectile implements ABSingleActio
 			final float rad = this.radius.callback(game, caster, localStore, castId);
 			theStartingRadius = rad;
 			theEndingRadius = rad;
-		}
-		else {
+		} else {
 			if (this.endingRadius != null) {
 				theStartingRadius = this.startingRadius.callback(game, caster, localStore, castId);
 				theEndingRadius = this.endingRadius.callback(game, caster, localStore, castId);
-			}
-			else {
+			} else {
 				final float rad = this.startingRadius.callback(game, caster, localStore, castId);
 				theStartingRadius = rad;
 				theEndingRadius = rad;
@@ -109,15 +107,15 @@ public class ABActionCreateUnitTargetedPseudoProjectile implements ABSingleActio
 
 		final GameObject editorData = (GameObject) localStore.get(ABLocalStoreKeys.ABILITYEDITORDATA);
 
-		if (this.speed != null) {
-			theSpeed = this.speed.callback(game, caster, localStore, castId);
-		}
+ 		if (this.speed != null) {
+ 			theSpeed = this.speed.callback(game, caster, localStore, castId);
+ 		}
 		else {
 			theSpeed = editorData.getFieldAsFloat(AbilityFields.PROJECTILE_SPEED, 0);
 		}
-		if (this.homing != null) {
-			isHoming = this.homing.callback(game, caster, localStore, castId);
-		}
+ 		if (this.homing != null) {
+ 			isHoming = this.homing.callback(game, caster, localStore, castId);
+ 		}
 		else {
 			isHoming = editorData.getFieldAsBoolean(AbilityFields.PROJECTILE_HOMING_ENABLED, 0);
 		}
@@ -129,9 +127,10 @@ public class ABActionCreateUnitTargetedPseudoProjectile implements ABSingleActio
 
 		final CProjectile proj = game.createPseudoProjectile(theSource,
 				this.id.callback(game, caster, localStore, castId), theEffectType, theEffectArtIndex,
-				sourceLocation.getX(), sourceLocation.getY(), (float) theSource.angleTo(theTarget), theSpeed,
-				theCollisionInterval, theArtSkip, isHoming, theTarget, theMaxHits, theHitsPerTarget, theStartingRadius,
-				theEndingRadius, listener, isProvideCounts);
+				sourceLocation.getX(), sourceLocation.getY(),
+				(float) AbilityTarget.angleBetween(sourceLocation, theTarget), theSpeed, theCollisionInterval,
+				theArtSkip, isHoming, theTarget, theMaxHits, theHitsPerTarget, theStartingRadius, theEndingRadius,
+				listener, isProvideCounts);
 
 		localStore.put(ABLocalStoreKeys.LASTCREATEDPROJECTILE + castId, proj);
 	}
@@ -161,8 +160,7 @@ public class ABActionCreateUnitTargetedPseudoProjectile implements ABSingleActio
 		String sourceLocExpression;
 		if (this.sourceLoc != null) {
 			sourceLocExpression = this.sourceLoc.generateJassEquivalent(jassTextGenerator);
-		}
-		else {
+		} else {
 			sourceLocExpression = "GetUnitLoc(" + sourceUnitExpression + ")";
 		}
 
@@ -182,13 +180,11 @@ public class ABActionCreateUnitTargetedPseudoProjectile implements ABSingleActio
 			final String radiusExpression = this.radius.generateJassEquivalent(jassTextGenerator);
 			startingRadiusExpression = radiusExpression;
 			endingRadiusExpression = radiusExpression;
-		}
-		else {
+		} else {
 			if (this.endingRadius != null) {
 				startingRadiusExpression = this.startingRadius.generateJassEquivalent(jassTextGenerator);
 				endingRadiusExpression = this.endingRadius.generateJassEquivalent(jassTextGenerator);
-			}
-			else {
+			} else {
 				final String radiusExpression = this.startingRadius.generateJassEquivalent(jassTextGenerator);
 				startingRadiusExpression = radiusExpression;
 				endingRadiusExpression = radiusExpression;
@@ -229,12 +225,10 @@ public class ABActionCreateUnitTargetedPseudoProjectile implements ABSingleActio
 						+ ", " + collisionIntervalExpression + ", " + artSkipExpression + ", " + provideCountsExpression
 						+ ")";
 
-			}
-			else {
+			} else {
 				throw new UnsupportedOperationException();
 			}
-		}
-		else if (this.homing != null) {
+		} else if (this.homing != null) {
 			throw new UnsupportedOperationException();
 		}
 

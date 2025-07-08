@@ -26,4 +26,8 @@ public interface CDamageFlags {
 
 	void setNonlethal(boolean callback);
 
+	boolean isPassLimitedMagicImmune();
+
+	void setPassLimitedMagicImmune(boolean limitedMagicImmune);
+
 }

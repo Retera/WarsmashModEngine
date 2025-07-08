@@ -247,8 +247,9 @@ public class CAbilityAbilityBuilderStatAuraTemplate extends AbilityGenericSingle
 	@Override
 	public void onAdd(CSimulation game, CUnit unit) {
 		if (this.buffId != null) {
-			this.buff = new ABGenericAuraBuff(game.getHandleIdAllocator().createId(), this.buffId, unit, this.leveled,
-					true);
+			this.buff = new ABGenericAuraBuff(game.getHandleIdAllocator().createId(), this.buffId,
+					localStore, this, unit,
+					this.leveled, true);
 		}
 		game.getAbilityData().createAbility(getAlias(), game.getHandleIdAllocator().createId());
 		auraGroup = new HashSet<>();

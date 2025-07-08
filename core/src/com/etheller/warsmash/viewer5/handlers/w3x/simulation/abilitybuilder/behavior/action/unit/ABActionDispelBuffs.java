@@ -17,7 +17,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core
 public class ABActionDispelBuffs implements ABAction {
 
 	private ABUnitCallback source;
-	private ABUnitCallback target;
+	private ABUnitCallback unit;
 	private ABCondition filter;
 
 	@Override
@@ -27,8 +27,8 @@ public class ABActionDispelBuffs implements ABAction {
 			theCaster = source.callback(game, theCaster, localStore, castId);
 		}
 		CUnit theTarget = caster;
-		if (target != null) {
-			theTarget = target.callback(game, theCaster, localStore, castId);
+		if (unit != null) {
+			theTarget = unit.callback(game, theCaster, localStore, castId);
 		}
 
 		if (theTarget != null) {

@@ -1733,7 +1733,10 @@ public class Jass2 {
 				@Override
 				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
 						final TriggerExecutionScope triggerScope) {
-					final Rectangle rect = arguments.get(0).visit(ObjectJassValueVisitor.<Rectangle>getInstance());
+					final Rectangle rect = nullable(arguments, 0, ObjectJassValueVisitor.<Rectangle>getInstance());
+					if (rect == null) {
+						return RealJassValue.ZERO;
+					}
 					return RealJassValue.of(rect.getCenter(this.centerHeap).x);
 				}
 			});
@@ -1743,7 +1746,10 @@ public class Jass2 {
 				@Override
 				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
 						final TriggerExecutionScope triggerScope) {
-					final Rectangle rect = arguments.get(0).visit(ObjectJassValueVisitor.<Rectangle>getInstance());
+					final Rectangle rect = nullable(arguments, 0, ObjectJassValueVisitor.<Rectangle>getInstance());
+					if (rect == null) {
+						return RealJassValue.ZERO;
+					}
 					return RealJassValue.of(rect.getCenter(this.centerHeap).y);
 				}
 			});

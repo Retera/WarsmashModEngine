@@ -563,13 +563,14 @@ public class CommonTriggerExecutionScope extends TriggerExecutionScope {
 	}
 
 	public static CommonTriggerExecutionScope unitDeathScope(final JassGameEventsWar3 triggerEventId,
-			final Trigger trigger, final CUnit dyingUnit, final CUnit killingUnit) {
+			final Trigger trigger, final CUnit dyingUnit, final CUnit killingUnit, final CPlayerJass player) {
 		final CommonTriggerExecutionScope scope = new CommonTriggerExecutionScope(trigger, TriggerExecutionScope.EMPTY);
 		scope.dyingUnit = dyingUnit;
 		scope.triggerWidget = dyingUnit;
 		scope.triggeringUnit = dyingUnit;
 		scope.killingUnit = killingUnit;
 		scope.triggerEventId = triggerEventId;
+		scope.triggeringPlayer = player;
 		return scope;
 	}
 
@@ -688,13 +689,14 @@ public class CommonTriggerExecutionScope extends TriggerExecutionScope {
 	}
 
 	public static CommonTriggerExecutionScope unitResearchFinishScope(final JassGameEventsWar3 triggerEventId,
-			final Trigger trigger, final CUnit researchingUnit, final War3ID researched) {
+			final Trigger trigger, final CUnit researchingUnit, final War3ID researched, final CPlayerJass player) {
 		final CommonTriggerExecutionScope scope = new CommonTriggerExecutionScope(trigger, TriggerExecutionScope.EMPTY);
 		scope.triggerWidget = researchingUnit;
 		scope.triggeringUnit = researchingUnit;
 		scope.researchingUnit = researchingUnit;
 		scope.researched = researched.getValue();
 		scope.triggerEventId = triggerEventId;
+		scope.triggeringPlayer = player;
 		return scope;
 	}
 

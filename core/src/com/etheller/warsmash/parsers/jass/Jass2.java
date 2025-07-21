@@ -895,7 +895,7 @@ public class Jass2 {
 						final List<CUnit> group = nullable(arguments, 0,
 								ObjectJassValueVisitor.<List<CUnit>>getInstance());
 						final CUnit whichUnit = arguments.get(1).visit(ObjectJassValueVisitor.<CUnit>getInstance());
-						if (group != null) {
+						if (group != null && whichUnit != null) {
 							if (!group.contains(whichUnit)) {
 								group.add(whichUnit);
 							}
@@ -2584,9 +2584,11 @@ public class Jass2 {
 					});
 			jassProgramVisitor.getJassNativeManager().createNative("RemoveItem",
 					(arguments, globalScope, triggerScope) -> {
-						final CItem whichItem = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());
-						CommonEnvironment.this.simulation.removeItem(whichItem);
-						meleeUI.removedItem(whichItem);
+						final CItem whichItem = nullable(arguments, 0, ObjectJassValueVisitor.getInstance());
+						if (whichItem != null) {
+							CommonEnvironment.this.simulation.removeItem(whichItem);
+							meleeUI.removedItem(whichItem);
+						}
 						return null;
 					});
 			jassProgramVisitor.getJassNativeManager().createNative("GetItemPlayer",
@@ -3032,16 +3034,20 @@ public class Jass2 {
 					});
 			jassProgramVisitor.getJassNativeManager().createNative("RemoveUnit",
 					(arguments, globalScope, triggerScope) -> {
-						final CUnit whichUnit = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());
-						CommonEnvironment.this.simulation.removeUnit(whichUnit);
-						meleeUI.removedUnit(whichUnit);
+						final CUnit whichUnit = nullable(arguments, 0, ObjectJassValueVisitor.getInstance());
+						if (whichUnit != null) {
+							CommonEnvironment.this.simulation.removeUnit(whichUnit);
+							meleeUI.removedUnit(whichUnit);
+						}
 						return null;
 					});
 			jassProgramVisitor.getJassNativeManager().createNative("ShowUnit",
 					(arguments, globalScope, triggerScope) -> {
-						final CUnit whichUnit = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());
+						final CUnit whichUnit = nullable(arguments, 0, ObjectJassValueVisitor.getInstance());
 						final boolean show = arguments.get(1).visit(BooleanJassValueVisitor.getInstance());
-						whichUnit.setHidden(!show);
+						if (whichUnit != null) {
+							whichUnit.setHidden(!show);
+						}
 						return null;
 					});
 

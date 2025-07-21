@@ -3118,7 +3118,7 @@ public class CUnit extends CWidget {
 		if (eventList != null) {
 			for (final CWidgetEvent event : eventList) {
 				event.fire(this, CommonTriggerExecutionScope.unitDeathScope(JassGameEventsWar3.EVENT_UNIT_DEATH,
-						event.getTrigger(), this, source));
+						event.getTrigger(), this, source, simulation.getPlayer(this.playerIndex)));
 			}
 		}
 		simulation.getPlayer(this.playerIndex).fireUnitDeathEvents(this, source);
@@ -5109,7 +5109,7 @@ public class CUnit extends CWidget {
 		if (eventList != null) {
 			for (final CWidgetEvent event : eventList) {
 				event.fire(this, CommonTriggerExecutionScope.unitResearchFinishScope(
-						JassGameEventsWar3.EVENT_UNIT_RESEARCH_FINISH, event.getTrigger(), this, researched));
+						JassGameEventsWar3.EVENT_UNIT_RESEARCH_FINISH, event.getTrigger(), this, researched, game.getPlayer(this.playerIndex)));
 			}
 		}
 		game.getPlayer(this.playerIndex).fireResearchFinishEvents(this, game, researched);

@@ -344,7 +344,9 @@ public class CSimulation implements CPlayerAPI, CFogMaskSettings {
 			final CPlayer player = getPlayer(playerIndex);
 			final CUnitType newUnitType = newUnit.getUnitType();
 			final int foodUsed = newUnitType.getFoodUsed();
+			final int foodMade = newUnitType.getFoodMade();
 			newUnit.setFoodUsed(foodUsed);
+			newUnit.setFoodMade(foodMade);
 			player.setFoodUsed(player.getFoodUsed() + foodUsed);
 			if (newUnitType.getFoodMade() != 0) {
 				player.setFoodCap(player.getFoodCap() + newUnitType.getFoodMade());
@@ -604,6 +606,13 @@ public class CSimulation implements CPlayerAPI, CFogMaskSettings {
 
 	public void removeUnit(final CUnit unit) {
 		unit.setHidden(true);
+		final CPlayer player = this.getPlayer(unit.getPlayerIndex());
+		if (unit.getFoodMade() != 0) {
+			player.setUnitFoodMade(unit, 0);
+		}
+		if (unit.getFoodUsed() != 0) {
+			player.setUnitFoodUsed(unit, 0);
+		}
 		this.removedUnits.add(unit);
 	}
 

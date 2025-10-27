@@ -261,6 +261,8 @@ public class CAbilityData {
 				(handleId, alias) -> new CAbilityItemPermanentLifeGain(handleId, alias)));
 		this.codeToAbilityTypeDefinition.put(War3ID.fromString("AIem"), new CAbilityTypeDefinitionSpellBase(
 				(handleId, alias) -> new CAbilityItemExperienceGain(handleId, alias)));
+		this.codeToAbilityTypeDefinition.put(War3ID.fromString("AIgo"), new CAbilityTypeDefinitionSpellBase(
+				(handleId, alias) -> new CAbilityItemChestOfGold(handleId, alias)));
 		this.codeToAbilityTypeDefinition.put(War3ID.fromString("AIlm"),
 				new CAbilityTypeDefinitionSpellBase((handleId, alias) -> new CAbilityItemLevelGain(handleId, alias)));
 		this.codeToAbilityTypeDefinition.put(War3ID.fromString("Acar"), new CAbilityTypeDefinitionCargoHold());

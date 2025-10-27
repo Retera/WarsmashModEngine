@@ -366,7 +366,7 @@ public class CPlayer extends CBasePlayer {
 		if (eventList != null) {
 			for (final CPlayerEvent event : eventList) {
 				event.fire(dyingUnit, CommonTriggerExecutionScope.unitDeathScope(
-						JassGameEventsWar3.EVENT_PLAYER_UNIT_DEATH, event.getTrigger(), dyingUnit, killingUnit));
+						JassGameEventsWar3.EVENT_PLAYER_UNIT_DEATH, event.getTrigger(), dyingUnit, killingUnit, this));
 			}
 		}
 	}
@@ -435,7 +435,7 @@ public class CPlayer extends CBasePlayer {
 		if (eventList != null) {
 			for (final CPlayerEvent event : eventList) {
 				event.fire(unit, CommonTriggerExecutionScope.unitResearchFinishScope(
-						JassGameEventsWar3.EVENT_PLAYER_UNIT_RESEARCH_FINISH, event.getTrigger(), unit, researched));
+						JassGameEventsWar3.EVENT_PLAYER_UNIT_RESEARCH_FINISH, event.getTrigger(), unit, researched, this));
 			}
 		}
 	}

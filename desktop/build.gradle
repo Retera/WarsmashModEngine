@@ -24,7 +24,7 @@ application {
 }
 
 task runGame(dependsOn: classes, type: JavaExec) {
-    main = project.mainClassName
+    mainClass = project.mainClassName
     classpath = sourceSets.main.runtimeClasspath
     standardInput = System.in
     workingDir = project.assetsDir
@@ -33,7 +33,7 @@ task runGame(dependsOn: classes, type: JavaExec) {
 }
 
 task runViewer(dependsOn: classes, type: JavaExec) {
-    main = "com.etheller.warsmash.desktop.editor.mdx.MdxEditorMain"
+    mainClass = "com.etheller.warsmash.desktop.editor.mdx.MdxEditorMain"
     classpath = sourceSets.main.runtimeClasspath
     standardInput = System.in
     workingDir = project.assetsDir
@@ -42,7 +42,7 @@ task runViewer(dependsOn: classes, type: JavaExec) {
 }
 
 task debug(dependsOn: classes, type: JavaExec) {
-    main = project.mainClassName
+    mainClass = project.mainClassName
     classpath = sourceSets.main.runtimeClasspath
     standardInput = System.in
     workingDir = project.assetsDir

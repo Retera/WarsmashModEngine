@@ -113,7 +113,7 @@ public class CBehaviorHarvest extends CAbstractRangedBehavior
 		this.unit.setHidden(false);
 		this.unit.setInvulnerable(false);
 		dropResources();
-		this.abilityHarvest.setCarriedResources(ResourceType.GOLD, goldMined);
+		this.abilityHarvest.setCarriedResources(ResourceType.GOLD, goldMined * 15);
 		if (this.unit.getUnitAnimationListener().addSecondaryTag(SecondaryTag.GOLD)) {
 			this.unit.getUnitAnimationListener().forceResetCurrentAnimation();
 		}
@@ -139,7 +139,7 @@ public class CBehaviorHarvest extends CAbstractRangedBehavior
 			dropResources();
 		}
 		this.abilityHarvest.setCarriedResources(ResourceType.LUMBER,
-				Math.min(this.abilityHarvest.getCarriedResourceAmount() + this.abilityHarvest.getDamageToTree(),
+				Math.min(this.abilityHarvest.getCarriedResourceAmount() + (this.abilityHarvest.getDamageToTree() * 15),
 						this.abilityHarvest.getLumberCapacity()));
 		if (this.unit.getUnitAnimationListener().addSecondaryTag(SecondaryTag.LUMBER)) {
 			this.unit.getUnitAnimationListener().forceResetCurrentAnimation();

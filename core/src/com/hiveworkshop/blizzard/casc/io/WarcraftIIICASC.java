@@ -181,7 +181,7 @@ public class WarcraftIIICASC implements AutoCloseable {
 	 * @param useMemoryMapping If memory mapped IO should be used to read file data.
 	 * @throws IOException If an exception occurs while mounting.
 	 */
-	public WarcraftIIICASC(final Path installFolder, final boolean useMemoryMapping) throws IOException {
+	public WarcraftIIICASC(final Path installFolder, final boolean useMemoryMapping, String product) throws IOException {
 		final Path infoFilePath = installFolder.resolve(Info.BUILD_INFO_FILE_NAME);
 		buildInfo = new Info(ByteBuffer.wrap(Files.readAllBytes(infoFilePath)));
 
@@ -195,10 +195,13 @@ public class WarcraftIIICASC implements AutoCloseable {
 		if (activeFiledIndex == -1) {
 			throw new MalformedCASCStructureException("build info contains no active field");
 		}
+		int productFieldIndex = buildInfo.getFieldIndex("Product");
 		int recordIndex = 0;
 		for (; recordIndex < recordCount; recordIndex += 1) {
 			if (Integer.parseInt(buildInfo.getField(recordIndex, activeFiledIndex)) == 1) {
-				break;
+				if(productFieldIndex == -1 || product == null || product.equals(buildInfo.getField(recordIndex, productFieldIndex))) {
+					break;
+				}
 			}
 		}
 		if (recordIndex == recordCount) {

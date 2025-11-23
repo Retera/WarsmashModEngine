@@ -293,6 +293,7 @@ public class CUnit extends CWidget {
 	private long detections = 0;
 
 	private MovementType movementOverride = null;
+	private MovementType nextMovementOverride = null;
 
 	public CUnit(final int handleId, final int playerIndex, final float x, final float y, final float life,
 			final War3ID typeId, final float facing, final float mana, final int maximumLife, final float lifeRegen,
@@ -1951,6 +1952,7 @@ public class CUnit extends CWidget {
 			}
 		}
 		else {
+			innerUpdateNoCollisionMovementType(game.getWorldCollision());
 			if (!this.paused) {
 				if ((this.rallyPoint != this) && (this.rallyPoint instanceof CUnit)
 						&& ((CUnit) this.rallyPoint).isDead()) {
@@ -3452,10 +3454,25 @@ public class CUnit extends CWidget {
 
 	public void setNoCollisionMovementType(final boolean active) {
 		if (active) {
-			this.movementOverride = MovementType.FOOT_NO_COLLISION;
+			this.nextMovementOverride = MovementType.FOOT_NO_COLLISION;
 		}
 		else {
-			this.movementOverride = null;
+			this.nextMovementOverride = null;
+		}
+	}
+
+	private void innerUpdateNoCollisionMovementType(final CWorldCollision worldCollision) {
+		// NOTE: changing movement type will crash the game unless we also remove/add
+		// the unit from world collision
+		if (this.movementOverride != this.nextMovementOverride) {
+			final boolean hasCollision = getCollisionRectangle() != null;
+			if (hasCollision) {
+				worldCollision.removeUnit(this);
+			}
+			this.movementOverride = this.nextMovementOverride;
+			if (hasCollision) {
+				worldCollision.addUnit(this);
+			}
 		}
 	}
 

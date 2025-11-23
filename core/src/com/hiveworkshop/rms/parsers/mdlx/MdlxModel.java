@@ -292,7 +292,7 @@ public class MdlxModel {
 			chunk.writeMdx(writer, this.version);
 		}
 
-		return writer.buffer;
+		return writer.buffer.flip();
 	}
 
 	private void saveVersionChunk(final BinaryWriter writer) {

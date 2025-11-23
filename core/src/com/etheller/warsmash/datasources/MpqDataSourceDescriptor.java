@@ -75,4 +75,9 @@ public class MpqDataSourceDescriptor implements DataSourceDescriptor {
 	public String getMpqFilePath() {
 		return this.mpqFilePath;
 	}
+
+	@Override
+	public DataSourceDescriptor duplicate() {
+		return new MpqDataSourceDescriptor(this.mpqFilePath);
+	}
 }

@@ -342,7 +342,7 @@ public final class VirtualFileSystem {
 	/**
 	 * Decoder used to load TVFS files in the TVFS tree.
 	 */
-	private final TVFSDecoder decoder = new TVFSDecoder();
+	private final TVFSDecoder decoder;
 
 	/**
 	 * TVFS file containing the root directory for the file system.
@@ -371,8 +371,10 @@ public final class VirtualFileSystem {
 	 * @param buildConfiguration Build configuration of CASC archive.
 	 * @throws IOException If an exception occurs when loading the file system.
 	 */
-	public VirtualFileSystem(final Storage storage, final Map<String, String> buildConfiguration) throws IOException {
+	public VirtualFileSystem(final Storage storage, final Map<String, String> buildConfiguration,
+			final boolean old131Format) throws IOException {
 		this.storage = storage;
+		this.decoder = new TVFSDecoder(old131Format);
 
 		int vfsNumber = 0;
 		String configurationKey;

@@ -14,15 +14,14 @@ public class CascDataSourceDescriptor implements DataSourceDescriptor {
 	private final String gameInstallPath;
 	private final List<String> prefixes;
 	private final String product;
+	private boolean old131Format;
 
-	public CascDataSourceDescriptor(final String gameInstallPath, final List<String> prefixes) {
-		this(gameInstallPath, prefixes, CascDataSource.Product.WARCRAFT_III.getKey());
-	}
-
-	public CascDataSourceDescriptor(final String gameInstallPath, final List<String> prefixes, final String product) {
+	public CascDataSourceDescriptor(final String gameInstallPath, final List<String> prefixes, final String product,
+			final boolean old131Format) {
 		this.gameInstallPath = gameInstallPath;
 		this.prefixes = prefixes;
 		this.product = product;
+		this.old131Format = old131Format;
 	}
 
 	@Override
@@ -32,7 +31,7 @@ public class CascDataSourceDescriptor implements DataSourceDescriptor {
 			product = Product.WARCRAFT_III.getKey();
 		}
 		return new CascDataSource(this.gameInstallPath, this.prefixes.toArray(new String[this.prefixes.size()]),
-				product);
+				product, this.old131Format);
 	}
 
 	@Override
@@ -68,6 +67,14 @@ public class CascDataSourceDescriptor implements DataSourceDescriptor {
 		return this.prefixes;
 	}
 
+	public boolean isOld131Format() {
+		return this.old131Format;
+	}
+
+	public void setOld131Format(final boolean old131Format) {
+		this.old131Format = old131Format;
+	}
+
 	@Override
 	public int hashCode() {
 		final int prime = 31;
@@ -75,6 +82,7 @@ public class CascDataSourceDescriptor implements DataSourceDescriptor {
 		result = (prime * result) + ((this.gameInstallPath == null) ? 0 : this.gameInstallPath.hashCode());
 		result = (prime * result) + ((this.prefixes == null) ? 0 : this.prefixes.hashCode());
 		result = (prime * result) + ((this.product == null) ? 0 : this.product.hashCode());
+		result = (prime * result) + (this.old131Format ? 1231 : 1237);
 		return result;
 	}
 
@@ -114,12 +122,16 @@ public class CascDataSourceDescriptor implements DataSourceDescriptor {
 		else if (!this.product.equals(other.product)) {
 			return false;
 		}
+		if (this.old131Format != other.old131Format) {
+			return false;
+		}
 		return true;
 	}
 
 	@Override
 	public DataSourceDescriptor duplicate() {
-		return new CascDataSourceDescriptor(this.gameInstallPath, new ArrayList<>(this.prefixes), this.product);
+		return new CascDataSourceDescriptor(this.gameInstallPath, new ArrayList<>(this.prefixes), this.product,
+				this.old131Format);
 	}
 
 	public String getProduct() {

@@ -1,7 +1,6 @@
 package com.hiveworkshop;
 
 public class ReteraCASCUtils {
-
 	public static boolean arraysEquals(final byte[] a, final int aFromIndex, final int aToIndex, final byte[] b,
 			final int bFromIndex, final int bToIndex) {
 		if (a == null) {

@@ -26,12 +26,11 @@ import javax.swing.table.DefaultTableCellRenderer;
 
 import com.etheller.warsmash.desktop.editor.w3m.ui.editors.object.UnitEditorSettings;
 import com.etheller.warsmash.desktop.launcher.emulator.editor.EmulatorEditorFieldBuilder;
-import com.etheller.warsmash.units.DataTable;
 import com.etheller.warsmash.units.Element;
+import com.etheller.warsmash.util.StringBundle;
 
 public class EmulatorEditorPanel extends JPanel {
 	private static final Object SHIFT_KEY_LOCK = new Object();
-	private final DataTable unitMetaData;
 	Element currentUnit = null;
 	UnitEditorSettings settings = new UnitEditorSettings();
 
@@ -40,19 +39,15 @@ public class EmulatorEditorPanel extends JPanel {
 	private ObjectDataTableModel dataModel;
 	private final Set<String> lastSelectedFields = new HashSet<>();
 	private EmulatorEditorFieldBuilder editorFieldBuilder;
-	private final HardcodedStringBundle hardcodedStringBundle = new HardcodedStringBundle();
+	private final StringBundle stringBundle;
 
-	public EmulatorEditorPanel(final Element emulatorConstants, final DataTable unitMetaData,
-			final EmulatorEditorFieldBuilder editorFieldBuilder) {
+	public EmulatorEditorPanel(final Element emulatorConstants, final EmulatorEditorFieldBuilder editorFieldBuilder,
+			final StringBundle stringBundle) {
+		this.stringBundle = stringBundle;
 		setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
-		this.unitMetaData = unitMetaData;
 		this.editorFieldBuilder = editorFieldBuilder;
 		// temp.setBackground(Color.blue);
 		this.table = new JTable();
-
-		this.hardcodedStringBundle.putString("WESTRING_UE_FIELDNAME", "Field");
-		this.hardcodedStringBundle.putString("WESTRING_UE_FIELDVALUE", "Value");
-		this.hardcodedStringBundle.putString("WESTRING_UNKNOWN", "Unknown");
 
 		((DefaultTableCellRenderer) this.table.getTableHeader().getDefaultRenderer())
 				.setHorizontalAlignment(JLabel.LEFT);
@@ -180,7 +175,7 @@ public class EmulatorEditorPanel extends JPanel {
 	}
 
 	public void fillTable() {
-		this.dataModel = new ObjectDataTableModel(this.currentUnit, this.hardcodedStringBundle, this.editorFieldBuilder,
+		this.dataModel = new ObjectDataTableModel(this.currentUnit, this.stringBundle, this.editorFieldBuilder,
 				this.settings.isDisplayAsRawData());
 		this.dataModel.addTableModelListener(new TableModelListener() {
 			@Override

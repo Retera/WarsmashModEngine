@@ -66,7 +66,8 @@ public class ObjectDataTableModel implements TableModel {
 		if (this.gameObject == null) {
 			return false;
 		}
-		return this.fields.get(rowIndex).hasEditedValue(this.gameObject);
+		return false;
+//		return this.fields.get(rowIndex).hasEditedValue(this.gameObject);
 	}
 
 	@Override

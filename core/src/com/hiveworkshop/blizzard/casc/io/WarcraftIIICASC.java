@@ -179,12 +179,15 @@ public class WarcraftIIICASC implements AutoCloseable {
 	 *
 	 * @param installFolder    Warcraft III installation folder.
 	 * @param useMemoryMapping If memory mapped IO should be used to read file data.
+	 * @param product          Whether to use the Public Test or not
+	 * @param old131Format     Whether to use the old 131 format parser or not
 	 * @throws IOException If an exception occurs while mounting.
 	 */
-	public WarcraftIIICASC(final Path installFolder, final boolean useMemoryMapping, String product) throws IOException {
+	public WarcraftIIICASC(final Path installFolder, final boolean useMemoryMapping, final String product,
+			final boolean old131Format) throws IOException {
 		final Path infoFilePath = installFolder.resolve(Info.BUILD_INFO_FILE_NAME);
 		buildInfo = new Info(ByteBuffer.wrap(Files.readAllBytes(infoFilePath)));
-
+ 
 		final int recordCount = buildInfo.getRecordCount();
 		if (recordCount < 1) {
 			throw new MalformedCASCStructureException("build info contains no records");
@@ -231,7 +234,7 @@ public class WarcraftIIICASC implements AutoCloseable {
 		// mounting virtual file system
 		VirtualFileSystem vfs = null;
 		try {
-			vfs = new VirtualFileSystem(localStorage, buildConfiguration.getConfiguration());
+			vfs = new VirtualFileSystem(localStorage, buildConfiguration.getConfiguration(), old131Format);
 		} finally {
 			if (vfs == null) {
 				// storage must be closed to prevent resource leaks

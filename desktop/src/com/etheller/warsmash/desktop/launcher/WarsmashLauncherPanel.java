@@ -29,7 +29,12 @@ import com.etheller.warsmash.WarsmashGdxMapScreen;
 import com.etheller.warsmash.datasources.DataSourceDescriptor;
 import com.etheller.warsmash.desktop.editor.util.ExceptionPopup;
 import com.etheller.warsmash.desktop.launcher.datasources.DataSourceChooserPanel;
+import com.etheller.warsmash.desktop.launcher.emulator.EmulatorEditorPanel;
+import com.etheller.warsmash.desktop.launcher.emulator.HardcodedStringBundle;
+import com.etheller.warsmash.desktop.launcher.emulator.HardcodedStringBundleDefaults;
+import com.etheller.warsmash.desktop.launcher.emulator.editor.DefaultEmulatorEditorFieldBuilder;
 import com.etheller.warsmash.units.DataTable;
+import com.etheller.warsmash.units.Element;
 import com.etheller.warsmash.util.StringBundle;
 
 public class WarsmashLauncherPanel extends JPanel {
@@ -53,8 +58,11 @@ public class WarsmashLauncherPanel extends JPanel {
 		final JPanel gamingNetworkPanel = new JPanel();
 		tabbedPane.addTab("Gaming Network", gamingNetworkPanel);
 
-		final JPanel emulatorPanel = new JPanel();
-		tabbedPane.addTab("Emulator", emulatorPanel);
+		final HardcodedStringBundle emulatorEditorStringBundle = HardcodedStringBundleDefaults.loadEnglish();
+		final EmulatorEditorPanel emulatorPanel = new EmulatorEditorPanel(
+				new Element("0000", new DataTable(emulatorEditorStringBundle)),
+				new DefaultEmulatorEditorFieldBuilder(emulatorEditorStringBundle), emulatorEditorStringBundle);
+		tabbedPane.addTab("Emulator", new JScrollPane(emulatorPanel));
 
 		add(tabbedPane, BorderLayout.CENTER);
 

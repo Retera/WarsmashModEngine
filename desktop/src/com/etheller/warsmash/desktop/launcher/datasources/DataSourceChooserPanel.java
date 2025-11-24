@@ -346,7 +346,8 @@ public class DataSourceChooserPanel extends JPanel {
 						}
 
 						DataSourceChooserPanel.this.dataSourceDescriptors.add(new CascDataSourceDescriptor(
-								selectedFile.getPath(), new ArrayList<String>(), product.getKey()));
+								selectedFile.getPath(), new ArrayList<String>(), product.getKey(),
+								detect131FormatCasc(Paths.get(selectedFile.getPath()), product.getKey())));
 						reloadTree();
 					}
 				}
@@ -579,7 +580,7 @@ public class DataSourceChooserPanel extends JPanel {
 				}
 			}
 			final CascDataSourceDescriptor dataSourceDesc = new CascDataSourceDescriptor(installPathPath.toString(),
-					new ArrayList<String>(), product.getKey());
+					new ArrayList<String>(), product.getKey(), detect131FormatCasc(installPathPath, product.getKey()));
 			this.dataSourceDescriptors.add(dataSourceDesc);
 			addDefaultCASCPrefixes(installPathPath, dataSourceDesc, allowPopup);
 		}
@@ -627,6 +628,42 @@ public class DataSourceChooserPanel extends JPanel {
 						installPathPath.resolve("war3.w3mod/_hd.w3mod/_locales/enus.w3mod").toString()));
 			}
 		}
+	}
+
+	private boolean detect131FormatCasc(final Path installPathPath, final String product) {
+		// TODO BELOW: Pretty terrible code. Needs testing. But I was writing it without
+		// internet based on a recollection of what I think I heard TRMS does... worth
+		// maybe looking it up.
+		boolean old131Format = false;
+		try {
+			final WarcraftIIICASC tempCascReader = new WarcraftIIICASC(installPathPath, true, product, old131Format);
+			try {
+				final FileSystem rootFileSystem = tempCascReader.getRootFileSystem();
+				rootFileSystem.enumerateFiles();
+			}
+			finally {
+				tempCascReader.close();
+			}
+		}
+		catch (final Exception exc) {
+			// try again but with old131Format=true
+			old131Format = true;
+			try {
+				final WarcraftIIICASC tempCascReader = new WarcraftIIICASC(installPathPath, true, product,
+						old131Format);
+				try {
+					final FileSystem rootFileSystem = tempCascReader.getRootFileSystem();
+					rootFileSystem.enumerateFiles();
+				}
+				finally {
+					tempCascReader.close();
+				}
+			}
+			catch (final Exception exc2) {
+				old131Format = false;
+			}
+		}
+		return old131Format;
 	}
 
 	protected void loadDefaults(final List<DataSourceDescriptor> dataSourceDescriptorDefaults) {
@@ -722,7 +759,7 @@ public class DataSourceChooserPanel extends JPanel {
 		// It's CASC. Now the question: what prefixes do we use?
 		try {
 			final WarcraftIIICASC tempCascReader = new WarcraftIIICASC(installPathPath, true,
-					dataSourceDesc.getProduct());
+					dataSourceDesc.getProduct(), dataSourceDesc.isOld131Format());
 			final DefaultComboBoxModel<String> prefixes = new DefaultComboBoxModel<String>();
 			try {
 				final FileSystem rootFileSystem = tempCascReader.getRootFileSystem();
@@ -778,7 +815,7 @@ public class DataSourceChooserPanel extends JPanel {
 		}
 		try {
 			final WarcraftIIICASC tempCascReader = new WarcraftIIICASC(installPathPath, true,
-					dataSourceDesc.getProduct());
+					dataSourceDesc.getProduct(), dataSourceDesc.isOld131Format());
 			try {
 				final String tags = tempCascReader.getBuildInfo().getField(tempCascReader.getActiveRecordIndex(),
 						"Tags");

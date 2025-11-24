@@ -27,7 +27,8 @@ public class CascDataSource implements DataSource {
 	private List<String> listFile;
 	private Map<String, String> fileAliases;
 
-	public CascDataSource(final String warcraft3InstallPath, final String[] prefixes, final String product) {
+	public CascDataSource(final String warcraft3InstallPath, final String[] prefixes, final String product,
+			final boolean old131Format) {
 		this.prefixes = prefixes;
 		for (int i = 0; i < (prefixes.length / 2); i++) {
 			final String temp = prefixes[i];
@@ -36,7 +37,7 @@ public class CascDataSource implements DataSource {
 		}
 
 		try {
-			this.warcraftIIICASC = new WarcraftIIICASC(Paths.get(warcraft3InstallPath), true, product);
+			this.warcraftIIICASC = new WarcraftIIICASC(Paths.get(warcraft3InstallPath), true, product, old131Format);
 			this.rootFileSystem = this.warcraftIIICASC.getRootFileSystem();
 			this.listFile = this.rootFileSystem.enumerateFiles();
 			this.fileAliases = new HashMap<>();

@@ -15,7 +15,7 @@ public interface EditableOnscreenEmulatorField {
 
 	Object getValue(final Element gameUnit);
 
-	boolean hasEditedValue(Element gameUnit);
+//	boolean hasEditedValue(Element gameUnit);
 
 	boolean popupEditor(Element gameUnit, Component parent, final StringBundle worldEditStrings, boolean editRawData,
 			boolean disableLimits);

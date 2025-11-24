@@ -256,9 +256,10 @@ public class WarsmashGdxMapScreen implements InputProcessor, Screen {
 			case "CASC": {
 				final String prefixes = dataSourcesConfig.getField("Prefixes" + numberText);
 				final String product = dataSourcesConfig.getField("Product" + numberText);
+				final boolean oldFormat = dataSourcesConfig.getFieldValue("OldFormat" + numberText) == 1;
 				final List<String> parsedPrefixes = Arrays.asList(prefixes.split(","));
 				allCascPrefixes.addAll(parsedPrefixes);
-				dataSourcesList.add(new CascDataSourceDescriptor(path, parsedPrefixes));
+				dataSourcesList.add(new CascDataSourceDescriptor(path, parsedPrefixes, product, oldFormat));
 				break;
 			}
 			case "":

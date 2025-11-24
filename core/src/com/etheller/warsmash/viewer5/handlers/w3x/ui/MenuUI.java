@@ -2012,11 +2012,20 @@ public class MenuUI {
 //									this.loadingMap.viewer.worldScene.fogSettings.end = 3000;
 //									this.loadingMap.viewer.worldScene.fogSettings
 //											.setStyleByIndex(FogStyle.LINEAR.ordinal());
+									// orange
 									this.loadingMap.viewer.worldScene.fogSettings.color = new Color(0.7f, 0.3f, 0.0f,
 											1.0f);
 									this.loadingMap.viewer.worldScene.fogSettings.density = 1;
 									this.loadingMap.viewer.worldScene.fogSettings.start = 9000;
 									this.loadingMap.viewer.worldScene.fogSettings.end = 10000;
+									this.loadingMap.viewer.worldScene.fogSettings
+											.setStyleByIndex(FogStyle.LINEAR.ordinal());
+
+									this.loadingMap.viewer.worldScene.fogSettings.color = new Color(0.33f, 0.5f, 0.7f,
+											1.0f);
+									this.loadingMap.viewer.worldScene.fogSettings.density = 0.5f;
+									this.loadingMap.viewer.worldScene.fogSettings.start = 10000;
+									this.loadingMap.viewer.worldScene.fogSettings.end = 20000;
 									this.loadingMap.viewer.worldScene.fogSettings
 											.setStyleByIndex(FogStyle.LINEAR.ordinal());
 								});

@@ -9,7 +9,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.thirdpers
 public final class ThirdPersonCameraManager extends CameraManager {
 	private final float fov = 70;
 	private final float nearZ = 50;
-	private final float farZ = 5000;
+	private final float farZ = 30000;
 	private boolean touchDown;
 	private final War3MapViewer war3MapViewer;
 	private final RenderUnit pawnUnit;

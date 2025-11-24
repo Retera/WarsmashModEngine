@@ -432,11 +432,13 @@ public class TerrainWdt extends TerrainInterface {
 
 		shader.setUniformMatrix("u_mvp", this.camera.viewProjectionMatrix);
 		shader.setUniformi("u_heightMap", 0);
-		sizeHeap[0] = this.columns - 1;
-		sizeHeap[1] = this.rows - 1;
+		final int columns = tile.activeTile.width;
+		final int rows = tile.activeTile.height;
+		sizeHeap[0] = columns - 1;
+		sizeHeap[1] = rows - 1;
 		shader.setUniform2fv("u_size", sizeHeap, 0, 2);
-		sizeHeap[0] = 1 / (float) this.columns;
-		sizeHeap[1] = 1 / (float) this.rows;
+		sizeHeap[0] = 1 / (float) columns;
+		sizeHeap[1] = 1 / (float) rows;
 		shader.setUniform2fv("u_pixel", sizeHeap, 0, 2);
 		shader.setUniform2fv("u_centerOffset", tile.myCornerXY, 0, 2);
 		shader.setUniformi("u_texture", 1);

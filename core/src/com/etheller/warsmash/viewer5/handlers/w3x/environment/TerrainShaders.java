@@ -499,7 +499,7 @@ public class TerrainShaders {
 				"	} else {\r\n" + //
 				"     color = vec4(color.xyz * (1.0 - shadow), 1.0);\r\n" + //
 				"	}\r\n" + //
-//				Shaders.fogSystem(false, null) + //
+				Shaders.fogSystem(false, null) + //
 //				"\r\n" + //
 //				"	if (show_pathing_map) {\r\n" + //
 //				"		uint byte_static = texelFetch(pathing_map_static, ivec2(pathing_map_uv), 0).r;\r\n" + //

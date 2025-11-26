@@ -82,10 +82,16 @@
 				},
 				"thenActions": [{
 					"type": "removeUnitStateListener",
+					"unit": {
+						"type": "getCastingUnit"
+					},
 					"effectToRemove": {
 						"type": "getLastCreatedUnitStateListener"
 					}
 				}]
+					"unit": {
+						"type": "getCastingUnit"
+					},
 		}]
 	},{
 		"ids": [{"id":"Arbr"}],
@@ -167,6 +173,9 @@
 				},
 				"thenActions": [{
 					"type": "removeUnitStateListener",
+					"unit": {
+						"type": "getCastingUnit"
+					},
 					"effectToRemove": {
 						"type": "getLastCreatedUnitStateListener"
 					}

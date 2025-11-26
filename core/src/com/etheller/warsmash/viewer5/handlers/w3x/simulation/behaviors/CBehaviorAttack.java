@@ -5,11 +5,11 @@ import com.etheller.warsmash.viewer5.handlers.w3x.AnimationTokens.PrimaryTag;
 import com.etheller.warsmash.viewer5.handlers.w3x.SequenceUtils;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityPointTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTargetStillAliveAndTargetableVisitor;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CWeaponType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.CUnitAttack;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.replacement.CUnitAttackModifier;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.replacement.CUnitAttackSettings;
 
 public class CBehaviorAttack extends CAbstractRangedBehavior {
 
@@ -26,6 +26,8 @@ public class CBehaviorAttack extends CAbstractRangedBehavior {
 	private int backSwingTime;
 	private int thisOrderCooldownEndTime;
 	private CBehaviorAttackListener attackListener;
+	private CUnitAttackModifier forcedModifier;
+	private CUnitAttackSettings settings;
 
 	public CBehavior reset(final CSimulation game, final int highlightOrderId, final CUnitAttack unitAttack,
 			final AbilityTarget target, final boolean disableMove, final CBehaviorAttackListener attackListener) {
@@ -38,6 +40,12 @@ public class CBehaviorAttack extends CAbstractRangedBehavior {
 		this.thisOrderCooldownEndTime = 0;
 		setDisableMove(disableMove);
 		return super.innerReset(game, target);
+	}
+
+	public CBehavior reset(final CSimulation game, final int highlightOrderId, final CUnitAttack unitAttack,
+			final AbilityTarget target, final boolean disableMove, final CBehaviorAttackListener attackListener, CUnitAttackModifier forcedModifier) {
+		this.forcedModifier = forcedModifier;
+		return this.reset(game, highlightOrderId, unitAttack, target, disableMove, attackListener);
 	}
 
 	@Override
@@ -83,13 +91,22 @@ public class CBehaviorAttack extends CAbstractRangedBehavior {
 			if (this.damagePointLaunchTime != 0) {
 				if (currentTurnTick >= this.damagePointLaunchTime) {
 					final int damage = this.unitAttack.roll(simulation.getSeededRandom());
+					this.settings.setBaseDamage(damage);
 					AbilityTarget target = this.target;
-					if (this.unitAttack.getWeaponType() == CWeaponType.ARTILLERY) {
-						// NOTE: adding this fixed a bunch of special cases in my code, but
-						// maybe we should re-use the point objects and not "new" here for
-						// better performance (maybe in a refactor in the future).
-						target = new AbilityPointTarget(target.getX(), target.getY());
+					if (this.forcedModifier != null && this.forcedModifier.checkApplication(simulation, this.unit, target, this.unitAttack)) {
+						this.forcedModifier.applyModification(simulation, this.unit, target, this.unitAttack, this.settings, null);
+					} else {
+						this.settings = this.unit.checkForAttackModification(simulation, target, unitAttack, this.settings);
 					}
+					this.forcedModifier = null;
+
+//					if (this.unitAttack.getWeaponType() == CWeaponType.ARTILLERY || this.unitAttack.getWeaponType() == CWeaponType.ALINE) {
+//						// NOTE: adding this fixed a bunch of special cases in my code, but
+//						// maybe we should re-use the point objects and not "new" here for
+//						// better performance (maybe in a refactor in the future).
+//						target = new AbilityPointTarget(target.getX(), target.getY());
+//					}
+					
 					this.unitAttack.launch(simulation, this.unit, target, damage, this.attackListener);
 					this.damagePointLaunchTime = 0;
 				}
@@ -105,8 +122,14 @@ public class CBehaviorAttack extends CAbstractRangedBehavior {
 				this.thisOrderCooldownEndTime = currentTurnTick + a1CooldownSteps;
 				this.damagePointLaunchTime = currentTurnTick + a1DamagePointSteps;
 				this.backSwingTime = currentTurnTick + a1DamagePointSteps + a1BackswingSteps;
+				this.settings = this.unitAttack.initialSettings();
+				if (this.forcedModifier != null && this.forcedModifier.checkPreLaunchApplication(simulation, this.unit, target, this.unitAttack)) {
+					this.forcedModifier.applyPreLaunchModification(simulation, this.unit, target, this.unitAttack, this.settings, null);
+				} else {
+					this.settings = this.unit.checkForAttackPreLaunchModification(simulation, target, unitAttack, this.settings);
+				}
 				this.unit.getUnitAnimationListener().playAnimationWithDuration(true, PrimaryTag.ATTACK,
-						this.unitAttack.getAnimationTag(), animationBackswingPoint + animationDamagePoint, true);
+						this.settings.getAnimationNames(), animationBackswingPoint + animationDamagePoint, true);
 				this.unit.getUnitAnimationListener().queueAnimation(PrimaryTag.STAND, SequenceUtils.READY, false);
 			}
 			else if (currentTurnTick >= this.thisOrderCooldownEndTime) {

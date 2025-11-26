@@ -76,38 +76,39 @@ public class CAbilityWander extends AbstractGenericNoIconAbility implements CAbi
 
 	@Override
 	public CBehavior begin(final CSimulation game, final CUnit caster, final int playerIndex, final int orderId,
-			final CWidget target) {
+			final boolean autoOrder, final CWidget target) {
 		return null;
 	}
 
 	@Override
 	public CBehavior begin(final CSimulation game, final CUnit caster, final int playerIndex, final int orderId,
-			final AbilityPointTarget point) {
+			final boolean autoOrder, final AbilityPointTarget point) {
 		return null;
 	}
 
 	@Override
-	public CBehavior beginNoTarget(final CSimulation game, final CUnit caster, final int playerIndex,
-			final int orderId) {
+	public CBehavior beginNoTarget(final CSimulation game, final CUnit caster, final int playerIndex, final int orderId,
+			final boolean autoOrder) {
 		return null;
 	}
 
 	@Override
 	public void checkCanTarget(final CSimulation game, final CUnit unit, final int playerIndex, final int orderId,
-			final CWidget target, final AbilityTargetCheckReceiver<CWidget> receiver) {
+			final boolean autoOrder, final CWidget target, final AbilityTargetCheckReceiver<CWidget> receiver) {
 		receiver.orderIdNotAccepted();
 	}
 
 	@Override
 	public void checkCanTarget(final CSimulation game, final CUnit unit, final int playerIndex, final int orderId,
-			final AbilityPointTarget target, final AbilityTargetCheckReceiver<AbilityPointTarget> receiver) {
+			final boolean autoOrder, final AbilityPointTarget target,
+			final AbilityTargetCheckReceiver<AbilityPointTarget> receiver) {
 		receiver.orderIdNotAccepted();
 
 	}
 
 	@Override
 	public void checkCanTargetNoTarget(final CSimulation game, final CUnit unit, final int playerIndex,
-			final int orderId, final AbilityTargetCheckReceiver<Void> receiver) {
+			final int orderId, final boolean autoOrder, final AbilityTargetCheckReceiver<Void> receiver) {
 		receiver.orderIdNotAccepted();
 
 	}

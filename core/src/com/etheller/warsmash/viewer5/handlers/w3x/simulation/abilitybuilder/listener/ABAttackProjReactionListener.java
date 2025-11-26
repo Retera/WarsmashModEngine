@@ -34,7 +34,7 @@ public class ABAttackProjReactionListener implements CUnitAttackProjReactionList
 		}
 		localStore.put(ABLocalStoreKeys.REACTIONALLOWHIT+triggerId, true);
 		localStore.put(ABLocalStoreKeys.ATTACKINGUNIT+triggerId, source);
-		localStore.put(ABLocalStoreKeys.ATTACKEDUNIT+triggerId, target);
+		localStore.put(ABLocalStoreKeys.ATTACKTARGET+triggerId, target);
 		localStore.put(ABLocalStoreKeys.ATTACKPROJ+triggerId, projectile);
 		if (actions != null) {
 			for (ABAction action : actions) {
@@ -42,7 +42,7 @@ public class ABAttackProjReactionListener implements CUnitAttackProjReactionList
 			}
 		}
 		localStore.remove(ABLocalStoreKeys.ATTACKINGUNIT+triggerId);
-		localStore.remove(ABLocalStoreKeys.ATTACKEDUNIT+triggerId);
+		localStore.remove(ABLocalStoreKeys.ATTACKTARGET+triggerId);
 		localStore.remove(ABLocalStoreKeys.ATTACKPROJ+triggerId);
 		return (boolean) localStore.remove(ABLocalStoreKeys.REACTIONALLOWHIT+triggerId);
 	}

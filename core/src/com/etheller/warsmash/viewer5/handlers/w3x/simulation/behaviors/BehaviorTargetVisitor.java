@@ -26,6 +26,11 @@ public class BehaviorTargetVisitor implements CBehaviorVisitor<AbilityTarget> {
 	public AbilityTarget accept(CBehaviorAbilityBuilderNoTarget target) {
 		return null;
 	}
+
+	@Override
+	public AbilityTarget accept(CBehaviorMove target) {
+		return target.getTarget();
+	}
 	
 	
 }

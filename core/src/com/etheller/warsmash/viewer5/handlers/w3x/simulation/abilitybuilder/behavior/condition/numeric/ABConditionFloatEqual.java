@@ -8,17 +8,16 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.floatcallbacks.ABFloatCallback;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABCondition;
 
-public class ABConditionFloatEqual implements ABCondition {
+public class ABConditionFloatEqual extends ABCondition {
 
 	private ABFloatCallback value1;
 	private ABFloatCallback value2;
 
 	@Override
-	public boolean evaluate(final CSimulation game, final CUnit caster, final Map<String, Object> localStore,
-			final int castId) {
-		final Float v1 = this.value1.callback(game, caster, localStore, castId);
-		final Float v2 = this.value2.callback(game, caster, localStore, castId);
-
+	public Boolean callback(CSimulation game, CUnit caster, Map<String, Object> localStore, final int castId) {
+		Float v1 = value1.callback(game, caster, localStore, castId);
+		Float v2 = value2.callback(game, caster, localStore, castId);
+		
 		return v1.equals(v2);
 	}
 

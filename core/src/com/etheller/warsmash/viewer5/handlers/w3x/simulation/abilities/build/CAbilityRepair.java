@@ -34,6 +34,7 @@ public class CAbilityRepair extends AbstractGenericSingleIconActiveAbility imple
 			final float repairTimeRatio, final float castRange) {
 		super(handleId, code, alias);
 		this.targetsAllowed = targetsAllowed;
+		this.targetsAllowed.add(CTargetType.REPAIRABLE);
 		this.navalRangeBonus = navalRangeBonus;
 		this.repairCostRatio = repairCostRatio;
 		this.repairTimeRatio = repairTimeRatio;
@@ -96,8 +97,8 @@ public class CAbilityRepair extends AbstractGenericSingleIconActiveAbility imple
 	}
 
 	@Override
-	protected void innerCheckCanUse(final CSimulation game, final CUnit unit, int playerIndex,
-			final int orderId, final AbilityActivationReceiver receiver) {
+	protected void innerCheckCanUse(final CSimulation game, final CUnit unit, final int playerIndex, final int orderId,
+			final AbilityActivationReceiver receiver) {
 		receiver.useOk();
 	}
 
@@ -123,19 +124,19 @@ public class CAbilityRepair extends AbstractGenericSingleIconActiveAbility imple
 
 	@Override
 	public CBehavior begin(final CSimulation game, final CUnit caster, final int playerIndex, final int orderId,
-			final CWidget target) {
+			final boolean autoOrder, final CWidget target) {
 		return this.behaviorRepair.reset(game, target);
 	}
 
 	@Override
 	public CBehavior begin(final CSimulation game, final CUnit caster, final int playerIndex, final int orderId,
-			final AbilityPointTarget point) {
+			final boolean autoOrder, final AbilityPointTarget point) {
 		return null;
 	}
 
 	@Override
-	public CBehavior beginNoTarget(final CSimulation game, final CUnit caster, final int playerIndex,
-			final int orderId) {
+	public CBehavior beginNoTarget(final CSimulation game, final CUnit caster, final int playerIndex, final int orderId,
+			final boolean autoOrder) {
 		return null;
 	}
 
@@ -195,19 +196,17 @@ public class CAbilityRepair extends AbstractGenericSingleIconActiveAbility imple
 	}
 
 	@Override
-	public void setAutoCastOn(final CUnit caster, final boolean autoCastOn) {
+	public void setAutoCastOn(final CSimulation simulation, final CUnit caster, final boolean autoCastOn,
+			final boolean notify) {
 		this.autocasting = autoCastOn;
-		caster.setAutocastAbility(autoCastOn ? this : null);
+		if (notify) {
+			caster.setAutocastAbility(simulation, autoCastOn ? this : null);
+		}
 	}
 
 	@Override
 	public boolean isAutoCastOn() {
 		return this.autocasting;
-	}
-
-	@Override
-	public void setAutoCastOff() {
-		this.autocasting = false;
 	}
 
 	@Override
@@ -223,7 +222,7 @@ public class CAbilityRepair extends AbstractGenericSingleIconActiveAbility imple
 	@Override
 	public void checkCanAutoTarget(final CSimulation game, final CUnit unit, final int playerIndex, final int orderId,
 			final CWidget target, final AbilityTargetCheckReceiver<CWidget> receiver) {
-		this.checkCanTarget(game, unit, playerIndex, orderId, target, receiver);
+		this.checkCanTarget(game, unit, playerIndex, orderId, false, target, receiver);
 	}
 
 	@Override
@@ -241,6 +240,11 @@ public class CAbilityRepair extends AbstractGenericSingleIconActiveAbility imple
 	@Override
 	public boolean isPhysical() {
 		return true;
+	}
+
+	@Override
+	public boolean isMagic() {
+		return false;
 	}
 
 	@Override

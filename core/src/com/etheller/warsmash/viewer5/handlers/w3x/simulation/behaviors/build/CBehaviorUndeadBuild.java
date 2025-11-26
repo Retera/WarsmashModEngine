@@ -82,7 +82,7 @@ public class CBehaviorUndeadBuild extends CAbstractRangedBehavior {
 			final int playerIndex = this.unit.getPlayerIndex();
 			if (!buildLocationObstructed) {
 				final CUnit constructedStructure = simulation.createUnit(this.orderId, playerIndex, this.target.getX(),
-						this.target.getY(), simulation.getGameplayConstants().getBuildingAngle());
+						this.target.getY(), simulation.getGameplayConstants().getBuildingAngle(), true);
 				if (canBeBuiltOnThem) {
 					CAbilityGoldMinable abilityGoldMine = null;
 					if (this.buildOnBuildingIntersector.getUnitToBuildOn() != null) {
@@ -106,7 +106,6 @@ public class CBehaviorUndeadBuild extends CAbstractRangedBehavior {
 						}
 					}
 				}
-				constructedStructure.setConstructing(true);
 				constructedStructure.setWorker(this.unit, false);
 				constructedStructure.setLife(simulation,
 						constructedStructure.getMaximumLife() * WarsmashConstants.BUILDING_CONSTRUCT_START_LIFE);
@@ -190,6 +189,6 @@ public class CBehaviorUndeadBuild extends CAbstractRangedBehavior {
 
 	@Override
 	public CBehaviorCategory getBehaviorCategory() {
-		return CBehaviorCategory.SPELL;
+		return CBehaviorCategory.BUILD;
 	}
 }

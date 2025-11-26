@@ -8,13 +8,12 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehavior;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.skills.CBehaviorTargetSpellBase;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetCheckReceiver;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetCheckReceiver.TargetType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.CommandStringErrorKeys;
 
 public abstract class CAbilityUnitOrPointTargetSpellBase extends CAbilitySpellBase {
 	private CBehaviorTargetSpellBase behavior;
 
-	public CAbilityUnitOrPointTargetSpellBase(int handleId, War3ID alias) {
+	public CAbilityUnitOrPointTargetSpellBase(final int handleId, final War3ID alias) {
 		super(handleId, alias);
 	}
 
@@ -24,18 +23,20 @@ public abstract class CAbilityUnitOrPointTargetSpellBase extends CAbilitySpellBa
 	}
 
 	@Override
-	public CBehavior begin(final CSimulation game, final CUnit caster, int playerIndex, final int orderId, final CWidget target) {
+	public CBehavior begin(final CSimulation game, final CUnit caster, final int playerIndex, final int orderId,
+			final boolean autoOrder, final CWidget target) {
 		return this.behavior.reset(game, target);
 	}
 
 	@Override
-	public CBehavior begin(final CSimulation game, final CUnit caster, int playerIndex,
-			final int orderId, final AbilityPointTarget point) {
+	public CBehavior begin(final CSimulation game, final CUnit caster, final int playerIndex, final int orderId,
+			final boolean autoOrder, final AbilityPointTarget point) {
 		return this.behavior.reset(game, point);
 	}
 
 	@Override
-	public CBehavior beginNoTarget(final CSimulation game, final CUnit caster, int playerIndex, final int orderId) {
+	public CBehavior beginNoTarget(final CSimulation game, final CUnit caster, final int playerIndex, final int orderId,
+			final boolean autoOrder) {
 		return null;
 	}
 
@@ -53,8 +54,8 @@ public abstract class CAbilityUnitOrPointTargetSpellBase extends CAbilitySpellBa
 	}
 
 	@Override
-	protected void innerCheckCanTarget(CSimulation game, CUnit unit, int orderId, AbilityPointTarget target,
-			AbilityTargetCheckReceiver<AbilityPointTarget> receiver) {
+	protected void innerCheckCanTarget(final CSimulation game, final CUnit unit, final int orderId,
+			final AbilityPointTarget target, final AbilityTargetCheckReceiver<AbilityPointTarget> receiver) {
 		if (!unit.isMovementDisabled() || unit.canReach(target, getCastRange())) {
 			receiver.targetOk(target);
 		}
@@ -64,8 +65,8 @@ public abstract class CAbilityUnitOrPointTargetSpellBase extends CAbilitySpellBa
 	}
 
 	@Override
-	protected void innerCheckCanTargetNoTarget(CSimulation game, CUnit unit, int orderId,
-			AbilityTargetCheckReceiver<Void> receiver) {
+	protected void innerCheckCanTargetNoTarget(final CSimulation game, final CUnit unit, final int orderId,
+			final AbilityTargetCheckReceiver<Void> receiver) {
 		receiver.orderIdNotAccepted();
 	}
 

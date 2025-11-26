@@ -124,9 +124,8 @@ public class CBehaviorHumanRepair extends CAbstractRangedBehavior {
 		if ((this.nextNotifyTick == 0) || (simulation.getGameTurnTick() >= this.nextNotifyTick)) {
 			if (this.nextNotifyTick == 0) {
 				this.nextNotifyTick = (int) (simulation.getGameTurnTick()
-						+ (0.5 / WarsmashConstants.SIMULATION_STEP_TIME));
-			}
-			else {
+						+ WarsmashConstants.ONGOING_BEHAVIOR_NOTIFICATION_TICKS / WarsmashConstants.SIMULATION_STEP_TIME);
+			} else {
 				this.unit.fireBehaviorChangeEvent(simulation, this, true);
 			}
 		}
@@ -233,6 +232,6 @@ public class CBehaviorHumanRepair extends CAbstractRangedBehavior {
 
 	@Override
 	public CBehaviorCategory getBehaviorCategory() {
-		return CBehaviorCategory.SPELL;
+		return CBehaviorCategory.BUILD;
 	}
 }

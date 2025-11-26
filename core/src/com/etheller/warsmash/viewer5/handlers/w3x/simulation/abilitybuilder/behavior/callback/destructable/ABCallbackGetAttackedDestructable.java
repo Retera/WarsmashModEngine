@@ -1,0 +1,20 @@
+package com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.destructable;
+
+import java.util.Map;
+
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CDestructable;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTarget;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTargetVisitor;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABLocalStoreKeys;
+
+public class ABCallbackGetAttackedDestructable extends ABDestructableCallback {
+
+	@Override
+	public CDestructable callback(CSimulation game, CUnit caster, Map<String, Object> localStore, final int castId) {
+		AbilityTarget tar = (AbilityTarget) localStore.get(ABLocalStoreKeys.ATTACKTARGET+castId);
+		return tar.visit(AbilityTargetVisitor.DESTRUCTABLE);
+	}
+
+}

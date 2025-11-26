@@ -9,11 +9,11 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.beha
 public class ABCallbackCreateDetectedData extends ABLongCallback {
 
 	private ABIntegerCallback detectionLevel;
-	private ABIntegerCallback player;
+	private ABIntegerCallback playerDetectedData;
 	
 	@Override
 	public Long callback(CSimulation game, CUnit caster, Map<String, Object> localStore, final int castId) {
-		long ply = player.callback(game, caster, localStore, castId);
+		long ply = playerDetectedData.callback(game, caster, localStore, castId);
 		byte val = detectionLevel.callback(game, caster, localStore, castId).byteValue();
 		return val + (ply<<8);
 	}

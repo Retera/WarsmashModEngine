@@ -1,0 +1,24 @@
+{
+	"abilityList": [{
+		"ids": [{"id":"AIri", "castId": "itemrandomitem"}],
+		"type": "NORMAL_UNITTARGET",
+		"onEndCasting": [{
+			"type": "if",
+			"condition": {
+				"type": "notNull",
+				"value": {
+					"type": "getAbilityTargetedItem"
+				}
+			},
+			"thenActions": [{
+				"type": "transformItem",
+				"item": {
+					"type": "getAbilityTargetedItem"
+				},
+				"newType": {
+					"type": "randomItemId"
+				}
+			}]
+		}]
+	}]
+}

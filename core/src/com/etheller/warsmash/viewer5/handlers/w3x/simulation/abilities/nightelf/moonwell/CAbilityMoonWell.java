@@ -137,7 +137,7 @@ public class CAbilityMoonWell extends CAbilitySpellBase implements CAutocastAbil
 
 	@Override
 	public CBehavior begin(final CSimulation game, final CUnit caster, final int playerIndex, final int orderId,
-			final CWidget target) {
+			final boolean autoOrder, final CWidget target) {
 		final CUnit unitTarget = target.visit(AbilityTargetVisitor.UNIT);
 		if (unitTarget != null) {
 			final float life = unitTarget.getLife();
@@ -170,13 +170,13 @@ public class CAbilityMoonWell extends CAbilitySpellBase implements CAutocastAbil
 
 	@Override
 	public CBehavior begin(final CSimulation game, final CUnit caster, final int playerIndex, final int orderId,
-			final AbilityPointTarget point) {
+			final boolean autoOrder, final AbilityPointTarget point) {
 		return null;
 	}
 
 	@Override
-	public CBehavior beginNoTarget(final CSimulation game, final CUnit caster, final int playerIndex,
-			final int orderId) {
+	public CBehavior beginNoTarget(final CSimulation game, final CUnit caster, final int playerIndex, final int orderId,
+			final boolean autoOrder) {
 		return null;
 	}
 
@@ -232,9 +232,12 @@ public class CAbilityMoonWell extends CAbilitySpellBase implements CAutocastAbil
 	}
 
 	@Override
-	public void setAutoCastOn(final CUnit caster, final boolean autoCastOn) {
+	public void setAutoCastOn(final CSimulation simulation, final CUnit caster, final boolean autoCastOn,
+			final boolean notify) {
 		this.autoCastActive = autoCastOn;
-		caster.setAutocastAbility(autoCastOn ? this : null);
+		if (notify) {
+			caster.setAutocastAbility(simulation, autoCastOn ? this : null);
+		}
 	}
 
 	@Override
@@ -253,14 +256,9 @@ public class CAbilityMoonWell extends CAbilitySpellBase implements CAutocastAbil
 	}
 
 	@Override
-	public void setAutoCastOff() {
-		this.autoCastActive = false;
-	}
-
-	@Override
 	public void checkCanAutoTarget(final CSimulation game, final CUnit unit, final int playerIndex, final int orderId,
 			final CWidget target, final AbilityTargetCheckReceiver<CWidget> receiver) {
-		this.checkCanTarget(game, unit, playerIndex, orderId, target, receiver);
+		this.checkCanTarget(game, unit, playerIndex, orderId, false, target, receiver);
 	}
 
 	@Override

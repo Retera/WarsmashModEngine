@@ -58,43 +58,24 @@
 						"type": "getAbilityDataAsFloat",
 						"dataField": "A"
 					},
+					"dispellable": {
+						"type": "rawBoolean",
+						"value": "false"
+					},
 					"showIcon": {
 						"type": "rawBoolean",
 						"value": "false"
 					},
-					"onAddActions": [{
-							"type": "addStateModBuff",
-							"targetUnit": {
-								"type": "getBuffedUnit"
-							},
-							"buff": {
-								"type": "getStoredStateModBuffByKey",
-								"instanceValue": {
-									"type": "rawBoolean",
-									"value": "false"
-								},
-								"key": {
-									"type": "rawString",
-									"value": "invuln"
-								}
-							}
-					}],
-					"onRemoveActions": [{
-							"type": "removeStateModBuff",
-							"targetUnit": {
-								"type": "getBuffedUnit"
-							},
-							"buff": {
-								"type": "getStoredStateModBuffByKey",
-								"instanceValue": {
-									"type": "rawBoolean",
-									"value": "false"
-								},
-								"key": {
-									"type": "rawString",
-									"value": "invuln"
-								}
-							}
+					"stateMods": [{
+						"type": "getStoredStateModBuffByKey",
+						"instanceValue": {
+							"type": "rawBoolean",
+							"value": "false"
+						},
+						"key": {
+							"type": "rawString",
+							"value": "invuln"
+						}
 					}]
 				},{
 					"type": "addBuff",
@@ -115,23 +96,22 @@
 							"type": "getAbilityTargetedUnit"
 						}
 					},
+					"positive": {
+						"type": "rawBoolean",
+						"value": "false"
+					},
+					"stateMods": [{
+						"type": "getStoredStateModBuffByKey",
+						"instanceValue": {
+							"type": "rawBoolean",
+							"value": "false"
+						},
+						"key": {
+							"type": "rawString",
+							"value": "sleep"
+						}
+					}],
 					"onAddActions": [{
-							"type": "addStateModBuff",
-							"targetUnit": {
-								"type": "getBuffedUnit"
-							},
-							"buff": {
-								"type": "getStoredStateModBuffByKey",
-								"instanceValue": {
-									"type": "rawBoolean",
-									"value": "false"
-								},
-								"key": {
-									"type": "rawString",
-									"value": "sleep"
-								}
-							}
-						},{
 							"type": "createDamageTakenListener",
 							"actions": [{
 									"type": "removeDamageTakenListener",
@@ -178,23 +158,7 @@
 							}
 					}],
 					"onRemoveActions": [{
-							"type": "removeStateModBuff",
-							"targetUnit": {
-								"type": "getBuffedUnit"
-							},
-							"buff": {
-								"type": "getStoredStateModBuffByKey",
-								"instanceValue": {
-									"type": "rawBoolean",
-									"value": "false"
-								},
-								"key": {
-									"type": "rawString",
-									"value": "sleep"
-								}
-							}
-						},{
-							"type": "cleanUpCastInstance"
+						"type": "cleanUpCastInstance"
 					}]
 				},{
 					"type": "addBuff",
@@ -216,7 +180,7 @@
 			}]
 		}]
 	},{
-		"ids": [{"id":"AUcs", "castId": "carrionswarm"},{"id":"AOsh", "castId": "shockwave"}],
+		"ids": [{"id":"AUcs", "castId": "carrionswarm"}],
 		"type": "NORMAL_POINTTARGET",
 		"displayFields": {
 			"hideAreaCursor": {
@@ -336,18 +300,17 @@
 			}],
 			"canHitTarget": [{
 				"type": "and",
-				"condition1": {
+				"conditions": [{
 					"type": "isValidTarget",
 					"target": {
 						"type": "getProjectileHitWidget"
 					}
-				},
-				"condition2": {
+				},{
 					"type": "isUnitEnemy",
 					"unit": {
 						"type": "getProjectileHitUnit"
 					}
-				}
+				}]
 			}],
 			"onHit": [{
 					"type": "storeValueLocally",
@@ -432,7 +395,6 @@
 					"elseActions": []
 				}]
 		}]
-		
 	},{
 		"ids": [{"id":"AUim", "castId": "impale"}],
 		"type": "NORMAL_POINTTARGET",
@@ -633,6 +595,14 @@
 						"buffId": {
 							"type": "getFirstBuffId"
 						},
+						"positive": {
+							"type": "rawBoolean",
+							"value": "false"
+						},
+						"dispellable": {
+							"type": "rawBoolean",
+							"value": "false"
+						},
 						"artType": "EFFECT",
 						"duration": {
 							"type": "getAbilityDataAsFloat",
@@ -819,6 +789,14 @@
 										"buffId": {
 											"type": "getFirstBuffId"
 										},
+										"positive": {
+											"type": "rawBoolean",
+											"value": "false"
+										},
+										"dispellable": {
+											"type": "rawBoolean",
+											"value": "false"
+										},
 										"duration": {
 											"type": "getAbilityDuration",
 											"target": {
@@ -879,6 +857,5 @@
 						}
 				}]
 		}]
-		
 	}]
 }

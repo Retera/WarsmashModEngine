@@ -1,5 +1,8 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.rendersim.commandbuttons;
 
+import java.util.HashSet;
+import java.util.Set;
+
 import com.badlogic.gdx.graphics.Texture;
 import com.etheller.warsmash.parsers.fdf.GameUI;
 import com.etheller.warsmash.util.War3ID;
@@ -66,6 +69,7 @@ public class CommandCardPopulatingAbilityVisitor implements CAbilityVisitor<Void
 	private final CommandCardActivationReceiverPreviewCallback previewCallback = new CommandCardActivationReceiverPreviewCallback();
 	private GameUI gameUI;
 	private boolean hasCancel;
+	private Set<String> buffVisibleGroups;
 
 	public CommandCardPopulatingAbilityVisitor reset(final CSimulation game, final GameUI gameUI, final CUnit unit,
 			final CommandButtonListener commandButtonListener, final AbilityDataUI abilityDataUI,
@@ -80,13 +84,15 @@ public class CommandCardPopulatingAbilityVisitor implements CAbilityVisitor<Void
 		this.localPlayerIndex = localPlayerIndex;
 		this.hasStop = false;
 		this.hasCancel = false;
+		this.buffVisibleGroups = new HashSet<>();
 		this.previewCallback.setup(this.game.getUnitData(), this.game.getUpgradeData(), this.gameUI.getTemplates());
 		return this;
 	}
 
 	@Override
 	public Void accept(final AbilityBuilderActiveAbility ability) {
-		if ((this.menuBaseOrderId == 0) && ability.isIconShowing()) {
+		if ((this.menuBaseOrderId == 0 || this.menuBaseOrderId == ability.getIconVisibleMenuId())
+				&& ability.isIconShowing()) {
 			final AbilityUI ui = this.abilityDataUI.getUI(ability.getAlias());
 			final boolean autoCastOn = ability.isAutoCastOn();
 			if (ability.isSeparateOnAndOff()) {
@@ -95,16 +101,15 @@ public class CommandCardPopulatingAbilityVisitor implements CAbilityVisitor<Void
 					addCommandButton(ability, ui.getOnIconUI(ability.getLevel() - 1), ability.getHandleId(),
 							ability.getBaseOrderId(),
 							autoCastOn ? ability.getAutoCastOffOrderId() : ability.getAutoCastOnOrderId(), autoCastOn,
-							false, ability.getUIGoldCost(), ability.getUILumberCost(), ability.getUIFoodCost(),
-							ability.getUIManaCost(), ability.getUsesRemaining());
-				}
-				else {
+							ability.isMenuAbility(), ability.getUIGoldCost(), ability.getUILumberCost(),
+							ability.getUIFoodCost(), ability.getUIManaCost(), ability.getUsesRemaining());
+				} else {
 					addCommandButton(ability, ui.getOnIconUI(ability.getLevel() - 1),
 							resolveUnknownIcon(onTt, false, ability.getLevel() - 1), ability.getHandleId(),
 							ability.getBaseOrderId(),
 							autoCastOn ? ability.getAutoCastOffOrderId() : ability.getAutoCastOnOrderId(), autoCastOn,
-							false, ability.getUIGoldCost(), ability.getUILumberCost(), ability.getUIFoodCost(),
-							ability.getUIManaCost(), ability.getUsesRemaining());
+							ability.isMenuAbility(), ability.getUIGoldCost(), ability.getUILumberCost(),
+							ability.getUIFoodCost(), ability.getUIManaCost(), ability.getUsesRemaining());
 				}
 
 				final War3ID offTt = ability.getOffTooltipOverride();
@@ -112,25 +117,22 @@ public class CommandCardPopulatingAbilityVisitor implements CAbilityVisitor<Void
 					addCommandButton(ability, ui.getOffIconUI(ability.getLevel() - 1), ability.getHandleId(),
 							ability.getOffOrderId(),
 							autoCastOn ? ability.getAutoCastOffOrderId() : ability.getAutoCastOnOrderId(), autoCastOn,
-							false, ability.getUIGoldCost(), ability.getUILumberCost(), ability.getUIFoodCost(),
-							ability.getUIManaCost(), -1);
-				}
-				else {
+							ability.isMenuAbility(), ability.getUIGoldCost(), ability.getUILumberCost(),
+							ability.getUIFoodCost(), ability.getUIManaCost(), -1);
+				} else {
 					addCommandButton(ability, ui.getOffIconUI(ability.getLevel() - 1),
 							resolveUnknownIcon(offTt, true, ability.getLevel() - 1), ability.getHandleId(),
 							ability.getOffOrderId(),
 							autoCastOn ? ability.getAutoCastOffOrderId() : ability.getAutoCastOnOrderId(), autoCastOn,
-							false, ability.getUIGoldCost(), ability.getUILumberCost(), ability.getUIFoodCost(),
-							ability.getUIManaCost(), -1);
+							ability.isMenuAbility(), ability.getUIGoldCost(), ability.getUILumberCost(),
+							ability.getUIFoodCost(), ability.getUIManaCost(), -1);
 				}
-			}
-			else {
+			} else {
 				final boolean active = ability.isToggleOn();
 				War3ID tt = null;
 				if (active) {
 					tt = ability.getOnTooltipOverride();
-				}
-				else {
+				} else {
 					tt = ability.getOffTooltipOverride();
 				}
 				if ((tt == null) || (tt == ability.getAlias())) {
@@ -138,17 +140,16 @@ public class CommandCardPopulatingAbilityVisitor implements CAbilityVisitor<Void
 							active ? ui.getOffIconUI(ability.getLevel() - 1) : ui.getOnIconUI(ability.getLevel() - 1),
 							ability.getHandleId(), active ? ability.getOffOrderId() : ability.getBaseOrderId(),
 							autoCastOn ? ability.getAutoCastOffOrderId() : ability.getAutoCastOnOrderId(), autoCastOn,
-							false, ability.getUIGoldCost(), ability.getUILumberCost(), ability.getUIFoodCost(),
-							ability.getUIManaCost(), active ? -1 : ability.getUsesRemaining());
-				}
-				else {
+							ability.isMenuAbility(), ability.getUIGoldCost(), ability.getUILumberCost(),
+							ability.getUIFoodCost(), ability.getUIManaCost(), active ? -1 : ability.getUsesRemaining());
+				} else {
 					addCommandButton(ability,
 							active ? ui.getOffIconUI(ability.getLevel() - 1) : ui.getOnIconUI(ability.getLevel() - 1),
 							resolveUnknownIcon(tt, active, ability.getLevel() - 1), ability.getHandleId(),
 							active ? ability.getOffOrderId() : ability.getBaseOrderId(),
 							autoCastOn ? ability.getAutoCastOffOrderId() : ability.getAutoCastOnOrderId(), autoCastOn,
-							false, ability.getUIGoldCost(), ability.getUILumberCost(), ability.getUIFoodCost(),
-							ability.getUIManaCost(), active ? -1 : ability.getUsesRemaining());
+							ability.isMenuAbility(), ability.getUIGoldCost(), ability.getUILumberCost(),
+							ability.getUIFoodCost(), ability.getUIManaCost(), active ? -1 : ability.getUsesRemaining());
 				}
 			}
 		}
@@ -175,12 +176,10 @@ public class CommandCardPopulatingAbilityVisitor implements CAbilityVisitor<Void
 					icon = buff.getOnIconUI();
 				}
 			}
-		}
-		else {
+		} else {
 			if (active) {
 				icon = aui.getOffIconUI(index);
-			}
-			else {
+			} else {
 				icon = aui.getOnIconUI(index);
 			}
 		}
@@ -240,8 +239,7 @@ public class CommandCardPopulatingAbilityVisitor implements CAbilityVisitor<Void
 				if (abilityUI != null) {
 					addCommandButton(ability, abilityUI.getOnIconUI(ability.getLevel() - 1), ability.getHandleId(), 0,
 							0, false, false);
-				}
-				else {
+				} else {
 					addCommandButton(ability, this.abilityDataUI.getStopUI(), ability.getHandleId(), 0, 0, false,
 							false);
 				}
@@ -329,8 +327,7 @@ public class CommandCardPopulatingAbilityVisitor implements CAbilityVisitor<Void
 			int autoCastId;
 			if (autoCastActive) {
 				autoCastId = OrderIds.coldarrows;
-			}
-			else {
+			} else {
 				autoCastId = OrderIds.uncoldarrows;
 			}
 			final IconUI onIconUI = this.abilityDataUI.getUI(ability.getAlias()).getOnIconUI(ability.getLevel() - 1);
@@ -406,8 +403,7 @@ public class CommandCardPopulatingAbilityVisitor implements CAbilityVisitor<Void
 							simulationUnitType.getFoodUsed(), 0, -1);
 				}
 			}
-		}
-		else if (this.menuBaseOrderId == 0) {
+		} else if (this.menuBaseOrderId == 0) {
 			if (this.multiSelect) {
 				return;
 			}
@@ -424,11 +420,17 @@ public class CommandCardPopulatingAbilityVisitor implements CAbilityVisitor<Void
 					this.commandButtonListener.timedLifeBar(buff.getLevel(), iconUI.getToolTip(),
 							buff.getDurationRemaining(this.game, this.unit), buff.getDurationMax());
 				}
-			}
-			else {
+			} else {
 				if (buff.isIconShowing()) {
-					this.commandButtonListener.buff(iconUI.getIcon(), buff.getLevel(), iconUI.getToolTip(),
-							iconUI.getUberTip());
+					String group = buff.getVisibilityGroup();
+					if (group != null && this.buffVisibleGroups.contains(group)) {
+						return;
+					}
+					if (iconUI != null) {
+						this.commandButtonListener.buff(iconUI.getIcon(), buff.getLevel(), iconUI.getToolTip(),
+								iconUI.getUberTip(), buff.isPositive(), buff.isLeveled());
+					}
+					this.buffVisibleGroups.add(group);
 				}
 			}
 		}
@@ -481,8 +483,7 @@ public class CommandCardPopulatingAbilityVisitor implements CAbilityVisitor<Void
 					final CUnit selectedPlayerUnit = neutralBuildingData.getSelectedPlayerUnit(this.localPlayerIndex);
 					if (selectedPlayerUnit != null) {
 						controlShared = true;
-					}
-					else {
+					} else {
 						requiresPatron = true;
 					}
 				}
@@ -491,7 +492,7 @@ public class CommandCardPopulatingAbilityVisitor implements CAbilityVisitor<Void
 				return;
 			}
 		}
-		ability.checkCanUse(this.game, this.unit, this.localPlayerIndex, orderId, this.previewCallback.reset());
+		ability.checkCanUse(this.game, this.unit, this.localPlayerIndex, orderId, false, this.previewCallback.reset());
 		if (!this.previewCallback.isOmitIconEntirely()) {
 			if (requiresPatron) {
 				this.previewCallback
@@ -500,6 +501,8 @@ public class CommandCardPopulatingAbilityVisitor implements CAbilityVisitor<Void
 			final boolean active = (this.unit.getCurrentBehavior() != null)
 					&& (orderId == this.unit.getCurrentBehavior().getHighlightOrderId());
 			final boolean disabled = ((ability != null) && ability.isDisabled()) || this.previewCallback.isDisabled();
+			final boolean clickDisabled = ((ability != null) && ability.isClickDisabled())
+					|| this.previewCallback.isDisabled();
 			final float cooldownRemaining = this.previewCallback.getCooldownRemaining();
 			final float cooldownMax = this.previewCallback.getCooldownMax();
 			if (disabled || this.previewCallback.isOutOfStock()) {
@@ -516,9 +519,11 @@ public class CommandCardPopulatingAbilityVisitor implements CAbilityVisitor<Void
 			if (this.previewCallback.isShowingRequirements()) {
 				uberTip = this.previewCallback.getRequirementsText() + "|r" + uberTip;
 			}
-			this.commandButtonListener.commandButton(buttonPosX, buttonPosY, disabled ? iconDisabled : icon, handleId,
-					disabled ? 0 : orderId, autoCastOrderId, active, autoCastActive, menuButton, toolTip, uberTip,
-					hotkey, goldCost, lumberCost, foodCost, manaCost, cooldownRemaining, cooldownMax, numberOverlay);
+			this.commandButtonListener.commandButton(buttonPosX, buttonPosY,
+					(disabled || clickDisabled) ? iconDisabled : icon, handleId,
+					(disabled || clickDisabled) ? 0 : orderId, autoCastOrderId, active, autoCastActive, menuButton,
+					toolTip, uberTip, hotkey, goldCost, lumberCost, foodCost, manaCost, cooldownRemaining, cooldownMax,
+					numberOverlay);
 		}
 
 	}
@@ -578,8 +583,7 @@ public class CommandCardPopulatingAbilityVisitor implements CAbilityVisitor<Void
 							&& (this.game.getPlayer(this.unit.getPlayerIndex()).getHeroTokens() > 0)) {
 						goldCost = 0;
 						lumberCost = 0;
-					}
-					else {
+					} else {
 						goldCost = simulationUnitType.getGoldCost();
 						lumberCost = simulationUnitType.getLumberCost();
 					}
@@ -640,8 +644,7 @@ public class CommandCardPopulatingAbilityVisitor implements CAbilityVisitor<Void
 					if (this.game.getGameplayConstants().isRelativeUpgradeCosts()) {
 						relativeOffsetGold = existingUnitType.getGoldCost();
 						relativeOffsetLumber = existingUnitType.getLumberCost();
-					}
-					else {
+					} else {
 						relativeOffsetGold = 0;
 						relativeOffsetLumber = 0;
 					}
@@ -676,12 +679,11 @@ public class CommandCardPopulatingAbilityVisitor implements CAbilityVisitor<Void
 							unitType.getValue(), 0, false, false, 0, 0, 0, 0, nextLevel);
 				}
 			}
-		}
-		else {
+		} else {
 			if (this.multiSelect) {
 				return null;
 			}
-			if (this.menuBaseOrderId == 0) {
+			if (this.menuBaseOrderId == 0 && ability.isIconShowing()) {
 				final int skillPoints = ability.getSkillPoints();
 				addCommandButton(ability, this.abilityDataUI.getSelectSkillUI(), ability.getHandleId(),
 						OrderIds.skillmenu, 0, false, true, 0, 0, 0, 0, skillPoints != 0 ? skillPoints : -1);

@@ -31,6 +31,7 @@ public class RenderDoodad {
 	private static final String DOODAD_COLOR_BLUE = "vertB"; // replaced from 'dvb1'
 
 	private CFogState fogState;
+	private byte lastFogStateColor;
 	private final float[] vertexColorBase;
 	private final float[] vertexColorFogged;
 
@@ -101,8 +102,16 @@ public class RenderDoodad {
 		this.instance = instance;
 		this.row = row;
 
-		this.fogState = CFogState.MASKED;
-		((MdxComplexInstance) instance).setVertexColor(VERTEX_COLOR_BLACK);
+		final CPlayerFogOfWar fogOfWar = map.getFogOfWar();
+		final PathingGrid pathingGrid = map.simulation.getPathingGrid();
+		final int fogOfWarIndexX = pathingGrid.getFogOfWarIndexX(this.x);
+		final int fogOfWarIndexY = pathingGrid.getFogOfWarIndexY(this.y);
+		this.fogState = fogOfWar.getFogState(map.simulation, fogOfWarIndexX, fogOfWarIndexY);
+		this.lastFogStateColor = this.fogState.getMask(); 
+		for (int i = 0; i < this.vertexColorBase.length; i++) {
+			VERTEX_COLOR_HEAP[i] = (this.vertexColorBase[i] * (255 - (this.lastFogStateColor & 0xFF))) / 255f;
+		}
+		((MdxComplexInstance) this.instance).setVertexColor(VERTEX_COLOR_HEAP);
 
 	}
 
@@ -121,7 +130,6 @@ public class RenderDoodad {
 		return PrimaryTag.STAND;
 	}
 
-	private byte lastFogStateColor = 0;
 
 	public void updateFog(final War3MapViewer war3MapViewer) {
 		final CPlayerFogOfWar fogOfWar = war3MapViewer.getFogOfWar();

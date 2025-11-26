@@ -1,12 +1,16 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.buff;
 
+import java.util.Map;
+
 import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbility;
 
 public class ABTargetingBuff extends ABBuff {
-	public ABTargetingBuff(int handleId, War3ID alias) {
-		super(handleId, alias, alias);
+	public ABTargetingBuff(int handleId, War3ID alias, Map<String, Object> localStore, CAbility sourceAbility,
+			CUnit sourceUnit) {
+		super(handleId, alias, alias, localStore, sourceAbility, sourceUnit);
 		this.setIconShowing(false);
 	}
 
@@ -18,11 +22,6 @@ public class ABTargetingBuff extends ABBuff {
 	@Override
 	public float getDurationMax() {
 		return 0;
-	}
-
-	@Override
-	public boolean isTimedLifeBar() {
-		return false;
 	}
 
 	@Override

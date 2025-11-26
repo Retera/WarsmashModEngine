@@ -1,0 +1,272 @@
+{
+	"abilityList": [{
+		"ids": [{"id":"AOcl", "castId": "chainlightning"}],
+		"type": "NORMAL_UNITTARGET",
+		"displayFields": {
+			"hideAreaCursor": {
+				"type": "rawBoolean",
+				"value": "true"
+			}
+		},
+		"reuseCallbacks": {
+			"jumpCondition": {
+				"type": "and",
+				"conditions": [{
+						"type": "isUnitValidTarget",
+						"target": {
+							"type": "getMatchingUnit"
+						}
+					},{
+						"type": "isUnitVisible",
+						"unit": {
+							"type": "getMatchingUnit"
+						}
+					},{
+						"type": "not",
+						"condition": {
+							"type": "isUnitSleeping",
+							"unit": {
+								"type": "getMatchingUnit"
+							}
+						}
+				}]
+			}
+		},
+		"reuseActions": {
+			"onCast": [{
+				"type": "storeValueLocally",
+				"key": {
+					"type": "rawString",
+					"value": "amount"
+				},
+				"valueToStore": {
+					"type": "getAbilityDataAsFloat",
+					"dataField": "A"
+				}
+			}],
+			"onHit": [{
+					"type": "createTemporarySpellEffectOnUnit",
+					"target": {
+						"type": "getChainUnit"
+					},
+					"id": {
+						"type": "getAlias"
+					},
+					"effectType": "TARGET"
+				},{
+					"type": "damageTarget",
+					"source": {
+						"type": "getCastingUnit"
+					},
+					"target": {
+						"type": "getChainUnit"
+					},
+					"damage": {
+						"type": "getStoredFloatByKey",
+						"key": {
+							"type": "rawString",
+							"value": "amount"
+						}
+					}
+				},{
+					"type": "storeValueLocally",
+					"key": {
+						"type": "rawString",
+						"value": "amount"
+					},
+					"valueToStore": {
+						"type": "f*",
+						"value1": {
+							"type": "getStoredFloatByKey",
+							"key": {
+								"type": "rawString",
+								"value": "amount"
+							}
+						},
+						"value2": {
+							"type": "f-",
+							"value1": {
+								"type": "rawFloat",
+								"value": 1
+							},
+							"value2": {
+								"type": "getAbilityDataAsFloat",
+								"dataField": "C"
+							}
+						}
+					}
+			}]
+		},
+		"onEndCasting": [{
+				"type": "runReuseAction",
+				"name": {
+					"type": "rawString",
+					"value": "onCast"
+				}
+			},{
+				"type": "createTemporarySpellEffectOnUnit",
+				"target": {
+					"type": "getCastingUnit"
+				},
+				"id": {
+					"type": "getAlias"
+				},
+				"effectType": "CASTER"
+			},{
+				"type": "chainEffect",
+				"target": {
+					"type": "getAbilityTargetedUnit"
+				},
+				"lightningId": {
+					"type": "getAlias"
+				},
+				"bounces": {
+					"type": "i-",
+					"value1": {
+						"type": "getAbilityDataAsInteger",
+						"dataField": "B"
+					},
+					"value2": {
+						"type": "rawInteger",
+						"value": 1
+					}
+				},
+				"range": {
+					"type": "getAbilityArea"
+				},
+				"bounceDelay": {
+					"type": "rawFloat",
+					"value": 0.25
+				},
+				"allowMultipleBouncesPerUnit": {
+					"type": "rawBoolean",
+					"value": "false"
+				},
+				"condition": {
+					"type": "reuseBoolean",
+					"name": {
+						"type": "rawString",
+						"value": "jumpCondition"
+					}
+				},
+				"actions": [{
+					"type": "runReuseAction",
+					"name": {
+						"type": "rawString",
+						"value": "onHit"
+					}
+				}]
+		}]
+	},{
+		"ids": [{"id":"AOhw", "castId": "healingwave"}],
+		"type": "INHERIT",
+		"parentId": "AOcl",
+		"extraTargetConditions": [{
+			"type": "reuseBooleanWithArguments",
+			"name": {
+				"type": "rawString",
+				"value": "targetCondition"
+			},
+			"arguments": {
+				"checkUnit": {
+					"type": "getAbilityTargetedUnit"
+				}
+			}
+		}],
+		"reuseCallbacks": {
+			"targetCondition": {
+				"type": "setCantUseReasonOnFailure",
+				"condition": {
+					"type": "not",
+					"condition": {
+						"type": "isUnitMaxHp",
+						"unit": {
+							"type": "argumentUnit",
+							"name": {
+								"type": "rawString",
+								"value": "checkUnit"
+							}
+						}
+					}
+				},
+				"reason": "ALREADY_AT_FULL_HEALTH"
+			},
+			"jumpCondition": {
+				"type": "and",
+				"conditions": [{
+						"type": "isUnitValidTarget",
+						"target": {
+							"type": "getMatchingUnit"
+						}
+					},{
+						"type": "reuseBooleanWithArguments",
+						"name": {
+							"type": "rawString",
+							"value": "targetCondition"
+						},
+						"arguments": {
+							"checkUnit": {
+								"type": "getMatchingUnit"
+							}
+						}
+					},{
+						"type": "isUnitVisible",
+						"unit": {
+							"type": "getMatchingUnit"
+						}
+				}]
+			}
+		},
+		"reuseActions": {
+			"onHit": [{
+					"type": "createTemporarySpellEffectOnUnit",
+					"target": {
+						"type": "getChainUnit"
+					},
+					"id": {
+						"type": "getAlias"
+					},
+					"effectType": "TARGET"
+				},{
+					"type": "heal",
+					"target": {
+						"type": "getChainUnit"
+					},
+					"amount": {
+						"type": "getStoredFloatByKey",
+						"key": {
+							"type": "rawString",
+							"value": "amount"
+						}
+					}
+				},{
+					"type": "storeValueLocally",
+					"key": {
+						"type": "rawString",
+						"value": "amount"
+					},
+					"valueToStore": {
+						"type": "f*",
+						"value1": {
+							"type": "getStoredFloatByKey",
+							"key": {
+								"type": "rawString",
+								"value": "amount"
+							}
+						},
+						"value2": {
+							"type": "f-",
+							"value1": {
+								"type": "rawFloat",
+								"value": 1
+							},
+							"value2": {
+								"type": "getAbilityDataAsFloat",
+								"dataField": "C"
+							}
+						}
+					}
+			}]
+		}
+	}]
+}

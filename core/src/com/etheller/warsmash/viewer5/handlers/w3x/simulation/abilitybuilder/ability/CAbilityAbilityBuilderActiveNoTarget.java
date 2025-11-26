@@ -9,10 +9,13 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityPointTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTarget;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTargetVisitor;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.ABBehavior;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABLocalStoreKeys;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.parser.AbilityBuilderConfiguration;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.types.impl.CAbilityTypeAbilityBuilderLevelData;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehavior;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.JassGameEventsWar3;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityActivationReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetCheckReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.CommandStringErrorKeys;
@@ -33,15 +36,16 @@ public class CAbilityAbilityBuilderActiveNoTarget extends CAbilityAbilityBuilder
 		super.onAdd(game, unit);
 		determineCastless(unit);
 	}
-	
+
 	@Override
 	public void setLevel(CSimulation game, CUnit unit, int level) {
 		super.setLevel(game, unit, level);
 		determineCastless(unit);
 	}
-	
+
 	protected void determineCastless(CUnit unit) {
-		if (this.item != null || this.config.getDisplayFields() != null && this.config.getDisplayFields().getCastlessNoTarget() != null
+		if (this.item != null || this.config.getDisplayFields() != null
+				&& this.config.getDisplayFields().getCastlessNoTarget() != null
 				&& this.config.getDisplayFields().getCastlessNoTarget().callback(null, unit, localStore, castId)) {
 			this.castless = true;
 			this.behavior = null;
@@ -52,18 +56,19 @@ public class CAbilityAbilityBuilderActiveNoTarget extends CAbilityAbilityBuilder
 	}
 
 	@Override
-	public CBehavior begin(CSimulation game, CUnit caster, int playerIndex, int orderId, CWidget target) {
+	public CBehavior begin(CSimulation game, CUnit caster, int playerIndex, int orderId, boolean autoOrder, CWidget target) {
 		return null;
 	}
 
 	@Override
-	public CBehavior begin(CSimulation game, CUnit caster, int playerIndex, int orderId, AbilityPointTarget point) {
+	public CBehavior begin(CSimulation game, CUnit caster, int playerIndex, int orderId, boolean autoOrder, AbilityPointTarget point) {
 		return null;
 	}
 
 	@Override
-	public boolean checkBeforeQueue(final CSimulation game, final CUnit caster, int playerIndex,
-			final int orderId, final AbilityTarget target) {
+	public boolean checkBeforeQueue(final CSimulation game, final CUnit caster, int playerIndex, final int orderId, boolean autoOrder,
+			final AbilityTarget target) {
+		this.localStore.put(ABLocalStoreKeys.combineKey(ABLocalStoreKeys.ISAUTOCAST, castId), autoOrder);
 
 //		System.err.println("Checking queue notarg level: " + active + " orderID : " + orderId + " offID: " + this.getOffOrderId());
 		if (castless && orderId == this.getBaseOrderId()) {
@@ -78,21 +83,40 @@ public class CAbilityAbilityBuilderActiveNoTarget extends CAbilityAbilityBuilder
 			this.startCooldown(game, caster);
 			this.runBeginCastingActions(game, caster, orderId);
 			this.runEndCastingActions(game, caster, orderId);
+			caster.fireSpellEvents(game, JassGameEventsWar3.EVENT_UNIT_SPELL_CHANNEL, this, null);
+			caster.fireSpellEvents(game, JassGameEventsWar3.EVENT_UNIT_SPELL_CAST, this, null);
+			caster.fireSpellEvents(game, JassGameEventsWar3.EVENT_UNIT_SPELL_EFFECT, this, null);
+			caster.fireSpellEvents(game, JassGameEventsWar3.EVENT_UNIT_SPELL_FINISH, this, null);
+			caster.fireSpellEvents(game, JassGameEventsWar3.EVENT_UNIT_SPELL_ENDCAST, this, null);
 			return false;
 		}
-		return super.checkBeforeQueue(game, caster, playerIndex, orderId, target);
+		return super.checkBeforeQueue(game, caster, playerIndex, orderId, autoOrder, target);
 	}
 
 	@Override
-	public CBehavior beginNoTarget(CSimulation game, CUnit caster, int playerIndex, int orderId) {
-		this.castId++;
+	public CBehavior beginNoTarget(CSimulation game, CUnit caster, int playerIndex, int orderId, boolean autoOrder) {
+		this.internalBegin(game, caster, playerIndex, orderId, autoOrder, null);
 		if (castless) {
 			return null;
 		} else {
-			this.runOnOrderIssuedActions(game, caster, orderId);
 			this.behavior.setCastId(castId);
-			return this.behavior.reset();
+			return this.behavior.reset(playerIndex, orderId, autoOrder);
 		}
+	}
+
+	@Override
+	public void internalBegin(CSimulation game, CUnit caster, int playerIndex, int orderId, boolean autoOrder, AbilityTarget target) {
+		this.castId++;
+		if (!castless) {
+			this.localStore.put(ABLocalStoreKeys.combineKey(ABLocalStoreKeys.ISAUTOCAST, castId), autoOrder);
+			this.localStore.put(ABLocalStoreKeys.PREVIOUSBEHAVIOR, caster.getCurrentBehavior());
+			this.runOnOrderIssuedActions(game, caster, orderId);
+		}
+	}
+
+	@Override
+	public void cleanupInputs(int theCastId) {
+		this.localStore.remove(ABLocalStoreKeys.PREVIOUSBEHAVIOR);
 	}
 
 	@Override
@@ -120,6 +144,5 @@ public class CAbilityAbilityBuilderActiveNoTarget extends CAbilityAbilityBuilder
 			AbilityActivationReceiver receiver) {
 		return true;
 	}
-
 
 }

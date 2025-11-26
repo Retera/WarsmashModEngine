@@ -88,19 +88,19 @@ public class CAbilityHarvest extends AbstractGenericSingleIconActiveAbility {
 
 	@Override
 	public CBehavior begin(final CSimulation game, final CUnit caster, final int playerIndex, final int orderId,
-			final CWidget target) {
+			final boolean autoOrder, final CWidget target) {
 		return this.behaviorHarvest.reset(game, target);
 	}
 
 	@Override
 	public CBehavior begin(final CSimulation game, final CUnit caster, final int playerIndex, final int orderId,
-			final AbilityPointTarget point) {
+			final boolean autoOrder, final AbilityPointTarget point) {
 		return caster.pollNextOrderBehavior(game);
 	}
 
 	@Override
-	public CBehavior beginNoTarget(final CSimulation game, final CUnit caster, final int playerIndex,
-			final int orderId) {
+	public CBehavior beginNoTarget(final CSimulation game, final CUnit caster, final int playerIndex, final int orderId,
+			final boolean autoOrder) {
 		if (isToggleOn() && (orderId == OrderIds.returnresources)) {
 			return this.behaviorReturnResources.reset(game);
 		}
@@ -267,6 +267,11 @@ public class CAbilityHarvest extends AbstractGenericSingleIconActiveAbility {
 	@Override
 	public boolean isPhysical() {
 		return true;
+	}
+
+	@Override
+	public boolean isMagic() {
+		return false;
 	}
 
 	@Override

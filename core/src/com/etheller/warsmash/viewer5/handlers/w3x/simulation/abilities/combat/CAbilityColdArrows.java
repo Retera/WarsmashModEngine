@@ -15,7 +15,6 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.CUni
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.OrderIds;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityActivationReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetCheckReceiver;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.BooleanAbilityTargetCheckReceiver;
 
 /**
  * Represents an ability from the object data
@@ -28,14 +27,14 @@ public class CAbilityColdArrows extends AbstractGenericAliasedAbility {
 	}
 
 	@Override
-	protected void innerCheckCanUse(final CSimulation game, final CUnit unit, int playerIndex,
-			final int orderId, final AbilityActivationReceiver receiver) {
+	protected void innerCheckCanUse(final CSimulation game, final CUnit unit, final int playerIndex, final int orderId,
+			final AbilityActivationReceiver receiver) {
 		receiver.useOk();
 	}
 
 	@Override
-	public void checkCanTarget(final CSimulation game, final CUnit unit, int playerIndex, final int orderId,
-			final CWidget target, final AbilityTargetCheckReceiver<CWidget> receiver) {
+	public void checkCanTarget(final CSimulation game, final CUnit unit, final int playerIndex, final int orderId,
+			final boolean autoOrder, final CWidget target, final AbilityTargetCheckReceiver<CWidget> receiver) {
 		switch (orderId) {
 		case OrderIds.coldarrowstarg:
 			receiver.targetOk(target);
@@ -47,14 +46,15 @@ public class CAbilityColdArrows extends AbstractGenericAliasedAbility {
 	}
 
 	@Override
-	public void checkCanTarget(final CSimulation game, final CUnit unit, int playerIndex,
-			final int orderId, final AbilityPointTarget target, final AbilityTargetCheckReceiver<AbilityPointTarget> receiver) {
+	public void checkCanTarget(final CSimulation game, final CUnit unit, final int playerIndex, final int orderId,
+			final boolean autoOrder, final AbilityPointTarget target,
+			final AbilityTargetCheckReceiver<AbilityPointTarget> receiver) {
 		receiver.orderIdNotAccepted();
 	}
 
 	@Override
-	public void checkCanTargetNoTarget(final CSimulation game, final CUnit unit, int playerIndex,
-			final int orderId, final AbilityTargetCheckReceiver<Void> receiver) {
+	public void checkCanTargetNoTarget(final CSimulation game, final CUnit unit, final int playerIndex,
+			final int orderId, final boolean autoOrder, final AbilityTargetCheckReceiver<Void> receiver) {
 		switch (orderId) {
 		case OrderIds.coldarrows:
 		case OrderIds.uncoldarrows:
@@ -88,8 +88,8 @@ public class CAbilityColdArrows extends AbstractGenericAliasedAbility {
 	}
 
 	@Override
-	public boolean checkBeforeQueue(final CSimulation game, final CUnit caster, int playerIndex,
-			final int orderId, final AbilityTarget target) {
+	public boolean checkBeforeQueue(final CSimulation game, final CUnit caster, final int playerIndex,
+			final int orderId, final boolean autoOrder, final AbilityTarget target) {
 		switch (orderId) {
 		case OrderIds.coldarrows:
 		case OrderIds.uncoldarrows:
@@ -101,7 +101,8 @@ public class CAbilityColdArrows extends AbstractGenericAliasedAbility {
 	}
 
 	@Override
-	public CBehavior begin(final CSimulation game, final CUnit caster, int playerIndex, final int orderId, final CWidget target) {
+	public CBehavior begin(final CSimulation game, final CUnit caster, final int playerIndex, final int orderId,
+			final boolean autoOrder, final CWidget target) {
 		CBehavior behavior = null;
 		for (final CUnitAttack attack : caster.getCurrentAttacks()) {
 			if (target.canBeTargetedBy(game, caster, attack.getTargetsAllowed())) {
@@ -117,18 +118,19 @@ public class CAbilityColdArrows extends AbstractGenericAliasedAbility {
 	}
 
 	@Override
-	public CBehavior begin(final CSimulation game, final CUnit caster, int playerIndex,
-			final int orderId, final AbilityPointTarget point) {
+	public CBehavior begin(final CSimulation game, final CUnit caster, final int playerIndex, final int orderId,
+			final boolean autoOrder, final AbilityPointTarget point) {
 		return caster.pollNextOrderBehavior(game);
 	}
 
 	@Override
-	public CBehavior beginNoTarget(final CSimulation game, final CUnit caster, int playerIndex, final int orderId) {
+	public CBehavior beginNoTarget(final CSimulation game, final CUnit caster, final int playerIndex, final int orderId,
+			final boolean autoOrder) {
 		return caster.pollNextOrderBehavior(game);
 	}
 
 	@Override
-	public void onCancelFromQueue(final CSimulation game, final CUnit unit, int playerIndex, final int orderId) {
+	public void onCancelFromQueue(final CSimulation game, final CUnit unit, final int playerIndex, final int orderId) {
 	}
 
 	@Override
@@ -138,6 +140,11 @@ public class CAbilityColdArrows extends AbstractGenericAliasedAbility {
 	@Override
 	public boolean isPhysical() {
 		return false;
+	}
+
+	@Override
+	public boolean isMagic() {
+		return true;
 	}
 
 	@Override

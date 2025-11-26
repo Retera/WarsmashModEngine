@@ -14,7 +14,6 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.harvest.C
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.OrderIds;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityActivationReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetCheckReceiver;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetCheckReceiver.TeamType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.CommandStringErrorKeys;
 
 public class CAbilityAcolyteHarvest extends AbstractGenericSingleIconActiveAbility {
@@ -22,7 +21,8 @@ public class CAbilityAcolyteHarvest extends AbstractGenericSingleIconActiveAbili
 	private float duration;
 	private CBehaviorAcolyteHarvest behaviorAcolyteHarvest;
 
-	public CAbilityAcolyteHarvest(final int handleId, final War3ID code, final War3ID alias, final float castRange, final float duration) {
+	public CAbilityAcolyteHarvest(final int handleId, final War3ID code, final War3ID alias, final float castRange,
+			final float duration) {
 		super(handleId, code, alias);
 		this.castRange = castRange;
 		this.duration = duration;
@@ -42,18 +42,20 @@ public class CAbilityAcolyteHarvest extends AbstractGenericSingleIconActiveAbili
 	}
 
 	@Override
-	public CBehavior begin(final CSimulation game, final CUnit caster, int playerIndex, final int orderId, final CWidget target) {
+	public CBehavior begin(final CSimulation game, final CUnit caster, final int playerIndex, final int orderId,
+			final boolean autoOrder, final CWidget target) {
 		return this.behaviorAcolyteHarvest.reset(game, target);
 	}
 
 	@Override
-	public CBehavior begin(final CSimulation game, final CUnit caster, int playerIndex,
-			final int orderId, final AbilityPointTarget point) {
+	public CBehavior begin(final CSimulation game, final CUnit caster, final int playerIndex, final int orderId,
+			final boolean autoOrder, final AbilityPointTarget point) {
 		return caster.pollNextOrderBehavior(game);
 	}
 
 	@Override
-	public CBehavior beginNoTarget(final CSimulation game, final CUnit caster, int playerIndex, final int orderId) {
+	public CBehavior beginNoTarget(final CSimulation game, final CUnit caster, final int playerIndex, final int orderId,
+			final boolean autoOrder) {
 		return caster.pollNextOrderBehavior(game);
 	}
 
@@ -68,8 +70,8 @@ public class CAbilityAcolyteHarvest extends AbstractGenericSingleIconActiveAbili
 	}
 
 	@Override
-	protected void innerCheckCanUse(final CSimulation game, final CUnit unit, int playerIndex,
-			final int orderId, final AbilityActivationReceiver receiver) {
+	protected void innerCheckCanUse(final CSimulation game, final CUnit unit, final int playerIndex, final int orderId,
+			final AbilityActivationReceiver receiver) {
 		receiver.useOk();
 	}
 
@@ -89,7 +91,8 @@ public class CAbilityAcolyteHarvest extends AbstractGenericSingleIconActiveAbili
 					receiver.targetOk(target);
 				}
 				else {
-					receiver.targetCheckFailed(CommandStringErrorKeys.UNABLE_TO_USE_A_MINE_CONTROLLED_BY_ANOTHER_PLAYER);
+					receiver.targetCheckFailed(
+							CommandStringErrorKeys.UNABLE_TO_USE_A_MINE_CONTROLLED_BY_ANOTHER_PLAYER);
 				}
 			}
 			else {
@@ -126,7 +129,7 @@ public class CAbilityAcolyteHarvest extends AbstractGenericSingleIconActiveAbili
 	}
 
 	@Override
-	public void onCancelFromQueue(final CSimulation game, final CUnit unit, int playerIndex, final int orderId) {
+	public void onCancelFromQueue(final CSimulation game, final CUnit unit, final int playerIndex, final int orderId) {
 	}
 
 	public void setCastRange(final float castRange) {
@@ -148,6 +151,11 @@ public class CAbilityAcolyteHarvest extends AbstractGenericSingleIconActiveAbili
 	@Override
 	public boolean isPhysical() {
 		return true;
+	}
+
+	@Override
+	public boolean isMagic() {
+		return false;
 	}
 
 	@Override

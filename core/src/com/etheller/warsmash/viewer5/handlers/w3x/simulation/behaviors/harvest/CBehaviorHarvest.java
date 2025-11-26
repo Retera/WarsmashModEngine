@@ -79,6 +79,7 @@ public class CBehaviorHarvest extends CAbstractRangedBehavior
 					final CAbilityGoldMinable abilityGoldMine = (CAbilityGoldMinable) ability;
 					final int activeMiners = abilityGoldMine.getActiveMinerCount();
 					if (activeMiners < abilityGoldMine.getMiningCapacity()) {
+						this.unit.fireBehaviorChangeEvent(this.simulation, this, true);
 						abilityGoldMine.addMiner(this);
 						this.unit.setHidden(true);
 						this.unit.setInvulnerable(true);
@@ -113,7 +114,7 @@ public class CBehaviorHarvest extends CAbstractRangedBehavior
 		this.unit.setHidden(false);
 		this.unit.setInvulnerable(false);
 		dropResources();
-		this.abilityHarvest.setCarriedResources(ResourceType.GOLD, goldMined * 15);
+		this.abilityHarvest.setCarriedResources(ResourceType.GOLD, goldMined);
 		if (this.unit.getUnitAnimationListener().addSecondaryTag(SecondaryTag.GOLD)) {
 			this.unit.getUnitAnimationListener().forceResetCurrentAnimation();
 		}

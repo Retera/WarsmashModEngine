@@ -945,11 +945,11 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 							final BooleanAbilityActivationReceiver activationReceiver = BooleanAbilityActivationReceiver.INSTANCE;
 							final CSimulation simulation = MeleeUI.this.war3MapViewer.simulation;
 							cargoData.checkCanUse(simulation, simulationUnit, MeleeUI.this.localPlayer.getId(),
-									OrderIds.unload, activationReceiver);
+									OrderIds.unload, false, activationReceiver);
 							if (activationReceiver.isOk()) {
 								final CWidgetAbilityTargetCheckReceiver targetCheckReceiver = CWidgetAbilityTargetCheckReceiver.INSTANCE;
 								cargoData.checkCanTarget(simulation, simulationUnit, MeleeUI.this.localPlayer.getId(),
-										OrderIds.unload, unitInside, targetCheckReceiver.reset());
+										OrderIds.unload, false, unitInside, targetCheckReceiver.reset());
 								if (targetCheckReceiver.getTarget() != null) {
 									final CPlayer player = simulation.getPlayer(simulationUnit.getPlayerIndex());
 									MeleeUI.this.unitOrderListener.issueTargetOrder(simulationUnit.getHandleId(),
@@ -1402,13 +1402,14 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 		}
 		if (abilityToUse != null) {
 			abilityToUse.checkCanUse(this.war3MapViewer.simulation, this.selectedUnit.getSimulationUnit(),
-					this.localPlayer.getId(), orderId, this.meleeUIAbilityActivationReceiver.reset(this,
+					this.localPlayer.getId(), orderId, false, this.meleeUIAbilityActivationReceiver.reset(this,
 							this.war3MapViewer.worldScene.audioContext, this.selectedUnit));
 			if (this.meleeUIAbilityActivationReceiver.isUseOk()) {
 				final BooleanAbilityTargetCheckReceiver<Void> noTargetReceiver = BooleanAbilityTargetCheckReceiver
 						.<Void>getInstance().reset();
 				abilityToUse.checkCanTargetNoTarget(this.war3MapViewer.simulation,
-						this.selectedUnit.getSimulationUnit(), this.localPlayer.getId(), orderId, noTargetReceiver);
+						this.selectedUnit.getSimulationUnit(), this.localPlayer.getId(), orderId, false,
+						noTargetReceiver);
 				if (noTargetReceiver.isTargetable()) {
 					final boolean shiftDown = isShiftDown();
 					this.unitOrderListener.issueImmediateOrder(this.selectedUnit.getSimulationUnit().getHandleId(),
@@ -1429,7 +1430,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 											.<Void>getInstance().reset();
 									ability.checkCanTargetNoTarget(this.war3MapViewer.simulation,
 											otherSelectedUnit.getSimulationUnit(), this.localPlayer.getId(),
-											this.activeCommandOrderId, receiver);
+											this.activeCommandOrderId, false, receiver);
 									if (receiver.isTargetable()) {
 										abilityToUse = ability;
 									}
@@ -1775,11 +1776,13 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 			else if (this.mouseOverUnit != null) {
 				if (this.mouseOverUnit instanceof RenderUnit) {
 					final RenderUnit mouseOverUnitUnit = (RenderUnit) this.mouseOverUnit;
-					final int playerIndex = mouseOverUnitUnit.getSimulationUnit().getPlayerIndex();
+					final int playerIndex = mouseOverUnitUnit.getSimulationUnit().getFakePlayerIndex();
 					if (!this.localPlayer.hasAlliance(playerIndex, CAllianceType.PASSIVE)) {
 						setCursorState(MenuCursorState.SELECT, Color.RED);
 					}
-					else if (this.localPlayer.hasAlliance(playerIndex, CAllianceType.SHARED_CONTROL)) {
+					else if (this.localPlayer.hasAlliance(playerIndex, CAllianceType.SHARED_CONTROL)
+							|| this.localPlayer.hasAlliance(mouseOverUnitUnit.getSimulationUnit().getPlayerIndex(),
+									CAllianceType.SHARED_CONTROL)) {
 						setCursorState(MenuCursorState.SELECT, Color.GREEN);
 					}
 					else {
@@ -1862,62 +1865,63 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 			final RenderUnit renderUnit = (RenderUnit) whichUnit;
 			final CUnit simulationUnit = renderUnit.getSimulationUnit();
 			final CAbilityHero heroData = simulationUnit.getHeroData();
-			if (heroData != null) {
-				final String level = this.rootFrame.getTemplates().getDecoratedString("LEVEL");
-				return heroData.getProperName() + "|n" + level + " " + heroData.getHeroLevel();
-			}
-			else {
-				final int simulationUnitPlayerIndex = simulationUnit.getPlayerIndex();
-				final boolean neutralHostile = simulationUnitPlayerIndex == (WarsmashConstants.MAX_PLAYERS - 4);
-				final boolean neutralPassive = simulationUnitPlayerIndex == (WarsmashConstants.MAX_PLAYERS - 1);
-				String returnValue = "";
-				if ((simulationUnitPlayerIndex != this.localPlayer.getId())
-						&& (simulationUnitPlayerIndex < (WarsmashConstants.MAX_PLAYERS - 4))) {
-					final boolean ally = simulationUnit.isUnitAlly(this.localPlayer);
-					final CPlayer unitPlayer = game.getPlayer(simulationUnitPlayerIndex);
-					final String name = unitPlayer.getName();
-					if (name != null) {
-						if (ally) {
-							if (unitPlayer.hasAlliance(this.localPlayer.getId(), CAllianceType.SHARED_CONTROL)) {
-								returnValue = "|CFF00FF00" + name;
-							}
-							else {
-								returnValue = "|CFFFFFF00" + name;
-							}
+			final int simulationUnitPlayerIndex = simulationUnit.getFakePlayerIndex();
+			final boolean neutralHostile = simulationUnitPlayerIndex == (WarsmashConstants.MAX_PLAYERS - 4);
+			final boolean neutralPassive = simulationUnitPlayerIndex == (WarsmashConstants.MAX_PLAYERS - 1);
+			String returnValue = "";
+			if ((simulationUnitPlayerIndex != this.localPlayer.getId())
+					&& (!this.localPlayer.hasAlliance(simulationUnitPlayerIndex, CAllianceType.SHARED_CONTROL))
+					&& (simulationUnitPlayerIndex < (WarsmashConstants.MAX_PLAYERS - 4))) {
+				final CPlayer unitPlayer = game.getPlayer(simulationUnitPlayerIndex);
+				final String name = unitPlayer.getName();
+				if (name != null) {
+					if (unitPlayer.hasAlliance(this.localPlayer.getId(), CAllianceType.PASSIVE)) {
+						if (unitPlayer.hasAlliance(this.localPlayer.getId(), CAllianceType.SHARED_SPELLS)) {
+							returnValue = "|CFF00FF00" + name;
 						}
 						else {
-							returnValue = "|CFFFF0000" + name;
+							returnValue = "|CFFFFFF00" + name;
 						}
-					}
-				}
-				final CAbilityGoldMinable goldMineData = simulationUnit.getGoldMineData();
-				final CAbilityOverlayedMine blightedGoldMineData = simulationUnit.getOverlayedGoldMineData();
-				final boolean neutral = (neutralPassive && simulationUnit.isBuilding()) || neutralHostile
-						|| (goldMineData != null) || (blightedGoldMineData != null);
-				if (neutral) {
-					if (!returnValue.isEmpty()) {
-						returnValue += "|n";
-					}
-					returnValue += simulationUnit.getUnitType().getName();
-					if (goldMineData != null) {
-						final String colonGold = this.rootFrame.getTemplates().getDecoratedString("COLON_GOLD");
-						returnValue += "|n" + colonGold + " " + goldMineData.getGold();
 					}
 					else {
-						if (blightedGoldMineData != null) {
-							final String colonGold = this.rootFrame.getTemplates().getDecoratedString("COLON_GOLD");
-							returnValue += "|n" + colonGold + " " + blightedGoldMineData.getGold();
-						}
-					}
-					final int creepLevel = simulationUnit.getUnitType().getLevel();
-					if (neutralHostile && (creepLevel > 0)) {
-						final String level = this.rootFrame.getTemplates().getDecoratedString("LEVEL");
-						returnValue += "|n" + level + " " + creepLevel;
+						returnValue = "|CFFFF0000" + name;
 					}
 				}
+			}
+			if (heroData != null) {
 				if (!returnValue.isEmpty()) {
-					return returnValue;
+					returnValue += "|r|n";
 				}
+				final String level = this.rootFrame.getTemplates().getDecoratedString("LEVEL");
+				return returnValue + heroData.getProperName() + "|n" + level + " " + heroData.getHeroLevel();
+			}
+			final CAbilityGoldMinable goldMineData = simulationUnit.getGoldMineData();
+			final CAbilityOverlayedMine blightedGoldMineData = simulationUnit.getOverlayedGoldMineData();
+			final boolean neutral = (neutralPassive && simulationUnit.isBuilding()) || neutralHostile
+					|| (goldMineData != null) || (blightedGoldMineData != null);
+			if (neutral) {
+				if (!returnValue.isEmpty()) {
+					returnValue += "|n";
+				}
+				returnValue += simulationUnit.getUnitType().getName();
+				if (goldMineData != null) {
+					final String colonGold = this.rootFrame.getTemplates().getDecoratedString("COLON_GOLD");
+					returnValue += "|n" + colonGold + " " + goldMineData.getGold();
+				}
+				else {
+					if (blightedGoldMineData != null) {
+						final String colonGold = this.rootFrame.getTemplates().getDecoratedString("COLON_GOLD");
+						returnValue += "|n" + colonGold + " " + blightedGoldMineData.getGold();
+					}
+				}
+				final int creepLevel = simulationUnit.getUnitType().getLevel();
+				if (neutralHostile && (creepLevel > 0)) {
+					final String level = this.rootFrame.getTemplates().getDecoratedString("LEVEL");
+					returnValue += "|n" + level + " " + creepLevel;
+				}
+			}
+			if (!returnValue.isEmpty()) {
+				return returnValue;
 			}
 		}
 		else if (whichUnit instanceof RenderItem) {
@@ -2107,7 +2111,8 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 				if (this.war3MapViewer.worldScene.camera.rect.contains(screenCoordsVector.x,
 						(Gdx.graphics.getHeight() - screenCoordsVector.y))) {
 					final Vector2 unprojected = this.uiViewport.unproject(screenCoordsVector);
-					unprojected.add(textTag.getScreenCoordTravelOffset());
+					unprojected.add(this.uiViewport.getMinWorldWidth() * textTag.getScreenCoordTravelOffset().x,
+							this.uiViewport.getMinWorldHeight() * textTag.getScreenCoordTravelOffset().y);
 					this.textTagFontParam.size = (int) GameUI.convertY(this.uiViewport, textTag.getFontHeight() * 0.5f);
 					// below: generateFont is a caching call, so hopefully this is not allocating
 					// font object on every loop, which would be wasteful
@@ -2647,7 +2652,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 					.<CWidget>getInstance().reset();
 			MeleeUI.this.activeCommand.checkCanTarget(MeleeUI.this.war3MapViewer.simulation,
 					MeleeUI.this.activeCommandUnit.getSimulationUnit(), MeleeUI.this.localPlayer.getId(),
-					MeleeUI.this.activeCommandOrderId, unit, targetReceiver);
+					MeleeUI.this.activeCommandOrderId, false, unit, targetReceiver);
 			this.lastFailureMessage = targetReceiver.getExternStringKey();
 			return targetReceiver.getTarget() != null;
 		}
@@ -3454,7 +3459,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 				}
 
 				final CAbilityHero heroData = simulationUnit.getHeroData();
-				final boolean hero = heroData != null;
+				final boolean hero = (heroData != null) && !heroData.isDisabled();
 				this.heroInfoPanel.setVisible(hero);
 				if (hero) {
 					final CPrimaryAttribute primaryAttribute = simulationUnit.getUnitType().getPrimaryAttribute();
@@ -3614,7 +3619,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 							this.recycleStringBuilder.append("|n");
 						}
 						inventory.checkCanUse(this.war3MapViewer.simulation, this.selectedUnit.getSimulationUnit(),
-								this.localPlayer.getId(), OrderIds.itemuse00 + index,
+								this.localPlayer.getId(), OrderIds.itemuse00 + index, false,
 								this.activationReceiverPreviewCallback.reset());
 						this.recycleStringBuilder.append(uberTip);
 						inventoryIcon.setCommandButtonData(
@@ -3706,10 +3711,11 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 	}
 
 	@Override
-	public void buff(final Texture icon, final int level, final String tip, final String uberTip) {
+	public void buff(final Texture icon, final int level, final String tip, final String uberTip,
+			final boolean positive, final boolean leveled) {
 		if ((this.selectedUnit == null) || !this.selectedUnit.getSimulationUnit().isBuilding()) {
 			if (this.currentBuffBarIconIndex < this.buffBarIcons.length) {
-				this.buffBarIcons[this.currentBuffBarIconIndex++].set(icon, tip, uberTip);
+				this.buffBarIcons[this.currentBuffBarIconIndex++].set(icon, tip, uberTip, positive, leveled, level);
 			}
 		}
 	}
@@ -3940,6 +3946,11 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 	}
 
 	@Override
+	public void upgradesChanged() {
+		reloadSelectedUnitUI(this.selectedUnit);
+	}
+
+	@Override
 	public void inventoryChanged() {
 		reloadSelectedUnitUI(this.selectedUnit);
 	}
@@ -4138,7 +4149,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 							pointTargetReceiver.reset();
 							this.activeCommand.checkCanTarget(this.war3MapViewer.simulation,
 									this.activeCommandUnit.getSimulationUnit(), this.localPlayer.getId(),
-									this.activeCommandOrderId, clickLocationTemp2, pointTargetReceiver);
+									this.activeCommandOrderId, false, clickLocationTemp2, pointTargetReceiver);
 							final Vector2 target = pointTargetReceiver.getTarget();
 							if (target != null) {
 								if ((this.activeCommand instanceof CAbilityAttack)
@@ -4163,7 +4174,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 														.reset();
 												ability.checkCanTarget(this.war3MapViewer.simulation,
 														otherSelectedUnit.getSimulationUnit(), this.localPlayer.getId(),
-														this.activeCommandOrderId, clickLocationTemp2, receiver);
+														this.activeCommandOrderId, false, clickLocationTemp2, receiver);
 												if (receiver.getTarget() != null) {
 													abilityToUse = ability;
 													targetToUse = receiver.getTarget();
@@ -4225,8 +4236,11 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 			}
 			else {
 				if (button == Input.Buttons.RIGHT) {
-					if ((getSelectedUnit() != null) && (getSelectedUnit().getSimulationUnit()
-							.getPlayerIndex() == this.war3MapViewer.getLocalPlayerIndex())) {
+					if ((getSelectedUnit() != null) && ((getSelectedUnit().getSimulationUnit()
+							.getPlayerIndex() == this.war3MapViewer.getLocalPlayerIndex())
+							|| this.war3MapViewer.simulation.getPlayer(this.war3MapViewer.getLocalPlayerIndex())
+									.hasAlliance(getSelectedUnit().getSimulationUnit().getPlayerIndex(),
+											CAllianceType.SHARED_CONTROL))) {
 						RenderWidget rayPickUnit = this.war3MapViewer.rayPickUnit(screenX, worldScreenY,
 								this.anyClickableUnitFilter);
 						if (rayPickUnit == null) {
@@ -4242,7 +4256,8 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 								CWidget targetToUse = null;
 								for (final CAbility ability : unit.getSimulationUnit().getAbilities()) {
 									ability.checkCanTarget(this.war3MapViewer.simulation, unit.getSimulationUnit(),
-											this.localPlayer.getId(), OrderIds.smart, rayPickUnit.getSimulationWidget(),
+											this.localPlayer.getId(), OrderIds.smart, false,
+											rayPickUnit.getSimulationWidget(),
 											CWidgetAbilityTargetCheckReceiver.INSTANCE);
 									final CWidget targetWidget = CWidgetAbilityTargetCheckReceiver.INSTANCE.getTarget();
 									if (targetWidget != null) {
@@ -4362,7 +4377,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 							final CWidgetAbilityTargetCheckReceiver receiver = CWidgetAbilityTargetCheckReceiver.INSTANCE
 									.reset();
 							ability.checkCanTarget(this.war3MapViewer.simulation, otherSelectedUnit.getSimulationUnit(),
-									this.localPlayer.getId(), this.activeCommandOrderId,
+									this.localPlayer.getId(), this.activeCommandOrderId, false,
 									rayPickUnit.getSimulationWidget(), receiver);
 							if (receiver.getTarget() != null) {
 								abilityToUse = ability;
@@ -4432,13 +4447,15 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 		final float lastPerpendicularDistance = (lastUnitLineWidth - 1) * selectionGroupMaxCollision;
 		int unitIndex = 0;
 		for (final RenderUnit unit : this.selectedUnits) {
-			if (unit.getSimulationUnit().getPlayerIndex() == this.war3MapViewer.getLocalPlayerIndex()) {
+			if ((unit.getSimulationUnit().getPlayerIndex() == this.war3MapViewer.getLocalPlayerIndex())
+					|| this.war3MapViewer.simulation.getPlayer(this.war3MapViewer.getLocalPlayerIndex())
+							.hasAlliance(unit.getSimulationUnit().getPlayerIndex(), CAllianceType.SHARED_CONTROL)) {
 				for (final CAbility ability : unit.getSimulationUnit().getAbilities()) {
 					ability.checkCanUse(this.war3MapViewer.simulation, unit.getSimulationUnit(),
-							this.localPlayer.getId(), OrderIds.smart, BooleanAbilityActivationReceiver.INSTANCE);
+							this.localPlayer.getId(), OrderIds.smart, false, BooleanAbilityActivationReceiver.INSTANCE);
 					if (BooleanAbilityActivationReceiver.INSTANCE.isOk()) {
 						ability.checkCanTarget(this.war3MapViewer.simulation, unit.getSimulationUnit(),
-								this.localPlayer.getId(), OrderIds.smart, clickLocationTemp2,
+								this.localPlayer.getId(), OrderIds.smart, false, clickLocationTemp2,
 								PointAbilityTargetCheckReceiver.INSTANCE);
 						final Vector2 target = PointAbilityTargetCheckReceiver.INSTANCE.getTarget();
 						if (target != null) {
@@ -4556,8 +4573,8 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 			}
 			UnitSound USAudio = null;
 			if ((unit.getSimulationUnit().getPlayerIndex() == this.war3MapViewer.getLocalPlayerIndex())
-					|| (unit.getSimulationUnit().getUnitType().getRace() == CUnitRace.CRITTERS)
-					|| ((unit.getSimulationUnit().getUnitType().getRace() == CUnitRace.OTHER)
+					|| (((unit.getSimulationUnit().getUnitType().getRace() == CUnitRace.CRITTERS)
+							|| (unit.getSimulationUnit().getUnitType().getRace() == CUnitRace.OTHER))
 							&& (unit.getSimulationUnit().getPlayerIndex() == (WarsmashConstants.MAX_PLAYERS - 1)))) {
 				if (unit.soundset != null) {
 					UnitSound ackSoundToPlay = unit.soundset.what;
@@ -4920,13 +4937,13 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 			case 0:
 				for (final CAbility ability : simulationUnit.getAbilities()) {
 					ability.checkCanUse(this.war3MapViewer.simulation, simulationUnit, this.localPlayer.getId(),
-							OrderIds.cancel, BooleanAbilityActivationReceiver.INSTANCE);
+							OrderIds.cancel, false, BooleanAbilityActivationReceiver.INSTANCE);
 					if (BooleanAbilityActivationReceiver.INSTANCE.isOk()) {
 
 						final BooleanAbilityTargetCheckReceiver<Void> targetCheckReceiver = BooleanAbilityTargetCheckReceiver
 								.<Void>getInstance().reset();
 						ability.checkCanTargetNoTarget(this.war3MapViewer.simulation, simulationUnit,
-								this.localPlayer.getId(), OrderIds.cancel, targetCheckReceiver);
+								this.localPlayer.getId(), OrderIds.cancel, false, targetCheckReceiver);
 						if (targetCheckReceiver.isTargetable()) {
 							this.unitOrderListener.issueImmediateOrder(simulationUnit.getHandleId(),
 									ability.getHandleId(), OrderIds.cancel, false);
@@ -4988,13 +5005,14 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 				final CSimulation game = MeleeUI.this.war3MapViewer.simulation;
 				final ExternStringMsgAbilityActivationReceiver receiver = ExternStringMsgAbilityActivationReceiver.INSTANCE;
 				receiver.reset();
-				inventoryData.checkCanUse(game, simulationUnit, MeleeUI.this.localPlayer.getId(), orderId, receiver);
+				inventoryData.checkCanUse(game, simulationUnit, MeleeUI.this.localPlayer.getId(), orderId, false,
+						receiver);
 				if (receiver.isUseOk()) {
 					final BooleanAbilityTargetCheckReceiver<Void> targetReceiver = BooleanAbilityTargetCheckReceiver
 							.getInstance();
 					targetReceiver.reset();
 					inventoryData.checkCanTargetNoTarget(game, simulationUnit, MeleeUI.this.localPlayer.getId(),
-							orderId, targetReceiver);
+							orderId, false, targetReceiver);
 					if (targetReceiver.isTargetable()) {
 						MeleeUI.this.unitOrderListener.issueImmediateOrder(simulationUnit.getHandleId(),
 								inventoryData.getHandleId(), orderId, isShiftDown());
@@ -5142,6 +5160,13 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 
 		@Override
 		public void abilitiesChanged() {
+			if (this.disposed) {
+				return;
+			}
+		}
+
+		@Override
+		public void upgradesChanged() {
 			if (this.disposed) {
 				return;
 			}

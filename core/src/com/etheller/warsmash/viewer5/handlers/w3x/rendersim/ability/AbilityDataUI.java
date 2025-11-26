@@ -57,6 +57,8 @@ public class AbilityDataUI {
 	private static final String AREA_EFFECT_ART = "Areaeffectart"; // replaced from 'aaea'
 	private static final String MISSILE_ART = "Missileart"; // replaced from 'amat'
 	private static final String MISSILE_ARC = "Missilearc"; // replaced from 'amac'
+	private static final String MISSILE_SPEED = "Missilespeed"; // replaced from 'amac'
+	private static final String MISSILE_HOMING = "MissileHoming"; // replaced from 'amac'
 	private static final String LIGHTNING_EFFECTS = "LightningEffect";
 
 	// Standard buff icon fields
@@ -231,8 +233,10 @@ public class AbilityDataUI {
 					.asList(abilityTypeData.getFieldAsString(MISSILE_ART, 0).split(","));
 
 			final float missileArc = abilityTypeData.getFieldAsFloat(MISSILE_ARC, 0);
+			final float missileSpeed = abilityTypeData.getFieldAsFloat(MISSILE_SPEED, 0);
+			final boolean missileHoming = abilityTypeData.getFieldAsBoolean(MISSILE_HOMING, 0);
 			for (final String missileArtPath : missileArtPaths) {
-				missileArt.add(new EffectAttachmentUIMissile(missileArtPath, Collections.emptyList(), missileArc));
+				missileArt.add(new EffectAttachmentUIMissile(missileArtPath, Collections.emptyList(), missileArc, missileSpeed, missileHoming));
 			}
 
 			final List<String> LightningEffectList = Arrays
@@ -301,11 +305,14 @@ public class AbilityDataUI {
 						: Arrays.asList(effectAttach);
 				effectArt.add(new EffectAttachmentUI(modelPath, attachmentPoints));
 			}
-			final List<EffectAttachmentUI> missileArt = new ArrayList<>();
+			final List<EffectAttachmentUIMissile> missileArt = new ArrayList<>();
 			final List<String> missileArtPaths = Arrays
 					.asList(abilityTypeData.getFieldAsString(BUFF_MISSILE_ART, 0).split(","));
+			final float missileArc = abilityTypeData.getFieldAsFloat(MISSILE_ARC, 0);
+			final float missileSpeed = abilityTypeData.getFieldAsFloat(MISSILE_SPEED, 0);
+			final boolean missileHoming = abilityTypeData.getFieldAsBoolean(MISSILE_HOMING, 0);
 			for (final String missileArtPath : missileArtPaths) {
-				missileArt.add(new EffectAttachmentUI(missileArtPath, Collections.emptyList()));
+				missileArt.add(new EffectAttachmentUIMissile(missileArtPath, Collections.emptyList(), missileArc, missileSpeed, missileHoming));
 			}
 
 			final String effectSound = abilityTypeData.getFieldAsString(BUFF_ABILITY_EFFECT_SOUND, 0);

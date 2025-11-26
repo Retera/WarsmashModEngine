@@ -14,7 +14,7 @@ public class ABCallbackNullIfFalse extends ABIDCallback {
 	
 	@Override
 	public War3ID callback(CSimulation game, CUnit caster, Map<String, Object> localStore, int castId) {
-		if (condition != null && condition.evaluate(game, caster, localStore, castId)) {
+		if (condition != null && condition.callback(game, caster, localStore, castId)) {
 			return value.callback(game, caster, localStore, castId);
 		}
 		return null;

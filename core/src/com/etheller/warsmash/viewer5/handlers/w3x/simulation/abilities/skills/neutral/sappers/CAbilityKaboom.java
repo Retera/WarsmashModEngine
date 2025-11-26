@@ -101,7 +101,7 @@ public class CAbilityKaboom extends CAbilityUnitOrPointTargetSpellBase implement
 				if (enumUnit.isBuilding()) {
 					damageAmount *= this.buildingDamageFactor;
 				}
-				enumUnit.damage(simulation, caster, false, true, CAttackType.SPELLS, CDamageType.DEMOLITION,
+				enumUnit.damage(simulation, caster, DAMAGE_FLAGS, CAttackType.SPELLS, CDamageType.DEMOLITION,
 						CWeaponSoundTypeJass.WHOKNOWS.name(), damageAmount);
 			}
 			return false;
@@ -109,19 +109,17 @@ public class CAbilityKaboom extends CAbilityUnitOrPointTargetSpellBase implement
 	}
 
 	@Override
-	public void setAutoCastOn(final CUnit caster, final boolean autoCastOn) {
+	public void setAutoCastOn(final CSimulation simulation, final CUnit caster, final boolean autoCastOn,
+			final boolean notify) {
 		this.autoCastOn = autoCastOn;
-		caster.setAutocastAbility(autoCastOn ? this : null);
+		if (notify) {
+			caster.setAutocastAbility(simulation, autoCastOn ? this : null);
+		}
 	}
 
 	@Override
 	public boolean isAutoCastOn() {
 		return this.autoCastOn;
-	}
-
-	@Override
-	public void setAutoCastOff() {
-		this.autoCastOn = false;
 	}
 
 	@Override
@@ -132,7 +130,7 @@ public class CAbilityKaboom extends CAbilityUnitOrPointTargetSpellBase implement
 	@Override
 	public void checkCanAutoTarget(final CSimulation game, final CUnit unit, final int playerIndex, final int orderId,
 			final CWidget target, final AbilityTargetCheckReceiver<CWidget> receiver) {
-		this.checkCanTarget(game, unit, playerIndex, orderId, target, receiver);
+		this.checkCanTarget(game, unit, playerIndex, orderId, false, target, receiver);
 	}
 
 	@Override

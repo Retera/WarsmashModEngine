@@ -15,6 +15,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.CPairingAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityPointTarget;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTargetVisitor;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.ABBehavior;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.CBehaviorSendOrder;
@@ -109,8 +110,8 @@ public class CAbilityAbilityBuilderActivePairing extends CAbilityAbilityBuilderG
 	}
 
 	@Override
-	public void onAdd(final CSimulation game, final CUnit unit) {
-		this.localStore.put(ABLocalStoreKeys.PAIRABILITY, this);
+	public void onAdd(CSimulation game, CUnit unit) {
+		localStore.put(ABLocalStoreKeys.ISPAIRABILITY, this);
 		this.behavior = this.createRangedBehavior(unit);
 		this.behavior.setInstant(true);
 		super.onAdd(game, unit);
@@ -182,12 +183,19 @@ public class CAbilityAbilityBuilderActivePairing extends CAbilityAbilityBuilderG
 		return ((this.toggleable && this.active) || this.separateOnAndOff) && (orderId == this.getOffOrderId());
 	}
 
+	@Override
+	public void internalBegin(CSimulation game, CUnit caster, int playerIndex, int orderId, boolean autoOrder, AbilityTarget noTarget) {
+		this.castId++;
+		this.localStore.put(ABLocalStoreKeys.combineKey(ABLocalStoreKeys.ISAUTOCAST, castId), autoOrder);
+		//Just don't do this
+	}
+
 	// ----
 	// Non-Targeted
 	@Override
-	public CBehavior beginNoTarget(final CSimulation game, final CUnit caster, final int playerIndex,
-			final int orderId) {
+	public CBehavior beginNoTarget(CSimulation game, CUnit caster, int playerIndex, int orderId, boolean autoOrder) {
 		if (checkNoTargetOrderId(game, caster, orderId)) {
+			this.localStore.put(ABLocalStoreKeys.combineKey(ABLocalStoreKeys.ISAUTOCAST, castId), autoOrder);
 
 //			System.err.println(caster.getUnitType().getName() + " Beginning NoTarget: " + orderId);
 			final boolean isOffId = orderId == this.getOffOrderId();
@@ -263,9 +271,9 @@ public class CAbilityAbilityBuilderActivePairing extends CAbilityAbilityBuilderG
 	// ----
 	// Targeted
 	@Override
-	public CBehavior begin(final CSimulation game, final CUnit caster, final int playerIndex, final int orderId,
-			final CWidget target) {
+	public CBehavior begin(CSimulation game, CUnit caster, int playerIndex, int orderId, boolean autoOrder, CWidget target) {
 		this.castId++;
+		this.localStore.put(ABLocalStoreKeys.combineKey(ABLocalStoreKeys.ISAUTOCAST, castId), autoOrder);
 //		System.err.println(caster.getUnitType().getName() + " Received pair target order: " + orderId + " (Base: "
 //				+ this.getBaseOrderId() + ", Internal: " + this.getPairOrderId(game, caster) + ")");
 		if (checkTargetPrimeOrderId(game, caster, orderId)) {
@@ -286,26 +294,26 @@ public class CAbilityAbilityBuilderActivePairing extends CAbilityAbilityBuilderG
 					return caster.pollNextOrderBehavior(game);
 				}
 			}
-			this.localStore.put(ABLocalStoreKeys.ABILITYTARGETEDUNIT + this.castId, targetUnit);
-			this.localStore.put(ABLocalStoreKeys.ABILITYPAIREDUNIT + this.castId, targetUnit);
+			this.localStore.put(ABLocalStoreKeys.ABILITYTARGETEDUNIT + castId, targetUnit);
+			this.localStore.put(ABLocalStoreKeys.ABILITYPAIREDUNIT + castId, targetUnit);
+			this.localStore.put(ABLocalStoreKeys.PREVIOUSBEHAVIOR, caster.getCurrentBehavior());
 //			System.out.println("Starting targeted behavior");
 
 			this.runOnOrderIssuedActions(game, caster, orderId);
-			this.behavior.setCastId(this.castId);
-			return this.behavior.reset(game, target);
-		}
-		else if (checkTargetInternalOrderId(game, caster, orderId)) {
+			this.behavior.setCastId(castId);
+			return this.behavior.reset(game, target, autoOrder);
+		} else if (checkTargetInternalOrderId(game, caster, orderId)) {
 //			System.err.println(caster.getUnitType().getName() + " Got internal order");
 			final CUnit targetUnit = target.visit(AbilityTargetVisitor.UNIT);
-			this.localStore.put(ABLocalStoreKeys.ABILITYTARGETEDUNIT + this.castId, targetUnit);
-			this.localStore.put(ABLocalStoreKeys.ABILITYPAIREDUNIT + this.castId, targetUnit);
+			this.localStore.put(ABLocalStoreKeys.ABILITYTARGETEDUNIT + castId, targetUnit);
+			this.localStore.put(ABLocalStoreKeys.ABILITYPAIREDUNIT + castId, targetUnit);
+			this.localStore.put(ABLocalStoreKeys.PREVIOUSBEHAVIOR, caster.getCurrentBehavior());
 //			System.out.println("Starting internal targeted behavior with target: " + targetUnit);
 
 			this.runOnOrderIssuedActions(game, caster, orderId);
-			this.behavior.setCastId(this.castId);
-			return this.behavior.reset(game, target, orderId);
-		}
-		else {
+			this.behavior.setCastId(castId);
+			return this.behavior.reset(game, target, playerIndex, orderId, autoOrder);
+		} else {
 			return null;
 		}
 	}
@@ -361,9 +369,9 @@ public class CAbilityAbilityBuilderActivePairing extends CAbilityAbilityBuilderG
 			return false;
 		}
 		if (getPairAbilityCode(game, caster) != null) {
-			for (final CAbility ability : target.getAbilities()) {
-				if (ability.getCode().equals(this.getPairAbilityCode(game, caster))) {
-					this.localStore.put(ABLocalStoreKeys.LASTPARTNERABILITY, ability);
+			for (CAbility ability : target.getAbilities()) {
+				if (this.getPairAbilityCode(game, caster).equals(ability.getCode())) {
+					localStore.put(ABLocalStoreKeys.LASTPARTNERABILITY, ability);
 					return true;
 				}
 			}
@@ -478,8 +486,7 @@ public class CAbilityAbilityBuilderActivePairing extends CAbilityAbilityBuilderG
 
 	// Not Used
 	@Override
-	public CBehavior begin(final CSimulation game, final CUnit caster, final int playerIndex, final int orderId,
-			final AbilityPointTarget point) {
+	public CBehavior begin(CSimulation game, CUnit caster, final int playerIndex, int orderId, boolean autoOrder, AbilityPointTarget point) {
 		return null;
 	}
 

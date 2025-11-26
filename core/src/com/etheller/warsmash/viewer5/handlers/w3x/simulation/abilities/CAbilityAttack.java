@@ -28,8 +28,8 @@ public class CAbilityAttack extends AbstractCAbility {
 	}
 
 	@Override
-	protected void innerCheckCanUse(final CSimulation game, final CUnit unit, int playerIndex,
-			final int orderId, final AbilityActivationReceiver receiver) {
+	protected void innerCheckCanUse(final CSimulation game, final CUnit unit, final int playerIndex, final int orderId,
+			final AbilityActivationReceiver receiver) {
 		if (unit.getCurrentAttacks().isEmpty()) {
 			receiver.disabled();
 		}
@@ -39,8 +39,8 @@ public class CAbilityAttack extends AbstractCAbility {
 	}
 
 	@Override
-	public void checkCanTarget(final CSimulation game, final CUnit unit, int playerIndex, final int orderId,
-			final CWidget target, final AbilityTargetCheckReceiver<CWidget> receiver) {
+	public void checkCanTarget(final CSimulation game, final CUnit unit, final int playerIndex, final int orderId,
+			final boolean autoOrder, final CWidget target, final AbilityTargetCheckReceiver<CWidget> receiver) {
 		if (target == unit) {
 			receiver.targetCheckFailed(CommandStringErrorKeys.UNABLE_TO_TARGET_SELF);
 			return; // no attacking self ever
@@ -66,20 +66,28 @@ public class CAbilityAttack extends AbstractCAbility {
 			CUnitAttack lastUnavailableAttack = null;
 			for (final CUnitAttack attack : unit.getCurrentAttacks()) {
 				if (target.canBeTargetedBy(game, unit, attack.getTargetsAllowed())) {
-					CUnit tarU = target.visit(AbilityTargetVisitor.UNIT);
+					final CUnit tarU = target.visit(AbilityTargetVisitor.UNIT);
 					if (tarU != null) {
-						if (tarU.isUnitType(CUnitTypeJass.ETHEREAL) && attack.getAttackType() != CAttackType.MAGIC && attack.getAttackType() != CAttackType.SPELLS) {
-							receiver.targetCheckFailed(CommandStringErrorKeys.ETHEREAL_UNITS_CAN_ONLY_BE_HIT_BY_SPELLS_AND_MAGIC_DAMAGE);
-						} else if (tarU.isUnitType(CUnitTypeJass.MAGIC_IMMUNE) && attack.getAttackType() == CAttackType.MAGIC && game.getGameplayConstants().isMagicImmuneResistsDamage()) {
+						if (tarU.isUnitType(CUnitTypeJass.ETHEREAL) && (attack.getAttackType() != CAttackType.MAGIC)
+								&& (attack.getAttackType() != CAttackType.SPELLS)) {
+							receiver.targetCheckFailed(
+									CommandStringErrorKeys.ETHEREAL_UNITS_CAN_ONLY_BE_HIT_BY_SPELLS_AND_MAGIC_DAMAGE);
+						}
+						else if (tarU.isUnitType(CUnitTypeJass.MAGIC_IMMUNE)
+								&& (attack.getAttackType() == CAttackType.MAGIC)
+								&& game.getGameplayConstants().isMagicImmuneResistsDamage()) {
 							receiver.targetCheckFailed(CommandStringErrorKeys.THAT_UNIT_IS_IMMUNE_TO_MAGIC);
-						} else {
+						}
+						else {
 							canTarget = true;
 						}
-					} else {
+					}
+					else {
 						canTarget = true;
 					}
 					break;
-				} else {
+				}
+				else {
 					lastUnavailableAttack = attack;
 				}
 			}
@@ -87,10 +95,11 @@ public class CAbilityAttack extends AbstractCAbility {
 				receiver.targetOk(target);
 			}
 			else {
-				if(lastUnavailableAttack != null) {
+				if (lastUnavailableAttack != null) {
 					// a check known to fail, so it will populate our receiver
 					target.canBeTargetedBy(game, unit, lastUnavailableAttack.getTargetsAllowed(), receiver);
-				} else {
+				}
+				else {
 					receiver.targetCheckFailed(CommandStringErrorKeys.MUST_TARGET_A_UNIT_WITH_THIS_ACTION);
 				}
 			}
@@ -101,14 +110,15 @@ public class CAbilityAttack extends AbstractCAbility {
 	}
 
 	@Override
-	public boolean checkBeforeQueue(final CSimulation game, final CUnit caster, int playerIndex,
-			final int orderId, final AbilityTarget target) {
+	public boolean checkBeforeQueue(final CSimulation game, final CUnit caster, final int playerIndex,
+			final int orderId, final boolean autoOrder, final AbilityTarget target) {
 		return true;
 	}
 
 	@Override
-	public void checkCanTarget(final CSimulation game, final CUnit unit, int playerIndex,
-			final int orderId, final AbilityPointTarget target, final AbilityTargetCheckReceiver<AbilityPointTarget> receiver) {
+	public void checkCanTarget(final CSimulation game, final CUnit unit, final int playerIndex, final int orderId,
+			final boolean autoOrder, final AbilityPointTarget target,
+			final AbilityTargetCheckReceiver<AbilityPointTarget> receiver) {
 		switch (orderId) {
 		case OrderIds.attack:
 			receiver.targetOk(target);
@@ -135,8 +145,8 @@ public class CAbilityAttack extends AbstractCAbility {
 	}
 
 	@Override
-	public void checkCanTargetNoTarget(final CSimulation game, final CUnit unit, int playerIndex,
-			final int orderId, final AbilityTargetCheckReceiver<Void> receiver) {
+	public void checkCanTargetNoTarget(final CSimulation game, final CUnit unit, final int playerIndex,
+			final int orderId, final boolean autoOrder, final AbilityTargetCheckReceiver<Void> receiver) {
 		receiver.targetCheckFailed(CommandStringErrorKeys.MUST_TARGET_A_UNIT_WITH_THIS_ACTION);
 	}
 
@@ -157,7 +167,8 @@ public class CAbilityAttack extends AbstractCAbility {
 	}
 
 	@Override
-	public CBehavior begin(final CSimulation game, final CUnit caster, int playerIndex, final int orderId, final CWidget target) {
+	public CBehavior begin(final CSimulation game, final CUnit caster, final int playerIndex, final int orderId,
+			final boolean autoOrder, final CWidget target) {
 		CBehavior behavior = null;
 		for (final CUnitAttack attack : caster.getCurrentAttacks()) {
 			if (target.canBeTargetedBy(game, caster, attack.getTargetsAllowed())) {
@@ -173,8 +184,8 @@ public class CAbilityAttack extends AbstractCAbility {
 	}
 
 	@Override
-	public CBehavior begin(final CSimulation game, final CUnit caster, int playerIndex,
-			final int orderId, final AbilityPointTarget point) {
+	public CBehavior begin(final CSimulation game, final CUnit caster, final int playerIndex, final int orderId,
+			final boolean autoOrder, final AbilityPointTarget point) {
 		switch (orderId) {
 		case OrderIds.attack:
 			if (caster.getAttackMoveBehavior() == null) {
@@ -201,7 +212,8 @@ public class CAbilityAttack extends AbstractCAbility {
 	}
 
 	@Override
-	public CBehavior beginNoTarget(final CSimulation game, final CUnit caster, int playerIndex, final int orderId) {
+	public CBehavior beginNoTarget(final CSimulation game, final CUnit caster, final int playerIndex, final int orderId,
+			final boolean autoOrder) {
 		return caster.pollNextOrderBehavior(game);
 	}
 
@@ -211,7 +223,7 @@ public class CAbilityAttack extends AbstractCAbility {
 	}
 
 	@Override
-	public void onCancelFromQueue(final CSimulation game, final CUnit unit, int playerIndex, final int orderId) {
+	public void onCancelFromQueue(final CSimulation game, final CUnit unit, final int playerIndex, final int orderId) {
 	}
 
 	@Override
@@ -221,6 +233,11 @@ public class CAbilityAttack extends AbstractCAbility {
 	@Override
 	public boolean isPhysical() {
 		return true;
+	}
+
+	@Override
+	public boolean isMagic() {
+		return false;
 	}
 
 	@Override

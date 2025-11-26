@@ -14,15 +14,17 @@ public final class ABAbilityTargetStillTargetableVisitor implements AbilityTarge
 	private CSimulation simulation;
 	private CUnit unit;
 	private AbilityBuilderActiveAbility ability;
+	private boolean autoOrder;
 	private boolean channeling;
 	private int playerIndex;
 	private int orderId;
 
 	public ABAbilityTargetStillTargetableVisitor reset(final CSimulation simulation, final CUnit unit,
-			final AbilityBuilderActiveAbility ability, final boolean channeling) {
+			final AbilityBuilderActiveAbility ability, boolean autoOrder, boolean channeling) {
 		this.simulation = simulation;
 		this.unit = unit;
 		this.ability = ability;
+		this.autoOrder = autoOrder;
 		this.channeling = channeling;
 		this.playerIndex = unit.getPlayerIndex();
 		this.orderId = this.ability.getBaseOrderId();
@@ -30,11 +32,11 @@ public final class ABAbilityTargetStillTargetableVisitor implements AbilityTarge
 	}
 
 	public ABAbilityTargetStillTargetableVisitor reset(final CSimulation simulation, final CUnit unit,
-			final AbilityBuilderActiveAbility ability, final boolean channeling, final int playerIndex,
-			final int orderId) {
+			final AbilityBuilderActiveAbility ability, boolean autoOrder, boolean channeling, final int playerIndex, int orderId) {
 		this.simulation = simulation;
 		this.unit = unit;
 		this.ability = ability;
+		this.autoOrder = autoOrder;
 		this.channeling = channeling;
 		this.playerIndex = playerIndex;
 		this.orderId = orderId;
@@ -51,8 +53,8 @@ public final class ABAbilityTargetStillTargetableVisitor implements AbilityTarge
 		if (this.channeling) {
 			return !target.isHidden();
 		}
-		final BooleanAbilityTargetCheckReceiver<CWidget> receiver = new BooleanAbilityTargetCheckReceiver<>();
-		this.ability.checkCanTarget(this.simulation, this.unit, this.playerIndex, this.orderId, target, receiver);
+		BooleanAbilityTargetCheckReceiver<CWidget> receiver = new BooleanAbilityTargetCheckReceiver<>();
+		ability.checkCanTarget(simulation, unit, this.playerIndex, this.orderId, this.autoOrder, target, receiver);
 		return !target.isHidden() && receiver.isTargetable();
 	}
 
@@ -61,8 +63,8 @@ public final class ABAbilityTargetStillTargetableVisitor implements AbilityTarge
 		if (this.channeling) {
 			return !target.isDead();
 		}
-		final BooleanAbilityTargetCheckReceiver<CWidget> receiver = new BooleanAbilityTargetCheckReceiver<>();
-		this.ability.checkCanTarget(this.simulation, this.unit, this.playerIndex, this.orderId, target, receiver);
+		BooleanAbilityTargetCheckReceiver<CWidget> receiver = new BooleanAbilityTargetCheckReceiver<>();
+		ability.checkCanTarget(simulation, unit, this.playerIndex, this.orderId, this.autoOrder, target, receiver);
 		return !target.isDead() && receiver.isTargetable();
 	}
 
@@ -71,8 +73,8 @@ public final class ABAbilityTargetStillTargetableVisitor implements AbilityTarge
 		if (this.channeling) {
 			return !target.isDead() && !target.isHidden();
 		}
-		final BooleanAbilityTargetCheckReceiver<CWidget> receiver = new BooleanAbilityTargetCheckReceiver<>();
-		this.ability.checkCanTarget(this.simulation, this.unit, this.playerIndex, this.orderId, target, receiver);
+		BooleanAbilityTargetCheckReceiver<CWidget> receiver = new BooleanAbilityTargetCheckReceiver<>();
+		ability.checkCanTarget(simulation, unit, this.playerIndex, this.orderId, this.autoOrder, target, receiver);
 		return !target.isDead() && !target.isHidden() && receiver.isTargetable();
 	}
 

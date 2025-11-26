@@ -39,29 +39,31 @@ public class CAbilityStandDown extends AbstractGenericSingleIconNoSmartActiveAbi
 	}
 
 	@Override
-	public CBehavior begin(final CSimulation game, final CUnit caster, int playerIndex, final int orderId, final CWidget target) {
+	public CBehavior begin(final CSimulation game, final CUnit caster, final int playerIndex, final int orderId,
+			final boolean autoOrder, final CWidget target) {
 		return null;
 	}
 
 	@Override
-	public CBehavior begin(final CSimulation game, final CUnit caster, int playerIndex,
-			final int orderId, final AbilityPointTarget point) {
+	public CBehavior begin(final CSimulation game, final CUnit caster, final int playerIndex, final int orderId,
+			final boolean autoOrder, final AbilityPointTarget point) {
 		return null;
 	}
 
 	@Override
-	public CBehavior beginNoTarget(final CSimulation game, final CUnit caster, int playerIndex, final int orderId) {
+	public CBehavior beginNoTarget(final CSimulation game, final CUnit caster, final int playerIndex, final int orderId,
+			final boolean autoOrder) {
 		return null;
 	}
 
 	@Override
-	protected void innerCheckCanUse(final CSimulation game, final CUnit unit, int playerIndex,
-			final int orderId, final AbilityActivationReceiver receiver) {
+	protected void innerCheckCanUse(final CSimulation game, final CUnit unit, final int playerIndex, final int orderId,
+			final AbilityActivationReceiver receiver) {
 		receiver.useOk();
 	}
 
 	@Override
-	public void onCancelFromQueue(final CSimulation game, final CUnit unit, int playerIndex, final int orderId) {
+	public void onCancelFromQueue(final CSimulation game, final CUnit unit, final int playerIndex, final int orderId) {
 	}
 
 	@Override
@@ -74,8 +76,9 @@ public class CAbilityStandDown extends AbstractGenericSingleIconNoSmartActiveAbi
 	}
 
 	@Override
-	public boolean checkBeforeQueue(CSimulation game, CUnit caster, int playerIndex, int orderId, AbilityTarget target) {
-		CAbilityCargoHold cargoData = caster.getCargoData();
+	public boolean checkBeforeQueue(final CSimulation game, final CUnit caster, final int playerIndex,
+			final int orderId, final boolean autoOrder, final AbilityTarget target) {
+		final CAbilityCargoHold cargoData = caster.getCargoData();
 		game.unitSoundEffectEvent(caster, cargoData.getAlias());
 		int goldWorkers = 0;
 		while (!cargoData.isEmpty()) {
@@ -83,7 +86,7 @@ public class CAbilityStandDown extends AbstractGenericSingleIconNoSmartActiveAbi
 			firstUnit.setPointAndCheckUnstuck(caster.getX(), caster.getY(), game);
 			firstUnit.setHidden(false);
 			firstUnit.setPaused(false);
-			ResourceType defaultResourceType = goldWorkers >= 5 ? ResourceType.LUMBER : ResourceType.GOLD;
+			final ResourceType defaultResourceType = goldWorkers >= 5 ? ResourceType.LUMBER : ResourceType.GOLD;
 			if (firstUnit.backToWork(game, defaultResourceType) == ResourceType.GOLD) {
 				goldWorkers++;
 			}
@@ -111,6 +114,11 @@ public class CAbilityStandDown extends AbstractGenericSingleIconNoSmartActiveAbi
 
 	@Override
 	public boolean isPhysical() {
+		return false;
+	}
+
+	@Override
+	public boolean isMagic() {
 		return false;
 	}
 

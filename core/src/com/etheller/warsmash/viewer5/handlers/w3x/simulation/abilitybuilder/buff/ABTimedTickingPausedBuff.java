@@ -6,30 +6,42 @@ import java.util.Map;
 import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABAction;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABLocalStoreKeys;
 
-public class ABTimedTickingPausedBuff extends ABTimedBuff {
+public class ABTimedTickingPausedBuff extends ABTimedBuff implements CPausedTickingBuff {
 
 	private List<ABAction> onTickActions;
 
-	public ABTimedTickingPausedBuff(int handleId, War3ID alias, float duration, boolean showTimedLifeBar, Map<String, Object> localStore,
-			List<ABAction> onAddActions, List<ABAction> onRemoveActions, List<ABAction> onExpireActions, List<ABAction> onTickActions, boolean showIcon, final int castId) {
-		this(handleId, alias, duration, showTimedLifeBar, localStore, onAddActions, onRemoveActions, onExpireActions, onTickActions, castId);
+	public ABTimedTickingPausedBuff(int handleId, War3ID alias, Map<String, Object> localStore, CAbility sourceAbility, CUnit sourceUnit,
+			float duration, boolean showTimedLifeBar, List<ABAction> onAddActions,
+			List<ABAction> onRemoveActions, List<ABAction> onExpireActions, List<ABAction> onTickActions,
+			boolean showIcon, final int castId, final boolean leveled, final boolean positive,
+			final boolean dispellable) {
+		this(handleId, alias, localStore,
+				sourceAbility, sourceUnit, duration, showTimedLifeBar, onAddActions,
+				onRemoveActions, onExpireActions, onTickActions, castId, leveled, positive, dispellable);
 		this.setIconShowing(showIcon);
 	}
-	
-	public ABTimedTickingPausedBuff(int handleId, War3ID alias, float duration, boolean showTimedLifeBar, Map<String, Object> localStore,
-			List<ABAction> onAddActions, List<ABAction> onRemoveActions, List<ABAction> onExpireActions, List<ABAction> onTickActions, final int castId) {
-		super(handleId, alias, duration, showTimedLifeBar, localStore, onAddActions, onRemoveActions, onExpireActions, castId);
+
+	public ABTimedTickingPausedBuff(int handleId, War3ID alias, Map<String, Object> localStore, CAbility sourceAbility, CUnit sourceUnit,
+			float duration, boolean showTimedLifeBar, List<ABAction> onAddActions,
+			List<ABAction> onRemoveActions, List<ABAction> onExpireActions, List<ABAction> onTickActions,
+			final int castId, final boolean leveled, final boolean positive, final boolean dispellable) {
+		super(handleId, alias, localStore, sourceAbility, sourceUnit, duration, showTimedLifeBar, onAddActions,
+				onRemoveActions, onExpireActions, castId, leveled, positive, dispellable);
 		this.onTickActions = onTickActions;
 	}
 
 	@Override
 	public void onTick(CSimulation game, CUnit unit) {
 		if (onTickActions != null) {
+			localStore.put(ABLocalStoreKeys.BUFF, this);
 			for (ABAction action : onTickActions) {
 				action.runAction(game, unit, localStore, castId);
 			}
+			localStore.remove(ABLocalStoreKeys.BUFF);
 		}
 		if (!unit.isPaused()) {
 			super.onTick(game, unit);

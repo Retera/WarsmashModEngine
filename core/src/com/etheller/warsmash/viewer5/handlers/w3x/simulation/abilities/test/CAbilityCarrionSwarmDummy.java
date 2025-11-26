@@ -56,23 +56,25 @@ public class CAbilityCarrionSwarmDummy extends AbstractGenericSingleIconNoSmartA
 	}
 
 	@Override
-	public void onCancelFromQueue(final CSimulation game, final CUnit unit, int playerIndex, final int orderId) {
+	public void onCancelFromQueue(final CSimulation game, final CUnit unit, final int playerIndex, final int orderId) {
 
 	}
 
 	@Override
-	public CBehavior begin(final CSimulation game, final CUnit caster, int playerIndex, final int orderId, final CWidget target) {
+	public CBehavior begin(final CSimulation game, final CUnit caster, final int playerIndex, final int orderId,
+			final boolean autoOrder, final CWidget target) {
 		return this.behaviorCarrionSwarmDummy.reset(game, target);
 	}
 
 	@Override
-	public CBehavior begin(final CSimulation game, final CUnit caster, int playerIndex,
-			final int orderId, final AbilityPointTarget point) {
+	public CBehavior begin(final CSimulation game, final CUnit caster, final int playerIndex, final int orderId,
+			final boolean autoOrder, final AbilityPointTarget point) {
 		return this.behaviorCarrionSwarmDummy.reset(game, point);
 	}
 
 	@Override
-	public CBehavior beginNoTarget(final CSimulation game, final CUnit caster, int playerIndex, final int orderId) {
+	public CBehavior beginNoTarget(final CSimulation game, final CUnit caster, final int playerIndex, final int orderId,
+			final boolean autoOrder) {
 		return caster.pollNextOrderBehavior(game);
 	}
 
@@ -80,7 +82,7 @@ public class CAbilityCarrionSwarmDummy extends AbstractGenericSingleIconNoSmartA
 	protected void innerCheckCanTarget(final CSimulation game, final CUnit unit, final int orderId,
 			final CWidget target, final AbilityTargetCheckReceiver<CWidget> receiver) {
 		if (unit.canReach(target, this.castRange)) {
-			if(target.canBeTargetedBy(game, unit, this.targetsAllowed, receiver)) {
+			if (target.canBeTargetedBy(game, unit, this.targetsAllowed, receiver)) {
 				receiver.targetOk(target);
 			}
 			// else receiver called automatically
@@ -108,8 +110,8 @@ public class CAbilityCarrionSwarmDummy extends AbstractGenericSingleIconNoSmartA
 	}
 
 	@Override
-	protected void innerCheckCanUse(final CSimulation game, final CUnit unit, int playerIndex,
-			final int orderId, final AbilityActivationReceiver receiver) {
+	protected void innerCheckCanUse(final CSimulation game, final CUnit unit, final int playerIndex, final int orderId,
+			final AbilityActivationReceiver receiver) {
 		receiver.useOk();
 	}
 
@@ -132,6 +134,11 @@ public class CAbilityCarrionSwarmDummy extends AbstractGenericSingleIconNoSmartA
 	@Override
 	public boolean isPhysical() {
 		return false;
+	}
+
+	@Override
+	public boolean isMagic() {
+		return true;
 	}
 
 	@Override

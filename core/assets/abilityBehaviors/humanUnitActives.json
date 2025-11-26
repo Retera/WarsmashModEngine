@@ -14,72 +14,81 @@
 				}
 			}
 		}],
+		"reuseActions": {
+			"setupBuffs": [{
+					"type": "createNonStackingStatBuff",
+					"buffType": {
+						"type": "getNonStackingStatBuffTypeFromString",
+						"id": {
+							"type": "rawString",
+							"value": "ATKSPD"
+						}
+					},
+					"stackingKey": {
+						"type": "rawString",
+						"value": "slow"
+					},
+					"value": {
+						"type": "negativeFloat",
+						"value": {
+							"type": "getAbilityDataAsFloat",
+							"dataField": "B"
+						}
+					}
+				},{
+					"type": "storeValueLocally",
+					"key": {
+						"type": "rawString",
+						"value": "asbuff"
+					},
+					"instanceValue": {
+						"type": "rawBoolean",
+						"value": "false"
+					},
+					"valueToStore": {
+						"type": "getLastCreatedNonStackingStatBuff"
+					}
+				},{
+					"type": "createNonStackingStatBuff",
+					"buffType": {
+						"type": "getNonStackingStatBuffTypeFromString",
+						"id": {
+							"type": "rawString",
+							"value": "MVSPDPCT"
+						}
+					},
+					"stackingKey": {
+						"type": "rawString",
+						"value": "slow"
+					},
+					"value": {
+						"type": "negativeFloat",
+						"value": {
+							"type": "getAbilityDataAsFloat",
+							"dataField": "A"
+						}
+					}
+				},{
+					"type": "storeValueLocally",
+					"key": {
+						"type": "rawString",
+						"value": "mvbuff"
+					},
+					"instanceValue": {
+						"type": "rawBoolean",
+						"value": "false"
+					},
+					"valueToStore": {
+						"type": "getLastCreatedNonStackingStatBuff"
+					}
+			}]
+		},
 		"onAddAbility": [{
-				"type": "createNonStackingStatBuff",
-				"buffType": {
-					"type": "getNonStackingStatBuffTypeFromString",
-					"id": {
-						"type": "rawString",
-						"value": "ATKSPD"
-					}
-				},
-				"stackingKey": {
-					"type": "rawString",
-					"value": "slow"
-				},
-				"value": {
-					"type": "negativeFloat",
-					"value": {
-						"type": "getAbilityDataAsFloat",
-						"dataField": "B"
-					}
-				}
-			},{
-				"type": "storeValueLocally",
-				"key": {
-					"type": "rawString",
-					"value": "asbuff"
-				},
-				"instanceValue": {
-					"type": "rawBoolean",
-					"value": "false"
-				},
-				"valueToStore": {
-					"type": "getLastCreatedNonStackingStatBuff"
-				}
-			},{
-				"type": "createNonStackingStatBuff",
-				"buffType": {
-					"type": "getNonStackingStatBuffTypeFromString",
-					"id": {
-						"type": "rawString",
-						"value": "MVSPDPCT"
-					}
-				},
-				"stackingKey": {
-					"type": "rawString",
-					"value": "slow"
-				},
-				"value": {
-					"type": "negativeFloat",
-					"value": {
-						"type": "getAbilityDataAsFloat",
-						"dataField": "A"
-					}
-				}
-			},{
-				"type": "storeValueLocally",
-				"key": {
-					"type": "rawString",
-					"value": "mvbuff"
-				},
-				"instanceValue": {
-					"type": "rawBoolean",
-					"value": "false"
-				},
-				"valueToStore": {
-					"type": "getLastCreatedNonStackingStatBuff"
-				}
+			"type": "runReuseAction",
+			"name": {
+				"type": "rawString",
+				"value": "setupBuffs"
+			}
 		}],
 		"onEndCasting": [{
 			"type": "checkAbilityEffectReaction",
@@ -106,70 +115,29 @@
 							"type": "getAbilityTargetedUnit"
 						}
 					},
-					"onAddActions": [{
-							"type": "addNonStackingStatBuff",
-							"targetUnit": {
-								"type": "getBuffedUnit"
+					"positive": {
+						"type": "rawBoolean",
+						"value": "false"
+					},
+					"statBuffs": [{
+							"type": "getStoredNonStackingStatBuffByKey",
+							"instanceValue": {
+								"type": "rawBoolean",
+								"value": "false"
 							},
-							"buff": {
-								"type": "getStoredNonStackingStatBuffByKey",
-								"instanceValue": {
-									"type": "rawBoolean",
-									"value": "false"
-								},
-								"key": {
-									"type": "rawString",
-									"value": "mvbuff"
-								}
+							"key": {
+								"type": "rawString",
+								"value": "mvbuff"
 							}
 						},{
-							"type": "addNonStackingStatBuff",
-							"targetUnit": {
-								"type": "getBuffedUnit"
+							"type": "getStoredNonStackingStatBuffByKey",
+							"instanceValue": {
+								"type": "rawBoolean",
+								"value": "false"
 							},
-							"buff": {
-								"type": "getStoredNonStackingStatBuffByKey",
-								"instanceValue": {
-									"type": "rawBoolean",
-									"value": "false"
-								},
-								"key": {
-									"type": "rawString",
-									"value": "asbuff"
-								}
-							}
-					}],
-					"onRemoveActions": [{
-							"type": "removeNonStackingStatBuff",
-							"targetUnit": {
-								"type": "getBuffedUnit"
-							},
-							"buff": {
-								"type": "getStoredNonStackingStatBuffByKey",
-								"instanceValue": {
-									"type": "rawBoolean",
-									"value": "false"
-								},
-								"key": {
-									"type": "rawString",
-									"value": "mvbuff"
-								}
-							}
-						},{
-							"type": "removeNonStackingStatBuff",
-							"targetUnit": {
-								"type": "getBuffedUnit"
-							},
-							"buff": {
-								"type": "getStoredNonStackingStatBuffByKey",
-								"instanceValue": {
-									"type": "rawBoolean",
-									"value": "false"
-								},
-								"key": {
-									"type": "rawString",
-									"value": "asbuff"
-								}
+							"key": {
+								"type": "rawString",
+								"value": "asbuff"
 							}
 					}]
 				},{
@@ -183,45 +151,11 @@
 			}]
 		}],
 		"onLevelChange": [{
-				"type": "updateNonStackingStatBuff",
-				"buff": {
-					"type": "getStoredNonStackingStatBuffByKey",
-					"instanceValue": {
-						"type": "rawBoolean",
-						"value": "false"
-					},
-					"key": {
-						"type": "rawString",
-						"value": "mvbuff"
-					}
-				},
-				"value": {
-					"type": "negativeFloat",
-					"value": {
-						"type": "getAbilityDataAsFloat",
-						"dataField": "A"
-					}
-				}
-			},{
-				"type": "updateNonStackingStatBuff",
-				"buff": {
-					"type": "getStoredNonStackingStatBuffByKey",
-					"instanceValue": {
-						"type": "rawBoolean",
-						"value": "false"
-					},
-					"key": {
-						"type": "rawString",
-						"value": "asbuff"
-					}
-				},
-				"value": {
-					"type": "negativeFloat",
-					"value": {
-						"type": "getAbilityDataAsFloat",
-						"dataField": "B"
-					}
-				}
+			"type": "runReuseAction",
+			"name": {
+				"type": "rawString",
+				"value": "setupBuffs"
+			}
 		}]
 	},{
 		"ids": [{"id":"Amls", "castId": "magicleash"}],
@@ -669,20 +603,41 @@
 				}]
 		}]
 	},{
-		"ids": [{"id":"Ahea", "castId": "heal", "autoCastOnId": "healon", "autoCastOffId": "healoff", "autoCastType": "NEARESTVALID"}],
+		"ids": [{"id":"Ahea", "castId": "heal", "autoCastOnId": "healon", "autoCastOffId": "healoff", "autoCastType": "NEARESTVALID"},{"id":"Anhe", "castId": "heal", "autoCastOnId": "healon", "autoCastOffId": "healoff", "autoCastType": "NEARESTVALID"}],
 		"type": "NORMAL_UNITTARGET",
+		"overrideFields": {
+			"universalSpell": {
+				"type": "rawBoolean",
+				"value": "true"
+			}
+		},
 		"extraTargetConditions": [{
-			"type": "setCantUseReasonOnFailure",
-			"condition": {
-				"type": "not",
+				"type": "setCantUseReasonOnFailure",
 				"condition": {
-					"type": "isUnitMaxHp",
-					"unit": {
-						"type": "getAbilityTargetedUnit"
+					"type": "not",
+					"condition": {
+						"type": "isUnitMaxHp",
+						"unit": {
+							"type": "getAbilityTargetedUnit"
+						}
 					}
-				}
-			},
-			"reason": "ALREADY_AT_FULL_HEALTH"
+				},
+				"reason": "ALREADY_AT_FULL_HEALTH"
+			},{
+				"type": "setCantUseReasonOnFailure",
+				"condition": {
+					"type": "not",
+					"condition": {
+						"type": "doesUnitHaveBuff",
+						"unit": {
+							"type": "getAbilityTargetedUnit"
+						},
+						"id": {
+							"type": "getFirstBuffId"
+						}
+					}
+				},
+				"reason": "TARGET_IS_ALREADY_BEING_HEALED"
 		}],
 		"onEndCasting": [{
 			"type": "checkAbilityEffectReaction",
@@ -714,6 +669,10 @@
 					},
 					"duration": {
 						"type": "getAbilityCooldown"
+					},
+					"dispellable": {
+						"type": "rawBoolean",
+						"value": "false"
 					}
 				},{
 					"type": "addBuff",
@@ -740,96 +699,105 @@
 				}
 			}
 		}],
+		"reuseActions": {
+			"setupBuffs": [{
+					"type": "createNonStackingStatBuff",
+					"buffType": {
+						"type": "getNonStackingStatBuffTypeFromString",
+						"id": {
+							"type": "rawString",
+							"value": "ALLATKPCT"
+						}
+					},
+					"stackingKey": {
+						"type": "rawString",
+						"value": "innerFire"
+					},
+					"value": {
+						"type": "getAbilityDataAsFloat",
+						"dataField": "A"
+					}
+				},{
+					"type": "storeValueLocally",
+					"key": {
+						"type": "rawString",
+						"value": "atkbuff"
+					},
+					"instanceValue": {
+						"type": "rawBoolean",
+						"value": "false"
+					},
+					"valueToStore": {
+						"type": "getLastCreatedNonStackingStatBuff"
+					}
+				},{
+					"type": "createNonStackingStatBuff",
+					"buffType": {
+						"type": "getNonStackingStatBuffTypeFromString",
+						"id": {
+							"type": "rawString",
+							"value": "DEF"
+						}
+					},
+					"stackingKey": {
+						"type": "rawString",
+						"value": "innerFire"
+					},
+					"value": {
+						"type": "getAbilityDataAsFloat",
+						"dataField": "B"
+					}
+				},{
+					"type": "storeValueLocally",
+					"key": {
+						"type": "rawString",
+						"value": "defbuff"
+					},
+					"instanceValue": {
+						"type": "rawBoolean",
+						"value": "false"
+					},
+					"valueToStore": {
+						"type": "getLastCreatedNonStackingStatBuff"
+					}
+				},{
+					"type": "createNonStackingStatBuff",
+					"buffType": {
+						"type": "getNonStackingStatBuffTypeFromString",
+						"id": {
+							"type": "rawString",
+							"value": "HPGEN"
+						}
+					},
+					"stackingKey": {
+						"type": "rawString",
+						"value": "innerFire"
+					},
+					"value": {
+						"type": "getAbilityDataAsFloat",
+						"dataField": "D"
+					}
+				},{
+					"type": "storeValueLocally",
+					"key": {
+						"type": "rawString",
+						"value": "hpbuff"
+					},
+					"instanceValue": {
+						"type": "rawBoolean",
+						"value": "false"
+					},
+					"valueToStore": {
+						"type": "getLastCreatedNonStackingStatBuff"
+					}
+			}]
+		},
 		"onAddAbility": [{
-				"type": "createNonStackingStatBuff",
-				"buffType": {
-					"type": "getNonStackingStatBuffTypeFromString",
-					"id": {
-						"type": "rawString",
-						"value": "ALLATKPCT"
-					}
-				},
-				"stackingKey": {
-					"type": "rawString",
-					"value": "innerFire"
-				},
-				"value": {
-					"type": "getAbilityDataAsFloat",
-					"dataField": "A"
-				}
-			},{
-				"type": "storeValueLocally",
-				"key": {
-					"type": "rawString",
-					"value": "atkbuff"
-				},
-				"instanceValue": {
-					"type": "rawBoolean",
-					"value": "false"
-				},
-				"valueToStore": {
-					"type": "getLastCreatedNonStackingStatBuff"
-				}
-			},{
-				"type": "createNonStackingStatBuff",
-				"buffType": {
-					"type": "getNonStackingStatBuffTypeFromString",
-					"id": {
-						"type": "rawString",
-						"value": "DEF"
-					}
-				},
-				"stackingKey": {
-					"type": "rawString",
-					"value": "innerFire"
-				},
-				"value": {
-					"type": "getAbilityDataAsFloat",
-					"dataField": "B"
-				}
-			},{
-				"type": "storeValueLocally",
-				"key": {
-					"type": "rawString",
-					"value": "defbuff"
-				},
-				"instanceValue": {
-					"type": "rawBoolean",
-					"value": "false"
-				},
-				"valueToStore": {
-					"type": "getLastCreatedNonStackingStatBuff"
-				}
-			},{
-				"type": "createNonStackingStatBuff",
-				"buffType": {
-					"type": "getNonStackingStatBuffTypeFromString",
-					"id": {
-						"type": "rawString",
-						"value": "HPGEN"
-					}
-				},
-				"stackingKey": {
-					"type": "rawString",
-					"value": "innerFire"
-				},
-				"value": {
-					"type": "getAbilityDataAsFloat",
-					"dataField": "D"
-				}
-			},{
-				"type": "storeValueLocally",
-				"key": {
-					"type": "rawString",
-					"value": "hpbuff"
-				},
-				"instanceValue": {
-					"type": "rawBoolean",
-					"value": "false"
-				},
-				"valueToStore": {
-					"type": "getLastCreatedNonStackingStatBuff"
-				}
+			"type": "runReuseAction",
+			"name": {
+				"type": "rawString",
+				"value": "setupBuffs"
+			}
 		}],
 		"onEndCasting": [{
 			"type": "checkAbilityEffectReaction",
@@ -847,102 +815,35 @@
 							"type": "getAbilityTargetedUnit"
 						}
 					},
-					"onAddActions": [{
-							"type": "addNonStackingStatBuff",
-							"targetUnit": {
-								"type": "getBuffedUnit"
+					"statBuffs": [{
+							"type": "getStoredNonStackingStatBuffByKey",
+							"instanceValue": {
+								"type": "rawBoolean",
+								"value": "false"
 							},
-							"buff": {
-								"type": "getStoredNonStackingStatBuffByKey",
-								"instanceValue": {
-									"type": "rawBoolean",
-									"value": "false"
-								},
-								"key": {
-									"type": "rawString",
-									"value": "atkbuff"
-								}
+							"key": {
+								"type": "rawString",
+								"value": "atkbuff"
 							}
 						},{
-							"type": "addNonStackingStatBuff",
-							"targetUnit": {
-								"type": "getBuffedUnit"
+							"type": "getStoredNonStackingStatBuffByKey",
+							"instanceValue": {
+								"type": "rawBoolean",
+								"value": "false"
 							},
-							"buff": {
-								"type": "getStoredNonStackingStatBuffByKey",
-								"instanceValue": {
-									"type": "rawBoolean",
-									"value": "false"
-								},
-								"key": {
-									"type": "rawString",
-									"value": "defbuff"
-								}
+							"key": {
+								"type": "rawString",
+								"value": "defbuff"
 							}
 						},{
-							"type": "addNonStackingStatBuff",
-							"targetUnit": {
-								"type": "getBuffedUnit"
+							"type": "getStoredNonStackingStatBuffByKey",
+							"instanceValue": {
+								"type": "rawBoolean",
+								"value": "false"
 							},
-							"buff": {
-								"type": "getStoredNonStackingStatBuffByKey",
-								"instanceValue": {
-									"type": "rawBoolean",
-									"value": "false"
-								},
-								"key": {
-									"type": "rawString",
-									"value": "hpbuff"
-								}
-							}
-					}],
-					"onRemoveActions": [{
-							"type": "removeNonStackingStatBuff",
-							"targetUnit": {
-								"type": "getBuffedUnit"
-							},
-							"buff": {
-								"type": "getStoredNonStackingStatBuffByKey",
-								"instanceValue": {
-									"type": "rawBoolean",
-									"value": "false"
-								},
-								"key": {
-									"type": "rawString",
-									"value": "atkbuff"
-								}
-							}
-						},{
-							"type": "removeNonStackingStatBuff",
-							"targetUnit": {
-								"type": "getBuffedUnit"
-							},
-							"buff": {
-								"type": "getStoredNonStackingStatBuffByKey",
-								"instanceValue": {
-									"type": "rawBoolean",
-									"value": "false"
-								},
-								"key": {
-									"type": "rawString",
-									"value": "defbuff"
-								}
-							}
-						},{
-							"type": "removeNonStackingStatBuff",
-							"targetUnit": {
-								"type": "getBuffedUnit"
-							},
-							"buff": {
-								"type": "getStoredNonStackingStatBuffByKey",
-								"instanceValue": {
-									"type": "rawBoolean",
-									"value": "false"
-								},
-								"key": {
-									"type": "rawString",
-									"value": "hpbuff"
-								}
+							"key": {
+								"type": "rawString",
+								"value": "hpbuff"
 							}
 					}]
 				},{
@@ -956,56 +857,11 @@
 			}]
 		}],
 		"onLevelChange": [{
-				"type": "updateNonStackingStatBuff",
-				"buff": {
-					"type": "getStoredNonStackingStatBuffByKey",
-					"instanceValue": {
-						"type": "rawBoolean",
-						"value": "false"
-					},
-					"key": {
-						"type": "rawString",
-						"value": "atkbuff"
-					}
-				},
-				"value": {
-					"type": "getAbilityDataAsFloat",
-					"dataField": "A"
-				}
-			},{
-				"type": "updateNonStackingStatBuff",
-				"buff": {
-					"type": "getStoredNonStackingStatBuffByKey",
-					"instanceValue": {
-						"type": "rawBoolean",
-						"value": "false"
-					},
-					"key": {
-						"type": "rawString",
-						"value": "defbuff"
-					}
-				},
-				"value": {
-					"type": "getAbilityDataAsFloat",
-					"dataField": "B"
-				}
-			},{
-				"type": "updateNonStackingStatBuff",
-				"buff": {
-					"type": "getStoredNonStackingStatBuffByKey",
-					"instanceValue": {
-						"type": "rawBoolean",
-						"value": "false"
-					},
-					"key": {
-						"type": "rawString",
-						"value": "hpbuff"
-					}
-				},
-				"value": {
-					"type": "getAbilityDataAsFloat",
-					"dataField": "D"
-				}
+			"type": "runReuseAction",
+			"name": {
+				"type": "rawString",
+				"value": "setupBuffs"
+			}
 		}]
 	},{
 		"ids": [{"id":"Aivs", "castId": "invisibility"}],
@@ -1499,7 +1355,7 @@
 							"type": "if",
 							"condition": {
 								"type": "isNewBehaviorCategoryInList",
-								"list": ["ATTACK","SPELL"]
+								"list": ["ATTACK","SPELL","BUILD"]
 							},
 							"thenActions": [{
 								"type": "removeBuff",

@@ -22,6 +22,28 @@ public class AbilityBuilderParserTemplateFields {
 	private List<StatBuffFromDataField> statBuffsFromDataFields;
 	private MeleeRangeTargetOverride meleeRangeTargetOverride;
 
+	public void updateFromParent(AbilityBuilderParserTemplateFields parent) {
+		if (this.templateType == null)
+			this.templateType = parent.templateType;
+
+		if (this.addToAuraActions == null)
+			this.addToAuraActions = parent.addToAuraActions;
+		if (this.updateAuraLevelActions == null)
+			this.updateAuraLevelActions = parent.updateAuraLevelActions;
+		if (this.removeFromAuraActions == null)
+			this.removeFromAuraActions = parent.removeFromAuraActions;
+
+		if (this.abilityIdsToAddPerLevel == null)
+			this.abilityIdsToAddPerLevel = parent.abilityIdsToAddPerLevel;
+		if (this.levellingAbilityIdsToAdd == null)
+			this.levellingAbilityIdsToAdd = parent.levellingAbilityIdsToAdd;
+
+		if (this.statBuffsFromDataFields == null)
+			this.statBuffsFromDataFields = parent.statBuffsFromDataFields;
+		if (this.meleeRangeTargetOverride == null)
+			this.meleeRangeTargetOverride = parent.meleeRangeTargetOverride;
+	}
+
 	public AbilityBuilderTemplateType getTemplateType() {
 		return templateType;
 	}

@@ -22,7 +22,8 @@ public class CAbilityItemHeal extends AbstractGenericSingleIconNoSmartActiveAbil
 	private final int lifeToRegain;
 	private final float cooldown;
 
-	public CAbilityItemHeal(final int handleId, final War3ID code, final War3ID alias, final int lifeToRegain, final float cooldown) {
+	public CAbilityItemHeal(final int handleId, final War3ID code, final War3ID alias, final int lifeToRegain,
+			final float cooldown) {
 		super(handleId, code, alias);
 		this.lifeToRegain = lifeToRegain;
 		this.cooldown = cooldown;
@@ -52,8 +53,8 @@ public class CAbilityItemHeal extends AbstractGenericSingleIconNoSmartActiveAbil
 	}
 
 	@Override
-	protected void innerCheckCanUse(final CSimulation game, final CUnit unit, int playerIndex,
-			final int orderId, final AbilityActivationReceiver receiver) {
+	protected void innerCheckCanUse(final CSimulation game, final CUnit unit, final int playerIndex, final int orderId,
+			final AbilityActivationReceiver receiver) {
 		final float cooldownRemaining = CAbilitySpellBase.getCooldownRemaining(game, unit, CODE);
 		if (cooldownRemaining > 0) {
 			final float cooldownLengthDisplay = unit.getCooldownLengthDisplayTicks(game, CODE)
@@ -94,40 +95,47 @@ public class CAbilityItemHeal extends AbstractGenericSingleIconNoSmartActiveAbil
 	}
 
 	@Override
-	public void onCancelFromQueue(final CSimulation game, final CUnit unit, int playerIndex, final int orderId) {
+	public void onCancelFromQueue(final CSimulation game, final CUnit unit, final int playerIndex, final int orderId) {
 
 	}
 
 	@Override
-	public boolean checkBeforeQueue(final CSimulation game, final CUnit caster, int playerIndex,
-			final int orderId, final AbilityTarget target) {
+	public boolean checkBeforeQueue(final CSimulation game, final CUnit caster, final int playerIndex,
+			final int orderId, final boolean autoOrder, final AbilityTarget target) {
 		if ((target == null) && (orderId == getBaseOrderId())) {
 			caster.heal(game, this.lifeToRegain);
 			game.createTemporarySpellEffectOnUnit(caster, getAlias(), CEffectType.TARGET);
-			caster.beginCooldown(game, CODE, cooldown);
+			caster.beginCooldown(game, CODE, this.cooldown);
 			return false;
 		}
-		return super.checkBeforeQueue(game, caster, playerIndex, orderId, target);
+		return super.checkBeforeQueue(game, caster, playerIndex, orderId, autoOrder, target);
 	}
 
 	@Override
-	public CBehavior begin(final CSimulation game, final CUnit caster, int playerIndex, final int orderId, final CWidget target) {
+	public CBehavior begin(final CSimulation game, final CUnit caster, final int playerIndex, final int orderId,
+			final boolean autoOrder, final CWidget target) {
 		return null;
 	}
 
 	@Override
-	public CBehavior begin(final CSimulation game, final CUnit caster, int playerIndex,
-			final int orderId, final AbilityPointTarget point) {
+	public CBehavior begin(final CSimulation game, final CUnit caster, final int playerIndex, final int orderId,
+			final boolean autoOrder, final AbilityPointTarget point) {
 		return null;
 	}
 
 	@Override
-	public CBehavior beginNoTarget(final CSimulation game, final CUnit caster, int playerIndex, final int orderId) {
+	public CBehavior beginNoTarget(final CSimulation game, final CUnit caster, final int playerIndex, final int orderId,
+			final boolean autoOrder) {
 		return null;
 	}
 
 	@Override
 	public boolean isPhysical() {
+		return false;
+	}
+
+	@Override
+	public boolean isMagic() {
 		return false;
 	}
 

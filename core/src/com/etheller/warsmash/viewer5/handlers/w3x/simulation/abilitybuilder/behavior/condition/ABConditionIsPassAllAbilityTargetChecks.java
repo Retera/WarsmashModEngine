@@ -12,18 +12,17 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABLocalStoreKeys;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.BooleanAbilityTargetCheckReceiver;
 
-public class ABConditionIsPassAllAbilityTargetChecks implements ABCondition {
+public class ABConditionIsPassAllAbilityTargetChecks extends ABCondition {
 
 	private ABUnitCallback caster;
 	private ABWidgetCallback target;
 
 	@Override
-	public boolean evaluate(final CSimulation game, final CUnit casterUnit, final Map<String, Object> localStore,
-			final int castId) {
+	public Boolean callback(CSimulation game, CUnit casterUnit, Map<String, Object> localStore, final int castId) {
 		CUnit theCaster = casterUnit;
 
-		if (this.caster != null) {
-			theCaster = this.caster.callback(game, casterUnit, localStore, castId);
+		if (caster != null) {
+			theCaster = caster.callback(game, casterUnit, localStore, castId);
 		}
 
 		final AbilityBuilderActiveAbility abil = (AbilityBuilderActiveAbility) localStore.get(ABLocalStoreKeys.ABILITY);
@@ -35,7 +34,8 @@ public class ABConditionIsPassAllAbilityTargetChecks implements ABCondition {
 		// functions, we may with to disambiguate between the owner of the unit and the
 		// player responsible for the command
 		abil.checkCanTarget(game, theCaster, theCaster.getPlayerIndex(), abil.getBaseOrderId(),
-				this.target.callback(game, casterUnit, localStore, castId), booleanTargetReceiver);
+				((Boolean) localStore.get(ABLocalStoreKeys.combineKey(ABLocalStoreKeys.ISAUTOCAST, castId))),
+				target.callback(game, casterUnit, localStore, castId), booleanTargetReceiver);
 
 		if (booleanTargetReceiver.isTargetable()) {
 			return true;

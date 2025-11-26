@@ -32,17 +32,17 @@ public class ABAttackEvasionListener implements CUnitAttackEvasionListener {
 			CDamageType damageType) {
 		boolean evade = false;
 		localStore.put(ABLocalStoreKeys.ATTACKINGUNIT+triggerId, attacker);
-		localStore.put(ABLocalStoreKeys.ATTACKEDUNIT+triggerId, target);
+		localStore.put(ABLocalStoreKeys.ATTACKTARGET+triggerId, target);
 		localStore.put(ABLocalStoreKeys.DAMAGEISATTACK+triggerId, isAttack);
 		localStore.put(ABLocalStoreKeys.DAMAGEISRANGED+triggerId, isRanged);
 		localStore.put(ABLocalStoreKeys.DAMAGETYPE+triggerId, damageType);
 		if (conditions != null) {
 			for (ABCondition condition : conditions) {
-				evade = evade || condition.evaluate(simulation, target, localStore, triggerId);
+				evade = evade || condition.callback(simulation, target, localStore, triggerId);
 			}
 		}
 		localStore.remove(ABLocalStoreKeys.ATTACKINGUNIT+triggerId);
-		localStore.remove(ABLocalStoreKeys.ATTACKEDUNIT+triggerId);
+		localStore.remove(ABLocalStoreKeys.ATTACKTARGET+triggerId);
 		localStore.remove(ABLocalStoreKeys.DAMAGEISATTACK+triggerId);
 		localStore.remove(ABLocalStoreKeys.DAMAGEISRANGED+triggerId);
 		localStore.remove(ABLocalStoreKeys.DAMAGETYPE+triggerId);

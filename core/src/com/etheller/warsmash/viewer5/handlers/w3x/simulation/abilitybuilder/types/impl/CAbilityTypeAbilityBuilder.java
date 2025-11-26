@@ -35,31 +35,12 @@ public class CAbilityTypeAbilityBuilder extends CAbilityType<CAbilityTypeAbility
 		localStore.put(ABLocalStoreKeys.CURRENTLEVEL, 1);
 		localStore.put(ABLocalStoreKeys.ALIAS, getAlias());
 		localStore.put(ABLocalStoreKeys.CODE, getCode());
-		CAbilitySpell ability;
 		
 		switch (parser.getType()) {
 		case PASSIVE:
 			return new CAbilityAbilityBuilderPassive(handleId, getCode(), getAlias(), getLevelData(), parser, localStore);
 		case HIDDEN:
 			return new CAbilityAbilityBuilderNoIcon(handleId, getCode(), getAlias(), getLevelData(), parser, localStore);
-		case TOGGLE:
-			return new CAbilityAbilityBuilderActiveToggle(handleId, getCode(), getAlias(), getLevelData(), parser, localStore);
-		case NORMAL_NOTARGET_SIMPLE:
-			ability = new CAbilityAbilityBuilderActiveNoTargetSimple(handleId, getAlias(), getLevelData(), parser, localStore);
-			ability.populate(this.abilityEditorData, 1);
-			return ability;
-		case NORMAL_POINTTARGET_SIMPLE:
-			ability = new CAbilityAbilityBuilderActivePointTargetSimple(handleId, getAlias(), getLevelData(), parser, localStore);
-			ability.populate(this.abilityEditorData, 1);
-			return ability;
-		case NORMAL_UNITTARGET_SIMPLE:
-			ability = new CAbilityAbilityBuilderActiveUnitTargetSimple(handleId, getAlias(), getLevelData(), parser, localStore);
-			ability.populate(this.abilityEditorData, 1);
-			return ability;
-		case NORMAL_FLEXTARGET_SIMPLE:
-			ability = new CAbilityAbilityBuilderActiveFlexTargetSimple(handleId, getAlias(), getLevelData(), parser, localStore);
-			ability.populate(this.abilityEditorData, 1);
-			return ability;
 		case NORMAL_FLEXTARGET:
 			return new CAbilityAbilityBuilderActiveFlexTarget(handleId, getCode(), getAlias(), getLevelData(), parser, localStore);
 		case NORMAL_PAIRING:

@@ -4,12 +4,10 @@ import java.util.List;
 import java.util.Map;
 
 import com.etheller.warsmash.parsers.jass.JassTextGenerator;
-import com.etheller.warsmash.units.GameObject;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityPointTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTarget;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.definitions.impl.AbilityFields;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.booleancallbacks.ABBooleanCallback;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.floatcallbacks.ABFloatCallback;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.idcallbacks.ABIDCallback;
@@ -37,13 +35,10 @@ public class ABActionCreateLocationTargetedProjectile implements ABSingleAction 
 	@Override
 	public void runAction(final CSimulation game, final CUnit caster, final Map<String, Object> localStore,
 			final int castId) {
-		float theSpeed = 0;
-		boolean isHoming = true;
+		Float theSpeed = null;
+		Boolean isHoming = null;
 		final CUnit theSource = this.source.callback(game, caster, localStore, castId);
 		AbilityTarget sourceLocation = theSource;
-
-		final GameObject editorData = (GameObject) localStore.get(ABLocalStoreKeys.ABILITYEDITORDATA);
-		final int level = (int) localStore.get(ABLocalStoreKeys.CURRENTLEVEL);
 
 		if (this.sourceLoc != null) {
 			sourceLocation = this.sourceLoc.callback(game, caster, localStore, castId);
@@ -51,14 +46,8 @@ public class ABActionCreateLocationTargetedProjectile implements ABSingleAction 
 		if (this.speed != null) {
 			theSpeed = this.speed.callback(game, caster, localStore, castId);
 		}
-		else {
-			theSpeed = editorData.getFieldAsFloat(AbilityFields.PROJECTILE_SPEED, 0);
-		}
 		if (this.homing != null) {
 			isHoming = this.homing.callback(game, caster, localStore, castId);
-		}
-		else {
-			isHoming = editorData.getFieldAsBoolean(AbilityFields.PROJECTILE_HOMING_ENABLED, 0);
 		}
 
 		final AbilityPointTarget theTarget = this.target.callback(game, caster, localStore, castId);
@@ -67,8 +56,8 @@ public class ABActionCreateLocationTargetedProjectile implements ABSingleAction 
 				localStore, castId);
 
 		final CProjectile proj = game.createProjectile(theSource, this.id.callback(game, caster, localStore, castId),
-				sourceLocation.getX(), sourceLocation.getY(), (float) theSource.angleTo(theTarget), theSpeed, isHoming,
-				theTarget, listener);
+				sourceLocation.getX(), sourceLocation.getY(),
+				(float) AbilityTarget.angleBetween(sourceLocation, theTarget), theSpeed, isHoming, theTarget, listener);
 
 		localStore.put(ABLocalStoreKeys.LASTCREATEDPROJECTILE + castId, proj);
 	}
@@ -84,8 +73,7 @@ public class ABActionCreateLocationTargetedProjectile implements ABSingleAction 
 		String sourceLocExpression;
 		if (this.sourceLoc != null) {
 			sourceLocExpression = this.sourceLoc.generateJassEquivalent(jassTextGenerator);
-		}
-		else {
+		} else {
 			sourceLocExpression = "GetUnitLoc(" + sourceUnitExpression + ")";
 		}
 
@@ -104,12 +92,10 @@ public class ABActionCreateLocationTargetedProjectile implements ABSingleAction 
 						+ jassTextGenerator.functionPointerByName(launchFunctionName) + ", "
 						+ jassTextGenerator.functionPointerByName(hitFunctionName) + ")";
 
-			}
-			else {
+			} else {
 				throw new UnsupportedOperationException();
 			}
-		}
-		else if (this.homing != null) {
+		} else if (this.homing != null) {
 			throw new UnsupportedOperationException();
 		}
 

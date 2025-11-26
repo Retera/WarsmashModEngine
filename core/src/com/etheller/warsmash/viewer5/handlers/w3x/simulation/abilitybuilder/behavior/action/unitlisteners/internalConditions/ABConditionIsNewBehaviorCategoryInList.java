@@ -10,12 +10,12 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehavior;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehaviorCategory;
 
-public class ABConditionIsNewBehaviorCategoryInList implements ABCondition {
+public class ABConditionIsNewBehaviorCategoryInList extends ABCondition {
 
 	private List<CBehaviorCategory> list;
 	
 	@Override
-	public boolean evaluate(CSimulation game, CUnit caster, Map<String, Object> localStore, int castId) {
+	public Boolean callback(CSimulation game, CUnit caster, Map<String, Object> localStore, int castId) {
 		CBehavior beh = (CBehavior) localStore.get(ABLocalStoreKeys.POSTCHANGEBEHAVIOR+castId);
 		CBehaviorCategory cat = CBehaviorCategory.IDLE;
 		if (beh != null) {

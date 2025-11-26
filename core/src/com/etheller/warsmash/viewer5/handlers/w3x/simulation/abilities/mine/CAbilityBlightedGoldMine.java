@@ -32,8 +32,9 @@ public class CAbilityBlightedGoldMine extends CAbilityOverlayedMine {
 
 	private final List<SimulationRenderComponent> spellEffects = new ArrayList<>();
 
-	public CAbilityBlightedGoldMine(final int handleId, final War3ID code, final War3ID alias, final int goldPerInterval,
-			final float intervalDuration, final int maxNumberOfMiners, final float radiusOfMiningRing) {
+	public CAbilityBlightedGoldMine(final int handleId, final War3ID code, final War3ID alias,
+			final int goldPerInterval, final float intervalDuration, final int maxNumberOfMiners,
+			final float radiusOfMiningRing) {
 		super(handleId, code, alias);
 		this.goldPerInterval = goldPerInterval;
 		this.intervalDuration = intervalDuration;
@@ -68,7 +69,7 @@ public class CAbilityBlightedGoldMine extends CAbilityOverlayedMine {
 	}
 
 	@Override
-	public void onDeath(CSimulation game, CUnit cUnit) {
+	public void onDeath(final CSimulation game, final CUnit cUnit) {
 		super.onDeath(game, cUnit);
 		for (final SimulationRenderComponent spellEffect : this.spellEffects) {
 			spellEffect.remove();
@@ -121,47 +122,50 @@ public class CAbilityBlightedGoldMine extends CAbilityOverlayedMine {
 	}
 
 	@Override
-	public CBehavior begin(final CSimulation game, final CUnit caster, int playerIndex, final int orderId, final CWidget target) {
+	public CBehavior begin(final CSimulation game, final CUnit caster, final int playerIndex, final int orderId,
+			final boolean autoOrder, final CWidget target) {
 		return null;
 	}
 
 	@Override
-	public CBehavior begin(final CSimulation game, final CUnit caster, int playerIndex,
-			final int orderId, final AbilityPointTarget point) {
+	public CBehavior begin(final CSimulation game, final CUnit caster, final int playerIndex, final int orderId,
+			final boolean autoOrder, final AbilityPointTarget point) {
 		return null;
 	}
 
 	@Override
-	public CBehavior beginNoTarget(final CSimulation game, final CUnit caster, int playerIndex, final int orderId) {
+	public CBehavior beginNoTarget(final CSimulation game, final CUnit caster, final int playerIndex, final int orderId,
+			final boolean autoOrder) {
 		return null;
 	}
 
 	@Override
-	public void checkCanTarget(final CSimulation game, final CUnit unit, int playerIndex, final int orderId,
-			final CWidget target, final AbilityTargetCheckReceiver<CWidget> receiver) {
+	public void checkCanTarget(final CSimulation game, final CUnit unit, final int playerIndex, final int orderId,
+			final boolean autoOrder, final CWidget target, final AbilityTargetCheckReceiver<CWidget> receiver) {
 		receiver.orderIdNotAccepted();
 	}
 
 	@Override
-	public void checkCanTarget(final CSimulation game, final CUnit unit, int playerIndex,
-			final int orderId, final AbilityPointTarget target, final AbilityTargetCheckReceiver<AbilityPointTarget> receiver) {
+	public void checkCanTarget(final CSimulation game, final CUnit unit, final int playerIndex, final int orderId,
+			final boolean autoOrder, final AbilityPointTarget target,
+			final AbilityTargetCheckReceiver<AbilityPointTarget> receiver) {
 		receiver.orderIdNotAccepted();
 	}
 
 	@Override
-	public void checkCanTargetNoTarget(final CSimulation game, final CUnit unit, int playerIndex,
-			final int orderId, final AbilityTargetCheckReceiver<Void> receiver) {
+	public void checkCanTargetNoTarget(final CSimulation game, final CUnit unit, final int playerIndex,
+			final int orderId, final boolean autoOrder, final AbilityTargetCheckReceiver<Void> receiver) {
 		receiver.orderIdNotAccepted();
 	}
 
 	@Override
-	protected void innerCheckCanUse(final CSimulation game, final CUnit unit, int playerIndex,
-			final int orderId, final AbilityActivationReceiver receiver) {
+	protected void innerCheckCanUse(final CSimulation game, final CUnit unit, final int playerIndex, final int orderId,
+			final AbilityActivationReceiver receiver) {
 		receiver.notAnActiveAbility();
 	}
 
 	@Override
-	public void onCancelFromQueue(final CSimulation game, final CUnit unit, int playerIndex, final int orderId) {
+	public void onCancelFromQueue(final CSimulation game, final CUnit unit, final int playerIndex, final int orderId) {
 	}
 
 	public int tryAddMiner(final CUnit acolyte, final CBehaviorAcolyteHarvest behaviorAcolyteHarvest) {

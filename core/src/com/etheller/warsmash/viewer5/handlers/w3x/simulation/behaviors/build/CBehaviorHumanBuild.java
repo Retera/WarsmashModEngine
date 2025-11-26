@@ -68,7 +68,7 @@ public class CBehaviorHumanBuild extends CAbstractRangedBehavior {
 			final int playerIndex = this.unit.getPlayerIndex();
 			if (!buildLocationObstructed) {
 				final CUnit constructedStructure = simulation.createUnit(this.orderId, playerIndex, this.target.getX(),
-						this.target.getY(), simulation.getGameplayConstants().getBuildingAngle());
+						this.target.getY(), simulation.getGameplayConstants().getBuildingAngle(), true);
 				if (canBeBuiltOnThem) {
 					CAbilityGoldMinable abilityGoldMine = null;
 					if (this.buildOnBuildingIntersector.getUnitToBuildOn() != null) {
@@ -92,7 +92,6 @@ public class CBehaviorHumanBuild extends CAbstractRangedBehavior {
 						}
 					}
 				}
-				constructedStructure.setConstructing(true);
 				constructedStructure.setConstructingPaused(true);
 				constructedStructure.setLife(simulation,
 						constructedStructure.getMaximumLife() * WarsmashConstants.BUILDING_CONSTRUCT_START_LIFE);
@@ -116,15 +115,14 @@ public class CBehaviorHumanBuild extends CAbstractRangedBehavior {
 					if (ability instanceof CAbilityHumanRepair) {
 						final int baseOrderId = ((CAbilityHumanRepair) ability).getBaseOrderId();
 						ability.checkCanUse(simulation, this.unit, this.unit.getPlayerIndex(), baseOrderId,
-								BooleanAbilityActivationReceiver.INSTANCE);
+								false, BooleanAbilityActivationReceiver.INSTANCE);
 						if (BooleanAbilityActivationReceiver.INSTANCE.isOk()) {
 							final BooleanAbilityTargetCheckReceiver<CWidget> targetCheckReceiver = BooleanAbilityTargetCheckReceiver
 									.getInstance();
-							ability.checkCanTarget(simulation, this.unit, this.unit.getPlayerIndex(), baseOrderId,
+							ability.checkCanTarget(simulation, this.unit, this.unit.getPlayerIndex(), baseOrderId, false,
 									constructedStructure, targetCheckReceiver.reset());
 							if (targetCheckReceiver.isTargetable()) {
-								return ability.begin(simulation, this.unit, this.unit.getPlayerIndex(), baseOrderId,
-										constructedStructure);
+								return ability.begin(simulation, this.unit, this.unit.getPlayerIndex(), baseOrderId, false, constructedStructure);
 							}
 						}
 					}
@@ -190,7 +188,7 @@ public class CBehaviorHumanBuild extends CAbstractRangedBehavior {
 
 	@Override
 	public CBehaviorCategory getBehaviorCategory() {
-		return CBehaviorCategory.SPELL;
+		return CBehaviorCategory.BUILD;
 	}
 
 }

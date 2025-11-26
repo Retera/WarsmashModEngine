@@ -1,6 +1,7 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.data;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -138,7 +139,7 @@ public class CItemData {
 			final List<CUnitTypeRequirement> requirements = CUnitData.parseRequirements(requirementsString,
 					requirementsLevelsString);
 
-			itemTypeInstance = new CItemType(abilityList, cooldownGroup, ignoreCooldown, numberOfCharges, activelyUsed,
+			itemTypeInstance = new CItemType(typeId, abilityList, cooldownGroup, ignoreCooldown, numberOfCharges, activelyUsed,
 					perishable, useAutomaticallyWhenAcquired, goldCost, lumberCost, stockMax, stockReplenishInterval,
 					stockStartDelay, hitPoints, armorType, level, levelUnclassified, priority, sellable, pawnable,
 					droppedWhenCarrierDies, canBeDropped, validTargetForTransformation, includeAsRandomChoice,
@@ -194,5 +195,9 @@ public class CItemData {
 	private static final class RandomItemSet {
 		private final List<War3ID> unclassifiedItems = new ArrayList<>();
 		private final Map<CItemTypeJass, List<War3ID>> classificationToItems = new HashMap<>();
+	}
+
+	public Collection<CItemType> getAllItemTypes() {
+		return this.itemIdToItemType.values();
 	}
 }

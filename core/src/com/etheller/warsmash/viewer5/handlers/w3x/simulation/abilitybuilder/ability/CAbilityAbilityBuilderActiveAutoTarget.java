@@ -8,6 +8,8 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityPointTarget;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTarget;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTargetVisitor;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.ABBehavior;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABAction;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABLocalStoreKeys;
@@ -45,18 +47,34 @@ public class CAbilityAbilityBuilderActiveAutoTarget extends CAbilityAbilityBuild
 	}
 
 	@Override
-	public CBehavior beginNoTarget(CSimulation game, CUnit caster, int playerIndex, int orderId) {
+	public CBehavior beginNoTarget(CSimulation game, CUnit caster, int playerIndex, int orderId, boolean autoOrder) {
 		castId++;
+		this.localStore.put(ABLocalStoreKeys.combineKey(ABLocalStoreKeys.ISAUTOCAST, castId), autoOrder);
 		CWidget target = autoTarget(game, caster);
 		if (target != null) {
 			this.runOnOrderIssuedActions(game, caster, orderId);
 			this.behavior.setCastId(castId);
-			return this.behavior.reset(game, target);
+			return this.behavior.reset(game, target, playerIndex, orderId, autoOrder);
 		} else {
 			this.localStore.remove(ABLocalStoreKeys.ABILITYTARGETEDUNIT + castId);
 			this.localStore.remove(ABLocalStoreKeys.ABILITYTARGETEDDESTRUCTABLE + castId);
 			this.localStore.remove(ABLocalStoreKeys.ABILITYTARGETEDITEM + castId);
 			return null;
+		}
+	}
+
+	@Override
+	public void internalBegin(CSimulation game, CUnit caster, int playerIndex, int orderId, boolean autoOrder, AbilityTarget noTarget) {
+		this.castId++;
+		this.localStore.put(ABLocalStoreKeys.combineKey(ABLocalStoreKeys.ISAUTOCAST, castId), autoOrder);
+		this.localStore.put(ABLocalStoreKeys.PREVIOUSBEHAVIOR, caster.getCurrentBehavior());
+		CWidget target = autoTarget(game, caster);
+		if (target != null) {
+			this.runOnOrderIssuedActions(game, caster, orderId);
+		} else {
+			this.localStore.remove(ABLocalStoreKeys.ABILITYTARGETEDUNIT + castId);
+			this.localStore.remove(ABLocalStoreKeys.ABILITYTARGETEDDESTRUCTABLE + castId);
+			this.localStore.remove(ABLocalStoreKeys.ABILITYTARGETEDITEM + castId);
 		}
 	}
 	
@@ -106,12 +124,12 @@ public class CAbilityAbilityBuilderActiveAutoTarget extends CAbilityAbilityBuild
 	// Unused
 
 	@Override
-	public CBehavior begin(CSimulation game, CUnit caster, int playerIndex, int orderId, CWidget target) {
+	public CBehavior begin(CSimulation game, CUnit caster, int playerIndex, int orderId, boolean autoOrder, CWidget target) {
 		return null;
 	}
 	
 	@Override
-	public CBehavior begin(CSimulation game, CUnit caster, int playerIndex, int orderId, AbilityPointTarget point) {
+	public CBehavior begin(CSimulation game, CUnit caster, int playerIndex, int orderId, boolean autoOrder, AbilityPointTarget point) {
 		return null;
 	}
 

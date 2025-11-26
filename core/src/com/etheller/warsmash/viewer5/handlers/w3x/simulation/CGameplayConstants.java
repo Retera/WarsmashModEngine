@@ -27,22 +27,29 @@ public class CGameplayConstants {
 	private final float structureDecayTime;
 	private final float buildingAngle;
 	private final float rootAngle;
-	
+
 	private final float fogFlashTime;
 	private final float dyingRevealRadius;
 	private final float foggedAttackRevealRadius;
 
 	private final float defenseArmor;
+	
+	private final boolean canDisableDivineShield;
 
-	private final float etherealDamageBonusSpells;
-	private final float etherealDamageBonusMagic;
+	private final float[] etherealDamageBonus;
 	private final boolean etherealDamageBonusAlly;
 	
+	private final float frostAttackSpeedDecrease;
+	private final float frostMoveSpeedDecrease;
+
+	private final boolean allowMultiBounce;
+	private final boolean abolishMagicSmartDispel;
+	private final boolean invulnerableSummonsTakeDispelDamage;
 	private final boolean magicImmuneResistsDamage;
 	private final boolean magicImmuneResistsLeech;
 	private final boolean magicImmuneResistsThorns;
 	private final boolean magicImmuneResistsUltimates;
-	
+
 	private final boolean defendDeflection;
 
 	private final int heroMaxReviveCostGold;
@@ -125,7 +132,7 @@ public class CGameplayConstants {
 	private final float maxUnitSpeed;
 	private final float minBldgSpeed;
 	private final float maxBldgSpeed;
-	
+
 	private final float chanceToMiss;
 	private final float missDamageReduction;
 
@@ -152,6 +159,8 @@ public class CGameplayConstants {
 		this.fogFlashTime = miscData.getFieldFloatValue("FogFlashTime");
 		this.dyingRevealRadius = miscData.getFieldFloatValue("DyingRevealRadius");
 		this.foggedAttackRevealRadius = miscData.getFieldFloatValue("FoggedAttackRevealRadius");
+		
+		this.canDisableDivineShield = miscData.getFieldValue("CanDeactivateDivineShield") != 0;
 
 		final CDefenseType[] defenseTypeOrder = { CDefenseType.SMALL, CDefenseType.MEDIUM, CDefenseType.LARGE,
 				CDefenseType.FORT, CDefenseType.NORMAL, CDefenseType.HERO, CDefenseType.DIVINE, CDefenseType.NONE, };
@@ -171,8 +180,7 @@ public class CGameplayConstants {
 					try {
 						this.damageBonusTable[i][defenseType.ordinal()] = Float.parseFloat(damageComponents[j]);
 //						System.out.println(attackType + ":" + defenseType + ": " + damageComponents[j]);
-					}
-					catch (final NumberFormatException e) {
+					} catch (final NumberFormatException e) {
 						throw new RuntimeException(fieldName, e);
 					}
 				}
@@ -183,38 +191,49 @@ public class CGameplayConstants {
 
 		final String damageBonus = miscData.getField("EtherealDamageBonus");
 		final String[] damageComponents = damageBonus.split(",");
-		float magBonus = 1;
-		float spellBonus = 1;
+		this.etherealDamageBonus = new float[damageComponents.length + 1];
+		this.etherealDamageBonus[this.etherealDamageBonus.length - 1] = 1;
 		for (int j = 0; j < damageComponents.length; j++) {
-			if (j == 3) {
-				if (damageComponents[j].length() > 0) {
-					try {
-						magBonus = Float.parseFloat(damageComponents[j]);
-					}
-					catch (final NumberFormatException e) {
-						throw new RuntimeException("EtherealDamageBonus", e);
-					}
+			int iter = 0;
+			if (j < 5) {
+				iter = j + 1;
+			} else if (j > 5) {
+				iter = j;
+			}
+			/*
+			 * The above reordering is to match the War3 attack type order. The ethereal
+			 * table is organized:
+			 * 
+			 * Normal,Pierce,Siege,Magic,Chaos,Spells,Hero
+			 * 
+			 * 
+			 * But the actual internal attack types are ordered:
+			 * 
+			 * Spells,Normal,Pierce,Siege,Magic,Chaos,Hero
+			 */
+			if (damageComponents[j].length() > 0) {
+				try {
+					this.etherealDamageBonus[iter] = Float.parseFloat(damageComponents[j]);
+				} catch (final NumberFormatException e) {
+					throw new RuntimeException("EtherealDamageBonus", e);
 				}
-			} else if (j == 5) {
-				if (damageComponents[j].length() > 0) {
-					try {
-						spellBonus = Float.parseFloat(damageComponents[j]);
-					}
-					catch (final NumberFormatException e) {
-						throw new RuntimeException("EtherealDamageBonus", e);
-					}
-				}
+			} else {
+				this.etherealDamageBonus[iter] = 0;
 			}
 		}
-		this.etherealDamageBonusMagic = magBonus;
-		this.etherealDamageBonusSpells = spellBonus;
 		this.etherealDamageBonusAlly = miscData.getFieldValue("EtherealDamageBonusAlly") != 0;
+		
+		this.frostAttackSpeedDecrease = miscData.getFieldFloatValue("FrostAttackSpeedDecrease");
+		this.frostMoveSpeedDecrease = miscData.getFieldFloatValue("FrostMoveSpeedDecrease");
 
+		this.allowMultiBounce = miscData.getFieldValue("AllowMultiBounce") != 0;
+		this.abolishMagicSmartDispel = miscData.getFieldValue("AbolishMagicDispelSmart") != 0;
+		this.invulnerableSummonsTakeDispelDamage = miscData.getFieldValue("InvulnSummonDispelDamage") != 0;
 		this.magicImmuneResistsDamage = miscData.getFieldValue("MagicImmunesResistDamage") != 0;
 		this.magicImmuneResistsLeech = miscData.getFieldValue("MagicImmunesResistLeech") != 0;
 		this.magicImmuneResistsThorns = miscData.getFieldValue("MagicImmunesResistThorns") != 0;
 		this.magicImmuneResistsUltimates = miscData.getFieldValue("MagicImmunesResistUltimates") != 0;
-		
+
 		this.defendDeflection = miscData.getFieldValue("DefendDeflection") != 0;
 
 		this.globalExperience = miscData.getFieldValue("GlobalExperience") != 0;
@@ -270,8 +289,7 @@ public class CGameplayConstants {
 		for (int i = 0; i < this.needHeroXpSum.length; i++) {
 			if (i == 0) {
 				this.needHeroXpSum[i] = this.needHeroXp[i];
-			}
-			else {
+			} else {
 				this.needHeroXpSum[i] = this.needHeroXp[i] + this.needHeroXpSum[i - 1];
 			}
 		}
@@ -392,16 +410,36 @@ public class CGameplayConstants {
 		return this.defenseArmor;
 	}
 
-	public float getEtherealDamageBonusSpells() {
-		return etherealDamageBonusSpells;
+	public boolean isCanDisableDivineShield() {
+		return canDisableDivineShield;
 	}
 
-	public float getEtherealDamageBonusMagic() {
-		return etherealDamageBonusMagic;
+	public float[] getEtherealDamageBonus() {
+		return etherealDamageBonus;
 	}
 
 	public boolean isEtherealDamageBonusAlly() {
 		return etherealDamageBonusAlly;
+	}
+
+	public float getFrostAttackSpeedDecrease() {
+		return frostAttackSpeedDecrease;
+	}
+
+	public float getFrostMoveSpeedDecrease() {
+		return frostMoveSpeedDecrease;
+	}
+
+	public boolean isAllowMultiBounce() {
+		return allowMultiBounce;
+	}
+
+	public boolean isAbolishMagicSmartDispel() {
+		return abolishMagicSmartDispel;
+	}
+
+	public boolean isInvulnerableSummonsTakeDispelDamage() {
+		return invulnerableSummonsTakeDispelDamage;
 	}
 
 	public boolean isMagicImmuneResistsDamage() {
@@ -419,6 +457,7 @@ public class CGameplayConstants {
 	public boolean isMagicImmuneResistsUltimates() {
 		return magicImmuneResistsUltimates;
 	}
+
 	public boolean isDefendDeflection() {
 		return defendDeflection;
 	}
@@ -625,8 +664,7 @@ public class CGameplayConstants {
 		for (int i = 0; i < tableSize; i++) {
 			if (i < splitTxt.length) {
 				result[i] = Integer.parseInt(splitTxt[i]);
-			}
-			else {
+			} else {
 				result[i] = (formulaA * result[i - 1]) + (formulaB * i) + formulaC;
 			}
 		}

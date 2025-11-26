@@ -30,6 +30,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityActivat
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetCheckReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.BooleanAbilityTargetCheckReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.CommandStringErrorKeys;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.ExternStringMsgAbilityActivationReceiver;
 
 public class CAbilityInventory extends AbstractGenericNoIconAbility {
 	private final boolean canDropItems;
@@ -80,7 +81,7 @@ public class CAbilityInventory extends AbstractGenericNoIconAbility {
 
 	@Override
 	public boolean checkBeforeQueue(final CSimulation game, final CUnit caster, final int playerIndex,
-			final int orderId, final AbilityTarget target) {
+			final int orderId, final boolean autoOrder, final AbilityTarget target) {
 		if ((orderId >= OrderIds.itemdrag00) && (orderId <= OrderIds.itemdrag05)) {
 			for (int i = 0; i < this.itemsHeld.length; i++) {
 				if (this.itemsHeld[i] == target) {
@@ -105,7 +106,7 @@ public class CAbilityInventory extends AbstractGenericNoIconAbility {
 					forwardedOrderId = ((SingleOrderAbility) cAbility).getBaseOrderId();
 				}
 				final boolean checkResult = cAbility.checkBeforeQueue(game, caster, playerIndex, forwardedOrderId,
-						target);
+						false, target);
 				if (!checkResult) {
 					// we will never call begin, so we need to consume a charge of perishables here
 					// assuming this is a no-queue instant use perishable... later if we have some
@@ -120,7 +121,7 @@ public class CAbilityInventory extends AbstractGenericNoIconAbility {
 				return checkResult;
 			}
 		}
-		return super.checkBeforeQueue(game, caster, playerIndex, orderId, target);
+		return super.checkBeforeQueue(game, caster, playerIndex, orderId, autoOrder, target);
 	}
 
 	private void consumePerishableCharge(final CSimulation game, final CUnit caster, final int slot,
@@ -159,7 +160,7 @@ public class CAbilityInventory extends AbstractGenericNoIconAbility {
 
 	@Override
 	public CBehavior begin(final CSimulation game, final CUnit caster, final int playerIndex, final int orderId,
-			final CWidget target) {
+			final boolean autoOrder, final CWidget target) {
 		if ((orderId >= OrderIds.itemuse00) && (orderId <= OrderIds.itemuse05)) {
 			final int slot = orderId - OrderIds.itemuse00;
 			final List<CAbility> itemsHeldAbilitiesForSlot = this.itemsHeldAbilities[slot];
@@ -169,7 +170,7 @@ public class CAbilityInventory extends AbstractGenericNoIconAbility {
 				if (ability instanceof SingleOrderAbility) {
 					forwardedOrderId = ((SingleOrderAbility) ability).getBaseOrderId();
 				}
-				final CBehavior behavior = ability.begin(game, caster, playerIndex, forwardedOrderId, target);
+				final CBehavior behavior = ability.begin(game, caster, playerIndex, forwardedOrderId, false, target);
 				final CItem cItem = this.itemsHeld[slot];
 				consumePerishableCharge(game, caster, slot, cItem);
 				return behavior;
@@ -194,7 +195,7 @@ public class CAbilityInventory extends AbstractGenericNoIconAbility {
 
 	@Override
 	public CBehavior begin(final CSimulation game, final CUnit caster, final int playerIndex, final int orderId,
-			final AbilityPointTarget point) {
+			final boolean autoOrder, final AbilityPointTarget point) {
 		if ((orderId >= OrderIds.itemuse00) && (orderId <= OrderIds.itemuse05)) {
 			final int slot = orderId - OrderIds.itemuse00;
 			final List<CAbility> itemsHeldAbilitiesForSlot = this.itemsHeldAbilities[slot];
@@ -204,7 +205,7 @@ public class CAbilityInventory extends AbstractGenericNoIconAbility {
 				if (ability instanceof SingleOrderAbility) {
 					forwardedOrderId = ((SingleOrderAbility) ability).getBaseOrderId();
 				}
-				final CBehavior behavior = ability.begin(game, caster, playerIndex, forwardedOrderId, point);
+				final CBehavior behavior = ability.begin(game, caster, playerIndex, forwardedOrderId, false, point);
 				final CItem cItem = this.itemsHeld[slot];
 				consumePerishableCharge(game, caster, slot, cItem);
 				return behavior;
@@ -214,8 +215,8 @@ public class CAbilityInventory extends AbstractGenericNoIconAbility {
 	}
 
 	@Override
-	public CBehavior beginNoTarget(final CSimulation game, final CUnit caster, final int playerIndex,
-			final int orderId) {
+	public CBehavior beginNoTarget(final CSimulation game, final CUnit caster, final int playerIndex, final int orderId,
+			final boolean autoOrder) {
 		if ((orderId >= OrderIds.itemuse00) && (orderId <= OrderIds.itemuse05)) {
 			final int slot = orderId - OrderIds.itemuse00;
 			final List<CAbility> itemsHeldAbilitiesForSlot = this.itemsHeldAbilities[slot];
@@ -225,7 +226,7 @@ public class CAbilityInventory extends AbstractGenericNoIconAbility {
 				if (ability instanceof SingleOrderAbility) {
 					forwardedOrderId = ((SingleOrderAbility) ability).getBaseOrderId();
 				}
-				final CBehavior behavior = ability.beginNoTarget(game, caster, playerIndex, forwardedOrderId);
+				final CBehavior behavior = ability.beginNoTarget(game, caster, playerIndex, forwardedOrderId, false);
 				final CItem cItem = this.itemsHeld[slot];
 				consumePerishableCharge(game, caster, slot, cItem);
 				return behavior;
@@ -236,7 +237,7 @@ public class CAbilityInventory extends AbstractGenericNoIconAbility {
 
 	@Override
 	public void checkCanTarget(final CSimulation game, final CUnit unit, final int playerIndex, final int orderId,
-			final CWidget target, final AbilityTargetCheckReceiver<CWidget> receiver) {
+			final boolean autoOrder, final CWidget target, final AbilityTargetCheckReceiver<CWidget> receiver) {
 		if (((orderId == OrderIds.getitem) || (orderId == OrderIds.smart)) && !target.isDead()) {
 			if (target instanceof CItem) {
 				if (this.canGetItems) {
@@ -304,7 +305,7 @@ public class CAbilityInventory extends AbstractGenericNoIconAbility {
 						if (ability instanceof SingleOrderAbility) {
 							forwardedOrderId = ((SingleOrderAbility) ability).getBaseOrderId();
 						}
-						ability.checkCanTarget(game, unit, playerIndex, forwardedOrderId, target, receiver);
+						ability.checkCanTarget(game, unit, playerIndex, forwardedOrderId, false, target, receiver);
 					}
 					else {
 						receiver.orderIdNotAccepted();
@@ -329,7 +330,8 @@ public class CAbilityInventory extends AbstractGenericNoIconAbility {
 
 	@Override
 	public void checkCanTarget(final CSimulation game, final CUnit unit, final int playerIndex, final int orderId,
-			final AbilityPointTarget target, final AbilityTargetCheckReceiver<AbilityPointTarget> receiver) {
+			final boolean autoOrder, final AbilityPointTarget target,
+			final AbilityTargetCheckReceiver<AbilityPointTarget> receiver) {
 		if (orderId != OrderIds.dropitem) {
 			if ((orderId >= OrderIds.itemuse00) && (orderId <= OrderIds.itemuse05)) {
 				final int slot = orderId - OrderIds.itemuse00;
@@ -340,7 +342,7 @@ public class CAbilityInventory extends AbstractGenericNoIconAbility {
 					if (ability instanceof SingleOrderAbility) {
 						forwardedOrderId = ((SingleOrderAbility) ability).getBaseOrderId();
 					}
-					ability.checkCanTarget(game, unit, playerIndex, forwardedOrderId, target, receiver);
+					ability.checkCanTarget(game, unit, playerIndex, forwardedOrderId, false, target, receiver);
 				}
 				else {
 					receiver.orderIdNotAccepted();
@@ -357,7 +359,7 @@ public class CAbilityInventory extends AbstractGenericNoIconAbility {
 
 	@Override
 	public void checkCanTargetNoTarget(final CSimulation game, final CUnit unit, final int playerIndex,
-			final int orderId, final AbilityTargetCheckReceiver<Void> receiver) {
+			final int orderId, final boolean autoOrder, final AbilityTargetCheckReceiver<Void> receiver) {
 		if ((orderId >= OrderIds.itemuse00) && (orderId <= OrderIds.itemuse05)) {
 			final int slot = orderId - OrderIds.itemuse00;
 			final List<CAbility> itemsHeldAbilitiesForSlot = this.itemsHeldAbilities[slot];
@@ -367,7 +369,7 @@ public class CAbilityInventory extends AbstractGenericNoIconAbility {
 				if (ability instanceof SingleOrderAbility) {
 					forwardedOrderId = ((SingleOrderAbility) ability).getBaseOrderId();
 				}
-				ability.checkCanTargetNoTarget(game, unit, playerIndex, forwardedOrderId, receiver);
+				ability.checkCanTargetNoTarget(game, unit, playerIndex, forwardedOrderId, false, receiver);
 			}
 			else {
 				receiver.orderIdNotAccepted();
@@ -395,7 +397,7 @@ public class CAbilityInventory extends AbstractGenericNoIconAbility {
 						if (ability instanceof SingleOrderAbility) {
 							forwardedOrderId = ((SingleOrderAbility) ability).getBaseOrderId();
 						}
-						ability.checkCanUse(game, unit, playerIndex, forwardedOrderId, receiver);
+						ability.checkCanUse(game, unit, playerIndex, forwardedOrderId, false, receiver);
 					}
 					else {
 						receiver.notAnActiveAbility();
@@ -432,7 +434,7 @@ public class CAbilityInventory extends AbstractGenericNoIconAbility {
 			final CItemType itemType = item.getItemType();
 			if (this.canUseItems && itemType.isUseAutomaticallyWhenAcquired()) {
 				if (itemType.isActivelyUsed()) {
-					item.setLife(simulation, 0);
+
 					// TODO when we give unit ability here, then use ability
 					final List<CAbility> addedAbilities = new ArrayList<>();
 					for (final War3ID abilityId : item.getItemType().getAbilityList()) {
@@ -446,30 +448,46 @@ public class CAbilityInventory extends AbstractGenericNoIconAbility {
 							if (abilityFromItem instanceof SingleOrderAbility) {
 								final int baseOrderId = ((SingleOrderAbility) abilityFromItem).getBaseOrderId();
 
-								final BooleanAbilityTargetCheckReceiver<CWidget> booleanUnitTargetReceiver = BooleanAbilityTargetCheckReceiver
-										.<CWidget>getInstance().reset();
-								abilityFromItem.checkCanTarget(simulation, hero, hero.getPlayerIndex(), baseOrderId,
-										hero, booleanUnitTargetReceiver);
-								if (booleanUnitTargetReceiver.isTargetable()) {
-									hero.order(simulation, new COrderTargetWidget(hero.getPlayerIndex(),
-											abilityFromItem.getHandleId(), baseOrderId, hero.getHandleId(), false),
-											false);
-
-								}
-								else {
-									final BooleanAbilityTargetCheckReceiver<AbilityPointTarget> booleanTargetReceiver = BooleanAbilityTargetCheckReceiver
-											.<AbilityPointTarget>getInstance().reset();
-									final AbilityPointTarget tar = new AbilityPointTarget(hero.getX(), hero.getY());
+								final ExternStringMsgAbilityActivationReceiver act = ExternStringMsgAbilityActivationReceiver.INSTANCE;
+								act.reset();
+								abilityFromItem.checkCanUse(simulation, hero, hero.getPlayerIndex(), baseOrderId, false,
+										act);
+								if (act.isUseOk()) {
+									item.setLife(simulation, 0);
+									final BooleanAbilityTargetCheckReceiver<CWidget> booleanUnitTargetReceiver = BooleanAbilityTargetCheckReceiver
+											.<CWidget>getInstance().reset();
 									abilityFromItem.checkCanTarget(simulation, hero, hero.getPlayerIndex(), baseOrderId,
-											tar, booleanTargetReceiver);
+											false, hero, booleanUnitTargetReceiver);
+									if (booleanUnitTargetReceiver.isTargetable()) {
+										hero.order(simulation, new COrderTargetWidget(hero.getPlayerIndex(),
+												abilityFromItem.getHandleId(), baseOrderId, hero.getHandleId(), false),
+												false);
 
-									if (booleanTargetReceiver.isTargetable()) {
-										hero.order(simulation, new COrderTargetPoint(hero.getPlayerIndex(),
-												abilityFromItem.getHandleId(), baseOrderId, tar, false), false);
 									}
 									else {
-										hero.order(simulation, new COrderNoTarget(hero.getPlayerIndex(),
-												abilityFromItem.getHandleId(), baseOrderId, false), false);
+										final BooleanAbilityTargetCheckReceiver<AbilityPointTarget> booleanTargetReceiver = BooleanAbilityTargetCheckReceiver
+												.<AbilityPointTarget>getInstance().reset();
+										final AbilityPointTarget tar = new AbilityPointTarget(hero.getX(), hero.getY());
+										abilityFromItem.checkCanTarget(simulation, hero, hero.getPlayerIndex(),
+												baseOrderId, false, tar, booleanTargetReceiver);
+
+										if (booleanTargetReceiver.isTargetable()) {
+											hero.order(simulation,
+													new COrderTargetPoint(hero.getPlayerIndex(),
+															abilityFromItem.getHandleId(), baseOrderId, tar, false),
+													false);
+										}
+										else {
+											hero.order(simulation, new COrderNoTarget(hero.getPlayerIndex(),
+													abilityFromItem.getHandleId(), baseOrderId, false), false);
+										}
+									}
+								}
+								else {
+									final String externStringKey = act.getExternStringKey();
+									if ((externStringKey != null) && !externStringKey.isEmpty()) {
+										simulation.getCommandErrorListener().showInterfaceError(hero.getPlayerIndex(),
+												externStringKey);
 									}
 								}
 							}

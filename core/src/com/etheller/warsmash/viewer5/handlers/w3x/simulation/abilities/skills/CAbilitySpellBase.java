@@ -18,11 +18,13 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.A
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTargetVisitor;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.definitions.impl.AbilityFields;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CSpellDamageFlags;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CTargetType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityActivationReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.CommandStringErrorKeys;
 
 public abstract class CAbilitySpellBase extends AbstractGenericSingleIconNoSmartActiveAbility implements CAbilitySpell {
+	protected static CSpellDamageFlags DAMAGE_FLAGS = new CSpellDamageFlags();
 	private int manaCost;
 	private float castRange;
 	private float cooldown;
@@ -228,6 +230,11 @@ public abstract class CAbilitySpellBase extends AbstractGenericSingleIconNoSmart
 	@Override
 	public boolean isPhysical() {
 		return false;
+	}
+
+	@Override
+	public boolean isMagic() {
+		return true;
 	}
 
 	@Override

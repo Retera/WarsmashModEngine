@@ -43,13 +43,12 @@
 			"type": "setCantUseReasonOnFailure",
 			"condition": {
 				"type": "and",
-				"condition1": {
+				"conditions": [{
 					"type": "isUnitValidTarget",
 					"target": {
 						"type": "getAbilityTargetedUnit"
 					}
-				},
-				"condition2": {
+				},{
 					"type": "not",
 					"condition": {
 						"type": "doesUnitHaveBuff",
@@ -60,7 +59,7 @@
 							"type": "getAlias"
 						}
 					}
-				}
+				}]
 			},
 			"reason": "THERE_ARE_NO_USABLE_CORPSES_NEARBY"
 		}],
@@ -298,6 +297,12 @@
 	},{
 		"ids": [{"id":"Arpl", "castId": "replenishlife", "autoCastOnId": "replenishlifeon", "autoCastOffId": "replenishlifeoff", "autoCastType": "NOTARGET"}],
 		"type": "NORMAL_NOTARGET",
+		"overrideFields": {
+			"ignoreCastTime": {
+				"type": "rawBoolean",
+				"value": "true"
+			}
+		},
 		"specialFields": {
 			"bufferManaRequired": {
 				"type": "i*",
@@ -317,6 +322,29 @@
 				}
 			}
 		},
+		"reuseActions": {
+			"effect": [{
+				"type": "heal",
+				"target": {
+					"type": "getEnumUnit"
+				},
+				"amount": {
+					"type": "getAbilityDataAsFloat",
+					"dataField": "A"
+				}
+			}]
+		},
+		"reuseCallbacks": {
+			"checkValidTarget": {
+				"type": "not",
+				"condition": {
+					"type": "isUnitMaxHp",
+					"unit": {
+						"type": "getMatchingUnit"
+					}
+				}
+			}
+		},
 		"extraAutoNoTargetConditions": [{
 			"type": "matchingUnitExistsInRangeOfUnit",
 			"originUnit": {
@@ -325,24 +353,21 @@
 			"range": {
 				"type": "getAbilityArea"
 			},
-			"conditions": [{
+			"condition": {
 				"type": "and",
-				"condition1": {
+				"conditions": [{
 					"type": "isUnitValidTarget",
 					"target": {
 						"type": "getMatchingUnit"
 					}
-				},
-				"condition2": {
-					"type": "not",
-					"condition": {
-						"type": "isUnitMaxHp",
-						"unit": {
-							"type": "getMatchingUnit"
-						}
+				},{
+					"type": "reuseBoolean",
+					"name": {
+						"type": "rawString",
+						"value": "checkValidTarget"
 					}
-				}
-			}]
+				}]
+			}
 		}],
 		"onEndCasting": [{
 				"type": "createTemporarySpellEffectOnUnit",
@@ -382,21 +407,18 @@
 				},
 				"condition": {
 					"type": "and",
-					"condition1": {
+					"conditions": [{
 						"type": "isUnitValidTarget",
 						"target": {
 							"type": "getMatchingUnit"
 						}
-					},
-					"condition2": {
-						"type": "not",
-						"condition": {
-							"type": "isUnitMaxHp",
-							"unit": {
-								"type": "getMatchingUnit"
-							}
+					},{
+						"type": "reuseBoolean",
+						"name": {
+							"type": "rawString",
+							"value": "checkValidTarget"
 						}
-					}
+					}]
 				},
 				"iterationActions": [{
 					"type": "if",
@@ -417,7 +439,7 @@
 							"type": "if",
 							"condition": {
 								"type": "and",
-								"condition1": {
+								"conditions": [{
 									"type": "i!=0",
 									"value": {
 										"type": "getStoredIntegerByKey",
@@ -426,8 +448,7 @@
 											"value": "cnt"
 										}
 									}
-								},
-								"condition2": {
+								},{
 									"type": "i<",
 									"value1": {
 										"type": "getStoredIntegerByKey",
@@ -440,11 +461,11 @@
 										"type": "getAbilityDataAsInteger",
 										"dataField": "E"
 									}
-								}
+								}]
 							},
 							"thenActions": [{
 								"type": "subtractMp",
-								"target": {
+								"unit": {
 									"type": "getCastingUnit"
 								},
 								"amount": {
@@ -456,13 +477,10 @@
 							}],
 							"elseActions": []
 						},{
-							"type": "heal",
-							"target": {
-								"type": "getEnumUnit"
-							},
-							"amount": {
-								"type": "getAbilityDataAsFloat",
-								"dataField": "A"
+							"type": "runReuseAction",
+							"name": {
+								"type": "rawString",
+								"value": "effect"
 							}
 						},{
 							"type": "createTemporarySpellEffectOnUnit",
@@ -477,6 +495,10 @@
 							"type": "createTimedBuff",
 							"buffId": {
 								"type": "getFirstBuffId"
+							},
+							"dispellable": {
+								"type": "rawBoolean",
+								"value": "false"
 							},
 							"duration": {
 								"type": "getAbilityDuration"
@@ -515,222 +537,31 @@
 			}]
 	},{
 		"ids": [{"id":"Arpm", "castId": "replenishmana", "autoCastOnId": "replenishmanaon", "autoCastOffId": "replenishmanaoff", "autoCastType": "NOTARGET"}],
-		"type": "NORMAL_NOTARGET",
-		"specialFields": {
-			"bufferManaRequired": {
-				"type": "i*",
-				"value1": {
-					"type": "getAbilityManaCost"
+		"type": "INHERIT",
+		"parentId": "Arpl",
+		"reuseActions": {
+			"effect": [{
+				"type": "addMp",
+				"target": {
+					"type": "getEnumUnit"
 				},
-				"value2": {
-					"type": "i-",
-					"value1": {
-						"type": "getAbilityDataAsInteger",
-						"dataField": "E"
-					},
-					"value2": {
-						"type": "rawInteger",
-						"value": 1
+				"amount": {
+					"type": "getAbilityDataAsFloat",
+					"dataField": "B"
+				}
+			}]
+		},
+		"reuseCallbacks": {
+			"checkValidTarget": {
+				"type": "not",
+				"condition": {
+					"type": "isUnitMaxMp",
+					"unit": {
+						"type": "getMatchingUnit"
 					}
 				}
 			}
-		},
-		"extraAutoNoTargetConditions": [{
-			"type": "matchingUnitExistsInRangeOfUnit",
-			"originUnit": {
-				"type": "getCastingUnit"
-			},
-			"range": {
-				"type": "getAbilityArea"
-			},
-			"conditions": [{
-				"type": "and",
-				"condition1": {
-					"type": "isUnitValidTarget",
-					"target": {
-						"type": "getMatchingUnit"
-					}
-				},
-				"condition2": {
-					"type": "not",
-					"condition": {
-						"type": "isUnitMaxMp",
-						"unit": {
-							"type": "getMatchingUnit"
-						}
-					}
-				}
-			}]
-		}],
-		"onEndCasting": [{
-				"type": "createTemporarySpellEffectOnUnit",
-				"target": {
-					"type": "getCastingUnit"
-				},
-				"id": {
-					"type": "getAlias"
-				},
-				"effectType": "CASTER"
-			},{
-				"type": "createTemporarySpellEffectOnUnit",
-				"target": {
-					"type": "getCastingUnit"
-				},
-				"id": {
-					"type": "getAlias"
-				},
-				"effectType": "SPECIAL"
-			},{
-				"type": "storeValueLocally",
-				"key": {
-					"type": "rawString",
-					"value": "cnt"
-				},
-				"valueToStore": {
-					"type": "rawInteger",
-					"value": 0
-				}
-			},{
-				"type": "iterateUnitsInRangeOfUnitMatchingCondition",
-				"originUnit": {
-					"type": "getCastingUnit"
-				},
-				"range": {
-					"type": "getAbilityArea"
-				},
-				"condition": {
-					"type": "and",
-					"condition1": {
-						"type": "isUnitValidTarget",
-						"target": {
-							"type": "getMatchingUnit"
-						}
-					},
-					"condition2": {
-						"type": "not",
-						"condition": {
-							"type": "isUnitMaxMp",
-							"unit": {
-								"type": "getMatchingUnit"
-							}
-						}
-					}
-				},
-				"iterationActions": [{
-					"type": "if",
-					"condition": {
-						"type": "i<",
-						"value1": {
-							"type": "getStoredIntegerByKey",
-							"key": {
-								"type": "rawString",
-								"value": "cnt"
-							}
-						},
-						"value2": {
-							"type": "getAbilityCastTimeAsInteger"
-						}
-					},
-					"thenActions": [{
-							"type": "if",
-							"condition": {
-								"type": "and",
-								"condition1": {
-									"type": "i!=0",
-									"value": {
-										"type": "getStoredIntegerByKey",
-										"key": {
-											"type": "rawString",
-											"value": "cnt"
-										}
-									}
-								},
-								"condition2": {
-									"type": "i<",
-									"value1": {
-										"type": "getStoredIntegerByKey",
-										"key": {
-											"type": "rawString",
-											"value": "cnt"
-										}
-									},
-									"value2": {
-										"type": "getAbilityDataAsInteger",
-										"dataField": "E"
-									}
-								}
-							},
-							"thenActions": [{
-								"type": "subtractMp",
-								"target": {
-									"type": "getCastingUnit"
-								},
-								"amount": {
-									"type": "i2f",
-									"value": {
-										"type": "getAbilityManaCost"
-									}
-								}
-							}],
-							"elseActions": []
-						},{
-							"type": "addMp",
-							"target": {
-								"type": "getEnumUnit"
-							},
-							"amount": {
-								"type": "getAbilityDataAsFloat",
-								"dataField": "B"
-							}
-						},{
-							"type": "createTemporarySpellEffectOnUnit",
-							"target": {
-								"type": "getEnumUnit"
-							},
-							"id": {
-								"type": "getAlias"
-							},
-							"effectType": "TARGET"
-						},{
-							"type": "createTimedBuff",
-							"buffId": {
-								"type": "getFirstBuffId"
-							},
-							"duration": {
-								"type": "getAbilityDuration"
-							}
-						},{
-							"type": "addBuff",
-							"target": {
-								"type": "getEnumUnit"
-							},
-							"buff": {
-								"type": "getLastCreatedBuff"
-							}
-						},{
-							"type": "storeValueLocally",
-							"key": {
-								"type": "rawString",
-								"value": "cnt"
-							},
-							"valueToStore": {
-								"type": "i+",
-								"value1": {
-									"type": "getStoredIntegerByKey",
-									"key": {
-										"type": "rawString",
-										"value": "cnt"
-									}
-								},
-								"value2": {
-									"type": "rawInteger",
-									"value": 1
-								}
-							}
-					}],
-					"elseActions": []
-				}]
-			}]
+		}
 	},{
 		"ids": [{"id":"Acrs", "castId": "curse", "autoCastOnId": "curseon", "autoCastOffId": "curseoff", "autoCastType": "ATTACKINGALLY"}],
 		"type": "NORMAL_UNITTARGET",
@@ -785,6 +616,10 @@
 					"type": "createTimedBuff",
 					"buffId": {
 						"type": "getFirstBuffId"
+					},
+					"positive": {
+						"type": "rawBoolean",
+						"value": "false"
 					},
 					"duration": {
 						"type": "getAbilityDuration",

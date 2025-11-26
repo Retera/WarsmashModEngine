@@ -9,14 +9,17 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.beha
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.unitcallbacks.ABUnitCallback;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABCondition;
 
-public class ABConditionDoesUnitHaveBuff implements ABCondition {
+public class ABConditionDoesUnitHaveBuff extends ABCondition {
 
 	private ABUnitCallback unit;
 	private ABIDCallback id;
 
 	@Override
-	public boolean evaluate(CSimulation game, CUnit caster, Map<String, Object> localStore, final int castId) {
-		CUnit theUnit = unit.callback(game, caster, localStore, castId);
+	public Boolean callback(CSimulation game, CUnit caster, Map<String, Object> localStore, final int castId) {
+		CUnit theUnit = caster;
+		if (unit != null) {
+			theUnit = unit.callback(game, caster, localStore, castId);
+		}
 		if (theUnit != null) {
 			for (CAbility ability : theUnit.getAbilities()) {
 				if (ability instanceof CBuff) {

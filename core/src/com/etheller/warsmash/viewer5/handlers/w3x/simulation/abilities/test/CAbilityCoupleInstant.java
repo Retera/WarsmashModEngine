@@ -81,7 +81,7 @@ public class CAbilityCoupleInstant extends AbstractGenericSingleIconNoSmartActiv
 
 	@Override
 	public CBehavior begin(final CSimulation game, final CUnit caster, final int playerIndex, final int orderId,
-			final CWidget target) {
+			final boolean autoOrder, final CWidget target) {
 		// only from engine, not ever allowed by the checks
 		if (target instanceof CUnit) {
 			return this.behaviorCoupleInstant.reset(game, (CUnit) target);
@@ -91,13 +91,13 @@ public class CAbilityCoupleInstant extends AbstractGenericSingleIconNoSmartActiv
 
 	@Override
 	public CBehavior begin(final CSimulation game, final CUnit caster, final int playerIndex, final int orderId,
-			final AbilityPointTarget point) {
+			final boolean autoOrder, final AbilityPointTarget point) {
 		return caster.pollNextOrderBehavior(game);
 	}
 
 	@Override
-	public CBehavior beginNoTarget(final CSimulation game, final CUnit caster, final int playerIndex,
-			final int orderId) {
+	public CBehavior beginNoTarget(final CSimulation game, final CUnit caster, final int playerIndex, final int orderId,
+			final boolean autoOrder) {
 		final PossiblePairFinderEnum possiblePairFinder = new PossiblePairFinderEnum(caster);
 		game.getWorldCollision().enumUnitsInRect(
 				new Rectangle(caster.getX() - this.area, caster.getY() - this.area, this.area * 2, this.area * 2),
@@ -251,6 +251,11 @@ public class CAbilityCoupleInstant extends AbstractGenericSingleIconNoSmartActiv
 	@Override
 	public boolean isPhysical() {
 		return true;
+	}
+
+	@Override
+	public boolean isMagic() {
+		return false;
 	}
 
 	@Override

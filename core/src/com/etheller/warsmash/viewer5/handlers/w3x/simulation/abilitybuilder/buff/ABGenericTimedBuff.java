@@ -1,25 +1,39 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.buff;
 
+import java.util.Map;
+
 import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.util.WarsmashConstants;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbility;
 
 public abstract class ABGenericTimedBuff extends ABBuff {
-	private boolean showTimedLifeBar;
 	private final float duration;
 	private int currentTick = 0;
 	private int expireTick;
-	
-	public ABGenericTimedBuff(int handleId, War3ID alias, float duration, boolean showTimedLifeBar) {
-		super(handleId, alias, alias);
-		this.showTimedLifeBar = showTimedLifeBar;
+
+	public ABGenericTimedBuff(int handleId, War3ID alias, Map<String, Object> localStore, CAbility sourceAbility,
+			CUnit sourceUnit, float duration, boolean showTimedLifeBar, boolean leveled, boolean positive,
+			boolean dispellable) {
+		super(handleId, alias, alias, localStore, sourceAbility, sourceUnit);
+		this.setTimedLifeBar(showTimedLifeBar);
 		this.duration = duration;
+		this.setLeveled(leveled);
+		this.setPositive(positive);
+		this.setDispellable(dispellable);
 	}
 
 	@Override
-	public boolean isTimedLifeBar() {
-		return showTimedLifeBar;
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		ABGenericTimedBuff other = (ABGenericTimedBuff) obj;
+		return this.getAlias() == other.getAlias() && this.getLevel() == other.getLevel() && !this.isStacks() && !other.isStacks();
 	}
 
 	@Override
@@ -38,8 +52,9 @@ public abstract class ABGenericTimedBuff extends ABBuff {
 	@Override
 	public void onRemove(CSimulation game, CUnit unit) {
 		this.onBuffRemove(game, unit);
+		this.cleanUpUniqueValues();
 	}
-	
+
 	protected abstract void onBuffRemove(CSimulation game, CUnit unit);
 
 	protected abstract void onBuffExpire(CSimulation game, CUnit unit);
@@ -68,9 +83,8 @@ public abstract class ABGenericTimedBuff extends ABBuff {
 	public void onDeath(final CSimulation game, final CUnit cUnit) {
 		cUnit.remove(game, this);
 	}
-	
+
 	public void updateExpiration(final CSimulation game, final CUnit unit) {
-		final int durationTicks = (int) (this.duration / WarsmashConstants.SIMULATION_STEP_TIME);
-		expireTick = game.getGameTurnTick() + durationTicks;
+		this.currentTick = 0;
 	}
 }

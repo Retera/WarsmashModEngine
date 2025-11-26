@@ -43,7 +43,8 @@ public class CBehaviorWispHarvest extends CAbstractRangedBehavior {
 			final CPlayer player = simulation.getPlayer(this.unit.getPlayerIndex());
 			player.setLumber(player.getLumber() + this.abilityWispHarvest.getLumberPerInterval());
 			simulation.unitGainResourceEvent(this.unit, player.getId(), ResourceType.LUMBER,
-					this.abilityWispHarvest.getLumberPerInterval());
+					abilityWispHarvest.getLumberPerInterval());
+			this.unit.fireBehaviorChangeEvent(simulation, this, true);
 		}
 		if (!this.harvesting) {
 			onStartHarvesting(simulation);

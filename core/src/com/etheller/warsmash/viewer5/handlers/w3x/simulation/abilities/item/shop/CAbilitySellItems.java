@@ -100,19 +100,20 @@ public final class CAbilitySellItems extends AbstractCAbility {
 
 	@Override
 	public final void checkCanTarget(final CSimulation game, final CUnit unit, final int playerIndex, final int orderId,
-			final CWidget target, final AbilityTargetCheckReceiver<CWidget> receiver) {
+			final boolean autoOrder, final CWidget target, final AbilityTargetCheckReceiver<CWidget> receiver) {
 		receiver.orderIdNotAccepted();
 	}
 
 	@Override
 	public final void checkCanTarget(final CSimulation game, final CUnit unit, final int playerIndex, final int orderId,
-			final AbilityPointTarget target, final AbilityTargetCheckReceiver<AbilityPointTarget> receiver) {
+			final boolean autoOrder, final AbilityPointTarget target,
+			final AbilityTargetCheckReceiver<AbilityPointTarget> receiver) {
 		receiver.orderIdNotAccepted();
 	}
 
 	@Override
 	public final void checkCanTargetNoTarget(final CSimulation game, final CUnit unit, final int playerIndex,
-			final int orderId, final AbilityTargetCheckReceiver<Void> receiver) {
+			final int orderId, final boolean autoOrder, final AbilityTargetCheckReceiver<Void> receiver) {
 		final War3ID itemTypeId = new War3ID(orderId);
 		if (this.itemsSold.contains(itemTypeId)) {
 			receiver.targetOk(null);
@@ -124,7 +125,7 @@ public final class CAbilitySellItems extends AbstractCAbility {
 
 	@Override
 	public boolean checkBeforeQueue(final CSimulation game, final CUnit caster, final int playerIndex,
-			final int orderId, final AbilityTarget target) {
+			final int orderId, final boolean autoOrder, final AbilityTarget target) {
 		return true;
 	}
 
@@ -174,19 +175,19 @@ public final class CAbilitySellItems extends AbstractCAbility {
 
 	@Override
 	public CBehavior begin(final CSimulation game, final CUnit caster, final int playerIndex, final int orderId,
-			final CWidget target) {
+			final boolean autoOrder, final CWidget target) {
 		return null;
 	}
 
 	@Override
 	public CBehavior begin(final CSimulation game, final CUnit caster, final int playerIndex, final int orderId,
-			final AbilityPointTarget point) {
+			final boolean autoOrder, final AbilityPointTarget point) {
 		return null;
 	}
 
 	@Override
-	public CBehavior beginNoTarget(final CSimulation game, final CUnit caster, final int playerIndex,
-			final int orderId) {
+	public CBehavior beginNoTarget(final CSimulation game, final CUnit caster, final int playerIndex, final int orderId,
+			final boolean autoOrder) {
 		final War3ID itemTypeId = new War3ID(orderId);
 		final CAbilityNeutralBuilding neutralBuildingData = caster.getNeutralBuildingData();
 		final ItemSellState itemSellState = this.itemToSellState.get(itemTypeId);
@@ -238,6 +239,11 @@ public final class CAbilitySellItems extends AbstractCAbility {
 
 	@Override
 	public boolean isPhysical() {
+		return false;
+	}
+
+	@Override
+	public boolean isMagic() {
 		return false;
 	}
 

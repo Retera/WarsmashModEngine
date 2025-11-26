@@ -18,15 +18,16 @@ public class ABActionSetAbilityCastRange implements ABSingleAction {
 	@Override
 	public void runAction(final CSimulation game, final CUnit caster, final Map<String, Object> localStore,
 			final int castId) {
-		final AbilityBuilderActiveAbility ability = (AbilityBuilderActiveAbility) localStore
-				.get(ABLocalStoreKeys.TOGGLEDABILITY);
-		ability.setCastRange(this.range.callback(game, caster, localStore, castId));
+		AbilityBuilderActiveAbility ability = (AbilityBuilderActiveAbility) localStore
+				.get(ABLocalStoreKeys.ISTOGGLEDABILITY);
+		ability.setCastRange(range.callback(game, caster, localStore, castId));
 	}
 
 	@Override
 	public String generateJassEquivalent(final JassTextGenerator jassTextGenerator) {
 		return "SetAbilityCastRange(" + jassTextGenerator.getCaster() + ", "
-				+ jassTextGenerator.getUserDataExpr("AB_LOCAL_STORE_KEY_TOGGLEDABILITY", JassTextGeneratorType.AbilityHandle)
+				+ jassTextGenerator.getUserDataExpr("AB_LOCAL_STORE_KEY_TOGGLEDABILITY",
+						JassTextGeneratorType.AbilityHandle)
 				+ ", " + this.range.generateJassEquivalent(jassTextGenerator) + ")";
 	}
 }

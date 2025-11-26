@@ -2,7 +2,8 @@ package com.etheller.interpreter.ast.scope.trigger;
 
 public abstract class RemovableTriggerEvent {
 	public RemovableTriggerEvent(final Trigger t) {
-		t.addEvent(this);
+		if (t != null)
+			t.addEvent(this);
 	}
 
 	public abstract void remove();

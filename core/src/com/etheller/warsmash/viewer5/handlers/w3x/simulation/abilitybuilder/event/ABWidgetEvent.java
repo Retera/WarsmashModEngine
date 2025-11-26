@@ -38,7 +38,7 @@ public class ABWidgetEvent extends CWidgetEvent {
 
 	@Override
 	public void fire(final CWidget triggerWidget, final TriggerExecutionScope scope) {
-		if (condition == null || condition.evaluate(game, caster, localStore, castId)) {
+		if (condition == null || condition.callback(game, caster, localStore, castId)) {
 			if (scope instanceof CommonTriggerExecutionScope) {
 				this.localStore.put(ABLocalStoreKeys.EVENTTARGETEDUNIT + castId,
 						((CommonTriggerExecutionScope) scope).getSpellTargetUnit());

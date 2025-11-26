@@ -91,8 +91,8 @@ public class CAbilityImmolation extends AbstractGenericSingleIconNoSmartActiveAb
 	}
 
 	@Override
-	public boolean checkBeforeQueue(final CSimulation game, final CUnit caster, int playerIndex,
-			final int orderId, final AbilityTarget target) {
+	public boolean checkBeforeQueue(final CSimulation game, final CUnit caster, final int playerIndex,
+			final int orderId, final boolean autoOrder, final AbilityTarget target) {
 		if (this.active && (orderId == OrderIds.unimmolation)) {
 			deactivate(game, caster);
 			return false;
@@ -103,7 +103,7 @@ public class CAbilityImmolation extends AbstractGenericSingleIconNoSmartActiveAb
 			}
 			return false;
 		}
-		return super.checkBeforeQueue(game, caster, playerIndex, orderId, target);
+		return super.checkBeforeQueue(game, caster, playerIndex, orderId, autoOrder, target);
 	}
 
 	public void activate(final CSimulation game, final CUnit caster) {
@@ -117,22 +117,24 @@ public class CAbilityImmolation extends AbstractGenericSingleIconNoSmartActiveAb
 	}
 
 	@Override
-	public void onCancelFromQueue(final CSimulation game, final CUnit unit, int playerIndex, final int orderId) {
+	public void onCancelFromQueue(final CSimulation game, final CUnit unit, final int playerIndex, final int orderId) {
 	}
 
 	@Override
-	public CBehavior begin(final CSimulation game, final CUnit caster, int playerIndex, final int orderId, final CWidget target) {
+	public CBehavior begin(final CSimulation game, final CUnit caster, final int playerIndex, final int orderId,
+			final boolean autoOrder, final CWidget target) {
 		return null;
 	}
 
 	@Override
-	public CBehavior begin(final CSimulation game, final CUnit caster, int playerIndex,
-			final int orderId, final AbilityPointTarget point) {
+	public CBehavior begin(final CSimulation game, final CUnit caster, final int playerIndex, final int orderId,
+			final boolean autoOrder, final AbilityPointTarget point) {
 		return null;
 	}
 
 	@Override
-	public CBehavior beginNoTarget(final CSimulation game, final CUnit caster, int playerIndex, final int orderId) {
+	public CBehavior beginNoTarget(final CSimulation game, final CUnit caster, final int playerIndex, final int orderId,
+			final boolean autoOrder) {
 		return null;
 	}
 
@@ -163,8 +165,8 @@ public class CAbilityImmolation extends AbstractGenericSingleIconNoSmartActiveAb
 	}
 
 	@Override
-	protected void innerCheckCanUse(final CSimulation game, final CUnit unit, int playerIndex,
-			final int orderId, final AbilityActivationReceiver receiver) {
+	protected void innerCheckCanUse(final CSimulation game, final CUnit unit, final int playerIndex, final int orderId,
+			final AbilityActivationReceiver receiver) {
 		if (!this.active && (unit.getMana() < (this.manaCost + this.bufferManaRequired))) {
 			receiver.activationCheckFailed(CommandStringErrorKeys.NOT_ENOUGH_MANA);
 		}
@@ -248,6 +250,11 @@ public class CAbilityImmolation extends AbstractGenericSingleIconNoSmartActiveAb
 	@Override
 	public boolean isPhysical() {
 		return false;
+	}
+
+	@Override
+	public boolean isMagic() {
+		return true;
 	}
 
 	@Override

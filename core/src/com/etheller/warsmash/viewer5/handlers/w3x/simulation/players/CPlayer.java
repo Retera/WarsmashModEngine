@@ -203,8 +203,7 @@ public class CPlayer extends CBasePlayer {
 		final Integer techtreeUnlocked = this.rawcodeToTechtreeUnlocked.get(rawcode);
 		if (techtreeUnlocked == null) {
 			this.rawcodeToTechtreeUnlocked.put(rawcode, 1);
-		}
-		else {
+		} else {
 			this.rawcodeToTechtreeUnlocked.put(rawcode, techtreeUnlocked + 1);
 		}
 	}
@@ -232,8 +231,7 @@ public class CPlayer extends CBasePlayer {
 		final Integer techtreeUnlocked = this.rawcodeToTechtreeUnlocked.get(rawcode);
 		if (techtreeUnlocked == null) {
 			this.rawcodeToTechtreeUnlocked.put(rawcode, -1);
-		}
-		else {
+		} else {
 			this.rawcodeToTechtreeUnlocked.put(rawcode, techtreeUnlocked - 1);
 		}
 	}
@@ -254,8 +252,7 @@ public class CPlayer extends CBasePlayer {
 		final Integer techtreeUnlocked = this.rawcodeToTechtreeInProgress.get(rawcode);
 		if (techtreeUnlocked == null) {
 			this.rawcodeToTechtreeInProgress.put(rawcode, 1);
-		}
-		else {
+		} else {
 			this.rawcodeToTechtreeInProgress.put(rawcode, techtreeUnlocked + 1);
 		}
 	}
@@ -276,8 +273,7 @@ public class CPlayer extends CBasePlayer {
 		final Integer techtreeUnlocked = this.rawcodeToTechtreeInProgress.get(rawcode);
 		if (techtreeUnlocked == null) {
 			this.rawcodeToTechtreeInProgress.put(rawcode, -1);
-		}
-		else {
+		} else {
 			this.rawcodeToTechtreeInProgress.put(rawcode, techtreeUnlocked - 1);
 		}
 	}
@@ -394,8 +390,7 @@ public class CPlayer extends CBasePlayer {
 	public int getHeroCount(final CSimulation game, final boolean includeInProgress) {
 		if (!includeInProgress) {
 			return this.heroes.size();
-		}
-		else {
+		} else {
 			int heroInProgressCount = 0;
 			for (final Map.Entry<War3ID, Integer> entry : this.rawcodeToTechtreeInProgress.entrySet()) {
 				final CUnitType unitType = game.getUnitData().getUnitType(entry.getKey());
@@ -418,6 +413,15 @@ public class CPlayer extends CBasePlayer {
 			for (final CPlayerEvent event : eventList) {
 				event.fire(dyingUnit, CommonTriggerExecutionScope.unitDeathScope(
 						JassGameEventsWar3.EVENT_PLAYER_UNIT_DEATH, event.getTrigger(), dyingUnit, killingUnit));
+			}
+		}
+	}
+
+	public void fireSimpleUnitEvents(final CUnit unit, final JassGameEventsWar3 type, final CSimulation game) {
+		final List<CPlayerEvent> eventList = getEventList(type);
+		if (eventList != null) {
+			for (final CPlayerEvent event : eventList) {
+				event.fire(unit, CommonTriggerExecutionScope.simpleUnitScope(type, event.getTrigger(), unit, this));
 			}
 		}
 	}
@@ -804,8 +808,7 @@ public class CPlayer extends CBasePlayer {
 	public void addFogModifer(final CSimulation game, final CFogModifier fogModifier, final boolean afterUnits) {
 		if (afterUnits) {
 			this.fogModifiersAfterUnits.add(fogModifier);
-		}
-		else {
+		} else {
 			this.fogModifiers.add(fogModifier);
 		}
 		fogModifier.onAdd(game, this);
@@ -832,8 +835,7 @@ public class CPlayer extends CBasePlayer {
 	public void setAbilityEnabled(final CSimulation simulation, final War3ID ability, final boolean enabled) {
 		if (enabled) {
 			this.disabledAbilities.remove(ability);
-		}
-		else {
+		} else {
 			this.disabledAbilities.add(ability);
 		}
 		fireRequirementUpdateForAbilities(simulation, !enabled);

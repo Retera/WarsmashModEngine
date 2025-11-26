@@ -38,12 +38,10 @@ public class ABActionIterateUnitsInRangeOfLocationMatchingCondition implements A
 			@Override
 			public boolean call(final CUnit enumUnit) {
 				if (enumUnit.canReach(target, rangeVal)) {
-					localStore.put(ABLocalStoreKeys.MATCHINGUNIT + castId, enumUnit);
-					if ((ABActionIterateUnitsInRangeOfLocationMatchingCondition.this.condition == null)
-							|| ABActionIterateUnitsInRangeOfLocationMatchingCondition.this.condition.evaluate(game,
-									caster, localStore, castId)) {
-						localStore.put(ABLocalStoreKeys.ENUMUNIT + castId, enumUnit);
-						for (final ABAction iterationAction : ABActionIterateUnitsInRangeOfLocationMatchingCondition.this.iterationActions) {
+					localStore.put(ABLocalStoreKeys.MATCHINGUNIT+castId, enumUnit);
+					if (condition == null || condition.callback(game, caster, localStore, castId)) {
+						localStore.put(ABLocalStoreKeys.ENUMUNIT+castId, enumUnit);
+						for (ABAction iterationAction : iterationActions) {
 							iterationAction.runAction(game, caster, localStore, castId);
 						}
 					}

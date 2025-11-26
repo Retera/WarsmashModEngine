@@ -20,8 +20,10 @@ public class ABActionAddBuff implements ABSingleAction {
 	public void runAction(final CSimulation game, final CUnit caster, final Map<String, Object> localStore,
 			final int castId) {
 		final CBuff ability = this.buff.callback(game, caster, localStore, castId);
-		this.target.callback(game, caster, localStore, castId).add(game, ability);
-		localStore.put(ABLocalStoreKeys.LASTADDEDBUFF, ability);
+		if (ability != null) {
+			this.target.callback(game, caster, localStore, castId).add(game, ability);
+			localStore.put(ABLocalStoreKeys.LASTADDEDBUFF, ability);
+		}
 	}
 
 	@Override

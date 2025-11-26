@@ -14,6 +14,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABLocalStoreKeys;
 
 public class ABActionPeriodicExecute implements ABAction {
+	private final static int HARD_LOOP_CAP = 100;
 
 	private List<ABAction> periodicActions;
 	private ABFloatCallback delaySeconds;
@@ -24,38 +25,51 @@ public class ABActionPeriodicExecute implements ABAction {
 	@Override
 	public void runAction(final CSimulation game, final CUnit caster, final Map<String, Object> localStore,
 			final int castId) {
-		int nextActiveTick = 0;
+		float nextActiveTick = 0;
 		Object u = null;
 		if (this.unique != null) {
 			u = this.unique.callback(game, caster, localStore, castId);
 			if (localStore.containsKey(ABLocalStoreKeys.PERIODICNEXTTICK + castId + "$" + u)) {
-				nextActiveTick = (int) localStore.get(ABLocalStoreKeys.PERIODICNEXTTICK + castId + "$" + u);
+				nextActiveTick = (float) localStore.get(ABLocalStoreKeys.PERIODICNEXTTICK + castId + "$" + u);
 			}
 		}
 		else {
 			if (localStore.containsKey(ABLocalStoreKeys.PERIODICNEXTTICK + castId)) {
-				nextActiveTick = (int) localStore.get(ABLocalStoreKeys.PERIODICNEXTTICK + castId);
+				nextActiveTick = (float) localStore.get(ABLocalStoreKeys.PERIODICNEXTTICK + castId);
 			}
 		}
 
 		final int currentTick = game.getGameTurnTick();
-		if (currentTick >= nextActiveTick) {
-			final int delayTicks = (int) (this.delaySeconds.callback(game, caster, localStore, castId)
-					/ WarsmashConstants.SIMULATION_STEP_TIME);
-			if (nextActiveTick == 0) {
-				nextActiveTick = currentTick + delayTicks;
+		int iter = 0;
+		boolean run = true;
+		while (run && currentTick >= (int)nextActiveTick && iter < HARD_LOOP_CAP) {
+			if (nextActiveTick <= 0) {
 				if ((this.initialTick != null) && this.initialTick.callback(game, caster, localStore, castId)) {
 					for (final ABAction periodicAction : this.periodicActions) {
 						periodicAction.runAction(game, caster, localStore, castId);
+						final Boolean brk = (Boolean) localStore.remove(ABLocalStoreKeys.BREAK);
+						if ((brk != null) && brk) {
+							run = false;
+							break;
+						}
 					}
 				}
+				nextActiveTick = currentTick + (this.delaySeconds.callback(game, caster, localStore, castId)
+						/ WarsmashConstants.SIMULATION_STEP_TIME);
 			}
 			else {
-				nextActiveTick = currentTick + delayTicks;
 				for (final ABAction periodicAction : this.periodicActions) {
 					periodicAction.runAction(game, caster, localStore, castId);
+					final Boolean brk = (Boolean) localStore.remove(ABLocalStoreKeys.BREAK);
+					if ((brk != null) && brk) {
+						run = false;
+						break;
+					}
 				}
+				nextActiveTick += (this.delaySeconds.callback(game, caster, localStore, castId)
+						/ WarsmashConstants.SIMULATION_STEP_TIME);
 			}
+			iter++;
 		}
 
 		if (this.unique != null) {

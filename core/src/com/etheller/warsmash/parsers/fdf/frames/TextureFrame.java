@@ -73,6 +73,9 @@ public class TextureFrame extends AbstractRenderableFrame {
 		if (texture != null) {
 			setTexture(texture);
 		}
+		else {
+			System.err.println("setTexture failed: '" + file + "'");
+		}
 	}
 
 	public void setTexCoord(final float x, final float y, final float z, final float w) {
@@ -112,6 +115,7 @@ public class TextureFrame extends AbstractRenderableFrame {
 			public LuaValue call(final LuaValue thistable, final LuaValue arg) {
 				final String text = arg.checkjstring();
 				setTexture(text, luaEnvironment.getRootFrame());
+				System.err.println("setTexture finished: '" + text + "'");
 				return LuaValue.NIL;
 			}
 		});

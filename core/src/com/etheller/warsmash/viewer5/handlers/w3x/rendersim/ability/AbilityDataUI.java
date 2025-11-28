@@ -151,11 +151,14 @@ public class AbilityDataUI {
 			final int iconTurnOffX = abilityTypeData.getFieldAsInteger(ICON_TURN_OFF_XY, 0);
 			final int iconTurnOffY = abilityTypeData.getFieldAsInteger(ICON_TURN_OFF_XY, 1);
 			final Texture iconResearch = gameUI.loadTexture(iconResearchPath);
-			final Texture iconResearchDisabled = gameUI.loadTexture(disable(iconResearchPath, this.disabledPrefix));
+			final String iconResearchDisabledPath = disable(iconResearchPath, this.disabledPrefix);
+			final Texture iconResearchDisabled = gameUI.loadTexture(iconResearchDisabledPath);
 			final Texture iconNormal = gameUI.loadTexture(iconNormalPath);
-			final Texture iconNormalDisabled = gameUI.loadTexture(disable(iconNormalPath, this.disabledPrefix));
+			final String disabledNormalPath = disable(iconNormalPath, this.disabledPrefix);
+			final Texture iconNormalDisabled = gameUI.loadTexture(disabledNormalPath);
 			final Texture iconTurnOff = gameUI.loadTexture(iconTurnOffPath);
-			final Texture iconTurnOffDisabled = gameUI.loadTexture(disable(iconTurnOffPath, this.disabledPrefix));
+			final String disabledIconTurnOffPath = disable(iconTurnOffPath, this.disabledPrefix);
+			final Texture iconTurnOffDisabled = gameUI.loadTexture(disabledIconTurnOffPath);
 
 			final List<IconUI> turnOffIconUIs = new ArrayList<>();
 			final List<IconUI> normalIconUIs = new ArrayList<>();
@@ -168,10 +171,11 @@ public class AbilityDataUI {
 				final String iconTurnOffUberTip = parseUbertip(allObjectData,
 						abilityTypeData.getFieldAsString(ABILITY_UN_UBER_TIP, i));
 
-				normalIconUIs.add(new IconUI(iconNormal, iconNormalDisabled, iconNormalX, iconNormalY, iconTip,
-						iconUberTip, iconHotkey));
-				turnOffIconUIs.add(new IconUI(iconTurnOff, iconTurnOffDisabled, iconTurnOffX, iconTurnOffY,
-						iconTurnOffTip, iconTurnOffUberTip, iconTurnOffHotkey));
+				normalIconUIs.add(new IconUI(iconNormal, iconNormalPath, iconNormalDisabled, disabledNormalPath,
+						iconNormalX, iconNormalY, iconTip, iconUberTip, iconHotkey));
+				turnOffIconUIs
+						.add(new IconUI(iconTurnOff, iconTurnOffPath, iconTurnOffDisabled, disabledIconTurnOffPath,
+								iconTurnOffX, iconTurnOffY, iconTurnOffTip, iconTurnOffUberTip, iconTurnOffHotkey));
 			}
 
 			final List<EffectAttachmentUI> casterArt = new ArrayList<>();
@@ -247,12 +251,11 @@ public class AbilityDataUI {
 			final String effectSound = abilityTypeData.getFieldAsString(ABILITY_EFFECT_SOUND, 0);
 			final String effectSoundLooped = abilityTypeData.getFieldAsString(ABILITY_EFFECT_SOUND_LOOPED, 0);
 
-			this.rawcodeToUI.put(War3ID.fromString(alias),
-					new AbilityUI(
-							new IconUI(iconResearch, iconResearchDisabled, iconResearchX, iconResearchY,
-									iconResearchTip, iconResearchUberTip, iconResearchHotkey),
-							normalIconUIs, turnOffIconUIs, casterArt, targetArt, specialArt, effectArt, areaEffectArt,
-							missileArt, LightningEffects, effectSound, effectSoundLooped));
+			this.rawcodeToUI.put(War3ID.fromString(alias), new AbilityUI(
+					new IconUI(iconResearch, iconResearchPath, iconResearchDisabled, iconResearchDisabledPath,
+							iconResearchX, iconResearchY, iconResearchTip, iconResearchUberTip, iconResearchHotkey),
+					normalIconUIs, turnOffIconUIs, casterArt, targetArt, specialArt, effectArt, areaEffectArt,
+					missileArt, LightningEffects, effectSound, effectSoundLooped));
 		}
 		for (final String alias : buffData.keySet()) {
 			// TODO pretty sure that in WC3 the buffs and abilities are stored in the same
@@ -264,7 +267,8 @@ public class AbilityDataUI {
 			final String iconUberTip = parseUbertip(allObjectData,
 					abilityTypeData.getFieldAsString(BUFF_ABILITY_UBER_TIP, 0));
 			final Texture iconNormal = gameUI.loadTexture(iconNormalPath);
-			final Texture iconNormalDisabled = gameUI.loadTexture(disable(iconNormalPath, this.disabledPrefix));
+			final String iconNormalDisabledPath = disable(iconNormalPath, this.disabledPrefix);
+			final Texture iconNormalDisabled = gameUI.loadTexture(iconNormalDisabledPath);
 
 			final List<EffectAttachmentUI> targetArt = new ArrayList<>();
 			final List<String> targetArtPaths = abilityTypeData.getFieldAsList(BUFF_TARGET_ART);
@@ -311,8 +315,10 @@ public class AbilityDataUI {
 			final String effectSoundLooped = abilityTypeData.getFieldAsString(BUFF_ABILITY_EFFECT_SOUND_LOOPED, 0);
 
 			this.rawcodeToBuffUI.put(War3ID.fromString(alias),
-					new BuffUI(new IconUI(iconNormal, iconNormalDisabled, 0, 0, iconTip, iconUberTip, '\0'), targetArt,
-							specialArt, effectArt, missileArt, effectSound, effectSoundLooped));
+					new BuffUI(
+							new IconUI(iconNormal, iconNormalPath, iconNormalDisabled, iconNormalDisabledPath, 0, 0,
+									iconTip, iconUberTip, '\0'),
+							targetArt, specialArt, effectArt, missileArt, effectSound, effectSoundLooped));
 		}
 		for (final String alias : unitData.keySet()) {
 			final GameObject abilityTypeData = unitData.get(alias);
@@ -325,9 +331,11 @@ public class AbilityDataUI {
 			final String iconUberTip = parseUbertip(allObjectData, abilityTypeData.getFieldAsString(UNIT_UBER_TIP, 0));
 			final char iconHotkey = getHotkey(abilityTypeData, UNIT_HOTKEY);
 			final Texture iconNormal = gameUI.loadTexture(iconNormalPath);
-			final Texture iconNormalDisabled = gameUI.loadTexture(disable(iconNormalPath, this.disabledPrefix));
-			this.rawcodeToUnitUI.put(War3ID.fromString(alias), new UnitIconUI(iconNormal, iconNormalDisabled,
-					iconNormalX, iconNormalY, iconTip, iconUberTip, iconHotkey, reviveTip, awakenTip));
+			final String iconNormalDisabledPath = disable(iconNormalPath, this.disabledPrefix);
+			final Texture iconNormalDisabled = gameUI.loadTexture(iconNormalDisabledPath);
+			this.rawcodeToUnitUI.put(War3ID.fromString(alias),
+					new UnitIconUI(iconNormal, iconNormalPath, iconNormalDisabled, iconNormalDisabledPath, iconNormalX,
+							iconNormalY, iconTip, iconUberTip, iconHotkey, reviveTip, awakenTip));
 		}
 		for (final String alias : itemData.keySet()) {
 			final GameObject abilityTypeData = itemData.get(alias);
@@ -339,13 +347,13 @@ public class AbilityDataUI {
 			final String iconDescription = abilityTypeData.getFieldAsString(ITEM_DESCRIPTION, 0);
 			final char iconHotkey = getHotkey(abilityTypeData, ITEM_HOTKEY);
 			final Texture iconNormal = gameUI.loadTexture(iconNormalPath);
-			final Texture iconNormalDisabled = gameUI.loadTexture(disable(iconNormalPath, this.disabledPrefix));
-			this.rawcodeToItemUI
-					.put(War3ID.fromString(alias),
-							new ItemUI(
-									new IconUI(iconNormal, iconNormalDisabled, iconNormalX, iconNormalY, iconTip,
-											iconUberTip, iconHotkey),
-									abilityTypeData.getName(), iconDescription, iconNormalPath));
+			final String iconNormalDisabledPath = disable(iconNormalPath, this.disabledPrefix);
+			final Texture iconNormalDisabled = gameUI.loadTexture(iconNormalDisabledPath);
+			this.rawcodeToItemUI.put(War3ID.fromString(alias),
+					new ItemUI(
+							new IconUI(iconNormal, iconNormalPath, iconNormalDisabled, iconNormalDisabledPath,
+									iconNormalX, iconNormalY, iconTip, iconUberTip, iconHotkey),
+							abilityTypeData.getName(), iconDescription, iconNormalPath));
 		}
 		for (final String alias : upgradeData.keySet()) {
 			final GameObject upgradeTypeData = upgradeData.get(alias);
@@ -361,9 +369,10 @@ public class AbilityDataUI {
 						.trySkinField(upgradeTypeData.getFieldAsString(UPGRADE_ICON_NORMAL, upgradeLevelValue));
 				final char iconHotkey = getHotkey(upgradeTypeData, UPGRADE_HOTKEY, upgradeLevelValue);
 				final Texture iconNormal = gameUI.loadTexture(iconNormalPath);
-				final Texture iconNormalDisabled = gameUI.loadTexture(disable(iconNormalPath, this.disabledPrefix));
-				upgradeIconsByLevel.add(new IconUI(iconNormal, iconNormalDisabled, iconNormalX, iconNormalY, iconTip,
-						iconUberTip, iconHotkey));
+				final String iconNormalDisabledPath = disable(iconNormalPath, this.disabledPrefix);
+				final Texture iconNormalDisabled = gameUI.loadTexture(iconNormalDisabledPath);
+				upgradeIconsByLevel.add(new IconUI(iconNormal, iconNormalPath, iconNormalDisabled,
+						iconNormalDisabledPath, iconNormalX, iconNormalY, iconTip, iconUberTip, iconHotkey));
 			}
 			this.rawcodeToUpgradeUI.put(War3ID.fromString(alias), upgradeIconsByLevel);
 		}
@@ -446,14 +455,16 @@ public class AbilityDataUI {
 		final Element builtInAbility = gameUI.getSkinData().get(key);
 		final String iconPath = gameUI.trySkinField(builtInAbility.getField("Art"));
 		final Texture icon = gameUI.loadTexture(iconPath);
-		final Texture iconDisabled = gameUI.loadTexture(disable(iconPath, disabledPrefix));
+		final String iconDisabledPath = disable(iconPath, disabledPrefix);
+		final Texture iconDisabled = gameUI.loadTexture(iconDisabledPath);
 		final int buttonPositionX = builtInAbility.getFieldValue("Buttonpos", 0);
 		final int buttonPositionY = builtInAbility.getFieldValue("Buttonpos", 1);
 		final String tip = builtInAbility.getField("Tip");
 		final String uberTip = builtInAbility.getField("UberTip");
 		final String hotkeyString = builtInAbility.getField("Hotkey");
 		final char hotkey = getHotkeyChar(hotkeyString);
-		return new IconUI(icon, iconDisabled, buttonPositionX, buttonPositionY, tip, uberTip, hotkey);
+		return new IconUI(icon, iconPath, iconDisabled, iconDisabledPath, buttonPositionX, buttonPositionY, tip,
+				uberTip, hotkey);
 	}
 
 	private IconUI createBuiltInIconUISplit(final GameUI gameUI, final String key, final String funckey,
@@ -466,14 +477,16 @@ public class AbilityDataUI {
 			iconPath = worldEditorValue;
 		}
 		final Texture icon = gameUI.loadTexture(iconPath);
-		final Texture iconDisabled = gameUI.loadTexture(disable(iconPath, disabledPrefix));
+		final String iconDisabledPath = disable(iconPath, disabledPrefix);
+		final Texture iconDisabled = gameUI.loadTexture(iconDisabledPath);
 		final int buttonPositionX = builtInAbilityFunc.getFieldValue("Buttonpos", 0);
 		final int buttonPositionY = builtInAbilityFunc.getFieldValue("Buttonpos", 1);
 		final String tip = builtInAbility.getField("Tip");
 		final String uberTip = builtInAbility.getField("UberTip");
 		final String hotkeyString = builtInAbility.getField("Hotkey");
 		final char hotkey = getHotkeyChar(hotkeyString);
-		return new IconUI(icon, iconDisabled, buttonPositionX, buttonPositionY, tip, uberTip, hotkey);
+		return new IconUI(icon, iconPath, iconDisabled, iconDisabledPath, buttonPositionX, buttonPositionY, tip,
+				uberTip, hotkey);
 	}
 
 	private char getHotkeyChar(final String hotkeyString) {

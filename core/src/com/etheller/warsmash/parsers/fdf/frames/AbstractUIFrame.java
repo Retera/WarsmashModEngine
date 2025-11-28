@@ -48,6 +48,16 @@ public abstract class AbstractUIFrame extends AbstractRenderableFrame implements
 	}
 
 	@Override
+	protected void checkLoad() {
+		super.checkLoad();
+		for (final UIFrame child : this.childFrames) {
+			if (child instanceof AbstractRenderableFrame) {
+				((AbstractRenderableFrame) child).checkLoad();
+			}
+		}
+	}
+
+	@Override
 	protected void internalRender(final SpriteBatch batch, final BitmapFont baseFont, final GlyphLayout glyphLayout) {
 		for (final UIFrame childFrame : this.childFrames) {
 			childFrame.render(batch, baseFont, glyphLayout);

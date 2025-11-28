@@ -598,6 +598,7 @@ public class StringFrame extends AbstractRenderableFrame {
 			public LuaValue call(final LuaValue thistable, final LuaValue arg) {
 				final String text = arg.checkjstring();
 				luaEnvironment.getRootFrame().setText(StringFrame.this, text);
+				System.err.println("setText: '" + text + "'");
 				return LuaValue.NIL;
 			}
 		});

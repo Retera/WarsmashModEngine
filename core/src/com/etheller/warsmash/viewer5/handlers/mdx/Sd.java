@@ -81,6 +81,8 @@ public abstract class Sd<TYPE> {
 		defVals.put(War3ID.fromString("KGTR"), new float[] { 0, 0, 0 });
 		defVals.put(War3ID.fromString("KGRT"), new float[] { 0, 0, 0, 1 });
 		defVals.put(War3ID.fromString("KGSC"), new float[] { 1, 1, 1 });
+		// ????
+		defVals.put(War3ID.fromString("KVIS"), new float[] { 1 });
 
 	}
 

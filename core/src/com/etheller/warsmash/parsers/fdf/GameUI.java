@@ -1,7 +1,6 @@
 package com.etheller.warsmash.parsers.fdf;
 
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -96,6 +95,9 @@ import com.etheller.warsmash.viewer5.Scene;
 import com.etheller.warsmash.viewer5.handlers.AbstractMdxModelViewer;
 import com.etheller.warsmash.viewer5.handlers.mdx.MdxModel;
 import com.etheller.warsmash.viewer5.handlers.w3x.War3MapViewer;
+import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.ability.AbilityDataUI;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.thirdperson.CAbilityPlayerPawn;
 import com.etheller.warsmash.viewer5.handlers.w3x.ui.command.FocusableFrame;
 import com.etheller.warsmash.viewer5.handlers.w3x.ui.sound.KeyedSounds;
 import com.hiveworkshop.rms.parsers.mdlx.MdlxLayer.FilterMode;
@@ -130,6 +132,10 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 	private final List<FocusableFrame> focusableFrames = new ArrayList<>();
 
 	private LuaEnvironment luaGlobals;
+	private CUnit pawnUnit;
+	private CAbilityPlayerPawn abilityPlayerPawn;
+	private AbilityDataUI abilityDataUI;
+	private final List<Runnable> pendingScriptLoads = new ArrayList<>();
 
 	public GameUI(final DataSource dataSource, final GameSkin skin, final Viewport viewport, final Scene uiScene,
 			final AbstractMdxModelViewer modelViewer, final int racialCommandIndex, final WTS mapStrings,
@@ -265,7 +271,8 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 						continue;
 					}
 					if (this.luaGlobals == null) {
-						this.luaGlobals = new LuaEnvironment(this, this.viewport, this.uiScene, this.uiSounds);
+						this.luaGlobals = new LuaEnvironment(this, this.viewport, this.uiScene, this.uiSounds,
+								this.pawnUnit, this.abilityPlayerPawn, this.abilityDataUI);
 						loadLuaFile("Interface/FrameXML/GlobalStrings.lua");// didn't see the link for what loads this
 					}
 					final DocumentBuilderFactory newInstance = DocumentBuilderFactory.newInstance();
@@ -276,9 +283,9 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 						for (int i = 0; i < rootChildNodes.getLength(); i++) {
 							final Node uiChild = rootChildNodes.item(i);
 							if (uiChild.getNodeName().equals("Ui")) {
-								int filenameCutoff = Math.max(line.lastIndexOf('\\'), line.lastIndexOf('/'));
-								final List<FrameDefinition> mainUiElements = inflateMultipleXMLs(line.substring(0, filenameCutoff),
-										uiChild.getChildNodes());
+								final int filenameCutoff = Math.max(line.lastIndexOf('\\'), line.lastIndexOf('/'));
+								final List<FrameDefinition> mainUiElements = inflateMultipleXMLs(
+										line.substring(0, filenameCutoff), uiChild.getChildNodes());
 //								final SimpleFrame rootUiElement = new SimpleFrame("#Ui" + this.untitledXMLFrameId++,
 //										this);
 //								rootUiElement.addAnchor(new AnchorDefinition(FramePoint.BOTTOMLEFT,
@@ -305,6 +312,11 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 										}
 									}
 								}
+								for (final Runnable job : this.pendingScriptLoads) {
+									job.run();
+								}
+								this.pendingScriptLoads.clear();
+
 //								if (foundAny) {
 //									this.add(rootUiElement);
 //								}
@@ -454,7 +466,7 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 	}
 
 	@Override
-	public void remove(UIFrame childFrame) {
+	public void remove(final UIFrame childFrame) {
 		this.nameToFrame.remove(childFrame.getName());
 		super.remove(childFrame);
 	}
@@ -1150,21 +1162,23 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 	public void loadLuaFile(String fileName) {
 		fileName = fileName.replace('/', '\\');
 		if (this.dataSource.has(fileName)) {
-			StringBuilder fileContents = new StringBuilder();
-			try (BufferedReader reader = new BufferedReader(new InputStreamReader(this.dataSource.getResourceAsStream(fileName)))) {
+			final StringBuilder fileContents = new StringBuilder();
+			try (BufferedReader reader = new BufferedReader(
+					new InputStreamReader(this.dataSource.getResourceAsStream(fileName)))) {
 				String line;
 				while ((line = reader.readLine()) != null) {
 					if (line.contains("for ")) {
 						System.out.println(line);
 					}
-					String trimmedLine = line.trim();
-					if (trimmedLine.startsWith("for ") && trimmedLine.endsWith(" do") ) {
-						int inIndex = line.indexOf(IN_STRING);
-						if(inIndex != -1) {
-							int replaceStart = inIndex + IN_STRING.length();
-							int replaceEnd = line.lastIndexOf(" do");
-							String toReplace = line.substring(replaceStart, replaceEnd);
-							line = line.substring(0, replaceStart) + "ipairs(" + toReplace + ")" + line.substring(replaceEnd);
+					final String trimmedLine = line.trim();
+					if (trimmedLine.startsWith("for ") && trimmedLine.endsWith(" do")) {
+						final int inIndex = line.indexOf(IN_STRING);
+						if (inIndex != -1) {
+							final int replaceStart = inIndex + IN_STRING.length();
+							final int replaceEnd = line.lastIndexOf(" do");
+							final String toReplace = line.substring(replaceStart, replaceEnd);
+							line = line.substring(0, replaceStart) + "ipairs(" + toReplace + ")"
+									+ line.substring(replaceEnd);
 						}
 					}
 					fileContents.append(line);
@@ -1276,14 +1290,14 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 
 	private UIFrameScripts inflateScriptBindings(final UIFrame thisFrame, final FrameDefinition scriptFrameDefinition) {
 		final UIFrameScripts scripts = new UIFrameScripts();
-		scripts.load(this.luaGlobals, scriptFrameDefinition, thisFrame);
+		scripts.inflate(this.luaGlobals, scriptFrameDefinition, thisFrame);
 		thisFrame.setScripts(scripts);
 		return scripts;
 	}
 
 	public UIFrame inflate(final FrameDefinition frameDefinition, UIFrame parent,
 			final FrameDefinition parentDefinitionIfAvailable, final boolean inDecorateFileNames) {
-		final String xmlParent = frameDefinition.getString("XMLParent");
+		final String xmlParent = getDefString(frameDefinition, parent, "XMLParent");
 		if (xmlParent != null) {
 			final UIFrame parentOverride = this.nameToFrame.get(xmlParent);
 			if (parentOverride != null) {
@@ -1302,6 +1316,7 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 				// since there are nested inflate calls happening before the general case
 				// mapping
 				this.nameToFrame.put(frameDefinitionName, simpleFrame);
+				inflateScriptsIfAvailable(frameDefinition, simpleFrame);
 				for (final FrameDefinition childDefinition : frameDefinition.getInnerFrames()) {
 					simpleFrame.add(inflate(childDefinition, simpleFrame, frameDefinition,
 							inDecorateFileNames || childDefinition.has("DecorateFileNames")));
@@ -1318,12 +1333,13 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 					simpleStatusBarFrame.add(inflate(childDefinition, simpleStatusBarFrame, frameDefinition,
 							inDecorateFileNames || childDefinition.has("DecorateFileNames")));
 				}
-				final String barTexture = frameDefinition.getString("BarTexture");
+				final String barTexture = getDefString(frameDefinition, parent, "BarTexture");
 				if (barTexture != null) {
 					simpleStatusBarFrame.getBarFrame().setTexture(barTexture, this);
 					simpleStatusBarFrame.getBorderFrame().setTexture(barTexture + "Border", this);
 				}
 				inflatedFrame = simpleStatusBarFrame;
+				inflateScriptsIfAvailable(frameDefinition, inflatedFrame);
 			}
 			else if ("SCROLLBAR".equals(frameDefinition.getFrameType())
 					|| "SLIDER".equals(frameDefinition.getFrameType())) {
@@ -1334,6 +1350,7 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 						|| ((parentDefinitionIfAvailable != null)
 								&& parentDefinitionIfAvailable.has("DecorateFileNames"));
 				final ScrollBarFrame scrollBarFrame = new ScrollBarFrame(frameDefinitionName, parent, vertical);
+				inflateScriptsIfAvailable(frameDefinition, scrollBarFrame);
 
 				final Float sliderMinValue = frameDefinition.getFloat("SliderMinValue");
 				if (sliderMinValue != null) {
@@ -1348,10 +1365,10 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 					scrollBarFrame.setStepSize(sliderStepSize.intValue());
 				}
 
-				final String controlBackdropKey = frameDefinition.getString("ControlBackdrop");
-				final String incButtonFrameKey = frameDefinition.getString("ScrollBarIncButtonFrame");
-				final String decButtonFrameKey = frameDefinition.getString("ScrollBarDecButtonFrame");
-				final String thumbButtonFrameKey = frameDefinition.getString("SliderThumbButtonFrame");
+				final String controlBackdropKey = getDefString(frameDefinition, parent, "ControlBackdrop");
+				final String incButtonFrameKey = getDefString(frameDefinition, parent, "ScrollBarIncButtonFrame");
+				final String decButtonFrameKey = getDefString(frameDefinition, parent, "ScrollBarDecButtonFrame");
+				final String thumbButtonFrameKey = getDefString(frameDefinition, parent, "SliderThumbButtonFrame");
 				for (final FrameDefinition childDefinition : frameDefinition.getInnerFrames()) {
 					if (childDefinition.getName().equals(controlBackdropKey)) {
 						final UIFrame inflatedChild = inflate(childDefinition, scrollBarFrame, frameDefinition,
@@ -1389,6 +1406,7 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 				if (frameDefinition.getName().endsWith("Portrait")) {
 					final SpriteFrame2 spriteFrame = new SpriteFrame2(frameDefinition.getName(), parent, viewport2,
 							this.modelViewer);
+					inflateScriptsIfAvailable(frameDefinition, spriteFrame);
 					String backgroundArt = frameDefinition.getString("BackgroundArt");
 					if (frameDefinition.has("DecorateFileNames") || inDecorateFileNames) {
 						if (backgroundArt != null) {
@@ -1413,6 +1431,7 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 				else {
 					final SpriteFrame spriteFrame = new SpriteFrame(frameDefinition.getName(), parent, this.uiScene,
 							viewport2);
+					inflateScriptsIfAvailable(frameDefinition, spriteFrame);
 					String backgroundArt = frameDefinition.getString("BackgroundArt");
 					if (frameDefinition.has("DecorateFileNames") || inDecorateFileNames) {
 						if (backgroundArt != null) {
@@ -1441,6 +1460,7 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 				// since there are nested inflate calls happening before the general case
 				// mapping
 				this.nameToFrame.put(frameDefinitionName, simpleFrame);
+				inflateScriptsIfAvailable(frameDefinition, simpleFrame);
 				for (final FrameDefinition childDefinition : frameDefinition.getInnerFrames()) {
 					simpleFrame.add(inflate(childDefinition, simpleFrame, frameDefinition,
 							inDecorateFileNames || childDefinition.has("DecorateFileNames")));
@@ -1452,8 +1472,9 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 				// TODO: we should not need to put ourselves in this map 2x, but we do
 				// since there are nested inflate calls happening before the general case
 				// mapping
-				final String dialogBackdropKey = frameDefinition.getString("DialogBackdrop");
+				final String dialogBackdropKey = getDefString(frameDefinition, parent, "DialogBackdrop");
 				this.nameToFrame.put(frameDefinitionName, simpleFrame);
+				inflateScriptsIfAvailable(frameDefinition, simpleFrame);
 
 				if (SHOW_BLACKNESS_BEHIND_DIALOGS) {
 					final TextureFrame modalDialogBlacknessScreenCover = new ClickConsumingTextureFrame(null, parent,
@@ -1559,8 +1580,8 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 					frameFont = this.dynamicFontGeneratorHolder.getFontGenerator(font.getFontName())
 							.generateFont(this.fontParam);
 				}
-				String textString = frameDefinition.getName();
-				String text = frameDefinition.getString("Text");
+				String textString = frameDefinitionName.startsWith("#") ? "" : frameDefinitionName;
+				String text = getDefString(frameDefinition, parent, "Text");
 				if (text != null) {
 					final String decoratedString = this.templates.getDecoratedString(text);
 					if (decoratedString != text) {
@@ -1580,6 +1601,7 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 					stringFrame.setFontShadowOffsetY(convertY(viewport2, shadowOffset.getY()));
 				}
 				inflatedFrame = stringFrame;
+				inflateScriptsIfAvailable(frameDefinition, inflatedFrame);
 			}
 			else if ("GLUETEXTBUTTON".equals(frameDefinition.getFrameType())) {
 				// ButtonText & ControlBackdrop
@@ -1588,11 +1610,14 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 				// since there are nested inflate calls happening before the general case
 				// mapping
 				this.nameToFrame.put(frameDefinitionName, glueButtonFrame);
-				final String controlBackdropKey = frameDefinition.getString("ControlBackdrop");
-				final String controlPushedBackdropKey = frameDefinition.getString("ControlPushedBackdrop");
-				final String controlDisabledBackdropKey = frameDefinition.getString("ControlDisabledBackdrop");
-				final String controlMouseOverHighlightKey = frameDefinition.getString("ControlMouseOverHighlight");
-				final String buttonTextKey = frameDefinition.getString("ButtonText");
+				inflateScriptsIfAvailable(frameDefinition, glueButtonFrame);
+				final String controlBackdropKey = getDefString(frameDefinition, parent, "ControlBackdrop");
+				final String controlPushedBackdropKey = getDefString(frameDefinition, parent, "ControlPushedBackdrop");
+				final String controlDisabledBackdropKey = getDefString(frameDefinition, parent,
+						"ControlDisabledBackdrop");
+				final String controlMouseOverHighlightKey = getDefString(frameDefinition, parent,
+						"ControlMouseOverHighlight");
+				final String buttonTextKey = getDefString(frameDefinition, parent, "ButtonText");
 				for (final FrameDefinition childDefinition : frameDefinition.getInnerFrames()) {
 					if (childDefinition.getName().equals(controlBackdropKey)) {
 						final UIFrame inflatedChild = inflate(childDefinition, glueButtonFrame, frameDefinition,
@@ -1642,11 +1667,14 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 				// since there are nested inflate calls happening before the general case
 				// mapping
 				this.nameToFrame.put(frameDefinitionName, glueButtonFrame);
-				final String controlBackdropKey = frameDefinition.getString("ControlBackdrop");
-				final String controlPushedBackdropKey = frameDefinition.getString("ControlPushedBackdrop");
-				final String controlDisabledBackdropKey = frameDefinition.getString("ControlDisabledBackdrop");
-				final String controlMouseOverHighlightKey = frameDefinition.getString("ControlMouseOverHighlight");
-				final String buttonTextKey = frameDefinition.getString("ButtonText");
+				inflateScriptsIfAvailable(frameDefinition, glueButtonFrame);
+				final String controlBackdropKey = getDefString(frameDefinition, parent, "ControlBackdrop");
+				final String controlPushedBackdropKey = getDefString(frameDefinition, parent, "ControlPushedBackdrop");
+				final String controlDisabledBackdropKey = getDefString(frameDefinition, parent,
+						"ControlDisabledBackdrop");
+				final String controlMouseOverHighlightKey = getDefString(frameDefinition, parent,
+						"ControlMouseOverHighlight");
+				final String buttonTextKey = getDefString(frameDefinition, parent, "ButtonText");
 				for (final FrameDefinition childDefinition : frameDefinition.getInnerFrames()) {
 					if (childDefinition.getName().equals(controlBackdropKey)) {
 						final UIFrame inflatedChild = inflate(childDefinition, glueButtonFrame, frameDefinition,
@@ -1700,15 +1728,18 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 				// since there are nested inflate calls happening before the general case
 				// mapping
 				this.nameToFrame.put(frameDefinitionName, glueButtonFrame);
+				inflateScriptsIfAvailable(frameDefinition, glueButtonFrame);
 
 				final Float popupButtonInset = frameDefinition.getFloat("PopupButtonInset");
-				final String controlBackdropKey = frameDefinition.getString("ControlBackdrop");
-				final String controlPushedBackdropKey = frameDefinition.getString("ControlPushedBackdrop");
-				final String controlDisabledBackdropKey = frameDefinition.getString("ControlDisabledBackdrop");
-				final String controlMouseOverHighlightKey = frameDefinition.getString("ControlMouseOverHighlight");
-				final String buttonTextKey = frameDefinition.getString("PopupTitleFrame");
-				final String popupArrowFrameKey = frameDefinition.getString("PopupArrowFrame");
-				final String popupMenuFrameKey = frameDefinition.getString("PopupMenuFrame");
+				final String controlBackdropKey = getDefString(frameDefinition, parent, "ControlBackdrop");
+				final String controlPushedBackdropKey = getDefString(frameDefinition, parent, "ControlPushedBackdrop");
+				final String controlDisabledBackdropKey = getDefString(frameDefinition, parent,
+						"ControlDisabledBackdrop");
+				final String controlMouseOverHighlightKey = getDefString(frameDefinition, parent,
+						"ControlMouseOverHighlight");
+				final String buttonTextKey = getDefString(frameDefinition, parent, "PopupTitleFrame");
+				final String popupArrowFrameKey = getDefString(frameDefinition, parent, "PopupArrowFrame");
+				final String popupMenuFrameKey = getDefString(frameDefinition, parent, "PopupMenuFrame");
 				for (final FrameDefinition childDefinition : frameDefinition.getInnerFrames()) {
 					if (childDefinition.getName().equals(controlBackdropKey)) {
 						final UIFrame inflatedChild = inflate(childDefinition, glueButtonFrame, frameDefinition,
@@ -1784,15 +1815,16 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 				// since there are nested inflate calls happening before the general case
 				// mapping
 				this.nameToFrame.put(frameDefinitionName, simpleButtonFrame);
+				inflateScriptsIfAvailable(frameDefinition, simpleButtonFrame);
 				final StringPairFrameDefinitionField normalTextDefinition = frameDefinition.getStringPair("NormalText");
 				final StringPairFrameDefinitionField disabledTextDefinition = frameDefinition
 						.getStringPair("DisabledText");
 				final StringPairFrameDefinitionField highlightTextDefinition = frameDefinition
 						.getStringPair("HighlightText");
-				final String normalTextureDefinition = frameDefinition.getString("NormalTexture");
-				final String pushedTextureDefinition = frameDefinition.getString("PushedTexture");
-				final String disabledTextureDefinition = frameDefinition.getString("DisabledTexture");
-				final String useHighlightDefinition = frameDefinition.getString("UseHighlight");
+				final String normalTextureDefinition = getDefString(frameDefinition, parent, "NormalTexture");
+				final String pushedTextureDefinition = getDefString(frameDefinition, parent, "PushedTexture");
+				final String disabledTextureDefinition = getDefString(frameDefinition, parent, "DisabledTexture");
+				final String useHighlightDefinition = getDefString(frameDefinition, parent, "UseHighlight");
 
 				final boolean decorateFileNamesOnThisFrame = frameDefinition.has("DecorateFileNames")
 						|| inDecorateFileNames;
@@ -1866,10 +1898,13 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 				// since there are nested inflate calls happening before the general case
 				// mapping
 				this.nameToFrame.put(frameDefinitionName, glueButtonFrame);
-				final String controlBackdropKey = frameDefinition.getString("ControlBackdrop");
-				final String controlPushedBackdropKey = frameDefinition.getString("ControlPushedBackdrop");
-				final String controlDisabledBackdropKey = frameDefinition.getString("ControlDisabledBackdrop");
-				final String controlMouseOverHighlightKey = frameDefinition.getString("ControlMouseOverHighlight");
+				inflateScriptsIfAvailable(frameDefinition, glueButtonFrame);
+				final String controlBackdropKey = getDefString(frameDefinition, parent, "ControlBackdrop");
+				final String controlPushedBackdropKey = getDefString(frameDefinition, parent, "ControlPushedBackdrop");
+				final String controlDisabledBackdropKey = getDefString(frameDefinition, parent,
+						"ControlDisabledBackdrop");
+				final String controlMouseOverHighlightKey = getDefString(frameDefinition, parent,
+						"ControlMouseOverHighlight");
 				for (final FrameDefinition childDefinition : frameDefinition.getInnerFrames()) {
 					if (childDefinition.getName().equals(controlBackdropKey)) {
 						final UIFrame inflatedChild = inflate(childDefinition, glueButtonFrame, frameDefinition,
@@ -1911,10 +1946,13 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 				// since there are nested inflate calls happening before the general case
 				// mapping
 				this.nameToFrame.put(frameDefinitionName, glueButtonFrame);
-				final String controlBackdropKey = frameDefinition.getString("ControlBackdrop");
-				final String controlPushedBackdropKey = frameDefinition.getString("ControlPushedBackdrop");
-				final String controlDisabledBackdropKey = frameDefinition.getString("ControlDisabledBackdrop");
-				final String controlMouseOverHighlightKey = frameDefinition.getString("ControlMouseOverHighlight");
+				inflateScriptsIfAvailable(frameDefinition, glueButtonFrame);
+				final String controlBackdropKey = getDefString(frameDefinition, parent, "ControlBackdrop");
+				final String controlPushedBackdropKey = getDefString(frameDefinition, parent, "ControlPushedBackdrop");
+				final String controlDisabledBackdropKey = getDefString(frameDefinition, parent,
+						"ControlDisabledBackdrop");
+				final String controlMouseOverHighlightKey = getDefString(frameDefinition, parent,
+						"ControlMouseOverHighlight");
 				for (final FrameDefinition childDefinition : frameDefinition.getInnerFrames()) {
 					if (childDefinition.getName().equals(controlBackdropKey)) {
 						final UIFrame inflatedChild = inflate(childDefinition, glueButtonFrame, frameDefinition,
@@ -1945,18 +1983,21 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 			}
 			else if ("CHECKBOX".equals(frameDefinition.getFrameType())
 					|| "GLUECHECKBOX".equals(frameDefinition.getFrameType())) {
+				final boolean fromXML = frameDefinition.has("FromXML");
 				// ButtonText & ControlBackdrop
-				final CheckBoxFrame glueButtonFrame = frameDefinition.has("FromXML")
-						? new XmlCheckBoxFrame(frameDefinitionName, parent)
+				final CheckBoxFrame glueButtonFrame = fromXML ? new XmlCheckBoxFrame(frameDefinitionName, parent)
 						: new CheckBoxFrame(frameDefinitionName, parent);
 				// TODO: we should not need to put ourselves in this map 2x, but we do
 				// since there are nested inflate calls happening before the general case
 				// mapping
 				this.nameToFrame.put(frameDefinitionName, glueButtonFrame);
-				final String controlBackdropKey = frameDefinition.getString("ControlBackdrop");
-				final String controlPushedBackdropKey = frameDefinition.getString("ControlPushedBackdrop");
-				final String controlDisabledBackdropKey = frameDefinition.getString("ControlDisabledBackdrop");
-				final String checkBoxCheckHighlightKey = frameDefinition.getString("CheckBoxCheckHighlight");
+				inflateScriptsIfAvailable(frameDefinition, glueButtonFrame);
+				final String controlBackdropKey = getDefString(frameDefinition, parent, "ControlBackdrop");
+				final String controlPushedBackdropKey = getDefString(frameDefinition, parent, "ControlPushedBackdrop");
+				final String controlDisabledBackdropKey = getDefString(frameDefinition, parent,
+						"ControlDisabledBackdrop");
+				final String checkBoxCheckHighlightKey = getDefString(frameDefinition, parent,
+						"CheckBoxCheckHighlight");
 				final String checkBoxDisabledCheckHighlightKey = frameDefinition
 						.getString("CheckBoxDisabledCheckHighlight");
 				for (final FrameDefinition childDefinition : frameDefinition.getInnerFrames()) {
@@ -1990,6 +2031,12 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 						inflatedChild.setSetAllPoints(true);
 						glueButtonFrame.setCheckBoxDisabledCheckHighlight(inflatedChild);
 					}
+					else if (fromXML) {
+						final UIFrame inflatedChild = inflate(childDefinition, glueButtonFrame, frameDefinition,
+								inDecorateFileNames || childDefinition.has("DecorateFileNames"));
+						((XmlCheckBoxFrame) glueButtonFrame).add(inflatedChild);
+						inflatedChild.setSetAllPoints(true);
+					}
 				}
 				inflatedFrame = glueButtonFrame;
 			}
@@ -2000,10 +2047,13 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 				// since there are nested inflate calls happening before the general case
 				// mapping
 				this.nameToFrame.put(frameDefinitionName, glueButtonFrame);
-				final String controlBackdropKey = frameDefinition.getString("ControlBackdrop");
-				final String controlPushedBackdropKey = frameDefinition.getString("ControlPushedBackdrop");
-				final String controlDisabledBackdropKey = frameDefinition.getString("ControlDisabledBackdrop");
-				final String controlMouseOverHighlightKey = frameDefinition.getString("ControlMouseOverHighlight");
+				inflateScriptsIfAvailable(frameDefinition, glueButtonFrame);
+				final String controlBackdropKey = getDefString(frameDefinition, parent, "ControlBackdrop");
+				final String controlPushedBackdropKey = getDefString(frameDefinition, parent, "ControlPushedBackdrop");
+				final String controlDisabledBackdropKey = getDefString(frameDefinition, parent,
+						"ControlDisabledBackdrop");
+				final String controlMouseOverHighlightKey = getDefString(frameDefinition, parent,
+						"ControlMouseOverHighlight");
 				final Vector2Definition pushedTextOffset = frameDefinition.getVector2("ButtonPushedTextOffset");
 				if (pushedTextOffset != null) {
 					glueButtonFrame.setButtonPushedTextOffsetX(pushedTextOffset.getX());
@@ -2062,8 +2112,9 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 				// since there are nested inflate calls happening before the general case
 				// mapping
 				this.nameToFrame.put(frameDefinitionName, editBoxFrame);
-				final String controlBackdropKey = frameDefinition.getString("ControlBackdrop");
-				final String editTextFrameKey = frameDefinition.getString("EditTextFrame");
+				inflateScriptsIfAvailable(frameDefinition, editBoxFrame);
+				final String controlBackdropKey = getDefString(frameDefinition, parent, "ControlBackdrop");
+				final String editTextFrameKey = getDefString(frameDefinition, parent, "EditTextFrame");
 				for (final FrameDefinition childDefinition : frameDefinition.getInnerFrames()) {
 					if (childDefinition.getName().equals(controlBackdropKey)) {
 						final UIFrame inflatedChild = inflate(childDefinition, editBoxFrame, frameDefinition,
@@ -2099,7 +2150,8 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 				// since there are nested inflate calls happening before the general case
 				// mapping
 				this.nameToFrame.put(frameDefinitionName, editBoxFrame);
-				final String controlBackdropKey = frameDefinition.getString("ControlBackdrop");
+				inflateScriptsIfAvailable(frameDefinition, editBoxFrame);
+				final String controlBackdropKey = getDefString(frameDefinition, parent, "ControlBackdrop");
 				for (final FrameDefinition childDefinition : frameDefinition.getInnerFrames()) {
 					if (childDefinition.getName().equals(controlBackdropKey)) {
 						final UIFrame inflatedChild = inflate(childDefinition, editBoxFrame, frameDefinition,
@@ -2128,7 +2180,8 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 				// since there are nested inflate calls happening before the general case
 				// mapping
 				this.nameToFrame.put(frameDefinitionName, controlFrame);
-				final String controlBackdropKey = frameDefinition.getString("ControlBackdrop");
+				inflateScriptsIfAvailable(frameDefinition, controlFrame);
+				final String controlBackdropKey = getDefString(frameDefinition, parent, "ControlBackdrop");
 				for (final FrameDefinition childDefinition : frameDefinition.getInnerFrames()) {
 					if (childDefinition.getName().equals(controlBackdropKey)) {
 						final UIFrame inflatedChild = inflate(childDefinition, controlFrame, frameDefinition,
@@ -2141,13 +2194,15 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 			}
 			else if ("LISTBOX".equals(frameDefinition.getFrameType())) {
 				// TODO advanced components here
-				final ListBoxFrame controlFrame = new ListBoxFrame(frameDefinitionName, parent, viewport2, dataSource);
+				final ListBoxFrame controlFrame = new ListBoxFrame(frameDefinitionName, parent, viewport2,
+						this.dataSource);
 				// TODO: we should not need to put ourselves in this map 2x, but we do
 				// since there are nested inflate calls happening before the general case
 				// mapping
 				this.nameToFrame.put(frameDefinitionName, controlFrame);
-				final String controlBackdropKey = frameDefinition.getString("ControlBackdrop");
-				final String listBoxScrollBarKey = frameDefinition.getString("ListBoxScrollBar");
+				inflateScriptsIfAvailable(frameDefinition, controlFrame);
+				final String controlBackdropKey = getDefString(frameDefinition, parent, "ControlBackdrop");
+				final String listBoxScrollBarKey = getDefString(frameDefinition, parent, "ListBoxScrollBar");
 				final Float listBoxBorder = frameDefinition.getFloat("ListBoxBorder");
 				if (listBoxBorder != null) {
 					controlFrame.setListBoxBorder(convertX(viewport2, listBoxBorder));
@@ -2184,8 +2239,9 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 				// since there are nested inflate calls happening before the general case
 				// mapping
 				this.nameToFrame.put(frameDefinitionName, controlFrame);
-				final String controlBackdropKey = frameDefinition.getString("ControlBackdrop");
-				final String listBoxScrollBarKey = frameDefinition.getString("TextAreaScrollBar");
+				inflateScriptsIfAvailable(frameDefinition, controlFrame);
+				final String controlBackdropKey = getDefString(frameDefinition, parent, "ControlBackdrop");
+				final String listBoxScrollBarKey = getDefString(frameDefinition, parent, "TextAreaScrollBar");
 				final Float textAreaLineHeight = frameDefinition.getFloat("TextAreaLineHeight");
 				if (textAreaLineHeight != null) {
 					controlFrame.setLineHeight(convertY(viewport2, textAreaLineHeight));
@@ -2249,7 +2305,8 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 				// since there are nested inflate calls happening before the general case
 				// mapping
 				this.nameToFrame.put(frameDefinitionName, controlFrame);
-				final String controlBackdropKey = frameDefinition.getString("ControlBackdrop");
+				inflateScriptsIfAvailable(frameDefinition, controlFrame);
+				final String controlBackdropKey = getDefString(frameDefinition, parent, "ControlBackdrop");
 				for (final FrameDefinition childDefinition : frameDefinition.getInnerFrames()) {
 					if (childDefinition.getName().equals(controlBackdropKey)) {
 						final UIFrame inflatedChild = inflate(childDefinition, controlFrame, frameDefinition,
@@ -2332,6 +2389,7 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 				final String highlightAlphaMode = frameDefinition.getString("HighlightAlphaMode");
 				final FilterModeTextureFrame textureFrame = new FilterModeTextureFrame(frameDefinitionName, parent,
 						inDecorateFileNames || frameDefinition.has("DecorateFileNames"), null);
+				inflateScriptsIfAvailable(frameDefinition, textureFrame);
 				textureFrame.setTexture(highlightAlphaFile, this);
 				if ("ADD".equals(highlightAlphaMode)) {
 					textureFrame.setFilterMode(FilterMode.ADDALPHA);
@@ -2388,6 +2446,7 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 						tileBackground, background, cornerFlags, cornerSize, backgroundSize, backgroundInsets, edgeFile,
 						mirrored);
 				this.nameToFrame.put(frameDefinitionName, backdropFrame);
+				inflateScriptsIfAvailable(frameDefinition, backdropFrame);
 				for (final FrameDefinition childDefinition : frameDefinition.getInnerFrames()) {
 					backdropFrame.add(inflate(childDefinition, backdropFrame, frameDefinition, decorateFileNames));
 				}
@@ -2398,6 +2457,7 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 			final SimpleFrame simpleFrame = new SimpleFrame(frameDefinitionName, parent);
 			simpleFrame.setSetAllPoints(true);
 			this.nameToFrame.put(frameDefinitionName, simpleFrame);
+			inflateScriptsIfAvailable(frameDefinition, simpleFrame);
 			for (final FrameDefinition childDefinition : frameDefinition.getInnerFrames()) {
 				simpleFrame.add(inflate(childDefinition, simpleFrame, frameDefinition,
 						inDecorateFileNames || childDefinition.has("DecorateFileNames")));
@@ -2431,8 +2491,8 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 			}
 			frameFont = this.dynamicFontGeneratorHolder.getFontGenerator(font.getFontName())
 					.generateFont(this.fontParam);
-			String textString = frameDefinitionName;
-			String text = frameDefinition.getString("Text");
+			String textString = frameDefinitionName.startsWith("#") ? "" : frameDefinitionName;
+			String text = getDefString(frameDefinition, parent, "Text");
 			if (text != null) {
 				final String decoratedString = this.templates.getDecoratedString(text);
 				if (decoratedString != text) {
@@ -2443,6 +2503,7 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 			final StringFrame stringFrame = new StringFrame(frameDefinitionName, parent, fontColor, justifyH, justifyV,
 					frameFont, textString, null, null);
 			inflatedFrame = stringFrame;
+			inflateScriptsIfAvailable(frameDefinition, inflatedFrame);
 			break;
 		case Texture:
 			final String file = frameDefinition.getString("File");
@@ -2463,18 +2524,13 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 				textureFrame.setTexture(file, this);
 			}
 			inflatedFrame = textureFrame;
+			inflateScriptsIfAvailable(frameDefinition, inflatedFrame);
 			break;
 		default:
 			break;
 		}
 		if (inflatedFrame != null) {
-			final FrameDefinition scriptDefinition = frameDefinition.getScriptDefinition();
-			if (scriptDefinition != null) {
-				inflateScriptBindings(inflatedFrame, scriptDefinition);
-			}
-			else if (frameDefinition.has("FromXML")) {
-				inflateScriptBindings(inflatedFrame, null);
-			}
+			final UIFrame fInflatedFrame = inflatedFrame;
 			final String id = frameDefinition.getString("ID");
 			if (id != null) {
 				inflatedFrame.setID(Integer.parseInt(id));
@@ -2483,7 +2539,16 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 				inflatedFrame.setSetAllPoints(true);
 			}
 			if (frameDefinition.has("XMLHidden")) {
-				inflatedFrame.setVisible(false);
+				fInflatedFrame.setVisible(false);
+			}
+			else {
+				this.pendingScriptLoads.add(() -> {
+					if (fInflatedFrame.isVisibleOnScreen()) {
+						if (fInflatedFrame.getScripts() != null) {
+							fInflatedFrame.getScripts().onLoad();
+						}
+					}
+				});
 			}
 			if ((inflatedFrame instanceof FocusableFrame) && (frameDefinition.get("TabFocusNext") != null)) {
 				this.focusableFrames.add((FocusableFrame) inflatedFrame);
@@ -2535,6 +2600,21 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 		return inflatedFrame;
 	}
 
+	private String getDefString(final FrameDefinition frameDefinition, final UIFrame parent, final String string) {
+		final String value = frameDefinition.getString(string);
+		return checkNameString(parent, value);
+	}
+
+	private void inflateScriptsIfAvailable(final FrameDefinition frameDefinition, final UIFrame inflatedFrame) {
+		final FrameDefinition scriptDefinition = frameDefinition.getScriptDefinition();
+		if (scriptDefinition != null) {
+			inflateScriptBindings(inflatedFrame, scriptDefinition);
+		}
+		else if (frameDefinition.has("FromXML")) {
+			inflateScriptBindings(inflatedFrame, null);
+		}
+	}
+
 	public String checkNameString(UIFrame parent, String frameDefinitionName) {
 		if ((frameDefinitionName != null) && (parent != null)) {
 			String parentName;
@@ -2549,7 +2629,7 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 		}
 		return frameDefinitionName;
 	}
-	
+
 	public void setSpriteFrameModel(final SpriteFrame2 spriteFrame, final String backgroundArt) {
 		final MdxModel model = War3MapViewer.loadModelMdx(this.modelViewer.dataSource, this.modelViewer, backgroundArt,
 				this.modelViewer.mapPathSolver, this.modelViewer.solverParams);
@@ -2714,11 +2794,19 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 		return this.focusableFrames;
 	}
 
-	public void setAutoPosition(boolean autoPosition) {
+	public void setAutoPosition(final boolean autoPosition) {
 		this.autoPosition = autoPosition;
 	}
 
 	public boolean isAutoPosition() {
 		return this.autoPosition;
+	}
+
+	public void bindPawnUnit(final CUnit pawnUnit, final CAbilityPlayerPawn abilityPlayerPawn,
+			final AbilityDataUI abilityDataUI) {
+		this.pawnUnit = pawnUnit;
+		this.abilityPlayerPawn = abilityPlayerPawn;
+		this.abilityDataUI = abilityDataUI;
+
 	}
 }

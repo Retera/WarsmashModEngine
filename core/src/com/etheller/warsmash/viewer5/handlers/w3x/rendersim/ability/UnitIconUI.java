@@ -6,10 +6,11 @@ public class UnitIconUI extends IconUI {
 	private final String reviveTip;
 	private final String awakenTip;
 
-	public UnitIconUI(final Texture icon, final Texture iconDisabled, final int buttonPositionX,
-			final int buttonPositionY, final String toolTip, final String uberTip, final char hotkey,
-			final String reviveTip, final String awakenTip) {
-		super(icon, iconDisabled, buttonPositionX, buttonPositionY, toolTip, uberTip, hotkey);
+	public UnitIconUI(final Texture icon, final String iconPath, final Texture iconDisabled,
+			final String iconDisabledPath, final int buttonPositionX, final int buttonPositionY, final String toolTip,
+			final String uberTip, final char hotkey, final String reviveTip, final String awakenTip) {
+		super(icon, iconPath, iconDisabled, iconDisabledPath, buttonPositionX, buttonPositionY, toolTip, uberTip,
+				hotkey);
 		this.reviveTip = reviveTip;
 		this.awakenTip = awakenTip;
 	}

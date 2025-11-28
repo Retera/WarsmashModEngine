@@ -2,6 +2,7 @@ package com.etheller.warsmash.parsers.fdf.frames;
 
 import java.util.EnumMap;
 
+import org.luaj.vm2.LuaBoolean;
 import org.luaj.vm2.LuaTable;
 import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.lib.TwoArgFunction;
@@ -14,6 +15,7 @@ import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.etheller.warsmash.parsers.fdf.GameUI;
 import com.etheller.warsmash.parsers.fdf.LuaEnvironment;
+import com.etheller.warsmash.parsers.fdf.ThirdPersonLuaXmlButton;
 import com.etheller.warsmash.parsers.fdf.ThirdPersonLuaXmlClick;
 import com.etheller.warsmash.parsers.fdf.ThirdPersonLuaXmlEvent;
 import com.etheller.warsmash.parsers.fdf.UIFrameLuaWrapper;
@@ -359,6 +361,17 @@ public abstract class AbstractRenderableFrame implements UIFrame {
 	@Override
 	public void setVisible(final boolean visible) {
 		this.visible = visible;
+
+		if (visible) {
+			checkLoad();
+		}
+	}
+
+	protected void checkLoad() {
+		final UIFrameScripts scripts = getScripts();
+		if ((scripts != null) && !scripts.isLoaded()) {
+			scripts.onLoad();
+		}
 	}
 
 	public void setLevel(final int level) {
@@ -458,6 +471,18 @@ public abstract class AbstractRenderableFrame implements UIFrame {
 					final String argString = args.tojstring(i);
 					final ThirdPersonLuaXmlClick click = ThirdPersonLuaXmlClick.valueOf(argString);
 					luaEnvironment.registerForClick(click, luaWrapper);
+				}
+				return LuaValue.NIL;
+			}
+		});
+		table.set("RegisterForDrag", new TwoArgFunction() {
+			@Override
+			public LuaValue call(final LuaValue thistable, final LuaValue args) {
+				final int narg = args.narg();
+				for (int i = 1; i <= narg; i++) {
+					final String argString = args.tojstring(i);
+					final ThirdPersonLuaXmlButton click = ThirdPersonLuaXmlButton.valueOf(argString);
+					luaEnvironment.registerForDrag(click, luaWrapper);
 				}
 				return LuaValue.NIL;
 			}
@@ -567,7 +592,57 @@ public abstract class AbstractRenderableFrame implements UIFrame {
 		table.set("GetParent", new ZeroArgFunction() {
 			@Override
 			public LuaValue call() {
-				return AbstractRenderableFrame.this.parent.getScripts().getLuaWrapper().getTable();
+				if (AbstractRenderableFrame.this.parent == null) {
+					return LuaValue.NIL;
+				}
+				final UIFrameScripts otherScripts = AbstractRenderableFrame.this.parent.getScripts();
+				if (otherScripts == null) {
+					return LuaValue.NIL;
+				}
+				final UIFrameLuaWrapper otherLuaWrapper = otherScripts.getLuaWrapper();
+				if (otherLuaWrapper == null) {
+					return LuaValue.NIL;
+				}
+				return otherLuaWrapper.getTable();
+			}
+		});
+		table.set("IsOwned", new TwoArgFunction() {
+			@Override
+			public LuaValue call(final LuaValue thistable, final LuaValue arg) {
+				if (AbstractRenderableFrame.this.parent == null) {
+					return LuaBoolean.FALSE;
+				}
+				final UIFrameScripts otherScripts = AbstractRenderableFrame.this.parent.getScripts();
+				if (otherScripts == null) {
+					return LuaValue.NIL;
+				}
+				final UIFrameLuaWrapper otherLuaWrapper = otherScripts.getLuaWrapper();
+				if (otherLuaWrapper == null) {
+					return LuaBoolean.FALSE;
+				}
+				return LuaBoolean
+						.valueOf(arg == AbstractRenderableFrame.this.parent.getScripts().getLuaWrapper().getTable());
+			}
+		});
+		table.set("SetOwner", new TwoArgFunction() {
+			@Override
+			public LuaValue call(final LuaValue thistable, final LuaValue arg) {
+				final LuaValue wsThis = arg.checktable().get(UIFrameLuaWrapper.WS_THIS);
+				if (wsThis instanceof UIFrameLuaWrapper) {
+					final UIFrameLuaWrapper otherWrapper = (UIFrameLuaWrapper) wsThis;
+					final UIFrame otherFrame = otherWrapper.getFrame();
+					final UIFrame parentFrame = getParent();
+					if (parentFrame instanceof AbstractUIFrame) {
+						final AbstractUIFrame parentContainer = (AbstractUIFrame) parentFrame;
+						parentContainer.remove(AbstractRenderableFrame.this);
+					}
+					setParent(otherFrame);
+					if (otherFrame instanceof AbstractUIFrame) {
+						final AbstractUIFrame otherContainer = (AbstractUIFrame) otherFrame;
+						otherContainer.add(AbstractRenderableFrame.this);
+					}
+				}
+				return LuaValue.NIL;
 			}
 		});
 	}

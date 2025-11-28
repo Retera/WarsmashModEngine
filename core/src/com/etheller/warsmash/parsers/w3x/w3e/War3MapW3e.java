@@ -297,7 +297,7 @@ public class War3MapW3e {
 			final int tileIdx = header.idx;
 			final int blockX = tileIdx % 64;
 			final float wowXOffset = blockX * tilesize;
-			final int blockY = tileIdx / 64;
+			final int blockY = 63 - (tileIdx / 64);
 			final float wowYOffset = blockY * tilesize;
 
 			minX = Math.min(blockX, minX);
@@ -313,10 +313,12 @@ public class War3MapW3e {
 		terrainFile.groundTiles.add(War3ID.fromString("Wsnw"));
 		terrainFile.cliffTiles.add(War3ID.fromString("CLdi"));
 
-		terrainFile.mapSize[0] = (((maxX - minX) + 1) * 16 * 8) + 1;
-		terrainFile.mapSize[1] = (((maxY - minY) + 1) * 16 * 8) + 1;
-		terrainFile.centerOffset[0] = -((terrainFile.mapSize[0] - 1) * 128f) / 2.f;
-		terrainFile.centerOffset[1] = -((terrainFile.mapSize[1] - 1) * 128f) / 2.f;
+//		terrainFile.mapSize[0] = (((maxX - minX) + 1) * 16 * 8) + 1;
+//		terrainFile.mapSize[1] = (((maxY - minY) + 1) * 16 * 8) + 1;
+		terrainFile.mapSize[0] = (((63) + 1) * 16 * 8) + 1;
+		terrainFile.mapSize[1] = (((63) + 1) * 16 * 8) + 1;
+		terrainFile.centerOffset[0] = (-minX * 16 * 8 * 128f) + ((-(((maxX - minX) + 1) * 16 * 8) * 128f) / 2.0f);
+		terrainFile.centerOffset[1] = (-minY * 16 * 8 * 128f) + ((-(((maxY - minY) + 1) * 16 * 8) * 128f) / 2.0f);
 
 		terrainFile.corners = null;
 

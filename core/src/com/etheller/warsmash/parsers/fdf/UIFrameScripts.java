@@ -41,51 +41,75 @@ public class UIFrameScripts {
 
 	private UIFrameLuaWrapper thisFrame;
 	private LuaEnvironment luaEnvironment;
+	private FrameDefinition frameDef;
 
-	public void load(final LuaEnvironment luaEnvironment, final FrameDefinition frameDef, final UIFrame uiFrame) {
+	public void inflate(final LuaEnvironment luaEnvironment, final FrameDefinition frameDef, final UIFrame uiFrame) {
 		this.luaEnvironment = luaEnvironment;
-		if (frameDef != null) {
-			this.OnLoad = loadSingle(luaEnvironment, frameDef, "OnLoad");
-			this.OnSizeChanged = loadSingle(luaEnvironment, frameDef, "OnSizeChanged");
-			this.OnEvent = loadSingle(luaEnvironment, frameDef, "OnEvent");
-			this.OnUpdate = loadSingle(luaEnvironment, frameDef, "OnUpdate");
-			this.OnShow = loadSingle(luaEnvironment, frameDef, "OnShow");
-			this.OnHide = loadSingle(luaEnvironment, frameDef, "OnHide");
-			this.OnEnter = loadSingle(luaEnvironment, frameDef, "OnEnter");
-			this.OnLeave = loadSingle(luaEnvironment, frameDef, "OnLeave");
-			this.OnMouseDown = loadSingle(luaEnvironment, frameDef, "OnMouseDown");
-			this.OnMouseUp = loadSingle(luaEnvironment, frameDef, "OnMouseUp");
-			this.OnMouseWheel = loadSingle(luaEnvironment, frameDef, "OnMouseWheel");
-			this.OnDragStart = loadSingle(luaEnvironment, frameDef, "OnDragStart");
-			this.OnDragStop = loadSingle(luaEnvironment, frameDef, "OnDragStop");
-			this.OnReceiveDrag = loadSingle(luaEnvironment, frameDef, "OnReceiveDrag");
-			this.OnClick = loadSingle(luaEnvironment, frameDef, "OnClick");
-			this.OnValueChanged = loadSingle(luaEnvironment, frameDef, "OnValueChanged");
-			this.OnUpdateModel = loadSingle(luaEnvironment, frameDef, "OnUpdateModel");
-			this.OnAnimFinished = loadSingle(luaEnvironment, frameDef, "OnAnimFinished");
-			this.OnEnterPressed = loadSingle(luaEnvironment, frameDef, "OnEnterPressed");
-			this.OnEscapePressed = loadSingle(luaEnvironment, frameDef, "OnEscapePressed");
-			this.OnSpacePressed = loadSingle(luaEnvironment, frameDef, "OnSpacePressed");
-			this.OnTabPressed = loadSingle(luaEnvironment, frameDef, "OnTabPressed");
-			this.OnTextChanged = loadSingle(luaEnvironment, frameDef, "OnTextChanged");
-			this.OnTextSet = loadSingle(luaEnvironment, frameDef, "OnTextSet");
-			this.OnHorizontalScroll = loadSingle(luaEnvironment, frameDef, "OnHorizontalScroll");
-			this.OnVerticalScroll = loadSingle(luaEnvironment, frameDef, "OnVerticalScroll");
-			this.OnScrollRangeChanged = loadSingle(luaEnvironment, frameDef, "OnScrollRangeChanged");
-			this.OnChar = loadSingle(luaEnvironment, frameDef, "OnChar");
-			this.OnKeyDown = loadSingle(luaEnvironment, frameDef, "OnKeyDown");
-			this.OnKeyUp = loadSingle(luaEnvironment, frameDef, "OnKeyUp");
-			this.OnHyperlinkEnter = loadSingle(luaEnvironment, frameDef, "OnHyperlinkEnter");
-			this.OnHyperlinkLeave = loadSingle(luaEnvironment, frameDef, "OnHyperlinkLeave");
-		}
+		this.frameDef = frameDef;
 
 		this.thisFrame = new UIFrameLuaWrapper(uiFrame, luaEnvironment);
 		luaEnvironment.getGlobals().set(uiFrame.getName(), this.thisFrame.getTable());
+	}
+
+	public void onLoad() {
+		if (this.frameDef != null) {
+			this.OnLoad = loadSingle(this.luaEnvironment, this.frameDef, "OnLoad");
+			this.OnSizeChanged = loadSingle(this.luaEnvironment, this.frameDef, "OnSizeChanged");
+			this.OnEvent = loadSingle(this.luaEnvironment, this.frameDef, "OnEvent");
+			this.OnUpdate = loadSingle(this.luaEnvironment, this.frameDef, "OnUpdate");
+			this.OnShow = loadSingle(this.luaEnvironment, this.frameDef, "OnShow");
+			this.OnHide = loadSingle(this.luaEnvironment, this.frameDef, "OnHide");
+			this.OnEnter = loadSingle(this.luaEnvironment, this.frameDef, "OnEnter");
+			this.OnLeave = loadSingle(this.luaEnvironment, this.frameDef, "OnLeave");
+			this.OnMouseDown = loadSingle(this.luaEnvironment, this.frameDef, "OnMouseDown");
+			this.OnMouseUp = loadSingle(this.luaEnvironment, this.frameDef, "OnMouseUp");
+			this.OnMouseWheel = loadSingle(this.luaEnvironment, this.frameDef, "OnMouseWheel");
+			this.OnDragStart = loadSingle(this.luaEnvironment, this.frameDef, "OnDragStart");
+			this.OnDragStop = loadSingle(this.luaEnvironment, this.frameDef, "OnDragStop");
+			this.OnReceiveDrag = loadSingle(this.luaEnvironment, this.frameDef, "OnReceiveDrag");
+			this.OnClick = loadSingle(this.luaEnvironment, this.frameDef, "OnClick");
+			this.OnValueChanged = loadSingle(this.luaEnvironment, this.frameDef, "OnValueChanged");
+			this.OnUpdateModel = loadSingle(this.luaEnvironment, this.frameDef, "OnUpdateModel");
+			this.OnAnimFinished = loadSingle(this.luaEnvironment, this.frameDef, "OnAnimFinished");
+			this.OnEnterPressed = loadSingle(this.luaEnvironment, this.frameDef, "OnEnterPressed");
+			this.OnEscapePressed = loadSingle(this.luaEnvironment, this.frameDef, "OnEscapePressed");
+			this.OnSpacePressed = loadSingle(this.luaEnvironment, this.frameDef, "OnSpacePressed");
+			this.OnTabPressed = loadSingle(this.luaEnvironment, this.frameDef, "OnTabPressed");
+			this.OnTextChanged = loadSingle(this.luaEnvironment, this.frameDef, "OnTextChanged");
+			this.OnTextSet = loadSingle(this.luaEnvironment, this.frameDef, "OnTextSet");
+			this.OnHorizontalScroll = loadSingle(this.luaEnvironment, this.frameDef, "OnHorizontalScroll");
+			this.OnVerticalScroll = loadSingle(this.luaEnvironment, this.frameDef, "OnVerticalScroll");
+			this.OnScrollRangeChanged = loadSingle(this.luaEnvironment, this.frameDef, "OnScrollRangeChanged");
+			this.OnChar = loadSingle(this.luaEnvironment, this.frameDef, "OnChar");
+			this.OnKeyDown = loadSingle(this.luaEnvironment, this.frameDef, "OnKeyDown");
+			this.OnKeyUp = loadSingle(this.luaEnvironment, this.frameDef, "OnKeyUp");
+			this.OnHyperlinkEnter = loadSingle(this.luaEnvironment, this.frameDef, "OnHyperlinkEnter");
+			this.OnHyperlinkLeave = loadSingle(this.luaEnvironment, this.frameDef, "OnHyperlinkLeave");
+		}
 
 		if (this.OnLoad != null) {
-			luaEnvironment.load(this.thisFrame);
+			this.luaEnvironment.load(this.thisFrame);
 			try {
 				this.OnLoad.call();
+			}
+			catch (final Exception exc) {
+				System.err.println("Who called load??? " + this.thisFrame.getFrame().getName());
+				exc.printStackTrace();
+			}
+		}
+
+		this.frameDef = null;
+	}
+
+	public boolean isLoaded() {
+		return this.frameDef == null;
+	}
+
+	public void onClick() {
+		if (this.OnClick != null) {
+			this.luaEnvironment.load(this.thisFrame);
+			try {
+				this.OnClick.call();
 			}
 			catch (final Exception exc) {
 				exc.printStackTrace();
@@ -93,10 +117,11 @@ public class UIFrameScripts {
 		}
 	}
 
-	public void onClick() {
+	public void onEvent(final ThirdPersonLuaXmlEvent event) {
 		if (this.OnClick != null) {
 			this.luaEnvironment.load(this.thisFrame);
 			try {
+				this.OnClick.checkglobals().set("event", event.name());
 				this.OnClick.call();
 			}
 			catch (final Exception exc) {

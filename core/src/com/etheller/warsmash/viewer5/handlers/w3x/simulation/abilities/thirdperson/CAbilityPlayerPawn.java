@@ -2,7 +2,6 @@ package com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.thirdper
 
 import com.badlogic.gdx.math.Vector3;
 import com.etheller.warsmash.units.GameObject;
-import com.etheller.warsmash.units.manager.MutableObjectData.MutableGameObject;
 import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.util.WarsmashConstants;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
@@ -84,7 +83,7 @@ public class CAbilityPlayerPawn extends AbstractGenericNoIconAbility implements 
 	public void onAdd(final CSimulation game, final CUnit unit) {
 		this.behaviorPlayerPawn = new CBehaviorPlayerPawn(unit, this);
 		unit.setDefaultBehavior(this.behaviorPlayerPawn);
-		game.setupPlayerPawn(unit, this, behaviorPlayerPawn);
+		game.setupPlayerPawn(unit, this, this.behaviorPlayerPawn);
 	}
 
 	@Override
@@ -169,9 +168,9 @@ public class CAbilityPlayerPawn extends AbstractGenericNoIconAbility implements 
 	public CBehaviorPlayerPawn getBehaviorPlayerPawn() {
 		return this.behaviorPlayerPawn;
 	}
-	
+
 	@Override
-	public void populate(GameObject worldEditorAbility, int level) {
+	public void populate(final GameObject worldEditorAbility, final int level) {
 	}
 
 	public float getRenderMoveSpeed() {

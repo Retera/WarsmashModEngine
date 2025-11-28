@@ -134,4 +134,14 @@ public class XmlButtonFrame extends GlueTextButtonFrame {
 		}
 		return super.getFrameChildUnderMouse(screenX, screenY);
 	}
+
+	@Override
+	protected void checkLoad() {
+		super.checkLoad();
+		for (final UIFrame child : this.childFrames) {
+			if (child instanceof AbstractRenderableFrame) {
+				((AbstractRenderableFrame) child).checkLoad();
+			}
+		}
+	}
 }

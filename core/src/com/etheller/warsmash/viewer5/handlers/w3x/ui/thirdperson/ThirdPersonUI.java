@@ -120,6 +120,12 @@ public class ThirdPersonUI implements WarsmashToggleableUI {
 //					this.war3MapViewer.getLocalPlayerIndex(), startLocation[0], startLocation[1], 0);
 //			this.war3MapViewer.simulation.createUnitSimple(War3ID.fromString("hpea"),
 //			this.war3MapViewer.getLocalPlayerIndex(), startLocation[0], startLocation[1], 0);
+			this.war3MapViewer.simulation.createUnitSimple(War3ID.fromString("nqb1"), 1, startLocation[0] + 2000,
+					startLocation[1], 0);
+			this.war3MapViewer.simulation.createUnitSimple(War3ID.fromString("hpea"), 0, startLocation[0],
+					startLocation[1], 0);
+			this.war3MapViewer.simulation.getPlayer(0).addGold(9999);
+			this.war3MapViewer.simulation.getPlayer(0).addLumber(9999);
 			if (false) {
 				this.war3MapViewer.simulation.createUnitSimple(War3ID.fromString("Hart"),
 						this.war3MapViewer.getLocalPlayerIndex(), startLocation[0], startLocation[1], 0);
@@ -174,21 +180,20 @@ public class ThirdPersonUI implements WarsmashToggleableUI {
 				this.uiViewport, this.uiScene, this.war3MapViewer, 0, this.war3MapViewer.getAllObjectData().getWts(),
 				new KeyedSounds(uiSoundsTable, this.war3MapViewer.mapMpq));
 
-		if (false) {
-			try {
-				this.rootFrame.loadTOCFile("Interface\\FrameXML\\FrameXML.toc");
-			}
-			catch (final IOException e) {
-				throw new IllegalStateException(e);
-			}
-
-			final UIFrame mainMenuBarFixed = this.rootFrame.getFrameByName("MainMenuBar", 0);
-			mainMenuBarFixed.setVisible(true);
-
-			this.tooltipFrame = this.rootFrame.createFrame("GameTooltip", this.rootFrame, 0, 0);
-//		this.uiParent.add(this.tooltipFrame);
-			this.tooltipFrame1 = (StringFrame) this.rootFrame.getFrameByName("$parentTextLeft1", 0);
+		try {
+			this.rootFrame.bindPawnUnit(this.pawnUnit, this.abilityPlayerPawn, this.war3MapViewer.getAbilityDataUI());
+			this.rootFrame.loadTOCFile("Interface\\FrameXML\\FrameXML.toc");
 		}
+		catch (final IOException e) {
+			throw new IllegalStateException(e);
+		}
+
+		final UIFrame mainMenuBarFixed = this.rootFrame.getFrameByName("MainMenuBar", 0);
+		mainMenuBarFixed.setVisible(true);
+
+		this.tooltipFrame = this.rootFrame.createFrame("GameTooltip", this.rootFrame, 0, 0);
+//		this.uiParent.add(this.tooltipFrame);
+		this.tooltipFrame1 = (StringFrame) this.rootFrame.getFrameByName("$parentTextLeft1", 0);
 
 		this.cursorFrame = (SpriteFrame) this.rootFrame.createFrameByType("SPRITE", "SmashTPCursorFrame",
 				this.rootFrame, "", 0);

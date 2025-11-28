@@ -275,4 +275,8 @@ public class GlueButtonFrame extends AbstractRenderableFrame implements Clickabl
 		textureFrame.positionBounds(rootFrame, luaEnvironment.getUiViewport());
 		return textureFrame;
 	}
+
+	public UIFrame getControlBackdrop() {
+		return this.controlBackdrop;
+	}
 }

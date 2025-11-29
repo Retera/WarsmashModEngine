@@ -1426,6 +1426,7 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 		}
 		for (final RenderWidget unit : this.selected) {
 			unit.unassignSelectionCircle();
+			unit.getInstance().unshadedOverride = 0.0f;
 		}
 		this.selectedSplatModelKeys.clear();
 		this.selected.clear();
@@ -1545,10 +1546,25 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 		}
 	}
 
+	public void doSelectUnitThirdPerson(final List<RenderWidget> units) {
+		deselect();
+		if (units.isEmpty()) {
+			return;
+		}
+
+		for (final RenderWidget unit : units) {
+			unit.getInstance().unshadedOverride = 1.0f;
+			this.selected.add(unit);
+		}
+	}
+
 	public void clearUnitMouseOverHighlight(final RenderWidget unit) {
 		this.mouseHighlightWidgets.remove(unit);
 		unit.getSelectionPreviewHighlight().destroy(Gdx.gl30, this.terrain.centerOffset);
 		unit.unassignSelectionPreviewHighlight();
+		if (unit.getInstance().unshadedOverride < 0.5f) {
+			unit.getInstance().unshadedOverride = 0.0f;
+		}
 	}
 
 	public void clearUnitMouseOverHighlight() {
@@ -1557,6 +1573,9 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 		}
 		for (final RenderWidget widget : this.mouseHighlightWidgets) {
 			widget.unassignSelectionPreviewHighlight();
+			if (widget.getInstance().unshadedOverride < 0.5f) {
+				widget.getInstance().unshadedOverride = 0.0f;
+			}
 		}
 		this.mouseHighlightSplatModelKeys.clear();
 		this.mouseHighlightWidgets.clear();
@@ -1661,6 +1680,13 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 			this.mouseHighlightSplatModelKeys.add("mouseover:" + path);
 			this.terrain.addSplatBatchModel("mouseover:" + path, model);
 		}
+	}
+
+	public void showUnitMouseOverHighlightThirdPerson(final RenderWidget unit) {
+		if (unit.getInstance().unshadedOverride < 0.5f) {
+			unit.getInstance().unshadedOverride = 0.4f;
+		}
+		this.mouseHighlightWidgets.add(unit);
 	}
 
 	public void getClickLocation(final Vector3 out, final int screenX, final int screenY,

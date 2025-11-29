@@ -2,6 +2,7 @@ package com.etheller.warsmash.parsers.fdf.frames;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Consumer;
 
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.Color;
@@ -10,6 +11,7 @@ import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.etheller.warsmash.parsers.fdf.GameUI;
+import com.etheller.warsmash.parsers.fdf.ThirdPersonLuaXmlButton;
 import com.etheller.warsmash.parsers.fdf.datamodel.FramePoint;
 import com.etheller.warsmash.parsers.fdf.datamodel.MenuItem;
 import com.etheller.warsmash.parsers.fdf.datamodel.TextJustify;
@@ -121,9 +123,9 @@ public class MenuFrame extends AbstractUIFrame {
 			add(menuItem);
 			lastChildFrame = childFrame;
 			final int childIndex = index;
-			childFrame.setOnClick(new Runnable() {
+			childFrame.setOnClick(new Consumer<ThirdPersonLuaXmlButton>() {
 				@Override
-				public void run() {
+				public void accept(final ThirdPersonLuaXmlButton button) {
 					doClick(Input.Buttons.LEFT, childIndex);
 				}
 			});

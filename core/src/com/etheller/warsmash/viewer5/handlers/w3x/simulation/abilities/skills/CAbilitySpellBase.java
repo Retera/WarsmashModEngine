@@ -60,6 +60,7 @@ public abstract class CAbilitySpellBase extends AbstractGenericSingleIconNoSmart
 		this.castingSecondaryTags = EnumSet.noneOf(AnimationTokens.SecondaryTag.class);
 		Sequence.populateTags(primaryTags, this.castingSecondaryTags, animNames);
 		this.castingPrimaryTag = Sequence.any(primaryTags);
+		checkPrimaryTag();
 		if (this.castingSecondaryTags.isEmpty()) {
 			this.castingSecondaryTags = SequenceUtils.SPELL;
 		}
@@ -69,6 +70,10 @@ public abstract class CAbilitySpellBase extends AbstractGenericSingleIconNoSmart
 		this.code = worldEditorAbility.getFieldAsWar3ID(AbilityFields.CODE, -1);
 
 		populateData(worldEditorAbility, level);
+	}
+
+	protected void checkPrimaryTag() {
+
 	}
 
 	public float getDurationForTarget(final CWidget target) {

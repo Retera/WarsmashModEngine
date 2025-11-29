@@ -78,6 +78,7 @@ public class MdxComplexInstance extends ModelInstance {
 	protected float blendTime;
 	protected float blendTimeRemaining;
 	public boolean additiveOverrideMeshMode = false;
+	public float unshadedOverride = 0.0f;
 	private boolean hasAnyUnselectableMesh = false;
 	private final Descriptor<MdxNode> mdxNodeDescriptor;
 

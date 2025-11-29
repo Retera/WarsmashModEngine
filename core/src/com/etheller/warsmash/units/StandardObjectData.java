@@ -433,7 +433,7 @@ public class StandardObjectData {
 		}
 
 		@Override
-		public void inheritFrom(String childKey, String parentKey) {
+		public void inheritFrom(final String childKey, final String parentKey) {
 			for (final DataTable table : this.tables) {
 				table.inheritFrom(childKey, parentKey);
 			}

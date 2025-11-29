@@ -303,9 +303,12 @@ public class ScrollBarFrame extends AbstractRenderableFrame implements Clickable
 	@Override
 	public UIFrame getFrameChildUnderMouse(final float screenX, final float screenY) {
 		if (isVisible() && this.renderBounds.contains(screenX, screenY)) {
-			UIFrame frameChildUnderMouse = this.thumbButtonFrame.getFrameChildUnderMouse(screenX, screenY);
-			if (frameChildUnderMouse != null) {
-				return frameChildUnderMouse;
+			UIFrame frameChildUnderMouse;
+			if (this.thumbButtonFrame != null) {
+				frameChildUnderMouse = this.thumbButtonFrame.getFrameChildUnderMouse(screenX, screenY);
+				if (frameChildUnderMouse != null) {
+					return frameChildUnderMouse;
+				}
 			}
 			if (this.incButtonFrame != null) {
 				frameChildUnderMouse = this.incButtonFrame.getFrameChildUnderMouse(screenX, screenY);
@@ -348,5 +351,9 @@ public class ScrollBarFrame extends AbstractRenderableFrame implements Clickable
 	@Override
 	public String getSoundKey() {
 		return SOUND_KEY_MENU_BUTTON_CLICK;
+	}
+
+	public int getMaxValue() {
+		return this.maxValue;
 	}
 }

@@ -3,37 +3,18 @@ package com.etheller.warsmash.parsers.fdf.frames;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.ListIterator;
-import java.util.function.Consumer;
-
-import org.luaj.vm2.LuaTable;
-import org.luaj.vm2.LuaValue;
-import org.luaj.vm2.lib.TwoArgFunction;
 
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.etheller.warsmash.parsers.fdf.GameUI;
-import com.etheller.warsmash.parsers.fdf.LuaEnvironment;
-import com.etheller.warsmash.parsers.fdf.ThirdPersonLuaXmlButton;
-import com.etheller.warsmash.parsers.fdf.UIFrameLuaWrapper;
-import com.etheller.warsmash.parsers.fdf.UIFrameScripts;
-import com.etheller.warsmash.parsers.fdf.lua.FourArgFunction;
 
-public class XmlCheckBoxFrame extends CheckBoxFrame {
+public class XmlTextAreaFrame extends TextAreaFrame {
 	private final List<UIFrame> childFrames = new ArrayList<>();
 
-	public XmlCheckBoxFrame(final String name, final UIFrame parent) {
-		super(name, parent);
-		setOnClick(new Consumer<ThirdPersonLuaXmlButton>() {
-			@Override
-			public void accept(final ThirdPersonLuaXmlButton button) {
-				final UIFrameScripts scripts = getScripts();
-				if (scripts != null) {
-					scripts.onClick(button);
-				}
-			}
-		});
+	public XmlTextAreaFrame(final String name, final UIFrame parent, final Viewport viewport) {
+		super(name, parent, viewport);
 	}
 
 	public void add(final UIFrame childFrame) {
@@ -152,30 +133,5 @@ public class XmlCheckBoxFrame extends CheckBoxFrame {
 				((AbstractRenderableFrame) child).checkLoad();
 			}
 		}
-	}
-
-	@Override
-	public void setupTable(final LuaTable table, final LuaEnvironment luaEnvironment,
-			final UIFrameLuaWrapper luaWrapper) {
-		super.setupTable(table, luaEnvironment, luaWrapper);
-		table.set("SetBackdropBorderColor", new TwoArgFunction() {
-			@Override
-			public LuaValue call(final LuaValue thistable, final LuaValue arg) {
-				return LuaValue.NIL;
-			}
-		});
-		table.set("SetBackdropColor", new FourArgFunction() {
-			@Override
-			public LuaValue call(final LuaValue thistable, final LuaValue arg, final LuaValue arg2,
-					final LuaValue arg3) {
-				final UIFrame controlBackdrop = getControlBackdrop();
-				if (controlBackdrop instanceof BackdropFrame) {
-					final BackdropFrame backdropFrame = (BackdropFrame) controlBackdrop;
-//					backdropFrame.setColor(arg.tofloat(), arg2.tofloat(), arg3.tofloat(),
-//							TextureFrame.this.color == null ? 1.0f : TextureFrame.this.color.a);
-				}
-				return LuaValue.NIL;
-			}
-		});
 	}
 }

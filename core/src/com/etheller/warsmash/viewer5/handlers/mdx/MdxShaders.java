@@ -639,7 +639,7 @@ public class MdxShaders {
 				"    uniform vec2 u_uvRot;\r\n" + //
 				"    uniform float u_uvScale;\r\n" + //
 				"    uniform bool u_hasBones;\r\n" + //
-				"    uniform bool u_unshaded;\r\n" + //
+				"    uniform float u_unshaded;\r\n" + //
 				"    attribute vec3 a_position;\r\n" + //
 				"    attribute vec3 a_normal;\r\n" + //
 				"    attribute vec2 a_uv;\r\n" + //
@@ -712,12 +712,12 @@ public class MdxShaders {
 				"      v_uvTransRot = vec4(u_uvTrans, u_uvRot);\r\n" + //
 				"      v_uvScale = u_uvScale;\r\n" + //
 				"      gl_Position = u_mvp * vec4(position, 1.0);\r\n" + //
-				"      if(!u_unshaded) {\r\n" + //
+				"      //if(!u_unshaded) {\r\n" + //
 				Shaders.lightSystem("normal", "position", "u_lightTexture", "u_lightTextureHeight", "u_lightCount",
 						false)
 				+ "\r\n" + //
-				"        v_color.xyz *= clamp(lightFactor, 0.0, 1.0);\r\n" + //
-				"      }\r\n" + //
+				"        v_color.xyz *= (1.0 - u_unshaded) * clamp(lightFactor, 0.0, 1.0) + u_unshaded;\r\n" + //
+				"      //}\r\n" + //
 				"    }";
 	}
 

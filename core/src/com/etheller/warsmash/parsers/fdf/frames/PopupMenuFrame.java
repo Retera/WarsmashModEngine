@@ -1,10 +1,13 @@
 package com.etheller.warsmash.parsers.fdf.frames;
 
+import java.util.function.Consumer;
+
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.etheller.warsmash.parsers.fdf.GameUI;
+import com.etheller.warsmash.parsers.fdf.ThirdPersonLuaXmlButton;
 import com.etheller.warsmash.parsers.fdf.frames.MenuFrame.MenuClickListener;
 
 public class PopupMenuFrame extends GlueTextButtonFrame {
@@ -14,9 +17,9 @@ public class PopupMenuFrame extends GlueTextButtonFrame {
 
 	public PopupMenuFrame(final String name, final UIFrame parent) {
 		super(name, parent);
-		setOnClick(new Runnable() {
+		setOnClick(new Consumer<ThirdPersonLuaXmlButton>() {
 			@Override
-			public void run() {
+			public void accept(final ThirdPersonLuaXmlButton button) {
 				if (PopupMenuFrame.this.popupMenuFrame != null) {
 					PopupMenuFrame.this.popupMenuFrame.setVisible(!PopupMenuFrame.this.popupMenuFrame.isVisible());
 				}

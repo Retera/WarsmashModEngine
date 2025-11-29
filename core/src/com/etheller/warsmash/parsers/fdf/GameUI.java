@@ -65,6 +65,7 @@ import com.etheller.warsmash.parsers.fdf.frames.ClickConsumingTextureFrame;
 import com.etheller.warsmash.parsers.fdf.frames.ControlFrame;
 import com.etheller.warsmash.parsers.fdf.frames.EditBoxFrame;
 import com.etheller.warsmash.parsers.fdf.frames.FilterModeTextureFrame;
+import com.etheller.warsmash.parsers.fdf.frames.GameTooltipFrame;
 import com.etheller.warsmash.parsers.fdf.frames.GlueButtonFrame;
 import com.etheller.warsmash.parsers.fdf.frames.GlueTextButtonFrame;
 import com.etheller.warsmash.parsers.fdf.frames.ListBoxFrame;
@@ -85,6 +86,7 @@ import com.etheller.warsmash.parsers.fdf.frames.TextureFrame;
 import com.etheller.warsmash.parsers.fdf.frames.UIFrame;
 import com.etheller.warsmash.parsers.fdf.frames.XmlButtonFrame;
 import com.etheller.warsmash.parsers.fdf.frames.XmlCheckBoxFrame;
+import com.etheller.warsmash.parsers.fdf.frames.XmlTextAreaFrame;
 import com.etheller.warsmash.units.DataTable;
 import com.etheller.warsmash.units.Element;
 import com.etheller.warsmash.units.custom.WTS;
@@ -96,8 +98,10 @@ import com.etheller.warsmash.viewer5.handlers.AbstractMdxModelViewer;
 import com.etheller.warsmash.viewer5.handlers.mdx.MdxModel;
 import com.etheller.warsmash.viewer5.handlers.w3x.War3MapViewer;
 import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.ability.AbilityDataUI;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.thirdperson.CAbilityPlayerPawn;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayerUnitOrderListener;
 import com.etheller.warsmash.viewer5.handlers.w3x.ui.command.FocusableFrame;
 import com.etheller.warsmash.viewer5.handlers.w3x.ui.sound.KeyedSounds;
 import com.hiveworkshop.rms.parsers.mdlx.MdlxLayer.FilterMode;
@@ -271,8 +275,12 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 						continue;
 					}
 					if (this.luaGlobals == null) {
-						this.luaGlobals = new LuaEnvironment(this, this.viewport, this.uiScene, this.uiSounds,
-								this.pawnUnit, this.abilityPlayerPawn, this.abilityDataUI);
+						CSimulation game = null;
+						if (this.modelViewer instanceof War3MapViewer) {
+							game = ((War3MapViewer) this.modelViewer).simulation;
+						}
+						this.luaGlobals = new LuaEnvironment(game, this, this.viewport, this.uiScene, this.uiSounds,
+								this.pawnUnit, this.abilityPlayerPawn, this.abilityDataUI, this.uiOrderListener);
 						loadLuaFile("Interface/FrameXML/GlobalStrings.lua");// didn't see the link for what loads this
 					}
 					final DocumentBuilderFactory newInstance = DocumentBuilderFactory.newInstance();
@@ -481,6 +489,7 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 	}
 
 	private int untitledXMLFrameId = 0;
+	private CPlayerUnitOrderListener uiOrderListener;
 
 	private FrameDefinition inflateXMLToDef(final String currentWorkingDir, final Node xmlNode) {
 		return inflateXMLToDef(currentWorkingDir, xmlNode, null);
@@ -526,11 +535,15 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 		else if ("#text".equals(baseXmlNodeName) || "#comment".equals(baseXmlNodeName)) {
 			return null;
 		}
-		else if ("Frame".equals(baseXmlNodeName) || "GameTooltip".equals(baseXmlNodeName)
-				|| "WorldFrame".equals(baseXmlNodeName)) {
+		else if ("Frame".equals(baseXmlNodeName) || "WorldFrame".equals(baseXmlNodeName)) {
 			// TODO got my own world frame, ignoring this one
 			frameClass = FrameClass.Frame;
 			frameType = "SIMPLEFRAME";
+		}
+		else if ("GameTooltip".equals(baseXmlNodeName)) {
+			// TODO got my own world frame, ignoring this one
+			frameClass = FrameClass.Frame;
+			frameType = "GAMETOOLTIP";
 		}
 		else if ("StatusBar".equals(baseXmlNodeName)) {
 			frameClass = FrameClass.Frame;
@@ -562,7 +575,7 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 		}
 		else if ("ScrollingMessageFrame".equals(baseXmlNodeName)) {
 			frameClass = FrameClass.Frame;
-			frameType = "TEXTAREA";
+			frameType = "XMLTEXTAREA";
 		}
 		else if ("SimpleHTML".equals(baseXmlNodeName)) {
 			frameClass = FrameClass.Frame;
@@ -1312,6 +1325,19 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 		case Frame:
 			if ("SIMPLEFRAME".equals(frameDefinition.getFrameType())) {
 				final SimpleFrame simpleFrame = new SimpleFrame(frameDefinitionName, parent);
+				// TODO: we should not need to put ourselves in this map 2x, but we do
+				// since there are nested inflate calls happening before the general case
+				// mapping
+				this.nameToFrame.put(frameDefinitionName, simpleFrame);
+				inflateScriptsIfAvailable(frameDefinition, simpleFrame);
+				for (final FrameDefinition childDefinition : frameDefinition.getInnerFrames()) {
+					simpleFrame.add(inflate(childDefinition, simpleFrame, frameDefinition,
+							inDecorateFileNames || childDefinition.has("DecorateFileNames")));
+				}
+				inflatedFrame = simpleFrame;
+			}
+			if ("GAMETOOLTIP".equals(frameDefinition.getFrameType())) {
+				final GameTooltipFrame simpleFrame = new GameTooltipFrame(frameDefinitionName, parent);
 				// TODO: we should not need to put ourselves in this map 2x, but we do
 				// since there are nested inflate calls happening before the general case
 				// mapping
@@ -2298,6 +2324,67 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 				}
 				inflatedFrame = controlFrame;
 			}
+			else if ("XMLTEXTAREA".equals(frameDefinition.getFrameType())) {
+				// TODO advanced components here
+				final XmlTextAreaFrame controlFrame = new XmlTextAreaFrame(frameDefinitionName, parent, viewport2);
+				// TODO: we should not need to put ourselves in this map 2x, but we do
+				// since there are nested inflate calls happening before the general case
+				// mapping
+				this.nameToFrame.put(frameDefinitionName, controlFrame);
+				inflateScriptsIfAvailable(frameDefinition, controlFrame);
+				final String controlBackdropKey = getDefString(frameDefinition, parent, "ControlBackdrop");
+				final String listBoxScrollBarKey = getDefString(frameDefinition, parent, "TextAreaScrollBar");
+				final Float textAreaLineHeight = frameDefinition.getFloat("TextAreaLineHeight");
+				if (textAreaLineHeight != null) {
+					controlFrame.setLineHeight(convertY(viewport2, textAreaLineHeight));
+				}
+				final Float textAreaLineGap = frameDefinition.getFloat("TextAreaLineGap");
+				if (textAreaLineGap != null) {
+					controlFrame.setLineGap(convertY(viewport2, textAreaLineGap));
+				}
+				final Float textAreaInset = frameDefinition.getFloat("TextAreaInset");
+				if (textAreaInset != null) {
+					controlFrame.setInset(convertY(viewport2, textAreaInset));
+				}
+				final Float textAreaMaxLines = frameDefinition.getFloat("TextAreaMaxLines");
+				if (textAreaMaxLines != null) {
+					controlFrame.setMaxLines(textAreaMaxLines.intValue());
+				}
+
+				FontDefinition font = frameDefinition.getFont("FrameFont");
+				if ((font == null) && (parentDefinitionIfAvailable != null)) {
+					font = parentDefinitionIfAvailable.getFont("FrameFont");
+				}
+				this.fontParam.size = (int) convertY(viewport2,
+						(font == null ? (textAreaLineHeight == null ? 0.06f : textAreaLineHeight)
+								: font.getFontSize()));
+				if (this.fontParam.size == 0) {
+					this.fontParam.size = 24;
+				}
+				frameFont = this.dynamicFontGeneratorHolder
+						.getFontGenerator(font == null ? "MasterFont" : font.getFontName())
+						.generateFont(this.fontParam);
+				controlFrame.setFrameFont(frameFont);
+				for (final FrameDefinition childDefinition : frameDefinition.getInnerFrames()) {
+					if (childDefinition.getName().equals(controlBackdropKey)) {
+						final UIFrame inflatedChild = inflate(childDefinition, controlFrame, frameDefinition,
+								inDecorateFileNames || childDefinition.has("DecorateFileNames"));
+						inflatedChild.setSetAllPoints(true);
+						controlFrame.setControlBackdrop(inflatedChild);
+					}
+					else if (childDefinition.getName().equals(listBoxScrollBarKey)) {
+						final UIFrame inflatedChild = inflate(childDefinition, controlFrame, frameDefinition,
+								inDecorateFileNames || childDefinition.has("DecorateFileNames"));
+						controlFrame.setScrollBarFrame((ScrollBarFrame) inflatedChild);
+					}
+					else {
+						final UIFrame inflatedChild = inflate(childDefinition, controlFrame, frameDefinition,
+								inDecorateFileNames || childDefinition.has("DecorateFileNames"));
+						controlFrame.add(inflatedChild);
+					}
+				}
+				inflatedFrame = controlFrame;
+			}
 			else if ("MENU".equals(frameDefinition.getFrameType())) {
 				// TODO advanced components here
 				final MenuFrame controlFrame = new MenuFrame(frameDefinitionName, parent);
@@ -2637,8 +2724,16 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 	}
 
 	public void setSpriteFrameModel(final SpriteFrame spriteFrame, final String backgroundArt) {
-		final MdxModel model = War3MapViewer.loadModelMdx(this.modelViewer.dataSource, this.modelViewer, backgroundArt,
-				this.modelViewer.mapPathSolver, this.modelViewer.solverParams);
+		MdxModel model;
+		try {
+			model = War3MapViewer.loadModelMdx(this.modelViewer.dataSource, this.modelViewer, backgroundArt,
+					this.modelViewer.mapPathSolver, this.modelViewer.solverParams);
+		}
+		catch (final Exception exc) {
+			System.err.println("Caught exception in setSpriteFrameModel:");
+			exc.printStackTrace();
+			model = null;
+		}
 		spriteFrame.setModel(model);
 	}
 
@@ -2803,10 +2898,19 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 	}
 
 	public void bindPawnUnit(final CUnit pawnUnit, final CAbilityPlayerPawn abilityPlayerPawn,
-			final AbilityDataUI abilityDataUI) {
+			final AbilityDataUI abilityDataUI, final CPlayerUnitOrderListener uiOrderListener) {
 		this.pawnUnit = pawnUnit;
 		this.abilityPlayerPawn = abilityPlayerPawn;
 		this.abilityDataUI = abilityDataUI;
+		this.uiOrderListener = uiOrderListener;
 
+	}
+
+	public LuaEnvironment getLuaGlobals() {
+		return this.luaGlobals;
+	}
+
+	public KeyedSounds getUiSounds() {
+		return this.uiSounds;
 	}
 }

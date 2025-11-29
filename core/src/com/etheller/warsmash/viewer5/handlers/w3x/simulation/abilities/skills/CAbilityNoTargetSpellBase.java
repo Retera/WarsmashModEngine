@@ -1,6 +1,7 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.skills;
 
 import com.etheller.warsmash.util.War3ID;
+import com.etheller.warsmash.viewer5.handlers.w3x.AnimationTokens.PrimaryTag;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
@@ -12,7 +13,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetC
 public abstract class CAbilityNoTargetSpellBase extends CAbilitySpellBase {
 	private CBehaviorNoTargetSpellBase behavior;
 
-	public CAbilityNoTargetSpellBase(int handleId, War3ID alias) {
+	public CAbilityNoTargetSpellBase(final int handleId, final War3ID alias) {
 		super(handleId, alias);
 	}
 
@@ -38,21 +39,28 @@ public abstract class CAbilityNoTargetSpellBase extends CAbilitySpellBase {
 	}
 
 	@Override
-	protected void innerCheckCanTarget(CSimulation game, CUnit unit, int orderId, CWidget target,
-			AbilityTargetCheckReceiver<CWidget> receiver) {
+	protected void innerCheckCanTarget(final CSimulation game, final CUnit unit, final int orderId,
+			final CWidget target, final AbilityTargetCheckReceiver<CWidget> receiver) {
 		receiver.orderIdNotAccepted();
 	}
 
 	@Override
-	protected void innerCheckCanTarget(CSimulation game, CUnit unit, int orderId, AbilityPointTarget target,
-			AbilityTargetCheckReceiver<AbilityPointTarget> receiver) {
+	protected void innerCheckCanTarget(final CSimulation game, final CUnit unit, final int orderId,
+			final AbilityPointTarget target, final AbilityTargetCheckReceiver<AbilityPointTarget> receiver) {
 		receiver.orderIdNotAccepted();
 	}
 
 	@Override
-	protected void innerCheckCanTargetNoTarget(CSimulation game, CUnit unit, int orderId,
-			AbilityTargetCheckReceiver<Void> receiver) {
+	protected void innerCheckCanTargetNoTarget(final CSimulation game, final CUnit unit, final int orderId,
+			final AbilityTargetCheckReceiver<Void> receiver) {
 		receiver.targetOk(null);
+	}
+
+	@Override
+	protected void checkPrimaryTag() {
+		if (this.getCastingPrimaryTag() == null) {
+			setCastingPrimaryTag(PrimaryTag.SPELLCASTOMNI);
+		}
 	}
 
 }

@@ -44,6 +44,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.item.shop
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.queue.CAbilityQueue;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.queue.CAbilityRally;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.queue.CAbilityReviveHero;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.thirdperson.CAbilityPlayerPawn;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.upgrade.CAbilityUpgrade;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CAttackType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CDefenseType;
@@ -291,7 +292,7 @@ public class CUnitData {
 	public void addDefaultAbilitiesToUnit(final CSimulation simulation, final HandleIdAllocator handleIdAllocator,
 			final CUnitType unitTypeInstance, final boolean resetMana, final int manaInitial, final int speed,
 			final CUnit unit) {
-		if (speed > 0) {
+		if ((speed > 0) && !unitTypeInstance.getAbilityList().contains(CAbilityPlayerPawn.CODE)) {
 			unit.add(simulation, new CAbilityMove(handleIdAllocator.createId()));
 		}
 		final List<CUnitAttack> unitSpecificAttacks = new ArrayList<>();

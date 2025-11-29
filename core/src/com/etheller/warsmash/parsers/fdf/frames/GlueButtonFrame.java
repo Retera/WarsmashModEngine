@@ -1,16 +1,20 @@
 package com.etheller.warsmash.parsers.fdf.frames;
 
+import java.util.function.Consumer;
+
 import org.luaj.vm2.LuaTable;
 import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.lib.TwoArgFunction;
 import org.luaj.vm2.lib.ZeroArgFunction;
 
+import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.etheller.warsmash.parsers.fdf.GameUI;
 import com.etheller.warsmash.parsers.fdf.LuaEnvironment;
+import com.etheller.warsmash.parsers.fdf.ThirdPersonLuaXmlButton;
 import com.etheller.warsmash.parsers.fdf.UIFrameLuaWrapper;
 import com.etheller.warsmash.parsers.fdf.datamodel.Vector4Definition;
 import com.etheller.warsmash.viewer5.handlers.w3x.ui.command.ClickableFrame;
@@ -27,7 +31,7 @@ public class GlueButtonFrame extends AbstractRenderableFrame implements Clickabl
 
 	private UIFrame activeChild;
 
-	private Runnable onClick;
+	private Consumer<ThirdPersonLuaXmlButton> onClick;
 	private ButtonListener buttonListener = ButtonListener.DO_NOTHING;
 
 	public GlueButtonFrame(final String name, final UIFrame parent) {
@@ -71,8 +75,14 @@ public class GlueButtonFrame extends AbstractRenderableFrame implements Clickabl
 		this.highlightOnMouseOver = highlightOnMouseOver;
 	}
 
-	public void setOnClick(final Runnable onClick) {
+	public void setOnClick(final Consumer<ThirdPersonLuaXmlButton> onClick) {
 		this.onClick = onClick;
+	}
+
+	public void setOnClick(final Runnable runnable) {
+		setOnClick((button) -> {
+			runnable.run();
+		});
 	}
 
 	public void setButtonListener(final ButtonListener buttonListener) {
@@ -156,7 +166,28 @@ public class GlueButtonFrame extends AbstractRenderableFrame implements Clickabl
 	@Override
 	public void onClick(final int button) {
 		if (this.onClick != null) {
-			this.onClick.run();
+			ThirdPersonLuaXmlButton click;
+			switch (button) {
+			case Input.Buttons.LEFT:
+				click = ThirdPersonLuaXmlButton.LeftButton;
+				break;
+			case Input.Buttons.RIGHT:
+				click = ThirdPersonLuaXmlButton.RightButton;
+				break;
+			case Input.Buttons.MIDDLE:
+				click = ThirdPersonLuaXmlButton.MiddleButton;
+				break;
+			case Input.Buttons.BACK:
+				click = ThirdPersonLuaXmlButton.Button4;
+				break;
+			case Input.Buttons.FORWARD:
+				click = ThirdPersonLuaXmlButton.Button5;
+				break;
+			default:
+				click = null;
+				break;
+			}
+			this.onClick.accept(click);
 		}
 	}
 
@@ -247,6 +278,39 @@ public class GlueButtonFrame extends AbstractRenderableFrame implements Clickabl
 						"ControlMouseOverHighlightGen", textureString);
 				GlueButtonFrame.this.highlightOnMouseOver = true;
 				return null;
+			}
+		});
+		table.set("GetButtonState", new ZeroArgFunction() {
+			@Override
+			public LuaValue call() {
+				String state;
+				if (GlueButtonFrame.this.activeChild == GlueButtonFrame.this.controlDisabledBackdrop) {
+					state = "DISABLED";
+				}
+				else if (GlueButtonFrame.this.activeChild == GlueButtonFrame.this.controlPushedBackdrop) {
+					state = "PUSHED";
+				}
+				else {
+					state = "NORMAL";
+				}
+				return LuaValue.valueOf(state);
+			}
+		});
+		table.set("SetButtonState", new TwoArgFunction() {
+			@Override
+			public LuaValue call(final LuaValue thisTable, final LuaValue state) {
+				final String jstring = state.checkjstring();
+				if ("PUSHED".equals(jstring)) {
+					if (GlueButtonFrame.this.enabled) {
+						GlueButtonFrame.this.activeChild = GlueButtonFrame.this.controlPushedBackdrop;
+					}
+				}
+				else if ("NORMAL".equals(jstring)) {
+					if (GlueButtonFrame.this.enabled) {
+						GlueButtonFrame.this.activeChild = GlueButtonFrame.this.controlBackdrop;
+					}
+				}
+				return LuaValue.NIL;
 			}
 		});
 		table.set("Enable", new ZeroArgFunction() {

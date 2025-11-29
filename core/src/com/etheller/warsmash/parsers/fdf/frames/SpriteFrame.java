@@ -2,12 +2,18 @@ package com.etheller.warsmash.parsers.fdf.frames;
 
 import java.util.EnumSet;
 
+import org.luaj.vm2.LuaTable;
+import org.luaj.vm2.LuaValue;
+import org.luaj.vm2.lib.TwoArgFunction;
+
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.etheller.warsmash.parsers.fdf.GameUI;
+import com.etheller.warsmash.parsers.fdf.LuaEnvironment;
+import com.etheller.warsmash.parsers.fdf.UIFrameLuaWrapper;
 import com.etheller.warsmash.parsers.fdf.datamodel.FramePoint;
 import com.etheller.warsmash.viewer5.Scene;
 import com.etheller.warsmash.viewer5.handlers.mdx.MdxComplexInstance;
@@ -151,10 +157,23 @@ public class SpriteFrame extends AbstractUIFrame {
 		}
 	}
 
-	public void setModelScale(float scale) {
+	public void setModelScale(final float scale) {
 		if (this.instance != null) {
 			this.instance.setUniformScale(scale);
 		}
+	}
+
+	@Override
+	public void setupTable(final LuaTable table, final LuaEnvironment luaEnvironment,
+			final UIFrameLuaWrapper luaWrapper) {
+		super.setupTable(table, luaEnvironment, luaWrapper);
+		table.set("SetScale", new TwoArgFunction() {
+			@Override
+			public LuaValue call(final LuaValue thistable, final LuaValue scaleValue) {
+				setModelScale(scaleValue.tofloat());
+				return LuaValue.NIL;
+			}
+		});
 	}
 
 }

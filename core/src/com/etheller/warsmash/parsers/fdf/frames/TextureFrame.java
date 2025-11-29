@@ -15,13 +15,14 @@ import com.etheller.warsmash.parsers.fdf.GameUI;
 import com.etheller.warsmash.parsers.fdf.LuaEnvironment;
 import com.etheller.warsmash.parsers.fdf.UIFrameLuaWrapper;
 import com.etheller.warsmash.parsers.fdf.datamodel.Vector4Definition;
+import com.etheller.warsmash.parsers.fdf.lua.FiveArgFunction;
 import com.etheller.warsmash.parsers.fdf.lua.FourArgFunction;
 
 public class TextureFrame extends AbstractRenderableFrame {
 	public static final Vector4Definition DEFAULT_TEX_COORDS = new Vector4Definition(0, 1, 0, 1);
 	private TextureRegion texture;
 	private final boolean decorateFileNames;
-	private final Vector4Definition texCoord;
+	private Vector4Definition texCoord;
 	private Color color;
 
 	public TextureFrame(final String name, final UIFrame parent, final boolean decorateFileNames,
@@ -79,7 +80,12 @@ public class TextureFrame extends AbstractRenderableFrame {
 	}
 
 	public void setTexCoord(final float x, final float y, final float z, final float w) {
-		this.texCoord.set(x, y, z, w);
+		if (this.texCoord == null) {
+			this.texCoord = new Vector4Definition(x, y, z, w);
+		}
+		else {
+			this.texCoord.set(x, y, z, w);
+		}
 		if (this.texture != null) {
 			this.texture.setRegion(this.texCoord.getX(), this.texCoord.getZ(), this.texCoord.getY(),
 					this.texCoord.getW());
@@ -128,5 +134,30 @@ public class TextureFrame extends AbstractRenderableFrame {
 				return LuaValue.NIL;
 			}
 		});
+		table.set("SetTexCoord", new FiveArgFunction() {
+			@Override
+			public LuaValue call(final LuaValue thistable, final LuaValue minx, final LuaValue miny,
+					final LuaValue maxx, final LuaValue maxy) {
+				setTexCoord(minx.tofloat(), miny.tofloat(), maxx.tofloat(), maxy.tofloat());
+				return LuaValue.NIL;
+			}
+		});
+		table.set("SetAlpha", new TwoArgFunction() {
+			@Override
+			public LuaValue call(final LuaValue thistable, final LuaValue alpha) {
+				if (TextureFrame.this.color != null) {
+					setColor(TextureFrame.this.color.r, TextureFrame.this.color.g, TextureFrame.this.color.b,
+							alpha.tofloat());
+				}
+				else {
+					setColor(1.0f, 1.0f, 1.0f, alpha.tofloat());
+				}
+				return LuaValue.NIL;
+			}
+		});
+	}
+
+	public Color getColor() {
+		return this.color;
 	}
 }

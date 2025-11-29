@@ -2713,14 +2713,14 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 			return (this.faceLockTime != 0) && (this.portraitCurrentDuration > this.faceLockTime);
 		}
 
-		public void talk(final UnitSound us, float extraDuration) {
+		public void talk(final UnitSound us, final float extraDuration) {
 			if ((this.faceLockTime > 0) && (this.portraitCurrentDuration <= this.faceLockTime)) {
 				return;
 			}
 			innerTalk(us, extraDuration);
 		}
 
-		private void innerTalk(final UnitSound us, float extraDuration) {
+		private void innerTalk(final UnitSound us, final float extraDuration) {
 			// TODO we somehow called talk from null by clicking a unit right at the same
 			// time it died, so I do a null check here until I study that case further.
 			if (this.modelInstance != null) {
@@ -2836,8 +2836,9 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 			}
 		}
 
-		public void setCinematicTalkingHead(MdxModel portraitModel, int teamColorIndex,
-				EnumSet<SecondaryTag> secondaryTags, float faceLockTime, final UnitSound us, float extraDuration) {
+		public void setCinematicTalkingHead(final MdxModel portraitModel, final int teamColorIndex,
+				final EnumSet<SecondaryTag> secondaryTags, final float faceLockTime, final UnitSound us,
+				final float extraDuration) {
 			this.faceLockTime = (long) (1000 * faceLockTime);
 			if (this.modelInstance != null) {
 				this.portraitScene.removeInstance(this.modelInstance);
@@ -2868,7 +2869,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 		private final SpriteFrame2 cinematicPortrait;
 		private final UIFrame cinematicScenePanel;
 
-		public CinematicPortrait(SpriteFrame2 cinematicPortrait, UIFrame cinematicScenePanel) {
+		public CinematicPortrait(final SpriteFrame2 cinematicPortrait, final UIFrame cinematicScenePanel) {
 			this.cinematicPortrait = cinematicPortrait;
 			this.cinematicScenePanel = cinematicScenePanel;
 			this.secondaryTags = SequenceUtils.EMPTY;
@@ -2910,7 +2911,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 			return this.portraitCurrentDuration > this.portraitShowDuration;
 		}
 
-		public void talk(final UnitSound us, float extraDuration) {
+		public void talk(final UnitSound us, final float extraDuration) {
 			// TODO we somehow called talk from null by clicking a unit right at the same
 			// time it died, so I do a null check here until I study that case further.
 			this.recycleSet.clear();
@@ -2930,8 +2931,8 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 			}
 		}
 
-		public void setCinematicTalkingHead(MdxModel portraitModel, int teamColorIndex,
-				EnumSet<SecondaryTag> secondaryTags, float faceLockTime) {
+		public void setCinematicTalkingHead(final MdxModel portraitModel, final int teamColorIndex,
+				final EnumSet<SecondaryTag> secondaryTags, final float faceLockTime) {
 			this.cinematicScenePanel.setVisible(true);
 			this.portraitShowDuration = (long) (1000 * faceLockTime);
 			this.secondaryTags = secondaryTags;
@@ -4463,7 +4464,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 		selectUnits(units);
 	}
 
-	private void selectItem(RenderItem selectedItem) {
+	private void selectItem(final RenderItem selectedItem) {
 		selectUnit(null);
 		this.portrait.setSelectedItem(selectedItem);
 		this.simpleInfoPanelItemDetail.setVisible(true);
@@ -4473,7 +4474,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 		this.rootFrame.setText(this.simpleItemDescriptionValue, itemUI.getDescription());
 	}
 
-	private void selectDestructable(RenderDestructable selectedItem) {
+	private void selectDestructable(final RenderDestructable selectedItem) {
 		selectUnit(null);
 		this.portrait.setSelectedDestructable(selectedItem);
 		this.simpleInfoPanelDestructableDetail.setVisible(true);
@@ -5097,12 +5098,12 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 	}
 
 	@Override
-	public Music playMusic(final String musicField, final boolean random, int index) {
+	public Music playMusic(final String musicField, final boolean random, final int index) {
 		return playMusicEx(musicField, random, index, 0, -1);
 	}
 
 	@Override
-	public Music setMapMusic(String musicField, boolean random, int index) {
+	public Music setMapMusic(final String musicField, final boolean random, final int index) {
 		return this.musicPlayer.setDefaultMusic(musicField, random, index);
 	}
 
@@ -5112,12 +5113,13 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 	}
 
 	@Override
-	public Music playMusicEx(String musicField, boolean random, int index, int fromMSecs, int fadeInMSecs) {
+	public Music playMusicEx(final String musicField, final boolean random, final int index, final int fromMSecs,
+			final int fadeInMSecs) {
 		return this.musicPlayer.playMusicEx(musicField, random, index, fromMSecs, fadeInMSecs);
 	}
 
 	@Override
-	public void stopMusic(boolean fadeOut) {
+	public void stopMusic(final boolean fadeOut) {
 		this.musicPlayer.stopMusic();
 	}
 
@@ -5127,12 +5129,12 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 	}
 
 	@Override
-	public void setMusicVolume(int volume) {
+	public void setMusicVolume(final int volume) {
 		this.musicPlayer.setVolume(volume);
 	}
 
 	@Override
-	public void setMusicPlayPosition(int millisecs) {
+	public void setMusicPlayPosition(final int millisecs) {
 		this.musicPlayer.setMusicPosition(millisecs);
 	}
 
@@ -5286,6 +5288,8 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 		this.timeIndicator.setVisible(false);
 		this.cursorFrame.setVisible(false);
 		this.showing = false;
+		this.war3MapViewer.deselect();
+		this.war3MapViewer.clearUnitMouseOverHighlight();
 	}
 
 	@Override
@@ -5293,14 +5297,15 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 		this.timeIndicator.setVisible(true);
 		this.cursorFrame.setVisible(true);
 		this.showing = true;
+		this.war3MapViewer.doSelectUnit(new ArrayList<>(this.selectedUnits));
 	}
 
 	@Override
-	public void showInterface(boolean show, float fadeDuration) {
+	public void showInterface(final boolean show, final float fadeDuration) {
 		updateInterfaceVisibility(show);
 	}
 
-	private void updateInterfaceVisibility(boolean show) {
+	private void updateInterfaceVisibility(final boolean show) {
 		this.consoleUI.setVisible(show);
 		this.resourceBar.setVisible(show);
 		this.timeIndicator.setVisible(show);
@@ -5317,8 +5322,8 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 	}
 
 	@Override
-	public void setCinematicScene(int portraitUnitId, CPlayerColor color, String speakerTitle, String text,
-			float sceneDuration, float voiceoverDuration) {
+	public void setCinematicScene(final int portraitUnitId, final CPlayerColor color, final String speakerTitle,
+			final String text, final float sceneDuration, final float voiceoverDuration) {
 		final RenderUnitType unitTypeData = this.war3MapViewer.getUnitTypeData(new War3ID(portraitUnitId));
 		if (this.cinematicPanel.isVisible()) {
 			this.rootFrame.setText(this.cinematicSpeakerText, speakerTitle);
@@ -5346,12 +5351,12 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 	}
 
 	@Override
-	public void forceCinematicSubtitles(boolean value) {
+	public void forceCinematicSubtitles(final boolean value) {
 		this.subtitleDisplayOverride = value;
 	}
 
 	@Override
-	public void enableUserControl(boolean value) {
+	public void enableUserControl(final boolean value) {
 		this.userControlEnabled = value;
 		this.cursorFrame.setVisible(value);
 		if (!value) {

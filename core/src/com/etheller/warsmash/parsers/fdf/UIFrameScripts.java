@@ -87,6 +87,10 @@ public class UIFrameScripts {
 			this.OnHyperlinkLeave = loadSingle(this.luaEnvironment, this.frameDef, "OnHyperlinkLeave");
 		}
 
+		if (this.thisFrame.getFrame().getName().equals("SpellButton1")) {
+			System.out.println("SB1");
+		}
+
 		if (this.OnLoad != null) {
 			this.luaEnvironment.load(this.thisFrame);
 			try {
@@ -105,11 +109,50 @@ public class UIFrameScripts {
 		return this.frameDef == null;
 	}
 
-	public void onClick() {
+	public void onClick(final ThirdPersonLuaXmlButton button) {
 		if (this.OnClick != null) {
 			this.luaEnvironment.load(this.thisFrame);
 			try {
+				this.luaEnvironment.getGlobals().set("arg1", button.name());
 				this.OnClick.call();
+			}
+			catch (final Exception exc) {
+				exc.printStackTrace();
+			}
+		}
+	}
+
+	public void onShow() {
+		if (this.OnShow != null) {
+			this.luaEnvironment.load(this.thisFrame);
+			try {
+				this.OnShow.call();
+			}
+			catch (final Exception exc) {
+				exc.printStackTrace();
+			}
+		}
+	}
+
+	public void onHide() {
+
+		if (this.OnHide != null) {
+			this.luaEnvironment.load(this.thisFrame);
+			try {
+				this.OnHide.call();
+			}
+			catch (final Exception exc) {
+				exc.printStackTrace();
+			}
+		}
+	}
+
+	public void onSizeChanged() {
+
+		if (this.OnSizeChanged != null) {
+			this.luaEnvironment.load(this.thisFrame);
+			try {
+				this.OnSizeChanged.call();
 			}
 			catch (final Exception exc) {
 				exc.printStackTrace();
@@ -121,8 +164,22 @@ public class UIFrameScripts {
 		if (this.OnClick != null) {
 			this.luaEnvironment.load(this.thisFrame);
 			try {
-				this.OnClick.checkglobals().set("event", event.name());
+				this.luaEnvironment.getGlobals().set("event", event.name());
+				this.luaEnvironment.getGlobals().set("arg1", event.name());
 				this.OnClick.call();
+			}
+			catch (final Exception exc) {
+				exc.printStackTrace();
+			}
+		}
+	}
+
+	public void onUpdate(final double elapsedMillis) {
+		if (this.OnUpdate != null) {
+			this.luaEnvironment.load(this.thisFrame);
+			try {
+				this.luaEnvironment.getGlobals().set("arg1", LuaValue.valueOf(elapsedMillis));
+				this.OnUpdate.call();
 			}
 			catch (final Exception exc) {
 				exc.printStackTrace();

@@ -8,6 +8,7 @@ import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.lib.TwoArgFunction;
 import org.luaj.vm2.lib.ZeroArgFunction;
 
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
@@ -279,9 +280,6 @@ public abstract class AbstractRenderableFrame implements UIFrame {
 
 	@Override
 	public void positionBounds(final GameUI gameUI, final Viewport viewport) {
-		if ("SpellbookMicroButton".equals(this.name)) {
-			System.out.println(1);
-		}
 		if (this.parent == null) {
 			// TODO this is a bit of a hack, remove later
 			return;
@@ -344,6 +342,10 @@ public abstract class AbstractRenderableFrame implements UIFrame {
 			System.out.println(getClass().getSimpleName() + ":" + this.name + ":" + hashCode()
 					+ " finishing position bounds: " + this.renderBounds);
 		}
+		final UIFrameScripts scripts = getScripts();
+		if ((scripts != null) && (scripts.OnSizeChanged != null)) {
+			scripts.onSizeChanged();
+		}
 		innerPositionBounds(gameUI, viewport);
 	}
 
@@ -360,10 +362,23 @@ public abstract class AbstractRenderableFrame implements UIFrame {
 
 	@Override
 	public void setVisible(final boolean visible) {
+		final boolean wasVisible = this.visible;
 		this.visible = visible;
 
 		if (visible) {
 			checkLoad();
+			if (!wasVisible) {
+				final UIFrameScripts scripts2 = getScripts();
+				if (scripts2 != null) {
+					scripts2.onShow();
+				}
+			}
+		}
+		else if (wasVisible) {
+			final UIFrameScripts scripts2 = getScripts();
+			if (scripts2 != null) {
+				scripts2.onHide();
+			}
 		}
 	}
 
@@ -382,6 +397,11 @@ public abstract class AbstractRenderableFrame implements UIFrame {
 	public final void render(final SpriteBatch batch, final BitmapFont font20, final GlyphLayout glyphLayout) {
 		if (this.visible) {
 			internalRender(batch, font20, glyphLayout);
+
+			final UIFrameScripts scripts = getScripts();
+			if ((scripts != null) && (scripts.OnUpdate != null)) {
+				scripts.onUpdate(Gdx.graphics.getDeltaTime() * 1000.0);
+			}
 		}
 	}
 
@@ -586,6 +606,14 @@ public abstract class AbstractRenderableFrame implements UIFrame {
 			@Override
 			public LuaValue call(final LuaValue thistable, final LuaValue arg) {
 				setID(arg.checkint());
+				return LuaValue.NIL;
+			}
+		});
+		table.set("ClearAllPoints", new ZeroArgFunction() {
+			@Override
+			public LuaValue call() {
+				clearFramePointAssignments();
+				positionBounds(luaEnvironment.getRootFrame(), luaEnvironment.getUiViewport());
 				return LuaValue.NIL;
 			}
 		});

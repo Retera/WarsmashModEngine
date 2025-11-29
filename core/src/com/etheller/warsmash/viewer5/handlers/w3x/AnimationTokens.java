@@ -5,11 +5,28 @@ import com.etheller.interpreter.ast.util.CHandle;
 public class AnimationTokens {
 	public static enum PrimaryTag implements CHandle {
 		ATTACK,
+		ATTACKUNARMED,
 		BIRTH,
 //		CINEMATIC,
-		DEATH, DECAY, DISSIPATE, MORPH, PORTRAIT, SLEEP,
+		DEATH,
+		DECAY,
+		DISSIPATE,
+		MORPH,
+		PORTRAIT,
+		SLEEP,
 //		SPELL,
-		STAND, WALK, JUMPSTART, JUMPEND, JUMP, FALL, RUN, WALKBACKWARDS, SHUFFLERIGHT, SHUFFLELEFT;
+		SPELLCASTDIRECTED,
+		SPELLCASTOMNI,
+		STAND,
+		WALK,
+		JUMPSTART,
+		JUMPEND,
+		JUMP,
+		FALL,
+		RUN,
+		WALKBACKWARDS,
+		SHUFFLERIGHT,
+		SHUFFLELEFT;
 
 		@Override
 		public int getHandleId() {

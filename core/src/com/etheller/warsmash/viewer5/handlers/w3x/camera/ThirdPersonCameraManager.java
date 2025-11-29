@@ -83,4 +83,8 @@ public final class ThirdPersonCameraManager extends CameraManager {
 		this.touchDown = touchDown;
 	}
 
+	public boolean isTouchDown() {
+		return this.touchDown;
+	}
+
 }

@@ -2,6 +2,7 @@ package com.etheller.warsmash.viewer5.handlers.w3x.ui.thirdperson;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import com.badlogic.gdx.Gdx;
@@ -29,10 +30,15 @@ import com.etheller.warsmash.viewer5.Scene;
 import com.etheller.warsmash.viewer5.handlers.w3x.War3MapViewer;
 import com.etheller.warsmash.viewer5.handlers.w3x.camera.ThirdPersonCameraManager;
 import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.RenderUnit;
+import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.RenderWidget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidgetFilterFunction;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTargetVisitor;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.thirdperson.CAbilityPlayerPawn;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.thirdperson.CBehaviorPlayerPawn;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.OrderIds;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CAllianceType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayer;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayerUnitOrderListener;
 import com.etheller.warsmash.viewer5.handlers.w3x.ui.WarsmashToggleableUI;
@@ -74,6 +80,12 @@ public class ThirdPersonUI implements WarsmashToggleableUI {
 	private CAbilityPlayerPawn abilityPlayerPawn;
 	private final CPlayerUnitOrderListener uiOrderListener;
 	private final War3ID pawnId;
+	private RenderWidget mouseOverUnit;
+	private RenderWidget targetUnit;
+	private final boolean userControlEnabled = true;
+	private final AnyClickableUnitFilter anyClickableUnitFilter;
+	private final AnyTargetableUnitFilter anyTargetableUnitFilter;
+	private KeyedSounds uiSounds;
 
 	public ThirdPersonUI(final War3MapViewer war3MapViewer, final Scene uiScene, final Viewport uiViewport,
 			final Scene portraitScene, final CPlayerUnitOrderListener uiOrderListener, final War3ID pawnId) {
@@ -83,6 +95,8 @@ public class ThirdPersonUI implements WarsmashToggleableUI {
 		this.portraitScene = portraitScene;
 		this.uiOrderListener = uiOrderListener;
 		this.pawnId = pawnId;
+		this.anyClickableUnitFilter = new AnyClickableUnitFilter();
+		this.anyTargetableUnitFilter = new AnyTargetableUnitFilter();
 
 //		final MdxModel skyModel = war3MapViewer
 //				.loadModelMdx("environment\\sky\\lordaeronsummersky\\lordaeronsummersky.mdx");
@@ -176,12 +190,14 @@ public class ThirdPersonUI implements WarsmashToggleableUI {
 			e1.printStackTrace();
 		}
 
+		this.uiSounds = new KeyedSounds(uiSoundsTable, this.war3MapViewer.mapMpq);
 		this.rootFrame = new GameUI(this.war3MapViewer.mapMpq, GameUI.loadSkin(this.war3MapViewer.mapMpq, 0),
 				this.uiViewport, this.uiScene, this.war3MapViewer, 0, this.war3MapViewer.getAllObjectData().getWts(),
-				new KeyedSounds(uiSoundsTable, this.war3MapViewer.mapMpq));
+				this.uiSounds);
 
 		try {
-			this.rootFrame.bindPawnUnit(this.pawnUnit, this.abilityPlayerPawn, this.war3MapViewer.getAbilityDataUI());
+			this.rootFrame.bindPawnUnit(this.pawnUnit, this.abilityPlayerPawn, this.war3MapViewer.getAbilityDataUI(),
+					this.uiOrderListener);
 			this.rootFrame.loadTOCFile("Interface\\FrameXML\\FrameXML.toc");
 		}
 		catch (final IOException e) {
@@ -322,7 +338,9 @@ public class ThirdPersonUI implements WarsmashToggleableUI {
 		final UIFrame clickedUIFrame = this.rootFrame.touchDown(screenCoordsVector.x, screenCoordsVector.y, button);
 		if (clickedUIFrame == null) {
 			this.touchDown = true;
-			this.cameraManager.setTouchDown(true);
+			if (this.mouseOverUnit == null) {
+				this.cameraManager.setTouchDown(true);
+			}
 		}
 		else {
 			if (clickedUIFrame instanceof ClickableFrame) {
@@ -331,6 +349,24 @@ public class ThirdPersonUI implements WarsmashToggleableUI {
 			}
 		}
 		return false;
+	}
+
+	private void updateMouseOverUnit(final int screenX, final float worldScreenY) {
+		final RenderWidget newMouseOverUnit;
+		if (this.userControlEnabled) {
+			newMouseOverUnit = this.war3MapViewer.rayPickUnit(screenX, worldScreenY, this.anyClickableUnitFilter);
+		}
+		else {
+			newMouseOverUnit = null;
+		}
+		if (newMouseOverUnit != this.mouseOverUnit) {
+			this.war3MapViewer.clearUnitMouseOverHighlight();
+			if (newMouseOverUnit != null) {
+				this.war3MapViewer.showUnitMouseOverHighlightThirdPerson(newMouseOverUnit);
+			}
+			this.mouseOverUnit = newMouseOverUnit;
+			this.rootFrame.getLuaGlobals().notifyUpdateMouseOver(this.mouseOverUnit);
+		}
 	}
 
 	@Override
@@ -350,7 +386,43 @@ public class ThirdPersonUI implements WarsmashToggleableUI {
 		}
 		else {
 			this.touchDown = false;
-			this.cameraManager.setTouchDown(false);
+			if (button == Input.Buttons.LEFT) {
+				updateMouseOverUnit(screenX, worldScreenY);
+			}
+			if (this.cameraManager.isTouchDown()) {
+				this.cameraManager.setTouchDown(false);
+			}
+			else {
+				if ((this.mouseOverUnit != null) && isUnitSelectable(this.mouseOverUnit)) {
+					this.war3MapViewer.doSelectUnitThirdPerson(Arrays.asList(this.mouseOverUnit));
+					final CUnit mousedUnit = this.mouseOverUnit.getSimulationWidget().visit(AbilityTargetVisitor.UNIT);
+					if (mousedUnit != null) {
+						final CPlayer localPlayer = this.war3MapViewer.simulation
+								.getPlayer(this.war3MapViewer.getLocalPlayerIndex());
+						final CPlayer mousedUnitPlayer = this.war3MapViewer.simulation
+								.getPlayer(mousedUnit.getPlayerIndex());
+						String soundKey = "GAMETARGETNEUTRALUNIT";
+						if (localPlayer.hasAlliance(mousedUnit.getPlayerIndex(), CAllianceType.PASSIVE)) {
+							if (mousedUnitPlayer.hasAlliance(this.war3MapViewer.getLocalPlayerIndex(),
+									CAllianceType.HELP_REQUEST)) {
+								soundKey = "GAMETARGETFRIENDLYUNIT";
+							}
+						}
+						else {
+							soundKey = "GAMETARGETHOSTILEUNIT";
+						}
+//						this.uiSounds.getSound(soundKey).play(this.uiScene.audioContext, 0, 0, 0);
+					}
+					setTarget(this.mouseOverUnit);
+				}
+			}
+			if ((this.mouseOverUnit == null) && (this.touchDownX == screenX) && (this.touchDownY == screenY)) {
+				if (this.targetUnit != null) {
+//					this.uiSounds.getSound("INTERFACESOUND_LOSTTARGETUNIT").play(this.uiScene.audioContext, 0, 0, 0);
+					this.war3MapViewer.deselect();
+					setTarget(null);
+				}
+			}
 			Gdx.input.setCursorPosition(this.touchDownX, this.touchDownY);
 		}
 		this.mouseDownUIFrame = null;
@@ -415,6 +487,7 @@ public class ThirdPersonUI implements WarsmashToggleableUI {
 		}
 		if (mousedUIFrame == null) {
 		}
+		updateMouseOverUnit(screenX, worldScreenY);
 		return false;
 	}
 
@@ -433,6 +506,12 @@ public class ThirdPersonUI implements WarsmashToggleableUI {
 		}
 	}
 
+	public void setTarget(final RenderWidget target) {
+		this.targetUnit = target;
+		this.rootFrame.getLuaGlobals().notifySetTarget(this.targetUnit);
+
+	}
+
 	@Override
 	public boolean scrolled(final float amountX, final float amountY) {
 		this.cameraManager.distance += amountY * 10;
@@ -446,9 +525,10 @@ public class ThirdPersonUI implements WarsmashToggleableUI {
 
 	@Override
 	public void onHide() {
-//		this.war3MapViewer.simulation.setFogEnabled(true);
-//		this.war3MapViewer.simulation.setFogMaskEnabled(true);
+		this.war3MapViewer.simulation.setFogEnabled(true);
+		this.war3MapViewer.simulation.setFogMaskEnabled(true);
 		this.war3MapViewer.removeScene(this.uiScene);
+		this.war3MapViewer.removeScene(this.portraitScene);
 		this.war3MapViewer.addScene(this.portraitScene);
 		this.war3MapViewer.addScene(this.uiScene);
 		this.showing = false;
@@ -462,10 +542,31 @@ public class ThirdPersonUI implements WarsmashToggleableUI {
 		this.war3MapViewer.simulation.setFogEnabled(false);
 		this.war3MapViewer.simulation.setFogMaskEnabled(false);
 		this.war3MapViewer.removeScene(this.portraitScene);
-//		this.war3MapViewer.removeScene(this.uiScene);
+//		this.war3MapViewer.addScene(this.portraitScene);
+//		this.war3MapViewer.addScene(this.uiScene);
 		this.showing = true;
 		this.cursorFrame.setVisible(true);
 //		this.skyModelInstance.show();
 	}
 
+	private final class AnyClickableUnitFilter implements CWidgetFilterFunction {
+		@Override
+		public boolean call(final CWidget unit) {
+			final RenderWidget renderPeer = ThirdPersonUI.this.war3MapViewer.getRenderPeer(unit);
+			return !unit.isDead() && renderPeer.isSelectable(ThirdPersonUI.this.war3MapViewer.simulation,
+					ThirdPersonUI.this.war3MapViewer.getLocalPlayerIndex());
+		}
+	}
+
+	private final class AnyTargetableUnitFilter implements CWidgetFilterFunction {
+		@Override
+		public boolean call(final CWidget unit) {
+			return !unit.isDead();
+		}
+	}
+
+	private boolean isUnitSelectable(final RenderWidget mouseOverUnit) {
+		return mouseOverUnit.isSelectable(this.war3MapViewer.simulation, this.war3MapViewer.getLocalPlayerIndex())
+				&& !mouseOverUnit.getSimulationWidget().isDead();
+	}
 }

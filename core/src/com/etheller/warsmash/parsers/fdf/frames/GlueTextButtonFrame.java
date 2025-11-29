@@ -109,6 +109,16 @@ public class GlueTextButtonFrame extends GlueButtonFrame {
 				return null;
 			}
 		});
+		table.set("GetTextWidth", new ZeroArgFunction() {
+			@Override
+			public LuaValue call() {
+				if (GlueTextButtonFrame.this.buttonText instanceof StringFrame) {
+					return LuaValue
+							.valueOf(((StringFrame) GlueTextButtonFrame.this.buttonText).getPredictedViewportWidth());
+				}
+				return LuaValue.ZERO;
+			}
+		});
 		table.set("LockHighlight", new ZeroArgFunction() {
 			@Override
 			public LuaValue call() {

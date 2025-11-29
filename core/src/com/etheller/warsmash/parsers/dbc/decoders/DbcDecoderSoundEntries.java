@@ -72,6 +72,7 @@ public class DbcDecoderSoundEntries implements DbcDecoder {
 			final Element element = new Element(soundName, output);
 			element.setField("SoundType", Integer.toString(this.soundType));
 			element.setField("SoundName", soundName);
+			System.err.println("SOUNDNAME: " + soundName);
 			final StringBuilder stringBuilder = new StringBuilder();
 			for (int i = 0; i < this.fileRef.length; i++) {
 				final int fileRefAtIndex = this.fileRef[i];

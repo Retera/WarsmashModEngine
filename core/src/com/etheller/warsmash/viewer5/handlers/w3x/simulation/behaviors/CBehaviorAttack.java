@@ -8,6 +8,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityPointTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTargetStillAliveAndTargetableVisitor;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.thirdperson.CAbilityPlayerPawn;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CWeaponType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.CUnitAttack;
 
@@ -15,6 +16,7 @@ public class CBehaviorAttack extends CAbstractRangedBehavior {
 
 	private int highlightOrderId;
 	private final AbilityTargetStillAliveAndTargetableVisitor abilityTargetStillAliveVisitor;
+	private PrimaryTag primaryTag;
 
 	public CBehaviorAttack(final CUnit unit) {
 		super(unit);
@@ -37,6 +39,12 @@ public class CBehaviorAttack extends CAbstractRangedBehavior {
 		this.backSwingTime = 0;
 		this.thisOrderCooldownEndTime = 0;
 		setDisableMove(disableMove);
+		if (this.unit.getFirstAbilityOfType(CAbilityPlayerPawn.class) != null) {
+			this.primaryTag = PrimaryTag.ATTACKUNARMED;
+		}
+		else {
+			this.primaryTag = PrimaryTag.ATTACK;
+		}
 		return super.innerReset(game, target);
 	}
 
@@ -105,7 +113,7 @@ public class CBehaviorAttack extends CAbstractRangedBehavior {
 				this.thisOrderCooldownEndTime = currentTurnTick + a1CooldownSteps;
 				this.damagePointLaunchTime = currentTurnTick + a1DamagePointSteps;
 				this.backSwingTime = currentTurnTick + a1DamagePointSteps + a1BackswingSteps;
-				this.unit.getUnitAnimationListener().playAnimationWithDuration(true, PrimaryTag.ATTACK,
+				this.unit.getUnitAnimationListener().playAnimationWithDuration(true, this.primaryTag,
 						SequenceUtils.EMPTY, animationBackswingPoint + animationDamagePoint, true);
 				this.unit.getUnitAnimationListener().queueAnimation(PrimaryTag.STAND, SequenceUtils.READY, false);
 			}

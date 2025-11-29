@@ -21,6 +21,7 @@ import com.etheller.warsmash.parsers.fdf.UIFrameLuaWrapper;
 import com.etheller.warsmash.parsers.fdf.datamodel.AnchorDefinition;
 import com.etheller.warsmash.parsers.fdf.datamodel.FramePoint;
 import com.etheller.warsmash.parsers.fdf.datamodel.TextJustify;
+import com.etheller.warsmash.parsers.fdf.lua.FourArgFunction;
 
 public class StringFrame extends AbstractRenderableFrame {
 	private final List<SingleStringFrame> internalFrames = new ArrayList<>();
@@ -599,6 +600,9 @@ public class StringFrame extends AbstractRenderableFrame {
 				final String text = arg.checkjstring();
 				luaEnvironment.getRootFrame().setText(StringFrame.this, text);
 				System.err.println("setText: '" + text + "'");
+				if ("Peasant".equals(text)) {
+					System.err.println("ssfasdfq");
+				}
 				return LuaValue.NIL;
 			}
 		});
@@ -606,6 +610,15 @@ public class StringFrame extends AbstractRenderableFrame {
 			@Override
 			public LuaValue call() {
 				return LuaValue.valueOf(StringFrame.this.getText());
+			}
+		});
+		table.set("SetTextColor", new FourArgFunction() {
+			@Override
+			public LuaValue call(final LuaValue thistable, final LuaValue arg, final LuaValue arg2,
+					final LuaValue arg3) {
+				setColor(new Color(arg.tofloat(), arg2.tofloat(), arg3.tofloat(),
+						StringFrame.this.color == null ? 1.0f : StringFrame.this.color.a));
+				return LuaValue.NIL;
 			}
 		});
 	}

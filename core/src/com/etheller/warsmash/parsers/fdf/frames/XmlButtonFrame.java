@@ -3,12 +3,14 @@ package com.etheller.warsmash.parsers.fdf.frames;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.ListIterator;
+import java.util.function.Consumer;
 
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.etheller.warsmash.parsers.fdf.GameUI;
+import com.etheller.warsmash.parsers.fdf.ThirdPersonLuaXmlButton;
 import com.etheller.warsmash.parsers.fdf.UIFrameScripts;
 
 public class XmlButtonFrame extends GlueTextButtonFrame {
@@ -16,12 +18,12 @@ public class XmlButtonFrame extends GlueTextButtonFrame {
 
 	public XmlButtonFrame(final String name, final UIFrame parent) {
 		super(name, parent);
-		setOnClick(new Runnable() {
+		setOnClick(new Consumer<ThirdPersonLuaXmlButton>() {
 			@Override
-			public void run() {
+			public void accept(final ThirdPersonLuaXmlButton button) {
 				final UIFrameScripts scripts = getScripts();
 				if (scripts != null) {
-					scripts.onClick();
+					scripts.onClick(button);
 				}
 			}
 		});

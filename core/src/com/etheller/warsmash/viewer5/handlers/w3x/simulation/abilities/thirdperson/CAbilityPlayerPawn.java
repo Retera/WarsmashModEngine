@@ -17,6 +17,8 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityActivat
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetCheckReceiver;
 
 public class CAbilityPlayerPawn extends AbstractGenericNoIconAbility implements CAbilitySpell {
+	public static final War3ID CODE = War3ID.fromString("Apwn");
+
 	private static final int RENDER_MOVE_SPEED = (int) (18 * (1 / WarsmashConstants.SIMULATION_STEP_TIME));
 	private float z;
 	private CBehaviorPlayerPawn behaviorPlayerPawn;

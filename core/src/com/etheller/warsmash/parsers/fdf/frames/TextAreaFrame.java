@@ -3,12 +3,19 @@ package com.etheller.warsmash.parsers.fdf.frames;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.luaj.vm2.LuaTable;
+import org.luaj.vm2.LuaValue;
+import org.luaj.vm2.lib.OneArgFunction;
+import org.luaj.vm2.lib.TwoArgFunction;
+
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.etheller.warsmash.parsers.fdf.GameUI;
+import com.etheller.warsmash.parsers.fdf.LuaEnvironment;
+import com.etheller.warsmash.parsers.fdf.UIFrameLuaWrapper;
 import com.etheller.warsmash.parsers.fdf.datamodel.FramePoint;
 import com.etheller.warsmash.parsers.fdf.datamodel.TextJustify;
 
@@ -238,5 +245,29 @@ public class TextAreaFrame extends ControlFrame implements ScrollBarFrame.Scroll
 	@Override
 	public void onChange(final GameUI gameUI, final Viewport uiViewport, final int newValue) {
 		updateUI(gameUI, uiViewport);
+	}
+
+	@Override
+	public void setupTable(final LuaTable table, final LuaEnvironment luaEnvironment,
+			final UIFrameLuaWrapper luaWrapper) {
+		super.setupTable(table, luaEnvironment, luaWrapper);
+		table.set("AtBottom", new OneArgFunction() {
+			@Override
+			public LuaValue call(final LuaValue thistable) {
+				if (TextAreaFrame.this.scrollBarFrame == null) {
+					return LuaValue.TRUE;
+				}
+				return LuaValue.valueOf(TextAreaFrame.this.scrollBarFrame
+						.getValue() >= TextAreaFrame.this.scrollBarFrame.getMaxValue());
+			}
+		});
+		table.set("AddMessage", new TwoArgFunction() {
+			@Override
+			public LuaValue call(final LuaValue thistable, final LuaValue message) {
+				final String checkjstring = message.checkjstring();
+				addItem(checkjstring, luaEnvironment.getRootFrame(), luaEnvironment.getUiViewport());
+				return LuaValue.NIL;
+			}
+		});
 	}
 }

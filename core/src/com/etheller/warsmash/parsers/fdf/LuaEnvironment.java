@@ -10,6 +10,7 @@ import org.luaj.vm2.Globals;
 import org.luaj.vm2.LoadState;
 import org.luaj.vm2.LuaBoolean;
 import org.luaj.vm2.LuaDouble;
+import org.luaj.vm2.LuaFunction;
 import org.luaj.vm2.LuaInteger;
 import org.luaj.vm2.LuaString;
 import org.luaj.vm2.LuaTable;
@@ -34,15 +35,28 @@ import com.etheller.warsmash.parsers.fdf.frames.TextureFrame;
 import com.etheller.warsmash.parsers.fdf.frames.UIFrame;
 import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.viewer5.Scene;
+import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.RenderWidget;
 import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.ability.AbilityDataUI;
 import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.ability.AbilityUI;
+import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.ability.IconUI;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnitStateListener;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbility;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.SingleOrderAbility;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.hero.CAbilityHero;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTargetVisitor;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.thirdperson.CAbilityPlayerPawn;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.OrderIds;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayerUnitOrderListener;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityActivationReceiver;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.ExternStringMsgAbilityActivationReceiver;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.ExternStringMsgTargetCheckReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.ui.sound.KeyedSounds;
 
 public class LuaEnvironment {
+	private final CSimulation game;
 	private final GameUI rootFrame;
 	private final Viewport uiViewport;
 	private final Globals globals;
@@ -52,15 +66,21 @@ public class LuaEnvironment {
 	private final CUnit pawnUnit;
 	private final CAbilityPlayerPawn abilityPlayerPawn;
 	private final AbilityDataUI abilityDataUI;
+	private final CPlayerUnitOrderListener uiOrderListener;
+	private RenderWidget targetUnit;
+	private RenderWidget mouseOverUnit;
 
-	public LuaEnvironment(final GameUI rootFrame, final Viewport uiViewport, final Scene uiScene,
-			final KeyedSounds uiSounds, final CUnit pawnUnit, final CAbilityPlayerPawn abilityPlayerPawn,
-			final AbilityDataUI abilityDataUI) {
+	public LuaEnvironment(final CSimulation game, final GameUI rootFrame, final Viewport uiViewport,
+			final Scene uiScene, final KeyedSounds uiSounds, final CUnit pawnUnit,
+			final CAbilityPlayerPawn abilityPlayerPawn, final AbilityDataUI abilityDataUI,
+			final CPlayerUnitOrderListener uiOrderListener) {
+		this.game = game;
 		this.rootFrame = rootFrame;
 		this.uiViewport = uiViewport;
 		this.pawnUnit = pawnUnit;
 		this.abilityPlayerPawn = abilityPlayerPawn;
 		this.abilityDataUI = abilityDataUI;
+		this.uiOrderListener = uiOrderListener;
 		this.globals = new Globals();
 		this.globals.load(new JseBaseLib());
 		this.globals.load(new Bit32Lib());
@@ -151,11 +171,15 @@ public class LuaEnvironment {
 			@Override
 			public LuaValue call(final LuaValue arg) {
 				final String checkjstring = arg.checkjstring();
-				final UIFrame frameByName = rootFrame.getFrameByName(checkjstring, 0);
-				if (frameByName == null) {
-					throw new NullPointerException("getglobal: " + checkjstring);
+				final LuaValue luaValue = getGlobals().get(checkjstring);
+				if ((luaValue == null) || (luaValue == LuaValue.NIL)) {
+					final UIFrame frameByName = rootFrame.getFrameByName(checkjstring, 0);
+					if (frameByName == null) {
+						throw new NullPointerException("getglobal: " + checkjstring);
+					}
+					return frameByName.getScripts().getLuaWrapper().getTable();
 				}
-				return frameByName.getScripts().getLuaWrapper().getTable();
+				return luaValue;
 			}
 		});
 		this.globals.set("PlaySound", new OneArgFunction() {
@@ -241,19 +265,15 @@ public class LuaEnvironment {
 						.listOf(new LuaValue[] { LuaValue.valueOf(0f), LuaValue.valueOf(0f), LuaValue.valueOf(false) });
 			}
 		});
-		this.globals.set("GetSpellName", new TwoArgFunction() {
+		this.globals.set("GetSpellName", new LuaFunction() {
 			@Override
-			public LuaValue call(final LuaValue id, final LuaValue bookType) {
-				final List<CAbility> abilities = pawnUnit.getAbilities();
-				final int idInt = id.checkint();
-				if ((idInt >= 0) && (idInt < abilities.size())) {
-					final War3ID alias = abilities.get(idInt).getAlias();
-					final AbilityUI abilityUI = abilityDataUI.getUI(alias);
-					final LuaTable tooltip = new LuaTable();
-					tooltip.set(1, LuaString.valueOf(abilityUI.getOnIconUI(0).getToolTip()));
-					tooltip.set(2, LuaString.valueOf(abilityUI.getOnIconUI(0).getUberTip()));
-					tooltip.set("n", 2);
-					return tooltip;
+			public Varargs invoke(final Varargs varargs) {
+				final CAbility ability = getAbility(varargs.arg(1).checkint(), varargs.arg(2).checkjstring());
+				if (ability != null) {
+					final IconUI iconUI = getIconUI(abilityDataUI, ability);
+					final String subNameText = "";// iconUI.getUberTip();
+					return LuaValue.varargsOf(
+							new LuaValue[] { LuaString.valueOf(iconUI.getToolTip()), LuaString.valueOf(subNameText) });
 				}
 				return LuaValue.NIL;
 			}
@@ -261,36 +281,105 @@ public class LuaEnvironment {
 		this.globals.set("GetSpellTexture", new TwoArgFunction() {
 			@Override
 			public LuaValue call(final LuaValue id, final LuaValue bookType) {
-				final List<CAbility> abilities = pawnUnit.getAbilities();
-				final int idInt = id.checkint();
-				if ((idInt >= 0) && (idInt < abilities.size())) {
-					final War3ID alias = abilities.get(idInt).getAlias();
-
-					final AbilityUI abilityUI = abilityDataUI.getUI(alias);
-					return LuaString.valueOf(abilityUI.getOnIconUI(0).getIconPath());
+				System.err.println("GetSpellTexture sees: " + id);
+				final CAbility ability = getAbility(id.checkint(), bookType.checkjstring());
+				if (ability != null) {
+					final IconUI iconUI = getIconUI(abilityDataUI, ability);
+					System.err.println("GetSpellTexture givess: " + iconUI.getIconPath());
+					return LuaString.valueOf(iconUI.getIconPath());
 				}
 				return LuaValue.NIL;
 			}
 		});
-		this.globals.set("GetSpellCooldown", new TwoArgFunction() {
+		this.globals.set("GetSpellCooldown", new LuaFunction() {
+			@Override
+			public Varargs invoke(final Varargs varargs) {
+				final CAbility ability = getAbility(varargs.arg(1).checkint(), varargs.arg(2).checkjstring());
+				if (ability != null) {
+					final int start = 0;
+					final int duration = 0;
+					final War3ID alias = ability.getAlias();
+					return LuaValue.varargsOf(new LuaValue[] { LuaInteger.valueOf(start), LuaInteger.valueOf(duration),
+							LuaInteger.valueOf(1) });
+				}
+				return LuaValue.varargsOf(
+						new LuaValue[] { LuaInteger.valueOf(0), LuaInteger.valueOf(0), LuaInteger.valueOf(0) });
+
+			}
+		});
+		this.globals.set("CastSpell", new TwoArgFunction() {
+
 			@Override
 			public LuaValue call(final LuaValue id, final LuaValue bookType) {
-				final List<CAbility> abilities = pawnUnit.getAbilities();
-				final int idInt = id.checkint();
-				if ((idInt >= 0) && (idInt < abilities.size())) {
-					final CAbility cAbility = abilities.get(idInt);
-					final double start = 0;
-					final double duration = 0;
-					final boolean enable = true;
-					final War3ID alias = cAbility.getAlias();
-					final LuaTable spellCooldownTuple = new LuaTable();
-					spellCooldownTuple.set(1, LuaDouble.valueOf(start));
-					spellCooldownTuple.set(2, LuaDouble.valueOf(duration));
-					spellCooldownTuple.set(3, LuaBoolean.valueOf(enable));
-					spellCooldownTuple.set("n", 3);
-					return spellCooldownTuple;
+				final CAbility ability = getAbility(id.checkint(), bookType.checkjstring());
+				if (ability != null) {
+					System.err.println("CastSpell: " + id);
+
+					int orderId = OrderIds.smart;
+					if (ability instanceof SingleOrderAbility) {
+						orderId = ((SingleOrderAbility) ability).getBaseOrderId();
+					}
+
+					final ExternStringMsgAbilityActivationReceiver activationReceiver = ExternStringMsgAbilityActivationReceiver.INSTANCE
+							.reset();
+					ability.checkCanUse(game, pawnUnit, orderId, activationReceiver);
+					if (activationReceiver.isUseOk()) {
+						if (LuaEnvironment.this.targetUnit != null) {
+							final ExternStringMsgTargetCheckReceiver<CWidget> targetReceiver = ExternStringMsgTargetCheckReceiver
+									.<CWidget>getInstance().reset();
+							ability.checkCanTarget(game, pawnUnit, orderId,
+									LuaEnvironment.this.targetUnit.getSimulationWidget(), targetReceiver);
+							if (targetReceiver.getTarget() != null) {
+								uiOrderListener.issueTargetOrder(pawnUnit.getHandleId(), ability.getHandleId(), orderId,
+										targetReceiver.getTarget().getHandleId(), false);
+							}
+							else {
+								final ExternStringMsgTargetCheckReceiver<Void> noTargetReceiver = ExternStringMsgTargetCheckReceiver
+										.<Void>getInstance().reset();
+								ability.checkCanTargetNoTarget(game, pawnUnit, orderId, noTargetReceiver);
+								if (noTargetReceiver.getExternStringKey() == null) {
+									uiOrderListener.issueImmediateOrder(pawnUnit.getHandleId(), ability.getHandleId(),
+											orderId, false);
+								}
+								else {
+									rootFrame.getUiSounds().getSound("HumanFemale_CantUseGeneric")
+											.play(rootFrame.getUiScene().audioContext, 0, 0, 0);
+								}
+							}
+						}
+						else {
+							rootFrame.getUiSounds().getSound("HumanFemale_CantCastGenericNoTa")
+									.play(rootFrame.getUiScene().audioContext, 0, 0, 0);
+						}
+					}
+					else {
+						rootFrame.getUiSounds().getSound("HumanFemale_CantUseGeneric")
+								.play(rootFrame.getUiScene().audioContext, 0, 0, 0);
+					}
 				}
 				return LuaValue.NIL;
+			}
+		});
+		this.globals.set("IsCurrentCast", new TwoArgFunction() {
+			@Override
+			public LuaValue call(final LuaValue id, final LuaValue bookType) {
+				final CAbility ability = getAbility(id.checkint(), bookType.checkjstring());
+				if (ability != null) {
+					return LuaBoolean.valueOf(pawnUnit.getCurrentOrder().getAbilityHandleId() == ability.getHandleId());
+				}
+				return LuaValue.NIL;
+			}
+		});
+		this.globals.set("IsSpellPassive", new TwoArgFunction() {
+			@Override
+			public LuaValue call(final LuaValue id, final LuaValue bookType) {
+				final CAbility ability = getAbility(id.checkint(), bookType.checkjstring());
+				if (ability != null) {
+					final AbilityActivationGetter activationGetter = AbilityActivationGetter.INSTANCE.reset();
+					ability.checkCanUse(game, pawnUnit, OrderIds.smart /* TODO TODO */, activationGetter);
+					return LuaBoolean.valueOf(activationGetter.passive);
+				}
+				return LuaValue.FALSE;
 			}
 		});
 		this.globals.set("UnitPowerType", new OneArgFunction() {
@@ -299,10 +388,180 @@ public class LuaEnvironment {
 				return LuaValue.ZERO;
 			}
 		});
+		this.globals.set("UnitName", new OneArgFunction() {
+			@Override
+			public LuaValue call(final LuaValue unitKey) {
+				final CUnit unit = getUnit(unitKey.checkjstring());
+				return LuaString.valueOf(getUnitName(unit));
+			}
+		});
+		this.globals.set("UnitHealth", new OneArgFunction() {
+			@Override
+			public LuaValue call(final LuaValue unitKey) {
+				final CUnit unit = getUnit(unitKey.checkjstring());
+				if (unit == null) {
+					return LuaValue.ZERO;
+				}
+				return LuaValue.valueOf(unit.getLife());
+			}
+		});
+		this.globals.set("UnitExists", new OneArgFunction() {
+			@Override
+			public LuaValue call(final LuaValue unitKey) {
+				final CUnit unit = getUnit(unitKey.checkjstring());
+				if (unit == null) {
+					return LuaValue.FALSE;
+				}
+				return LuaValue.TRUE;
+			}
+		});
+		this.globals.set("UnitHealthMax", new OneArgFunction() {
+			@Override
+			public LuaValue call(final LuaValue unitKey) {
+				final CUnit unit = getUnit(unitKey.checkjstring());
+				if (unit == null) {
+					return LuaValue.ZERO;
+				}
+				return LuaValue.valueOf(unit.getMaximumLife());
+			}
+		});
+		this.globals.set("UnitMana", new OneArgFunction() {
+			@Override
+			public LuaValue call(final LuaValue unitKey) {
+				final CUnit unit = getUnit(unitKey.checkjstring());
+				if (unit == null) {
+					return LuaValue.ZERO;
+				}
+				return LuaValue.valueOf(unit.getMana());
+			}
+		});
+		this.globals.set("UnitManaMax", new OneArgFunction() {
+			@Override
+			public LuaValue call(final LuaValue unitKey) {
+				final CUnit unit = getUnit(unitKey.checkjstring());
+				if (unit == null) {
+					return LuaValue.ZERO;
+				}
+				return LuaValue.valueOf(unit.getMaximumMana());
+			}
+		});
+		this.globals.set("UnitIsUnit", new TwoArgFunction() {
+			@Override
+			public LuaValue call(final LuaValue unitKey, final LuaValue otherUnitKey) {
+				final CUnit unit = getUnit(unitKey.checkjstring());
+				final CUnit otherUnit = getUnit(otherUnitKey.checkjstring());
+				return LuaBoolean.valueOf(((unit == otherUnit) && (unit != null)) || (otherUnit != null));
+			}
+		});
+		this.globals.set("UnitIsPlayer", new OneArgFunction() {
+			@Override
+			public LuaValue call(final LuaValue unitKey) {
+				final CUnit unit = getUnit(unitKey.checkjstring());
+				return LuaBoolean.valueOf(unit.getFirstAbilityOfType(CAbilityPlayerPawn.class) != null);
+			}
+		});
+		this.globals.set("UnitInParty", new OneArgFunction() {
+			@Override
+			public LuaValue call(final LuaValue unitKey) {
+				return LuaBoolean.valueOf(false);
+			}
+		});
+		this.globals.set("GetPartyMember", new OneArgFunction() {
+			@Override
+			public LuaValue call(final LuaValue id) {
+				// takes id in the form "1" or "2" or "3"
+				return LuaBoolean.NIL;
+			}
+		});
+		this.globals.set("GetPartyLeaderIndex", new OneArgFunction() {
+			@Override
+			public LuaValue call(final LuaValue id) {
+				return LuaBoolean.ZERO;
+			}
+		});
+		this.globals.set("UnitLevel", new OneArgFunction() {
+			@Override
+			public LuaValue call(final LuaValue unitKey) {
+				final CUnit unit = getUnit(unitKey.checkjstring());
+				final CAbilityHero heroData = unit.getHeroData();
+				if (heroData != null) {
+					return LuaValue.valueOf(heroData.getHeroLevel());
+				}
+				return LuaValue.valueOf(unit.getUnitType().getLevel());
+			}
+		});
+		this.globals.set("GetNumPartyMembers", new ZeroArgFunction() {
+			@Override
+			public LuaValue call() {
+				return LuaBoolean.ZERO;
+			}
+		});
+		this.globals.set("IsPartyLeader", new ZeroArgFunction() {
+			@Override
+			public LuaValue call() {
+				return LuaBoolean.FALSE;
+			}
+		});
+		this.globals.set("UnitCanCooperate", new TwoArgFunction() {
+			@Override
+			public LuaValue call(final LuaValue unitKey1, final LuaValue unitKey2) {
+				return LuaBoolean.FALSE;
+			}
+		});
+		this.globals.set("SpellIsTargeting", new ZeroArgFunction() {
+			@Override
+			public LuaValue call() {
+				return LuaBoolean.valueOf(false);
+			}
+		});
+		this.globals.set("SpellStopTargeting", new ZeroArgFunction() {
+			@Override
+			public LuaValue call() {
+				return LuaValue.NIL;
+			}
+		});
+		this.globals.set("GetLootMethod", new LuaFunction() {
+			@Override
+			public Varargs invoke(final Varargs args) {
+				// possibilities:
+				// freeforall
+				// roundrobin
+				// master
+				return LuaValue.varargsOf(new LuaValue[] { LuaValue.valueOf("freeforall"), LuaValue.valueOf(-1) });
+			}
+		});
+		this.globals.set("GetTime", new ZeroArgFunction() {
+			@Override
+			public LuaValue call() {
+				return LuaValue.valueOf(System.currentTimeMillis());
+			}
+		});
+		this.globals.set("GetGameTime", new LuaFunction() {
+			@Override
+			public Varargs invoke(final Varargs arg) {
+				final float gameTimeOfDay = game.getGameTimeOfDay();
+				final float gameDayHours = game.getGameplayConstants().getGameDayHours();
+				final int gameDayTotalMinutes = (int) ((gameTimeOfDay / gameDayHours) * 60);
+				return LuaValue.varargsOf(new LuaValue[] { LuaValue.valueOf(gameDayTotalMinutes / 60),
+						LuaValue.valueOf(gameDayTotalMinutes % 60) });
+			}
+		});
+		this.globals.set("GetNetStats", new LuaFunction() {
+			@Override
+			public Varargs invoke(final Varargs args) {
+				final double bandwidthIn = 0;
+				final double bandwidthOut = 0;
+				final double latency = 0;
+				return LuaValue.varargsOf(new LuaValue[] { LuaValue.valueOf(bandwidthIn),
+						LuaValue.valueOf(bandwidthOut), LuaValue.valueOf(latency) });
+			}
+		});
 		this.globals.set("strlen", new OneArgFunction() {
 			@Override
 			public LuaValue call(final LuaValue text) {
-				return LuaInteger.valueOf(text.checkstring().length());
+				final int length = text.checkstring().length();
+				System.err.println("strlen: " + text + ": " + length);
+				return LuaInteger.valueOf(length);
 			}
 		});
 		this.pawnUnit.addStateListener(new CUnitStateListener() {
@@ -447,5 +706,165 @@ public class LuaEnvironment {
 
 	public Globals getGlobals() {
 		return this.globals;
+	}
+
+	private IconUI getIconUI(final AbilityDataUI abilityDataUI, final CAbility ability) {
+		final War3ID alias = ability.getAlias();
+
+		final AbilityUI abilityUI = abilityDataUI.getUI(alias);
+		IconUI iconUI = abilityUI == null ? null : abilityUI.getOnIconUI(0);
+		if (alias.asStringValue().equals("Aatk")) {
+			iconUI = abilityDataUI.getAttackUI();
+		}
+		if ((iconUI == null) || iconUI.getIconPath().isEmpty()) {
+			iconUI = new IconUI(null, "Textures\\BTNTemp.blp", null, "", 0, 0, ability.getClass().getSimpleName(),
+					"Tooltip missing!", '?');
+		}
+		return iconUI;
+	}
+
+	private CAbility getAbility(final int id, final String bookType) {
+		final int idInt = id - 1;
+		final List<CAbility> abilities = this.pawnUnit.getAbilities();
+		if ((idInt >= 0) && (idInt < abilities.size())) {
+			final CAbility cAbility = abilities.get(idInt);
+			return cAbility;
+		}
+		return null;
+	}
+
+	private static final class AbilityActivationGetter implements AbilityActivationReceiver {
+		private boolean passive;
+
+		public static AbilityActivationGetter INSTANCE = new AbilityActivationGetter();
+
+		private float cooldownRemaining;
+
+		private float cooldown;
+
+		public AbilityActivationGetter reset() {
+			this.passive = false;
+			this.cooldown = 0;
+			this.cooldownRemaining = 0;
+			return this;
+		}
+
+		@Override
+		public void useOk() {
+
+		}
+
+		@Override
+		public void unknownReasonUseNotOk() {
+			// TODO Auto-generated method stub
+
+		}
+
+		@Override
+		public void notAnActiveAbility() {
+			this.passive = true;
+		}
+
+		@Override
+		public void missingRequirement(final War3ID type, final int level) {
+
+		}
+
+		@Override
+		public void missingHeroLevelRequirement(final int level) {
+			// TODO Auto-generated method stub
+
+		}
+
+		@Override
+		public void noHeroSkillPointsAvailable() {
+			// TODO Auto-generated method stub
+
+		}
+
+		@Override
+		public void disabled() {
+			// TODO Auto-generated method stub
+
+		}
+
+		@Override
+		public void techtreeMaximumReached() {
+			// TODO Auto-generated method stub
+
+		}
+
+		@Override
+		public void techItemAlreadyInProgress() {
+			// TODO Auto-generated method stub
+
+		}
+
+		@Override
+		public void cooldownNotYetReady(final float cooldownRemaining, final float cooldown) {
+			this.cooldownRemaining = cooldownRemaining;
+			this.cooldown = cooldown;
+
+		}
+
+		@Override
+		public void noChargesRemaining() {
+			// TODO Auto-generated method stub
+
+		}
+
+		@Override
+		public void activationCheckFailed(final String commandStringErrorKey) {
+			// TODO Auto-generated method stub
+
+		}
+
+	}
+
+	public CUnit getUnit(final String unitKey) {
+		switch (unitKey) {
+		case "target":
+			if (this.targetUnit == null) {
+				return null;
+			}
+			return this.targetUnit.getSimulationWidget().visit(AbilityTargetVisitor.UNIT);
+		case "player":
+			return this.pawnUnit;
+		case "mouseover":
+			if (this.mouseOverUnit == null) {
+				return null;
+			}
+			return this.mouseOverUnit.getSimulationWidget().visit(AbilityTargetVisitor.UNIT);
+		default:
+			return null;
+
+		}
+	}
+
+	public void notifySetTarget(final RenderWidget targetUnit) {
+		this.targetUnit = targetUnit;
+		final LinkedHashSet<UIFrameLuaWrapper> registered = getRegistered(ThirdPersonLuaXmlEvent.PLAYER_TARGET_CHANGED);
+		for (final UIFrameLuaWrapper frameLuaWrapper : registered) {
+			frameLuaWrapper.getFrame().getScripts().onEvent(ThirdPersonLuaXmlEvent.PLAYER_TARGET_CHANGED);
+		}
+	}
+
+	public void notifyUpdateMouseOver(final RenderWidget mouseOverUnit) {
+		this.mouseOverUnit = mouseOverUnit;
+		final LinkedHashSet<UIFrameLuaWrapper> registered = getRegistered(ThirdPersonLuaXmlEvent.UPDATE_MOUSEOVER_UNIT);
+		for (final UIFrameLuaWrapper frameLuaWrapper : registered) {
+			frameLuaWrapper.getFrame().getScripts().onEvent(ThirdPersonLuaXmlEvent.UPDATE_MOUSEOVER_UNIT);
+		}
+	}
+
+	public String getUnitName(final CUnit unit) {
+		if (unit == null) {
+			return "NO UNIT";
+		}
+		final CAbilityHero heroData = unit.getHeroData();
+		if (heroData != null) {
+			return heroData.getProperName();
+		}
+		return unit.getUnitType().getName();
 	}
 }

@@ -310,7 +310,7 @@ public class LuaEnvironment {
 		this.globals.set("GetActionCooldown", new LuaFunction() {
 			@Override
 			public Varargs invoke(final Varargs varargs) {
-				final CAbility ability = getAbility(varargs.arg(0).checkint(), "ability?");
+				final CAbility ability = getAbility(varargs.arg(1).checkint(), "ability?");
 				long start = 0, duration = 0;
 				long enable = 0;
 				if (ability != null) {
@@ -337,7 +337,7 @@ public class LuaEnvironment {
 			public Varargs invoke(final Varargs varargs) {
 				boolean isUsable = false;
 				boolean notEnoughMana = false;
-				final CAbility ability = getAbility(varargs.arg(0).checkint(), "ability?");
+				final CAbility ability = getAbility(varargs.arg(1).checkint(), "ability?");
 				if (ability != null) {
 					final AbilityActivationGetter activationGetter = AbilityActivationGetter.INSTANCE.reset();
 					int orderId = OrderIds.smart;

@@ -725,11 +725,13 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 		case Frame:
 		case Layer:
 		case Texture:
+			boolean anyAnchors = false;
 			for (int i = 0; i < childNodes.getLength(); i++) {
 				final Node item = childNodes.item(i);
 				final String nodeName = item.getNodeName();
 				switch (nodeName) {
 				case "Size":
+					anyAnchors = true;
 					final Node absDimensionChild = firstChild(item, "AbsDimension");
 					if (absDimensionChild != null) {
 						final NamedNodeMap dimensionAttributes = absDimensionChild.getAttributes();
@@ -749,6 +751,7 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 					}
 					break;
 				case "Anchors":
+					anyAnchors = true;
 					final NodeList anchorNodes = item.getChildNodes();
 					for (int j = 0; j < anchorNodes.getLength(); j++) {
 						final Node anchorNode = anchorNodes.item(j);
@@ -1065,6 +1068,8 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 				default:
 					throw new IllegalArgumentException(nodeName);
 				}
+			}
+			if (!anyAnchors) {
 			}
 			break;
 		default:
@@ -2656,9 +2661,11 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 			if (height != null) {
 				inflatedFrame.setHeight(convertY(viewport2, height));
 			}
+			boolean anyAnchors = false;
 			for (final AnchorDefinition anchor : frameDefinition.getAnchors()) {
 				inflatedFrame.addAnchor(new AnchorDefinition(anchor.getMyPoint(), anchor.getRelativePoint(),
 						convertX(this.viewport, anchor.getX()), convertY(this.viewport, anchor.getY())));
+				anyAnchors = true;
 			}
 			for (final SetPointDefinition setPointDefinition : frameDefinition.getSetPoints()) {
 				final String otherFrameName = checkNameString(parent, setPointDefinition.getOther());
@@ -2677,6 +2684,10 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 							setPointDefinition.getOtherPoint(), convertX(this.viewport, setPointDefinition.getX()),
 							convertY(this.viewport, setPointDefinition.getY())));
 				}
+				anyAnchors = true;
+			}
+			if (!anyAnchors && frameDefinition.has("FromXML")) {
+				inflatedFrame.setSetAllPoints(true);
 			}
 			this.nameToFrame.put(frameDefinitionName, inflatedFrame);
 		}

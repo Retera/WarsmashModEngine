@@ -269,5 +269,21 @@ public class TextAreaFrame extends ControlFrame implements ScrollBarFrame.Scroll
 				return LuaValue.NIL;
 			}
 		});
+		table.set("ScrollUp", new OneArgFunction() {
+			@Override
+			public LuaValue call(final LuaValue thistable) {
+				TextAreaFrame.this.scrollBarFrame.setValue(TextAreaFrame.this.gameUI, TextAreaFrame.this.viewport,
+						TextAreaFrame.this.scrollBarFrame.getValue() - TextAreaFrame.this.scrollBarFrame.getStepSize());
+				return LuaValue.NIL;
+			}
+		});
+		table.set("ScrollDown", new OneArgFunction() {
+			@Override
+			public LuaValue call(final LuaValue thistable) {
+				TextAreaFrame.this.scrollBarFrame.setValue(TextAreaFrame.this.gameUI, TextAreaFrame.this.viewport,
+						TextAreaFrame.this.scrollBarFrame.getValue() + TextAreaFrame.this.scrollBarFrame.getStepSize());
+				return LuaValue.NIL;
+			}
+		});
 	}
 }

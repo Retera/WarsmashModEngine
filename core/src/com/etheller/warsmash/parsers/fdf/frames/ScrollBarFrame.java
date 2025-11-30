@@ -356,4 +356,8 @@ public class ScrollBarFrame extends AbstractRenderableFrame implements Clickable
 	public int getMaxValue() {
 		return this.maxValue;
 	}
+
+	public int getStepSize() {
+		return this.stepSize;
+	}
 }

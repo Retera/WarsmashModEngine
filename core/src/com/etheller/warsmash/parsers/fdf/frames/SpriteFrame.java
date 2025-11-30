@@ -4,6 +4,7 @@ import java.util.EnumSet;
 
 import org.luaj.vm2.LuaTable;
 import org.luaj.vm2.LuaValue;
+import org.luaj.vm2.lib.ThreeArgFunction;
 import org.luaj.vm2.lib.TwoArgFunction;
 
 import com.badlogic.gdx.graphics.Color;
@@ -121,6 +122,12 @@ public class SpriteFrame extends AbstractUIFrame {
 		}
 	}
 
+	public void setFrameWithinSequence(final int animationFrame) {
+		if (this.instance != null) {
+			this.instance.setFrameWithinSequence(animationFrame);
+		}
+	}
+
 	public void setFrameByRatio(final float ratioOfAnimationCompleted) {
 		if (this.instance != null) {
 			this.instance.setFrameByRatio(ratioOfAnimationCompleted);
@@ -171,6 +178,21 @@ public class SpriteFrame extends AbstractUIFrame {
 			@Override
 			public LuaValue call(final LuaValue thistable, final LuaValue scaleValue) {
 				setModelScale(scaleValue.tofloat());
+				return LuaValue.NIL;
+			}
+		});
+		table.set("SetSequence", new TwoArgFunction() {
+			@Override
+			public LuaValue call(final LuaValue thistable, final LuaValue sequenceIndex) {
+				setSequence(sequenceIndex.checkint());
+				return LuaValue.NIL;
+			}
+		});
+		table.set("SetSequenceTime", new ThreeArgFunction() {
+			@Override
+			public LuaValue call(final LuaValue thistable, final LuaValue sequenceIndex, final LuaValue time) {
+				setSequence(sequenceIndex.checkint());
+				setFrameWithinSequence(time.checkint());
 				return LuaValue.NIL;
 			}
 		});

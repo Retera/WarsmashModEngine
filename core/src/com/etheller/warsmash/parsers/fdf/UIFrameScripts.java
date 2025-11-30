@@ -160,13 +160,13 @@ public class UIFrameScripts {
 		}
 	}
 
-	public void onEvent(final ThirdPersonLuaXmlEvent event) {
-		if (this.OnClick != null) {
+	public void onEvent(final ThirdPersonLuaXmlEvent event, final LuaValue arg1) {
+		if (this.OnEvent != null) {
 			this.luaEnvironment.load(this.thisFrame);
 			try {
 				this.luaEnvironment.getGlobals().set("event", event.name());
-				this.luaEnvironment.getGlobals().set("arg1", event.name());
-				this.OnClick.call();
+				this.luaEnvironment.getGlobals().set("arg1", arg1);
+				this.OnEvent.call();
 			}
 			catch (final Exception exc) {
 				exc.printStackTrace();

@@ -1244,19 +1244,19 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 		float r = 0, g = 0, b = 0, a = 1;
 		final Node rAttr = colorAttributes.getNamedItem("r");
 		if (rAttr != null) {
-			r = convertXMLCoordX(Float.parseFloat(getAttributeText(rAttr)));
+			r = (Float.parseFloat(getAttributeText(rAttr)));
 		}
 		final Node gAttr = colorAttributes.getNamedItem("g");
 		if (gAttr != null) {
-			g = convertXMLCoordX(Float.parseFloat(getAttributeText(gAttr)));
+			g = (Float.parseFloat(getAttributeText(gAttr)));
 		}
 		final Node bAttr = colorAttributes.getNamedItem("b");
 		if (bAttr != null) {
-			b = convertXMLCoordX(Float.parseFloat(getAttributeText(bAttr)));
+			b = (Float.parseFloat(getAttributeText(bAttr)));
 		}
 		final Node aAttr = colorAttributes.getNamedItem("a");
 		if (aAttr != null) {
-			a = convertXMLCoordX(Float.parseFloat(getAttributeText(aAttr)));
+			a = (Float.parseFloat(getAttributeText(aAttr)));
 			final Vector4Definition colorDefinition = new Vector4Definition(r, g, b, a);
 			return new Vector4FrameDefinitionField(colorDefinition);
 		}
@@ -1368,6 +1368,18 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 				if (barTexture != null) {
 					simpleStatusBarFrame.getBarFrame().setTexture(barTexture, this);
 					simpleStatusBarFrame.getBorderFrame().setTexture(barTexture + "Border", this);
+				}
+				final Vector4Definition barColor4 = frameDefinition.getVector4("BarColor");
+				if (barColor4 != null) {
+					simpleStatusBarFrame.getBarFrame().setColor(barColor4.getX(), barColor4.getY(), barColor4.getZ(),
+							barColor4.getW());
+				}
+				else {
+					final Vector3Definition barColor3 = frameDefinition.getVector3("BarColor");
+					if (barColor3 != null) {
+						simpleStatusBarFrame.getBarFrame().setColor(barColor3.getX(), barColor3.getY(),
+								barColor3.getZ(), 1.0f);
+					}
 				}
 				inflatedFrame = simpleStatusBarFrame;
 				inflateScriptsIfAvailable(frameDefinition, inflatedFrame);

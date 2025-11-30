@@ -91,6 +91,7 @@ public class UIFrameScripts {
 			System.out.println("SB1");
 		}
 
+		this.frameDef = null;
 		if (this.OnLoad != null) {
 			this.luaEnvironment.load(this.thisFrame);
 			try {
@@ -102,7 +103,6 @@ public class UIFrameScripts {
 			}
 		}
 
-		this.frameDef = null;
 	}
 
 	public boolean isLoaded() {

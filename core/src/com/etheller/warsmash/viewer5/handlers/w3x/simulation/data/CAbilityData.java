@@ -39,11 +39,11 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.skills.ni
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.skills.orc.blademaster.CAbilityWhirlWind;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.skills.orc.farseer.CAbilityChainLightning;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.skills.orc.farseer.CAbilityFeralSpirit;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.thirdperson.CAbilityPlayerPawn;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.skills.orc.taurenchieftain.CAbilityWarStomp;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.skills.undead.deathknight.CAbilityDarkRitual;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.skills.undead.deathknight.CAbilityDeathCoil;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.skills.undead.deathknight.CAbilityDeathPact;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.thirdperson.CAbilityPlayerPawn;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.CAbilityType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.definitions.CAbilityTypeDefinition;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.definitions.impl.AbilityFields;
@@ -122,8 +122,8 @@ public class CAbilityData {
 //		this.codeToAbilityTypeDefinition.put(War3ID.fromString("AHmt"),
 //				new CAbilityTypeDefinitionSpellBase((handleId, alias) -> new CAbilityMassTeleport(handleId, alias)));
 		// Mountain King:
-//		this.codeToAbilityTypeDefinition.put(War3ID.fromString("AHtb"),
-//				new CAbilityTypeDefinitionSpellBase((handleId, alias) -> new CAbilityThunderBolt(handleId, alias)));
+		this.codeToAbilityTypeDefinition.put(War3ID.fromString("AHtb"),
+				new CAbilityTypeDefinitionSpellBase((handleId, alias) -> new CAbilityThunderBolt(handleId, alias)));
 //		this.codeToAbilityTypeDefinition.put(War3ID.fromString("AHtc"),
 //				new CAbilityTypeDefinitionSpellBase((handleId, alias) -> new CAbilityThunderClap(handleId, alias)));
 		this.codeToAbilityTypeDefinition.put(War3ID.fromString("ANfb"),
@@ -321,11 +321,12 @@ public class CAbilityData {
 			if (gameObject == null) {
 				return null;
 			}
-			String readSLKTag = gameObject.readSLKTag("code");
+			final String readSLKTag = gameObject.readSLKTag("code");
 			final War3ID code;
 			if (readSLKTag.length() == 4) {
 				code = War3ID.fromString(readSLKTag);
-			} else {
+			}
+			else {
 				code = War3ID.fromString(gameObject.getId());
 			}
 			final CAbilityTypeDefinition abilityTypeDefinition = this.codeToAbilityTypeDefinition.get(code);

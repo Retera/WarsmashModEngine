@@ -600,9 +600,6 @@ public class StringFrame extends AbstractRenderableFrame {
 				final String text = arg.checkjstring();
 				luaEnvironment.getRootFrame().setText(StringFrame.this, text);
 				System.err.println("setText: '" + text + "'");
-				if ("Peasant".equals(text)) {
-					System.err.println("ssfasdfq");
-				}
 				return LuaValue.NIL;
 			}
 		});

@@ -324,6 +324,9 @@ public class ThirdPersonUI implements WarsmashToggleableUI {
 					OrderIds.pawnUpReleased, false);
 			return true;
 		}
+		else {
+			this.rootFrame.getLuaGlobals().keyUp(keycode);
+		}
 		return false;
 	}
 

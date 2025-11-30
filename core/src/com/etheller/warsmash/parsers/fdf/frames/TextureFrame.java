@@ -49,9 +49,6 @@ public class TextureFrame extends AbstractRenderableFrame {
 
 	@Override
 	protected void innerPositionBounds(final GameUI gameUI, final Viewport viewport) {
-		if ("TargetFrameTexture".equals(getName())) {
-			System.err.println("asdfasdfasdf");
-		}
 	}
 
 	public void setColor(final Color color) {

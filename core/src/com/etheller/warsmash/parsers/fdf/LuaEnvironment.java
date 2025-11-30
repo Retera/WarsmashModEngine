@@ -46,14 +46,17 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnitStateListener;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbility;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityAttack;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.SingleOrderAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.hero.CAbilityHero;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTargetVisitor;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.thirdperson.CAbilityPlayerPawn;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.COrder;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.OrderIds;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CAllianceType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayerUnitOrderListener;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityActivationReceiver;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.CommandStringErrorKeys;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.ExternStringMsgAbilityActivationReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.ExternStringMsgTargetCheckReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.ui.sound.KeyedSounds;
@@ -77,6 +80,9 @@ public class LuaEnvironment {
 	private RenderWidget targetUnit;
 	private RenderWidget mouseOverUnit;
 	private CUnitStateListenerImplementation targetStateListener;
+
+	private final Map<String, String> bindingKeys = new HashMap<>();
+	private final Map<Integer, String> keysToBinding = new HashMap<>();
 
 	public LuaEnvironment(final CSimulation game, final GameUI rootFrame, final Viewport uiViewport,
 			final Scene uiScene, final KeyedSounds uiSounds, final CUnit pawnUnit,
@@ -200,7 +206,13 @@ public class LuaEnvironment {
 		this.globals.set("GetBindingKey", new OneArgFunction() {
 			@Override
 			public LuaValue call(final LuaValue arg) {
-				return LuaValue.valueOf("A");// TODO
+				System.err.println("GetBindingKey: " + arg);
+
+				final String bindingKeyValue = LuaEnvironment.this.bindingKeys.get(arg.checkjstring());
+				if (bindingKeyValue == null) {
+					return LuaValue.NIL;
+				}
+				return LuaValue.valueOf(bindingKeyValue);// TODO
 			}
 		});
 		this.globals.set("IsShiftKeyDown", new OneArgFunction() {
@@ -266,19 +278,27 @@ public class LuaEnvironment {
 		this.globals.set("GetActionTexture", new OneArgFunction() {
 			@Override
 			public LuaValue call(final LuaValue id) {
+				System.err.println("GetActionTexture sees: " + id);
+				final CAbility ability = getAbility(id.checkint(), "ability?");
+				if (ability != null) {
+					final IconUI iconUI = getIconUI(abilityDataUI, ability);
+					return LuaString.valueOf(iconUI.getIconPath());
+				}
 				return LuaValue.NIL;
 			}
 		});
 		this.globals.set("HasAction", new OneArgFunction() {
 			@Override
 			public LuaValue call(final LuaValue id) {
-				return LuaValue.FALSE;
+				final CAbility ability = getAbility(id.checkint(), "ability?");
+				return LuaValue.valueOf(ability != null);
 			}
 		});
 		this.globals.set("IsAttackAction", new OneArgFunction() {
 			@Override
 			public LuaValue call(final LuaValue id) {
-				return LuaValue.FALSE;
+				final CAbility ability = getAbility(id.checkint(), "ability?");
+				return LuaValue.valueOf(ability instanceof CAbilityAttack);
 			}
 		});
 		this.globals.set("GetActionCount", new OneArgFunction() {
@@ -290,16 +310,44 @@ public class LuaEnvironment {
 		this.globals.set("GetActionCooldown", new LuaFunction() {
 			@Override
 			public Varargs invoke(final Varargs varargs) {
-				return LuaValue.varargsOf(
-						new LuaValue[] { LuaInteger.valueOf(0), LuaInteger.valueOf(0), LuaInteger.valueOf(0) });
+				final CAbility ability = getAbility(varargs.arg(0).checkint(), "ability?");
+				long start = 0, duration = 0;
+				long enable = 0;
+				if (ability != null) {
+					final AbilityActivationGetter activationGetter = AbilityActivationGetter.INSTANCE.reset();
+					int orderId = OrderIds.smart;
+					if (ability instanceof SingleOrderAbility) {
+						orderId = ((SingleOrderAbility) ability).getBaseOrderId();
+					}
+					ability.checkCanUse(game, pawnUnit, orderId, activationGetter);
+					if (activationGetter.cooldownRemaining > 0) {
+						duration = (long) (activationGetter.cooldown * 1000);
+						start = System.currentTimeMillis()
+								- (long) ((activationGetter.cooldown - activationGetter.cooldownRemaining) * 1000);
+					}
+					enable = 1;
+				}
+				return LuaValue.varargsOf(new LuaValue[] { LuaInteger.valueOf(start), LuaInteger.valueOf(duration),
+						LuaInteger.valueOf(enable) });
 
 			}
 		});
 		this.globals.set("IsUsableAction", new LuaFunction() {
 			@Override
 			public Varargs invoke(final Varargs varargs) {
-				final boolean isUsable = false;
-				final boolean notEnoughMana = false;
+				boolean isUsable = false;
+				boolean notEnoughMana = false;
+				final CAbility ability = getAbility(varargs.arg(0).checkint(), "ability?");
+				if (ability != null) {
+					final AbilityActivationGetter activationGetter = AbilityActivationGetter.INSTANCE.reset();
+					int orderId = OrderIds.smart;
+					if (ability instanceof SingleOrderAbility) {
+						orderId = ((SingleOrderAbility) ability).getBaseOrderId();
+					}
+					ability.checkCanUse(game, pawnUnit, orderId, activationGetter);
+					isUsable = activationGetter.ok;
+					notEnoughMana = activationGetter.commandStringErrorKey == CommandStringErrorKeys.NOT_ENOUGH_MANA;
+				}
 				return LuaValue
 						.varargsOf(new LuaValue[] { LuaValue.valueOf(isUsable), LuaValue.valueOf(notEnoughMana) });
 
@@ -308,12 +356,20 @@ public class LuaEnvironment {
 		this.globals.set("IsCurrentAction", new OneArgFunction() {
 			@Override
 			public LuaValue call(final LuaValue id) {
+				final CAbility ability = getAbility(id.checkint(), "ability?");
+				if (ability != null) {
+					final COrder currentOrder = pawnUnit.getCurrentOrder();
+					return LuaBoolean.valueOf(
+							(currentOrder != null) && (currentOrder.getAbilityHandleId() == ability.getHandleId()));
+				}
 				return LuaValue.FALSE;
 			}
 		});
 		this.globals.set("UseAction", new OneArgFunction() {
 			@Override
 			public LuaValue call(final LuaValue id) {
+				final int actionId = id.checkint();
+				useAction(game, rootFrame, pawnUnit, uiOrderListener, actionId);
 				return LuaValue.NIL;
 			}
 		});
@@ -426,8 +482,17 @@ public class LuaEnvironment {
 							}
 						}
 						else {
-							rootFrame.getUiSounds().getSound("HumanFemale_CantCastGenericNoTa")
-									.play(rootFrame.getUiScene().audioContext, 0, 0, 0);
+							final ExternStringMsgTargetCheckReceiver<Void> noTargetReceiver = ExternStringMsgTargetCheckReceiver
+									.<Void>getInstance().reset();
+							ability.checkCanTargetNoTarget(game, pawnUnit, orderId, noTargetReceiver);
+							if (noTargetReceiver.getExternStringKey() == null) {
+								uiOrderListener.issueImmediateOrder(pawnUnit.getHandleId(), ability.getHandleId(),
+										orderId, false);
+							}
+							else {
+								rootFrame.getUiSounds().getSound("HumanFemale_CantCastGenericNoTa")
+										.play(rootFrame.getUiScene().audioContext, 0, 0, 0);
+							}
 						}
 					}
 					else {
@@ -443,7 +508,9 @@ public class LuaEnvironment {
 			public LuaValue call(final LuaValue id, final LuaValue bookType) {
 				final CAbility ability = getAbility(id.checkint(), bookType.checkjstring());
 				if (ability != null) {
-					return LuaBoolean.valueOf(pawnUnit.getCurrentOrder().getAbilityHandleId() == ability.getHandleId());
+					final COrder currentOrder = pawnUnit.getCurrentOrder();
+					return LuaBoolean.valueOf(
+							(currentOrder != null) && (currentOrder.getAbilityHandleId() == ability.getHandleId()));
 				}
 				return LuaValue.FALSE;
 			}
@@ -693,7 +760,8 @@ public class LuaEnvironment {
 				final CUnit unit = getUnit(unitKey.checkjstring());
 				final CAbilityHero heroData = unit.getHeroData();
 				if (heroData != null) {
-					return LuaValue.valueOf(heroData.getXp());
+					final int prevXp = game.getGameplayConstants().getNeedHeroXP(heroData.getHeroLevel() - 1);
+					return LuaValue.valueOf(heroData.getXp() - prevXp);
 				}
 				return LuaValue.ZERO;
 			}
@@ -704,7 +772,7 @@ public class LuaEnvironment {
 				final CUnit unit = getUnit(unitKey.checkjstring());
 				final CAbilityHero heroData = unit.getHeroData();
 				if (heroData != null) {
-					return LuaValue.valueOf(game.getGameplayConstants().getNeedHeroXPSum(heroData.getHeroLevel()));
+					return LuaValue.valueOf(game.getGameplayConstants().getNeedHeroXP(heroData.getHeroLevel()));
 				}
 				return LuaValue.ZERO;
 			}
@@ -824,6 +892,11 @@ public class LuaEnvironment {
 			}
 		});
 		this.pawnUnit.addStateListener(new CUnitStateListenerImplementation(UNITKEY_PLAYER));
+		for (int i = 1; i <= 12; i++) {
+			final String binding = "ACTIONBUTTON" + (i);
+			this.bindingKeys.put(binding, Integer.toString(i));
+			this.keysToBinding.put(Input.Keys.valueOf("" + i), binding);
+		}
 	}
 
 	public LinkedHashSet<UIFrameLuaWrapper> getRegistered(final ThirdPersonLuaXmlEvent event) {
@@ -979,8 +1052,10 @@ public class LuaEnvironment {
 
 		@Override
 		public void heroStatsChanged() {
-			// TODO Auto-generated method stub
-
+			final LinkedHashSet<UIFrameLuaWrapper> registered = getRegistered(ThirdPersonLuaXmlEvent.PLAYER_XP_UPDATE);
+			for (final UIFrameLuaWrapper frameLuaWrapper : registered) {
+				frameLuaWrapper.getFrame().getScripts().onEvent(ThirdPersonLuaXmlEvent.PLAYER_XP_UPDATE, this.unitKey);
+			}
 		}
 
 		@Override
@@ -999,6 +1074,7 @@ public class LuaEnvironment {
 	}
 
 	private static final class AbilityActivationGetter implements AbilityActivationReceiver {
+		private boolean ok;
 		private boolean passive;
 
 		public static AbilityActivationGetter INSTANCE = new AbilityActivationGetter();
@@ -1007,16 +1083,19 @@ public class LuaEnvironment {
 
 		private float cooldown;
 
+		private String commandStringErrorKey;
+
 		public AbilityActivationGetter reset() {
 			this.passive = false;
 			this.cooldown = 0;
 			this.cooldownRemaining = 0;
+			this.ok = false;
 			return this;
 		}
 
 		@Override
 		public void useOk() {
-
+			this.ok = true;
 		}
 
 		@Override
@@ -1080,8 +1159,7 @@ public class LuaEnvironment {
 
 		@Override
 		public void activationCheckFailed(final String commandStringErrorKey) {
-			// TODO Auto-generated method stub
-
+			this.commandStringErrorKey = commandStringErrorKey;
 		}
 
 	}
@@ -1226,5 +1304,74 @@ public class LuaEnvironment {
 			return heroData.getHeroLevel();
 		}
 		return unit.getUnitType().getLevel();
+	}
+
+	private void useAction(final CSimulation game, final GameUI rootFrame, final CUnit pawnUnit,
+			final CPlayerUnitOrderListener uiOrderListener, final int actionId) {
+		final CAbility ability = getAbility(actionId, "ability?");
+		if (ability != null) {
+			System.err.println("CastSpell: " + actionId);
+
+			int orderId = OrderIds.smart;
+			if (ability instanceof SingleOrderAbility) {
+				orderId = ((SingleOrderAbility) ability).getBaseOrderId();
+			}
+
+			final ExternStringMsgAbilityActivationReceiver activationReceiver = ExternStringMsgAbilityActivationReceiver.INSTANCE
+					.reset();
+			ability.checkCanUse(game, pawnUnit, orderId, activationReceiver);
+			if (activationReceiver.isUseOk()) {
+				if (LuaEnvironment.this.targetUnit != null) {
+					final ExternStringMsgTargetCheckReceiver<CWidget> targetReceiver = ExternStringMsgTargetCheckReceiver
+							.<CWidget>getInstance().reset();
+					ability.checkCanTarget(game, pawnUnit, orderId,
+							LuaEnvironment.this.targetUnit.getSimulationWidget(), targetReceiver);
+					if (targetReceiver.getTarget() != null) {
+						uiOrderListener.issueTargetOrder(pawnUnit.getHandleId(), ability.getHandleId(), orderId,
+								targetReceiver.getTarget().getHandleId(), false);
+					}
+					else {
+						final ExternStringMsgTargetCheckReceiver<Void> noTargetReceiver = ExternStringMsgTargetCheckReceiver
+								.<Void>getInstance().reset();
+						ability.checkCanTargetNoTarget(game, pawnUnit, orderId, noTargetReceiver);
+						if (noTargetReceiver.getExternStringKey() == null) {
+							uiOrderListener.issueImmediateOrder(pawnUnit.getHandleId(), ability.getHandleId(), orderId,
+									false);
+						}
+						else {
+							rootFrame.getUiSounds().getSound("HumanFemale_CantUseGeneric")
+									.play(rootFrame.getUiScene().audioContext, 0, 0, 0);
+						}
+					}
+				}
+				else {
+					final ExternStringMsgTargetCheckReceiver<Void> noTargetReceiver = ExternStringMsgTargetCheckReceiver
+							.<Void>getInstance().reset();
+					ability.checkCanTargetNoTarget(game, pawnUnit, orderId, noTargetReceiver);
+					if (noTargetReceiver.getExternStringKey() == null) {
+						uiOrderListener.issueImmediateOrder(pawnUnit.getHandleId(), ability.getHandleId(), orderId,
+								false);
+					}
+					else {
+						rootFrame.getUiSounds().getSound("HumanFemale_CantCastGenericNoTa")
+								.play(rootFrame.getUiScene().audioContext, 0, 0, 0);
+					}
+				}
+			}
+			else {
+				rootFrame.getUiSounds().getSound("HumanFemale_CantUseGeneric").play(rootFrame.getUiScene().audioContext,
+						0, 0, 0);
+			}
+		}
+	}
+
+	public void keyUp(final int keycode) {
+		final String binding = this.keysToBinding.get(keycode);
+		if (binding != null) {
+			if (binding.startsWith("ACTIONBUTTON")) {
+				final String keyText = binding.substring(12);
+				useAction(this.game, this.rootFrame, this.pawnUnit, this.uiOrderListener, Integer.parseInt(keyText));
+			}
+		}
 	}
 }

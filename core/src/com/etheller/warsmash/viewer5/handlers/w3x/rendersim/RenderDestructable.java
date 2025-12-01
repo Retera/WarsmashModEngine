@@ -12,7 +12,7 @@ import com.etheller.warsmash.viewer5.handlers.mdx.MdxComplexInstance;
 import com.etheller.warsmash.viewer5.handlers.mdx.MdxModel;
 import com.etheller.warsmash.viewer5.handlers.w3x.AnimationTokens.PrimaryTag;
 import com.etheller.warsmash.viewer5.handlers.w3x.AnimationTokens.SecondaryTag;
-import com.etheller.warsmash.viewer5.handlers.w3x.CollidableDoodadComponent;
+import com.etheller.warsmash.viewer5.handlers.w3x.CollidableDoodadGeosetComponent;
 import com.etheller.warsmash.viewer5.handlers.w3x.SequenceUtils;
 import com.etheller.warsmash.viewer5.handlers.w3x.SplatModel.SplatMover;
 import com.etheller.warsmash.viewer5.handlers.w3x.War3MapViewer;
@@ -40,7 +40,7 @@ public class RenderDestructable extends RenderDoodad implements RenderWidget {
 	private final int replaceableTextureId;
 	private String replaceableTextureFile;
 
-	private final List<CollidableDoodadComponent> collidableComponents = new ArrayList<>();
+	private final List<CollidableDoodadGeosetComponent> collidableComponents = new ArrayList<>();
 
 	public RenderDestructable(final War3MapViewer map, final MdxModel model, MdxModel portraitModel,
 			final GameObject row, final float[] location3D, final float[] scale3D, final float facingRadians,
@@ -262,11 +262,11 @@ public class RenderDestructable extends RenderDoodad implements RenderWidget {
 		((MdxComplexInstance) instance).setVertexColor(new float[] { vertR / 255f, vertG / 255f, vertB / 255f });
 	}
 
-	public void add(final CollidableDoodadComponent collidableComponent) {
+	public void add(final CollidableDoodadGeosetComponent collidableComponent) {
 		this.collidableComponents.add(collidableComponent);
 	}
 
-	public List<CollidableDoodadComponent> getCollidableComponents() {
+	public List<CollidableDoodadGeosetComponent> getCollidableComponents() {
 		return this.collidableComponents;
 	}
 }

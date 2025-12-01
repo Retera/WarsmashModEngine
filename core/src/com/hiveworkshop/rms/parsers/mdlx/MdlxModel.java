@@ -82,6 +82,7 @@ public class MdlxModel {
 	public List<MdlxCamera> cameras = new ArrayList<>();
 	public List<MdlxEventObject> eventObjects = new ArrayList<>();
 	public List<MdlxCollisionShape> collisionShapes = new ArrayList<>();
+	public List<MdlxCollisionGeometry> collisionGeometries = new ArrayList<>();
 	/**
 	 * @since 900
 	 */
@@ -271,11 +272,9 @@ public class MdlxModel {
 				break;
 			case CLID:
 				if (this.version == 1300) {
-					// long count = reader.readUInt32();
-					// System.out.println("CLID count is: " + count);
-					// loadNDynamicObjects(collisionShapes, MdlxBlockDescriptor.COLLISION_SHAPE,
-					// reader, count);
-					this.unknownChunks.add(new MdlxUnknownChunk(reader, size, new War3ID(tag)));
+					final MdlxCollisionGeometry mdlxCollisionGeometry = new MdlxCollisionGeometry();
+					mdlxCollisionGeometry.readMdx(reader, this.version);
+					this.collisionGeometries.add(mdlxCollisionGeometry);
 				}
 				else {
 					loadDynamicObjects(this.collisionShapes, MdlxBlockDescriptor.COLLISION_SHAPE, reader, size);
@@ -1082,5 +1081,9 @@ public class MdlxModel {
 
 	public List<MdlxGeoset> getGeosets() {
 		return this.geosets;
+	}
+
+	public List<MdlxCollisionGeometry> getCollisionGeometries() {
+		return this.collisionGeometries;
 	}
 }

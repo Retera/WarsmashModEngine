@@ -15,7 +15,7 @@ public class TestsWithWDT {
 		System.out.println("Hello world");
 
 		final DataSource dataSource = new FolderDataSourceDescriptor(
-				"/home/etheller/WoW3_TheFrozenThrone/ModifiedMaps/Kalimdor").createDataSource();
+				"/home/eric/Games/WoW3_TheFrozenThrone/ModifiedMaps/Kalimdor").createDataSource();
 		try {
 			final WdtMap map = new WdtMap(dataSource.read("Kalimdor.wdt"));
 
@@ -69,6 +69,14 @@ public class TestsWithWDT {
 //					catch (final InterruptedException e) {
 //						e.printStackTrace();
 //					}
+				}
+				for (final var x : header.mapObjectDefinitions) {
+					final int flags = x.getFlags();
+					final String name = map.worldModelFileNames.get((int) x.getNameId());
+
+					System.out.println("WMO:");
+					System.out.println(flags + ": " + name);
+					System.out.println(Arrays.toString(x.getPosition()));
 				}
 			}
 			System.out.println(duskwood);

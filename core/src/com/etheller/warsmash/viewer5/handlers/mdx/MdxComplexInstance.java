@@ -28,6 +28,7 @@ import com.etheller.warsmash.viewer5.TextureMapper;
 import com.etheller.warsmash.viewer5.UpdatableObject;
 import com.etheller.warsmash.viewer5.gl.DataTexture;
 import com.etheller.warsmash.viewer5.handlers.w3x.DynamicShadowManager;
+import com.hiveworkshop.rms.parsers.mdlx.MdlxCollisionGeometry;
 import com.hiveworkshop.rms.parsers.mdlx.MdlxGeoset;
 
 public class MdxComplexInstance extends ModelInstance {
@@ -931,6 +932,24 @@ public class MdxComplexInstance extends ModelInstance {
 					intersected = true;
 				}
 			}
+		}
+		return intersected;
+	}
+
+	public boolean intersectRayWithCollisionGeometrySlow(final Ray ray, final MdlxCollisionGeometry geoset,
+			final Vector3 intersection) {
+		ray.getEndPoint(intersection, 99999);
+		return intersectCollisionGeometryTest(ray, geoset, intersection, false);
+	}
+
+	private boolean intersectCollisionGeometryTest(final Ray ray, final MdlxCollisionGeometry geoset,
+			final Vector3 intersection, boolean intersected) {
+		if (CollisionShape.intersectRayTriangles(ray, this, geoset.getVertices(), geoset.getFaces(), 3,
+				intersectionHeap)) {
+			if (intersectionHeap.dst2(ray.origin) < intersection.dst2(ray.origin)) {
+				intersection.set(intersectionHeap);
+			}
+			intersected = true;
 		}
 		return intersected;
 	}

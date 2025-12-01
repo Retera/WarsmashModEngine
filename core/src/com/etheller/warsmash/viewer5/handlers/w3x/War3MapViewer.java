@@ -170,6 +170,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.SimulationRend
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.TextTagConfigType;
 import com.etheller.warsmash.viewer5.handlers.w3x.ui.command.SettableCommandErrorListener;
 import com.etheller.warsmash.viewer5.handlers.w3x.ui.sound.KeyedSounds;
+import com.hiveworkshop.rms.parsers.mdlx.MdlxCollisionGeometry;
 import com.hiveworkshop.rms.parsers.mdlx.MdlxExtent;
 
 import mpq.MPQArchive;
@@ -827,7 +828,7 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 				final BoundingBox geosetBoundingBox = bounds.getBoundingBox();
 				final Rectangle geosetRotatedBounds = getRotatedBoundingBox(location[0], location[1], scale,
 						facingRadians, geosetBoundingBox);
-				final CollidableDoodadComponent collidableComponent = new CollidableDoodadComponent(
+				final CollidableDoodadGeosetComponent collidableComponent = new CollidableDoodadGeosetComponent(
 						(MdxComplexInstance) renderDoodad.instance, geoset, geosetRotatedBounds, geosetBoundingBox);
 				this.walkableComponentTree.add(collidableComponent, geosetRotatedBounds);
 			}
@@ -853,6 +854,35 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 				new Quaternion().setFromAxisRad(RenderMathUtils.VEC3_UNIT_X, (float) Math.toRadians(rotation[2])));
 		if (model.hasMdx1300Collision) {
 			final Rectangle entireMap = this.terrain.getEntireMap();
+			for (final MdlxCollisionGeometry collisionGeometry : model.getCollisionGeometries()) {
+				final Bounds bounds = new Bounds();
+				final float[] min = new float[] { Float.MAX_VALUE, Float.MAX_VALUE, Float.MAX_VALUE };
+				final float[] max = new float[] { -Float.MAX_VALUE, -Float.MAX_VALUE, -Float.MAX_VALUE };
+				final float[] vertices = collisionGeometry.getVertices();
+				for (int i = 0; i < vertices.length; i += 3) {
+					for (int k = 0; k < 3; k++) {
+						if (vertices[i + k] < min[k]) {
+							min[k] = vertices[i + k];
+						}
+						if (vertices[i + k] > max[k]) {
+							max[k] = vertices[i + k];
+						}
+					}
+				}
+				bounds.fromExtents(min, max, 0);
+				final BoundingBox geosetBoundingBox = bounds.getBoundingBox();
+				final Rectangle geosetRotatedBounds = getRotatedBoundingBox(location[0], location[1], scale3D,
+						facingRadians, geosetBoundingBox);
+				if (entireMap.overlaps(geosetRotatedBounds)) {
+					final CollidableDoodadComponent collidableComponent = new CollidableDoodadCollisionComponent(
+							(MdxComplexInstance) renderDoodad.instance, collisionGeometry, geosetRotatedBounds,
+							geosetBoundingBox, min, max);
+					this.walkableComponentTree.add(collidableComponent, geosetRotatedBounds);
+				}
+			}
+		}
+		else {
+			final Rectangle entireMap = this.terrain.getEntireMap();
 			for (final Geoset geoset : model.getGeosets()) {
 				final MdlxExtent extent = geoset.mdlxGeoset.extent;
 				final Bounds bounds = new Bounds();
@@ -861,7 +891,7 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 				final Rectangle geosetRotatedBounds = getRotatedBoundingBox(location[0], location[1], scale3D,
 						facingRadians, geosetBoundingBox);
 				if (entireMap.overlaps(geosetRotatedBounds)) {
-					final CollidableDoodadComponent collidableComponent = new CollidableDoodadComponent(
+					final CollidableDoodadGeosetComponent collidableComponent = new CollidableDoodadGeosetComponent(
 							(MdxComplexInstance) renderDoodad.instance, geoset, geosetRotatedBounds, geosetBoundingBox);
 					this.walkableComponentTree.add(collidableComponent, geosetRotatedBounds);
 				}
@@ -886,7 +916,7 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 					renderDoodad.instance.localScale.x, renderDoodad.instance.localScale.y,
 					renderDoodad.getFacingRadians(), geosetBoundingBox);
 			if (entireMap.overlaps(geosetRotatedBounds)) {
-				final CollidableDoodadComponent collidableComponent = new CollidableDoodadComponent(
+				final CollidableDoodadGeosetComponent collidableComponent = new CollidableDoodadGeosetComponent(
 						(MdxComplexInstance) renderDoodad.instance, geoset, geosetRotatedBounds, geosetBoundingBox);
 				this.walkableComponentTree.remove(collidableComponent, geosetRotatedBounds);
 			}
@@ -960,8 +990,8 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 				bounds.fromExtents(extent.getMin(), extent.getMax(), extent.getBoundsRadius());
 				final BoundingBox geosetBoundingBox = bounds.getBoundingBox();
 				final Rectangle geosetRotatedBounds = getRotatedBoundingBox(x, y, scale, angle, geosetBoundingBox);
-				final CollidableDoodadComponent collidableComponent = new CollidableDoodadComponent(complexInstance,
-						geoset, geosetRotatedBounds, geosetBoundingBox);
+				final CollidableDoodadGeosetComponent collidableComponent = new CollidableDoodadGeosetComponent(
+						complexInstance, geoset, geosetRotatedBounds, geosetBoundingBox);
 				this.walkableComponentTree.add(collidableComponent, geosetRotatedBounds);
 				renderDestructable.add(collidableComponent);
 			}
@@ -3140,6 +3170,23 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 					long minX = Integer.MAX_VALUE, minY = Integer.MAX_VALUE;
 					final Map<String, War3ID> doodadNameToId = new HashMap<>();
 					War3ID baseDoodadId = War3ID.fromString("0000");
+					final List<War3ID> doodadNameKeys = new ArrayList<>();
+					for (final String name : map.doodadModelFileNames) {
+						War3ID cloneIdBase = doodadNameToId.get(name);
+						if (cloneIdBase == null) {
+							final ObjectData war3Doodads = War3MapViewer.this.allObjectData.getDoodads();
+							cloneIdBase = MutableObjectData.advanceId(baseDoodadId);
+							final String cloneId = cloneIdBase.toString();
+							war3Doodads.cloneUnit("YOtf", cloneId);
+							final GameObject createdDoodad = war3Doodads.get(cloneId);
+							createdDoodad.setField("file", name);
+							createdDoodad.setField("soundLoop", "_"); // YOtf has a sound we dont want
+							createdDoodad.setField("minScale", "0.0");
+							createdDoodad.setField("maxScale", "10000.0");
+							baseDoodadId = cloneIdBase;
+						}
+						doodadNameKeys.add(cloneIdBase);
+					}
 					for (final TileHeader tileHeader : map.tileHeaders) {
 						System.out.println("loading doodads from tile header: " + tileHeader.idx);
 						for (final Chunk chunk : tileHeader.chunks) {
@@ -3151,23 +3198,6 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 						}
 //						tileHeader.
 
-						final List<War3ID> doodadNameKeys = new ArrayList<>();
-						for (final String name : map.doodadModelFileNames) {
-							War3ID cloneIdBase = doodadNameToId.get(name);
-							if (cloneIdBase == null) {
-								final ObjectData war3Doodads = War3MapViewer.this.allObjectData.getDoodads();
-								cloneIdBase = MutableObjectData.advanceId(baseDoodadId);
-								final String cloneId = cloneIdBase.toString();
-								war3Doodads.cloneUnit("YOtf", cloneId);
-								final GameObject createdDoodad = war3Doodads.get(cloneId);
-								createdDoodad.setField("file", name);
-								createdDoodad.setField("soundLoop", "_"); // YOtf has a sound we dont want
-								createdDoodad.setField("minScale", "0.0");
-								createdDoodad.setField("maxScale", "10000.0");
-								baseDoodadId = cloneIdBase;
-							}
-							doodadNameKeys.add(cloneIdBase);
-						}
 						this.terrainWdt.tileHeaderToDoodadIds.put(tileHeader, doodadNameKeys);
 						final float[] centerOffset = this.terrainData.getCenterOffset();
 						final float tilesize = 533.3333f;
@@ -3709,7 +3739,7 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 				War3MapViewer.this.walkableObjectsTree.remove((MdxComplexInstance) renderPeer.instance,
 						renderPeer.walkableBounds);
 			}
-			for (final CollidableDoodadComponent component : renderPeer.getCollidableComponents()) {
+			for (final CollidableDoodadGeosetComponent component : renderPeer.getCollidableComponents()) {
 				War3MapViewer.this.walkableComponentTree.remove(component, component.getGeosetRotatedBounds());
 			}
 

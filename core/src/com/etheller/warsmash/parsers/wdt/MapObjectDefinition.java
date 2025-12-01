@@ -10,47 +10,88 @@ import com.hiveworkshop.rms.util.BinaryWriter;
 public class MapObjectDefinition implements MdlxBlock, MdlxChunk {
 	private long nameId;
 	private int uniqueId;
-	private float[] position = new float[3];
-	private float[] rotation = new float[3];
-	private float[] minExt = new float[3];
-	private float[] maxExt = new float[3];
+	private final float[] position = new float[3];
+	private final float[] rotation = new float[3];
+	private final float[] minExt = new float[3];
+	private final float[] maxExt = new float[3];
 	private int flags;
 	private int doodadSet;
 	private int nameSet;
-	private int scale;
+	private float scale;
+	private int scaleShort;
 
 	@Override
-	public void readMdx(BinaryReader reader, int version) {
-		nameId = reader.readUInt32();
-		uniqueId = reader.readInt32();
-		reader.readFloat32Array(position);
-		reader.readFloat32Array(rotation);
-		reader.readFloat32Array(minExt);
-		reader.readFloat32Array(maxExt);
-		flags = reader.readUInt16();
-		doodadSet = reader.readUInt16();
-		nameSet = reader.readUInt16();
-		scale = reader.readUInt16();
+	public void readMdx(final BinaryReader reader, final int version) {
+		this.nameId = reader.readUInt32();
+		this.uniqueId = reader.readInt32();
+		reader.readFloat32Array(this.position);
+		reader.readFloat32Array(this.rotation);
+		reader.readFloat32Array(this.minExt);
+		reader.readFloat32Array(this.maxExt);
+		this.flags = reader.readUInt16();
+		this.doodadSet = reader.readUInt16();
+		this.nameSet = reader.readUInt16();
+		this.scaleShort = reader.readUInt16();
+		this.scale = this.scaleShort / 1024f;
 	}
 
 	@Override
-	public void writeMdx(BinaryWriter writer, int version) {
+	public void writeMdx(final BinaryWriter writer, final int version) {
 		throw new RuntimeException();
 	}
 
 	@Override
-	public void readMdl(MdlTokenInputStream stream, int version) {
+	public void readMdl(final MdlTokenInputStream stream, final int version) {
 		throw new RuntimeException();
 	}
 
 	@Override
-	public void writeMdl(MdlTokenOutputStream stream, int version) {
+	public void writeMdl(final MdlTokenOutputStream stream, final int version) {
 		throw new RuntimeException();
 	}
 
 	@Override
-	public long getByteLength(int version) {
+	public long getByteLength(final int version) {
 		return 4 + 4 + 12 + 12 + 12 + 12 + 2 + 2 + 2 + 2;
 	}
 
+	public long getNameId() {
+		return this.nameId;
+	}
+
+	public int getUniqueId() {
+		return this.uniqueId;
+	}
+
+	public float[] getPosition() {
+		return this.position;
+	}
+
+	public float[] getRotation() {
+		return this.rotation;
+	}
+
+	public float[] getMinExt() {
+		return this.minExt;
+	}
+
+	public float[] getMaxExt() {
+		return this.maxExt;
+	}
+
+	public int getFlags() {
+		return this.flags;
+	}
+
+	public int getDoodadSet() {
+		return this.doodadSet;
+	}
+
+	public int getNameSet() {
+		return this.nameSet;
+	}
+
+	public float getScale() {
+		return this.scale;
+	}
 }

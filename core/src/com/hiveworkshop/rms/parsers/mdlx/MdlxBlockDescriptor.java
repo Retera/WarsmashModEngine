@@ -12,6 +12,8 @@ public interface MdlxBlockDescriptor<E> extends Descriptor<E> {
 
 	MdlxBlockDescriptor<MdlxCollisionShape> COLLISION_SHAPE = MdlxCollisionShape::new;
 
+	MdlxBlockDescriptor<MdlxCollisionGeometry> COLLISION_GEOMETRY = MdlxCollisionGeometry::new;
+
 	MdlxBlockDescriptor<MdlxEventObject> EVENT_OBJECT = MdlxEventObject::new;
 
 	MdlxBlockDescriptor<MdlxGeoset> GEOSET = MdlxGeoset::new;

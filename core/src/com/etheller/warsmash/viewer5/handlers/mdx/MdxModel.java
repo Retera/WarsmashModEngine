@@ -16,6 +16,7 @@ import com.etheller.warsmash.viewer5.Texture;
 import com.hiveworkshop.rms.parsers.mdlx.MdlxAttachment;
 import com.hiveworkshop.rms.parsers.mdlx.MdlxBone;
 import com.hiveworkshop.rms.parsers.mdlx.MdlxCamera;
+import com.hiveworkshop.rms.parsers.mdlx.MdlxCollisionGeometry;
 import com.hiveworkshop.rms.parsers.mdlx.MdlxCollisionShape;
 import com.hiveworkshop.rms.parsers.mdlx.MdlxEventObject;
 import com.hiveworkshop.rms.parsers.mdlx.MdlxExtent;
@@ -32,7 +33,6 @@ import com.hiveworkshop.rms.parsers.mdlx.MdlxSequence;
 import com.hiveworkshop.rms.parsers.mdlx.MdlxTexture;
 import com.hiveworkshop.rms.parsers.mdlx.MdlxTexture.WrapMode;
 import com.hiveworkshop.rms.parsers.mdlx.MdlxTextureAnimation;
-import com.hiveworkshop.rms.parsers.mdlx.MdlxUnknownChunk;
 
 public class MdxModel extends com.etheller.warsmash.viewer5.Model<MdxHandler> {
 	public boolean reforged = false;
@@ -59,6 +59,7 @@ public class MdxModel extends com.etheller.warsmash.viewer5.Model<MdxHandler> {
 	public List<Camera> cameras = new ArrayList<>();
 	public List<EventObjectEmitterObject> eventObjects = new ArrayList<>();
 	public List<CollisionShape> collisionShapes = new ArrayList<>();
+	public List<MdlxCollisionGeometry> collisionGeometries = new ArrayList<>();
 	public boolean hasLayerAnims = false;
 	public boolean hasGeosetAnims = false;
 	public boolean hasMdx1300Collision = false;
@@ -274,10 +275,9 @@ public class MdxModel extends com.etheller.warsmash.viewer5.Model<MdxHandler> {
 			this.collisionShapes.add(new CollisionShape(this, collisionShape, objectId++));
 		}
 
-		for (final MdlxUnknownChunk chunk : parser.getUnknownChunks()) {
-			if (chunk.tag.asStringValue().equals("CLID")) {
-				this.hasMdx1300Collision = true;
-			}
+		for (final MdlxCollisionGeometry collisionGeometry : parser.getCollisionGeometries()) {
+			this.collisionGeometries.add(collisionGeometry);
+			this.hasMdx1300Collision = true;
 		}
 
 		// One array for all generic objects.
@@ -392,6 +392,10 @@ public class MdxModel extends com.etheller.warsmash.viewer5.Model<MdxHandler> {
 
 	public List<Bone> getBones() {
 		return this.bones;
+	}
+
+	public List<MdlxCollisionGeometry> getCollisionGeometries() {
+		return this.collisionGeometries;
 	}
 
 }

@@ -285,8 +285,8 @@ public class RenderUnit implements RenderWidget {
 			currentWalkableUnder = map.getHighestWalkableUnder(this.location[0], this.location[1]);
 			War3MapViewer.gdxRayHeap.set(this.location[0], this.location[1], 40960, 0, 0, -81920);
 			if ((currentWalkableUnder != null)
-					&& currentWalkableUnder.intersectRayWithCollision(War3MapViewer.gdxRayHeap,
-							War3MapViewer.intersectionHeap, true, true)
+					&& currentWalkableUnder.intersectRayWithGeosetSlow(War3MapViewer.gdxRayHeap,
+							War3MapViewer.intersectionHeap)
 					&& (War3MapViewer.intersectionHeap.z > groundHeightTerrainAndWater)) {
 				groundHeight = War3MapViewer.intersectionHeap.z;
 				swimming = false; // Naga Royal Guard should slither across a bridge, not swim in rock

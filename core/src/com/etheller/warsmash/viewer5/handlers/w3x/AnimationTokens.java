@@ -26,7 +26,8 @@ public class AnimationTokens {
 		RUN,
 		WALKBACKWARDS,
 		SHUFFLERIGHT,
-		SHUFFLELEFT;
+		SHUFFLELEFT,
+		MOUNT;
 
 		@Override
 		public int getHandleId() {

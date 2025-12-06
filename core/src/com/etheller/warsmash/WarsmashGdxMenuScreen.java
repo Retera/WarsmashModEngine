@@ -1,6 +1,5 @@
 package com.etheller.warsmash;
 
-import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.IntBuffer;
@@ -23,6 +22,7 @@ import com.badlogic.gdx.utils.viewport.ExtendViewport;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.etheller.warsmash.datasources.DataSource;
+import com.etheller.warsmash.datasources.SourcedData;
 import com.etheller.warsmash.networking.uberserver.GamingNetworkConnectionImpl;
 import com.etheller.warsmash.parsers.fdf.GameUI;
 import com.etheller.warsmash.parsers.jass.Jass2.RootFrameListener;
@@ -899,7 +899,7 @@ public class WarsmashGdxMenuScreen implements InputProcessor, Screen, SingleMode
 		}
 
 		@Override
-		protected void load(final InputStream src, final Object options) {
+		protected void load(final SourcedData src, final Object options) {
 		}
 
 		@Override

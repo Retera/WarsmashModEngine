@@ -1269,4 +1269,9 @@ public class CSimulation implements CPlayerAPI, CFogMaskSettings {
 		this.simulationRenderController.setupPlayerPawn(unit, abilityPlayerPawn, behaviorPlayerPawn);
 	}
 
+	public SimulationRenderComponentModel createMountBuffEffectOnUnit(final CUnit unit, final War3ID alias,
+			final CEffectType target, final int index) {
+		return this.simulationRenderController.spawnMountBuffEffectOnUnit(unit, alias, target, index);
+	}
+
 }

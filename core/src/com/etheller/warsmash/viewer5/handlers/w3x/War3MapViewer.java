@@ -42,6 +42,7 @@ import com.etheller.warsmash.common.LoadGenericCallback;
 import com.etheller.warsmash.datasources.CompoundDataSource;
 import com.etheller.warsmash.datasources.DataSource;
 import com.etheller.warsmash.datasources.MpqDataSource;
+import com.etheller.warsmash.datasources.SourcedData;
 import com.etheller.warsmash.datasources.SubdirDataSource;
 import com.etheller.warsmash.networking.GameTurnManager;
 import com.etheller.warsmash.parsers.fdf.GameUI;
@@ -121,6 +122,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.RenderItem;
 import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.RenderItemType;
 import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.RenderItemTypeData;
 import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.RenderLightningEffect;
+import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.RenderMountEffect;
 import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.RenderProjectile;
 import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.RenderShadowType;
 import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.RenderSpellEffect;
@@ -199,7 +201,6 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 	public static final Vector3 intersectionHeap = new Vector3();
 	public static final Vector3 intersectionHeap2 = new Vector3();
 	private static final Rectangle rectangleHeap = new Rectangle();
-	public static final StreamDataCallbackImplementation streamDataCallback = new StreamDataCallbackImplementation();
 
 	public WorldScene worldScene;
 	public boolean anyReady;
@@ -816,7 +817,7 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 		final float maxRoll = row.readSLKTagFloat("maxRoll");
 		final float defScale = row.readSLKTagFloat("defScale");
 		final RenderDoodad renderDoodad = new RenderDoodad(this, model, row, location, scale, facingRadians, maxPitch,
-				maxRoll, defScale, doodadVariation);
+				maxRoll, defScale, doodadVariation, -1);
 		renderDoodad.instance.uniformScale(defScale);
 		if (((model.name != null) && (model.name.toLowerCase().contains("deathknightnecropolis")
 				|| model.name.toLowerCase().contains("pirateship")))) {
@@ -838,7 +839,7 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 	}
 
 	public RenderDoodad createWdtDoodad(final GameObject row, final int doodadVariation, final float[] location,
-			final float[] rotation, final float scale, final boolean shrubbery) {
+			final float[] rotation, final float scale, final boolean shrubbery, final long uniqueId) {
 		final MdxModel model = getDoodadModel(doodadVariation, row);
 		final float maxPitch = row.readSLKTagFloat("maxPitch");
 		final float maxRoll = row.readSLKTagFloat("maxRoll");
@@ -846,7 +847,7 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 		final float defScale = scale;
 		final float facingRadians = (float) Math.toRadians(rotation[1] - 90);
 		final RenderDoodad renderDoodad = new RenderDoodad(this, model, row, location, scale3D, facingRadians, maxPitch,
-				maxRoll, defScale, doodadVariation);
+				maxRoll, defScale, doodadVariation, uniqueId);
 //		renderDoodad.instance.uniformScale(defScale);
 		renderDoodad.instance.rotate(
 				new Quaternion().setFromAxisRad(RenderMathUtils.VEC3_UNIT_Y, (float) Math.toRadians(rotation[0])));
@@ -881,7 +882,7 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 				}
 			}
 		}
-		else {
+		else if (false) {
 			final Rectangle entireMap = this.terrain.getEntireMap();
 			for (final Geoset geoset : model.getGeosets()) {
 				final MdlxExtent extent = geoset.mdlxGeoset.extent;
@@ -1813,9 +1814,10 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 
 	private static final class MappedDataCallbackImplementation implements LoadGenericCallback {
 		@Override
-		public Object call(final InputStream data) {
+		public Object call(final SourcedData data) {
 			final StringBuilder stringBuilder = new StringBuilder();
-			try (BufferedReader reader = new BufferedReader(new InputStreamReader(data, "utf-8"))) {
+			try (BufferedReader reader = new BufferedReader(
+					new InputStreamReader(data.getResourceAsStream(), "utf-8"))) {
 				String line;
 				while ((line = reader.readLine()) != null) {
 					stringBuilder.append(line);
@@ -1834,12 +1836,13 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 
 	private static final class StringDataCallbackImplementation implements LoadGenericCallback {
 		@Override
-		public Object call(final InputStream data) {
+		public Object call(final SourcedData data) {
 			if (data == null) {
 				System.err.println("data null");
 			}
 			final StringBuilder stringBuilder = new StringBuilder();
-			try (BufferedReader reader = new BufferedReader(new InputStreamReader(data, "utf-8"))) {
+			try (BufferedReader reader = new BufferedReader(
+					new InputStreamReader(data.getResourceAsStream(), "utf-8"))) {
 				String line;
 				while ((line = reader.readLine()) != null) {
 					stringBuilder.append(line);
@@ -1853,13 +1856,6 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 				throw new RuntimeException(e);
 			}
 			return stringBuilder.toString();
-		}
-	}
-
-	private static final class StreamDataCallbackImplementation implements LoadGenericCallback {
-		@Override
-		public Object call(final InputStream data) {
-			return data;
 		}
 	}
 
@@ -2030,8 +2026,6 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 		}
 		intersectorUnitOut[0] = null;
 		this.walkableComponentTree.intersect(x, y, this.walkableComponentsIntersector.reset(x, y, z + 1));
-		this.simulation.getWorldCollision().enumBuildingsAtPoint(x, y,
-				this.walkableBuildingIntersector.reset(x, y, z + 1));
 		this.simulation.getWorldCollision().enumUnitsAtPoint(x, y, this.walkableBuildingIntersector.reset(x, y, z + 1));
 		if (this.walkableBuildingIntersector.bestIntersectedUnit != null) {
 			intersectorUnitOut[0] = this.walkableBuildingIntersector.bestIntersectedUnit;
@@ -2083,14 +2077,14 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 			bestClosestAvailableLocationIfFailed.z -= pawnHeight;
 			return true;
 		}
-		this.simulation.getWorldCollision().enumBuildingsInRect(rectangleHeap, this.walkableBuildingRayHitter
+		this.simulation.getWorldCollision().enumUnitsInRect(rectangleHeap, this.walkableBuildingRayHitter
 				.reset(prevLocation.x, prevLocation.y, prevLocation.z + stairsHeight, dx, dy, dz));
 		if (this.walkableBuildingRayHitter.intersected) {
 			bestClosestAvailableLocationIfFailed.set(this.walkableBuildingRayHitter.nearestHit);
 			bestClosestAvailableLocationIfFailed.z -= stairsHeight;
 			return true;
 		}
-		this.simulation.getWorldCollision().enumBuildingsInRect(rectangleHeap, this.walkableBuildingRayHitter
+		this.simulation.getWorldCollision().enumUnitsInRect(rectangleHeap, this.walkableBuildingRayHitter
 				.reset(prevLocation.x, prevLocation.y, prevLocation.z + pawnHeight, dx, dy, dz));
 		if (this.walkableBuildingRayHitter.intersected) {
 			bestClosestAvailableLocationIfFailed.set(this.walkableBuildingRayHitter.nearestHit);
@@ -2117,7 +2111,7 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 			nearestHit.set(this.walkableComponentsRayHitter.nearestHit);
 			return true;
 		}
-		this.simulation.getWorldCollision().enumBuildingsInRect(rectangleHeap,
+		this.simulation.getWorldCollision().enumUnitsInRect(rectangleHeap,
 				this.walkableBuildingRayHitter.reset(prevLocation.x, prevLocation.y, prevLocation.z, dx, dy, dz));
 		if (this.walkableBuildingRayHitter.intersected) {
 			nearestHit.set(this.walkableBuildingRayHitter.nearestHit);
@@ -2315,7 +2309,7 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 		}
 	}
 
-	private final class QuadtreeIntersectorFindsBuildingRayHit implements QuadtreeIntersector<CUnit> {
+	private final class QuadtreeIntersectorFindsBuildingRayHit implements CUnitEnumFunction {
 		private final Ray ray = new Ray();
 		private final Vector3 intersection = new Vector3();
 		private final Vector3 nearestHit = new Vector3();
@@ -2331,14 +2325,16 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 		}
 
 		@Override
-		public boolean onIntersect(final CUnit intersectingObject) {
-			final RenderUnit renderPeer = getRenderPeer(intersectingObject);
-			if (renderPeer.instance.intersectRayWithMeshSlow(this.ray, this.intersection)) {
-				final float dst2 = this.intersection.dst2(this.ray.origin);
-				if (dst2 <= this.lastDist2) {
-					this.intersected = true;
-					this.lastDist2 = dst2;
-					this.nearestHit.set(this.intersection);
+		public boolean call(final CUnit intersectingObject) {
+			if (intersectingObject.isUnitType(CUnitTypeJass.MECHANICAL)) {
+				final RenderUnit renderPeer = getRenderPeer(intersectingObject);
+				if (renderPeer.instance.intersectRayWithMeshSlow(this.ray, this.intersection)) {
+					final float dst2 = this.intersection.dst2(this.ray.origin);
+					if (dst2 <= this.lastDist2) {
+						this.intersected = true;
+						this.lastDist2 = dst2;
+						this.nearestHit.set(this.intersection);
+					}
 				}
 			}
 			return false;
@@ -2730,6 +2726,75 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 					RenderSpellEffect.DEFAULT_ANIMATION_QUEUE, SequenceUtils.EMPTY);
 			War3MapViewer.this.projectiles.add(renderAttackInstant);
 			return renderAttackInstant;
+		}
+		return null;
+	}
+
+	public RenderMountEffect addMountEffectTarget(final String modelName, final CWidget targetWidget,
+			final int attachmentId) {
+		if (targetWidget instanceof CUnit) {
+			final RenderUnit renderUnit = War3MapViewer.this.unitToRenderPeer.get(targetWidget);
+			if (renderUnit == null) {
+				final NullPointerException nullPointerException = new NullPointerException(
+						"renderUnit is null! targetWidget is \"" + ((CUnit) targetWidget).getUnitType().getName()
+								+ "\", attachmentId=\"" + attachmentId + "\"");
+				if (WarsmashConstants.ENABLE_DEBUG) {
+					throw nullPointerException;
+				}
+				else {
+					nullPointerException.printStackTrace();
+				}
+				return null;
+			}
+			final MdxModel spawnedEffectModel = loadModelMdx(modelName);
+			if (spawnedEffectModel != null) {
+				final MdxComplexInstance modelInstance = (MdxComplexInstance) spawnedEffectModel.addInstance();
+				final MdxComplexInstance unitModelInstance = renderUnit.instance;
+				modelInstance.setTeamColor(renderUnit.playerIndex);
+				modelInstance.setReplaceableTexture(11, "Creature\\Horse\\HorseSkinPalamino.blp");
+				{
+					final MdxModel model = (MdxModel) modelInstance.model;
+					int index = -1;
+					for (int i = 0; i < model.attachments.size(); i++) {
+						final Attachment attachment = model.attachments.get(i);
+						if (attachment.getAttachmentId() == attachmentId) {
+							index = i;
+						}
+					}
+					modelInstance.setLocation(unitModelInstance.localLocation);
+					modelInstance.setRotation(unitModelInstance.localRotation);
+					modelInstance.setScale(unitModelInstance.localScale);
+					unitModelInstance.detach();
+					if (index != -1) {
+						final MdxNode attachment = modelInstance.getAttachment(index);
+						unitModelInstance.setParent(attachment);
+					}
+					else {
+						// TODO Mount attachment fail, both models smashed into one or something
+						unitModelInstance.setParent(modelInstance);
+					}
+					unitModelInstance.setLocation(0, 0, 0);
+					renderUnit.setModelInstance(modelInstance);
+				}
+				unitModelInstance.setScene(War3MapViewer.this.worldScene);
+				modelInstance.setScene(War3MapViewer.this.worldScene);
+				final EnumSet<SecondaryTag> requiredAnimationNamesForAttachments = renderUnit == null
+						? SequenceUtils.EMPTY
+						: renderUnit.getTypeData().getRequiredAnimationNamesForAttachments();
+				final RenderMountEffect renderMountEffect = new RenderMountEffect(modelInstance, unitModelInstance,
+						renderUnit, War3MapViewer.this, RenderMountEffect.DEFAULT_ANIMATION_QUEUE,
+						requiredAnimationNamesForAttachments);
+				War3MapViewer.this.projectiles.add(renderMountEffect);
+				return renderMountEffect;
+			}
+		}
+		else if (targetWidget instanceof CItem) {
+			// TODO this is stupid api, who would do this?
+			throw new UnsupportedOperationException("API for addSpecialEffectTarget() on item is NYI");
+		}
+		else if (targetWidget instanceof CDestructable) {
+			// TODO this is stupid api, who would do this?
+			throw new UnsupportedOperationException("API for addSpecialEffectTarget() on destructable is NYI");
 		}
 		return null;
 	}
@@ -3248,7 +3313,7 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 											}
 
 											createWdtDoodad(row, 0, location, rotation, finalScale,
-													(doodad.getFlags() & 0x2) != 0);
+													(doodad.getFlags() & 0x2) != 0, doodad.getUniqueId());
 											// ---
 										}
 									}
@@ -3368,6 +3433,7 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 	}
 
 	private final class SimulationRenderControllerImplementation implements SimulationRenderController {
+		private static final int DEFAULT_MOUNT_ATTACHMENT_ID = 0;
 		private final int localPlayerIndex;
 		private final Map<String, UnitSound> keyToCombatSound = new HashMap<>();
 		int nextUserTextTagId = 0;
@@ -3912,6 +3978,34 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 					for (final RenderSpellEffect effect : specialEffects) {
 						effect.setHeight(height);
 					}
+				}
+			};
+		}
+
+		@Override
+		public SimulationRenderComponentModel spawnMountBuffEffectOnUnit(final CUnit unit, final War3ID alias,
+				final CEffectType effectType, final int index) {
+			final List<EffectAttachmentUI> effectAttachmentUI = getEffectAttachmentUIList(alias, effectType);
+			if (effectAttachmentUI == null) {
+				return null;
+			}
+			final EffectAttachmentUI effectUI = effectAttachmentUI.get(index);
+			final String modelPath = effectUI.getModelPath();
+//			final List<String> attachmentPoint = effectUI.getAttachmentPoint();
+			final RenderMountEffect effect = addMountEffectTarget(modelPath, unit, DEFAULT_MOUNT_ATTACHMENT_ID);
+			if (effect == null) {
+				return SimulationRenderComponentModel.DO_NOTHING;
+			}
+			return new SimulationRenderComponentModel() {
+				@Override
+				public void remove() {
+					effect.setAnimations(RenderSpellEffect.DEATH_ONLY);
+					effect.dismount(War3MapViewer.this);
+				}
+
+				@Override
+				public void setHeight(final float height) {
+					effect.setHeight(height);
 				}
 			};
 		}

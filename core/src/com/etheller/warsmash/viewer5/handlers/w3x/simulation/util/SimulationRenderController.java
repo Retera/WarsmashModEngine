@@ -115,6 +115,9 @@ public interface SimulationRenderController {
 	SimulationRenderComponentModel spawnPersistentSpellEffectOnUnit(CUnit unit, War3ID alias, CEffectType effectType,
 			int index);
 
+	SimulationRenderComponentModel spawnMountBuffEffectOnUnit(CUnit unit, War3ID alias, CEffectType effectType,
+			int index);
+
 	SimulationRenderComponentModel spawnSpellEffectOnPoint(float x, float y, float facing, War3ID alias,
 			CEffectType effectType, int index);
 
@@ -165,7 +168,7 @@ public interface SimulationRenderController {
 	boolean isTerrainRomp(float x, float y);
 
 	boolean isTerrainWater(float x, float y);
-	
+
 	void setupPlayerPawn(CUnit unit, CAbilityPlayerPawn abilityPlayerPawn, CBehaviorPlayerPawn behaviorPlayerPawn);
 
 }

@@ -10,13 +10,13 @@ public class WorldGrid {
 	}
 
 	public int getCellX(final float x) {
-		final float userCellSpaceX = (x - this.centerOffset[0]) / this.cellSize;
+		final double userCellSpaceX = StrictMath.floor((StrictMath.floor(x) - this.centerOffset[0]) / this.cellSize);
 		final int cellX = (int) userCellSpaceX;
 		return cellX;
 	}
 
 	public int getCellY(final float y) {
-		final float userCellSpaceY = (y - this.centerOffset[1]) / this.cellSize;
+		final double userCellSpaceY = StrictMath.floor((StrictMath.floor(y) - this.centerOffset[1]) / this.cellSize);
 		final int cellY = (int) userCellSpaceY;
 		return cellY;
 	}

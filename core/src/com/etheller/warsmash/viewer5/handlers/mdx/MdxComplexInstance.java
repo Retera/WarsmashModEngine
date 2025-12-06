@@ -27,6 +27,7 @@ import com.etheller.warsmash.viewer5.Texture;
 import com.etheller.warsmash.viewer5.TextureMapper;
 import com.etheller.warsmash.viewer5.UpdatableObject;
 import com.etheller.warsmash.viewer5.gl.DataTexture;
+import com.etheller.warsmash.viewer5.gl.DataTexturePool;
 import com.etheller.warsmash.viewer5.handlers.w3x.DynamicShadowManager;
 import com.hiveworkshop.rms.parsers.mdlx.MdlxCollisionGeometry;
 import com.hiveworkshop.rms.parsers.mdlx.MdlxGeoset;
@@ -225,7 +226,8 @@ public class MdxComplexInstance extends ModelInstance {
 		setSequence(this.sequence);
 
 		if (model.bones.size() != 0) {
-			this.boneTexture = new DataTexture(model.viewer.gl, 4, model.bones.size() * 4, 1);
+			this.boneTexture = DataTexturePool.INSTANCE.get(4, model.bones.size() * 4, 1);
+			// new DataTexture(model.viewer.gl, 4, model.bones.size() * 4, 1);
 		}
 	}
 
@@ -309,10 +311,12 @@ public class MdxComplexInstance extends ModelInstance {
 	 * Updates all of this instance internal nodes and objects. Nodes that are
 	 * determined to not be visible will not be updated, nor will any of their
 	 * children down the hierarchy.
+	 *
+	 * @return true if anything updated at all
 	 */
-	public void updateNodes(final float dt, final boolean forced) {
+	public boolean updateNodes(final float dt, final boolean forced) {
 		if (!this.model.ok) {
-			return;
+			return false;
 		}
 		final int sequence = this.sequence;
 		final int frame = this.frame;
@@ -321,6 +325,8 @@ public class MdxComplexInstance extends ModelInstance {
 		final MdxModel model = (MdxModel) this.model;
 		final List<GenericObject> sortedGenericObjects = model.sortedGenericObjects;
 		final Scene scene = this.scene;
+
+		boolean updated = false;
 
 		// Update the nodes
 		for (int i = 0, l = sortedNodes.length; i < l; i++) {
@@ -398,6 +404,7 @@ public class MdxComplexInstance extends ModelInstance {
 				// parent node was updated, do a full world update.
 				if (wasReallyDirty) {
 					node.recalculateTransformation(scene, this.blendTimeRemaining / this.blendTime);
+					updated = true;
 				}
 
 				// If there is an instance object associated with this node, and the node is
@@ -415,6 +422,7 @@ public class MdxComplexInstance extends ModelInstance {
 				node.updateChildren(dt, scene);
 			}
 		}
+		return updated;
 	}
 
 	/**
@@ -650,9 +658,9 @@ public class MdxComplexInstance extends ModelInstance {
 		if (sequenceId == -1) {
 			if (forced) {
 				// Update the nodes
-				updateNodes(dt, forced);
-
-				updateBoneTexture();
+				if (updateNodes(dt, forced)) {
+					updateBoneTexture();
+				}
 
 				// Update the batches
 				updateBatches(forced);
@@ -663,9 +671,10 @@ public class MdxComplexInstance extends ModelInstance {
 
 			// if (forced || variants.nodes[sequenceId]) {
 			// Update the nodes
-			updateNodes(dt, forced);
+			if (updateNodes(dt, forced)) {
+				updateBoneTexture();
+			}
 
-			updateBoneTexture();
 			// }
 
 			// if (forced || variants.batches[sequenceId]) {
@@ -1076,7 +1085,7 @@ public class MdxComplexInstance extends ModelInstance {
 	@Override
 	public void unload() {
 		if (this.boneTexture != null) {
-			this.boneTexture.delete();
+			DataTexturePool.INSTANCE.release(this.boneTexture);
 		}
 		this.boneTexture = null;
 	}

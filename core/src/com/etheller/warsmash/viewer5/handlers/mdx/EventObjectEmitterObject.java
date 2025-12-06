@@ -13,6 +13,7 @@ import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.files.FileHandle;
 import com.etheller.warsmash.common.FetchDataTypeName;
 import com.etheller.warsmash.common.LoadGenericCallback;
+import com.etheller.warsmash.datasources.SourcedData;
 import com.etheller.warsmash.util.MappedData;
 import com.etheller.warsmash.util.MappedDataRow;
 import com.etheller.warsmash.viewer5.GenericResource;
@@ -33,11 +34,11 @@ public class EventObjectEmitterObject extends GenericObject implements EmitterOb
 		}
 
 		@Override
-		public Object call(final InputStream data) {
+		public Object call(final SourcedData data) {
 			final FileHandle temp = new FileHandle(this.filename) {
 				@Override
 				public InputStream read() {
-					return data;
+					return data.getResourceAsStream();
 				}
 
 				;
@@ -55,12 +56,13 @@ public class EventObjectEmitterObject extends GenericObject implements EmitterOb
 	private static final LoadGenericCallback mappedDataCallback = new LoadGenericCallback() {
 
 		@Override
-		public Object call(final InputStream data) {
+		public Object call(final SourcedData data) {
 			if (data == null) {
 				return new MappedData();
 			}
 			final StringBuilder stringBuilder = new StringBuilder();
-			try (BufferedReader reader = new BufferedReader(new InputStreamReader(data, "utf-8"))) {
+			try (BufferedReader reader = new BufferedReader(
+					new InputStreamReader(data.getResourceAsStream(), "utf-8"))) {
 				String line;
 				while ((line = reader.readLine()) != null) {
 					stringBuilder.append(line);

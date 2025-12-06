@@ -2,6 +2,7 @@ package com.etheller.warsmash.viewer5.handlers.w3x.lightning;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.GL20;
+import com.etheller.warsmash.datasources.SourcedData;
 import com.etheller.warsmash.util.RenderMathUtils;
 import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.viewer5.*;
@@ -91,7 +92,7 @@ public class LightningEffectModel extends Model<LightningEffectModelHandler> {
 	}
 
 	@Override
-	protected void load(InputStream src, Object options) {
+	protected void load(SourcedData src, Object options) {
 		String path = textureFilePath;
 		if ("".equals(path)) {
 			path = "Textures\\white.blp";

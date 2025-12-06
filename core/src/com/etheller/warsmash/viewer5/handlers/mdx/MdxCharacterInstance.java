@@ -28,15 +28,16 @@ public class MdxCharacterInstance extends MdxComplexInstance implements Sequence
 	 * children down the hierarchy.
 	 */
 	@Override
-	public void updateNodes(final float dt, final boolean forcedArg) {
+	public boolean updateNodes(final float dt, final boolean forcedArg) {
 		if (!this.model.ok) {
-			return;
+			return false;
 		}
 		final int counter = this.counter;
 		final SkeletalNode[] sortedNodes = this.sortedNodes;
 		final MdxModel model = (MdxModel) this.model;
 		final List<GenericObject> sortedGenericObjects = model.sortedGenericObjects;
 		final Scene scene = this.scene;
+		boolean updated = false;
 
 		// Update the nodes
 		for (int i = 0, l = sortedNodes.length; i < l; i++) {
@@ -116,6 +117,7 @@ public class MdxCharacterInstance extends MdxComplexInstance implements Sequence
 				// parent node was updated, do a full world update.
 				if (wasReallyDirty) {
 					node.recalculateTransformation(scene, this.blendTimeRemaining / this.blendTime);
+					updated = true;
 				}
 
 				// If there is an instance object associated with this node, and the node is
@@ -133,6 +135,7 @@ public class MdxCharacterInstance extends MdxComplexInstance implements Sequence
 				node.updateChildren(dt, scene);
 			}
 		}
+		return updated;
 	}
 
 	@Override

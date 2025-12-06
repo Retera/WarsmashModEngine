@@ -13,6 +13,14 @@ public class HashTable {
 	}
 	
 	public int lookupBlock(HashLookup what) throws MPQException{
+		int result = lookupBlock2(what);
+		if(result == -1) {
+			throw new MPQException("lookup not found");
+		}
+		return result;
+	}
+	
+	public int lookupBlock2(HashLookup what) {
 		int mask = bucketArray.length-1;
 		int index = what.index & mask;
 		for(int pos = index ; ; ){
@@ -22,7 +30,7 @@ public class HashTable {
 			pos = ( pos + 1 ) & mask;
 			if(pos == index) break;
 		}
-		throw new MPQException("lookup not found");
+		return -1;
 	}
 	
 	/*public static int lookupBlock(Entry[] hashtable, byte[] file) throws FileNotFoundException{

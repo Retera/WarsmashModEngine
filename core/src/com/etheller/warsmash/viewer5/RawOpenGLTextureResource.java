@@ -28,7 +28,7 @@ public abstract class RawOpenGLTextureResource extends Texture {
 	private int wrapS = GL20.GL_CLAMP_TO_EDGE;
 	private int wrapT = GL20.GL_CLAMP_TO_EDGE;
 	private final int magFilter = GL20.GL_LINEAR;
-	private final int minFilter = GL20.GL_LINEAR;
+	private final int minFilter = GL20.GL_LINEAR_MIPMAP_LINEAR;
 	private ByteBuffer data;
 
 	public RawOpenGLTextureResource(final ModelViewer viewer, final String extension, final PathSolver pathSolver,
@@ -131,6 +131,8 @@ public abstract class RawOpenGLTextureResource extends Texture {
 //		else {
 		gl.glTexImage2D(GL20.GL_TEXTURE_2D, 0, sRGBFix ? GL30.GL_SRGB8_ALPHA8 : GL30.GL_RGBA8, imageWidth, imageHeight,
 				0, GL20.GL_RGBA, GL20.GL_UNSIGNED_BYTE, buffer);
+
+		gl.glGenerateMipmap(GL30.GL_TEXTURE_2D);
 
 		this.width = imageWidth;
 		this.height = imageHeight;

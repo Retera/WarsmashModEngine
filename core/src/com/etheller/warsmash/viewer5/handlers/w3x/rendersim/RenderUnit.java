@@ -165,6 +165,11 @@ public class RenderUnit implements RenderWidget {
 		this.building = simulationUnit.isBuilding();
 	}
 
+	public void setModelInstance(final MdxComplexInstance instance) {
+		this.instance = instance;
+		this.unitAnimationListenerImpl.setInstance(instance);
+	}
+
 	public void populateCommandCard(final CSimulation game, final GameUI gameUI,
 			final CommandButtonListener commandButtonListener, final AbilityDataUI abilityDataUI,
 			final int subMenuOrderId, final boolean multiSelect, final int localPlayerIndex) {

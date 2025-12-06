@@ -25,7 +25,10 @@ import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.math.collision.Ray;
+import com.badlogic.gdx.utils.ObjectLongMap;
+import com.badlogic.gdx.utils.TimeUtils;
 import com.etheller.warsmash.datasources.DataSource;
+import com.etheller.warsmash.datasources.SourcedData;
 import com.etheller.warsmash.parsers.w3x.w3e.War3MapW3e;
 import com.etheller.warsmash.parsers.w3x.w3i.War3MapW3i;
 import com.etheller.warsmash.parsers.w3x.wpm.War3MapWpm;
@@ -73,6 +76,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.vision.CPla
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.vision.CPlayerFogOfWarInterface;
 
 public class TerrainWdt extends TerrainInterface {
+	private static final int WORST_MS_PER_FRAME = 8000000;
 	private static final int LOAD_RADIUS = 1;
 	public static final float CELL_SIZE = 128f;
 	private static final String[] colorTags = { "R", "G", "B", "A" };
@@ -151,6 +155,7 @@ public class TerrainWdt extends TerrainInterface {
 	private final int waterTextureArray;
 
 	private final ArrayDeque<DynamicTask> tasks = new ArrayDeque<>();
+	final Set<Long> usedDoodadSet = new HashSet<>();
 
 	public TerrainWdt(final WdtMap map, final War3MapW3e w3eFile, final War3MapWpm terrainPathing,
 			final War3MapW3i w3iFile, final WebGL webGL, final DataSource dataSource,
@@ -375,8 +380,9 @@ public class TerrainWdt extends TerrainInterface {
 			final Tile tile = this.activeTiles.get(k);
 			final int dx = Math.abs(tile.terrainModel.blockX - cellX);
 			final int dy = Math.abs(tile.terrainModel.blockY - cellY);
-			if ((dx > LOAD_RADIUS) || (dy > LOAD_RADIUS)) {
+			if ((dx > (LOAD_RADIUS)) || (dy > (LOAD_RADIUS))) {
 				tile.deactivate();
+				System.out.println("DEACTIVATING (" + tile.terrainModel.blockX + ", " + tile.terrainModel.blockY + ")");
 				this.activeTiles.remove(k);
 			}
 		}
@@ -390,6 +396,8 @@ public class TerrainWdt extends TerrainInterface {
 						final Tile tile = this.tiles[x][y];
 						if (tile != null) {
 							if (tile.activate()) {
+								System.out.println("ACTIVATING (" + tile.terrainModel.blockX + ", "
+										+ tile.terrainModel.blockY + ")  <---> (" + x + ", " + y + ")");
 								this.activeTiles.add(this.tiles[x][y]);
 							}
 						}
@@ -398,7 +406,9 @@ public class TerrainWdt extends TerrainInterface {
 			}
 		}
 
-		if (!this.tasks.isEmpty()) {
+		final long startMs = TimeUtils.nanoTime();
+		long lastMs = startMs;
+		while (!this.tasks.isEmpty()) {
 			final DynamicTask nextTask = this.tasks.peek();
 			if (nextTask.run()) {
 				this.tasks.poll();
@@ -406,8 +416,27 @@ public class TerrainWdt extends TerrainInterface {
 			if (this.tasks.isEmpty()) {
 				System.out.println("finished all tasks for now!!");
 			}
+			final long taskFinishMillis = TimeUtils.nanoTime();
+			this.taskTime.getAndIncrement(nextTask.getClass().hashCode() + nextTask.getClass().getSimpleName(), 0,
+					taskFinishMillis - lastMs);
+			this.taskCounter++;
+			lastMs = taskFinishMillis;
+			if (((taskFinishMillis - startMs) > WORST_MS_PER_FRAME)) {
+				break;
+			}
+		}
+		if (this.taskCounter > 1000) {
+			System.out.println("Task Times:");
+			for (final ObjectLongMap.Entry<String> entry : this.taskTime) {
+				System.out.println(entry.key + ": " + entry.value);
+			}
+			this.taskTime.clear();
+			this.taskCounter = 0;
 		}
 	}
+
+	private final ObjectLongMap<String> taskTime = new ObjectLongMap<>();
+	private long taskCounter = 0;
 
 	@Override
 	public void renderGround(final DynamicShadowManager dynamicShadowManager) {
@@ -511,8 +540,8 @@ public class TerrainWdt extends TerrainInterface {
 		if ((tile != null) && (tile.activeTile != null)) {
 			final Texture texture = this.shadowTextures.get(file);
 
-			final int columns = (tile.activeTile.width - 1) * 4;
-			final int rows = (tile.activeTile.height - 1) * 4;
+			final int columns = (tile.activeTile.width - 1) * 8;
+			final int rows = (tile.activeTile.height - 1) * 8;
 			if (tile.activeTile.blitShadowData(columns, rows, shadowX, shadowY, texture)) {
 				final GL30 gl = Gdx.gl30;
 				gl.glBindTexture(GL30.GL_TEXTURE_2D, tile.activeTile.shadowMap);
@@ -606,13 +635,16 @@ public class TerrainWdt extends TerrainInterface {
 
 	@Override
 	public float getGroundHeight(final float x, final float y) {
-		final float userCellSpaceXWc3 = (x - this.centerOffset[0]) / 128.0f;
-		final float userCellSpaceYWc3 = (y - this.centerOffset[1]) / 128.0f;
-		final int cellXWc3 = (int) userCellSpaceXWc3;
-		final int cellYWc3 = (int) userCellSpaceYWc3;
+		final double userCellSpaceXWc3 = (StrictMath.floor(x) - this.centerOffset[0]) / 128.0;
+		final double userCellSpaceYWc3 = (StrictMath.floor(y) - this.centerOffset[1]) / 128.0;
+		final int cellXWc3 = (int) StrictMath.floor(userCellSpaceXWc3);
+		final int cellYWc3 = (int) StrictMath.floor(userCellSpaceYWc3);
 
 		if ((cellXWc3 >= 0) && (cellXWc3 < (this.mapSize[0] - 1)) && (cellYWc3 >= 0)
 				&& (cellYWc3 < (this.mapSize[1] - 1))) {
+			if ((x < 0) && (x >= -1)) {
+				System.err.println("??");
+			}
 			final int worldGridCellX = this.worldGrid.getCellX(x);
 			final int worldGridCellY = this.worldGrid.getCellY(y);
 			if ((worldGridCellX >= 0) && (worldGridCellX < this.tiles.length)) {
@@ -622,18 +654,25 @@ public class TerrainWdt extends TerrainInterface {
 					if (tile != null) {
 						final float cornerX = this.worldGrid.getCornerX(worldGridCellX);
 						final float cornerY = this.worldGrid.getCornerY(worldGridCellY);
-						final float xWithinBlock = x - cornerX;
-						final float yWithinBlock = y - cornerY;
+						final double xWithinBlock = StrictMath.floor(x) - cornerX;
+						final double yWithinBlock = StrictMath.floor(y) - cornerY;
 
+						System.err.println("zgfg");
 						final float chunkSize = 128.0f * 8;
-						final int chunkX = (int) (xWithinBlock / chunkSize);
-						final int chunkY = (int) (yWithinBlock / chunkSize);
+						final int chunkX = (int) StrictMath.floor(xWithinBlock / chunkSize);
+						final int chunkY = (int) StrictMath.floor(yWithinBlock / chunkSize);
+						if ((chunkX == -1) || (chunkY == -1) || (chunkX >= 16) || (chunkY >= 16)) {
+							throw new IllegalStateException("math");
+						}
 						final Chunk chunk = tile.chunks[chunkX][chunkY];
 						if (chunk != null) {
-							final float userCellSpaceX = (xWithinBlock - (chunkX * chunkSize)) / 128.0f;
-							final float userCellSpaceY = (yWithinBlock - (chunkY * chunkSize)) / 128.0f;
-							final int cellX = (int) userCellSpaceX;
-							final int cellY = (int) userCellSpaceY;
+							final double userCellSpaceX = (xWithinBlock - (chunkX * chunkSize)) / 128.0;
+							final double userCellSpaceY = (yWithinBlock - (chunkY * chunkSize)) / 128.0;
+							final int cellX = (int) StrictMath.floor(userCellSpaceX);
+							final int cellY = (int) StrictMath.floor(userCellSpaceY);
+							if ((cellX == -1) || (cellY == -1)) {
+								throw new IllegalStateException("math");
+							}
 
 							final float[][] heightMap = chunk.getHeightMap();
 							final float bottomLeft = heightMap[8 - cellY][cellX]
@@ -646,34 +685,34 @@ public class TerrainWdt extends TerrainInterface {
 									* WdtChunkModelInstance.wowToHiveWEFactor;
 							final float center = heightMap[16 - cellY][cellX] * WdtChunkModelInstance.wowToHiveWEFactor;
 
-							final float sqX = userCellSpaceXWc3 - cellXWc3;
-							final float sqY = userCellSpaceYWc3 - cellYWc3;
-							final float sqXinv = 1 - sqX;
-							final float sqYinv = 1 - sqY;
+							final double sqX = userCellSpaceXWc3 - cellXWc3;
+							final double sqY = userCellSpaceYWc3 - cellYWc3;
+							final double sqXinv = 1 - sqX;
+							final double sqYinv = 1 - sqY;
 							float height;
 
 							if ((sqX + sqY) < 1) {
 								if ((sqX + sqYinv) >= 1) {
 									// bottom
-									height = bottomLeft + ((bottomRight - bottomLeft) * sqX)
-											+ (((center * 2) - bottomRight - bottomLeft) * sqY);
+									height = (float) (bottomLeft + ((bottomRight - bottomLeft) * sqX)
+											+ (((center * 2) - bottomRight - bottomLeft) * sqY));
 								}
 								else {
 									// left
-									height = bottomLeft + (((center * 2) - topLeft - bottomLeft) * sqX)
-											+ ((topLeft - bottomLeft) * sqY);
+									height = (float) (bottomLeft + (((center * 2) - topLeft - bottomLeft) * sqX)
+											+ ((topLeft - bottomLeft) * sqY));
 								}
 							}
 							else {
 								if ((sqX + sqYinv) >= 1) {
 									// right
-									height = topRight + ((bottomRight - topRight) * sqYinv)
-											+ (((center * 2) - bottomRight - topRight) * sqXinv);
+									height = (float) (topRight + ((bottomRight - topRight) * sqYinv)
+											+ (((center * 2) - bottomRight - topRight) * sqXinv));
 								}
 								else {
 									// top
-									height = topRight + (((center * 2) - topLeft - topRight) * sqYinv)
-											+ ((topLeft - topRight) * sqXinv);
+									height = (float) (topRight + (((center * 2) - topLeft - topRight) * sqYinv)
+											+ ((topLeft - topRight) * sqXinv));
 								}
 							}
 
@@ -875,6 +914,15 @@ public class TerrainWdt extends TerrainInterface {
 		}
 	}
 
+	private static int getAlphaMappingIndex(final int withinSpacedChunkIndexX, final int withinSpacedChunkIndexY,
+			final int userX, final int userY) {
+		final int war3IndexX = withinSpacedChunkIndexY + userY;
+		final int war3IndexY = withinSpacedChunkIndexX + (65 - userX);
+
+		final int value = (war3IndexY * (66 * 16)) + war3IndexX;
+		return 4 * value;
+	}
+
 	private class WdtChunkModelInstance extends ModelInstance {
 		public static final int CHUNK_GRID_SIZE = 9;
 		public static final int CHUNK_INTERIOR_GRID_SIZE = CHUNK_GRID_SIZE - 1;
@@ -885,20 +933,8 @@ public class TerrainWdt extends TerrainInterface {
 		private final ChunkInfo chunkInfo;
 		private final Chunk chunk;
 
-		private float[] groundCornerHeights;
-		private float[] groundCornerHeightsWdtInterior;
-		private float[] groundCornerNormals;
-		private float[] groundCornerNormalsInterior;
-		private short[] groundTextureList;
-
-		private int groundCornerHeight;
-		private int groundCornerHeightWdtInterior;
-		private int groundCornerNormal;
-		private int groundCornerNormalWdtInterior;
-		private int groundTextureData = -1;
-		private int[] alphaMapHandleIds;
-		private AlphaMapDataValue[] alphaMapValues;
 		private final int[] tileOffset = new int[2];
+		private final int[] chunkOffset = new int[2];
 
 		public WdtChunkModelInstance(final Model model, final ChunkInfo chunkInfo, final Chunk chunk) {
 			super(model);
@@ -949,7 +985,6 @@ public class TerrainWdt extends TerrainInterface {
 			gl.glUniform1i(TerrainWdt.this.groundShader.getUniformLocation("height_cliff_texture_wdt"), 23);
 			gl.glUniform1i(TerrainWdt.this.groundShader.getUniformLocation("normal_texture"), 10);
 			gl.glUniform1i(TerrainWdt.this.groundShader.getUniformLocation("normal_texture_interior"), 11);
-			gl.glUniform1i(TerrainWdt.this.groundShader.getUniformLocation("terrain_alpha_list"), 2);
 //			gl.glUniform1i(TerrainWdt.this.groundShader.getUniformLocation("shadowMap"), 20);
 			gl.glUniform1f(TerrainWdt.this.groundShader.getUniformLocation("centerOffsetX"),
 					TerrainWdt.this.centerOffset[0]);
@@ -957,6 +992,8 @@ public class TerrainWdt extends TerrainInterface {
 					TerrainWdt.this.centerOffset[1]);
 			gl.glUniform1i(TerrainWdt.this.groundShader.getUniformLocation("tileOffsetX"), this.tileOffset[0]);
 			gl.glUniform1i(TerrainWdt.this.groundShader.getUniformLocation("tileOffsetY"), this.tileOffset[1]);
+			gl.glUniform2i(TerrainWdt.this.groundShader.getUniformLocation("chunkOffset"), this.chunkOffset[0],
+					this.chunkOffset[1]);
 			gl.glUniform2f(TerrainWdt.this.groundShader.getUniformLocation("size_world"), TerrainWdt.this.columns,
 					TerrainWdt.this.rows);
 
@@ -980,11 +1017,7 @@ public class TerrainWdt extends TerrainInterface {
 			gl.glUniform1i(TerrainWdt.this.groundShader.getUniformLocation("cliff_textures"), 0);
 
 			gl.glActiveTexture(GL30.GL_TEXTURE1);
-			gl.glBindTexture(GL30.GL_TEXTURE_2D, this.groundCornerHeight);
-
-			gl.glUniform1i(TerrainWdt.this.groundShader.getUniformLocation("pathing_map_static"), 2);
-			gl.glActiveTexture(GL30.GL_TEXTURE2);
-			gl.glBindTexture(GL30.GL_TEXTURE_2D, this.groundTextureData);
+			gl.glBindTexture(GL30.GL_TEXTURE_2D, model.groundCornerHeight);
 
 			gl.glUniform1i(TerrainWdt.this.groundShader.getUniformLocation("sample0"), 3);
 			gl.glUniform1i(TerrainWdt.this.groundShader.getUniformLocation("sample1"), 4);
@@ -1003,7 +1036,7 @@ public class TerrainWdt extends TerrainInterface {
 				i++;
 			}
 			i = 0;
-			for (final int handleId : this.alphaMapHandleIds) {
+			for (final int handleId : model.alphaMapHandleIds) {
 				gl.glActiveTexture(GL30.GL_TEXTURE7 + i);
 				gl.glBindTexture(GL30.GL_TEXTURE_2D, handleId);
 				i++;
@@ -1011,22 +1044,24 @@ public class TerrainWdt extends TerrainInterface {
 			gl.glUniform1i(TerrainWdt.this.groundShader.getUniformLocation("layer_count"),
 					this.chunk.getMapChunkLayers().size());
 			gl.glActiveTexture(GL30.GL_TEXTURE10);
-			gl.glBindTexture(GL30.GL_TEXTURE_2D, this.groundCornerNormal);
+			gl.glBindTexture(GL30.GL_TEXTURE_2D, model.groundCornerNormal);
 
 			gl.glActiveTexture(GL30.GL_TEXTURE11);
-			gl.glBindTexture(GL30.GL_TEXTURE_2D, this.groundCornerNormalWdtInterior);
+			gl.glBindTexture(GL30.GL_TEXTURE_2D, model.groundCornerNormalWdtInterior);
 
 //			gl.glActiveTexture(GL30.GL_TEXTURE20, /*pathingMap.getTextureStatic()*/);
 //			gl.glActiveTexture(GL30.GL_TEXTURE21, /*pathingMap.getTextureDynamic()*/);
 
-//			gl.glActiveTexture(GL30.GL_TEXTURE20);
-//			gl.glBindTexture(GL30.GL_TEXTURE_2D, TerrainWdt.this.shadowMap);
+			if (model.tile.activeTile != null) {
+				gl.glActiveTexture(GL30.GL_TEXTURE20);
+				gl.glBindTexture(GL30.GL_TEXTURE_2D, model.tile.activeTile.shadowMap);
+			}
 
 //			gl.glActiveTexture(GL30.GL_TEXTURE22);
 //			gl.glBindTexture(GL30.GL_TEXTURE_2D, TerrainWdt.this.fogOfWarMap);
 
 			gl.glActiveTexture(GL30.GL_TEXTURE23);
-			gl.glBindTexture(GL30.GL_TEXTURE_2D, this.groundCornerHeightWdtInterior);
+			gl.glBindTexture(GL30.GL_TEXTURE_2D, model.groundCornerHeightWdtInterior);
 
 //			gl.glEnableVertexAttribArray(0);
 			gl.glBindBuffer(GL30.GL_ARRAY_BUFFER, ShapesWdt.INSTANCE.vertexBuffer);
@@ -1068,15 +1103,12 @@ public class TerrainWdt extends TerrainInterface {
 			final float[][] heightMap = this.chunk.getHeightMap();
 			final Vector3b[][] normals = this.chunk.getNormals();
 
-			this.groundCornerHeights = new float[CHUNK_GRID_SIZE * CHUNK_GRID_SIZE];
-			this.groundCornerHeightsWdtInterior = new float[CHUNK_INTERIOR_GRID_SIZE * CHUNK_INTERIOR_GRID_SIZE];
-			this.groundCornerNormals = new float[CHUNK_GRID_SIZE * CHUNK_GRID_SIZE * 3];
-			this.groundCornerNormalsInterior = new float[CHUNK_INTERIOR_GRID_SIZE * CHUNK_INTERIOR_GRID_SIZE * 3];
-
 			final long war3BaseIndexX = (war3ChunkIndexX * 8);
 			final long war3BaseIndexY = (war3ChunkIndexY * 8);
 			this.tileOffset[0] = (int) war3BaseIndexX;
 			this.tileOffset[1] = (int) war3BaseIndexY;
+			this.chunkOffset[0] = (int) (indexX) * 8;
+			this.chunkOffset[1] = (int) (15 - indexY) * 8;
 			double heightAvg = 0;
 			for (int i = 0; i < CHUNK_GRID_SIZE; i++) {
 				for (int j = 0; j < CHUNK_GRID_SIZE; j++) {
@@ -1086,152 +1118,18 @@ public class TerrainWdt extends TerrainInterface {
 					final int war3IndexX = (9 - i - 1);
 					final int war3IndexY = j;
 					final float convertedHeight = height * wowToHiveWEFactor;
-					this.groundCornerHeights[(war3IndexX * CHUNK_GRID_SIZE) + war3IndexY] = convertedHeight;
-					for (int k = 0; k < normal.components.length; k++) {
-						this.groundCornerNormals[(((war3IndexX * CHUNK_GRID_SIZE) + war3IndexY) * 3)
-								+ k] = (normal.components[k]) / 128f;
-					}
 					heightAvg += convertedHeight;
 				}
 			}
 			setLocation((war3BaseIndexX * 128f) + TerrainWdt.this.centerOffset[0],
 					(war3BaseIndexY * 128f) + TerrainWdt.this.centerOffset[1],
 					(float) (heightAvg / (CHUNK_GRID_SIZE * CHUNK_GRID_SIZE)));
-			for (int i = 0; i < CHUNK_INTERIOR_GRID_SIZE; i++) {
-				for (int j = 0; j < CHUNK_INTERIOR_GRID_SIZE; j++) {
-					final float height = heightMap[i + 9][j];
-					final Vector3b normal = normals[i + 9][j];
-
-					final int war3IndexX = (8 - i - 1);
-					final int war3IndexY = j;
-					this.groundCornerHeightsWdtInterior[(war3IndexX * CHUNK_INTERIOR_GRID_SIZE) + war3IndexY] = height
-							* wowToHiveWEFactor;
-
-					for (int k = 0; k < normal.components.length; k++) {
-						this.groundCornerNormalsInterior[(((war3IndexX * CHUNK_INTERIOR_GRID_SIZE) + war3IndexY) * 3)
-								+ k] = (normal.components[k]) / 128f;
-					}
-				}
-			}
 			final GL30 gl = Gdx.gl30;
-			this.alphaMapHandleIds = new int[this.chunk.getMapChunkLayers().size() - 1];
-			this.alphaMapValues = new AlphaMapDataValue[this.chunk.getMapChunkLayers().size() - 1];
-			for (int layerId = 1; layerId < this.chunk.getMapChunkLayers().size(); layerId++) {
-				final MapChunkLayer mapChunkLayer = this.chunk.getMapChunkLayers().get(layerId);
-				int offset = (int) mapChunkLayer.getOffsAlpha();
-				final short[] alphaMaps = this.chunk.getAlphaMaps();
-				final AlphaMapData alphaMapData = new AlphaMapData(offset, alphaMaps);
-				AlphaMapDataValue alphaMapDataValue = TerrainWdt.this.alphaDataToId.get(alphaMapData);
-				final int idx = layerId - 1;
-				if (alphaMapDataValue == null) {
-					alphaMapDataValue = new AlphaMapDataValue(alphaMapData);
-					alphaMapDataValue.glTextureHandle = gl.glGenTexture();
-
-					final ByteBuffer wrapper = ByteBuffer.allocateDirect(4096 * 4).order(ByteOrder.nativeOrder());
-					while (wrapper.hasRemaining()) {
-						final short data = alphaMaps[offset];
-						final byte nibbleA = (byte) (data & 0xF);
-						final byte nibbleB = (byte) ((data & 0xF0) >> 4);
-						wrapper.putFloat(nibbleA / 15f);
-						wrapper.putFloat(nibbleB / 15f);
-						offset++;
-					}
-					for (int x = 0; x < 64; x++) {
-						// the internet said to copy the last row into the one next to it if some map
-						// header
-						// was set, and we don't even have that header on alpha. So, here's assuming
-						// we have to always do that:
-//						alpha_map[x][63] == alpha_map[x][62]
-//						alpha_map[63][x] == alpha_map[62][x]
-//						alpha_map[63][63] == alpha_map[62][62]
-						wrapper.putFloat(4 * ((x * 64) + 63), wrapper.getFloat(4 * ((x * 64) + 62)));
-						wrapper.putFloat(4 * ((63 * 64) + x), wrapper.getFloat(4 * ((62 * 64) + x)));
-					}
-					wrapper.putFloat(4 * ((63 * 64) + 63), wrapper.getFloat(4 * ((62 * 64) + 62)));
-
-					gl.glBindTexture(GL30.GL_TEXTURE_2D, alphaMapDataValue.glTextureHandle);
-					wrapper.clear();
-					gl.glTexImage2D(GL30.GL_TEXTURE_2D, 0, GL30.GL_R32F, 64, 64, 0, GL30.GL_RED, GL30.GL_FLOAT,
-							wrapper);
-					gl.glTexParameteri(GL30.GL_TEXTURE_2D, GL30.GL_TEXTURE_MAG_FILTER, GL30.GL_LINEAR);
-					gl.glTexParameteri(GL30.GL_TEXTURE_2D, GL30.GL_TEXTURE_MIN_FILTER, GL30.GL_LINEAR);
-					gl.glTexParameteri(GL30.GL_TEXTURE_2D, GL30.GL_TEXTURE_WRAP_S, GL30.GL_CLAMP_TO_EDGE);
-					gl.glTexParameteri(GL30.GL_TEXTURE_2D, GL30.GL_TEXTURE_WRAP_T, GL30.GL_CLAMP_TO_EDGE);
-
-					TerrainWdt.this.alphaDataToId.put(alphaMapData, alphaMapDataValue);
-				}
-				this.alphaMapHandleIds[idx] = alphaMapDataValue.glTextureHandle;
-				this.alphaMapValues[idx] = alphaMapDataValue;
-				alphaMapDataValue.referenceCount++;
-
-			}
-			this.groundTextureList = new short[CHUNK_INTERIOR_GRID_SIZE * CHUNK_INTERIOR_GRID_SIZE * 4];
-
-			// Ground
-			// Ground
-			this.groundTextureData = gl.glGenTexture();
-			gl.glBindTexture(GL30.GL_TEXTURE_2D, this.groundTextureData);
-			gl.glTexImage2D(GL30.GL_TEXTURE_2D, 0, GL30.GL_RGBA16UI, CHUNK_INTERIOR_GRID_SIZE, CHUNK_INTERIOR_GRID_SIZE,
-					0, GL30.GL_RGBA_INTEGER, GL30.GL_UNSIGNED_SHORT, RenderMathUtils.wrapShort(this.groundTextureList));
-			gl.glTexParameteri(GL30.GL_TEXTURE_2D, GL30.GL_TEXTURE_MAG_FILTER, GL30.GL_NEAREST);
-			gl.glTexParameteri(GL30.GL_TEXTURE_2D, GL30.GL_TEXTURE_MIN_FILTER, GL30.GL_NEAREST);
-
-			this.groundCornerHeight = gl.glGenTexture();
-			gl.glBindTexture(GL30.GL_TEXTURE_2D, this.groundCornerHeight);
-			gl.glTexParameteri(GL30.GL_TEXTURE_2D, GL30.GL_TEXTURE_MAG_FILTER, GL30.GL_NEAREST);
-			gl.glTexParameteri(GL30.GL_TEXTURE_2D, GL30.GL_TEXTURE_MIN_FILTER, GL30.GL_NEAREST);
-
-			gl.glTexImage2D(GL30.GL_TEXTURE_2D, 0, GL30.GL_R16F, CHUNK_GRID_SIZE, CHUNK_GRID_SIZE, 0, GL30.GL_RED,
-					GL30.GL_FLOAT, RenderMathUtils.wrap(this.groundCornerHeights));
-			gl.glTexParameteri(GL30.GL_TEXTURE_2D, GL30.GL_TEXTURE_WRAP_S, GL30.GL_CLAMP_TO_EDGE);
-			gl.glTexParameteri(GL30.GL_TEXTURE_2D, GL30.GL_TEXTURE_WRAP_T, GL30.GL_CLAMP_TO_EDGE);
-
-			this.groundCornerHeightWdtInterior = gl.glGenTexture();
-			gl.glBindTexture(GL30.GL_TEXTURE_2D, this.groundCornerHeightWdtInterior);
-			gl.glTexParameteri(GL30.GL_TEXTURE_2D, GL30.GL_TEXTURE_MAG_FILTER, GL30.GL_NEAREST);
-			gl.glTexParameteri(GL30.GL_TEXTURE_2D, GL30.GL_TEXTURE_MIN_FILTER, GL30.GL_NEAREST);
-
-			gl.glTexImage2D(GL30.GL_TEXTURE_2D, 0, GL30.GL_R16F, CHUNK_INTERIOR_GRID_SIZE, CHUNK_INTERIOR_GRID_SIZE, 0,
-					GL30.GL_RED, GL30.GL_FLOAT, RenderMathUtils.wrap(this.groundCornerHeightsWdtInterior));
-			gl.glTexParameteri(GL30.GL_TEXTURE_2D, GL30.GL_TEXTURE_WRAP_S, GL30.GL_CLAMP_TO_EDGE);
-			gl.glTexParameteri(GL30.GL_TEXTURE_2D, GL30.GL_TEXTURE_WRAP_T, GL30.GL_CLAMP_TO_EDGE);
-
-			this.groundCornerNormal = gl.glGenTexture();
-			gl.glBindTexture(GL30.GL_TEXTURE_2D, this.groundCornerNormal);
-			gl.glTexParameteri(GL30.GL_TEXTURE_2D, GL30.GL_TEXTURE_MAG_FILTER, GL30.GL_NEAREST);
-			gl.glTexParameteri(GL30.GL_TEXTURE_2D, GL30.GL_TEXTURE_MIN_FILTER, GL30.GL_NEAREST);
-
-			gl.glTexImage2D(GL30.GL_TEXTURE_2D, 0, GL30.GL_RGB, CHUNK_GRID_SIZE, CHUNK_GRID_SIZE, 0, GL30.GL_RGB,
-					GL30.GL_FLOAT, RenderMathUtils.wrap(this.groundCornerNormals));
-			gl.glTexParameteri(GL30.GL_TEXTURE_2D, GL30.GL_TEXTURE_WRAP_S, GL30.GL_CLAMP_TO_EDGE);
-			gl.glTexParameteri(GL30.GL_TEXTURE_2D, GL30.GL_TEXTURE_WRAP_T, GL30.GL_CLAMP_TO_EDGE);
-
-			this.groundCornerNormalWdtInterior = gl.glGenTexture();
-			gl.glBindTexture(GL30.GL_TEXTURE_2D, this.groundCornerNormalWdtInterior);
-			gl.glTexParameteri(GL30.GL_TEXTURE_2D, GL30.GL_TEXTURE_MAG_FILTER, GL30.GL_NEAREST);
-			gl.glTexParameteri(GL30.GL_TEXTURE_2D, GL30.GL_TEXTURE_MIN_FILTER, GL30.GL_NEAREST);
-
-			gl.glTexImage2D(GL30.GL_TEXTURE_2D, 0, GL30.GL_RGB, CHUNK_INTERIOR_GRID_SIZE, CHUNK_INTERIOR_GRID_SIZE, 0,
-					GL30.GL_RGB, GL30.GL_FLOAT, RenderMathUtils.wrap(this.groundCornerNormalsInterior));
-			gl.glTexParameteri(GL30.GL_TEXTURE_2D, GL30.GL_TEXTURE_WRAP_S, GL30.GL_CLAMP_TO_EDGE);
-			gl.glTexParameteri(GL30.GL_TEXTURE_2D, GL30.GL_TEXTURE_WRAP_T, GL30.GL_CLAMP_TO_EDGE);
 
 		}
 
 		@Override
 		public void unload() {
-			for (final AlphaMapDataValue alphaMapDataValue : this.alphaMapValues) {
-				alphaMapDataValue.referenceCount--;
-				if (alphaMapDataValue.referenceCount <= 0) {
-					Gdx.gl30.glDeleteTexture(alphaMapDataValue.glTextureHandle);
-					TerrainWdt.this.alphaDataToId.remove(alphaMapDataValue.key);
-				}
-			}
-			Gdx.gl30.glDeleteTexture(this.groundTextureData);
-			Gdx.gl30.glDeleteTexture(this.groundCornerHeight);
-			Gdx.gl30.glDeleteTexture(this.groundCornerHeightWdtInterior);
-			Gdx.gl30.glDeleteTexture(this.groundCornerNormal);
-			Gdx.gl30.glDeleteTexture(this.groundCornerNormalWdtInterior);
 		}
 
 		@Override
@@ -1259,7 +1157,16 @@ public class TerrainWdt extends TerrainInterface {
 
 	}
 
+	private static interface IntIntFunction {
+		int compute(int x, int y);
+	}
+
 	private class WdtChunkModel extends Model {
+		public static final int CHUNK_GRID_SIZE = WdtChunkModelInstance.CHUNK_GRID_SIZE;
+		public static final int CHUNK_INTERIOR_GRID_SIZE = WdtChunkModelInstance.CHUNK_INTERIOR_GRID_SIZE;
+		public static final int CHUNKS_PER_BLOCK = 16;
+		public static final int BLOCK_GRID_SIZE = CHUNK_GRID_SIZE * CHUNKS_PER_BLOCK;
+		public static final int BLOCK_INTERIOR_GRID_SIZE = CHUNK_INTERIOR_GRID_SIZE * CHUNKS_PER_BLOCK;
 
 		private final TileHeader tileHeader;
 
@@ -1271,6 +1178,12 @@ public class TerrainWdt extends TerrainInterface {
 		private int blockX;
 
 		private int blockY;
+		private int groundCornerHeight;
+		private int groundCornerHeightWdtInterior;
+		private int groundCornerNormal;
+		private int groundCornerNormalWdtInterior;
+		private int[] alphaMapHandleIds;
+		public Tile tile;
 
 		public WdtChunkModel(final ModelHandler handler, final ModelViewer viewer, final String extension,
 				final PathSolver pathSolver, final String fetchUrl, final TileHeader tileHeader) {
@@ -1290,7 +1203,7 @@ public class TerrainWdt extends TerrainInterface {
 		}
 
 		@Override
-		protected void load(final InputStream src, final Object options) {
+		protected void load(final SourcedData src, final Object options) {
 			final int tileIdx = this.tileHeader.idx;
 			this.blockX = tileIdx % 64;
 			this.wowXOffset = this.blockX * WdtChunkModelInstance.tilesize;
@@ -1298,7 +1211,7 @@ public class TerrainWdt extends TerrainInterface {
 			this.wowYOffset = this.blockY * WdtChunkModelInstance.tilesize;
 
 			final float size = 8 * WdtChunkModelInstance.wowToWc3Factor;
-			final float height = 18000 * WdtChunkModelInstance.wowToWc3Factor;
+			final float tileHeight = 18000 * WdtChunkModelInstance.wowToWc3Factor;
 			final float halfSize = size / 2;
 			this.bounds.fromExtents(new float[] { -halfSize, -halfSize, -halfSize },
 					new float[] { halfSize, halfSize, halfSize }, 0);
@@ -1318,6 +1231,193 @@ public class TerrainWdt extends TerrainInterface {
 				}
 				this.groundTextureToId.put(fileName, this.groundTextures.size() - 1);
 			}
+
+			// make a giant mosaic of all the chunks, maybe it'll be faster than actually
+			// uploading them individually to GPU. The dimensions on these will be roughly
+			// 1024x1024 textures which by modern standards should be fine or something
+			final float[] groundCornerHeights = new float[BLOCK_GRID_SIZE * BLOCK_GRID_SIZE];
+			final float[] groundCornerHeightsWdtInterior = new float[BLOCK_INTERIOR_GRID_SIZE
+					* BLOCK_INTERIOR_GRID_SIZE];
+			final float[] groundCornerNormals = new float[BLOCK_GRID_SIZE * BLOCK_GRID_SIZE * 3];
+			final float[] groundCornerNormalsInterior = new float[BLOCK_INTERIOR_GRID_SIZE * BLOCK_INTERIOR_GRID_SIZE
+					* 3];
+			final ByteBuffer[] alphaMapData = new ByteBuffer[3];
+			final GL30 gl = Gdx.gl30;
+			this.alphaMapHandleIds = new int[3];
+			for (int i = 0; i < this.alphaMapHandleIds.length; i++) {
+				alphaMapData[i] = ByteBuffer.allocateDirect((16 * 16) * (66 * 66) * 4).order(ByteOrder.nativeOrder());
+			}
+			for (int chunkIndex = 0; chunkIndex < this.tileHeader.chunks.size(); chunkIndex++) {
+				// internet says: floor((32 - (axis / 533.33333)))
+				final Chunk chunk = this.tileHeader.chunks.get(chunkIndex);
+				final ChunkInfo chunkInfo = this.tileHeader.chunkInfos.get(chunkIndex);
+				final long indexX = chunk.getIndexX();
+				final long indexY = chunk.getIndexY();
+
+				final long war3ChunkIndexX = (this.blockX * 16) + indexX;
+				final long war3ChunkIndexY = ((this.blockY * 16) + 15) - indexY;
+
+				final float[][] heightMap = chunk.getHeightMap();
+				final Vector3b[][] normals = chunk.getNormals();
+
+				final long war3BaseIndexX = (war3ChunkIndexX * 8);
+				final long war3BaseIndexY = (war3ChunkIndexY * 8);
+				double heightAvg = 0;
+
+				final int withinChunkIndexX = (int) ((15 - indexY) * 8);
+				final int withinChunkIndexY = (int) ((indexX) * 8);
+				for (int i = 0; i < CHUNK_GRID_SIZE; i++) {
+					for (int j = 0; j < CHUNK_GRID_SIZE; j++) {
+						final float height = heightMap[i][j];
+						final Vector3b normal = normals[i][j];
+
+						final int war3IndexX = withinChunkIndexX + (9 - i - 1);
+						final int war3IndexY = withinChunkIndexY + j;
+						final float convertedHeight = height * WdtChunkModelInstance.wowToHiveWEFactor;
+						groundCornerHeights[(war3IndexX * BLOCK_GRID_SIZE) + war3IndexY] = convertedHeight;
+						for (int k = 0; k < normal.components.length; k++) {
+							groundCornerNormals[(((war3IndexX * BLOCK_GRID_SIZE) + war3IndexY) * 3)
+									+ k] = (normal.components[k]) / 128f;
+						}
+						heightAvg += convertedHeight;
+					}
+				}
+				for (int i = 0; i < CHUNK_INTERIOR_GRID_SIZE; i++) {
+					for (int j = 0; j < CHUNK_INTERIOR_GRID_SIZE; j++) {
+						final float height = heightMap[i + 9][j];
+						final Vector3b normal = normals[i + 9][j];
+
+						final int war3IndexX = withinChunkIndexX + (8 - i - 1);
+						final int war3IndexY = withinChunkIndexY + j;
+						groundCornerHeightsWdtInterior[(war3IndexX * BLOCK_INTERIOR_GRID_SIZE) + war3IndexY] = height
+								* WdtChunkModelInstance.wowToHiveWEFactor;
+
+						for (int k = 0; k < normal.components.length; k++) {
+							groundCornerNormalsInterior[(((war3IndexX * BLOCK_INTERIOR_GRID_SIZE) + war3IndexY) * 3)
+									+ k] = (normal.components[k]) / 128f;
+						}
+					}
+				}
+				final int withinSpacedChunkIndexX = (int) ((15 - indexY) * 66);
+				final int withinSpacedChunkIndexY = (int) ((indexX) * 66);
+				final IntIntFunction getIndex = (userX, userY) -> {
+					return getAlphaMappingIndex(withinSpacedChunkIndexX, withinSpacedChunkIndexY, userX, userY);
+				};
+				for (int layerId = 1; layerId < chunk.getMapChunkLayers().size(); layerId++) {
+					final MapChunkLayer mapChunkLayer = chunk.getMapChunkLayers().get(layerId);
+					int offset = (int) mapChunkLayer.getOffsAlpha();
+					final short[] alphaMaps = chunk.getAlphaMaps();
+
+					final int idx = layerId - 1;
+
+					for (int k = 0; k < 2048; k++) {
+						final short data = alphaMaps[offset];
+						final byte nibbleA = (byte) (data & 0xF);
+						final byte nibbleB = (byte) ((data & 0xF0) >> 4);
+
+						final int chunkX = (k * 2) % 64;
+						final int chunkY = (k * 2) / 64;
+
+						final int war3IndexX = withinSpacedChunkIndexY + 1 + chunkX;
+						final int war3IndexY = withinSpacedChunkIndexX + 1 + (63 - chunkY);
+
+						alphaMapData[idx].putFloat(4 * ((war3IndexY * (66 * 16)) + war3IndexX), nibbleA / 15f);
+						alphaMapData[idx].putFloat(4 * (((war3IndexY) * (66 * 16)) + (war3IndexX + 1)), nibbleB / 15f);
+						offset++;
+					}
+					for (int x = 1; x <= 64; x++) {
+						alphaMapData[idx].putFloat(getIndex.compute(x, 64),
+								alphaMapData[idx].getFloat(getIndex.compute(x, 63)));
+						alphaMapData[idx].putFloat(getIndex.compute(64, x),
+								alphaMapData[idx].getFloat(getIndex.compute(63, x)));
+					}
+					alphaMapData[idx].putFloat(getIndex.compute(64, 64),
+							alphaMapData[idx].getFloat(getIndex.compute(63, 63)));
+					for (int x = 1; x < 65; x++) {
+						// the internet said to copy the last row into the one next to it if some map
+						// header
+						// was set, and we don't even have that header on alpha. So, here's assuming
+						// we have to always do that:
+//						alpha_map[x][63] == alpha_map[x][62]
+//						alpha_map[63][x] == alpha_map[62][x]
+//						alpha_map[63][63] == alpha_map[62][62]
+
+						alphaMapData[idx].putFloat(getIndex.compute(x, 65),
+								alphaMapData[idx].getFloat(getIndex.compute(x, 64)));
+						alphaMapData[idx].putFloat(getIndex.compute(65, x),
+								alphaMapData[idx].getFloat(getIndex.compute(64, x)));
+
+						alphaMapData[idx].putFloat(getIndex.compute(x, 0),
+								alphaMapData[idx].getFloat(getIndex.compute(x, 1)));
+						alphaMapData[idx].putFloat(getIndex.compute(0, x),
+								alphaMapData[idx].getFloat(getIndex.compute(1, x)));
+					}
+					alphaMapData[idx].putFloat(getIndex.compute(65, 65),
+							alphaMapData[idx].getFloat(getIndex.compute(64, 64)));
+					alphaMapData[idx].putFloat(getIndex.compute(64, 0),
+							alphaMapData[idx].getFloat(getIndex.compute(64, 1)));
+					alphaMapData[idx].putFloat(getIndex.compute(0, 64),
+							alphaMapData[idx].getFloat(getIndex.compute(1, 64)));
+					alphaMapData[idx].putFloat(getIndex.compute(0, 0),
+							alphaMapData[idx].getFloat(getIndex.compute(1, 1)));
+				}
+			}
+			for (int i = 0; i < this.alphaMapHandleIds.length; i++) {
+				this.alphaMapHandleIds[i] = gl.glGenTexture();
+				gl.glBindTexture(GL30.GL_TEXTURE_2D, this.alphaMapHandleIds[i]);
+				alphaMapData[i].clear();
+				gl.glTexImage2D(GL30.GL_TEXTURE_2D, 0, GL30.GL_R32F, 1056, 1056, 0, GL30.GL_RED, GL30.GL_FLOAT,
+						alphaMapData[i]);
+				gl.glTexParameteri(GL30.GL_TEXTURE_2D, GL30.GL_TEXTURE_MAG_FILTER, GL30.GL_LINEAR_MIPMAP_LINEAR);
+				gl.glTexParameteri(GL30.GL_TEXTURE_2D, GL30.GL_TEXTURE_MIN_FILTER, GL30.GL_LINEAR_MIPMAP_LINEAR);
+//				gl.glTexParameteri(GL30.GL_TEXTURE_2D, GL30.GL_TEXTURE_MAG_FILTER, GL30.GL_NEAREST);
+//				gl.glTexParameteri(GL30.GL_TEXTURE_2D, GL30.GL_TEXTURE_MIN_FILTER, GL30.GL_NEAREST);
+				gl.glTexParameteri(GL30.GL_TEXTURE_2D, GL30.GL_TEXTURE_WRAP_S, GL30.GL_CLAMP_TO_EDGE);
+				gl.glTexParameteri(GL30.GL_TEXTURE_2D, GL30.GL_TEXTURE_WRAP_T, GL30.GL_CLAMP_TO_EDGE);
+				gl.glGenerateMipmap(GL30.GL_TEXTURE_2D);
+			}
+			// Ground
+			// Ground
+
+			this.groundCornerHeight = gl.glGenTexture();
+			gl.glBindTexture(GL30.GL_TEXTURE_2D, this.groundCornerHeight);
+			gl.glTexParameteri(GL30.GL_TEXTURE_2D, GL30.GL_TEXTURE_MAG_FILTER, GL30.GL_NEAREST);
+			gl.glTexParameteri(GL30.GL_TEXTURE_2D, GL30.GL_TEXTURE_MIN_FILTER, GL30.GL_NEAREST);
+
+			gl.glTexImage2D(GL30.GL_TEXTURE_2D, 0, GL30.GL_R16F, BLOCK_GRID_SIZE, BLOCK_GRID_SIZE, 0, GL30.GL_RED,
+					GL30.GL_FLOAT, RenderMathUtils.wrap(groundCornerHeights));
+			gl.glTexParameteri(GL30.GL_TEXTURE_2D, GL30.GL_TEXTURE_WRAP_S, GL30.GL_CLAMP_TO_EDGE);
+			gl.glTexParameteri(GL30.GL_TEXTURE_2D, GL30.GL_TEXTURE_WRAP_T, GL30.GL_CLAMP_TO_EDGE);
+
+			this.groundCornerHeightWdtInterior = gl.glGenTexture();
+			gl.glBindTexture(GL30.GL_TEXTURE_2D, this.groundCornerHeightWdtInterior);
+			gl.glTexParameteri(GL30.GL_TEXTURE_2D, GL30.GL_TEXTURE_MAG_FILTER, GL30.GL_NEAREST);
+			gl.glTexParameteri(GL30.GL_TEXTURE_2D, GL30.GL_TEXTURE_MIN_FILTER, GL30.GL_NEAREST);
+
+			gl.glTexImage2D(GL30.GL_TEXTURE_2D, 0, GL30.GL_R16F, BLOCK_INTERIOR_GRID_SIZE, BLOCK_INTERIOR_GRID_SIZE, 0,
+					GL30.GL_RED, GL30.GL_FLOAT, RenderMathUtils.wrap(groundCornerHeightsWdtInterior));
+			gl.glTexParameteri(GL30.GL_TEXTURE_2D, GL30.GL_TEXTURE_WRAP_S, GL30.GL_CLAMP_TO_EDGE);
+			gl.glTexParameteri(GL30.GL_TEXTURE_2D, GL30.GL_TEXTURE_WRAP_T, GL30.GL_CLAMP_TO_EDGE);
+
+			this.groundCornerNormal = gl.glGenTexture();
+			gl.glBindTexture(GL30.GL_TEXTURE_2D, this.groundCornerNormal);
+			gl.glTexParameteri(GL30.GL_TEXTURE_2D, GL30.GL_TEXTURE_MAG_FILTER, GL30.GL_NEAREST);
+			gl.glTexParameteri(GL30.GL_TEXTURE_2D, GL30.GL_TEXTURE_MIN_FILTER, GL30.GL_NEAREST);
+
+			gl.glTexImage2D(GL30.GL_TEXTURE_2D, 0, GL30.GL_RGB, BLOCK_GRID_SIZE, BLOCK_GRID_SIZE, 0, GL30.GL_RGB,
+					GL30.GL_FLOAT, RenderMathUtils.wrap(groundCornerNormals));
+			gl.glTexParameteri(GL30.GL_TEXTURE_2D, GL30.GL_TEXTURE_WRAP_S, GL30.GL_CLAMP_TO_EDGE);
+			gl.glTexParameteri(GL30.GL_TEXTURE_2D, GL30.GL_TEXTURE_WRAP_T, GL30.GL_CLAMP_TO_EDGE);
+
+			this.groundCornerNormalWdtInterior = gl.glGenTexture();
+			gl.glBindTexture(GL30.GL_TEXTURE_2D, this.groundCornerNormalWdtInterior);
+			gl.glTexParameteri(GL30.GL_TEXTURE_2D, GL30.GL_TEXTURE_MAG_FILTER, GL30.GL_NEAREST);
+			gl.glTexParameteri(GL30.GL_TEXTURE_2D, GL30.GL_TEXTURE_MIN_FILTER, GL30.GL_NEAREST);
+
+			gl.glTexImage2D(GL30.GL_TEXTURE_2D, 0, GL30.GL_RGB, BLOCK_INTERIOR_GRID_SIZE, BLOCK_INTERIOR_GRID_SIZE, 0,
+					GL30.GL_RGB, GL30.GL_FLOAT, RenderMathUtils.wrap(groundCornerNormalsInterior));
+			gl.glTexParameteri(GL30.GL_TEXTURE_2D, GL30.GL_TEXTURE_WRAP_S, GL30.GL_CLAMP_TO_EDGE);
+			gl.glTexParameteri(GL30.GL_TEXTURE_2D, GL30.GL_TEXTURE_WRAP_T, GL30.GL_CLAMP_TO_EDGE);
 		}
 
 		@Override
@@ -1391,6 +1491,7 @@ public class TerrainWdt extends TerrainInterface {
 				final long war3ChunkIndexX = chunk.getIndexX();
 				this.chunks[(int) war3ChunkIndexX][(int) war3ChunkIndexY] = chunk;
 			}
+			wdtChunkModel.tile = this;
 		}
 
 		public boolean activate() {
@@ -1422,7 +1523,6 @@ public class TerrainWdt extends TerrainInterface {
 
 		final float[] groundCornerHeights;
 		boolean disposed = false;
-		final Set<Long> usedSet = new HashSet<>();
 
 		public SoftwareGroundMesh softwareGroundMesh;
 		public SoftwareWaterAndGroundMesh softwareWaterAndGroundMesh;
@@ -1438,10 +1538,12 @@ public class TerrainWdt extends TerrainInterface {
 			this.width = (16 * 8) + 1;
 			this.height = this.width;
 
-			TerrainWdt.this.tasks.add(new ChunkTask());
+			for (int i = 0; i < tile.tileHeader.chunks.size(); i++) {
+				TerrainWdt.this.tasks.add(new ChunkTask(i));
+			}
 
-			final int columns = (this.width - 1) * 4;
-			final int rows = (this.height - 1) * 4;
+			final int columns = (this.width - 1) * 8;
+			final int rows = (this.height - 1) * 8;
 
 			final int shadowSize = columns * rows;
 			this.staticShadowData = new byte[shadowSize];
@@ -1485,12 +1587,14 @@ public class TerrainWdt extends TerrainInterface {
 			TerrainWdt.this.tasks.add(new DynamicTask() {
 				@Override
 				public boolean run() {
-					ActiveTile.this.softwareGroundMesh = new SoftwareGroundMesh(ActiveTile.this.groundCornerHeights,
-							tile.myCornerXY, ActiveTile.this.width, ActiveTile.this.height);
-					ActiveTile.this.softwareWaterAndGroundMesh = new SoftwareWaterAndGroundMesh(0,
-							ActiveTile.this.groundCornerHeights, ActiveTile.this.waterHeights,
-							ActiveTile.this.waterExistsData, tile.myCornerXY, ActiveTile.this.width,
-							ActiveTile.this.height);
+					if (!ActiveTile.this.disposed) {
+						ActiveTile.this.softwareGroundMesh = new SoftwareGroundMesh(ActiveTile.this.groundCornerHeights,
+								tile.myCornerXY, ActiveTile.this.width, ActiveTile.this.height);
+						ActiveTile.this.softwareWaterAndGroundMesh = new SoftwareWaterAndGroundMesh(0,
+								ActiveTile.this.groundCornerHeights, ActiveTile.this.waterHeights,
+								ActiveTile.this.waterExistsData, tile.myCornerXY, ActiveTile.this.width,
+								ActiveTile.this.height);
+					}
 					return true;
 				}
 			});
@@ -1609,13 +1713,19 @@ public class TerrainWdt extends TerrainInterface {
 			Gdx.gl30.glDeleteTexture(this.waterHeight);
 			Gdx.gl30.glDeleteTexture(this.waterExists);
 			this.disposed = true;
-			TerrainWdt.this.tasks.add(new DisposeTask());
+
+			for (int i = ActiveTile.this.modelInstances.size() - 1; i >= 0; i--) {
+				TerrainWdt.this.tasks.add(new IndividualDisposeTaskChunk(i));
+			}
+			for (int i = ActiveTile.this.renderDoodads.size() - 1; i >= 0; i--) {
+				TerrainWdt.this.tasks.add(new IndividualDisposeTaskDood(i));
+			}
 		}
 
 		private void initShadows() {
 			final GL30 gl = Gdx.gl30;
-			final int columns = (this.width - 1) * 4;
-			final int rows = (this.height - 1) * 4;
+			final int columns = (this.width - 1) * 8;
+			final int rows = (this.height - 1) * 8;
 
 			final int shadowSize = columns * rows;
 			this.shadowData = new byte[columns * rows];
@@ -1652,21 +1762,29 @@ public class TerrainWdt extends TerrainInterface {
 		}
 
 		public boolean blitShadowDataLocation(final int columns, final int rows, final RawOpenGLTextureResource texture,
-				final int width, final int height, final int x01, final int y01, final float[] centerOffset,
+				final int widthHalf, final int heightHalf, final int x01, final int y01, final float[] centerOffset,
 				final float v, final float v2, final byte[] shadowData) {
-			final int x0 = (int) Math.floor((v - centerOffset[0]) / 32.0) - x01;
-			final int y0 = (int) Math.floor((v2 - centerOffset[1]) / 32.0) + y01;
+			final float centerOffsetX = centerOffset[0]
+					+ (this.tile.terrainModel.wowXOffset * WdtChunkModelInstance.wowToWc3Factor);
+			final float centerOffsetY = centerOffset[1]
+					+ (this.tile.terrainModel.wowYOffset * WdtChunkModelInstance.wowToWc3Factor);
+
+			final int x0 = (int) Math.floor((v - centerOffsetX) / 32.0) - x01;
+			final int y0 = (int) Math.floor((v2 - centerOffsetY) / 32.0) + y01;
 			boolean anyDataWritten = false;
-			for (int y = 0; y < height; ++y) {
-				if (((y0 - y) < 0) || ((y0 - y) >= rows)) {
+			for (int y = 0; y < heightHalf; ++y) {
+				if (((y0 - y) < 0) || (((y0 - y) * 2) >= rows)) {
 					continue;
 				}
-				for (int x = 0; x < width; ++x) {
-					if (((x0 + x) < 0) || ((x0 + x) >= columns)) {
+				for (int x = 0; x < widthHalf; ++x) {
+					if (((x0 + x) < 0) || (((x0 + x) * 2) >= columns)) {
 						continue;
 					}
-					if (texture.getData().get((((y * width) + x) * 4) + 3) != 0) {
-						shadowData[((y0 - y) * columns) + x0 + x] = (byte) 128;
+					if (texture.getData().get((((y * widthHalf) + x) * 4) + 3) != 0) {
+						shadowData[(((y0 - y) * 2) * columns) + ((x0 + x) * 2)] = (byte) 128;
+						shadowData[(((y0 - y) * 2) * columns) + (((x0 + x) * 2) + 1)] = (byte) 128;
+						shadowData[((((y0 - y) * 2) + 1) * columns) + ((x0 + x) * 2)] = (byte) 128;
+						shadowData[((((y0 - y) * 2) + 1) * columns) + (((x0 + x) * 2) + 1)] = (byte) 128;
 						anyDataWritten = true;
 					}
 				}
@@ -1685,8 +1803,8 @@ public class TerrainWdt extends TerrainInterface {
 		}
 
 		private void reloadShadowDataToGPU() {
-			final int columns = (TerrainWdt.this.columns - 1) * 4;
-			final int rows = (TerrainWdt.this.rows - 1) * 4;
+			final int columns = (this.width - 1) * 8;
+			final int rows = (this.height - 1) * 8;
 			reloadShadowData(TerrainWdt.this.centerOffset, columns, rows);
 			final GL30 gl = Gdx.gl30;
 			gl.glBindTexture(GL30.GL_TEXTURE_2D, this.shadowMap);
@@ -1694,32 +1812,53 @@ public class TerrainWdt extends TerrainInterface {
 					RenderMathUtils.wrap(this.shadowData));
 		}
 
-		private class DisposeTask implements DynamicTask {
+		private class IndividualDisposeTaskDood implements DynamicTask {
+			private final int i;
+
+			public IndividualDisposeTaskDood(final int i) {
+				this.i = i;
+			}
+
 			@Override
 			public boolean run() {
-				for (int i = ActiveTile.this.modelInstances.size() - 1, k = 35; (i >= 0) && (k >= 0); i--, k--) {
-					final ModelInstance modelInstance = ActiveTile.this.modelInstances.get(i);
-					modelInstance.detach();
-					((WdtChunkModelInstance) modelInstance).unload();
-					ActiveTile.this.modelInstances.remove(i);
-				}
-				for (int i = ActiveTile.this.renderDoodads.size() - 1, k = 20; (i >= 0) && (k >= 0); i--, k--) {
-					final RenderDoodad renderDoodad = ActiveTile.this.renderDoodads.get(i);
-					TerrainWdt.this.viewer.removeWdtDoodad(renderDoodad);
-					ActiveTile.this.renderDoodads.remove(i);
-				}
-				final boolean empty = ActiveTile.this.modelInstances.isEmpty()
-						&& ActiveTile.this.renderDoodads.isEmpty();
-				return empty;
+				final RenderDoodad renderDoodad = ActiveTile.this.renderDoodads.get(this.i);
+				TerrainWdt.this.viewer.removeWdtDoodad(renderDoodad);
+				ActiveTile.this.renderDoodads.remove(this.i);
+				TerrainWdt.this.usedDoodadSet.remove(renderDoodad.getUniqueId());
+				return true;
+			}
+		}
+
+		private class IndividualDisposeTaskChunk implements DynamicTask {
+			private final int i;
+
+			public IndividualDisposeTaskChunk(final int i) {
+				this.i = i;
+			}
+
+			@Override
+			public boolean run() {
+				final ModelInstance modelInstance = ActiveTile.this.modelInstances.get(this.i);
+				modelInstance.detach();
+				((WdtChunkModelInstance) modelInstance).unload();
+				ActiveTile.this.modelInstances.remove(this.i);
+				return true;
 			}
 		}
 
 		private class ChunkTask implements DynamicTask {
 			int i;
 
+			public ChunkTask(final int i) {
+				this.i = i;
+			}
+
 			@Override
 			public boolean run() {
-				for (int k = 0; (this.i < ActiveTile.this.tile.tileHeader.chunks.size()) && (k < 30); k++, this.i++) {
+				if (ActiveTile.this.disposed) {
+					return true;
+				}
+				for (int k = 0; (this.i < ActiveTile.this.tile.tileHeader.chunks.size()) && (k < 1); k++, this.i++) {
 					final Chunk chunk = ActiveTile.this.tile.tileHeader.chunks.get(this.i);
 					if (!chunk.getMapChunkLayers().isEmpty()) {
 						final ModelInstance chunkInstance = ActiveTile.this.tile.terrainModel.addInstance(this.i);
@@ -1747,16 +1886,19 @@ public class TerrainWdt extends TerrainInterface {
 									+ war3IndexY] = heightValue * WdtChunkModelInstance.wowToHiveWEFactor;
 						}
 					}
+					final int shadowColumns = (ActiveTile.this.width - 1) * 8;
+					final int shadowRows = (ActiveTile.this.height - 1) * 8;
 					if (shadowMap != null) {
-						for (int i = 0; i < 9; i++) {
-							for (int j = 0; j < 9; j++) {
-//								final float heightValue = heightMap[i][j];
-//
-//								final int war3IndexX = (int) ((war3ChunkIndexX * 8) + (9 - i - 1));
-//								final int war3IndexY = (int) ((war3ChunkIndexY * 8) + j);
-//
-//								ActiveTile.this.groundCornerHeights[(war3IndexX * ActiveTile.this.width)
-//										+ war3IndexY] = heightValue * WdtChunkModelInstance.wowToHiveWEFactor;
+						for (int i = 0; i < shadowMap.length; i++) {
+							final long data = shadowMap[i];
+							for (int j = 0; j < 64; j++) {
+								final long bit = (data >> j) & 0x1;
+								if (bit != 0) {
+									final int war3IndexX = (int) ((war3ChunkIndexX * 64) + (63 - i));
+									final int war3IndexY = (int) ((war3ChunkIndexY * 64) + j);
+									ActiveTile.this.staticShadowData[(war3IndexX * shadowRows)
+											+ war3IndexY] = (byte) 128;
+								}
 							}
 						}
 					}
@@ -1778,13 +1920,17 @@ public class TerrainWdt extends TerrainInterface {
 									height = swVert.height;
 									depth = swVert.depth;
 								}
-								height = Math.max(layer.minHeight, Math.min(layer.maxHeight, height));
+								// height = Math.max(layer.minHeight, Math.min(layer.maxHeight, height));
+								// height = Math.max(layer.minHeight, height);
 								final int war3IndexX = (int) ((war3ChunkIndexX * 8) + (9 - i - 1));
 								final int war3IndexY = (int) ((war3ChunkIndexY * 8) + j);
 
-								ActiveTile.this.waterExistsData[(war3IndexX * ActiveTile.this.width) + war3IndexY] = 1;
+								final boolean isWater = (height >= layer.minHeight) && (height <= layer.maxHeight);
+								ActiveTile.this.waterExistsData[(war3IndexX * ActiveTile.this.width)
+										+ war3IndexY] = (byte) (isWater ? 1 : 0);
 								ActiveTile.this.waterHeights[(war3IndexX * ActiveTile.this.width)
-										+ war3IndexY] = (height * WdtChunkModelInstance.wowToHiveWEFactor);
+										+ war3IndexY] = ((isWater ? height : 0)
+												* WdtChunkModelInstance.wowToHiveWEFactor);
 							}
 						}
 					}
@@ -1793,9 +1939,9 @@ public class TerrainWdt extends TerrainInterface {
 					if (doodadReferences != null) {
 						for (final long ref : doodadReferences) {
 							if (ref < ActiveTile.this.tile.tileHeader.doodads.size()) {
-								if (ActiveTile.this.usedSet.add(ref)) {
-									final DoodadDefinition doodad = ActiveTile.this.tile.tileHeader.doodads
-											.get((int) ref);
+								final DoodadDefinition doodad = ActiveTile.this.tile.tileHeader.doodads.get((int) ref);
+								final long uniqueId = doodad.getUniqueId();
+								if (TerrainWdt.this.usedDoodadSet.add(uniqueId)) {
 									final long nameId = doodad.getNameId();
 									final float[] position = doodad.getPosition();
 									final float[] rotation = doodad.getRotation();
@@ -1817,7 +1963,7 @@ public class TerrainWdt extends TerrainInterface {
 											position[1] * WdtChunkModelInstance.wowToWc3Factor };
 
 									final RenderDoodad renderDoodad = TerrainWdt.this.viewer.createWdtDoodad(row, 0,
-											location, rotation, finalScale, (doodad.getFlags() & 0x2) != 0);
+											location, rotation, finalScale, (doodad.getFlags() & 0x2) != 0, uniqueId);
 									ActiveTile.this.renderDoodads.add(renderDoodad);
 									// ---
 								}
@@ -1825,7 +1971,8 @@ public class TerrainWdt extends TerrainInterface {
 						}
 					}
 				}
-				return this.i >= ActiveTile.this.tile.tileHeader.chunks.size();
+				return true;
+//				return this.i >= ActiveTile.this.tile.tileHeader.chunks.size();
 			}
 		}
 

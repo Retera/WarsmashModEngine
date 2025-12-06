@@ -68,6 +68,10 @@ public class DataTexture {
 		return this.height;
 	}
 
+	public int getChannels() {
+		return (this.format == GL20.GL_RGBA) ? 4 : 3;
+	}
+
 	public void delete() {
 		final GL20 gl = this.gl;
 		gl.glDeleteTexture(this.texture);

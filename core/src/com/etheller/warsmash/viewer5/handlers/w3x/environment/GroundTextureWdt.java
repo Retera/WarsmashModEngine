@@ -4,6 +4,7 @@ import java.io.IOException;
 
 import com.badlogic.gdx.graphics.GL30;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.Texture.TextureFilter;
 import com.etheller.warsmash.datasources.DataSource;
 import com.etheller.warsmash.units.Element;
 import com.etheller.warsmash.util.ImageUtils;
@@ -25,6 +26,9 @@ public class GroundTextureWdt extends GroundTexture {
 				this.texture = ImageUtils.getAnyExtensionTexture(dataSource, "Textures\\White.blp"); // TODO
 			}
 		}
+		this.texture.unsafeSetFilter(TextureFilter.MipMapLinearLinear, TextureFilter.Linear);
+		this.texture.bind();
+		gl.glGenerateMipmap(GL30.GL_TEXTURE_2D);
 		this.id = this.texture.getTextureObjectHandle();
 	}
 }

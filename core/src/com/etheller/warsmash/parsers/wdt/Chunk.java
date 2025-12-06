@@ -155,7 +155,10 @@ public class Chunk {
 				}
 				break;
 			case i_MCSH:
-				this.shadows = reader.readUInt32Array(this.sizeShadow / 4);
+				if (this.shadows != null) {
+					throw new IllegalStateException();
+				}
+				this.shadows = reader.readInt64Array(this.sizeShadow / 8);
 				break;
 			case i_MCLQ:
 				if ((this.flags & Flags.IsRiver) != 0) {

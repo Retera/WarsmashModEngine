@@ -38,13 +38,15 @@ public class RenderDoodad {
 
 	private final War3ID typeId;
 	private final float facingRadians;
+	private final long uniqueId;
 
 	public RenderDoodad(final War3MapViewer map, final MdxModel model, final GameObject row, final float[] location3D,
 			final float[] scale3D, final float facingRadians, final float maxPitch, final float maxRoll,
-			final float selectionScale, final int doodadVariation) {
+			final float selectionScale, final int doodadVariation, final long uniqueId) {
 		this.facingRadians = facingRadians;
 		this.maxPitch = maxPitch;
 		this.maxRoll = maxRoll;
+		this.uniqueId = uniqueId;
 		final boolean isSimple = row.readSLKTagBoolean("lightweight");
 		ModelInstance instance;
 
@@ -168,5 +170,9 @@ public class RenderDoodad {
 
 	public float getFacingRadians() {
 		return this.facingRadians;
+	}
+
+	public long getUniqueId() {
+		return this.uniqueId;
 	}
 }

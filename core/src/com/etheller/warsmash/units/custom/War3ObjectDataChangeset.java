@@ -235,6 +235,7 @@ public final class War3ObjectDataChangeset {
 		switch (cmp) {
 		case 'u':
 		case 'h':
+		case 'f':
 		case 'b':
 		case 't':
 			return false;
@@ -455,7 +456,9 @@ public final class War3ObjectDataChangeset {
 	}
 
 	public static enum CollisionHandling {
-		CREATE_NEW_ID, REPLACE, MERGE;
+		CREATE_NEW_ID,
+		REPLACE,
+		MERGE;
 	}
 
 	public void merge(final War3ObjectDataChangeset obj, final CollisionHandling collisionHandling) {

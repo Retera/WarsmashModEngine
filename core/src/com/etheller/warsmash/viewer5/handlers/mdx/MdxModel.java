@@ -1,14 +1,11 @@
 package com.etheller.warsmash.viewer5.handlers.mdx;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.commons.compress.utils.IOUtils;
-
 import com.badlogic.gdx.graphics.GL20;
+import com.etheller.warsmash.datasources.SourcedData;
 import com.etheller.warsmash.viewer5.ModelInstance;
 import com.etheller.warsmash.viewer5.ModelViewer;
 import com.etheller.warsmash.viewer5.PathSolver;
@@ -98,8 +95,7 @@ public class MdxModel extends com.etheller.warsmash.viewer5.Model<MdxHandler> {
 			parser = (MdlxModel) bufferOrParser;
 		}
 		else {
-			System.err.println("Wasting memory with conversion from InputStream to buffer in MdxModel");
-			parser = new MdlxModel(ByteBuffer.wrap(IOUtils.toByteArray((InputStream) bufferOrParser)));
+			parser = new MdlxModel(((SourcedData) bufferOrParser).read());
 		}
 
 		final ModelViewer viewer = this.viewer;
@@ -329,7 +325,7 @@ public class MdxModel extends com.etheller.warsmash.viewer5.Model<MdxHandler> {
 	}
 
 	@Override
-	protected void load(final InputStream src, final Object options) {
+	protected void load(final SourcedData src, final Object options) {
 		try {
 			this.load(src);
 		}

@@ -1,7 +1,7 @@
 package com.etheller.warsmash.common;
 
-import java.io.InputStream;
+import com.etheller.warsmash.datasources.SourcedData;
 
 public interface LoadGenericCallback {
-	Object call(InputStream data); // TODO typing
+	Object call(SourcedData data); // TODO typing
 }

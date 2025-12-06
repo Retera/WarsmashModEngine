@@ -72,7 +72,19 @@ public abstract class Node extends GenericNode {
 		return this;
 	}
 
+	public Node setRotation(final Quaternion rotation) {
+		this.localRotation.set(rotation);
+		this.dirty = true;
+		return this;
+	}
+
 	public Node setScale(final float[] varying) {
+		this.localScale.set(varying);
+		this.dirty = true;
+		return this;
+	}
+
+	public Node setScale(final Vector3 varying) {
 		this.localScale.set(varying);
 		this.dirty = true;
 		return this;

@@ -1,6 +1,5 @@
 package com.etheller.warsmash.viewer5;
 
-import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.ArrayList;
@@ -15,6 +14,7 @@ import com.badlogic.gdx.graphics.GL20;
 import com.etheller.warsmash.common.FetchDataTypeName;
 import com.etheller.warsmash.common.LoadGenericCallback;
 import com.etheller.warsmash.datasources.DataSource;
+import com.etheller.warsmash.datasources.SourcedData;
 import com.etheller.warsmash.viewer5.gl.ClientBuffer;
 import com.etheller.warsmash.viewer5.gl.WebGL;
 import com.etheller.warsmash.viewer5.handlers.ResourceHandler;
@@ -153,17 +153,25 @@ public abstract class ModelViewer {
 			final SolvedPath solved = pathSolver.solve(src, solverParams);
 
 			finalSrc = solved.getFinalSrc();
+			String finalDataSrc = finalSrc;
+			isFetch = solved.isFetch();
+			if (isFetch) {
+				final Resource resource = this.fetchCache.get(finalSrc);
+
+				if (resource != null) {
+					return resource;
+				}
+			}
 			if (!this.dataSource.has(finalSrc)) {
 				final String ddsPath = finalSrc.substring(0, finalSrc.lastIndexOf('.')) + ".dds";
 				if (this.dataSource.has(ddsPath)) {
-					finalSrc = ddsPath;
+					finalDataSrc = ddsPath;
 				}
 				else {
 					System.err.println("Attempting to load non-existant file: " + finalSrc);
 				}
 			}
 			extension = solved.getExtension();
-			isFetch = solved.isFetch();
 
 			if (!(extension instanceof String)) {
 				throw new IllegalStateException("The path solver did not return an extension!");
@@ -179,13 +187,6 @@ public abstract class ModelViewer {
 
 			// Is there a handler for this file type?
 			if (handlerAndDataType != null) {
-				if (isFetch) {
-					final Resource resource = this.fetchCache.get(finalSrc);
-
-					if (resource != null) {
-						return resource;
-					}
-				}
 
 				final ResourceHandler handler = (ResourceHandler) handlerAndDataType[0];
 				final Resource resource = handler.construct(new ResourceHandlerConstructionParams(this, handler,
@@ -199,7 +200,7 @@ public abstract class ModelViewer {
 
 				// TODO this is a synchronous hack, skipped some Ghostwolf code
 				try {
-					resource.loadData(this.dataSource.getResourceAsStream(finalSrc), null);
+					resource.loadData(new SourcedData(this.dataSource, finalDataSrc), null);
 				}
 				catch (final Exception e) {
 					throw new IllegalStateException("Unable to load data: " + finalSrc, e);
@@ -265,12 +266,7 @@ public abstract class ModelViewer {
 		this.fetchCache.put(path, resource);
 
 		// TODO this is a synchronous hack, skipped some Ghostwolf code
-		try {
-			resource.loadData(dataSource.getResourceAsStream(path), null);
-		}
-		catch (final IOException e) {
-			throw new IllegalStateException("Unable to load data: " + path);
-		}
+		resource.loadData(new SourcedData(dataSource, path), null);
 
 		return resource;
 

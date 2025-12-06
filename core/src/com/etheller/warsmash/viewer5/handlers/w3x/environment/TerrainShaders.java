@@ -321,47 +321,48 @@ public class TerrainShaders {
 					"uniform sampler2D height_cliff_texture_wdt;\r\n" + //
 					"uniform sampler2D normal_texture;\r\n" + //
 					"uniform sampler2D normal_texture_interior;\r\n" + //
-					"uniform usampler2D terrain_alpha_list;\r\n" + //
 					"uniform float centerOffsetX;\r\n" + //
 					"uniform float centerOffsetY;\r\n" + //
 					"uniform int tileOffsetX;\r\n" + //
 					"uniform int tileOffsetY;\r\n" + //
+					"uniform ivec2 chunkOffset;\r\n" + //
 					"uniform vec2 size_world;\r\n" + //
 					"uniform sampler2D lightTexture;\r\n" + //
 					"uniform float lightCount;\r\n" + //
 					"uniform float lightTextureHeight;\r\n" + //
 					"\r\n" + //
 					"out vec2 UV;\r\n" + //
-					"flat out uvec4 texture_indices;\r\n" + //
 					"out vec2 pathing_map_uv;\r\n" + //
 					"out vec3 position;\r\n" + //
-					"out vec3 ShadowCoord;\r\n" + //
 					"out vec2 v_suv;\r\n" + //
 					"out vec2 v_auv;\r\n" + //
 					"out vec3 shadeColor;\r\n" + //
 					"\r\n" + //
 					"void main() { \r\n" + //
 					"	ivec2 size = textureSize(height_cliff_texture_wdt, 0);\r\n" + //
-					"	ivec2 pos = ivec2(gl_InstanceID % size.x, gl_InstanceID / size.x);\r\n" + //
+					"	ivec2 chunkSize = ivec2(8, 8);\r\n" + //
+					"	ivec2 pos = ivec2(gl_InstanceID % chunkSize.x, gl_InstanceID / chunkSize.x);\r\n" + //
 					"\r\n" + //
 					"	vec4 height;\r\n" + //
 					"	ivec2 height_pos;\r\n" + //
 					"	vec3 normal;\r\n" + //
 					"	if (vPosition.x > 0.25 && vPosition.x < 0.75) {\r\n" + // wdt interior
-					"		height_pos = pos;\r\n" + //
+					"		height_pos = pos + chunkOffset;\r\n" + //
 					"		height = texelFetch(height_cliff_texture_wdt, height_pos, 0);\r\n" + //
-					"		normal = normalize(texelFetch(normal_texture_interior, height_pos, 0).xzy);\r\n" + //
+					"		normal = texelFetch(normal_texture_interior, height_pos, 0).xzy;\r\n" + //
 					"	} else {\r\n" + //
-					"		height_pos = ivec2(vPosition + pos);\r\n" + //
+					"		height_pos = ivec2(vPosition + pos) + chunkOffset;\r\n" + //
 					"		height = texelFetch(height_cliff_texture, height_pos, 0);\r\n" + //
-					"		normal = normalize(texelFetch(normal_texture, height_pos, 0).xzy);\r\n" + //
+					"		normal = texelFetch(normal_texture, height_pos, 0).xzy;\r\n" + //
 					"	}\r\n" + //
 					"	normal.y *= -1.0;\r\n" + //
+					"   normal = normalize(normal);\r\n" + //
+//					"	normal.x = 0.0;\r\n" + //
+//					"	normal.y = 0.0;\r\n" + //
 					"	ivec2 pos_tile = pos + ivec2(tileOffsetX, tileOffsetY);\r\n" + //
 					"\r\n" + //
 					" UV = vec2(vPosition.x, 1 - vPosition.y);\r\n" + //
 					// " UV = vec2(vPosition.x==0?0.01:0.99, vPosition.y==0?0.99:0.01);\r\n" + //
-					"	texture_indices = texelFetch(terrain_alpha_list, pos, 0);\r\n" + //
 					"	pathing_map_uv = (vPosition + pos_tile) * 4;	\r\n" + //
 					"\r\n" + //
 					"	// Cliff culling\r\n" + //
@@ -371,12 +372,11 @@ public class TerrainShaders {
 //					"	gl_Position = ((texture_indices.a & 32768u) == 0u) ? MVP * vec4(position.xyz, 1) : vec4(2.0, 0.0, 0.0, 1.0);\r\n"
 //					+ //
 					"	gl_Position = MVP * vec4(position.xyz, 1);\r\n" + //
-					"	ShadowCoord = (((texture_indices.a & 32768u) == 0u) ? DepthBiasMVP * vec4(position.xyz, 1) : vec4(2.0, 0.0, 0.0, 1.0)).xyz;\r\n"
+					"   v_suv = (vPosition + pos + chunkOffset) / vec2(128.0, 128.0);\r\n" + //
+					"   v_auv = vec2((vPosition.x * 8.0 + pos.x * 8) + (chunkOffset.x / 8) * 66 + 1, (vPosition.y * 8.0 + pos.y * 8) + (chunkOffset.y / 8) * 66 + 1) / vec2(1056.0, 1056.0);\r\n"
 					+ //
-					"   v_suv = (vPosition + pos_tile) / size_world;\r\n" + //
-					"   v_auv = vec2(vPosition.x + pos.x, 8.0 - (vPosition.y + pos.y)) / size;\r\n" + //
-					"	position.x = (position.x - centerOffsetX) / (size.x * 128.0);\r\n" + //
-					"	position.y = (position.y - centerOffsetY) / (size.y * 128.0);\r\n" + //
+					"	position.x = (position.x - centerOffsetX) / (chunkSize.x * 128.0);\r\n" + //
+					"	position.y = (position.y - centerOffsetY) / (chunkSize.y * 128.0);\r\n" + //
 					Shaders.lightSystem("normal", "positionWorld", "lightTexture", "lightTextureHeight", "lightCount",
 							true)
 					+ "\r\n" + //
@@ -396,6 +396,7 @@ public class TerrainShaders {
 				"uniform sampler2D alpha1;\r\n" + //
 				"uniform sampler2D alpha2;\r\n" + //
 				"uniform sampler2D alpha3;\r\n" + //
+				"uniform sampler2D shadowMap;\r\n" + //
 //				"uniform sampler2D sample4;\r\n" + //
 //				"uniform sampler2D sample5;\r\n" + //
 //				"uniform sampler2D sample6;\r\n" + //
@@ -417,10 +418,8 @@ public class TerrainShaders {
 				"uniform int layer_count;\r\n" + //
 				"\r\n" + //
 				"in vec2 UV;\r\n" + //
-				"flat in uvec4 texture_indices;\r\n" + //
 				"in vec2 pathing_map_uv;\r\n" + //
 				"in vec3 position;\r\n" + //
-				"in vec3 ShadowCoord;\r\n" + //
 				"in vec2 v_suv;\r\n" + //
 				"in vec2 v_auv;\r\n" + //
 				"in vec3 shadeColor;\r\n" + //
@@ -428,49 +427,6 @@ public class TerrainShaders {
 				"out vec4 color;\r\n" + //
 //				"layout (location = 1) out vec4 position;\r\n" + //
 				"\r\n" + //
-				"vec4 get_fragment(uint id, vec2 uv) {\r\n" + //
-				"	vec2 dx = dFdx(uv.xy);\r\n" + //
-				"	vec2 dy = dFdy(uv.xy);\r\n" + //
-				"\r\n" + //
-				"	switch(id) {\r\n" + //
-				"		case 0u:\r\n" + //
-				"			return texture(sample0, uv);\r\n" + //
-				"		case 1u:\r\n" + //
-				"			return texture(sample1, uv);\r\n" + //
-				"		case 2u:\r\n" + //
-				"			return texture(sample2, uv);\r\n" + //
-				"		case 3u:\r\n" + //
-				"			return texture(sample3, uv);\r\n" + //
-//				"		case 4u:\r\n" + //
-//				"			return textureGrad(sample4, vec2(uv), dx, dy);\r\n" + //
-//				"		case 5u:\r\n" + //
-//				"			return textureGrad(sample5, vec2(uv), dx, dy);\r\n" + //
-//				"		case 6u:\r\n" + //
-//				"			return textureGrad(sample6, vec2(uv), dx, dy);\r\n" + //
-//				"		case 7u:\r\n" + //
-//				"			return textureGrad(sample7, vec2(uv), dx, dy);\r\n" + //
-//				"		case 8u:\r\n" + //
-//				"			return textureGrad(sample8, vec2(uv), dx, dy);\r\n" + //
-//				"		case 9u:\r\n" + //
-//				"			return textureGrad(sample9, vec2(uv), dx, dy);\r\n" + //
-//				"		case 10u:\r\n" + //
-//				"			return textureGrad(sample10, vec2(uv), dx, dy);\r\n" + //
-//				"		case 11u:\r\n" + //
-//				"			return textureGrad(sample11, vec2(uv), dx, dy);\r\n" + //
-//				"		case 12u:\r\n" + //
-//				"			return textureGrad(sample12, vec2(uv), dx, dy);\r\n" + //
-//				"		case 13u:\r\n" + //
-//				"			return textureGrad(sample13, vec2(uv), dx, dy);\r\n" + //
-//				"		case 14u:\r\n" + //
-//				"			return textureGrad(sample14, vec2(uv), dx, dy);\r\n" + //
-//				"		case 15u:\r\n" + //
-//				"			return textureGrad(sample15, vec2(uv), dx, dy);\r\n" + //
-//				"		case 16u:\r\n" + //
-//				"			return textureGrad(sample16, vec2(uv), dx, dy);\r\n" + //
-				"		case 17u:\r\n" + //
-				"			return vec4(0, 0, 0, 0);\r\n" + //
-				"	}\r\n" + //
-				"}\r\n" + //
 				"\r\n" + //
 				"\r\n" + //
 				"void main() {\r\n" + //
@@ -488,11 +444,7 @@ public class TerrainShaders {
 				"		layerFragment = texture(sample3, UV);\r\n" + //
 				"		color = mix(color, layerFragment, texture(alpha3, v_auv).r);\r\n" + //
 				"	}\r\n" + //
-				"   float shadow = 0.0;\r\n" + //
-//				"   float visibility = 1.0;\r\n" + //
-//				"   if ( texture2D(shadowMap, ShadowCoord.xy).z > ShadowCoord.z ) {\r\n" + //
-//				"       visibility = 0.5;\r\n" + //
-//				"   }\r\n" + //
+				"   float shadow = texture2D(shadowMap, v_suv).r;\r\n" + //
 				"\r\n" + //
 				"	if (show_lighting) {\r\n" + //
 				"     color = vec4(color.xyz * (1.0 - shadow) * shadeColor, 1.0);\r\n" + //

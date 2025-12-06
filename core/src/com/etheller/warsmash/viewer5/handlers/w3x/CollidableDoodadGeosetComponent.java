@@ -45,6 +45,6 @@ public class CollidableDoodadGeosetComponent implements CollidableDoodadComponen
 	@Override
 	public boolean intersectRayWithCollision(final Ray ray, final Vector3 intersection, final boolean b,
 			final boolean c) {
-		return this.collision.checkIntersect(ray, this.instance.nodes[0], intersection);
+		return this.collision.checkIntersect(ray, this.instance, intersection);
 	}
 }

@@ -43,15 +43,15 @@ public class MpqDataSource implements DataSource {
 	public InputStream getResourceAsStream(final String filepath) throws IOException {
 		ArchivedFile file = null;
 		try {
-			file = this.archive.lookupHash2(new HashLookup(filepath));
-		}
-		catch (final MPQException exc) {
-			if (exc.getMessage().equals("lookup not found")) {
+			final HashLookup hashLookup = new HashLookup(filepath);
+			final int lookupIdx = this.archive.lookupPath3(hashLookup);
+			if (lookupIdx == -1) {
 				return null;
 			}
-			else {
-				throw new IOException(exc);
-			}
+			file = this.archive.lookupHash3(hashLookup, lookupIdx);
+		}
+		catch (final MPQException exc) {
+			throw new IOException(exc);
 		}
 		final ArchivedFileStream stream = new ArchivedFileStream(this.inputChannel, this.extractor, file);
 		final InputStream newInputStream = Channels.newInputStream(stream);
@@ -62,15 +62,15 @@ public class MpqDataSource implements DataSource {
 	public ByteBuffer read(final String path) throws IOException {
 		ArchivedFile file = null;
 		try {
-			file = this.archive.lookupHash2(new HashLookup(path));
-		}
-		catch (final MPQException exc) {
-			if (exc.getMessage().equals("lookup not found")) {
+			final HashLookup hashLookup = new HashLookup(path);
+			final int lookupIdx = this.archive.lookupPath3(hashLookup);
+			if (lookupIdx == -1) {
 				return null;
 			}
-			else {
-				throw new IOException(exc);
-			}
+			file = this.archive.lookupHash3(hashLookup, lookupIdx);
+		}
+		catch (final MPQException exc) {
+			throw new IOException(exc);
 		}
 		try (final ArchivedFileStream stream = new ArchivedFileStream(this.inputChannel, this.extractor, file)) {
 			final long size = stream.size();
@@ -82,12 +82,14 @@ public class MpqDataSource implements DataSource {
 
 	@Override
 	public File getFile(final String filepath) throws IOException {
-		// TODO Auto-generated method stub
-		// System.out.println("getting it from the outside: " +
-		// filepath);
 		ArchivedFile file = null;
 		try {
-			file = this.archive.lookupHash2(new HashLookup(filepath));
+			final HashLookup hashLookup = new HashLookup(filepath);
+			final int lookupIdx = this.archive.lookupPath3(hashLookup);
+			if (lookupIdx == -1) {
+				return null;
+			}
+			file = this.archive.lookupHash3(hashLookup, lookupIdx);
 		}
 		catch (final MPQException exc) {
 			if (exc.getMessage().equals("lookup not found")) {
@@ -119,18 +121,7 @@ public class MpqDataSource implements DataSource {
 
 	@Override
 	public boolean has(final String filepath) {
-		try {
-			this.archive.lookupPath(filepath);
-			return true;
-		}
-		catch (final MPQException exc) {
-			if (exc.getMessage().equals("lookup not found")) {
-				return false;
-			}
-			else {
-				throw new RuntimeException(exc);
-			}
-		}
+		return this.archive.lookupPath3(new HashLookup(filepath)) != -1;
 	}
 
 	@Override

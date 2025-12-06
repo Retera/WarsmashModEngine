@@ -18,6 +18,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.item.CAbi
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.item.CAbilityItemManaRegain;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.item.CAbilityItemPermanentLifeGain;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.mine.CAbilityEntangledMine;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.mount.CAbilityMount;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.neutral.CAbilityWayGate;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.nightelf.eattree.CAbilityEatTree;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.nightelf.moonwell.CAbilityMoonWell;
@@ -130,6 +131,10 @@ public class CAbilityData {
 				new CAbilityTypeDefinitionSpellBase((handleId, alias) -> new CAbilityThunderBolt(handleId, alias)));
 //		this.codeToAbilityTypeDefinition.put(War3ID.fromString("AHav"),
 //				new CAbilityTypeDefinitionSpellBase((handleId, alias) -> new CAbilityAvatar(handleId, alias)));
+		this.codeToAbilityTypeDefinition.put(War3ID.fromString("AM01"),
+				new CAbilityTypeDefinitionSpellBase((handleId, alias) -> new CAbilityMount(handleId, alias)));
+		this.codeToAbilityTypeDefinition.put(War3ID.fromString("AM02"),
+				new CAbilityTypeDefinitionSpellBase((handleId, alias) -> new CAbilityMount(handleId, alias)));
 
 		// Blood Mage:
 		this.codeToAbilityTypeDefinition.put(War3ID.fromString("Apxf"), new CAbilityTypeDefinitionPhoenixFire());
@@ -329,7 +334,10 @@ public class CAbilityData {
 			else {
 				code = War3ID.fromString(gameObject.getId());
 			}
-			final CAbilityTypeDefinition abilityTypeDefinition = this.codeToAbilityTypeDefinition.get(code);
+			CAbilityTypeDefinition abilityTypeDefinition = this.codeToAbilityTypeDefinition.get(alias);
+			if (abilityTypeDefinition == null) {
+				abilityTypeDefinition = this.codeToAbilityTypeDefinition.get(code);
+			}
 			if (abilityTypeDefinition != null) {
 				abilityType = abilityTypeDefinition.createAbilityType(alias, gameObject);
 				this.aliasToAbilityType.put(alias, abilityType);

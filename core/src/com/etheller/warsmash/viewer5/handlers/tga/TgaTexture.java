@@ -2,8 +2,8 @@ package com.etheller.warsmash.viewer5.handlers.tga;
 
 import java.awt.image.BufferedImage;
 import java.io.IOException;
-import java.io.InputStream;
 
+import com.etheller.warsmash.datasources.SourcedData;
 import com.etheller.warsmash.viewer5.ModelViewer;
 import com.etheller.warsmash.viewer5.PathSolver;
 import com.etheller.warsmash.viewer5.RawOpenGLTextureResource;
@@ -22,10 +22,10 @@ public class TgaTexture extends RawOpenGLTextureResource {
 	}
 
 	@Override
-	protected void load(final InputStream src, final Object options) {
+	protected void load(final SourcedData src, final Object options) {
 		BufferedImage img;
 		try {
-			img = TgaFile.readTGA(this.fetchUrl, src);
+			img = TgaFile.readTGA(this.fetchUrl, src.getResourceAsStream());
 			update(img, false);
 		}
 		catch (final IOException e) {

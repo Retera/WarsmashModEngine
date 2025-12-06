@@ -45,7 +45,7 @@ public class CollisionShape extends GenericObject {
 	}
 
 	private static interface Intersectable {
-		boolean checkIntersect(final Ray ray, final MdxNode mdxNode, final Vector3 intersection);
+		boolean checkIntersect(final Ray ray, final GenericNode mdxNode, final Vector3 intersection);
 	}
 
 	public static final class IntersectableBox implements Intersectable {
@@ -56,7 +56,7 @@ public class CollisionShape extends GenericObject {
 		}
 
 		@Override
-		public boolean checkIntersect(final Ray ray, final MdxNode mdxNode, final Vector3 intersection) {
+		public boolean checkIntersect(final Ray ray, final GenericNode mdxNode, final Vector3 intersection) {
 			intersectMatrixHeap.set(mdxNode.worldMatrix);
 			Matrix4.inv(intersectMatrixHeap.val);
 			intersectHeap.set(ray.origin);
@@ -84,7 +84,7 @@ public class CollisionShape extends GenericObject {
 		}
 
 		@Override
-		public boolean checkIntersect(final Ray ray, final MdxNode mdxNode, final Vector3 intersection) {
+		public boolean checkIntersect(final Ray ray, final GenericNode mdxNode, final Vector3 intersection) {
 			intersectHeap.set(this.center);
 			intersectHeap.prj(mdxNode.worldMatrix);
 			if (Intersector.intersectRaySphere(ray, intersectHeap, this.radius, intersection)) {

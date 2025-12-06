@@ -1,7 +1,6 @@
 package com.etheller.warsmash;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.IntBuffer;
@@ -31,6 +30,7 @@ import com.etheller.warsmash.datasources.DataSource;
 import com.etheller.warsmash.datasources.DataSourceDescriptor;
 import com.etheller.warsmash.datasources.FolderDataSourceDescriptor;
 import com.etheller.warsmash.datasources.MpqDataSourceDescriptor;
+import com.etheller.warsmash.datasources.SourcedData;
 import com.etheller.warsmash.datasources.SubdirDataSource;
 import com.etheller.warsmash.parsers.fdf.GameUI;
 import com.etheller.warsmash.parsers.jass.Jass2;
@@ -39,7 +39,6 @@ import com.etheller.warsmash.parsers.jass.Jass2.RootFrameListener;
 import com.etheller.warsmash.units.DataTable;
 import com.etheller.warsmash.units.Element;
 import com.etheller.warsmash.util.ImageUtils;
-import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.util.WarsmashConstants;
 import com.etheller.warsmash.util.WarsmashUtils;
 import com.etheller.warsmash.viewer5.Model;
@@ -211,7 +210,7 @@ public class WarsmashGdxMapScreen implements InputProcessor, Screen {
 //		pawnComplexInstance.setReplaceableTexture(6, "Creature\\HighElf\\BloodElfMaleHair.blp");
 //		pawnComplexInstance.setReplaceableTexture(11, "Creature\\HighElf\\BloodElfFemaleWarrior.blp");
 //		pawnComplexInstance.setUniformScale(50.0f);
-		MeleeToggleUI toggleUI = new MeleeToggleUI(baseMeleeUI, Arrays.asList(baseMeleeUI, thirdPersonUI));
+		final MeleeToggleUI toggleUI = new MeleeToggleUI(baseMeleeUI, Arrays.asList(baseMeleeUI, thirdPersonUI));
 		this.meleeUI = toggleUI;
 		this.viewer.getCommandErrorListener().setDelegate(this.meleeUI);
 		final ModelInstance libgdxContentInstance = new LibGDXContentLayerModel(null, this.viewer, "",
@@ -518,7 +517,7 @@ public class WarsmashGdxMapScreen implements InputProcessor, Screen {
 		}
 
 		@Override
-		protected void load(final InputStream src, final Object options) {
+		protected void load(final SourcedData src, final Object options) {
 		}
 
 		@Override

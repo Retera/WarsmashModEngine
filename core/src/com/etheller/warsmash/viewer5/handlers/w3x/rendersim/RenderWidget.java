@@ -54,7 +54,7 @@ public interface RenderWidget {
 	boolean isShowSelectionCircleAboveWater();
 
 	public static final class UnitAnimationListenerImpl implements CUnitAnimationListener {
-		private final MdxComplexInstance instance;
+		private MdxComplexInstance instance;
 		protected final EnumSet<AnimationTokens.SecondaryTag> secondaryAnimationTags = EnumSet
 				.noneOf(AnimationTokens.SecondaryTag.class);
 		private final EnumSet<AnimationTokens.SecondaryTag> recycleSet = EnumSet
@@ -337,6 +337,10 @@ public interface RenderWidget {
 		@Override
 		public void clearHeadFacing() {
 			this.headFacingLock = null;
+		}
+
+		public void setInstance(final MdxComplexInstance instance) {
+			this.instance = instance;
 		}
 	}
 

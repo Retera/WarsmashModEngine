@@ -281,11 +281,19 @@ public class MPQArchive {
 		return hashTable.lookupBlock(new HashLookup(path));
 	}
 	
+	public int lookupPath3(HashLookup hash) {
+		return hashTable.lookupBlock2(hash);
+	}
+	
 	public BlockTable.Entry lookupHash(HashLookup hash) throws MPQException{
 		return blockTable.lookupEntry(hashTable.lookupBlock(hash));
 	}
 	
 	public ArchivedFile lookupHash2(HashLookup hash) throws MPQException{
 		return new ArchivedFile(this, hash, blockTable.lookupEntry(hashTable.lookupBlock(hash)));
+	}
+	
+	public ArchivedFile lookupHash3(HashLookup hash, int lookupPathResult) throws MPQException{
+		return new ArchivedFile(this, hash, blockTable.lookupEntry(lookupPathResult));
 	}
 }

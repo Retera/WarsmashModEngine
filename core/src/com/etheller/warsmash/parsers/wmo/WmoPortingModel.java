@@ -305,14 +305,16 @@ public class WmoPortingModel extends MdxModel {
 
 		portedModel.pivotPoints.add(new float[3]);
 
-		final File dst = new File("/tmp/dumbwmo/" + fetchUrl + ".mdx");
-		dst.getParentFile().mkdirs();
-		try (FileOutputStream fos = new FileOutputStream(dst)) {
-			final ByteBuffer saveMdx = portedModel.saveMdx();
-			fos.write(saveMdx.array());
-		}
-		catch (final Exception e) {
-			e.printStackTrace();
+		if (false) {
+			final File dst = new File("/tmp/dumbwmo/" + fetchUrl + ".mdx");
+			dst.getParentFile().mkdirs();
+			try (FileOutputStream fos = new FileOutputStream(dst)) {
+				final ByteBuffer saveMdx = portedModel.saveMdx();
+				fos.write(saveMdx.array());
+			}
+			catch (final Exception e) {
+				e.printStackTrace();
+			}
 		}
 
 		return portedModel;

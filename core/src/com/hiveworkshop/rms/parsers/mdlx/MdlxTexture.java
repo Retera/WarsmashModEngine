@@ -8,7 +8,7 @@ import com.hiveworkshop.rms.util.BinaryWriter;
 
 public class MdlxTexture implements MdlxBlock {
 	public enum WrapMode {
-		REPEAT_BOTH, WRAP_WIDTH, WRAP_HEIGHT, WRAP_BOTH;
+		WRAP_NONE, WRAP_WIDTH, WRAP_HEIGHT, WRAP_BOTH;
 
 		public static WrapMode fromId(final int id) {
 			return values()[id];
@@ -25,7 +25,7 @@ public class MdlxTexture implements MdlxBlock {
 
 	public int replaceableId = 0;
 	public String path = "";
-	public WrapMode wrapMode = WrapMode.REPEAT_BOTH;
+	public WrapMode wrapMode = WrapMode.WRAP_NONE;
 	public boolean reforged = false;
 
 	@Override

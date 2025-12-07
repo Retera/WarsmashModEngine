@@ -245,7 +245,7 @@ public class CBehaviorPlayerPawn implements CBehavior {
 	}
 
 	public float getHeight() {
-		return 100;
+		return 75;
 	}
 
 	public void setVelocityZ(final float zGravity) {

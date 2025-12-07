@@ -58,7 +58,7 @@ public class SmartBackdropFrame extends SpriteFrame {
 	private int generateMaterial(final MdlxModel model, final String path, final boolean wrap) {
 		final MdlxTexture edgeFileReference = new MdlxTexture();
 		if (wrap) {
-			edgeFileReference.setWrapMode(WrapMode.REPEAT_BOTH);
+			edgeFileReference.setWrapMode(WrapMode.WRAP_NONE);
 		}
 		edgeFileReference.setPath(path);
 		final int textureId = model.getTextures().size();

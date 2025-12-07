@@ -94,4 +94,8 @@ public class MapObjectDefinition implements MdlxBlock, MdlxChunk {
 	public float getScale() {
 		return this.scale;
 	}
+
+	public int getScaleShort() {
+		return this.scaleShort;
+	}
 }

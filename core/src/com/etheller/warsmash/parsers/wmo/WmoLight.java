@@ -24,7 +24,7 @@ public class WmoLight implements MdlxBlock, MdlxChunk {
 
 	@Override
 	public void readMdx(final BinaryReader reader, final int version) {
-		this.type = Type.fromId(reader.readInt32());
+		this.type = Type.fromId(reader.readInt8());
 		this.useAtten = reader.readInt8();
 		this.unknown = reader.readInt16();
 		reader.readUInt8Array(this.color);

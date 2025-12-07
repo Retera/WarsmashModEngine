@@ -162,4 +162,11 @@ public class MdlxMaterial implements MdlxBlock, MdlxChunk {
 	public List<MdlxLayer> getLayers() {
 		return this.layers;
 	}
+
+	public static final class Flags {
+		public static final int CONSTANT_COLOR = 0x1;
+		public static final int TWO_SIDED_REFORGED = 0x2; // reforged
+		public static final int SORT_PRIMS_FAR_Z = 0x10;
+		public static final int FULL_RESOLUTION = 0x20;
+	}
 }

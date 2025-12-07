@@ -67,6 +67,10 @@ public class DoodadDefinition implements MdlxBlock, MdlxChunk {
 		return this.scale;
 	}
 
+	public int getScaleShort() {
+		return this.scaleShort;
+	}
+
 	public int getFlags() {
 		return this.flags;
 	}

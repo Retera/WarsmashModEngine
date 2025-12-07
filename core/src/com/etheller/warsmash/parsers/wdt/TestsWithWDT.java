@@ -24,6 +24,9 @@ public class TestsWithWDT {
 			System.out.println(map.offsDoodadNames);
 			System.out.println(map.nMapObjNames);
 			System.out.println(map.offsMapObjNames);
+			for (final String name : map.worldModelFileNames) {
+				System.out.println(name);
+			}
 			System.out.println(Arrays.toString(map.headerUnused));
 
 			System.out.println(map.tileHeaders.size());
@@ -60,8 +63,8 @@ public class TestsWithWDT {
 				for (final var x : header.doodads) {
 					final int flags = x.getFlags();
 					final String name = map.doodadModelFileNames.get((int) x.getNameId());
-					System.out.println(flags + ": " + name);
-					System.out.println(Arrays.toString(x.getPosition()));
+//					System.out.println(flags + ": " + name);
+//					System.out.println(Arrays.toString(x.getPosition()));
 
 //					try {
 //						Thread.sleep(100);
@@ -74,9 +77,9 @@ public class TestsWithWDT {
 					final int flags = x.getFlags();
 					final String name = map.worldModelFileNames.get((int) x.getNameId());
 
-					System.out.println("WMO:");
-					System.out.println(flags + ": " + name);
-					System.out.println(Arrays.toString(x.getPosition()));
+//					System.out.println("WMO:");
+//					System.out.println(flags + ": " + name);
+//					System.out.println(Arrays.toString(x.getPosition()));
 				}
 			}
 			System.out.println(duskwood);

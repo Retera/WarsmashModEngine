@@ -294,12 +294,7 @@ public class MdxModel extends com.etheller.warsmash.viewer5.Model<MdxHandler> {
 		SetupSimpleGroups.setupSimpleGroups(this);
 
 		// Creates the sorted indices array of the generic objects
-		try {
-			setupHierarchy(-1);
-		}
-		catch (final StackOverflowError e) {
-			System.out.println("bah");
-		}
+		setupHierarchy(-1);
 
 		// Keep a sorted array.
 		for (int i = 0, l = this.genericObjects.size(); i < l; i++) {

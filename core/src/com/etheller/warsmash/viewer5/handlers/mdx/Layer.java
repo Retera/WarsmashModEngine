@@ -43,12 +43,12 @@ public class Layer extends AnimatedObject {
 
 		final int flags = layer.getFlags();
 
-		this.unshaded = flags & 0x1;
-		this.sphereEnvironmentMap = flags & 0x2;
-		this.twoSided = flags & 0x10;
-		this.unfogged = flags & 0x20;
-		this.noDepthTest = flags & 0x40;
-		this.noDepthSet = flags & 0x80;
+		this.unshaded = flags & MdlxLayer.Flags.UNSHADED;
+		this.sphereEnvironmentMap = flags & MdlxLayer.Flags.SPHERE_ENVIRONMENT_MAP;
+		this.twoSided = flags & MdlxLayer.Flags.TWO_SIDED;
+		this.unfogged = flags & MdlxLayer.Flags.UNFOGGED;
+		this.noDepthTest = flags & MdlxLayer.Flags.NO_DEPTH_TEST;
+		this.noDepthSet = flags & MdlxLayer.Flags.NO_DEPTH_SET;
 
 		this.depthMaskValue = ((filterMode == MdlxLayer.FilterMode.NONE)
 				|| (filterMode == MdlxLayer.FilterMode.TRANSPARENT));

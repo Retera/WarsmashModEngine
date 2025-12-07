@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.badlogic.gdx.utils.ByteArray;
+import com.badlogic.gdx.utils.LongMap;
 import com.etheller.warsmash.util.War3ID;
 import com.hiveworkshop.rms.parsers.mdlx.MdlxBlock;
 import com.hiveworkshop.rms.parsers.mdlx.MdlxBlockDescriptor;
@@ -40,9 +41,13 @@ public class ModelObjectHeaders {
 	private long wmoId;
 
 	private List<String> textureFileNames;
+	private final LongMap<String> textureFileNamesOffsetLookup = new LongMap<String>();
 	private List<String> skyboxFileNames;
+	private final LongMap<String> skyboxFileNamesOffsetLookup = new LongMap<String>();
 	private List<String> groupNames;
+	private final LongMap<String> groupNamesOffsetLookup = new LongMap<String>();
 	private List<String> doodadFileNames;
+	private final LongMap<String> doodadFileNamesOffsetLookup = new LongMap<String>();
 	private final List<WmoMaterial> materials = new ArrayList<>();
 	private final List<WmoGroupInfo> groupInfos = new ArrayList<>();
 	private float[] portalVertices;
@@ -80,16 +85,16 @@ public class ModelObjectHeaders {
 				loadHeaderChunk(reader, version);
 				break;
 			case MOTX:
-				this.textureFileNames = loadStringsChunk(reader, size);
+				this.textureFileNames = loadStringsChunk(reader, size, this.textureFileNamesOffsetLookup);
 				break;
 			case MOSB:
-				this.skyboxFileNames = loadStringsChunk(reader, size);
+				this.skyboxFileNames = loadStringsChunk(reader, size, this.skyboxFileNamesOffsetLookup);
 				break;
 			case MOGN:
-				this.groupNames = loadStringsChunk(reader, size);
+				this.groupNames = loadStringsChunk(reader, size, this.groupNamesOffsetLookup);
 				break;
 			case MODN:
-				this.doodadFileNames = loadStringsChunk(reader, size);
+				this.doodadFileNames = loadStringsChunk(reader, size, this.doodadFileNamesOffsetLookup);
 				break;
 			case MOMT:
 				loadDynamicObjects(this.materials, WmoMaterial::new, reader, size, version);
@@ -157,21 +162,30 @@ public class ModelObjectHeaders {
 		}
 	}
 
-	private List<String> loadStringsChunk(final BinaryReader reader, final int size) {
+	private List<String> loadStringsChunk(final BinaryReader reader, final int size,
+			final LongMap<String> namesOffsetLookup) {
 		final List<String> strings = new ArrayList<>();
 		final ByteArray byteArray = new ByteArray();
+		int lastOffset = 0;
 		for (int k = 0; k < size; k++) {
 			final byte value = reader.readInt8();
 			if (value == 0) {
-				strings.add(new String(byteArray.toArray()));
+				final String string = new String(byteArray.toArray());
+				namesOffsetLookup.put(lastOffset, string);
+				if (!string.isEmpty()) {
+					strings.add(string);
+				}
 				byteArray.clear();
+				lastOffset = k + 1;
 			}
 			else {
 				byteArray.add(value);
 			}
 		}
 		if (!byteArray.isEmpty()) {
-			strings.add(new String(byteArray.toArray()));
+			final String string = new String(byteArray.toArray());
+			strings.add(string);
+			namesOffsetLookup.put(lastOffset, string);
 		}
 		return strings;
 	}
@@ -240,6 +254,10 @@ public class ModelObjectHeaders {
 
 	public List<String> getTextureFileNames() {
 		return this.textureFileNames;
+	}
+
+	public LongMap<String> getTextureFileNamesOffsetLookup() {
+		return this.textureFileNamesOffsetLookup;
 	}
 
 	public List<String> getSkyboxFileNames() {

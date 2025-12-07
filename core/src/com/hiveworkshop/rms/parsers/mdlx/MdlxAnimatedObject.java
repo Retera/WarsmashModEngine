@@ -25,7 +25,11 @@ public abstract class MdlxAnimatedObject implements MdlxChunk, MdlxBlock {
 				continue;
 			}
 			final War3ID name = new War3ID(readTag);
-			final MdlxTimeline<?> timeline = AnimationMap.ID_TO_TAG.get(name).getImplementation().createTimeline();
+			final AnimationMap tag = AnimationMap.ID_TO_TAG.get(name);
+			if (tag == null) {
+				throw new IllegalStateException("Unsupported timeline animation tag: " + name);
+			}
+			final MdlxTimeline<?> timeline = tag.getImplementation().createTimeline();
 
 			timeline.readMdx(reader, name, version);
 

@@ -79,7 +79,7 @@ public class GroupLiquid<T> implements MdlxBlock, MdlxChunk {
 
 	@Override
 	public long getByteLength(final int version) {
-		return 14 + (this.vertexCount[0] * this.vertexCount[1] * 8) + (this.tileCount[0] * this.tileCount[1]);
+		return 30 + (this.vertexCount[0] * this.vertexCount[1] * 8) + (this.tileCount[0] * this.tileCount[1]);
 	}
 
 	public static final class Vertex {

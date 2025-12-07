@@ -8,13 +8,13 @@ import com.etheller.warsmash.viewer5.handlers.ModelHandler;
 import com.etheller.warsmash.viewer5.handlers.ResourceHandlerConstructionParams;
 import com.etheller.warsmash.viewer5.handlers.mdx.MdxHandler;
 
-public class WmoPortingHandler extends ModelHandler {
+public class WmoMpqPortingHandler extends ModelHandler {
 	private final MdxHandler mdxHandler;
 
-	public WmoPortingHandler(final MdxHandler mdxHandler) {
+	public WmoMpqPortingHandler(final MdxHandler mdxHandler) {
 		this.mdxHandler = mdxHandler;
 		this.extensions = new ArrayList<>();
-		this.extensions.add(new String[] { ".wmo", "arrayBuffer" });
+		this.extensions.add(new String[] { ".mpq", "arrayBuffer" });
 		this.load = true;
 	}
 
@@ -25,8 +25,8 @@ public class WmoPortingHandler extends ModelHandler {
 
 	@Override
 	public HandlerResource<?> construct(final ResourceHandlerConstructionParams params) {
-		return new WmoPortingModel(this.mdxHandler, params.getViewer(), params.getExtension(), params.getPathSolver(),
-				params.getFetchUrl());
+		return new WmoMpqPortingModel(this.mdxHandler, params.getViewer(), params.getExtension(),
+				params.getPathSolver(), params.getFetchUrl());
 	}
 
 }

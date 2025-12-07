@@ -10,8 +10,13 @@ import com.hiveworkshop.rms.util.BinaryWriter;
 
 public class MdlxLayer extends MdlxAnimatedObject {
 	public enum FilterMode {
-		NONE("None"), TRANSPARENT("Transparent"), BLEND("Blend"), ADDITIVE("Additive"), ADDALPHA("AddAlpha"),
-		MODULATE("Modulate"), MODULATE2X("Modulate2x");
+		NONE("None"),
+		TRANSPARENT("Transparent"),
+		BLEND("Blend"),
+		ADDITIVE("Additive"),
+		ADDALPHA("AddAlpha"),
+		MODULATE("Modulate"),
+		MODULATE2X("Modulate2x");
 
 		String token;
 
@@ -360,5 +365,17 @@ public class MdlxLayer extends MdlxAnimatedObject {
 
 	public void setFresnelTeamColor(final float fresnelTeamColor) {
 		this.fresnelTeamColor = fresnelTeamColor;
+	}
+
+	public static final class Flags {
+		public static final int UNSHADED = 0x1;
+		public static final int SPHERE_ENVIRONMENT_MAP = 0x2;
+		public static final int WRAP_WIDTH_UNUSED = 0x4;
+		public static final int WRAP_HEIGHT_UNUSED = 0x8;
+		public static final int TWO_SIDED = 0x10;
+		public static final int UNFOGGED = 0x20;
+		public static final int NO_DEPTH_TEST = 0x40;
+		public static final int NO_DEPTH_SET = 0x80;
+		public static final int UNLIT = 0x100;
 	}
 }

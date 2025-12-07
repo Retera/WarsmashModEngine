@@ -59,6 +59,8 @@ import com.etheller.warsmash.parsers.wdt.Chunk;
 import com.etheller.warsmash.parsers.wdt.DoodadDefinition;
 import com.etheller.warsmash.parsers.wdt.WdtMap;
 import com.etheller.warsmash.parsers.wdt.WdtMap.TileHeader;
+import com.etheller.warsmash.parsers.wmo.WmoMpqPortingHandler;
+import com.etheller.warsmash.parsers.wmo.WmoPortingHandler;
 import com.etheller.warsmash.units.DataTable;
 import com.etheller.warsmash.units.Element;
 import com.etheller.warsmash.units.GameObject;
@@ -305,7 +307,10 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 
 		final WebGL webGL = this.webGL;
 
-		addHandler(new MdxHandler());
+		final MdxHandler mdxHandler = new MdxHandler();
+		addHandler(mdxHandler);
+		addHandler(new WmoPortingHandler(mdxHandler));
+		addHandler(new WmoMpqPortingHandler(mdxHandler));
 
 		this.wc3PathSolver = PathSolver.DEFAULT;
 
@@ -896,6 +901,55 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 							(MdxComplexInstance) renderDoodad.instance, geoset, geosetRotatedBounds, geosetBoundingBox);
 					this.walkableComponentTree.add(collidableComponent, geosetRotatedBounds);
 				}
+			}
+		}
+		this.doodads.add(renderDoodad);
+		this.decals.add(renderDoodad);
+		return renderDoodad;
+	}
+
+	public RenderDoodad createWdtWorldModelObject(final GameObject row, final int doodadVariation,
+			final float[] location, final float[] rotation, final float scale, final boolean shrubbery,
+			final long uniqueId) {
+		final String file = row.readSLKTag("file").replace("/", "\\");
+		final MdxModel model = (MdxModel) load(file, this.mapPathSolver, this.solverParams);
+		final float maxPitch = row.readSLKTagFloat("maxPitch");
+		final float maxRoll = row.readSLKTagFloat("maxRoll");
+		final float[] scale3D = new float[] { scale, scale, scale };
+		final float defScale = scale;
+		final float facingRadians = (float) Math.toRadians(rotation[1] - 90);
+		final RenderDoodad renderDoodad = new RenderDoodad(this, model, row, location, scale3D, facingRadians, maxPitch,
+				maxRoll, defScale, doodadVariation, uniqueId);
+//		renderDoodad.instance.uniformScale(defScale);
+		renderDoodad.instance.rotate(
+				new Quaternion().setFromAxisRad(RenderMathUtils.VEC3_UNIT_Y, (float) Math.toRadians(rotation[0])));
+		renderDoodad.instance.rotate(
+				new Quaternion().setFromAxisRad(RenderMathUtils.VEC3_UNIT_X, (float) Math.toRadians(rotation[2])));
+		final Rectangle entireMap = this.terrain.getEntireMap();
+		for (final MdlxCollisionGeometry collisionGeometry : model.getCollisionGeometries()) {
+			final Bounds bounds = new Bounds();
+			final float[] min = new float[] { Float.MAX_VALUE, Float.MAX_VALUE, Float.MAX_VALUE };
+			final float[] max = new float[] { -Float.MAX_VALUE, -Float.MAX_VALUE, -Float.MAX_VALUE };
+			final float[] vertices = collisionGeometry.getVertices();
+			for (int i = 0; i < vertices.length; i += 3) {
+				for (int k = 0; k < 3; k++) {
+					if (vertices[i + k] < min[k]) {
+						min[k] = vertices[i + k];
+					}
+					if (vertices[i + k] > max[k]) {
+						max[k] = vertices[i + k];
+					}
+				}
+			}
+			bounds.fromExtents(min, max, 0);
+			final BoundingBox geosetBoundingBox = bounds.getBoundingBox();
+			final Rectangle geosetRotatedBounds = getRotatedBoundingBox(location[0], location[1], scale3D,
+					facingRadians, geosetBoundingBox);
+			if (entireMap.overlaps(geosetRotatedBounds)) {
+				final CollidableDoodadComponent collidableComponent = new CollidableDoodadCollisionComponent(
+						(MdxComplexInstance) renderDoodad.instance, collisionGeometry, geosetRotatedBounds,
+						geosetBoundingBox, min, max);
+				this.walkableComponentTree.add(collidableComponent, geosetRotatedBounds);
 			}
 		}
 		this.doodads.add(renderDoodad);
@@ -3236,6 +3290,7 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 					final Map<String, War3ID> doodadNameToId = new HashMap<>();
 					War3ID baseDoodadId = War3ID.fromString("0000");
 					final List<War3ID> doodadNameKeys = new ArrayList<>();
+					final List<War3ID> worldModelObjectNameKeys = new ArrayList<>();
 					for (final String name : map.doodadModelFileNames) {
 						War3ID cloneIdBase = doodadNameToId.get(name);
 						if (cloneIdBase == null) {
@@ -3252,6 +3307,26 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 						}
 						doodadNameKeys.add(cloneIdBase);
 					}
+					for (final String name : map.worldModelFileNames) {
+						War3ID cloneIdBase = doodadNameToId.get(name);
+						if (cloneIdBase == null) {
+							final ObjectData war3Doodads = War3MapViewer.this.allObjectData.getDoodads();
+							cloneIdBase = MutableObjectData.advanceId(baseDoodadId);
+							final String cloneId = cloneIdBase.toString();
+							war3Doodads.cloneUnit("YOtf", cloneId);
+							final GameObject createdDoodad = war3Doodads.get(cloneId);
+							String filepath = name;
+							if (!filepath.toLowerCase().endsWith(".mpq")) {
+								filepath += ".mpq";
+							}
+							createdDoodad.setField("file", filepath);
+							createdDoodad.setField("soundLoop", "_"); // YOtf has a sound we dont want
+							createdDoodad.setField("minScale", "0.0");
+							createdDoodad.setField("maxScale", "10000.0");
+							baseDoodadId = cloneIdBase;
+						}
+						worldModelObjectNameKeys.add(cloneIdBase);
+					}
 					for (final TileHeader tileHeader : map.tileHeaders) {
 						System.out.println("loading doodads from tile header: " + tileHeader.idx);
 						for (final Chunk chunk : tileHeader.chunks) {
@@ -3263,7 +3338,10 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 						}
 //						tileHeader.
 
-						this.terrainWdt.tileHeaderToDoodadIds.put(tileHeader, doodadNameKeys);
+						this.terrainWdt.doodadNameKeys = doodadNameKeys;// tileHeaderToDoodadIds.put(tileHeader,
+																		// doodadNameKeys);
+						this.terrainWdt.worldModelObjectNameKeys = worldModelObjectNameKeys;
+
 						final float[] centerOffset = this.terrainData.getCenterOffset();
 						final float tilesize = 533.3333f;
 						final float wowToWc3Factor = 128.0f / ((tilesize / 16) / 8);

@@ -14,7 +14,7 @@ import com.badlogic.gdx.graphics.GL20;
 import com.etheller.warsmash.common.FetchDataTypeName;
 import com.etheller.warsmash.common.LoadGenericCallback;
 import com.etheller.warsmash.datasources.DataSource;
-import com.etheller.warsmash.datasources.SourcedData;
+import com.etheller.warsmash.datasources.SourcedDataImpl;
 import com.etheller.warsmash.viewer5.gl.ClientBuffer;
 import com.etheller.warsmash.viewer5.gl.WebGL;
 import com.etheller.warsmash.viewer5.handlers.ResourceHandler;
@@ -200,7 +200,7 @@ public abstract class ModelViewer {
 
 				// TODO this is a synchronous hack, skipped some Ghostwolf code
 				try {
-					resource.loadData(new SourcedData(this.dataSource, finalDataSrc), null);
+					resource.loadData(new SourcedDataImpl(this.dataSource, finalDataSrc), null);
 				}
 				catch (final Exception e) {
 					throw new IllegalStateException("Unable to load data: " + finalSrc, e);
@@ -266,7 +266,7 @@ public abstract class ModelViewer {
 		this.fetchCache.put(path, resource);
 
 		// TODO this is a synchronous hack, skipped some Ghostwolf code
-		resource.loadData(new SourcedData(dataSource, path), null);
+		resource.loadData(new SourcedDataImpl(dataSource, path), null);
 
 		return resource;
 

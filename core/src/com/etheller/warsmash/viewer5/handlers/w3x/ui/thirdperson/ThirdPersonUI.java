@@ -125,7 +125,7 @@ public class ThirdPersonUI implements WarsmashToggleableUI {
 			final float[] startLocation = this.war3MapViewer.simulation
 					.getPlayer(this.war3MapViewer.getLocalPlayerIndex()).getStartLocation();
 			pawnUnits.add(this.war3MapViewer.simulation.createUnitSimple(this.pawnId,
-					this.war3MapViewer.getLocalPlayerIndex(), startLocation[0], startLocation[1], 0));
+					this.war3MapViewer.getLocalPlayerIndex(), startLocation[0] + 20000, startLocation[1], 0));
 //			this.war3MapViewer.simulation.createUnitSimple(War3ID.fromString("hwtw"),
 //			this.war3MapViewer.getLocalPlayerIndex(), startLocation[0], startLocation[1], 0);
 //			this.war3MapViewer.simulation.createUnitSimple(War3ID.fromString("hpea"),

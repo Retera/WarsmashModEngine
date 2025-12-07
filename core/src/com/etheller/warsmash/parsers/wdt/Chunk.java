@@ -567,10 +567,12 @@ public class Chunk {
 	}
 
 	public static final class Flags {
+		public static final int HasShadows = 1;
 		public static final int IsRiver = 4;
 		public static final int IsOcean = 8;
 		public static final int IsMagma = 16;
 		public static final int IsSlime = 32;
 		public static final int HasLiquid = IsRiver | IsOcean | IsMagma | IsSlime;
+		public static final int DoNotFixAlphaMap = 0x200;
 	}
 }

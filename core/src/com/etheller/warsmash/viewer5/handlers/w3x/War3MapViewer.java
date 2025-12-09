@@ -3212,8 +3212,6 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 							@Override
 							public TextTag spawnTextTag(final CUnit unit, final TextTagConfigType configType,
 									final int displayAmount) {
-								final RenderUnit renderPeer = War3MapViewer.this.unitToRenderPeer.get(unit);
-								final TextTagConfig textTagConfig = getTextTagConfig(configType.getKey());
 								String text;
 								switch (configType) {
 								case GOLD:
@@ -3236,14 +3234,7 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 									break;
 								}
 								}
-								final Vector3 unitPosition = new Vector3(renderPeer.location);
-								final Bounds bounds = renderPeer.instance.getBounds();
-								final TextTag textTag = new TextTag(unitPosition, new Vector2(0, 60f), text,
-										textTagConfig.getColor(), textTagConfig.getLifetime(),
-										textTagConfig.getFadeStart(), textTagConfig.getHeight(),
-										BUILTIN_TEXT_TAG_REPORTED_HANDLE_ID);
-								War3MapViewer.this.textTags.add(textTag);
-								return textTag;
+								return spawnTextTag(unit, configType, text);
 							}
 
 							@Override

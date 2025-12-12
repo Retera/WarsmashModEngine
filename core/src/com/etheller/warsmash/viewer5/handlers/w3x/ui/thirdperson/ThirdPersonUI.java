@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Scanner;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
@@ -125,7 +126,8 @@ public class ThirdPersonUI implements WarsmashToggleableUI {
 			final float[] startLocation = this.war3MapViewer.simulation
 					.getPlayer(this.war3MapViewer.getLocalPlayerIndex()).getStartLocation();
 			pawnUnits.add(this.war3MapViewer.simulation.createUnitSimple(this.pawnId,
-					this.war3MapViewer.getLocalPlayerIndex(), startLocation[0] + 20000, startLocation[1], 0));
+					this.war3MapViewer.getLocalPlayerIndex(), startLocation[0], startLocation[1], 0));
+//			this.war3MapViewer.getLocalPlayerIndex(), startLocation[0] + 80000, startLocation[1] - 400000, 0));
 //			this.war3MapViewer.simulation.createUnitSimple(War3ID.fromString("hwtw"),
 //			this.war3MapViewer.getLocalPlayerIndex(), startLocation[0], startLocation[1], 0);
 //			this.war3MapViewer.simulation.createUnitSimple(War3ID.fromString("hpea"),
@@ -134,16 +136,52 @@ public class ThirdPersonUI implements WarsmashToggleableUI {
 //					this.war3MapViewer.getLocalPlayerIndex(), startLocation[0], startLocation[1], 0);
 //			this.war3MapViewer.simulation.createUnitSimple(War3ID.fromString("hpea"),
 //			this.war3MapViewer.getLocalPlayerIndex(), startLocation[0], startLocation[1], 0);
-			this.war3MapViewer.simulation.createUnitSimple(War3ID.fromString("nqb1"), 1, startLocation[0] + 2000,
-					startLocation[1], 0);
-			this.war3MapViewer.simulation.createUnitSimple(War3ID.fromString("nqb1"), 1, startLocation[0] + 4000,
-					startLocation[1], 0);
-			this.war3MapViewer.simulation.createUnitSimple(War3ID.fromString("nqb1"), 1, startLocation[0] + 6000,
-					startLocation[1], 0);
-			this.war3MapViewer.simulation.createUnitSimple(War3ID.fromString("nqb1"), 1, startLocation[0] + 8000,
-					startLocation[1], 0);
-			this.war3MapViewer.simulation.createUnitSimple(War3ID.fromString("hpea"), 0, startLocation[0],
-					startLocation[1], 0);
+//			this.war3MapViewer.simulation.createUnitSimple(War3ID.fromString("nqb1"), 1, startLocation[0] + 2000,
+//					startLocation[1], 0);
+//			this.war3MapViewer.simulation.createUnitSimple(War3ID.fromString("nqb1"), 1, startLocation[0] + 4000,
+//					startLocation[1], 0);
+//			this.war3MapViewer.simulation.createUnitSimple(War3ID.fromString("nqb1"), 1, startLocation[0] + 6000,
+//					startLocation[1], 0);
+//			this.war3MapViewer.simulation.createUnitSimple(War3ID.fromString("nqb1"), 1, startLocation[0] + 8000,
+//					startLocation[1], 0);
+//			this.war3MapViewer.simulation.createUnitSimple(War3ID.fromString("ewis"), 0, startLocation[0],
+//					startLocation[1], 0);
+			new Thread(new Runnable() {
+
+				@Override
+				public void run() {
+					final Scanner scanner = new Scanner(System.in);
+					while (scanner.hasNextLine()) {
+						final String nextLine = scanner.nextLine();
+						final String[] bits = nextLine.split(" ");
+						try {
+							final War3ID unitId = War3ID.fromString(bits[0]);
+							int playerId = 0;
+							if (bits.length > 0) {
+								playerId = Integer.parseInt(bits[1]);
+							}
+							final int finalPlayerId = playerId;
+							Gdx.app.postRunnable(new Runnable() {
+
+								@Override
+								public void run() {
+									ThirdPersonUI.this.war3MapViewer.simulation.createUnit(unitId, finalPlayerId,
+											ThirdPersonUI.this.pawnUnit.getX(), ThirdPersonUI.this.pawnUnit.getY(),
+											ThirdPersonUI.this.pawnUnit.getFacing());
+									System.out.println("call CreateUnit(Player(" + finalPlayerId + "), '"
+											+ unitId.toString() + "', " + ThirdPersonUI.this.pawnUnit.getX() + ", "
+											+ ThirdPersonUI.this.pawnUnit.getY() + ", "
+											+ ThirdPersonUI.this.pawnUnit.getFacing() + ")");
+								}
+							});
+						}
+						catch (final Exception exc) {
+							exc.printStackTrace();
+						}
+					}
+				}
+			}).start();
+			;
 			this.war3MapViewer.simulation.getPlayer(0).addGold(9999);
 			this.war3MapViewer.simulation.getPlayer(0).addLumber(9999);
 			if (false) {

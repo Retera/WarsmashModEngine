@@ -184,6 +184,32 @@ public class MdxCharacterInstance extends MdxComplexInstance implements Sequence
 		updateBoneTexture();
 
 		updateBatches(forced);
+		int i = 0;
+		for (final Geoset geoset : ((MdxModel) this.model).getGeosets()) {
+			boolean show = true;
+			if (geoset.mdlxGeoset.selectionGroup > 0) {
+				final int slotKey = (int) (geoset.mdlxGeoset.selectionGroup / 100);
+				final int slotValue = (int) (geoset.mdlxGeoset.selectionGroup % 100);
+				switch (slotKey) {
+				case 0:
+					show = (slotValue == 3);
+					break;
+				case 5:
+					show = (slotValue == 2);
+					break;
+				case 10:
+					show = (slotValue == 2);
+					break;
+				default:
+					show = (slotValue == 1);
+					break;
+				}
+			}
+			if (!show) {
+				this.geosetColors[i][3] = 0.0f;
+			}
+			i++;
+		}
 
 		this.forced = false;
 

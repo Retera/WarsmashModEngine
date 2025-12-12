@@ -17,6 +17,9 @@ public class CBehaviorAttack extends CAbstractRangedBehavior {
 	private int highlightOrderId;
 	private final AbilityTargetStillAliveAndTargetableVisitor abilityTargetStillAliveVisitor;
 	private PrimaryTag primaryTag;
+	private PrimaryTag readyTag;
+	private PrimaryTag readyTagWrongFacing;
+	private PrimaryTag readyTagPostAttack;
 
 	public CBehaviorAttack(final CUnit unit) {
 		super(unit);
@@ -40,10 +43,16 @@ public class CBehaviorAttack extends CAbstractRangedBehavior {
 		this.thisOrderCooldownEndTime = 0;
 		setDisableMove(disableMove);
 		if (this.unit.getFirstAbilityOfType(CAbilityPlayerPawn.class) != null) {
-			this.primaryTag = PrimaryTag.ATTACKUNARMED;
+			this.primaryTag = PrimaryTag.ATTACKBOW;
+			this.readyTag = PrimaryTag.HOLDBOW;
+			this.readyTagWrongFacing = PrimaryTag.READYBOW;
+			this.readyTagPostAttack = PrimaryTag.LOADBOW;
 		}
 		else {
 			this.primaryTag = PrimaryTag.ATTACK;
+			this.readyTag = PrimaryTag.STAND;
+			this.readyTagWrongFacing = PrimaryTag.STAND;
+			this.readyTagPostAttack = PrimaryTag.STAND;
 		}
 		return super.innerReset(game, target);
 	}
@@ -115,16 +124,17 @@ public class CBehaviorAttack extends CAbstractRangedBehavior {
 				this.backSwingTime = currentTurnTick + a1DamagePointSteps + a1BackswingSteps;
 				this.unit.getUnitAnimationListener().playAnimationWithDuration(true, this.primaryTag,
 						SequenceUtils.EMPTY, animationBackswingPoint + animationDamagePoint, true);
-				this.unit.getUnitAnimationListener().queueAnimation(PrimaryTag.STAND, SequenceUtils.READY, false);
+				this.unit.getUnitAnimationListener().queueAnimation(this.readyTagPostAttack, SequenceUtils.READY,
+						false);
 			}
 			else if (currentTurnTick >= this.thisOrderCooldownEndTime) {
-				this.unit.getUnitAnimationListener().playAnimation(false, PrimaryTag.STAND, SequenceUtils.READY, 1.0f,
+				this.unit.getUnitAnimationListener().playAnimation(false, this.readyTag, SequenceUtils.READY, 1.0f,
 						false);
 			}
 		}
 		else {
-			this.unit.getUnitAnimationListener().playAnimation(false, PrimaryTag.STAND, SequenceUtils.READY, 1.0f,
-					false);
+			this.unit.getUnitAnimationListener().playAnimation(false, this.readyTagWrongFacing, SequenceUtils.READY,
+					1.0f, false);
 		}
 		if ((this.backSwingTime != 0) && (currentTurnTick >= this.backSwingTime)) {
 			this.backSwingTime = 0;

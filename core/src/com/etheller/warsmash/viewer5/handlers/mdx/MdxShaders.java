@@ -272,6 +272,7 @@ public class MdxShaders {
 				"uniform sampler2D u_teamColorMap;\r\n" + //
 				"uniform sampler2D u_environmentMap;\r\n" + //
 				"uniform float u_filterMode;\r\n" + //
+				"uniform float u_unshaded;\r\n" + //
 				"// uniform sampler2D u_lutMap;\r\n" + //
 				"// uniform sampler2D u_envDiffuseMap;\r\n" + //
 				"// uniform sampler2D u_envSpecularMap;\r\n" + //
@@ -493,7 +494,7 @@ public class MdxShaders {
 				"void applyLight(vec4 thisLightColor, vec4 thisLightDir, vec3 normal, vec3 baseColor, vec3 tc, vec4 ormTexel, vec3 reflectionsTexel, float tcFactor, inout vec3 color, inout vec3 lambertFactorSum) {\r\n"
 				+ //
 				"  if (thisLightColor.a > 0) {;\r\n" + //
-				"    float lambertFactor = clamp(dot(normal, thisLightDir.xyz), 0.0, 1.0);\r\n" + //
+				"    float lambertFactor = clamp(dot(normal, thisLightDir.xyz) * 0.60 + 0.40, 0.0, 1.0);\r\n" + //
 				"    \r\n" + //
 				"			vec3 reflectDir = reflect(-thisLightDir.xyz, normal);\r\n" + //
 				"			vec3 halfwayDir = normalize(thisLightDir.xyz + v_eyeVec);\r\n" + //
@@ -569,7 +570,8 @@ public class MdxShaders {
 						"      diffuse = diffuse * (1.0 - tcFactor) + diffuse * tc * tcFactor;\r\n" + //
 						"    }\r\n" : "\r\n")
 				+ //
-				"  color = clamp(color, 0.0, 1.0) + diffuse * lambertFactorSum + emissive;\r\n" + //
+				"  color = clamp(color, 0.0, 1.0) + diffuse * ((1.0 - u_unshaded) * lambertFactorSum + u_unshaded) + emissive;\r\n"
+				+ //
 				"  gl_FragColor = vec4(color, baseColor.a);\r\n" + //
 				"}\r\n" + //
 				"void main() {\r\n" + //

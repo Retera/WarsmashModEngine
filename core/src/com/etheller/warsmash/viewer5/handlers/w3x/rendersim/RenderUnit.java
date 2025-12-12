@@ -77,6 +77,8 @@ public class RenderUnit implements RenderWidget {
 	private RenderUnit preferredSelectionReplacement;
 	private CAbilityPlayerPawn playerPawn;
 	private float[] currentColor = { 1, 1, 1, 1 };
+	private float maxPitch;
+	private float maxRoll;
 
 	public RenderUnit(final War3MapViewer map, final float x, final float y, final float z, final int playerIndex,
 			final CUnit simulationUnit, final RenderUnitType typeData, final BuildingShadow buildingShadow,
@@ -155,6 +157,8 @@ public class RenderUnit implements RenderWidget {
 
 			final float blendTime = typeData.getBlendTime();
 			instance.setBlendTime(blendTime * 1000.0f);
+			this.maxPitch = (float) Math.toRadians(this.typeData.getMaxPitch());
+			this.maxRoll = (float) Math.toRadians(this.typeData.getMaxRoll());
 		}
 
 		this.instance = instance;
@@ -247,11 +251,10 @@ public class RenderUnit implements RenderWidget {
 			if (verticalSign != 0) {
 				final float elapsedSteps = deltaTime / WarsmashConstants.SIMULATION_STEP_TIME;
 				final float verticalSpeed = (elapsedSteps
-						* Math.abs(this.playerPawn.getBehaviorPlayerPawn().getVelocity().z
-								- (float) Math.pow(1.5, elapsedSteps - 2f)));
-				float min = Math.min(verticalSpeed, absSimDz);
-				if (min <= 0) {
-					min = 0;
+						* Math.abs(this.playerPawn.getBehaviorPlayerPawn().getPreviousVelocity().z));
+				float min = Math.min(Math.max(verticalSpeed, absSimDz * 0.5f), absSimDz);
+				if (min <= 0.0) {
+					min = 0.0f;
 				}
 				this.location[2] += min * verticalSign;
 				if (this.location[2] < groundHeightTerrain) {
@@ -435,8 +438,6 @@ public class RenderUnit implements RenderWidget {
 		this.instance.setLocalRotation(tempQuat.setFromAxis(RenderMathUtils.VEC3_UNIT_Z, this.facing));
 
 		final float facingRadians = (float) Math.toRadians(this.facing);
-		final float maxPitch = (float) Math.toRadians(this.typeData.getMaxPitch());
-		final float maxRoll = (float) Math.toRadians(this.typeData.getMaxRoll());
 		final float sampleRadius = this.typeData.getElevationSampleRadius();
 		float pitch, roll;
 		final float pitchSampleForwardX = this.location[0] + (sampleRadius * (float) Math.cos(facingRadians));
@@ -484,9 +485,9 @@ public class RenderUnit implements RenderWidget {
 				rollSampleGroundHeight2 = rollGroundHeight2;
 			}
 		}
-		pitch = Math.max(-maxPitch, Math.min(maxPitch,
+		pitch = Math.max(-this.maxPitch, Math.min(this.maxPitch,
 				(float) Math.atan2(pitchSampleGroundHeight2 - pitchSampleGroundHeight1, sampleRadius * 2)));
-		roll = Math.max(-maxRoll, Math.min(maxRoll,
+		roll = Math.max(-this.maxRoll, Math.min(this.maxRoll,
 				(float) Math.atan2(rollSampleGroundHeight2 - rollSampleGroundHeight1, sampleRadius * 2)));
 		this.instance.rotate(tempQuat.setFromAxisRad(RenderMathUtils.VEC3_UNIT_Y, -pitch));
 		this.instance.rotate(tempQuat.setFromAxisRad(RenderMathUtils.VEC3_UNIT_X, roll));
@@ -837,5 +838,21 @@ public class RenderUnit implements RenderWidget {
 
 	public void setupPlayerPawn(final CAbilityPlayerPawn abilityPlayerPawn) {
 		this.playerPawn = abilityPlayerPawn;
+	}
+
+	public float getMaxPitch() {
+		return this.maxPitch;
+	}
+
+	public float getMaxRoll() {
+		return this.maxRoll;
+	}
+
+	public void setMaxPitch(final float maxPitch) {
+		this.maxPitch = maxPitch;
+	}
+
+	public void setMaxRoll(final float maxRoll) {
+		this.maxRoll = maxRoll;
 	}
 }

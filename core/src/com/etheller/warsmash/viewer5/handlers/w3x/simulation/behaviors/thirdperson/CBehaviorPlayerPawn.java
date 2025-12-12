@@ -30,6 +30,7 @@ public class CBehaviorPlayerPawn implements CBehavior {
 
 	public final CameraPanControls cameraPanControls;
 	private final Vector3 velocity;
+	private final Vector3 previousVelocity;
 
 	boolean wasAirborn = false;
 	private boolean wasFalling;
@@ -48,6 +49,7 @@ public class CBehaviorPlayerPawn implements CBehavior {
 		this.playerPawn = playerPawn;
 		this.cameraPanControls = new CameraPanControls();
 		this.velocity = new Vector3();
+		this.previousVelocity = new Vector3();
 	}
 
 	public void setViewerWorldAccess(final War3MapViewer viewerWorldAccess) {
@@ -63,6 +65,9 @@ public class CBehaviorPlayerPawn implements CBehavior {
 
 	@Override
 	public CBehavior update(final CSimulation game) {
+		if (this.velocity.len2() != 0) {
+			this.previousVelocity.set(this.velocity);
+		}
 		int shuffle = 0;
 		if (this.cameraPanControls.left) {
 			setFacingDegrees(this.unit.getFacing() + 12);
@@ -245,7 +250,7 @@ public class CBehaviorPlayerPawn implements CBehavior {
 	}
 
 	public float getHeight() {
-		return 75;
+		return 66;
 	}
 
 	public void setVelocityZ(final float zGravity) {
@@ -271,6 +276,10 @@ public class CBehaviorPlayerPawn implements CBehavior {
 
 	public Vector3 getVelocity() {
 		return this.velocity;
+	}
+
+	public Vector3 getPreviousVelocity() {
+		return this.previousVelocity;
 	}
 
 	public static boolean HACKON = false;

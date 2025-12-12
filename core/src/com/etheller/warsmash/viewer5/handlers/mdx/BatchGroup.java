@@ -120,6 +120,12 @@ public class BatchGroup extends GenericGroup {
 				if ((geosetColor[3] > 0.01) && (layerAlpha > 0)) {
 					shader.setUniformf("u_layerAlpha", layerAlpha * geosetColor[3]);
 					shader.setUniformf("u_filterMode", diffuseLayer.filterMode);
+					if (instance.unshadedOverride != 0) {
+						shader.setUniformf("u_unshaded", instance.unshadedOverride * 0.5f);
+					}
+					else {
+						shader.setUniformf("u_unshaded", 0);
+					}
 
 					final int diffuseId = Math.max(0, instance.layerTextures[diffuseLayer.index]);
 					final int normalsId = Math.max(0, instance.layerTextures[normalsLayer.index]);
@@ -217,12 +223,14 @@ public class BatchGroup extends GenericGroup {
 					shader.setUniform4fv("u_geosetColor", geosetColor, 0, geosetColor.length);
 
 					shader.setUniformf("u_layerAlpha", layerAlpha);
-					if(instance.unshadedOverride != 0) {
+					if (instance.unshadedOverride != 0) {
 						shader.setUniformf("u_unshaded", (layer.unshaded != 0) ? 1 : instance.unshadedOverride);
-					} else {
+					}
+					else {
 						shader.setUniformf("u_unshaded", (layer.unshaded != 0) ? 1 : 0);
 					}
-					shader.setUniformi("u_unfogged", ((layer.unfogged != 0) || instance.unshadedOverride != 0) ? 1 : 0);
+					shader.setUniformi("u_unfogged",
+							((layer.unfogged != 0) || (instance.unshadedOverride != 0)) ? 1 : 0);
 					shader.setUniformf("u_fogColor", scene.fogSettings.color);
 					shader.setUniformf("u_fogParams", scene.fogSettings.style.ordinal(), scene.fogSettings.start,
 							scene.fogSettings.end, scene.fogSettings.density);

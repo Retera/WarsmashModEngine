@@ -5,6 +5,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.etheller.warsmash.util.War3ID;
+import com.etheller.warsmash.util.WarsmashConstants;
+import com.hiveworkshop.rms.parsers.mdlx.MdlxCollisionShape.Type;
 import com.hiveworkshop.rms.parsers.mdlx.mdl.MdlTokenInputStream;
 import com.hiveworkshop.rms.parsers.mdlx.mdl.MdlTokenOutputStream;
 import com.hiveworkshop.rms.parsers.mdlx.mdl.MdlUtils;
@@ -278,6 +280,19 @@ public class MdlxModel {
 				}
 				else {
 					loadDynamicObjects(this.collisionShapes, MdlxBlockDescriptor.COLLISION_SHAPE, reader, size);
+					if ((this.version >= 900) && (this.version <= 1200)) {
+						// reforged sucks. Anyway the below "if" is so that this code
+						// throws a compile error if you copy it out to a model editor outside of this
+						// game client
+						if (WarsmashConstants.GAME_SPEED_TIME_FACTOR > 0) {
+							final MdlxCollisionShape oldThing = this.collisionShapes.get(0);
+							this.collisionShapes.clear();
+							final MdlxCollisionShape mdlxCollisionShape = new MdlxCollisionShape();
+							mdlxCollisionShape.boundsRadius = this.extent.boundsRadius;
+							mdlxCollisionShape.type = Type.SPHERE;
+							mdlxCollisionShape.objectId = oldThing.objectId;
+						}
+					}
 				}
 				break;
 			case FAFX:
@@ -298,6 +313,9 @@ public class MdlxModel {
 
 	private void loadModelChunk(final BinaryReader reader) {
 		this.name = reader.read(80);
+		if (this.name.toLowerCase().equals("nightelffemale")) {
+			System.out.println("doop");
+		}
 		this.animationFile = reader.read(260);
 		this.extent.readMdx(reader);
 		this.blendTime = reader.readInt32();

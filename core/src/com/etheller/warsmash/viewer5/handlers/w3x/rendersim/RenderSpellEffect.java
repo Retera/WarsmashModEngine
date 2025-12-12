@@ -33,7 +33,7 @@ public class RenderSpellEffect implements RenderEffect {
 		final MdxModel model = (MdxModel) this.modelInstance.model;
 		this.sequences = model.getSequences();
 		this.sequenceLoopMode = SequenceLoopMode.MODEL_LOOP;
-		this.modelInstance.setSequenceLoopMode(sequenceLoopMode);
+		this.modelInstance.setSequenceLoopMode(this.sequenceLoopMode);
 		this.modelInstance.localRotation.setFromAxisRad(0, 0, 1, yaw);
 		this.modelInstance.sequenceEnded = true;
 		playNextAnimation();
@@ -45,14 +45,16 @@ public class RenderSpellEffect implements RenderEffect {
 
 	@Override
 	public boolean updateAnimations(final War3MapViewer war3MapViewer, final float deltaTime) {
-		final boolean everythingDone = this.modelInstance.sequenceEnded && this.animationQueueIndex >= this.animationQueue.length;
+		final boolean everythingDone = this.modelInstance.sequenceEnded
+				&& (this.animationQueueIndex >= this.animationQueue.length);
 		if (everythingDone) {
 			if (this.killWhenDone) {
 				if (this.modelInstance.parent != null) {
 					this.modelInstance.setParent(null);
 				}
 				war3MapViewer.worldScene.removeInstance(this.modelInstance);
-			} else {
+			}
+			else {
 				this.animationQueueIndex = 0;
 				return false;
 			}
@@ -70,14 +72,14 @@ public class RenderSpellEffect implements RenderEffect {
 
 	public void applySequence() {
 		final PrimaryTag tag = this.animationQueue[this.animationQueueIndex];
-		final IndexedSequence sequence = SequenceUtils.selectSequence(tag, requiredAnimationNames, this.sequences,
+		final IndexedSequence sequence = SequenceUtils.selectSequence(tag, this.requiredAnimationNames, this.sequences,
 				true);
 		if ((sequence != null) && (sequence.index != -1)) {
-			if ((tag == PrimaryTag.STAND) && (sequenceLoopMode != SequenceLoopMode.NEVER_LOOP)) {
+			if ((tag == PrimaryTag.STAND) && (this.sequenceLoopMode != SequenceLoopMode.NEVER_LOOP)) {
 				this.modelInstance.setSequenceLoopMode(SequenceLoopMode.ALWAYS_LOOP);
 			}
 			else {
-				this.modelInstance.setSequenceLoopMode(sequenceLoopMode);
+				this.modelInstance.setSequenceLoopMode(this.sequenceLoopMode);
 			}
 			this.modelInstance.setSequence(sequence.index);
 		}
@@ -93,15 +95,23 @@ public class RenderSpellEffect implements RenderEffect {
 	public void setKillWhenDone(final boolean killWhenDone) {
 		this.killWhenDone = killWhenDone;
 		if (killWhenDone) {
-			sequenceLoopMode = SequenceLoopMode.NEVER_LOOP;
+			this.sequenceLoopMode = SequenceLoopMode.NEVER_LOOP;
 			this.modelInstance.setSequenceLoopMode(SequenceLoopMode.NEVER_LOOP);
 		}
 		else {
-			this.modelInstance.setSequenceLoopMode(sequenceLoopMode);
+			this.modelInstance.setSequenceLoopMode(this.sequenceLoopMode);
 		}
 	}
 
 	public void setHeight(final float height) {
-		this.modelInstance.setLocation(modelInstance.localLocation.x, modelInstance.localLocation.y, height);
+		this.modelInstance.setLocation(this.modelInstance.localLocation.x, this.modelInstance.localLocation.y, height);
+	}
+
+	public void setReplaceableId(final int index, final String path) {
+		this.modelInstance.setReplaceableTexture(index, path);
+	}
+
+	public void setScale(final float scalingValue) {
+		this.modelInstance.uniformScale(scalingValue);
 	}
 }

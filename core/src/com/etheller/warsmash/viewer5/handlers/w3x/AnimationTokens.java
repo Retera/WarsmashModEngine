@@ -6,6 +6,10 @@ public class AnimationTokens {
 	public static enum PrimaryTag implements CHandle {
 		ATTACK,
 		ATTACKUNARMED,
+		ATTACKBOW,
+		READYBOW,
+		HOLDBOW,
+		LOADBOW,
 		BIRTH,
 //		CINEMATIC,
 		DEATH,

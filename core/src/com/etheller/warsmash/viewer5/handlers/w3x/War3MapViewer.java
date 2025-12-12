@@ -95,6 +95,7 @@ import com.etheller.warsmash.viewer5.handlers.mdx.Geoset;
 import com.etheller.warsmash.viewer5.handlers.mdx.Layer;
 import com.etheller.warsmash.viewer5.handlers.mdx.Light;
 import com.etheller.warsmash.viewer5.handlers.mdx.Material;
+import com.etheller.warsmash.viewer5.handlers.mdx.MdxCharacterInstance;
 import com.etheller.warsmash.viewer5.handlers.mdx.MdxComplexInstance;
 import com.etheller.warsmash.viewer5.handlers.mdx.MdxHandler;
 import com.etheller.warsmash.viewer5.handlers.mdx.MdxHandler.ShaderEnvironmentType;
@@ -1306,6 +1307,14 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 				}
 				if (buildingUberSplatDynamicIngame != null) {
 					renderUnit.uberSplat = buildingUberSplatDynamicIngame;
+				}
+				if (renderUnit.isPlayerPawn() || (renderUnit.instance instanceof MdxCharacterInstance)) {
+					final RenderSpellEffect weaponModel = addSpecialEffectTarget(
+							"Item\\ObjectComponents\\Weapon\\Bow_1H_Standard_A_01.mdx", simulationUnit, "_handl");
+					weaponModel.setReplaceableId(2, "Item\\ObjectComponents\\Weapon\\Bow_1H_Standard_A_01Black.blp");
+//					final RenderSpellEffect ammoModel = addSpecialEffectTarget(
+//							"Item\\ObjectComponents\\Ammo\\ArrowFlight_01.mdx", simulationUnit, "_arrow");
+//					ammoModel.setReplaceableId(2, "Item\\ObjectComponents\\Ammo\\Arrow_A_01Brown.blp");
 				}
 				return simulationUnit;
 
@@ -2714,21 +2723,10 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 					modelInstance.setTeamColor(renderUnit.playerIndex);
 					{
 						final MdxModel model = (MdxModel) renderUnit.instance.model;
-						int index = -1;
-						int bestFitAttachmentNameLength = Integer.MAX_VALUE;
-						for (int i = 0; i < model.attachments.size(); i++) {
-							final Attachment attachment = model.attachments.get(i);
-							boolean match = true;
-							for (final String attachmentPointNameToken : attachPointNames) {
-								if (!attachment.getName().contains(attachmentPointNameToken)) {
-									match = false;
-								}
-							}
-							final int attachmentNameLength = attachment.getName().length();
-							if (match && (attachmentNameLength < bestFitAttachmentNameLength)) {
-								index = i;
-								bestFitAttachmentNameLength = attachmentNameLength;
-							}
+						int index = findAttachmentIndex(attachPointNames, model);
+						if (index == -1) {
+							// fallback for clients with `_Head` name
+							index = findAttachmentIndex(Arrays.asList("_head"), model);
 						}
 						if (index != -1) {
 							modelInstance.detach();
@@ -2741,6 +2739,10 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 							modelInstance.setLocation(renderUnit.location);
 							yaw = (float) Math.toRadians(renderUnit.getSimulationUnit().getFacing());
 						}
+					}
+					if (modelName.toLowerCase().startsWith("abilities") && (renderUnit.instance.localScale.x > 10)) {
+						// attaching wc3 model to WoW thing, inverse the scale
+						modelInstance.uniformScale(1f / renderUnit.instance.localScale.x);
 					}
 				}
 				else {
@@ -2765,6 +2767,26 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 			throw new UnsupportedOperationException("API for addSpecialEffectTarget() on destructable is NYI");
 		}
 		return null;
+	}
+
+	private int findAttachmentIndex(final List<String> attachPointNames, final MdxModel model) {
+		int index = -1;
+		int bestFitAttachmentNameLength = Integer.MAX_VALUE;
+		for (int i = 0; i < model.attachments.size(); i++) {
+			final Attachment attachment = model.attachments.get(i);
+			boolean match = true;
+			for (final String attachmentPointNameToken : attachPointNames) {
+				if (!attachment.getName().contains(attachmentPointNameToken)) {
+					match = false;
+				}
+			}
+			final int attachmentNameLength = attachment.getName().length();
+			if (match && (attachmentNameLength < bestFitAttachmentNameLength)) {
+				index = i;
+				bestFitAttachmentNameLength = attachmentNameLength;
+			}
+		}
+		return index;
 	}
 
 	public RenderSpellEffect addSpecialEffect(final String modelName, final float x, final float y, final float yaw) {
@@ -2818,7 +2840,7 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 					modelInstance.setLocation(unitModelInstance.localLocation);
 					modelInstance.setRotation(unitModelInstance.localRotation);
 					modelInstance.setScale(unitModelInstance.localScale);
-					unitModelInstance.detach();
+//					unitModelInstance.detach();
 					if (index != -1) {
 						final MdxNode attachment = modelInstance.getAttachment(index);
 						unitModelInstance.setParent(attachment);

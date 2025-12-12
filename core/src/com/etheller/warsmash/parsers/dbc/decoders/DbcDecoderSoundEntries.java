@@ -6,24 +6,23 @@ import java.util.List;
 import com.badlogic.gdx.utils.LongMap;
 import com.etheller.warsmash.parsers.dbc.DbcDecoder;
 import com.etheller.warsmash.parsers.dbc.DbcRecord;
+import com.etheller.warsmash.parsers.dbc.decoders.DbcDecoderSoundEntries.SoundEntriesRecord;
 import com.etheller.warsmash.units.DataTable;
 import com.etheller.warsmash.units.Element;
 import com.etheller.warsmash.util.War3ID;
 import com.hiveworkshop.rms.util.BinaryReader;
 
-public class DbcDecoderSoundEntries implements DbcDecoder {
+public class DbcDecoderSoundEntries implements DbcDecoder<SoundEntriesRecord> {
+	public static final DbcDecoderSoundEntries INSTANCE = new DbcDecoderSoundEntries();
+
+	// size 136
 
 	@Override
-	public long getRecordSize() {
-		return 136;
-	}
-
-	@Override
-	public DbcRecord readRecord(final BinaryReader reader) {
+	public SoundEntriesRecord readRecord(final BinaryReader reader) {
 		return new SoundEntriesRecord(reader);
 	}
 
-	private static final class SoundEntriesRecord implements DbcRecord {
+	public static final class SoundEntriesRecord implements DbcRecord {
 		private final War3ID id;
 		private final int soundType;
 		private final int nameRef;
@@ -41,7 +40,7 @@ public class DbcDecoderSoundEntries implements DbcDecoder {
 		private final float distanceCutoff;
 		private final int eaxDef;
 
-		public SoundEntriesRecord(final BinaryReader reader) {
+		private SoundEntriesRecord(final BinaryReader reader) {
 			this.id = new War3ID(reader.readInt32());
 			this.soundType = reader.readInt32();
 			this.nameRef = reader.readInt32();

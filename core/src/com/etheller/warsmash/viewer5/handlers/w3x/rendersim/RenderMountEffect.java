@@ -24,6 +24,8 @@ public class RenderMountEffect implements RenderEffect {
 	private int animationQueueIndex;
 	private final List<Sequence> sequences;
 	private boolean dismounted;
+	private final float originalMaxPitch;
+	private final float originalMaxRoll;
 
 	public RenderMountEffect(final MdxComplexInstance mountModelInstance, final MdxComplexInstance unitModelInstance,
 			final RenderUnit renderUnit, final War3MapViewer war3MapViewer, final PrimaryTag[] animationQueue,
@@ -43,6 +45,11 @@ public class RenderMountEffect implements RenderEffect {
 			this.unitModelInstance.setSequence(0);
 			this.animationQueueIndex = 0;
 		}
+
+		this.originalMaxPitch = renderUnit.getMaxPitch();
+		this.originalMaxRoll = renderUnit.getMaxRoll();
+		renderUnit.setMaxPitch((float) (Math.PI / 4));
+		renderUnit.setMaxRoll((float) (Math.PI / 4));
 	}
 
 	@Override
@@ -102,5 +109,7 @@ public class RenderMountEffect implements RenderEffect {
 		this.renderUnit.setModelInstance(this.unitModelInstance);
 		war3MapViewer.worldScene.removeInstance(this.mountModelInstance);
 		this.dismounted = true;
+		this.renderUnit.setMaxPitch(this.originalMaxPitch);
+		this.renderUnit.setMaxRoll(this.originalMaxRoll);
 	}
 }

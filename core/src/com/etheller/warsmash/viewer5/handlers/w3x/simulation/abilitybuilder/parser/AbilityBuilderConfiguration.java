@@ -1,9 +1,12 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.parser;
 
 import java.util.List;
+import java.util.Map;
 
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.autocast.AutocastType;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.stringcallbacks.ABStringCallback;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABAction;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABCallback;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABCondition;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.types.definitions.impl.CAbilityTypeDefinitionAbilityBuilder;
 
@@ -36,6 +39,7 @@ public class AbilityBuilderConfiguration {
 	private List<ABAction> onOrderIssued;
 	private List<ABAction> onActivate;
 	private List<ABAction> onDeactivate;
+	private List<ABAction> onChangeAutoCast;
 	
 	private List<ABAction> onLevelChange;
 
@@ -43,6 +47,11 @@ public class AbilityBuilderConfiguration {
 	private List<ABAction> onEndCasting;
 	private List<ABAction> onChannelTick;
 	private List<ABAction> onEndChannel;
+	
+	private Map<String, List<ABAction>> reuseActions;
+	private Map<String, ABCallback> reuseCallbacks;
+
+	private List<ABStringCallback> initialUniqueFlags;
 
 	public AbilityBuilderConfiguration(AbilityBuilderParser parser, AbilityBuilderDupe dupe) {
 		this.id = dupe.getId();
@@ -70,6 +79,7 @@ public class AbilityBuilderConfiguration {
 		this.onOrderIssued = parser.getOnOrderIssued();
 		this.onActivate = parser.getOnActivate();
 		this.onDeactivate = parser.getOnDeactivate();
+		this.onChangeAutoCast = parser.getOnChangeAutoCast();
 		
 		this.onLevelChange = parser.getOnLevelChange();
 
@@ -77,6 +87,11 @@ public class AbilityBuilderConfiguration {
 		this.onEndCasting = parser.getOnEndCasting();
 		this.onChannelTick = parser.getOnChannelTick();
 		this.onEndChannel = parser.getOnEndChannel();
+		
+		this.setReuseActions(parser.getReuseActions());
+		this.setReuseCallbacks(parser.getReuseCallbacks());
+		
+		this.setInitialUniqueFlags(parser.getInitialUniqueFlags());
 	}
 	
 	public CAbilityTypeDefinitionAbilityBuilder createDefinition() {
@@ -291,6 +306,14 @@ public class AbilityBuilderConfiguration {
 		this.onDeactivate = onDeactivate;
 	}
 
+	public List<ABAction> getOnChangeAutoCast() {
+		return onChangeAutoCast;
+	}
+
+	public void setOnChangeAutoCast(List<ABAction> onChangeAutoCast) {
+		this.onChangeAutoCast = onChangeAutoCast;
+	}
+
 	public List<ABAction> getOnLevelChange() {
 		return onLevelChange;
 	}
@@ -329,6 +352,30 @@ public class AbilityBuilderConfiguration {
 
 	public void setOnEndChannel(List<ABAction> onEndChannel) {
 		this.onEndChannel = onEndChannel;
+	}
+
+	public Map<String, List<ABAction>> getReuseActions() {
+		return reuseActions;
+	}
+
+	public void setReuseActions(Map<String, List<ABAction>> reuseActions) {
+		this.reuseActions = reuseActions;
+	}
+
+	public Map<String, ABCallback> getReuseCallbacks() {
+		return reuseCallbacks;
+	}
+
+	public void setReuseCallbacks(Map<String, ABCallback> reuseCallbacks) {
+		this.reuseCallbacks = reuseCallbacks;
+	}
+
+	public List<ABStringCallback> getInitialUniqueFlags() {
+		return this.initialUniqueFlags;
+	}
+
+	public void setInitialUniqueFlags( List<ABStringCallback> initialUniqueFlags) {
+		this.initialUniqueFlags = initialUniqueFlags;
 	}
 
 }

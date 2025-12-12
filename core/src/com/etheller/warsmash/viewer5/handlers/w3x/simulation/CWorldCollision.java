@@ -173,7 +173,7 @@ public class CWorldCollision {
 		// and so a recycled allocation did not work
 		final Set<CUnit> intersectedUnits = new HashSet<>();
 		this.anyUnitEnumerableCollision.intersect(rect, (unit) -> {
-			if (unit.isHidden() || !intersectedUnits.add(unit)) {
+			if (unit.isHidden() || unit.isUnenumerable() || !intersectedUnits.add(unit)) {
 				return false;
 			}
 			return callback.call(unit);
@@ -199,7 +199,7 @@ public class CWorldCollision {
 		// NOTE: allocation here seems quite wasteful, see note on enumUnitsInRect
 		final Set<CUnit> intersectedUnits = new HashSet<>();
 		this.deadUnitCollision.intersect(rect, (unit) -> {
-			if (unit.isHidden() || !intersectedUnits.add(unit)) {
+			if (unit.isHidden() || unit.isUnenumerable() || !intersectedUnits.add(unit)) {
 				return false;
 			}
 			return callback.call(unit);
@@ -210,7 +210,7 @@ public class CWorldCollision {
 		// NOTE: allocation here seems quite wasteful, see note on enumUnitsInRect
 		final Set<CUnit> intersectedUnits = new HashSet<>();
 		final QuadtreeIntersector<CUnit> intersectorFxn = (unit) -> {
-			if (unit.isHidden() || !intersectedUnits.add(unit)) {
+			if (unit.isHidden() || unit.isUnenumerable() || !intersectedUnits.add(unit)) {
 				return false;
 			}
 			return callback.call(unit);
@@ -400,7 +400,7 @@ public class CWorldCollision {
 
 		@Override
 		public boolean onIntersect(final CUnit intersectingObject) {
-			if (intersectingObject.isHidden()
+			if (intersectingObject.isHidden() || intersectingObject.isUnenumerable()
 					|| MovementType.FOOT_NO_COLLISION.equals(intersectingObject.getMovementType())
 					|| (this.forConstruction && intersectingObject.isNoBuildingCollision())
 					|| (!this.forConstruction && intersectingObject.isNoUnitCollision())) {
@@ -424,7 +424,7 @@ public class CWorldCollision {
 
 		@Override
 		public boolean onIntersect(final CUnit intersectingObject) {
-			if (intersectingObject.isHidden()) {
+			if (intersectingObject.isHidden() || intersectingObject.isUnenumerable()) {
 				return false;
 			}
 			if (this.done) {

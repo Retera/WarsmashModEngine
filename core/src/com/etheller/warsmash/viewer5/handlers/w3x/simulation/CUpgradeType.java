@@ -135,9 +135,7 @@ public class CUpgradeType {
 	}
 
 	public void apply(CSimulation simulation, CUnit unit, int i) {
-		for (CUpgradeEffect upgradeEffect : getUpgradeEffects()) {
-			upgradeEffect.apply(simulation, unit, i);
-		}
+		unit.applyUpgrade(simulation, this, i);
 	}
 
 	public void apply(CSimulation simulation, int playerIndex, int i) {
@@ -147,9 +145,7 @@ public class CUpgradeType {
 	}
 
 	public void unapply(CSimulation simulation, CUnit unit, int i) {
-		for (CUpgradeEffect upgradeEffect : getUpgradeEffects()) {
-			upgradeEffect.unapply(simulation, unit, i);
-		}
+		unit.unapplyUpgrade(simulation, this);
 	}
 
 	public void unapply(CSimulation simulation, int playerIndex, int i) {

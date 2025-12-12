@@ -34,9 +34,10 @@ public class CAbilityCoupleInstant extends AbstractGenericSingleIconNoSmartActiv
 	private int goldCost;
 	private int lumberCost;
 
-	public CAbilityCoupleInstant(final int handleId, final War3ID code, final War3ID alias, final War3ID resultingUnitType,
-			final War3ID partnerUnitType, final boolean moveToPartner, final float castRange, final float area,
-			final EnumSet<CTargetType> targetsAllowed, final int goldCost, final int lumberCost) {
+	public CAbilityCoupleInstant(final int handleId, final War3ID code, final War3ID alias,
+			final War3ID resultingUnitType, final War3ID partnerUnitType, final boolean moveToPartner,
+			final float castRange, final float area, final EnumSet<CTargetType> targetsAllowed, final int goldCost,
+			final int lumberCost) {
 		super(handleId, code, alias);
 		this.resultingUnitType = resultingUnitType;
 		this.partnerUnitType = partnerUnitType;
@@ -74,12 +75,13 @@ public class CAbilityCoupleInstant extends AbstractGenericSingleIconNoSmartActiv
 	}
 
 	@Override
-	public void onCancelFromQueue(final CSimulation game, final CUnit unit, final int orderId) {
+	public void onCancelFromQueue(final CSimulation game, final CUnit unit, final int playerIndex, final int orderId) {
 
 	}
 
 	@Override
-	public CBehavior begin(final CSimulation game, final CUnit caster, final int orderId, final CWidget target) {
+	public CBehavior begin(final CSimulation game, final CUnit caster, final int playerIndex, final int orderId,
+			final boolean autoOrder, final CWidget target) {
 		// only from engine, not ever allowed by the checks
 		if (target instanceof CUnit) {
 			return this.behaviorCoupleInstant.reset(game, (CUnit) target);
@@ -88,23 +90,25 @@ public class CAbilityCoupleInstant extends AbstractGenericSingleIconNoSmartActiv
 	}
 
 	@Override
-	public CBehavior begin(final CSimulation game, final CUnit caster, final int orderId,
-			final AbilityPointTarget point) {
+	public CBehavior begin(final CSimulation game, final CUnit caster, final int playerIndex, final int orderId,
+			final boolean autoOrder, final AbilityPointTarget point) {
 		return caster.pollNextOrderBehavior(game);
 	}
 
 	@Override
-	public CBehavior beginNoTarget(final CSimulation game, final CUnit caster, final int orderId) {
+	public CBehavior beginNoTarget(final CSimulation game, final CUnit caster, final int playerIndex, final int orderId,
+			final boolean autoOrder) {
 		final PossiblePairFinderEnum possiblePairFinder = new PossiblePairFinderEnum(caster);
 		game.getWorldCollision().enumUnitsInRect(
 				new Rectangle(caster.getX() - this.area, caster.getY() - this.area, this.area * 2, this.area * 2),
 				possiblePairFinder);
 		final CUnit coupleTarget = possiblePairFinder.pairMatchFound;
 		if (coupleTarget == null) {
-			game.getCommandErrorListener().showInterfaceError(caster.getPlayerIndex(), CommandStringErrorKeys.UNABLE_TO_FIND_COUPLE_TARGET);
+			game.getCommandErrorListener().showInterfaceError(caster.getPlayerIndex(),
+					CommandStringErrorKeys.UNABLE_TO_FIND_COUPLE_TARGET);
 			return caster.pollNextOrderBehavior(game);
 		}
-		coupleTarget.order(game, new COrderTargetWidget(possiblePairFinder.pairMatchAbility.getHandleId(),
+		coupleTarget.order(game, new COrderTargetWidget(playerIndex, possiblePairFinder.pairMatchAbility.getHandleId(),
 				possiblePairFinder.pairMatchAbility.getBaseOrderId(), caster.getHandleId(), false), false);
 		return this.behaviorCoupleInstant.reset(game, coupleTarget);
 	}
@@ -128,7 +132,7 @@ public class CAbilityCoupleInstant extends AbstractGenericSingleIconNoSmartActiv
 	}
 
 	@Override
-	protected void innerCheckCanUse(final CSimulation game, final CUnit unit, final int orderId,
+	protected void innerCheckCanUse(final CSimulation game, final CUnit unit, final int playerIndex, final int orderId,
 			final AbilityActivationReceiver receiver) {
 		final CPlayer player = game.getPlayer(unit.getPlayerIndex());
 		if (player.getGold() >= this.goldCost) {
@@ -247,6 +251,11 @@ public class CAbilityCoupleInstant extends AbstractGenericSingleIconNoSmartActiv
 	@Override
 	public boolean isPhysical() {
 		return true;
+	}
+
+	@Override
+	public boolean isMagic() {
+		return false;
 	}
 
 	@Override

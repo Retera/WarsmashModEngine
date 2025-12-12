@@ -13,7 +13,7 @@ public class ABCallbackGetUnitCurrentHp extends ABFloatCallback {
 
 	@Override
 	public Float callback(CSimulation game, CUnit caster, Map<String, Object> localStore, final int castId) {
-		return this.unit.callback(game, caster, localStore, castId).getLife();
+		return unit == null ? caster.getLife() : this.unit.callback(game, caster, localStore, castId).getLife();
 	}
 
 	@Override

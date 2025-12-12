@@ -8,6 +8,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABAction;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABLocalStoreKeys;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CAttackType;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CDamageFlags;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.listeners.CUnitAttackFinalDamageTakenModificationListener;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CDamageType;
 
@@ -30,12 +31,12 @@ public class ABFinalDamageTakenModificationListener implements CUnitAttackFinalD
 	
 	@Override
 	public float onDamage(CSimulation simulation, CUnit attacker,
-			CUnit target, boolean isAttack, boolean isRanged, CAttackType attackType, CDamageType damageType,
+			CUnit target, final CDamageFlags flags, CAttackType attackType, CDamageType damageType,
 			float previousDamage) {
-		localStore.put(ABLocalStoreKeys.ATTACKINGUNIT+triggerId, attacker);
-		localStore.put(ABLocalStoreKeys.ATTACKEDUNIT+triggerId, target);
-		localStore.put(ABLocalStoreKeys.DAMAGEISATTACK+triggerId, isAttack);
-		localStore.put(ABLocalStoreKeys.DAMAGEISRANGED+triggerId, isRanged);
+		localStore.put(ABLocalStoreKeys.DAMAGINGUNIT+triggerId, attacker);
+		localStore.put(ABLocalStoreKeys.DAMAGEDUNIT+triggerId, target);
+		localStore.put(ABLocalStoreKeys.DAMAGEISATTACK+triggerId, flags.isAttack());
+		localStore.put(ABLocalStoreKeys.DAMAGEISRANGED+triggerId, flags.isRanged());
 		localStore.put(ABLocalStoreKeys.ATTACKTYPE+triggerId, attackType);
 		localStore.put(ABLocalStoreKeys.DAMAGETYPE+triggerId, damageType);
 		localStore.put(ABLocalStoreKeys.TOTALDAMAGEDEALT+triggerId, previousDamage);
@@ -46,8 +47,8 @@ public class ABFinalDamageTakenModificationListener implements CUnitAttackFinalD
 			}
 		}
 		float finalDamage = (float) localStore.get(ABLocalStoreKeys.TOTALDAMAGEDEALT+triggerId);
-		localStore.remove(ABLocalStoreKeys.ATTACKINGUNIT+triggerId);
-		localStore.remove(ABLocalStoreKeys.ATTACKEDUNIT+triggerId);
+		localStore.remove(ABLocalStoreKeys.DAMAGINGUNIT+triggerId);
+		localStore.remove(ABLocalStoreKeys.DAMAGEDUNIT+triggerId);
 		localStore.remove(ABLocalStoreKeys.DAMAGEISATTACK+triggerId);
 		localStore.remove(ABLocalStoreKeys.DAMAGEISRANGED+triggerId);
 		localStore.remove(ABLocalStoreKeys.ATTACKTYPE+triggerId);

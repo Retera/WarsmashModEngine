@@ -162,6 +162,7 @@ public class WarsmashPreviewApplication extends ApplicationAdapter implements Ca
 		final MdxComplexInstance instance = (MdxComplexInstance) mdx.addInstance();
 //		this.cameraManager.setModelInstance(instance, mdx);
 		instance.setScene(this.scene);
+		instance.setTeamColor(1);
 		this.mainInstance = instance;
 		return mdlxModel;
 	}

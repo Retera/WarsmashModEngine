@@ -32,19 +32,21 @@ public class CAbilityNeutralBuild extends AbstractCAbilityBuild {
 	}
 
 	@Override
-	public CBehavior begin(final CSimulation game, final CUnit caster, final int orderId, final CWidget target) {
+	public CBehavior begin(final CSimulation game, final CUnit caster, final int playerIndex, final int orderId,
+			final boolean autoOrder, final CWidget target) {
 		return caster.pollNextOrderBehavior(game);
 	}
 
 	@Override
-	public CBehavior begin(final CSimulation game, final CUnit caster, final int orderId,
-			final AbilityPointTarget point) {
+	public CBehavior begin(final CSimulation game, final CUnit caster, final int playerIndex, final int orderId,
+			final boolean autoOrder, final AbilityPointTarget point) {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
-	public CBehavior beginNoTarget(final CSimulation game, final CUnit caster, final int orderId) {
+	public CBehavior beginNoTarget(final CSimulation game, final CUnit caster, final int playerIndex, final int orderId,
+			final boolean autoOrder) {
 		return caster.pollNextOrderBehavior(game);
 	}
 
@@ -54,7 +56,7 @@ public class CAbilityNeutralBuild extends AbstractCAbilityBuild {
 	}
 
 	@Override
-	public void onCancelFromQueue(final CSimulation game, final CUnit unit, final int orderId) {
+	public void onCancelFromQueue(final CSimulation game, final CUnit unit, final int playerIndex, final int orderId) {
 		// TODO Auto-generated method stub
 
 	}
@@ -62,6 +64,11 @@ public class CAbilityNeutralBuild extends AbstractCAbilityBuild {
 	@Override
 	public boolean isPhysical() {
 		return true;
+	}
+
+	@Override
+	public boolean isMagic() {
+		return false;
 	}
 
 	@Override

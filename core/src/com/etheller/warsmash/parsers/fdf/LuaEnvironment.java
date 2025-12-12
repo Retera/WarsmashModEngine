@@ -319,7 +319,7 @@ public class LuaEnvironment {
 					if (ability instanceof SingleOrderAbility) {
 						orderId = ((SingleOrderAbility) ability).getBaseOrderId();
 					}
-					ability.checkCanUse(game, pawnUnit, orderId, activationGetter);
+					ability.checkCanUse(game, pawnUnit, pawnUnit.getPlayerIndex(), orderId, false, activationGetter);
 					if (activationGetter.cooldownRemaining > 0) {
 						duration = (long) (activationGetter.cooldown * 1000);
 						start = System.currentTimeMillis()
@@ -344,7 +344,7 @@ public class LuaEnvironment {
 					if (ability instanceof SingleOrderAbility) {
 						orderId = ((SingleOrderAbility) ability).getBaseOrderId();
 					}
-					ability.checkCanUse(game, pawnUnit, orderId, activationGetter);
+					ability.checkCanUse(game, pawnUnit, pawnUnit.getPlayerIndex(), orderId, false, activationGetter);
 					isUsable = activationGetter.ok;
 					notEnoughMana = activationGetter.commandStringErrorKey == CommandStringErrorKeys.NOT_ENOUGH_MANA;
 				}
@@ -456,12 +456,12 @@ public class LuaEnvironment {
 
 					final ExternStringMsgAbilityActivationReceiver activationReceiver = ExternStringMsgAbilityActivationReceiver.INSTANCE
 							.reset();
-					ability.checkCanUse(game, pawnUnit, orderId, activationReceiver);
+					ability.checkCanUse(game, pawnUnit, pawnUnit.getPlayerIndex(), orderId, false, activationReceiver);
 					if (activationReceiver.isUseOk()) {
 						if (LuaEnvironment.this.targetUnit != null) {
 							final ExternStringMsgTargetCheckReceiver<CWidget> targetReceiver = ExternStringMsgTargetCheckReceiver
 									.<CWidget>getInstance().reset();
-							ability.checkCanTarget(game, pawnUnit, orderId,
+							ability.checkCanTarget(game, pawnUnit, pawnUnit.getPlayerIndex(), orderId, false,
 									LuaEnvironment.this.targetUnit.getSimulationWidget(), targetReceiver);
 							if (targetReceiver.getTarget() != null) {
 								uiOrderListener.issueTargetOrder(pawnUnit.getHandleId(), ability.getHandleId(), orderId,
@@ -470,7 +470,8 @@ public class LuaEnvironment {
 							else {
 								final ExternStringMsgTargetCheckReceiver<Void> noTargetReceiver = ExternStringMsgTargetCheckReceiver
 										.<Void>getInstance().reset();
-								ability.checkCanTargetNoTarget(game, pawnUnit, orderId, noTargetReceiver);
+								ability.checkCanTargetNoTarget(game, pawnUnit, pawnUnit.getPlayerIndex(), orderId,
+										false, noTargetReceiver);
 								if (noTargetReceiver.getExternStringKey() == null) {
 									uiOrderListener.issueImmediateOrder(pawnUnit.getHandleId(), ability.getHandleId(),
 											orderId, false);
@@ -484,7 +485,8 @@ public class LuaEnvironment {
 						else {
 							final ExternStringMsgTargetCheckReceiver<Void> noTargetReceiver = ExternStringMsgTargetCheckReceiver
 									.<Void>getInstance().reset();
-							ability.checkCanTargetNoTarget(game, pawnUnit, orderId, noTargetReceiver);
+							ability.checkCanTargetNoTarget(game, pawnUnit, pawnUnit.getPlayerIndex(), orderId, false,
+									noTargetReceiver);
 							if (noTargetReceiver.getExternStringKey() == null) {
 								uiOrderListener.issueImmediateOrder(pawnUnit.getHandleId(), ability.getHandleId(),
 										orderId, false);
@@ -521,7 +523,8 @@ public class LuaEnvironment {
 				final CAbility ability = getAbility(id.checkint(), bookType.checkjstring());
 				if (ability != null) {
 					final AbilityActivationGetter activationGetter = AbilityActivationGetter.INSTANCE.reset();
-					ability.checkCanUse(game, pawnUnit, OrderIds.smart /* TODO TODO */, activationGetter);
+					ability.checkCanUse(game, pawnUnit, pawnUnit.getPlayerIndex(), OrderIds.smart /* TODO TODO */,
+							false, activationGetter);
 					return LuaBoolean.valueOf(activationGetter.passive);
 				}
 				return LuaValue.FALSE;
@@ -1071,6 +1074,10 @@ public class LuaEnvironment {
 				frameLuaWrapper.getFrame().getScripts().onEvent(ThirdPersonLuaXmlEvent.SPELLS_CHANGED, this.unitKey);
 			}
 		}
+
+		@Override
+		public void upgradesChanged() {
+		}
 	}
 
 	private static final class AbilityActivationGetter implements AbilityActivationReceiver {
@@ -1319,12 +1326,12 @@ public class LuaEnvironment {
 
 			final ExternStringMsgAbilityActivationReceiver activationReceiver = ExternStringMsgAbilityActivationReceiver.INSTANCE
 					.reset();
-			ability.checkCanUse(game, pawnUnit, orderId, activationReceiver);
+			ability.checkCanUse(game, pawnUnit, pawnUnit.getPlayerIndex(), orderId, false, activationReceiver);
 			if (activationReceiver.isUseOk()) {
 				if (LuaEnvironment.this.targetUnit != null) {
 					final ExternStringMsgTargetCheckReceiver<CWidget> targetReceiver = ExternStringMsgTargetCheckReceiver
 							.<CWidget>getInstance().reset();
-					ability.checkCanTarget(game, pawnUnit, orderId,
+					ability.checkCanTarget(game, pawnUnit, pawnUnit.getPlayerIndex(), orderId, false,
 							LuaEnvironment.this.targetUnit.getSimulationWidget(), targetReceiver);
 					if (targetReceiver.getTarget() != null) {
 						uiOrderListener.issueTargetOrder(pawnUnit.getHandleId(), ability.getHandleId(), orderId,
@@ -1333,7 +1340,8 @@ public class LuaEnvironment {
 					else {
 						final ExternStringMsgTargetCheckReceiver<Void> noTargetReceiver = ExternStringMsgTargetCheckReceiver
 								.<Void>getInstance().reset();
-						ability.checkCanTargetNoTarget(game, pawnUnit, orderId, noTargetReceiver);
+						ability.checkCanTargetNoTarget(game, pawnUnit, pawnUnit.getPlayerIndex(), orderId, false,
+								noTargetReceiver);
 						if (noTargetReceiver.getExternStringKey() == null) {
 							uiOrderListener.issueImmediateOrder(pawnUnit.getHandleId(), ability.getHandleId(), orderId,
 									false);
@@ -1347,7 +1355,8 @@ public class LuaEnvironment {
 				else {
 					final ExternStringMsgTargetCheckReceiver<Void> noTargetReceiver = ExternStringMsgTargetCheckReceiver
 							.<Void>getInstance().reset();
-					ability.checkCanTargetNoTarget(game, pawnUnit, orderId, noTargetReceiver);
+					ability.checkCanTargetNoTarget(game, pawnUnit, pawnUnit.getPlayerIndex(), orderId, false,
+							noTargetReceiver);
 					if (noTargetReceiver.getExternStringKey() == null) {
 						uiOrderListener.issueImmediateOrder(pawnUnit.getHandleId(), ability.getHandleId(), orderId,
 								false);

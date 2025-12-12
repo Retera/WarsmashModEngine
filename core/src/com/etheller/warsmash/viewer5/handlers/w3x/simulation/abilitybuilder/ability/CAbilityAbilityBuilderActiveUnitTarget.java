@@ -8,6 +8,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityPointTarget;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTargetVisitor;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.ABBehavior;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABLocalStoreKeys;
@@ -34,24 +35,30 @@ public class CAbilityAbilityBuilderActiveUnitTarget extends CAbilityAbilityBuild
 	}
 
 	@Override
-	public CBehavior begin(CSimulation game, CUnit caster, int orderId, CWidget target) {
-		this.castId++;
+	public CBehavior begin(CSimulation game, CUnit caster, int playerIndex, int orderId, boolean autoOrder, CWidget target) {
+		this.internalBegin(game, caster, playerIndex, orderId, autoOrder, target);
 		this.behavior.setCastId(castId);
-
-		this.localStore.put(ABLocalStoreKeys.ABILITYTARGETEDUNIT + castId, target.visit(AbilityTargetVisitor.UNIT));
-		this.localStore.put(ABLocalStoreKeys.ABILITYTARGETEDITEM + castId, target.visit(AbilityTargetVisitor.ITEM));
-		this.localStore.put(ABLocalStoreKeys.ABILITYTARGETEDDESTRUCTABLE + castId, target.visit(AbilityTargetVisitor.DESTRUCTABLE));
-		this.runOnOrderIssuedActions(game, caster, orderId);
-		return this.behavior.reset(game, target);
+		return this.behavior.reset(game, target, playerIndex, orderId, autoOrder);
 	}
 
 	@Override
-	public CBehavior begin(CSimulation game, CUnit caster, int orderId, AbilityPointTarget point) {
+	public void internalBegin(CSimulation game, CUnit caster, int playerIndex, int orderId, boolean autoOrder, AbilityTarget target) {
+		this.castId++;
+		this.localStore.put(ABLocalStoreKeys.combineKey(ABLocalStoreKeys.ISAUTOCAST, castId), autoOrder);
+		this.localStore.put(ABLocalStoreKeys.ABILITYTARGETEDUNIT + castId, target.visit(AbilityTargetVisitor.UNIT));
+		this.localStore.put(ABLocalStoreKeys.ABILITYTARGETEDITEM + castId, target.visit(AbilityTargetVisitor.ITEM));
+		this.localStore.put(ABLocalStoreKeys.ABILITYTARGETEDDESTRUCTABLE + castId, target.visit(AbilityTargetVisitor.DESTRUCTABLE));
+		this.localStore.put(ABLocalStoreKeys.PREVIOUSBEHAVIOR, caster.getCurrentBehavior());
+		this.runOnOrderIssuedActions(game, caster, orderId);
+	}
+
+	@Override
+	public CBehavior begin(CSimulation game, CUnit caster, int playerIndex, int orderId, boolean autoOrder, AbilityPointTarget point) {
 		return null;
 	}
 
 	@Override
-	public CBehavior beginNoTarget(CSimulation game, CUnit caster, int orderId) {
+	public CBehavior beginNoTarget(CSimulation game, CUnit caster, int playerIndex, int orderId, boolean autoOrder) {
 		return null;
 	}
 

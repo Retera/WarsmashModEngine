@@ -1,11 +1,11 @@
 package com.etheller.interpreter.ast.expression;
 
 public class ArrayRefJassExpression implements JassExpression {
-	private final String identifier;
+	private final JassExpression identifierExpression;
 	private final JassExpression indexExpression;
 
-	public ArrayRefJassExpression(final String identifier, final JassExpression indexExpression) {
-		this.identifier = identifier;
+	public ArrayRefJassExpression(final JassExpression identifierExpression, final JassExpression indexExpression) {
+		this.identifierExpression = identifierExpression;
 		this.indexExpression = indexExpression;
 	}
 
@@ -14,8 +14,8 @@ public class ArrayRefJassExpression implements JassExpression {
 		return visitor.visit(this);
 	}
 
-	public String getIdentifier() {
-		return this.identifier;
+	public JassExpression getIdentifierExpression() {
+		return this.identifierExpression;
 	}
 
 	public JassExpression getIndexExpression() {

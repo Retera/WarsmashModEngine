@@ -8,22 +8,36 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehavior
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.ExternStringMsgTargetCheckReceiver;
 
 public class COrderTargetPoint implements COrder {
+	private final int playerIndex;
 	private final int abilityHandleId;
 	private final int orderId;
 	private final AbilityPointTarget target;
 	private final boolean queued;
+	private boolean autoOrder;
 
-	public COrderTargetPoint(final int abilityHandleId, final int orderId, final AbilityPointTarget target,
+	public COrderTargetPoint(final int playerIndex, final int abilityHandleId, final int orderId, final AbilityPointTarget target,
 			final boolean queued) {
+		this(playerIndex, abilityHandleId, orderId, target, queued, false);
+	}
+
+	public COrderTargetPoint(final int playerIndex, final int abilityHandleId, final int orderId, final AbilityPointTarget target,
+			final boolean queued, boolean autoOrder) {
+		this.playerIndex = playerIndex;
 		this.abilityHandleId = abilityHandleId;
 		this.orderId = orderId;
 		this.target = target;
 		this.queued = queued;
+		this.autoOrder = autoOrder;
 	}
 
 	@Override
 	public int getAbilityHandleId() {
 		return this.abilityHandleId;
+	}
+
+	@Override
+	public int getPlayerIndex() {
+		return this.playerIndex;
 	}
 
 	@Override
@@ -45,19 +59,22 @@ public class COrderTargetPoint implements COrder {
 	public CBehavior begin(final CSimulation game, final CUnit caster) {
 		final CAbility ability = game.getAbility(this.abilityHandleId);
 		if (ability == null) {
-			game.getCommandErrorListener().showInterfaceError(caster.getPlayerIndex(), "NOTEXTERN: No such ability");
+			if (!caster.order(game, this.orderId, this.target)) {
+				game.getCommandErrorListener().showInterfaceError(caster.getPlayerIndex(), "NOTEXTERN: No such ability");
+			}
 			return caster.pollNextOrderBehavior(game);
 		}
-		ability.checkCanUse(game, caster, this.orderId, this.abilityActivationReceiver.reset());
+		ability.checkCanUse(game, caster, this.playerIndex, this.orderId, this.autoOrder, this.abilityActivationReceiver.reset());
 		if (this.abilityActivationReceiver.isUseOk()) {
 			final ExternStringMsgTargetCheckReceiver<AbilityPointTarget> targetReceiver = (ExternStringMsgTargetCheckReceiver<AbilityPointTarget>) targetCheckReceiver;
-			ability.checkCanTarget(game, caster, this.orderId, this.target, targetReceiver);
+			ability.checkCanTarget(game, caster, this.playerIndex, this.orderId, this.autoOrder, this.target, targetReceiver);
 			if (targetReceiver.getTarget() != null) {
 				caster.fireOrderEvents(game, this);
-				return ability.begin(game, caster, this.orderId, this.target);
+				return ability.begin(game, caster, this.playerIndex, this.orderId, this.autoOrder, this.target);
 			}
 			else {
-				game.getCommandErrorListener().showInterfaceError(caster.getPlayerIndex(), targetReceiver.getExternStringKey());
+				game.getCommandErrorListener().showInterfaceError(caster.getPlayerIndex(),
+						targetReceiver.getExternStringKey());
 				return caster.pollNextOrderBehavior(game);
 			}
 		}

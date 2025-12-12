@@ -34,10 +34,17 @@ public class CGameplayConstants {
 
 	private final float defenseArmor;
 
-	private final float etherealDamageBonusSpells;
-	private final float etherealDamageBonusMagic;
+	private final boolean canDisableDivineShield;
+
+	private final float[] etherealDamageBonus;
 	private final boolean etherealDamageBonusAlly;
 
+	private final float frostAttackSpeedDecrease;
+	private final float frostMoveSpeedDecrease;
+
+	private final boolean allowMultiBounce;
+	private final boolean abolishMagicSmartDispel;
+	private final boolean invulnerableSummonsTakeDispelDamage;
 	private final boolean magicImmuneResistsDamage;
 	private final boolean magicImmuneResistsLeech;
 	private final boolean magicImmuneResistsThorns;
@@ -153,6 +160,8 @@ public class CGameplayConstants {
 		this.dyingRevealRadius = miscData.getFieldFloatValue("DyingRevealRadius");
 		this.foggedAttackRevealRadius = miscData.getFieldFloatValue("FoggedAttackRevealRadius");
 
+		this.canDisableDivineShield = miscData.getFieldValue("CanDeactivateDivineShield") != 0;
+
 		final CDefenseType[] defenseTypeOrder = { CDefenseType.SMALL, CDefenseType.MEDIUM, CDefenseType.LARGE,
 				CDefenseType.FORT, CDefenseType.NORMAL, CDefenseType.HERO, CDefenseType.DIVINE, CDefenseType.NONE, };
 		this.damageBonusTable = new float[CAttackType.values().length][defenseTypeOrder.length];
@@ -183,34 +192,47 @@ public class CGameplayConstants {
 
 		final String damageBonus = miscData.getField("EtherealDamageBonus");
 		final String[] damageComponents = damageBonus.split(",");
-		float magBonus = 1;
-		float spellBonus = 1;
+		this.etherealDamageBonus = new float[damageComponents.length + 1];
+		this.etherealDamageBonus[this.etherealDamageBonus.length - 1] = 1;
 		for (int j = 0; j < damageComponents.length; j++) {
-			if (j == 3) {
-				if (damageComponents[j].length() > 0) {
-					try {
-						magBonus = Float.parseFloat(damageComponents[j]);
-					}
-					catch (final NumberFormatException e) {
-						throw new RuntimeException("EtherealDamageBonus", e);
-					}
+			int iter = 0;
+			if (j < 5) {
+				iter = j + 1;
+			}
+			else if (j > 5) {
+				iter = j;
+			}
+			/*
+			 * The above reordering is to match the War3 attack type order. The ethereal
+			 * table is organized:
+			 *
+			 * Normal,Pierce,Siege,Magic,Chaos,Spells,Hero
+			 *
+			 *
+			 * But the actual internal attack types are ordered:
+			 *
+			 * Spells,Normal,Pierce,Siege,Magic,Chaos,Hero
+			 */
+			if (damageComponents[j].length() > 0) {
+				try {
+					this.etherealDamageBonus[iter] = Float.parseFloat(damageComponents[j]);
+				}
+				catch (final NumberFormatException e) {
+					throw new RuntimeException("EtherealDamageBonus", e);
 				}
 			}
-			else if (j == 5) {
-				if (damageComponents[j].length() > 0) {
-					try {
-						spellBonus = Float.parseFloat(damageComponents[j]);
-					}
-					catch (final NumberFormatException e) {
-						throw new RuntimeException("EtherealDamageBonus", e);
-					}
-				}
+			else {
+				this.etherealDamageBonus[iter] = 0;
 			}
 		}
-		this.etherealDamageBonusMagic = magBonus;
-		this.etherealDamageBonusSpells = spellBonus;
 		this.etherealDamageBonusAlly = miscData.getFieldValue("EtherealDamageBonusAlly") != 0;
 
+		this.frostAttackSpeedDecrease = miscData.getFieldFloatValue("FrostAttackSpeedDecrease");
+		this.frostMoveSpeedDecrease = miscData.getFieldFloatValue("FrostMoveSpeedDecrease");
+
+		this.allowMultiBounce = miscData.getFieldValue("AllowMultiBounce") != 0;
+		this.abolishMagicSmartDispel = miscData.getFieldValue("AbolishMagicDispelSmart") != 0;
+		this.invulnerableSummonsTakeDispelDamage = miscData.getFieldValue("InvulnSummonDispelDamage") != 0;
 		this.magicImmuneResistsDamage = miscData.getFieldValue("MagicImmunesResistDamage") != 0;
 		this.magicImmuneResistsLeech = miscData.getFieldValue("MagicImmunesResistLeech") != 0;
 		this.magicImmuneResistsThorns = miscData.getFieldValue("MagicImmunesResistThorns") != 0;
@@ -394,16 +416,36 @@ public class CGameplayConstants {
 		return this.defenseArmor;
 	}
 
-	public float getEtherealDamageBonusSpells() {
-		return this.etherealDamageBonusSpells;
+	public boolean isCanDisableDivineShield() {
+		return this.canDisableDivineShield;
 	}
 
-	public float getEtherealDamageBonusMagic() {
-		return this.etherealDamageBonusMagic;
+	public float[] getEtherealDamageBonus() {
+		return this.etherealDamageBonus;
 	}
 
 	public boolean isEtherealDamageBonusAlly() {
 		return this.etherealDamageBonusAlly;
+	}
+
+	public float getFrostAttackSpeedDecrease() {
+		return this.frostAttackSpeedDecrease;
+	}
+
+	public float getFrostMoveSpeedDecrease() {
+		return this.frostMoveSpeedDecrease;
+	}
+
+	public boolean isAllowMultiBounce() {
+		return this.allowMultiBounce;
+	}
+
+	public boolean isAbolishMagicSmartDispel() {
+		return this.abolishMagicSmartDispel;
+	}
+
+	public boolean isInvulnerableSummonsTakeDispelDamage() {
+		return this.invulnerableSummonsTakeDispelDamage;
 	}
 
 	public boolean isMagicImmuneResistsDamage() {

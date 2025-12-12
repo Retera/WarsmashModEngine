@@ -7,17 +7,17 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehavior
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.COrderNoTarget;
 
 public class COrderStartTransformation extends COrderNoTarget {
-	private CBehavior transformBehavior;
+	private final CBehavior transformBehavior;
 
 	public COrderStartTransformation(final CBehavior transformBehavior, final int orderId) {
-		super(0, orderId, false);
+		super(0, 0, orderId, false);
 		this.transformBehavior = transformBehavior;
 	}
 
 	@Override
 	public CBehavior begin(final CSimulation game, final CUnit caster) {
 		caster.fireOrderEvents(game, this);
-		return transformBehavior;
+		return this.transformBehavior;
 	}
 
 	@Override
@@ -61,4 +61,3 @@ public class COrderStartTransformation extends COrderNoTarget {
 	}
 
 }
-

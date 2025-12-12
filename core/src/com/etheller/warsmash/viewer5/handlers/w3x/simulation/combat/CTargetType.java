@@ -39,7 +39,9 @@ public enum CTargetType implements CHandle {
 	DECORATION,
 	// BELOW: internal values:
 	NON_MAGIC_IMMUNE,
-	NON_ETHEREAL
+	LIMITED_MAGIC_IMMUNE,
+	NON_ETHEREAL, 
+	REPAIRABLE
 
 	;
 

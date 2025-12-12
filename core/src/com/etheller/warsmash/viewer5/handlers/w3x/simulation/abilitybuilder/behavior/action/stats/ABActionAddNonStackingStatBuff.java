@@ -20,7 +20,7 @@ public class ABActionAddNonStackingStatBuff implements ABSingleAction {
 			final int castId) {
 		final CUnit target = this.targetUnit.callback(game, caster, localStore, castId);
 
-		target.addNonStackingStatBuff(this.buff.callback(game, caster, localStore, castId));
+		target.addNonStackingStatBuff(game, this.buff.callback(game, caster, localStore, castId));
 	}
 
 	@Override

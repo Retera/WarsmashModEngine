@@ -6,4 +6,6 @@ public interface DataSourceDescriptor extends Serializable {
 	DataSource createDataSource();
 
 	String getDisplayName();
+
+	DataSourceDescriptor duplicate();
 }

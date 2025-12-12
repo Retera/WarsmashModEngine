@@ -1,6 +1,7 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.parser;
 
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.booleancallbacks.ABBooleanCallback;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.floatcallbacks.ABFloatCallback;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.idcallbacks.ABIDCallback;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.integercallbacks.ABIntegerCallback;
 
@@ -13,6 +14,7 @@ public class AbilityBuilderSpecialDisplayFields {
 	private ABIntegerCallback lumberCost;
 	
 	private ABBooleanCallback hideAreaCursor;
+	private ABFloatCallback areaCursorOverride;
 	private ABBooleanCallback instantCast;
 	private ABBooleanCallback castlessNoTarget;
 	
@@ -20,6 +22,39 @@ public class AbilityBuilderSpecialDisplayFields {
 	private ABBooleanCallback castToggleOff;
 	private ABBooleanCallback separateOnAndOff;
 	private ABIDCallback alternateUnitId;
+
+	private ABBooleanCallback isMenu;
+	private ABIntegerCallback menuId;
+
+	public void updateFromParent(AbilityBuilderSpecialDisplayFields parent) {
+		if (this.showOnAndOffIcons == null)
+			this.showOnAndOffIcons = parent.showOnAndOffIcons;
+
+		if (this.foodCost == null)
+			this.foodCost = parent.foodCost;
+		if (this.goldCost == null)
+			this.goldCost = parent.goldCost;
+		if (this.lumberCost == null)
+			this.lumberCost = parent.lumberCost;
+
+		if (this.hideAreaCursor == null)
+			this.hideAreaCursor = parent.hideAreaCursor;
+		if (this.areaCursorOverride == null)
+			this.areaCursorOverride = parent.areaCursorOverride;
+		if (this.instantCast == null)
+			this.instantCast = parent.instantCast;
+		if (this.castlessNoTarget == null)
+			this.castlessNoTarget = parent.castlessNoTarget;
+
+		if (this.toggleable == null)
+			this.toggleable = parent.toggleable;
+		if (this.castToggleOff == null)
+			this.castToggleOff = parent.castToggleOff;
+		if (this.separateOnAndOff == null)
+			this.separateOnAndOff = parent.separateOnAndOff;
+		if (this.alternateUnitId == null)
+			this.alternateUnitId = parent.alternateUnitId;
+	}
 	
 	public ABBooleanCallback getShowOnAndOffIcons() {
 		return showOnAndOffIcons;
@@ -50,6 +85,12 @@ public class AbilityBuilderSpecialDisplayFields {
 	}
 	public void setHideAreaCursor(ABBooleanCallback hideAreaCursor) {
 		this.hideAreaCursor = hideAreaCursor;
+	}
+	public ABFloatCallback getAreaCursorOverride() {
+		return areaCursorOverride;
+	}
+	public void setAreaCursorOverride(ABFloatCallback areaCursorOverride) {
+		this.areaCursorOverride = areaCursorOverride;
 	}
 	public ABBooleanCallback getInstantCast() {
 		return instantCast;
@@ -86,6 +127,19 @@ public class AbilityBuilderSpecialDisplayFields {
 	}
 	public void setAlternateUnitId(ABIDCallback alternateUnitId) {
 		this.alternateUnitId = alternateUnitId;
+	}
+
+	public ABBooleanCallback getIsMenu() {
+		return this.isMenu;
+	}
+	public void setIsMenu(ABBooleanCallback isMenu) {
+		this.isMenu = isMenu;
+	}
+	public ABIntegerCallback getMenuId() {
+		return this.menuId;
+	}
+	public void setMenuId(ABIntegerCallback menuId) {
+		this.menuId = menuId;
 	}
 
 }

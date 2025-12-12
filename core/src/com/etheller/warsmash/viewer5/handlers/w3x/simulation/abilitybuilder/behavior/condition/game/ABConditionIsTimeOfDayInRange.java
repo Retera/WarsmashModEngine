@@ -6,13 +6,13 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.floatcallbacks.ABFloatCallback;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABCondition;
 
-public class ABConditionIsTimeOfDayInRange implements ABCondition {
+public class ABConditionIsTimeOfDayInRange extends ABCondition {
 
 	private ABFloatCallback startTime;
 	private ABFloatCallback endTime;
 	
 	@Override
-	public boolean evaluate(CSimulation game, CUnit caster, Map<String, Object> localStore, final int castId) {
+	public Boolean callback(CSimulation game, CUnit caster, Map<String, Object> localStore, final int castId) {
 		float st = 0;
 		float et = Float.MAX_VALUE;
 		if (startTime != null) {

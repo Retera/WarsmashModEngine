@@ -26,7 +26,11 @@ public enum CPlayerColor implements CHandle {
 	COAL,
 	SNOW,
 	EMERALD,
-	PEANUT;
+	PEANUT,
+	NEUTRAL_GRAY,
+	NEUTRAL_GRAY2,
+	NEUTRAL_GRAY3,
+	NEUTRAL_GRAY4;
 
 	public static CPlayerColor[] VALUES = values();
 

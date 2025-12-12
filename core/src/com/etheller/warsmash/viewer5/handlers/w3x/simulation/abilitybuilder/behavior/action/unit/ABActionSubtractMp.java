@@ -12,7 +12,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core
 
 public class ABActionSubtractMp implements ABSingleAction {
 
-	private ABUnitCallback target;
+	private ABUnitCallback unit;
 	private ABFloatCallback amount;
 	private ABBooleanCallback isPercent;
 
@@ -22,7 +22,7 @@ public class ABActionSubtractMp implements ABSingleAction {
 		if (this.isPercent != null) {
 			percent = this.isPercent.callback(game, caster, localStore, castId);
 		}
-		final CUnit targetUnit = this.target.callback(game, caster, localStore, castId);
+		final CUnit targetUnit = this.unit.callback(game, caster, localStore, castId);
 		if (percent) {
 			targetUnit.setMana(Math.max(Math.min(
 					targetUnit.getMana()
@@ -42,7 +42,7 @@ public class ABActionSubtractMp implements ABSingleAction {
 		if (this.isPercent != null) {
 			percentExpression = this.isPercent.generateJassEquivalent(jassTextGenerator);
 		}
-		return "AddMpAU(" + this.target.generateJassEquivalent(jassTextGenerator) + ", -("
+		return "AddMpAU(" + this.unit.generateJassEquivalent(jassTextGenerator) + ", -("
 				+ this.amount.generateJassEquivalent(jassTextGenerator) + "), " + percentExpression + ")";
 	}
 }

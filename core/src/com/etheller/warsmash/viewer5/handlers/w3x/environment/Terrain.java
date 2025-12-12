@@ -133,6 +133,9 @@ public class Terrain extends TerrainInterface {
 	private final int[] mapBounds;
 	private final float[] shaderMapBounds;
 	private final int[] mapSize;
+	public FloatBuffer renderGroundBuffer;
+	public final SoftwareGroundMesh softwareGroundMesh;
+	public final SoftwareWaterAndGroundMesh softwareWaterAndGroundMesh;
 	private final int testArrayBuffer;
 	private final int testElementBuffer;
 	private boolean initShadowsFinished = false;
@@ -144,8 +147,6 @@ public class Terrain extends TerrainInterface {
 	private final Rectangle shaderMapBoundsRectangle;
 	private final Rectangle entireMapRectangle;
 	private final float[] defaultCameraBounds;
-	public SoftwareGroundMesh softwareGroundMesh;
-	public SoftwareWaterAndGroundMesh softwareWaterAndGroundMesh;
 
 	public Terrain(final War3MapW3e w3eFile, final War3MapWpm terrainPathing, final War3MapW3i w3iFile,
 			final WebGL webGL, final DataSource dataSource, final WorldEditStrings worldEditStrings,
@@ -440,8 +441,9 @@ public class Terrain extends TerrainInterface {
 
 		this.testArrayBuffer = gl.glGenBuffer();
 		gl.glBindBuffer(GL30.GL_ARRAY_BUFFER, this.testArrayBuffer);
-		gl.glBufferData(GL30.GL_ARRAY_BUFFER, this.softwareGroundMesh.vertices.length,
-				RenderMathUtils.wrap(this.softwareGroundMesh.vertices), GL30.GL_STATIC_DRAW);
+		this.renderGroundBuffer = RenderMathUtils.wrap(this.softwareGroundMesh.vertices);
+		gl.glBufferData(GL30.GL_ARRAY_BUFFER, this.softwareGroundMesh.vertices.length, this.renderGroundBuffer,
+				GL30.GL_STATIC_DRAW);
 
 		this.testElementBuffer = gl.glGenBuffer();
 //		gl.glBindBuffer(GL30.GL_ELEMENT_ARRAY_BUFFER, this.testElementBuffer);
@@ -1480,6 +1482,11 @@ public class Terrain extends TerrainInterface {
 	}
 
 	@Override
+	public float getTerrainSpaceX(final float x) {
+		return (x - this.centerOffset[0]) / 128.0f;
+	}
+
+	@Override
 	public int get128CellX(final float x) {
 		final float userCellSpaceX = (x - this.centerOffset[0]) / 128.0f;
 		final int cellX = (int) userCellSpaceX;
@@ -1489,6 +1496,11 @@ public class Terrain extends TerrainInterface {
 	@Override
 	public float get128WorldCoordinateFromCellX(final int cellX) {
 		return (cellX * 128.0f) + this.centerOffset[0];
+	}
+
+	@Override
+	public float getTerrainSpaceY(final float y) {
+		return (y - this.centerOffset[1]) / 128.0f;
 	}
 
 	@Override
@@ -1714,5 +1726,51 @@ public class Terrain extends TerrainInterface {
 			RenderMathUtils.intersectRayTriangles(gdxRayHeap, this.softwareGroundMesh.vertices,
 					this.softwareGroundMesh.indices, 3, out);
 		}
+	}
+
+	private static Rectangle tempRect = new Rectangle();
+
+	@Override
+	public void updateGroundBuffer(final float x, final float y, final float i) {
+		final int nodeX = get128CellX(x);
+		final int nodeY = get128CellY(y);
+		final int instanceId = (nodeY * (this.columns - 1)) + nodeX;
+		final int vertexZ = (instanceId * 4 * 3) + (0 * 3) + 2;
+		this.softwareGroundMesh.vertices[vertexZ] = this.softwareGroundMesh.vertices[vertexZ] + i;
+		this.corners[nodeX][nodeY].setGroundHeight(this.corners[nodeX][nodeY].getGroundHeight() + (i / 512));
+		this.updateGroundHeights(tempRect.set(nodeX, nodeY, 1, 1));
+	}
+
+	@Override
+	public int[] getTerrainModBufferSize(final float x, final float y, final float width, final float height) {
+		return new int[] { Math.min(this.rows - 1, Math.max(0, get128CellX(x))),
+				Math.min(this.columns - 1, Math.max(0, get128CellY(y))),
+				Math.min(this.rows - 1, Math.max(0, get128CellX(x + width) + 1)),
+				Math.min(this.columns - 1, Math.max(0, get128CellY(y + height) + 1)) };
+	}
+
+	@Override
+	public int[] getTerrainModBufferSize(final float centerX, final float centerY, final float radius) {
+		return getTerrainModBufferSize(centerX - radius, centerY - radius, radius * 2, radius * 2);
+	}
+
+	@Override
+	public void updateGroundBuffer(final int[] rect, final float[] modBuffer) {
+		updateGroundBuffer(rect[0], rect[1], (rect[2] - rect[0]) + 1, (rect[3] - rect[1]) + 1, modBuffer);
+	}
+
+	public void updateGroundBuffer(final int x, final int y, final int width, final int height,
+			final float[] modBuffer) {
+		for (int j = y; j < (y + height); j++) {
+			for (int i = x; i < (x + width); i++) {
+				final int vertexZ = (((j * (this.columns - 1)) + i) * 4 * 3) + 2;
+				this.softwareGroundMesh.vertices[vertexZ] = this.softwareGroundMesh.vertices[vertexZ]
+						+ modBuffer[(i - x) + ((j - y) * width)];
+				this.corners[i][j].setGroundHeight(
+						this.corners[i][j].getGroundHeight() + (modBuffer[(i - x) + ((j - y) * width)] / 512));
+			}
+		}
+		this.updateGroundHeights(tempRect.set(x, y, width, height));
+
 	}
 }

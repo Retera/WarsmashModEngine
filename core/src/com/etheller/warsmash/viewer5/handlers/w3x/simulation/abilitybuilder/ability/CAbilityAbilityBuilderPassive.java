@@ -1,7 +1,9 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.ability;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import com.etheller.warsmash.units.GameObject;
 import com.etheller.warsmash.util.War3ID;
@@ -12,6 +14,8 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnitTypeRequirement;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityVisitor;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.AbilityGenericSingleIconPassiveAbility;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.definitions.impl.AbilityFields;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.stringcallbacks.ABStringCallback;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABAction;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABLocalStoreKeys;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.parser.AbilityBuilderConfiguration;
@@ -30,8 +34,13 @@ public class CAbilityAbilityBuilderPassive extends AbilityGenericSingleIconPassi
 	protected float cooldown = 0;
 	protected float area = 0;
 	protected float range = 0;
+	private float castTime = 0;
 
 	private War3ID onTooltipOverride = null;
+	
+	protected Set<String> uniqueFlags = null;
+
+	private int visibleMenuId = 0;
 
 	public CAbilityAbilityBuilderPassive(int handleId, War3ID code, War3ID alias,
 			List<CAbilityTypeAbilityBuilderLevelData> levelData, AbilityBuilderConfiguration config,
@@ -41,6 +50,20 @@ public class CAbilityAbilityBuilderPassive extends AbilityGenericSingleIconPassi
 		this.config = config;
 		this.localStore = localStore;
 		localStore.put(ABLocalStoreKeys.ABILITY, this);
+		GameObject editorData = (GameObject) localStore.get(ABLocalStoreKeys.ABILITYEDITORDATA);
+		final int levels = editorData.getFieldAsInteger(AbilityFields.LEVELS, 0);
+		localStore.put(ABLocalStoreKeys.ISABILITYLEVELED, levels > 1);
+		localStore.put(ABLocalStoreKeys.ISABILITYMAGIC, false);
+		localStore.put(ABLocalStoreKeys.ISABILITYPHYSICAL, false);
+	}
+	
+	private void addInitialUniqueFlags(CSimulation game, CUnit unit) {
+		if (this.config.getInitialUniqueFlags() != null && !this.config.getInitialUniqueFlags().isEmpty()) {
+			this.uniqueFlags = new HashSet<>();
+			for (ABStringCallback flag : this.config.getInitialUniqueFlags()) {
+				this.uniqueFlags.add(flag.callback(game, unit, localStore, 0));
+			}
+		}
 	}
 
 	protected void setSpellFields(CSimulation game, CUnit unit) {
@@ -58,6 +81,10 @@ public class CAbilityAbilityBuilderPassive extends AbilityGenericSingleIconPassi
 				this.range = this.config.getOverrideFields().getRangeOverride().callback(game, unit, localStore,
 						0);
 			}
+			if (this.config.getOverrideFields().getCastTimeOverride() != null) {
+				this.castTime = this.config.getOverrideFields().getCastTimeOverride().callback(game, unit, localStore,
+						0);
+			}
 			if (this.config.getOverrideFields().getCooldownOverride() != null) {
 				this.cooldown = this.config.getOverrideFields().getCooldownOverride().callback(game, unit, localStore,
 						0);
@@ -73,6 +100,24 @@ public class CAbilityAbilityBuilderPassive extends AbilityGenericSingleIconPassi
 	public int getAbilityIntField(String field) {
 		GameObject editorData = (GameObject) localStore.get(ABLocalStoreKeys.ABILITYEDITORDATA);
 		return editorData.getFieldValue(field);
+	}
+	
+	@Override
+	public float getAbilityFloatField(String field) {
+		GameObject editorData = (GameObject) localStore.get(ABLocalStoreKeys.ABILITYEDITORDATA);
+		return editorData.getFieldFloatValue(field);
+	}
+	
+	@Override
+	public String getAbilityStringField(String field) {
+		GameObject editorData = (GameObject) localStore.get(ABLocalStoreKeys.ABILITYEDITORDATA);
+		return editorData.getField(field);
+	}
+	
+	@Override
+	public boolean getAbilityBooleanField(String field) {
+		GameObject editorData = (GameObject) localStore.get(ABLocalStoreKeys.ABILITYEDITORDATA);
+		return editorData.getFieldValue(field) != 0;
 	}
 
 	@Override
@@ -98,6 +143,10 @@ public class CAbilityAbilityBuilderPassive extends AbilityGenericSingleIconPassi
 	@Override
 	public float getCastRange() {
 		return range;
+	}
+
+	public float getCastTime() {
+		return castTime;
 	}
 
 	@Override
@@ -154,6 +203,45 @@ public class CAbilityAbilityBuilderPassive extends AbilityGenericSingleIconPassi
 	public CItem getItem() {
 		return this.item;
 	}
+	
+	@Override
+	public boolean hasUniqueFlag(String flag) {
+		if (this.uniqueFlags != null) {
+			return this.uniqueFlags.contains(flag);
+		}
+		return false;
+	}
+	
+	public void addUniqueFlag(String flag) {
+		if (this.uniqueFlags == null) {
+			this.uniqueFlags = new HashSet<>();
+		}
+		this.uniqueFlags.add(flag);
+	}
+	
+	public void removeUniqueFlag(String flag) {
+		if (this.uniqueFlags != null) {
+			this.uniqueFlags.remove(flag);
+		}
+	}
+
+	@SuppressWarnings("unchecked")
+	@Override
+	public <T> T getUniqueValue(String key, Class<T> cls) {
+		Object o = this.localStore.get(ABLocalStoreKeys.combineUniqueValueKey(key, this.getHandleId()));
+		if (o != null && o.getClass() == cls) {
+			return (T)o;
+		}
+		return null;
+	}
+	
+	public void addUniqueValue(Object item, String key) {
+		this.localStore.put(ABLocalStoreKeys.combineUniqueValueKey(key, this.getHandleId()), item);
+	}
+	
+	public void removeUniqueValue(String key) {
+		this.localStore.remove(ABLocalStoreKeys.combineUniqueValueKey(key, this.getHandleId()));
+	}
 
 	@Override
 	public War3ID getOnTooltipOverride() {
@@ -189,6 +277,7 @@ public class CAbilityAbilityBuilderPassive extends AbilityGenericSingleIconPassi
 	public void onAddDisabled(CSimulation game, CUnit unit) {
 		localStore.put(ABLocalStoreKeys.GAME, game);
 		localStore.put(ABLocalStoreKeys.THISUNIT, unit);
+		addInitialUniqueFlags(game, unit);
 		setSpellFields(game, unit);
 		if (config.getOnAddDisabledAbility() != null) {
 			for (ABAction action : config.getOnAddDisabledAbility()) {
@@ -267,8 +356,8 @@ public class CAbilityAbilityBuilderPassive extends AbilityGenericSingleIconPassi
 	}
 
 	@Override
-	protected void innerCheckCanUse(final CSimulation game, final CUnit unit, final int orderId,
-			final AbilityActivationReceiver receiver) {
+	protected void innerCheckCanUse(final CSimulation game, final CUnit unit, int playerIndex,
+			final int orderId, final AbilityActivationReceiver receiver) {
 		final int cooldownRemaining = unit.getCooldownRemainingTicks(game, getCooldownId());
 
 		if (cooldownRemaining > 0) {
@@ -278,7 +367,17 @@ public class CAbilityAbilityBuilderPassive extends AbilityGenericSingleIconPassi
 					cooldownLengthDisplay);
 		}
 		
-		super.innerCheckCanUse(game, unit, orderId, receiver);
+		super.innerCheckCanUse(game, unit, playerIndex, orderId, receiver);
+	}
+
+	@Override
+	public int getIconVisibleMenuId() {
+		return this.visibleMenuId;
+	}
+	
+	@Override
+	public void setIconVisibleMenuId(int menu) {
+		this.visibleMenuId = menu;
 	}
 
 }

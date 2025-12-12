@@ -1,11 +1,14 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.data;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import com.etheller.warsmash.units.GameObject;
 import com.etheller.warsmash.units.ObjectData;
 import com.etheller.warsmash.util.War3ID;
+import com.etheller.warsmash.util.WarsmashConstants;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityGenericDoNothing;
@@ -19,6 +22,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.item.CAbi
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.item.CAbilityItemPermanentLifeGain;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.mine.CAbilityEntangledMine;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.mount.CAbilityMount;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.neutral.CAbilityWander;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.neutral.CAbilityWayGate;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.nightelf.eattree.CAbilityEatTree;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.nightelf.moonwell.CAbilityMoonWell;
@@ -38,9 +42,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.skills.ni
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.skills.nightelf.moonpriestess.CAbilitySummonOwlScout;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.skills.nightelf.warden.CAbilityBlink;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.skills.orc.blademaster.CAbilityWhirlWind;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.skills.orc.farseer.CAbilityChainLightning;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.skills.orc.farseer.CAbilityFeralSpirit;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.skills.orc.taurenchieftain.CAbilityWarStomp;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.skills.undead.deathknight.CAbilityDarkRitual;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.skills.undead.deathknight.CAbilityDeathCoil;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.skills.undead.deathknight.CAbilityDeathPact;
@@ -56,7 +58,6 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.def
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.definitions.impl.CAbilityTypeDefinitionCargoHoldEntangledMine;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.definitions.impl.CAbilityTypeDefinitionCarrionSwarmDummy;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.definitions.impl.CAbilityTypeDefinitionChannelTest;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.definitions.impl.CAbilityTypeDefinitionColdArrows;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.definitions.impl.CAbilityTypeDefinitionDrop;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.definitions.impl.CAbilityTypeDefinitionGoldMine;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.definitions.impl.CAbilityTypeDefinitionGoldMineOverlayed;
@@ -88,6 +89,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.def
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.jass.CAbilityTypeJassDefinition;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.parser.AbilityBuilderConfiguration;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.parser.AbilityBuilderDupe;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.parser.AbilityBuilderParser;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.parser.AbilityBuilderParserUtil;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.parser.AbilityBuilderType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.types.definitions.impl.CAbilityTypeDefinitionAbilityTemplateBuilder;
@@ -144,12 +146,12 @@ public class CAbilityData {
 		// ----Orc----
 		this.codeToAbilityTypeDefinition.put(War3ID.fromString("AOsf"),
 				new CAbilityTypeDefinitionSpellBase((handleId, alias) -> new CAbilityFeralSpirit(handleId, alias)));
-		this.codeToAbilityTypeDefinition.put(War3ID.fromString("AOcl"),
-				new CAbilityTypeDefinitionSpellBase((handleId, alias) -> new CAbilityChainLightning(handleId, alias)));
+//		this.codeToAbilityTypeDefinition.put(War3ID.fromString("AOcl"),
+//				new CAbilityTypeDefinitionSpellBase((handleId, alias) -> new CAbilityChainLightning(handleId, alias)));
 
 		// Tauren Chieftain
-		this.codeToAbilityTypeDefinition.put(War3ID.fromString("AOws"),
-				new CAbilityTypeDefinitionSpellBase((handleId, alias) -> new CAbilityWarStomp(handleId, alias)));
+//		this.codeToAbilityTypeDefinition.put(War3ID.fromString("AOws"),
+//				new CAbilityTypeDefinitionSpellBase((handleId, alias) -> new CAbilityWarStomp(handleId, alias)));
 
 		// Burrow:
 		this.codeToAbilityTypeDefinition.put(War3ID.fromString("Abun"), new CAbilityTypeDefinitionCargoHoldBurrow());
@@ -223,7 +225,7 @@ public class CAbilityData {
 		this.codeToAbilityTypeDefinition.put(War3ID.fromString("ANsw"),
 				new CAbilityTypeDefinitionSpellBase((handleId, alias) -> new CAbilitySummonHawk(handleId, alias)));
 
-		this.codeToAbilityTypeDefinition.put(War3ID.fromString("AHca"), new CAbilityTypeDefinitionColdArrows());
+//		this.codeToAbilityTypeDefinition.put(War3ID.fromString("AHca"), new CAbilityTypeDefinitionColdArrows());
 		this.codeToAbilityTypeDefinition.put(War3ID.fromString("Agld"), new CAbilityTypeDefinitionGoldMine());
 		this.codeToAbilityTypeDefinition.put(War3ID.fromString("Agl2"), new CAbilityTypeDefinitionGoldMineOverlayed());
 		this.codeToAbilityTypeDefinition.put(War3ID.fromString("Abgm"), new CAbilityTypeDefinitionBlightedGoldMine());
@@ -282,27 +284,151 @@ public class CAbilityData {
 				new CAbilityTypeDefinitionSpellBase((handleId, alias) -> new CAbilityWayGate(handleId, alias)));
 		this.codeToAbilityTypeDefinition.put(War3ID.fromString("AOww"),
 				new CAbilityTypeDefinitionSpellBase((handleId, alias) -> new CAbilityWhirlWind(handleId, alias)));
+		this.codeToAbilityTypeDefinition.put(War3ID.fromString("Awan"),
+				new CAbilityTypeDefinitionSpellBase((handleId, alias) -> new CAbilityWander(handleId, alias)));
 
 		System.err.println("========================================================================");
 		System.err.println("Starting to load ability builder");
 		System.err.println("========================================================================");
 
-		if (true) {
+		try {
+			final List<AbilityBuilderParser> inheritingAbilities = new ArrayList<>();
+			final Map<String, AbilityBuilderParser> previousAbilityParsers = new HashMap<>();
+
 			AbilityBuilderParserUtil.loadAbilityBuilderFiles(behavior -> {
-				if (behavior.getType().equals(AbilityBuilderType.TEMPLATE)) {
+				if (behavior.getType().equals(AbilityBuilderType.INHERIT)) {
+					inheritingAbilities.add(behavior);
+				}
+				else if (behavior.getType().equals(AbilityBuilderType.TEMPLATE)) {
 					for (final AbilityBuilderDupe dupe : behavior.getIds()) {
+						previousAbilityParsers.put(dupe.getId(), behavior);
 						this.codeToAbilityTypeDefinition.put(War3ID.fromString(dupe.getId()),
 								new CAbilityTypeDefinitionAbilityTemplateBuilder(behavior));
 					}
 				}
 				else {
 					for (final AbilityBuilderDupe dupe : behavior.getIds()) {
+						previousAbilityParsers.put(dupe.getId(), behavior);
 						final AbilityBuilderConfiguration config = new AbilityBuilderConfiguration(behavior, dupe);
 						this.codeToAbilityTypeDefinition.put(War3ID.fromString(config.getId()),
 								config.createDefinition());
 					}
 				}
 			});
+
+			int prevIter = 1;
+			List<AbilityBuilderParser> loopInheritingAbilities = inheritingAbilities;
+			while (loopInheritingAbilities.size() > 0) {
+				final List<AbilityBuilderParser> iter = loopInheritingAbilities;
+				loopInheritingAbilities = new ArrayList<>();
+
+				if (prevIter == 0) {
+					for (final AbilityBuilderParser parser : iter) {
+						System.err.println("Couldn't parse INHERIT ability due to no parent ability definition: "
+								+ parser.getIds().get(0).getId());
+					}
+					break;
+				}
+				prevIter = 0;
+
+				for (final AbilityBuilderParser parser : iter) {
+					if (parser.getParentId() == null) {
+						System.err.println("Couldn't parse INHERIT ability due to missing parent ID: "
+								+ parser.getIds().get(0).getId());
+						continue;
+					}
+					final AbilityBuilderParser parent = previousAbilityParsers.get(parser.getParentId());
+					if (parent != null) {
+						parser.updateFromParent(parent);
+						for (final AbilityBuilderDupe dupe : parser.getIds()) {
+							previousAbilityParsers.put(dupe.getId(), parser);
+							final AbilityBuilderConfiguration config = new AbilityBuilderConfiguration(parser, dupe);
+							this.codeToAbilityTypeDefinition.put(War3ID.fromString(config.getId()),
+									config.createDefinition());
+							prevIter++;
+						}
+					}
+					else {
+						loopInheritingAbilities.add(parser);
+					}
+				}
+			}
+
+			if ((WarsmashConstants.ABILITY_COMPATIBILITY != null)
+					&& (WarsmashConstants.ABILITY_COMPATIBILITY.size() > 0)) {
+				final List<AbilityBuilderParser> inheritingCompatAbilities = new ArrayList<>();
+				final boolean all = WarsmashConstants.ABILITY_COMPATIBILITY.contains("all");
+
+				AbilityBuilderParserUtil.loadAbilityBuilderFiles(behavior -> {
+					if (behavior.getType().equals(AbilityBuilderType.INHERIT)) {
+						inheritingCompatAbilities.add(behavior);
+					}
+					else if (behavior.getType().equals(AbilityBuilderType.TEMPLATE)) {
+						for (final AbilityBuilderDupe dupe : behavior.getIds()) {
+							if (all || WarsmashConstants.ABILITY_COMPATIBILITY.contains(dupe.getId())) {
+								previousAbilityParsers.put(dupe.getId(), behavior);
+								this.codeToAbilityTypeDefinition.put(War3ID.fromString(dupe.getId()),
+										new CAbilityTypeDefinitionAbilityTemplateBuilder(behavior));
+							}
+						}
+					}
+					else {
+						for (final AbilityBuilderDupe dupe : behavior.getIds()) {
+							if (all || WarsmashConstants.ABILITY_COMPATIBILITY.contains(dupe.getId())) {
+								previousAbilityParsers.put(dupe.getId(), behavior);
+								final AbilityBuilderConfiguration config = new AbilityBuilderConfiguration(behavior,
+										dupe);
+								this.codeToAbilityTypeDefinition.put(War3ID.fromString(config.getId()),
+										config.createDefinition());
+							}
+						}
+					}
+				}, "abilityBehaviors_compatibility");
+
+				prevIter = 1;
+				List<AbilityBuilderParser> loopInheritingCompatAbilities = inheritingCompatAbilities;
+				while (loopInheritingCompatAbilities.size() > 0) {
+					final List<AbilityBuilderParser> iter = loopInheritingCompatAbilities;
+					loopInheritingCompatAbilities = new ArrayList<>();
+
+					if (prevIter == 0) {
+						for (final AbilityBuilderParser parser : iter) {
+							System.err.println("Couldn't parse INHERIT ability due to no parent ability definition: "
+									+ parser.getIds().get(0).getId());
+						}
+						break;
+					}
+					prevIter = 0;
+
+					for (final AbilityBuilderParser parser : iter) {
+						if (parser.getParentId() == null) {
+							System.err.println("Couldn't parse INHERIT ability due to missing parent ID: "
+									+ parser.getIds().get(0).getId());
+							continue;
+						}
+						final AbilityBuilderParser parent = previousAbilityParsers.get(parser.getParentId());
+						if (parent != null) {
+							parser.updateFromParent(parent);
+							for (final AbilityBuilderDupe dupe : parser.getIds()) {
+								if (all || WarsmashConstants.ABILITY_COMPATIBILITY.contains(dupe.getId())) {
+									previousAbilityParsers.put(dupe.getId(), parser);
+									final AbilityBuilderConfiguration config = new AbilityBuilderConfiguration(parser,
+											dupe);
+									this.codeToAbilityTypeDefinition.put(War3ID.fromString(config.getId()),
+											config.createDefinition());
+									prevIter++;
+								}
+							}
+						}
+						else {
+							loopInheritingCompatAbilities.add(parser);
+						}
+					}
+				}
+			}
+		}
+		catch (final Exception e) {
+			e.printStackTrace();
 		}
 
 		System.err.println("========================================================================");
@@ -326,10 +452,10 @@ public class CAbilityData {
 			if (gameObject == null) {
 				return null;
 			}
-			final String readSLKTag = gameObject.readSLKTag("code");
+			final String codeSLKTag = gameObject.readSLKTag("code");
 			final War3ID code;
-			if (readSLKTag.length() == 4) {
-				code = War3ID.fromString(readSLKTag);
+			if ((codeSLKTag != null) && (codeSLKTag.length() == 4)) {
+				code = War3ID.fromString(codeSLKTag);
 			}
 			else {
 				code = War3ID.fromString(gameObject.getId());

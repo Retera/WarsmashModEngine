@@ -227,6 +227,16 @@ public interface RenderWidget {
 				final boolean allowRarityVariations) {
 			this.animationQueue.add(new QueuedAnimation(animationName, secondaryAnimationTags, allowRarityVariations));
 		}
+		
+		@Override
+		public boolean isAnimationQueued(final PrimaryTag animationName) {
+			for (QueuedAnimation anim : this.animationQueue) {
+				if (anim.animationName.equals(animationName)) {
+					return true;
+				}
+			}
+			return false;
+		}
 
 		public void update() {
 			if (this.instance.sequenceEnded || (this.instance.sequence == -1)) {

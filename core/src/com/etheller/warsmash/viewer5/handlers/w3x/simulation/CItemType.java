@@ -6,6 +6,7 @@ import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.item.CItemTypeJass;
 
 public class CItemType {
+	private final War3ID typeId;
 	private final List<War3ID> abilityList;
 	private final War3ID cooldownGroup;
 	private final boolean ignoreCooldown;
@@ -30,15 +31,17 @@ public class CItemType {
 	private final boolean validTargetForTransformation;
 	private final boolean includeAsRandomChoice;
 	private final CItemTypeJass itemClass;
+	private final List<CUnitTypeRequirement> requirements;
 
-	public CItemType(final List<War3ID> abilityList, final War3ID cooldownGroup, final boolean ignoreCooldown,
+	public CItemType(final War3ID typeId, final List<War3ID> abilityList, final War3ID cooldownGroup, final boolean ignoreCooldown,
 			final int numberOfCharges, final boolean activelyUsed, final boolean perishable,
 			final boolean useAutomaticallyWhenAcquired, final int goldCost, final int lumberCost, final int stockMax,
 			final int stockReplenishInterval, final int stockStartDelay, final int maxLife, final String armorType,
 			final int level, final int levelUnclassified, final int priority, final boolean sellable,
 			final boolean pawnable, final boolean droppedWhenCarrierDies, final boolean canBeDropped,
 			final boolean validTargetForTransformation, final boolean includeAsRandomChoice,
-			final CItemTypeJass itemClass) {
+			final CItemTypeJass itemClass, final List<CUnitTypeRequirement> requirements) {
+		this.typeId = typeId;
 		this.abilityList = abilityList;
 		this.cooldownGroup = cooldownGroup;
 		this.ignoreCooldown = ignoreCooldown;
@@ -63,6 +66,11 @@ public class CItemType {
 		this.validTargetForTransformation = validTargetForTransformation;
 		this.includeAsRandomChoice = includeAsRandomChoice;
 		this.itemClass = itemClass;
+		this.requirements = requirements;
+	}
+
+	public War3ID getTypeId() {
+		return this.typeId;
 	}
 
 	public List<War3ID> getAbilityList() {
@@ -159,5 +167,9 @@ public class CItemType {
 
 	public CItemTypeJass getItemClass() {
 		return this.itemClass;
+	}
+
+	public List<CUnitTypeRequirement> getRequirements() {
+		return this.requirements;
 	}
 }

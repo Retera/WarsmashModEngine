@@ -39,10 +39,10 @@ public class CAbilityEatTree extends CAbilityTargetSpellBase {
 
 	@Override
 	public void populateData(final GameObject worldEditorAbility, final int level) {
-		ripDelay = worldEditorAbility.getFieldAsFloat(AbilityFields.DATA_A + level, 0);
-		eatDelay = worldEditorAbility.getFieldAsFloat(AbilityFields.DATA_B + level, 0);
-		hitPointsGained = worldEditorAbility.getFieldAsFloat(AbilityFields.DATA_C + level, 0);
-		buffId = AbstractCAbilityTypeDefinition.getBuffId(worldEditorAbility, level);
+		this.ripDelay = worldEditorAbility.getFieldAsFloat(AbilityFields.DATA_A + level, 0);
+		this.eatDelay = worldEditorAbility.getFieldAsFloat(AbilityFields.DATA_B + level, 0);
+		this.hitPointsGained = worldEditorAbility.getFieldAsFloat(AbilityFields.DATA_C + level, 0);
+		this.buffId = AbstractCAbilityTypeDefinition.getBuffId(worldEditorAbility, level);
 		setCastingSecondaryTags(SequenceUtils.SPELL_EATTREE);
 	}
 
@@ -59,13 +59,13 @@ public class CAbilityEatTree extends CAbilityTargetSpellBase {
 	}
 
 	@Override
-	public void checkCanTarget(final CSimulation game, final CUnit unit, final int orderId, final CWidget target,
-			final AbilityTargetCheckReceiver<CWidget> receiver) {
+	public void checkCanTarget(final CSimulation game, final CUnit unit, final int playerIndex, final int orderId,
+			final boolean autoOrder, final CWidget target, final AbilityTargetCheckReceiver<CWidget> receiver) {
 		if (orderId == OrderIds.smart) {
-			super.checkCanTarget(game, unit, getBaseOrderId(), target, receiver);
+			super.checkCanTarget(game, unit, playerIndex, getBaseOrderId(), autoOrder, target, receiver);
 		}
 		else {
-			super.checkCanTarget(game, unit, orderId, target, receiver);
+			super.checkCanTarget(game, unit, playerIndex, orderId, autoOrder, target, receiver);
 		}
 	}
 
@@ -83,27 +83,27 @@ public class CAbilityEatTree extends CAbilityTargetSpellBase {
 	@Override
 	public boolean doEffect(final CSimulation simulation, final CUnit unit, final AbilityTarget target) {
 		final int gameTurnTick = simulation.getGameTurnTick();
-		ripEndTick = gameTurnTick + (int) (ripDelay / WarsmashConstants.SIMULATION_STEP_TIME);
-		eatEndTick = ripEndTick + (int) ((eatDelay) / WarsmashConstants.SIMULATION_STEP_TIME);
-		ripComplete = false;
+		this.ripEndTick = gameTurnTick + (int) (this.ripDelay / WarsmashConstants.SIMULATION_STEP_TIME);
+		this.eatEndTick = this.ripEndTick + (int) ((this.eatDelay) / WarsmashConstants.SIMULATION_STEP_TIME);
+		this.ripComplete = false;
 		return true;
 	}
 
 	@Override
 	public boolean doChannelTick(final CSimulation simulation, final CUnit unit, final AbilityTarget target) {
 		final int gameTurnTick = simulation.getGameTurnTick();
-		if (gameTurnTick >= ripEndTick) {
-			if (!ripComplete) {
+		if (gameTurnTick >= this.ripEndTick) {
+			if (!this.ripComplete) {
 				final CDestructable targetDest = target.visit(AbilityTargetVisitor.DESTRUCTABLE);
 				if (targetDest != null) {
-					unit.add(simulation, new CBuffEatTree(simulation.getHandleIdAllocator().createId(), buffId, 1.0f,
-							getDuration(), hitPointsGained));
+					unit.add(simulation, new CBuffEatTree(simulation.getHandleIdAllocator().createId(), this.buffId,
+							1.0f, getDuration(), this.hitPointsGained));
 					targetDest.setLife(simulation, 0);
 					simulation.createTemporarySpellEffectOnUnit(unit, getAlias(), CEffectType.SPECIAL);
 				}
-				ripComplete = true;
+				this.ripComplete = true;
 			}
-			if (gameTurnTick >= eatEndTick) {
+			if (gameTurnTick >= this.eatEndTick) {
 				return false;
 			}
 		}

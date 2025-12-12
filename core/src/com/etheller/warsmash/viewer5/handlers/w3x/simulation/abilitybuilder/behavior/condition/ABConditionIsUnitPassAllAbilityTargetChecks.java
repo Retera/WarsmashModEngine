@@ -11,25 +11,33 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABLocalStoreKeys;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.BooleanAbilityTargetCheckReceiver;
 
-public class ABConditionIsUnitPassAllAbilityTargetChecks implements ABCondition {
+public class ABConditionIsUnitPassAllAbilityTargetChecks extends ABCondition {
 
 	private ABUnitCallback caster;
 	private ABUnitCallback target;
 
 	@Override
-	public boolean evaluate(CSimulation game, CUnit casterUnit, Map<String, Object> localStore, final int castId) {
+	public Boolean callback(CSimulation game, CUnit casterUnit, Map<String, Object> localStore, final int castId) {
 		CUnit theCaster = casterUnit;
-
+		CUnit theTarget = target.callback(game, casterUnit, localStore, castId);
+		if (theTarget == null) {
+			return false;
+		}
 		if (caster != null) {
 			theCaster = caster.callback(game, casterUnit, localStore, castId);
 		}
 
-		AbilityBuilderActiveAbility abil = (AbilityBuilderActiveAbility) localStore.get(ABLocalStoreKeys.ABILITY);
+		final AbilityBuilderActiveAbility abil = (AbilityBuilderActiveAbility) localStore.get(ABLocalStoreKeys.ABILITY);
 		final BooleanAbilityTargetCheckReceiver<CWidget> booleanTargetReceiver = BooleanAbilityTargetCheckReceiver
 				.<CWidget>getInstance().reset();
 
-		abil.checkCanTarget(game, theCaster, abil.getBaseOrderId(),
-				target.callback(game, casterUnit, localStore, castId), booleanTargetReceiver);
+		// NOTE: below "theCaster.getPlayerIndex()" added in refactor, assumes all AB
+		// actions are triggered by owning player! for neutral building sales/control
+		// functions, we may with to disambiguate between the owner of the unit and the
+		// player responsible for the command
+		abil.checkCanTarget(game, theCaster, theCaster.getPlayerIndex(), abil.getBaseOrderId(),
+				((Boolean) localStore.get(ABLocalStoreKeys.combineKey(ABLocalStoreKeys.ISAUTOCAST, castId))), theTarget,
+				booleanTargetReceiver);
 
 		if (booleanTargetReceiver.isTargetable()) {
 			return true;

@@ -12,6 +12,7 @@ import com.etheller.interpreter.ast.scope.GlobalScope;
 import com.etheller.interpreter.ast.scope.trigger.RemovableTriggerEvent;
 import com.etheller.interpreter.ast.scope.trigger.Trigger;
 import com.etheller.interpreter.ast.scope.trigger.TriggerBooleanExpression;
+import com.etheller.warsmash.parsers.jass.JassAIEnvironment;
 import com.etheller.warsmash.parsers.jass.scope.CommonTriggerExecutionScope;
 import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CDestructable;
@@ -27,6 +28,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityPointTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.config.CBasePlayer;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.data.CUnitData;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.COrderNoTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.COrderTargetPoint;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.COrderTargetWidget;
@@ -75,6 +77,7 @@ public class CPlayer extends CBasePlayer {
 	private float handicapXP = 1.0f;
 	private float handicap = 0.9f;
 	private final CPlayerFogOfWarInterface fogOfWar;
+	private JassAIEnvironment aiScript;
 
 	public CPlayer(final CRace race, final float[] startLocation, final CBasePlayer configPlayer,
 			final CPlayerFogOfWarInterface fogOfWar) {
@@ -184,6 +187,19 @@ public class CPlayer extends CBasePlayer {
 	}
 
 	public void addTechtreeUnlocked(final CSimulation simulation, final War3ID rawcode) {
+		addSingleTechtreeUnlocked(rawcode);
+		final CUnitData unitData = simulation.getUnitData();
+		final CUnitType unitType = unitData.getUnitType(rawcode);
+		if (unitType != null) {
+			final List<War3ID> dependencyOr = unitType.getDependencyOr();
+			for (final War3ID otherDependency : dependencyOr) {
+				addSingleTechtreeUnlocked(otherDependency);
+			}
+		}
+		fireRequirementUpdateForAbilities(simulation, false);
+	}
+
+	private void addSingleTechtreeUnlocked(final War3ID rawcode) {
 		final Integer techtreeUnlocked = this.rawcodeToTechtreeUnlocked.get(rawcode);
 		if (techtreeUnlocked == null) {
 			this.rawcodeToTechtreeUnlocked.put(rawcode, 1);
@@ -191,7 +207,6 @@ public class CPlayer extends CBasePlayer {
 		else {
 			this.rawcodeToTechtreeUnlocked.put(rawcode, techtreeUnlocked + 1);
 		}
-		fireRequirementUpdateForAbilities(simulation, false);
 	}
 
 	public void setTechtreeUnlocked(final CSimulation simulation, final War3ID rawcode, final int setToLevel) {
@@ -201,6 +216,19 @@ public class CPlayer extends CBasePlayer {
 	}
 
 	public void removeTechtreeUnlocked(final CSimulation simulation, final War3ID rawcode) {
+		removeSingleTechtreeUnlocked(rawcode);
+		final CUnitData unitData = simulation.getUnitData();
+		final CUnitType unitType = unitData.getUnitType(rawcode);
+		if (unitType != null) {
+			final List<War3ID> dependencyOr = unitType.getDependencyOr();
+			for (final War3ID otherDependency : dependencyOr) {
+				removeSingleTechtreeUnlocked(otherDependency);
+			}
+		}
+		fireRequirementUpdateForAbilities(simulation, true);
+	}
+
+	private void removeSingleTechtreeUnlocked(final War3ID rawcode) {
 		final Integer techtreeUnlocked = this.rawcodeToTechtreeUnlocked.get(rawcode);
 		if (techtreeUnlocked == null) {
 			this.rawcodeToTechtreeUnlocked.put(rawcode, -1);
@@ -208,10 +236,21 @@ public class CPlayer extends CBasePlayer {
 		else {
 			this.rawcodeToTechtreeUnlocked.put(rawcode, techtreeUnlocked - 1);
 		}
-		fireRequirementUpdateForAbilities(simulation, true);
 	}
 
-	public void addTechtreeInProgress(final War3ID rawcode) {
+	public void addTechtreeInProgress(final CSimulation simulation, final War3ID rawcode) {
+		addSingleTechtreeInProgress(rawcode);
+		final CUnitData unitData = simulation.getUnitData();
+		final CUnitType unitType = unitData.getUnitType(rawcode);
+		if (unitType != null) {
+			final List<War3ID> dependencyOr = unitType.getDependencyOr();
+			for (final War3ID otherDependency : dependencyOr) {
+				addSingleTechtreeInProgress(otherDependency);
+			}
+		}
+	}
+
+	private void addSingleTechtreeInProgress(final War3ID rawcode) {
 		final Integer techtreeUnlocked = this.rawcodeToTechtreeInProgress.get(rawcode);
 		if (techtreeUnlocked == null) {
 			this.rawcodeToTechtreeInProgress.put(rawcode, 1);
@@ -221,7 +260,19 @@ public class CPlayer extends CBasePlayer {
 		}
 	}
 
-	public void removeTechtreeInProgress(final War3ID rawcode) {
+	public void removeTechtreeInProgress(final CSimulation simulation, final War3ID rawcode) {
+		removeSingleTechtreeInProgress(rawcode);
+		final CUnitData unitData = simulation.getUnitData();
+		final CUnitType unitType = unitData.getUnitType(rawcode);
+		if (unitType != null) {
+			final List<War3ID> dependencyOr = unitType.getDependencyOr();
+			for (final War3ID otherDependency : dependencyOr) {
+				removeSingleTechtreeInProgress(otherDependency);
+			}
+		}
+	}
+
+	private void removeSingleTechtreeInProgress(final War3ID rawcode) {
 		final Integer techtreeUnlocked = this.rawcodeToTechtreeInProgress.get(rawcode);
 		if (techtreeUnlocked == null) {
 			this.rawcodeToTechtreeInProgress.put(rawcode, -1);
@@ -367,6 +418,15 @@ public class CPlayer extends CBasePlayer {
 			for (final CPlayerEvent event : eventList) {
 				event.fire(dyingUnit, CommonTriggerExecutionScope.unitDeathScope(
 						JassGameEventsWar3.EVENT_PLAYER_UNIT_DEATH, event.getTrigger(), dyingUnit, killingUnit));
+			}
+		}
+	}
+
+	public void fireSimpleUnitEvents(final CUnit unit, final JassGameEventsWar3 type, final CSimulation game) {
+		final List<CPlayerEvent> eventList = getEventList(type);
+		if (eventList != null) {
+			for (final CPlayerEvent event : eventList) {
+				event.fire(unit, CommonTriggerExecutionScope.simpleUnitScope(type, event.getTrigger(), unit, this));
 			}
 		}
 	}
@@ -794,5 +854,13 @@ public class CPlayer extends CBasePlayer {
 
 	public void fireRequirementUpdateForAbilities(final CSimulation simulation, final boolean disable) {
 		simulation.fireRequirementUpdateForAbilities(this, disable);
+	}
+
+	public JassAIEnvironment getAiScript() {
+		return this.aiScript;
+	}
+
+	public void setAiScript(final JassAIEnvironment aiScript) {
+		this.aiScript = aiScript;
 	}
 }

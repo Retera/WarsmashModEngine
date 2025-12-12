@@ -17,6 +17,7 @@ public final class CommandCardActivationReceiverPreviewCallback implements Abili
 	private boolean disabled;
 	private boolean omitIconEntirely;
 	private boolean notEnoughMana;
+	private boolean outOfStock;
 	private final StringBuilder requirementsTextBuilder = new StringBuilder();
 	private float cooldownRemaining;
 	private float cooldownMax;
@@ -32,6 +33,7 @@ public final class CommandCardActivationReceiverPreviewCallback implements Abili
 	public CommandCardActivationReceiverPreviewCallback reset() {
 		this.disabled = false;
 		this.omitIconEntirely = false;
+		this.outOfStock = false;
 		this.cooldownRemaining = 0;
 		this.requirementsTextBuilder.setLength(0);
 		return this;
@@ -137,7 +139,7 @@ public final class CommandCardActivationReceiverPreviewCallback implements Abili
 
 	@Override
 	public void noChargesRemaining() {
-
+		this.outOfStock = true;
 	}
 
 	public boolean isShowingRequirements() {
@@ -158,6 +160,10 @@ public final class CommandCardActivationReceiverPreviewCallback implements Abili
 
 	public boolean isNotEnoughMana() {
 		return this.notEnoughMana;
+	}
+
+	public boolean isOutOfStock() {
+		return this.outOfStock;
 	}
 
 	public float getCooldownMax() {

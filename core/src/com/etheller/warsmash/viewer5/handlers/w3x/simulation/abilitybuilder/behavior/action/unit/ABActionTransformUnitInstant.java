@@ -25,10 +25,14 @@ public class ABActionTransformUnitInstant implements ABAction {
 	private ABIDCallback baseUnitId;
 	private ABIDCallback alternateUnitId;
 
+	private ABBooleanCallback keepRatios;
+
 	private ABBooleanCallback permanent; // remove ability after transform
 	private ABBooleanCallback requiresPayment;
 
 	private ABFloatCallback transformTime; // the time the unit is locked for the transformation
+
+	private ABBooleanCallback onlyTransformToAlternate;
 
 	private ABFloatCallback duration; // the time before the unit is forced to change back (doesn't charge for it)
 	private ABIDCallback buffId;
@@ -73,7 +77,12 @@ public class ABActionTransformUnitInstant implements ABAction {
 
 		CUnitType targetType = null;
 
-		if (u1.getTypeId().equals(altId)) {
+		boolean onlyToAlt = false;
+		if (onlyTransformToAlternate != null) {
+			onlyToAlt = onlyTransformToAlternate.callback(game, caster, localStore, castId);
+		}
+
+		if (!onlyToAlt && u1.getTypeId().equals(altId)) {
 			// Transforming back
 			targetType = baseType;
 			if (perm || targetType.equals(u1.getUnitType())) {
@@ -113,13 +122,17 @@ public class ABActionTransformUnitInstant implements ABAction {
 			}
 		}
 		OnTransformationActions actions = new OnTransformationActions(goldCost, lumberCost, foodCost,
-				onTransformActions, onUntransformActions);
-		OnTransformationActions unActions = new OnTransformationActions(-goldCost, -lumberCost, null,
-				null, onUntransformActions);
+				onTransformActions, onUntransformActions, castId);
+		OnTransformationActions unActions = new OnTransformationActions(-goldCost, -lumberCost, null, null,
+				onUntransformActions, castId);
 
+		boolean isKeepRatios = true;
 		float dur = 0;
 		float transTime = 0;
 		War3ID theBuffId = null;
+		if (keepRatios != null) {
+			isKeepRatios = keepRatios.callback(game, caster, localStore, castId);
+		}
 		if (permanent != null) {
 			perm = permanent.callback(game, caster, localStore, castId);
 		}
@@ -136,15 +149,14 @@ public class ABActionTransformUnitInstant implements ABAction {
 		localStore.put(ABLocalStoreKeys.TRANSFORMINGTOALT + castId, addAlternateTagAfter);
 		if (transTime > 0) {
 			TransformationHandler.playMorphAnimation(u1, addAlternateTagAfter);
-			new DelayInstantTransformationTimer(game, localStore, u1, actions, addAlternateTagAfter, transTime,
-					baseType, targetType, abil, theBuffId, transTime, dur).start(game);
+			new DelayInstantTransformationTimer(game, caster, localStore, u1, actions, addAlternateTagAfter, transTime,
+					baseType, targetType, isKeepRatios, abil, theBuffId, transTime, dur).start(game);
 		} else {
-			TransformationHandler.instantTransformation(game, localStore, u1, targetType, actions, abil,
+			TransformationHandler.instantTransformation(game, localStore, u1, targetType, isKeepRatios, actions, abil,
 					addAlternateTagAfter, perm, true);
 			if (dur > 0) {
-				TransformationHandler.createInstantTransformBackBuff(game, localStore, u1, baseType,
-						unActions, abil, theBuffId, addAlternateTagAfter,
-						transTime, dur, perm);
+				TransformationHandler.createInstantTransformBackBuff(game, caster, localStore, u1, baseType, isKeepRatios,
+						unActions, abil, theBuffId, addAlternateTagAfter, transTime, dur, perm);
 			}
 		}
 

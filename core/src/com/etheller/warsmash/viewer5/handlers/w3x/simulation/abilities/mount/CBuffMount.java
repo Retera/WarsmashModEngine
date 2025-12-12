@@ -46,14 +46,14 @@ public class CBuffMount extends AbstractCBuff {
 	public void onAdd(final CSimulation game, final CUnit unit) {
 		this.fx = game.createMountBuffEffectOnUnit(unit, getAlias(), CEffectType.TARGET, 0);
 
-		unit.addNonStackingStatBuff(this.movespeedBuff);
+		unit.addNonStackingStatBuff(game, this.movespeedBuff);
 	}
 
 	@Override
 	public void onRemove(final CSimulation game, final CUnit unit) {
 		this.fx.remove();
 
-		unit.removeNonStackingStatBuff(this.movespeedBuff);
+		unit.removeNonStackingStatBuff(game, this.movespeedBuff);
 	}
 
 	@Override
@@ -66,45 +66,48 @@ public class CBuffMount extends AbstractCBuff {
 	}
 
 	@Override
-	public void onCancelFromQueue(final CSimulation game, final CUnit unit, final int orderId) {
+	public void onCancelFromQueue(final CSimulation game, final CUnit unit, final int playerIndex, final int orderId) {
 	}
 
 	@Override
-	public CBehavior begin(final CSimulation game, final CUnit caster, final int orderId, final CWidget target) {
+	public CBehavior begin(final CSimulation game, final CUnit caster, final int playerIndex, final int orderId,
+			final boolean autoOrder, final CWidget target) {
 		return null;
 	}
 
 	@Override
-	public CBehavior begin(final CSimulation game, final CUnit caster, final int orderId,
-			final AbilityPointTarget point) {
+	public CBehavior begin(final CSimulation game, final CUnit caster, final int playerIndex, final int orderId,
+			final boolean autoOrder, final AbilityPointTarget point) {
 		return null;
 	}
 
 	@Override
-	public CBehavior beginNoTarget(final CSimulation game, final CUnit caster, final int orderId) {
+	public CBehavior beginNoTarget(final CSimulation game, final CUnit caster, final int playerIndex, final int orderId,
+			final boolean autoOrder) {
 		return null;
 	}
 
 	@Override
-	public void checkCanTarget(final CSimulation game, final CUnit unit, final int orderId, final CWidget target,
-			final AbilityTargetCheckReceiver<CWidget> receiver) {
+	public void checkCanTarget(final CSimulation game, final CUnit unit, final int playerIndex, final int orderId,
+			final boolean autoOrder, final CWidget target, final AbilityTargetCheckReceiver<CWidget> receiver) {
 		receiver.notAnActiveAbility();
 	}
 
 	@Override
-	public void checkCanTarget(final CSimulation game, final CUnit unit, final int orderId,
-			final AbilityPointTarget target, final AbilityTargetCheckReceiver<AbilityPointTarget> receiver) {
+	public void checkCanTarget(final CSimulation game, final CUnit unit, final int playerIndex, final int orderId,
+			final boolean autoOrder, final AbilityPointTarget target,
+			final AbilityTargetCheckReceiver<AbilityPointTarget> receiver) {
 		receiver.notAnActiveAbility();
 	}
 
 	@Override
-	public void checkCanTargetNoTarget(final CSimulation game, final CUnit unit, final int orderId,
-			final AbilityTargetCheckReceiver<Void> receiver) {
+	public void checkCanTargetNoTarget(final CSimulation game, final CUnit unit, final int playerIndex,
+			final int orderId, final boolean autoOrder, final AbilityTargetCheckReceiver<Void> receiver) {
 		receiver.notAnActiveAbility();
 	}
 
 	@Override
-	protected void innerCheckCanUse(final CSimulation game, final CUnit unit, final int orderId,
+	protected void innerCheckCanUse(final CSimulation game, final CUnit unit, final int playerIndex, final int orderId,
 			final AbilityActivationReceiver receiver) {
 		receiver.notAnActiveAbility();
 	}

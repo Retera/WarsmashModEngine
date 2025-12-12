@@ -23,6 +23,7 @@ import com.etheller.interpreter.ast.scope.trigger.Trigger;
 import com.etheller.interpreter.ast.scope.trigger.TriggerBooleanExpression;
 import com.etheller.interpreter.ast.scope.variableevent.CLimitOp;
 import com.etheller.interpreter.ast.scope.variableevent.VariableEvent;
+import com.etheller.warsmash.parsers.jass.JassAIEnvironment;
 import com.etheller.warsmash.parsers.jass.scope.CommonTriggerExecutionScope;
 import com.etheller.warsmash.units.DataTable;
 import com.etheller.warsmash.units.ObjectData;
@@ -42,6 +43,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.thirdpers
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.CUnitAttackInstant;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.CUnitAttackListener;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.CUnitAttackMissile;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.replacement.CUnitAttackSettings;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.projectile.CAbilityCollisionProjectileListener;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.projectile.CAbilityProjectile;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.projectile.CAbilityProjectileListener;
@@ -49,7 +51,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.projectile.C
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.projectile.CCollisionProjectile;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.projectile.CEffect;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.projectile.CJassProjectile;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.projectile.CPsuedoProjectile;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.projectile.CPseudoProjectile;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.config.CBasePlayer;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.config.CPlayerAPI;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.config.War3MapConfig;
@@ -154,6 +156,7 @@ public class CSimulation implements CPlayerAPI, CFogMaskSettings {
 		this.upgradeData = new CUpgradeData(this.gameplayConstants, parsedUpgradeData, standardUpgradeEffectMeta);
 		this.unitData = new CUnitData(this.gameplayConstants, parsedUnitData, this.abilityData, this.upgradeData,
 				this.simulationRenderController);
+		this.unitData.getAllUnitTypesLightweight(); // Quick hack to avoid lag on first cast of Mech Critter
 		this.destructableData = new CDestructableData(parsedDestructableData, simulationRenderController);
 		this.itemData = new CItemData(parsedItemData);
 		this.units = new ArrayList<>();
@@ -240,6 +243,10 @@ public class CSimulation implements CPlayerAPI, CFogMaskSettings {
 		System.out.println("CSimulation created players");
 	}
 
+	public char getTileset() {
+		return this.simulationRenderController.getTileset();
+	}
+
 	public CUnitData getUnitData() {
 		return this.unitData;
 	}
@@ -297,9 +304,10 @@ public class CSimulation implements CPlayerAPI, CFogMaskSettings {
 	}
 
 	public CUnit internalCreateUnit(final War3ID typeId, final int playerIndex, final float x, final float y,
-			final float facing, final BufferedImage buildingPathingPixelMap) {
+			final float facing, final BufferedImage buildingPathingPixelMap, final int editorConfigHitPointPercent,
+			final int editorConfigManaAmount) {
 		final CUnit unit = this.unitData.create(this, playerIndex, typeId, x, y, facing, buildingPathingPixelMap,
-				this.handleIdAllocator);
+				this.handleIdAllocator, editorConfigHitPointPercent, editorConfigManaAmount);
 		this.newUnits.add(unit);
 		this.handleIdToUnit.put(unit.getHandleId(), unit);
 		return unit;
@@ -328,9 +336,19 @@ public class CSimulation implements CPlayerAPI, CFogMaskSettings {
 		return this.simulationRenderController.createItem(this, alias, unitX, unitY);
 	}
 
+	public void updateItemModel(final CItem item) {
+		this.simulationRenderController.updateItemModel(item);
+	}
+
 	public CUnit createUnit(final War3ID typeId, final int playerIndex, final float x, final float y,
 			final float facing) {
+		return this.createUnit(typeId, playerIndex, x, y, facing, false);
+	}
+
+	public CUnit createUnit(final War3ID typeId, final int playerIndex, final float x, final float y,
+			final float facing, final boolean constructing) {
 		final CUnit createdUnit = this.simulationRenderController.createUnit(this, typeId, playerIndex, x, y, facing);
+		createdUnit.setConstructing(constructing);
 		if (createdUnit != null) {
 			setupCreatedUnit(createdUnit);
 			if (createdUnit.getCollisionRectangle() == null) {
@@ -350,12 +368,8 @@ public class CSimulation implements CPlayerAPI, CFogMaskSettings {
 		if (newUnit != null) {
 			final CPlayer player = getPlayer(playerIndex);
 			final CUnitType newUnitType = newUnit.getUnitType();
-			final int foodUsed = newUnitType.getFoodUsed();
-			newUnit.setFoodUsed(foodUsed);
-			player.setFoodUsed(player.getFoodUsed() + foodUsed);
-			if (newUnitType.getFoodMade() != 0) {
-				player.setFoodCap(player.getFoodCap() + newUnitType.getFoodMade());
-			}
+			player.setUnitFoodUsed(newUnit, newUnitType.getFoodUsed());
+			player.setUnitFoodMade(newUnit, newUnitType.getFoodMade());
 			player.addTechtreeUnlocked(this, typeId);
 			// nudge unit
 			newUnit.setPointAndCheckUnstuck(x, y, this);
@@ -396,15 +410,15 @@ public class CSimulation implements CPlayerAPI, CFogMaskSettings {
 
 	public CAttackProjectile createProjectile(final CUnit source, final float launchX, final float launchY,
 			final float launchFacing, final CUnitAttackMissile attack, final AbilityTarget target, final float damage,
-			final int bounceIndex, final CUnitAttackListener attackListener) {
+			final int bounceIndex, final CUnitAttackListener attackListener, final CUnitAttackSettings settings) {
 		final CAttackProjectile projectile = this.simulationRenderController.createAttackProjectile(this, launchX,
-				launchY, launchFacing, source, attack, target, damage, bounceIndex, attackListener);
+				launchY, launchFacing, source, attack, target, damage, bounceIndex, attackListener, settings);
 		this.newProjectiles.add(projectile);
 		return projectile;
 	}
 
 	public CAbilityProjectile createProjectile(final CUnit source, final War3ID spellAlias, final float launchX,
-			final float launchY, final float launchFacing, final float speed, final boolean homing,
+			final float launchY, final float launchFacing, final Float speed, final Boolean homing,
 			final AbilityTarget target, final CAbilityProjectileListener projectileListener) {
 		final CAbilityProjectile projectile = this.simulationRenderController.createProjectile(this, launchX, launchY,
 				launchFacing, speed, homing, source, spellAlias, target, projectileListener);
@@ -413,8 +427,18 @@ public class CSimulation implements CPlayerAPI, CFogMaskSettings {
 		return projectile;
 	}
 
+	public CAbilityProjectile createProjectile(final CUnit source, final CUnitAttackSettings settings,
+			final float launchX, final float launchY, final float launchFacing, final AbilityTarget target,
+			final CAbilityProjectileListener projectileListener) {
+		final CAbilityProjectile projectile = this.simulationRenderController.createProjectile(this, launchX, launchY,
+				launchFacing, source, settings, target, projectileListener);
+		this.newProjectiles.add(projectile);
+		projectileListener.onLaunch(this, projectile, target);
+		return projectile;
+	}
+
 	public CJassProjectile createProjectile(final CUnit source, final War3ID spellAlias, final float launchX,
-			final float launchY, final float launchFacing, final float speed, final boolean homing,
+			final float launchY, final float launchFacing, final Float speed, final Boolean homing,
 			final AbilityTarget target) {
 		final CJassProjectile projectile = this.simulationRenderController.createJassProjectile(this, launchX, launchY,
 				launchFacing, speed, homing, source, spellAlias, target);
@@ -423,7 +447,7 @@ public class CSimulation implements CPlayerAPI, CFogMaskSettings {
 	}
 
 	public CCollisionProjectile createCollisionProjectile(final CUnit source, final War3ID spellAlias,
-			final float launchX, final float launchY, final float launchFacing, final float speed, final boolean homing,
+			final float launchX, final float launchY, final float launchFacing, final Float speed, final Boolean homing,
 			final AbilityTarget target, final int maxHits, final int hitsPerTarget, final float startingRadius,
 			final float finalRadius, final float collisionInterval,
 			final CAbilityCollisionProjectileListener projectileListener, final boolean provideCounts) {
@@ -435,13 +459,13 @@ public class CSimulation implements CPlayerAPI, CFogMaskSettings {
 		return projectile;
 	}
 
-	public CPsuedoProjectile createPseudoProjectile(final CUnit source, final War3ID spellAlias,
+	public CPseudoProjectile createPseudoProjectile(final CUnit source, final War3ID spellAlias,
 			final CEffectType effectType, final int effectArtIndex, final float launchX, final float launchY,
 			final float launchFacing, final float speed, final float projectileStepInterval,
 			final int projectileArtSkip, final boolean homing, final AbilityTarget target, final int maxHits,
 			final int hitsPerTarget, final float startingRadius, final float finalRadius,
 			final CAbilityCollisionProjectileListener projectileListener, final boolean provideCounts) {
-		final CPsuedoProjectile projectile = this.simulationRenderController.createPseudoProjectile(this, launchX,
+		final CPseudoProjectile projectile = this.simulationRenderController.createPseudoProjectile(this, launchX,
 				launchY, launchFacing, speed, projectileStepInterval, projectileArtSkip, homing, source, spellAlias,
 				effectType, effectArtIndex, target, maxHits, hitsPerTarget, startingRadius, finalRadius,
 				projectileListener, provideCounts);
@@ -474,6 +498,10 @@ public class CSimulation implements CPlayerAPI, CFogMaskSettings {
 			final int lightningIndex, final CUnit target, final Float duration) {
 		return this.simulationRenderController.createAbilityLightning(this, lightningId, source, target, lightningIndex,
 				duration);
+	}
+
+	public SimulationRenderComponent createStaticUberSplat(final float x, final float y, final War3ID id) {
+		return this.simulationRenderController.createStaticUberSplat(x, y, id);
 	}
 
 	public void createInstantAttackEffect(final CUnit source, final CUnitAttackInstant attack, final CWidget target) {
@@ -581,6 +609,12 @@ public class CSimulation implements CPlayerAPI, CFogMaskSettings {
 		this.removedOnTickTriggers.clear();
 
 		this.globalScope.runThreads();
+		for (final CPlayer player : this.players) {
+			final JassAIEnvironment aiScript = player.getAiScript();
+			if (aiScript != null) {
+				aiScript.update();
+			}
+		}
 
 		this.runningPostUpdateCallbacks.clear();
 		this.runningPostUpdateCallbacks.addAll(this.postUpdateCallbacks);
@@ -869,6 +903,11 @@ public class CSimulation implements CPlayerAPI, CFogMaskSettings {
 		this.simulationRenderController.stopAbilitySoundEffect(caster, alias);
 	}
 
+	public SimulationRenderComponent locationSoundEffectEvent(final float x, final float y, final War3ID alias,
+			final boolean looping) {
+		return this.simulationRenderController.spawnAbilitySoundEffect(x, y, alias, looping);
+	}
+
 	public void unitPreferredSelectionReplacement(final CUnit unit, final CUnit newUnit) {
 		this.simulationRenderController.unitPreferredSelectionReplacement(unit, newUnit);
 	}
@@ -1111,8 +1150,8 @@ public class CSimulation implements CPlayerAPI, CFogMaskSettings {
 		this.simulationRenderController.setBlight(x, y, radius, blighted);
 	}
 
-	public void unitUpdatedType(final CUnit unit, final War3ID typeId) {
-		this.simulationRenderController.unitUpdatedType(unit, typeId);
+	public void unitUpdatedType(final CUnit unit, final War3ID typeId, final boolean updatePortrait) {
+		this.simulationRenderController.unitUpdatedType(unit, typeId, updatePortrait);
 	}
 
 	private void setupCreatedUnit(final CUnit unit) {
@@ -1126,6 +1165,10 @@ public class CSimulation implements CPlayerAPI, CFogMaskSettings {
 		if (buildingPathingPixelMap != null) {
 			unit.regeneratePathingInstance(this, buildingPathingPixelMap);
 		}
+	}
+
+	public void changeUnitScale(final CUnit unit, final float scale, final boolean multiplier) {
+		this.simulationRenderController.changeUnitScale(unit, scale, multiplier);
 	}
 
 	public void changeUnitColor(final CUnit unit, final int playerIndex) {
@@ -1154,6 +1197,30 @@ public class CSimulation implements CPlayerAPI, CFogMaskSettings {
 
 	public GlobalScope getGlobalScope() {
 		return this.globalScope;
+	}
+
+	public int[] getTerrainModBufferSize(final float x, final float y, final float width, final float height) {
+		return this.simulationRenderController.getTerrainModBufferSize(x, y, width, height);
+	}
+
+	public int[] getTerrainModBufferSize(final float centerX, final float centerY, final float radius) {
+		return this.simulationRenderController.getTerrainModBufferSize(centerX, centerY, radius);
+	}
+
+	public void adjustTerrain(final int[] rect, final float[] modBuffer) {
+		this.simulationRenderController.adjustTerrain(rect, modBuffer);
+	}
+
+	public void adjustTerrain(final float x, final float y, final float i) {
+		this.simulationRenderController.adjustTerrain(x, y, i);
+	}
+
+	public float getTerrainSpaceX(final float x) {
+		return this.simulationRenderController.getTerrainSpaceX(x);
+	}
+
+	public float getTerrainSpaceY(final float y) {
+		return this.simulationRenderController.getTerrainSpaceY(y);
 	}
 
 	public int getTerrainHeight(final float x, final float y) {

@@ -7,15 +7,18 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.CUnitAttack;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.CUnitAttackInstant;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.CUnitAttackListener;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.replacement.CUnitAttackSettings;
 
 public class CAttackProjectileInstant extends CAttackProjectile {
 	CUnitAttackInstant attack;
+	private CUnitAttackSettings settings;
 
 	public CAttackProjectileInstant(final float x, final float y, final AbilityTarget target,
 			final CUnit source, final float damage, final CUnitAttackInstant unitAttack,
-			final CUnitAttackListener attackListener) {
+			final CUnitAttackListener attackListener, final CUnitAttackSettings settings) {
 		super(x, y, Float.MAX_VALUE, target, source, damage, true, attackListener);
 		this.attack = unitAttack;
+		this.settings = settings;
 	}
 	@Override
 	public boolean update(final CSimulation game) {
@@ -37,7 +40,7 @@ public class CAttackProjectileInstant extends CAttackProjectile {
 		CUnit tarU = getTarget().visit(AbilityTargetVisitor.UNIT);
 		if (tarU == null || tarU.checkForAttackProjReaction(game, getSource(), this)) {
 			this.attack.doDamage(game, getSource(), getTarget(), this.damage, getX(), getY(),
-					this.attackListener);
+					this.attackListener, settings);
 		}
 	}
 

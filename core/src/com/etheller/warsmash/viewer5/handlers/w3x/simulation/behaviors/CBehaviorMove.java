@@ -46,11 +46,12 @@ public class CBehaviorMove implements CBehavior {
 	private boolean firstPathfindJob = false;
 	private boolean pathfindingFailedGiveUp;
 	private int giveUpUntilTurnTick;
+	private int prevSpeed = 0;
 
 	public CBehaviorMove reset(final int highlightOrderId, final AbilityTarget target) {
 		target.visit(this.targetVisitingResetter.reset(highlightOrderId));
 		this.rangedBehavior = null;
-		this.disableCollision = false;
+		resetDisableCollision(false);
 		return this;
 	}
 
@@ -59,8 +60,19 @@ public class CBehaviorMove implements CBehavior {
 		final int highlightOrderId = rangedBehavior.getHighlightOrderId();
 		target.visit(this.targetVisitingResetter.reset(highlightOrderId));
 		this.rangedBehavior = rangedBehavior;
-		this.disableCollision = disableCollision;
+		resetDisableCollision(disableCollision);
 		return this;
+	}
+
+	private void resetDisableCollision(final boolean disableCollision) {
+		final boolean previousCollisionState = this.disableCollision;
+		this.disableCollision = disableCollision;
+		if ((previousCollisionState != this.disableCollision) && (this.unit.getCurrentBehavior() == this)) {
+			// begin() / end() are sometimes not called on behavior when it resets
+			// while it was already the active behavior. Until that design is fixed,
+			// need to ensure we can't leave unit stuck in "no collision" mode here
+			this.unit.setNoCollisionMovementType(this.disableCollision);
+		}
 	}
 
 	private void internalResetMove(final int highlightOrderId, final float targetX, final float targetY) {
@@ -187,6 +199,8 @@ public class CBehaviorMove implements CBehavior {
 		final float propulsionWindow = this.unit.getPropWindow();
 		final float turnRate = this.unit.getTurnRate();
 		final int speed = this.unit.getSpeed();
+		final boolean speedChange = speed != prevSpeed;
+		this.prevSpeed = speed;
 
 		if (delta < -180) {
 			delta = 360 + delta;
@@ -325,7 +339,12 @@ public class CBehaviorMove implements CBehavior {
 						return this;
 					}
 				}
-				this.unit.getUnitAnimationListener().playWalkAnimation(false, this.unit.getSpeed(), true);
+				if (speed > 0) {
+					this.unit.getUnitAnimationListener().playWalkAnimation(speedChange, speed, true);
+				} else {
+					this.unit.getUnitAnimationListener().playAnimation(false, PrimaryTag.STAND,
+							SequenceUtils.EMPTY, 1.0f, true);
+				}
 				this.wasWithinPropWindow = true;
 			}
 			while (continueDistance > 0);
@@ -405,6 +424,10 @@ public class CBehaviorMove implements CBehavior {
 
 	public CUnit getUnit() {
 		return this.unit;
+	}
+
+	public CRangedBehavior getRangedBehavior() {
+		return this.rangedBehavior;
 	}
 
 	public void pathFound(final List<Point2D.Float> waypoints, final CSimulation simulation) {
@@ -499,5 +522,14 @@ public class CBehaviorMove implements CBehavior {
 	@Override
 	public CBehaviorCategory getBehaviorCategory() {
 		return CBehaviorCategory.MOVEMENT;
+	}
+	
+	public AbilityTarget getTarget() {
+		if (this.rangedBehavior != null) {
+			return this.rangedBehavior.getTarget();
+		} else if (this.followUnit != null) {
+			return this.followUnit;
+		}
+		return new AbilityPointTarget(this.target.x, this.target.y);
 	}
 }

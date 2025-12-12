@@ -60,48 +60,48 @@ public class CAbilityKaboom extends CAbilityUnitOrPointTargetSpellBase implement
 
 	@Override
 	public void populateData(final GameObject worldEditorAbility, final int level) {
-		fullDamageAmount = worldEditorAbility.getFieldAsFloat(AbilityFields.DATA_B + level, 0);
-		fullDamageRadius = worldEditorAbility.getFieldAsFloat(AbilityFields.DATA_A + level, 0);
-		partialDamageAmount = worldEditorAbility.getFieldAsFloat(AbilityFields.DATA_D + level, 0);
-		partialDamageRadius = worldEditorAbility.getFieldAsFloat(AbilityFields.DATA_C + level, 0);
-		explodesOnDeath = worldEditorAbility.getFieldAsBoolean(AbilityFields.DATA_F + level, 0);
-		buildingDamageFactor = worldEditorAbility.getFieldAsFloat(AbilityFields.DATA_E + level, 0);
+		this.fullDamageAmount = worldEditorAbility.getFieldAsFloat(AbilityFields.DATA_B + level, 0);
+		this.fullDamageRadius = worldEditorAbility.getFieldAsFloat(AbilityFields.DATA_A + level, 0);
+		this.partialDamageAmount = worldEditorAbility.getFieldAsFloat(AbilityFields.DATA_D + level, 0);
+		this.partialDamageRadius = worldEditorAbility.getFieldAsFloat(AbilityFields.DATA_C + level, 0);
+		this.explodesOnDeath = worldEditorAbility.getFieldAsBoolean(AbilityFields.DATA_F + level, 0);
+		this.buildingDamageFactor = worldEditorAbility.getFieldAsFloat(AbilityFields.DATA_E + level, 0);
 
 		setCastRange(getCastRange() + 128);
 	}
 
 	@Override
 	public boolean doEffect(final CSimulation simulation, final CUnit caster, final AbilityTarget target) {
-		exploding = true;
+		this.exploding = true;
 		caster.kill(simulation);
 		return false;
 	}
 
 	@Override
 	public void onDeath(final CSimulation game, final CUnit cUnit) {
-		if (explodesOnDeath) {
-			exploding = true;
+		if (this.explodesOnDeath) {
+			this.exploding = true;
 		}
-		if (exploding) {
+		if (this.exploding) {
 			explode(game, cUnit);
 		}
 	}
 
 	private void explode(final CSimulation simulation, final CUnit caster) {
-		final float radius = StrictMath.max(partialDamageRadius, fullDamageRadius);
+		final float radius = StrictMath.max(this.partialDamageRadius, this.fullDamageRadius);
 		simulation.getWorldCollision().enumUnitsInRange(caster.getX(), caster.getY(), radius, (enumUnit) -> {
 			if (enumUnit.canBeTargetedBy(simulation, caster, getTargetsAllowed())) {
 				float damageAmount;
-				if (caster.canReach(enumUnit, fullDamageRadius)) {
-					damageAmount = fullDamageAmount;
+				if (caster.canReach(enumUnit, this.fullDamageRadius)) {
+					damageAmount = this.fullDamageAmount;
 				}
 				else {
-					damageAmount = partialDamageAmount;
+					damageAmount = this.partialDamageAmount;
 				}
 				if (enumUnit.isBuilding()) {
-					damageAmount *= buildingDamageFactor;
+					damageAmount *= this.buildingDamageFactor;
 				}
-				enumUnit.damage(simulation, caster, false, true, CAttackType.SPELLS, CDamageType.DEMOLITION,
+				enumUnit.damage(simulation, caster, DAMAGE_FLAGS, CAttackType.SPELLS, CDamageType.DEMOLITION,
 						CWeaponSoundTypeJass.WHOKNOWS.name(), damageAmount);
 			}
 			return false;
@@ -109,19 +109,17 @@ public class CAbilityKaboom extends CAbilityUnitOrPointTargetSpellBase implement
 	}
 
 	@Override
-	public void setAutoCastOn(final CUnit caster, final boolean autoCastOn) {
+	public void setAutoCastOn(final CSimulation simulation, final CUnit caster, final boolean autoCastOn,
+			final boolean notify) {
 		this.autoCastOn = autoCastOn;
-		caster.setAutocastAbility(autoCastOn ? this : null);
+		if (notify) {
+			caster.setAutocastAbility(simulation, autoCastOn ? this : null);
+		}
 	}
 
 	@Override
 	public boolean isAutoCastOn() {
-		return autoCastOn;
-	}
-
-	@Override
-	public void setAutoCastOff() {
-		this.autoCastOn = false;
+		return this.autoCastOn;
 	}
 
 	@Override
@@ -129,22 +127,21 @@ public class CAbilityKaboom extends CAbilityUnitOrPointTargetSpellBase implement
 		return AutocastType.NEARESTENEMY;
 	}
 
-
 	@Override
-	public void checkCanAutoTarget(CSimulation game, CUnit unit, int orderId, CWidget target,
-			AbilityTargetCheckReceiver<CWidget> receiver) {
-		this.checkCanTarget(game, unit, orderId, target, receiver);
+	public void checkCanAutoTarget(final CSimulation game, final CUnit unit, final int playerIndex, final int orderId,
+			final CWidget target, final AbilityTargetCheckReceiver<CWidget> receiver) {
+		this.checkCanTarget(game, unit, playerIndex, orderId, false, target, receiver);
 	}
 
 	@Override
-	public void checkCanAutoTarget(CSimulation game, CUnit unit, int orderId, AbilityPointTarget target,
-			AbilityTargetCheckReceiver<AbilityPointTarget> receiver) {
+	public void checkCanAutoTarget(final CSimulation game, final CUnit unit, final int playerIndex, final int orderId,
+			final AbilityPointTarget target, final AbilityTargetCheckReceiver<AbilityPointTarget> receiver) {
 		receiver.orderIdNotAccepted();
 	}
 
 	@Override
-	public void checkCanAutoTargetNoTarget(CSimulation game, CUnit unit, int orderId,
-			AbilityTargetCheckReceiver<Void> receiver) {
+	public void checkCanAutoTargetNoTarget(final CSimulation game, final CUnit unit, final int playerIndex,
+			final int orderId, final AbilityTargetCheckReceiver<Void> receiver) {
 		receiver.orderIdNotAccepted();
 	}
 }

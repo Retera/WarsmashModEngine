@@ -109,9 +109,19 @@ public class RenderDoodad {
 		this.instance = instance;
 		this.row = row;
 
-		this.fogState = CFogState.MASKED;
+//		this.fogState = CFogState.MASKED;
+//		this.lastFogStateColor = this.fogState.getMask();
+//		((MdxComplexInstance) instance).setVertexColor(VERTEX_COLOR_BLACK);
+		final CPlayerFogOfWarInterface fogOfWar = map.getFogOfWar();
+		final PathingGrid pathingGrid = map.simulation.getPathingGrid();
+		final int fogOfWarIndexX = pathingGrid.getFogOfWarIndexX(this.x);
+		final int fogOfWarIndexY = pathingGrid.getFogOfWarIndexY(this.y);
+		this.fogState = fogOfWar.getFogState(map.simulation, fogOfWarIndexX, fogOfWarIndexY);
 		this.lastFogStateColor = this.fogState.getMask();
-		((MdxComplexInstance) instance).setVertexColor(VERTEX_COLOR_BLACK);
+		for (int i = 0; i < this.vertexColorBase.length; i++) {
+			VERTEX_COLOR_HEAP[i] = (this.vertexColorBase[i] * (255 - (this.lastFogStateColor & 0xFF))) / 255f;
+		}
+		((MdxComplexInstance) this.instance).setVertexColor(VERTEX_COLOR_HEAP);
 
 		this.typeId = War3ID.fromString(row.getId());
 

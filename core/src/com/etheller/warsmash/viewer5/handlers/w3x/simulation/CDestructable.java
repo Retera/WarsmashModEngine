@@ -12,6 +12,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.RenderWidget.UnitAni
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.CDestructableBuff;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTargetVisitor;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CAttackType;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CDamageFlags;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CTargetType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.pathing.CBuildingPathingType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CDamageType;
@@ -23,7 +24,7 @@ public class CDestructable extends CWidget {
 	private final CDestructableType destType;
 	private final RemovablePathingMapInstance pathingInstance;
 	private final RemovablePathingMapInstance pathingInstanceDeath;
-	private UnitAnimationListenerImpl unitAnimationListenerImpl;
+	private UnitAnimationListenerImpl unitAnimationListener;
 	private boolean invulnerable;
 	private boolean blighted;
 	private Rectangle registeredEnumRectangle;
@@ -70,9 +71,9 @@ public class CDestructable extends CWidget {
 	}
 
 	@Override
-	public float damage(final CSimulation simulation, final CUnit source, final boolean isAttack,
-			final boolean isRanged, final CAttackType attackType, final CDamageType damageType,
-			final String weaponSoundType, final float damage) {
+	public float damage(final CSimulation simulation, final CUnit source, final CDamageFlags flags,
+			final CAttackType attackType, final CDamageType damageType, final String weaponSoundType,
+			final float damage) {
 		if (isInvulnerable()) {
 			return 0;
 		}
@@ -86,11 +87,10 @@ public class CDestructable extends CWidget {
 	}
 
 	@Override
-	public float damage(final CSimulation simulation, final CUnit source, final boolean isAttack,
-			final boolean isRanged, final CAttackType attackType, final CDamageType damageType,
-			final String weaponSoundType, final float damage, final float bonusDamage) {
-		return this.damage(simulation, source, isAttack, isRanged, attackType, damageType, weaponSoundType,
-				damage + bonusDamage);
+	public float damage(final CSimulation simulation, final CUnit source, final CDamageFlags flags,
+			final CAttackType attackType, final CDamageType damageType, final String weaponSoundType,
+			final float damage, final float bonusDamage) {
+		return this.damage(simulation, source, flags, attackType, damageType, weaponSoundType, damage + bonusDamage);
 	}
 
 	private void kill(final CSimulation simulation) {
@@ -187,7 +187,11 @@ public class CDestructable extends CWidget {
 	}
 
 	public void setUnitAnimationListener(final UnitAnimationListenerImpl unitAnimationListenerImpl) {
-		this.unitAnimationListenerImpl = unitAnimationListenerImpl;
+		this.unitAnimationListener = unitAnimationListenerImpl;
+	}
+
+	public CUnitAnimationListener getUnitAnimationListener() {
+		return this.unitAnimationListener;
 	}
 
 	@Override
@@ -234,6 +238,10 @@ public class CDestructable extends CWidget {
 	public void remove(final CSimulation simulation, final CDestructableBuff buff) {
 		this.buffs.remove(buff);
 		buff.onRemove(simulation, this);
+	}
+	
+	public List<CDestructableBuff> getBuffs() {
+		return this.buffs;
 	}
 
 	public void onRemove(CSimulation cSimulation) {

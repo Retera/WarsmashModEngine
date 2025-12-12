@@ -10,6 +10,19 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CRaceManage
 import net.warsmash.uberserver.GamingNetwork;
 
 public class WarsmashConstants {
+	public static final String KEY_JASS_FILE_LIST = "JassFileList";
+	public static final String KEY_MAX_PLAYERS = "MaxPlayers";
+	public static final String KEY_GAME_VERSION = "GameVersion";
+	public static final String KEY_CATCH_CURSOR = "CatchCursor";
+	public static final String KEY_FULL_SCREEN_MENU_BACKDROP = "FullScreenMenuBackdrop";
+	public static final String KEY_FIX_FLAT_FILES_TILESET_LOADING = "FixFlatFilesTilesetLoading";
+	public static final String KEY_ENABLE_MUSIC = "EnableMusic";
+	public static final String KEY_LOAD_UNITS_FROM_WORLD_EDIT_DATA = "LoadUnitsFromWorldEditData";
+	public static final String KEY_CRASH_ON_INCOMPATIBLE132_FEATURES = "CrashOnIncompatible132Features";
+	public static final String KEY_INPUT_HOTKEY_MODE = "InputHotkeyMode";
+	public static final String KEY_PARSE_REIGN_OF_CHAOS_BETA_MODELS_INSTEAD = "ParseReignOfChaosBetaModelsInstead";
+	public static final String KEY_USE_NINE_ITEM_INVENTORY = "UseNineItemInventory";
+
 	public static int MAX_PLAYERS = 28;
 	/*
 	 * With version, we use 0 for RoC, 1 for TFT emulation, and probably 2+ or
@@ -59,30 +72,34 @@ public class WarsmashConstants {
 
 	public static String[] JASS_FILE_LIST = { "Scripts\\common.j", "Scripts\\Blizzard.j", "Scripts\\war3map.j" };
 	public static final float GAME_SPEED_TIME_FACTOR = 0.5f;
+	public static final int ONGOING_BEHAVIOR_NOTIFICATION_TICKS = (int) (0.5f / SIMULATION_STEP_TIME);
 
 	public static final boolean SHOW_FPS = true;
 
+	public static List<String> ABILITY_COMPATIBILITY = null;
+
 	public static void loadConstants(final GameObject emulatorConstants, final DataTable warsmashIni) {
-		MAX_PLAYERS = emulatorConstants.getFieldValue("MaxPlayers");
-		GAME_VERSION = emulatorConstants.getFieldValue("GameVersion");
-		CATCH_CURSOR = emulatorConstants.getFieldValue("CatchCursor") == 1;
-		if (emulatorConstants.getField("FullScreenMenuBackdrop") != null) {
-			FULL_SCREEN_MENU_BACKDROP = emulatorConstants.getFieldValue("FullScreenMenuBackdrop") == 1;
+		MAX_PLAYERS = emulatorConstants.getFieldValue(KEY_MAX_PLAYERS);
+		GAME_VERSION = emulatorConstants.getFieldValue(KEY_GAME_VERSION);
+		CATCH_CURSOR = emulatorConstants.getFieldValue(KEY_CATCH_CURSOR) == 1;
+		if (emulatorConstants.getField(KEY_FULL_SCREEN_MENU_BACKDROP) != null) {
+			FULL_SCREEN_MENU_BACKDROP = emulatorConstants.getFieldValue(KEY_FULL_SCREEN_MENU_BACKDROP) == 1;
 		}
-		final List<String> jassFileList = emulatorConstants.getFieldAsList("JassFileList");
+		final List<String> jassFileList = emulatorConstants.getFieldAsList(KEY_JASS_FILE_LIST);
 		if ((jassFileList != null) && !jassFileList.isEmpty()
 				&& !((jassFileList.size() == 1) && jassFileList.get(0).isEmpty())) {
 			final String[] jassFileArray = jassFileList.toArray(new String[0]);
 			JASS_FILE_LIST = jassFileArray;
 		}
-		FIX_FLAT_FILES_TILESET_LOADING = emulatorConstants.getFieldValue("FixFlatFilesTilesetLoading") == 1;
-		ENABLE_MUSIC = emulatorConstants.getFieldValue("EnableMusic") == 1;
-		LOAD_UNITS_FROM_WORLDEDIT_DATA = emulatorConstants.getFieldValue("LoadUnitsFromWorldEditData") == 1;
-		CRASH_ON_INCOMPATIBLE_132_FEATURES = emulatorConstants.getFieldValue("CrashOnIncompatible132Features") == 1;
-		INPUT_HOTKEY_MODE = emulatorConstants.getFieldValue("InputHotkeyMode");
+		FIX_FLAT_FILES_TILESET_LOADING = emulatorConstants.getFieldValue(KEY_FIX_FLAT_FILES_TILESET_LOADING) == 1;
+		ENABLE_MUSIC = emulatorConstants.getFieldValue(KEY_ENABLE_MUSIC) == 1;
+		LOAD_UNITS_FROM_WORLDEDIT_DATA = emulatorConstants.getFieldValue(KEY_LOAD_UNITS_FROM_WORLD_EDIT_DATA) == 1;
+		CRASH_ON_INCOMPATIBLE_132_FEATURES = emulatorConstants
+				.getFieldValue(KEY_CRASH_ON_INCOMPATIBLE132_FEATURES) == 1;
+		INPUT_HOTKEY_MODE = emulatorConstants.getFieldValue(KEY_INPUT_HOTKEY_MODE);
 		PARSE_REIGN_OF_CHAOS_BETA_MODELS_INSTEAD = emulatorConstants
-				.getFieldValue("ParseReignOfChaosBetaModelsInstead") == 1;
-		USE_NINE_ITEM_INVENTORY = emulatorConstants.getFieldValue("UseNineItemInventory") == 1;
+				.getFieldValue(KEY_PARSE_REIGN_OF_CHAOS_BETA_MODELS_INSTEAD) == 1;
+		USE_NINE_ITEM_INVENTORY = emulatorConstants.getFieldValue(KEY_USE_NINE_ITEM_INVENTORY) == 1;
 		final String races = emulatorConstants.getField("Races");
 		RACE_MANAGER = new CRaceManager();
 		if ((races == null) || races.isEmpty()) {
@@ -103,6 +120,7 @@ public class WarsmashConstants {
 			}
 		}
 		RACE_MANAGER.build();
+		ABILITY_COMPATIBILITY = emulatorConstants.getFieldAsList("AbilityCompatibility");
 	}
 
 	public static final String getGameId() {

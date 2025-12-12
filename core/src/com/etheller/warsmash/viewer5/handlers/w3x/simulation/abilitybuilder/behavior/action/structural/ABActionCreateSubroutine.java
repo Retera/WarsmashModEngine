@@ -14,7 +14,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core
 
 public class ABActionCreateSubroutine implements ABSingleAction {
 
-	private ABStringCallback key;
+	private ABStringCallback name;
 	private ABBooleanCallback instanceValue;
 	private List<ABAction> actions;
 
@@ -23,11 +23,11 @@ public class ABActionCreateSubroutine implements ABSingleAction {
 			final int castId) {
 		if ((this.instanceValue == null) || this.instanceValue.callback(game, caster, localStore, castId)) {
 			localStore.put(ABLocalStoreKeys.combineSubroutineInstanceKey(
-					this.key.callback(game, caster, localStore, castId), castId), this.actions);
+					this.name.callback(game, caster, localStore, castId), castId), this.actions);
 		}
 		else {
 			localStore.put(
-					ABLocalStoreKeys.combineSubroutineKey(this.key.callback(game, caster, localStore, castId), castId),
+					ABLocalStoreKeys.combineSubroutineKey(this.name.callback(game, caster, localStore, castId), castId),
 					this.actions);
 		}
 	}
@@ -43,7 +43,7 @@ public class ABActionCreateSubroutine implements ABSingleAction {
 		}
 
 		return "CreateSubroutineAU(" + jassTextGenerator.getTriggerLocalStore() + ", "
-				+ this.key.generateJassEquivalent(jassTextGenerator) + ", " + jassTextGenerator.getCastId() + ", "
+				+ this.name.generateJassEquivalent(jassTextGenerator) + ", " + jassTextGenerator.getCastId() + ", "
 				+ instanceValueExpression + ", " + jassTextGenerator.functionPointerByName(subroutineFunctionName)
 				+ ")";
 	}

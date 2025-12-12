@@ -29,11 +29,12 @@ public class CAbilityRepair extends AbstractGenericSingleIconActiveAbility imple
 	private CBehaviorRepair behaviorRepair;
 	private boolean autocasting = false;
 
-	public CAbilityRepair(final int handleId, final War3ID code, final War3ID alias, final EnumSet<CTargetType> targetsAllowed,
-			final float navalRangeBonus, final float repairCostRatio, final float repairTimeRatio,
-			final float castRange) {
+	public CAbilityRepair(final int handleId, final War3ID code, final War3ID alias,
+			final EnumSet<CTargetType> targetsAllowed, final float navalRangeBonus, final float repairCostRatio,
+			final float repairTimeRatio, final float castRange) {
 		super(handleId, code, alias);
 		this.targetsAllowed = targetsAllowed;
+		this.targetsAllowed.add(CTargetType.REPAIRABLE);
 		this.navalRangeBonus = navalRangeBonus;
 		this.repairCostRatio = repairCostRatio;
 		this.repairTimeRatio = repairTimeRatio;
@@ -43,14 +44,16 @@ public class CAbilityRepair extends AbstractGenericSingleIconActiveAbility imple
 	@Override
 	protected void innerCheckCanTarget(final CSimulation game, final CUnit unit, final int orderId,
 			final CWidget target, final AbilityTargetCheckReceiver<CWidget> receiver) {
-		if(target.getLife() < target.getMaxLife()) {
+		if (target.getLife() < target.getMaxLife()) {
 			if (target.canBeTargetedBy(game, unit, this.targetsAllowed, receiver)) {
 				final CUnit targetUnit = target.visit(AbilityTargetVisitor.UNIT);
 				if ((targetUnit != null) && targetUnit.isConstructing()) {
-					if(orderId == OrderIds.smart) {
+					if (orderId == OrderIds.smart) {
 						receiver.orderIdNotAccepted();
-					} else {
-						receiver.targetCheckFailed(CommandStringErrorKeys.THAT_BUILDING_IS_CURRENTLY_UNDER_CONSTRUCTION);
+					}
+					else {
+						receiver.targetCheckFailed(
+								CommandStringErrorKeys.THAT_BUILDING_IS_CURRENTLY_UNDER_CONSTRUCTION);
 					}
 				}
 				else {
@@ -60,9 +63,10 @@ public class CAbilityRepair extends AbstractGenericSingleIconActiveAbility imple
 			// else receiver called by canBeTargetedBy
 		}
 		else {
-			if(orderId == OrderIds.smart) {
+			if (orderId == OrderIds.smart) {
 				receiver.orderIdNotAccepted();
-			} else {
+			}
+			else {
 				receiver.targetCheckFailed(CommandStringErrorKeys.TARGET_IS_NOT_DAMAGED);
 			}
 		}
@@ -93,7 +97,7 @@ public class CAbilityRepair extends AbstractGenericSingleIconActiveAbility imple
 	}
 
 	@Override
-	protected void innerCheckCanUse(final CSimulation game, final CUnit unit, final int orderId,
+	protected void innerCheckCanUse(final CSimulation game, final CUnit unit, final int playerIndex, final int orderId,
 			final AbilityActivationReceiver receiver) {
 		receiver.useOk();
 	}
@@ -114,23 +118,25 @@ public class CAbilityRepair extends AbstractGenericSingleIconActiveAbility imple
 	}
 
 	@Override
-	public void onCancelFromQueue(final CSimulation game, final CUnit unit, final int orderId) {
+	public void onCancelFromQueue(final CSimulation game, final CUnit unit, final int playerIndex, final int orderId) {
 
 	}
 
 	@Override
-	public CBehavior begin(final CSimulation game, final CUnit caster, final int orderId, final CWidget target) {
+	public CBehavior begin(final CSimulation game, final CUnit caster, final int playerIndex, final int orderId,
+			final boolean autoOrder, final CWidget target) {
 		return this.behaviorRepair.reset(game, target);
 	}
 
 	@Override
-	public CBehavior begin(final CSimulation game, final CUnit caster, final int orderId,
-			final AbilityPointTarget point) {
+	public CBehavior begin(final CSimulation game, final CUnit caster, final int playerIndex, final int orderId,
+			final boolean autoOrder, final AbilityPointTarget point) {
 		return null;
 	}
 
 	@Override
-	public CBehavior beginNoTarget(final CSimulation game, final CUnit caster, final int orderId) {
+	public CBehavior beginNoTarget(final CSimulation game, final CUnit caster, final int playerIndex, final int orderId,
+			final boolean autoOrder) {
 		return null;
 	}
 
@@ -190,19 +196,17 @@ public class CAbilityRepair extends AbstractGenericSingleIconActiveAbility imple
 	}
 
 	@Override
-	public void setAutoCastOn(final CUnit caster, final boolean autoCastOn) {
+	public void setAutoCastOn(final CSimulation simulation, final CUnit caster, final boolean autoCastOn,
+			final boolean notify) {
 		this.autocasting = autoCastOn;
-		caster.setAutocastAbility(autoCastOn ? this : null);
+		if (notify) {
+			caster.setAutocastAbility(simulation, autoCastOn ? this : null);
+		}
 	}
 
 	@Override
 	public boolean isAutoCastOn() {
-		return autocasting ;
-	}
-
-	@Override
-	public void setAutoCastOff() {
-		this.autocasting = false;
+		return this.autocasting;
 	}
 
 	@Override
@@ -216,26 +220,31 @@ public class CAbilityRepair extends AbstractGenericSingleIconActiveAbility imple
 	}
 
 	@Override
-	public void checkCanAutoTarget(CSimulation game, CUnit unit, int orderId, CWidget target,
-			AbilityTargetCheckReceiver<CWidget> receiver) {
-		this.checkCanTarget(game, unit, orderId, target, receiver);
+	public void checkCanAutoTarget(final CSimulation game, final CUnit unit, final int playerIndex, final int orderId,
+			final CWidget target, final AbilityTargetCheckReceiver<CWidget> receiver) {
+		this.checkCanTarget(game, unit, playerIndex, orderId, false, target, receiver);
 	}
 
 	@Override
-	public void checkCanAutoTarget(CSimulation game, CUnit unit, int orderId, AbilityPointTarget target,
-			AbilityTargetCheckReceiver<AbilityPointTarget> receiver) {
+	public void checkCanAutoTarget(final CSimulation game, final CUnit unit, final int playerIndex, final int orderId,
+			final AbilityPointTarget target, final AbilityTargetCheckReceiver<AbilityPointTarget> receiver) {
 		receiver.orderIdNotAccepted();
 	}
 
 	@Override
-	public void checkCanAutoTargetNoTarget(CSimulation game, CUnit unit, int orderId,
-			AbilityTargetCheckReceiver<Void> receiver) {
+	public void checkCanAutoTargetNoTarget(final CSimulation game, final CUnit unit, final int playerIndex,
+			final int orderId, final AbilityTargetCheckReceiver<Void> receiver) {
 		receiver.orderIdNotAccepted();
 	}
 
 	@Override
 	public boolean isPhysical() {
 		return true;
+	}
+
+	@Override
+	public boolean isMagic() {
+		return false;
 	}
 
 	@Override

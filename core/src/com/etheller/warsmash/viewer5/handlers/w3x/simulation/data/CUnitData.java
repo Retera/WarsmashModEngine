@@ -3,6 +3,7 @@ package com.etheller.warsmash.viewer5.handlers.w3x.simulation.data;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumMap;
 import java.util.EnumSet;
@@ -16,6 +17,8 @@ import com.etheller.warsmash.units.GameObject;
 import com.etheller.warsmash.units.ObjectData;
 import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.util.WarsmashConstants;
+import com.etheller.warsmash.viewer5.handlers.w3x.AnimationTokens.SecondaryTag;
+import com.etheller.warsmash.viewer5.handlers.w3x.SequenceUtils;
 import com.etheller.warsmash.viewer5.handlers.w3x.environment.PathingGrid;
 import com.etheller.warsmash.viewer5.handlers.w3x.environment.PathingGrid.MovementType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CGameplayConstants;
@@ -28,6 +31,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUpgradeType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.HandleIdAllocator;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityAttack;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityDisableType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityMove;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.GetAbilityByRawcodeVisitor;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.autocast.CAutocastAbility;
@@ -71,6 +75,8 @@ public class CUnitData {
 	private static final String HIT_POINT_REGEN = "regenHP"; // replaced from 'uhpr'
 	private static final String HIT_POINT_REGEN_TYPE = "regenType"; // replaced from 'uhrt'
 	private static final String MOVEMENT_SPEED_BASE = "spd"; // replaced from 'umvs'
+	private static final String MOVEMENT_SPEED_MAX = "maxSpd";
+	private static final String MOVEMENT_SPEED_MIN = "minSpd";
 	private static final String PROPULSION_WINDOW = "propWin"; // replaced from 'uprw'
 	private static final String TURN_RATE = "turnRate"; // replaced from 'umvr'
 	private static final String IS_BLDG = "isbldg"; // replaced from 'ubdg'
@@ -166,6 +172,8 @@ public class CUnitData {
 
 	private static final String STRUCTURES_BUILT = "Builds"; // replaced from 'ubui'
 	private static final String UNITS_TRAINED = "Trains"; // replaced from 'utra'
+	private static final String UNITS_SOLD = "Sellunits";
+	private static final String DEPENDENCY_EQUIVALENTS = "DependencyOr";
 	private static final String RESEARCHES_AVAILABLE = "Researches"; // replaced from 'ures'
 	private static final String UPGRADES_USED = "upgrades"; // replaced from 'upgr'
 	private static final String UPGRADES_TO = "Upgrade"; // replaced from 'uupt'
@@ -174,8 +182,8 @@ public class CUnitData {
 	private static final String REVIVES_HEROES = "Revive"; // replaced from 'urev'
 	private static final String UNIT_RACE = "race"; // replaced from 'urac'
 
-	private static final String REQUIRES = "Requires"; // replaced from 'ureq'
-	private static final String REQUIRES_AMOUNT = "Requiresamount"; // replaced from 'urqa'
+	public static final String REQUIRES = "Requires"; // replaced from 'ureq'
+	public static final String REQUIRES_AMOUNT = "Requiresamount"; // replaced from 'urqa'
 	private static final String REQUIRES_TIER_COUNT = "Requirescount"; // replaced from 'urqc'
 	private static final String[] REQUIRES_TIER_X = { "Requires1", "Requires2", // replaced from 'urq1'
 			"Requires3", "Requires4", "Requires5", "Requires6", // replaced from 'urq3'
@@ -225,9 +233,13 @@ public class CUnitData {
 
 	private static final String NEUTRAL_BUILDING_SHOW_ICON = "nbmmIcon";
 
+	private static final String TILESETS = "tilesets";
+	private static final String SPECIAL = "special";
+
 	private final CGameplayConstants gameplayConstants;
 	private final ObjectData unitData;
 	private final Map<War3ID, CUnitType> unitIdToUnitType = new HashMap<>();
+	private final Map<War3ID, CUnitType> unitIdToUnitTypeLightweight = new HashMap<>();
 	private final Map<String, War3ID> jassLegacyNameToUnitId = new HashMap<>();
 	private final CAbilityData abilityData;
 	private final CUpgradeData upgradeData;
@@ -245,19 +257,31 @@ public class CUnitData {
 
 	public CUnit create(final CSimulation simulation, final int playerIndex, final War3ID typeId, final float x,
 			final float y, final float facing, final BufferedImage buildingPathingPixelMap,
-			final HandleIdAllocator handleIdAllocator) {
+			final HandleIdAllocator handleIdAllocator, final int editorConfigHitPointPercent,
+			final int editorConfigManaAmount) {
 		final GameObject unitType = this.unitData.get(typeId.asStringValue());
 		final int handleId = handleIdAllocator.createId();
 
 		final CUnitType unitTypeInstance = getUnitTypeInstance(typeId, buildingPathingPixelMap, unitType);
-		final int life = unitTypeInstance.getMaxLife();
+		final float life = editorConfigHitPointPercent > 0
+				? unitTypeInstance.getMaxLife() * (editorConfigHitPointPercent / 100f)
+				: unitTypeInstance.getMaxLife();
 		final float lifeRegen = unitTypeInstance.getLifeRegen();
 		final int manaInitial = unitTypeInstance.getManaInitial();
 		final int manaMaximum = unitTypeInstance.getManaMaximum();
 		final int speed = unitTypeInstance.getSpeed();
+		int maxSpeed = unitTypeInstance.getMaxSpeed();
+		if (maxSpeed == 0) {
+			maxSpeed = (int) simulation.getGameplayConstants().getMaxUnitSpeed();
+		}
+		int minSpeed = unitTypeInstance.getMinSpeed();
+		if (minSpeed == 0) {
+			minSpeed = (int) simulation.getGameplayConstants().getMinUnitSpeed();
+		}
 
-		final CUnit unit = new CUnit(handleId, playerIndex, x, y, life, typeId, facing, manaInitial, life, lifeRegen,
-				manaMaximum, speed, unitTypeInstance);
+		final CUnit unit = new CUnit(handleId, playerIndex, x, y, life, typeId, facing,
+				editorConfigManaAmount >= 0 ? editorConfigManaAmount : manaInitial, unitTypeInstance.getMaxLife(),
+				lifeRegen, manaMaximum, speed, maxSpeed, minSpeed, unitTypeInstance);
 		return unit;
 	}
 
@@ -343,10 +367,10 @@ public class CUnitData {
 			unit.add(simulation, new CAbilityUpgrade(handleIdAllocator.createId(), upgradesTo));
 		}
 		if (!itemsSold.isEmpty()) {
-			unit.add(simulation, new CAbilitySellItems(handleIdAllocator.createId(), itemsSold));
+			unit.add(simulation, new CAbilitySellItems(handleIdAllocator.createId(), itemsSold, false));
 		}
 		if (!itemsMade.isEmpty()) {
-			unit.add(simulation, new CAbilitySellItems(handleIdAllocator.createId(), itemsMade));
+			unit.add(simulation, new CAbilitySellItems(handleIdAllocator.createId(), itemsMade, true));
 		}
 		if (unitTypeInstance.isRevivesHeroes()) {
 			unit.add(simulation, new CAbilityReviveHero(handleIdAllocator.createId()));
@@ -370,13 +394,13 @@ public class CUnitData {
 				}
 				if (ability.equals(unitTypeInstance.getDefaultAutocastAbility())
 						&& (createAbility instanceof CAutocastAbility)) {
-					((CAutocastAbility) createAbility).setAutoCastOn(unit, true);
+					((CAutocastAbility) createAbility).setAutoCastOn(simulation, unit, true, true);
 				}
 			}
 			else {
 				if (ability.equals(unitTypeInstance.getDefaultAutocastAbility())
 						&& (existingAbility instanceof CAutocastAbility)) {
-					((CAutocastAbility) existingAbility).setAutoCastOn(unit, true);
+					((CAutocastAbility) existingAbility).setAutoCastOn(simulation, unit, true, true);
 				}
 			}
 		}
@@ -447,10 +471,10 @@ public class CUnitData {
 			unit.add(simulation, new CAbilityUpgrade(handleIdAllocator.createId(), upgradesTo));
 		}
 		if (!itemsSold.isEmpty()) {
-			unit.add(simulation, new CAbilitySellItems(handleIdAllocator.createId(), itemsSold));
+			unit.add(simulation, new CAbilitySellItems(handleIdAllocator.createId(), itemsSold, false));
 		}
 		if (!itemsMade.isEmpty()) {
-			unit.add(simulation, new CAbilitySellItems(handleIdAllocator.createId(), itemsMade));
+			unit.add(simulation, new CAbilitySellItems(handleIdAllocator.createId(), itemsMade, true));
 		}
 		if (unitTypeInstance.isRevivesHeroes()) {
 			unit.add(simulation, new CAbilityReviveHero(handleIdAllocator.createId()));
@@ -459,16 +483,38 @@ public class CUnitData {
 			unit.add(simulation, new CAbilityRally(handleIdAllocator.createId()));
 		}
 		if (unitTypeInstance.isHero()) {
-			final List<War3ID> heroAbilityList = unitTypeInstance.getHeroAbilityList();
 			if (unit.getFirstAbilityOfType(CAbilityHero.class) != null) {
 				final CAbilityHero abil = unit.getFirstAbilityOfType(CAbilityHero.class);
-				abil.setSkillsAvailable(heroAbilityList);
-				abil.recalculateAllStats(simulation, unit);
+				if (abil.isDisabled()) {
+					abil.setDisabled(false, CAbilityDisableType.TRANSFORMATION);
+					abil.setIconShowing(true);
+					for (final CAbility habl : abil.getLearnedHeroAbilities()) {
+						unit.add(simulation, habl);
+					}
+				}
+				abil.setHeroName(unitTypeInstance);
+//				abil.setSkillsAvailable(heroAbilityList);
+				abil.calculateDerivatedFields(simulation, unit);
 			}
 			else {
-				unit.add(simulation, new CAbilityHero(handleIdAllocator.createId(), heroAbilityList));
+				final List<War3ID> heroAbilityList = unitTypeInstance.getHeroAbilityList();
+				final CAbilityHero abil = new CAbilityHero(handleIdAllocator.createId(), heroAbilityList);
+				unit.add(simulation, abil);
 				// reset initial mana after the value is adjusted for hero data
 				unit.setMana(manaInitial);
+				abil.recalculateAllStats(simulation, unit);
+			}
+		}
+		else {
+			if (unit.getFirstAbilityOfType(CAbilityHero.class) != null) {
+				final CAbilityHero abil = unit.getFirstAbilityOfType(CAbilityHero.class);
+//				abil.setSkillsAvailable(heroAbilityList);
+				abil.calculateDerivatedFields(simulation, unit);
+				abil.setDisabled(true, CAbilityDisableType.TRANSFORMATION);
+				abil.setIconShowing(false);
+				for (final CAbility habl : abil.getLearnedHeroAbilities()) {
+					unit.remove(simulation, habl);
+				}
 			}
 		}
 		for (final War3ID ability : unitTypeInstance.getAbilityList()) {
@@ -481,13 +527,13 @@ public class CUnitData {
 				}
 				if (ability.equals(unitTypeInstance.getDefaultAutocastAbility())
 						&& (createAbility instanceof CAutocastAbility)) {
-					((CAutocastAbility) createAbility).setAutoCastOn(unit, true);
+					((CAutocastAbility) createAbility).setAutoCastOn(simulation, unit, true, true);
 				}
 			}
 			else {
 				if (ability.equals(unitTypeInstance.getDefaultAutocastAbility())
 						&& (existingAbility instanceof CAutocastAbility)) {
-					((CAutocastAbility) existingAbility).setAutoCastOn(unit, true);
+					((CAutocastAbility) existingAbility).setAutoCastOn(simulation, unit, true, true);
 				}
 			}
 		}
@@ -512,6 +558,8 @@ public class CUnitData {
 			final int manaMaximum = unitType.getFieldAsInteger(MANA_MAXIMUM, 0);
 			final float manaRegen = unitType.getFieldAsFloat(MANA_REGEN, 0);
 			final int speed = unitType.getFieldAsInteger(MOVEMENT_SPEED_BASE, 0);
+			final int maxSpeed = unitType.getFieldAsInteger(MOVEMENT_SPEED_MAX, 0);
+			final int minSpeed = unitType.getFieldAsInteger(MOVEMENT_SPEED_MIN, 0);
 			final int defense = unitType.getFieldAsInteger(DEFENSE, 0);
 			final String defaultAutocastAbility = unitType.getFieldAsString(ABILITIES_DEFAULT_AUTO, 0);
 			final List<String> abilityListString = unitType.getFieldAsList(ABILITIES_NORMAL);
@@ -541,7 +589,7 @@ public class CUnitData {
 			final CPrimaryAttribute primaryAttribute = CPrimaryAttribute
 					.parsePrimaryAttribute(unitType.getFieldAsString(PRIMARY_ATTRIBUTE, 0));
 
-			final String properNames = unitType.getFieldAsString(PROPER_NAMES, 0);
+			final String properNames = unitType.getField(PROPER_NAMES);
 			final int properNamesCount = unitType.getFieldAsInteger(PROPER_NAMES_COUNT, 0);
 
 			final boolean isBldg = unitType.getFieldAsBoolean(IS_BLDG, 0);
@@ -612,7 +660,7 @@ public class CUnitData {
 						cooldownTime, damageBase, damageFactorMedium, damageFactorSmall, damageLossFactor, damageDice,
 						damageSidesPerDie, damageSpillDistance, damageSpillRadius, damageUpgradeAmount,
 						maximumNumberOfTargets, projectileArc, projectileArt, projectileHomingEnabled, projectileSpeed,
-						range, rangeMotionBuffer, showUI, targetsAllowed, weaponSound, weaponType));
+						range, rangeMotionBuffer, showUI, targetsAllowed, weaponSound, weaponType, SequenceUtils.ONE));
 			}
 			catch (final Exception exc) {
 				System.err.println("Attack 1 failed to parse with: " + exc.getClass() + ":" + exc.getMessage());
@@ -676,7 +724,7 @@ public class CUnitData {
 						cooldownTime, damageBase, damageFactorMedium, damageFactorSmall, damageLossFactor, damageDice,
 						damageSidesPerDie, damageSpillDistance, damageSpillRadius, damageUpgradeAmount,
 						maximumNumberOfTargets, projectileArc, projectileArt, projectileHomingEnabled, projectileSpeed,
-						range, rangeMotionBuffer, showUI, targetsAllowed, weaponSound, weaponType));
+						range, rangeMotionBuffer, showUI, targetsAllowed, weaponSound, weaponType, SequenceUtils.TWO));
 			}
 			catch (final Exception exc) {
 				System.err.println("Attack 2 failed to parse with: " + exc.getClass() + ":" + exc.getMessage());
@@ -720,10 +768,13 @@ public class CUnitData {
 			final boolean revivesHeroes = unitType.getFieldAsBoolean(REVIVES_HEROES, 0);
 
 			final List<War3ID> unitsTrained = parseIDList(unitType.getFieldAsList(UNITS_TRAINED));
+			final List<War3ID> unitsSold = parseIDList(unitType.getFieldAsList(UNITS_SOLD));
 
 			final List<War3ID> upgradesTo = parseIDList(unitType.getFieldAsList(UPGRADES_TO));
 
 			final List<War3ID> researchesAvailable = parseIDList(unitType.getFieldAsList(RESEARCHES_AVAILABLE));
+
+			final List<War3ID> dependencyOr = parseIDList(unitType.getFieldAsList(DEPENDENCY_EQUIVALENTS));
 
 			final List<War3ID> upgradesUsed = parseIDList(unitType.getFieldAsList(UPGRADES_USED));
 			final EnumMap<CUpgradeClass, War3ID> upgradeClassToType = new EnumMap<>(CUpgradeClass.class);
@@ -780,21 +831,25 @@ public class CUnitData {
 
 			final boolean neutralBuildingShowMinimapIcon = unitType.getFieldAsBoolean(NEUTRAL_BUILDING_SHOW_ICON, 0);
 
+			final String tilesets = unitType.getFieldAsString(TILESETS, 0);
+			final boolean special = unitType.getFieldAsBoolean(SPECIAL, 0);
+
 			unitTypeInstance = new CUnitType(unitName, legacyName, typeId, life, lifeRegen, manaRegen, lifeRegenType,
-					manaInitial, manaMaximum, speed, defense, defaultAutocastAbilityId, abilityList, isBldg,
-					movementType, moveHeight, collisionSize, classifications, attacks, attacksEnabled, armorType, raise,
-					decay, defenseType, impactZ, buildingPathingPixelMap, deathTime, targetedAs, acquisitionRange,
-					minimumAttackRange, structuresBuilt, unitsTrained, researchesAvailable, upgradesUsed,
-					upgradeClassToType, upgradesTo, itemsSold, itemsMade, unitRace, goldCost, lumberCost, foodUsed,
-					foodMade, buildTime, goldRepairCost, lumberRepairCost, repairTime, preventedPathingTypes,
-					requiredPathingTypes, propWindow, turnRate, requirements, requirementTiers, unitLevel, hero,
-					strength, strPlus, agility, agiPlus, intelligence, intPlus, primaryAttribute, heroAbilityList,
-					heroProperNames, properNamesCount, canFlee, priority, revivesHeroes, pointValue, castBackswingPoint,
-					castPoint, canBeBuiltOnThem, canBuildOnMe, defenseUpgradeBonus, sightRadiusDay, sightRadiusNight,
-					extendedLineOfSight, goldBountyAwardedBase, goldBountyAwardedDice, goldBountyAwardedSides,
-					lumberBountyAwardedBase, lumberBountyAwardedDice, lumberBountyAwardedSides,
-					neutralBuildingShowMinimapIcon);
+					manaInitial, manaMaximum, speed, maxSpeed, minSpeed, defense, defaultAutocastAbilityId, abilityList,
+					isBldg, movementType, moveHeight, collisionSize, classifications, attacks, attacksEnabled,
+					armorType, raise, decay, defenseType, impactZ, buildingPathingPixelMap, deathTime, targetedAs,
+					acquisitionRange, minimumAttackRange, structuresBuilt, unitsTrained, unitsSold, researchesAvailable,
+					upgradesUsed, dependencyOr, upgradeClassToType, upgradesTo, itemsSold, itemsMade, unitRace,
+					goldCost, lumberCost, foodUsed, foodMade, buildTime, goldRepairCost, lumberRepairCost, repairTime,
+					preventedPathingTypes, requiredPathingTypes, propWindow, turnRate, requirements, requirementTiers,
+					unitLevel, hero, strength, strPlus, agility, agiPlus, intelligence, intPlus, primaryAttribute,
+					heroAbilityList, heroProperNames, properNamesCount, canFlee, priority, revivesHeroes, pointValue,
+					castBackswingPoint, castPoint, canBeBuiltOnThem, canBuildOnMe, defenseUpgradeBonus, sightRadiusDay,
+					sightRadiusNight, extendedLineOfSight, goldBountyAwardedBase, goldBountyAwardedDice,
+					goldBountyAwardedSides, lumberBountyAwardedBase, lumberBountyAwardedDice, lumberBountyAwardedSides,
+					neutralBuildingShowMinimapIcon, tilesets, special);
 			this.unitIdToUnitType.put(typeId, unitTypeInstance);
+			this.unitIdToUnitTypeLightweight.put(typeId, unitTypeInstance);
 			this.jassLegacyNameToUnitId.put(legacyName, typeId);
 		}
 		return unitTypeInstance;
@@ -907,47 +962,49 @@ public class CUnitData {
 			final int maximumNumberOfTargets, final float projectileArc, final String projectileArt,
 			final boolean projectileHomingEnabled, final int projectileSpeed, final int range,
 			final float rangeMotionBuffer, final boolean showUI, final EnumSet<CTargetType> targetsAllowed,
-			final String weaponSound, final CWeaponType weaponType) {
+			final String weaponSound, final CWeaponType weaponType, final EnumSet<SecondaryTag> animationTags) {
 		final CUnitAttack attack;
 		switch (weaponType) {
 		case MISSILE:
 			attack = new CUnitAttackMissile(animationBackswingPoint, animationDamagePoint, attackType, cooldownTime,
 					damageBase, damageDice, damageSidesPerDie, damageUpgradeAmount, range, rangeMotionBuffer, showUI,
-					targetsAllowed, weaponSound, weaponType, projectileArc, projectileArt, projectileHomingEnabled,
-					projectileSpeed);
+					targetsAllowed, weaponSound, weaponType, animationTags, projectileArc, projectileArt,
+					projectileHomingEnabled, projectileSpeed);
 			break;
 		case MBOUNCE:
 			attack = new CUnitAttackMissileBounce(animationBackswingPoint, animationDamagePoint, attackType,
 					cooldownTime, damageBase, damageDice, damageSidesPerDie, damageUpgradeAmount, range,
-					rangeMotionBuffer, showUI, targetsAllowed, weaponSound, weaponType, projectileArc, projectileArt,
-					projectileHomingEnabled, projectileSpeed, damageLossFactor, maximumNumberOfTargets,
+					rangeMotionBuffer, showUI, targetsAllowed, weaponSound, weaponType, animationTags, projectileArc,
+					projectileArt, projectileHomingEnabled, projectileSpeed, damageLossFactor, maximumNumberOfTargets,
 					areaOfEffectFullDamage, areaOfEffectTargets);
 			break;
 		case MSPLASH:
 		case ARTILLERY:
 			attack = new CUnitAttackMissileSplash(animationBackswingPoint, animationDamagePoint, attackType,
 					cooldownTime, damageBase, damageDice, damageSidesPerDie, damageUpgradeAmount, range,
-					rangeMotionBuffer, showUI, targetsAllowed, weaponSound, weaponType, projectileArc, projectileArt,
-					projectileHomingEnabled, projectileSpeed, areaOfEffectFullDamage, areaOfEffectMediumDamage,
-					areaOfEffectSmallDamage, areaOfEffectTargets, damageFactorMedium, damageFactorSmall);
+					rangeMotionBuffer, showUI, targetsAllowed, weaponSound, weaponType, animationTags, projectileArc,
+					projectileArt, projectileHomingEnabled, projectileSpeed, areaOfEffectFullDamage,
+					areaOfEffectMediumDamage, areaOfEffectSmallDamage, areaOfEffectTargets, damageFactorMedium,
+					damageFactorSmall, weaponType == CWeaponType.ARTILLERY);
 			break;
 		case MLINE:
 		case ALINE:
 			attack = new CUnitAttackMissileLine(animationBackswingPoint, animationDamagePoint, attackType, cooldownTime,
 					damageBase, damageDice, damageSidesPerDie, damageUpgradeAmount, range, rangeMotionBuffer, showUI,
-					targetsAllowed, weaponSound, weaponType, projectileArc, projectileArt, projectileHomingEnabled,
-					projectileSpeed, damageSpillDistance, damageSpillRadius);
+					targetsAllowed, weaponSound, weaponType, animationTags, projectileArc, projectileArt,
+					projectileHomingEnabled, projectileSpeed, damageSpillDistance, damageSpillRadius,
+					weaponType == CWeaponType.ALINE);
 			break;
 		case INSTANT:
 			attack = new CUnitAttackInstant(animationBackswingPoint, animationDamagePoint, attackType, cooldownTime,
 					damageBase, damageDice, damageSidesPerDie, damageUpgradeAmount, range, rangeMotionBuffer, showUI,
-					targetsAllowed, weaponSound, weaponType, projectileArt);
+					targetsAllowed, weaponSound, weaponType, animationTags, projectileArt);
 			break;
 		default:
 		case NORMAL:
 			attack = new CUnitAttackNormal(animationBackswingPoint, animationDamagePoint, attackType, cooldownTime,
 					damageBase, damageDice, damageSidesPerDie, damageUpgradeAmount, range, rangeMotionBuffer, showUI,
-					targetsAllowed, weaponSound, weaponType);
+					targetsAllowed, weaponSound, weaponType, animationTags);
 			break;
 		}
 		return attack;
@@ -1069,5 +1126,334 @@ public class CUnitData {
 			}
 		}
 		return getUnitType(typeId);
+	}
+
+	private CUnitType getUnitTypeInstanceLightweight(final War3ID typeId, final GameObject unitType) {
+		CUnitType unitTypeInstance = this.unitIdToUnitType.get(typeId);
+		if (unitTypeInstance == null) {
+			final String legacyName = getLegacyName(unitType);
+			final int life = unitType.getFieldAsInteger(HIT_POINT_MAXIMUM, 0);
+			final float lifeRegen = unitType.getFieldAsFloat(HIT_POINT_REGEN, 0);
+			final CRegenType lifeRegenType = CRegenType
+					.parseRegenType(unitType.getFieldAsString(HIT_POINT_REGEN_TYPE, 0));
+			final int manaInitial = unitType.getFieldAsInteger(MANA_INITIAL_AMOUNT, 0);
+			final int manaMaximum = unitType.getFieldAsInteger(MANA_MAXIMUM, 0);
+			final float manaRegen = unitType.getFieldAsFloat(MANA_REGEN, 0);
+			final int speed = unitType.getFieldAsInteger(MOVEMENT_SPEED_BASE, 0);
+			final int maxSpeed = unitType.getFieldAsInteger(MOVEMENT_SPEED_MAX, 0);
+			final int minSpeed = unitType.getFieldAsInteger(MOVEMENT_SPEED_MIN, 0);
+			final int defense = unitType.getFieldAsInteger(DEFENSE, 0);
+			final String defaultAutocastAbility = unitType.getFieldAsString(ABILITIES_DEFAULT_AUTO, 0);
+			final List<String> abilityListString = unitType.getFieldAsList(ABILITIES_NORMAL);
+			final List<String> heroAbilityListString = unitType.getFieldAsList(ABILITIES_HERO);
+			final int unitLevel = unitType.getFieldAsInteger(UNIT_LEVEL, 0);
+			final int priority = unitType.getFieldAsInteger(PRIORITY, 0);
+			final int defenseUpgradeBonus = unitType.getFieldAsInteger(DEFENSE_UPGRADE_BONUS, 0);
+
+			final float moveHeight = unitType.getFieldAsFloat(MOVE_HEIGHT, 0);
+			final String movetp = unitType.getFieldAsString(MOVE_TYPE, 0);
+			final float collisionSize = unitType.getFieldAsFloat(COLLISION_SIZE, 0);
+			final float propWindow = unitType.getFieldAsFloat(PROPULSION_WINDOW, 0);
+			final float turnRate = unitType.getFieldAsFloat(TURN_RATE, 0);
+
+			final boolean canFlee = unitType.getFieldAsBoolean(CAN_FLEE, 0);
+
+			final boolean canBeBuiltOnThem = unitType.getFieldAsBoolean(CAN_BE_BUILT_ON_THEM, 0);
+			final boolean canBuildOnMe = unitType.getFieldAsBoolean(CAN_BUILD_ON_ME, 0);
+
+			final float strPlus = unitType.getFieldAsFloat(STR_PLUS, 0);
+			final float agiPlus = unitType.getFieldAsFloat(AGI_PLUS, 0);
+			final float intPlus = unitType.getFieldAsFloat(INT_PLUS, 0);
+
+			final int strength = unitType.getFieldAsInteger(STR, 0);
+			final int agility = unitType.getFieldAsInteger(AGI, 0);
+			final int intelligence = unitType.getFieldAsInteger(INT, 0);
+			final CPrimaryAttribute primaryAttribute = CPrimaryAttribute
+					.parsePrimaryAttribute(unitType.getFieldAsString(PRIMARY_ATTRIBUTE, 0));
+
+			final String properNames = unitType.getField(PROPER_NAMES);
+			final int properNamesCount = unitType.getFieldAsInteger(PROPER_NAMES_COUNT, 0);
+
+			final boolean isBldg = unitType.getFieldAsBoolean(IS_BLDG, 0);
+			PathingGrid.MovementType movementType = PathingGrid.getMovementType(movetp);
+			if (movementType == null) {
+				movementType = MovementType.DISABLED;
+			}
+			final String unitName = unitType.getFieldAsString(NAME, 0);
+			final float acquisitionRange = unitType.getFieldAsFloat(ACQUISITION_RANGE, 0);
+			// note: uamn expected type int below, not exactly sure why that decision was
+			// made but I'll support it
+			final float minimumAttackRange = unitType.getFieldAsInteger(MINIMUM_ATTACK_RANGE, 0);
+			final EnumSet<CTargetType> targetedAs = CTargetType
+					.parseTargetTypeSet(unitType.getFieldAsList(TARGETED_AS));
+			final List<String> classificationStringList = unitType.getFieldAsList(CLASSIFICATION);
+			final EnumSet<CUnitClassification> classifications = EnumSet.noneOf(CUnitClassification.class);
+			if (!classificationStringList.isEmpty()) {
+				for (final String unitEditorKey : classificationStringList) {
+					final CUnitClassification unitClassification = CUnitClassification
+							.parseUnitClassification(unitEditorKey);
+					if (unitClassification != null) {
+						classifications.add(unitClassification);
+					}
+				}
+			}
+			final List<CUnitAttack> attacks = new ArrayList<>();
+			final int attacksEnabled = unitType.getFieldAsInteger(ATTACKS_ENABLED, 0);
+			try {
+				// attack one
+				final float animationBackswingPoint = unitType.getFieldAsFloat(ATTACK1_BACKSWING_POINT, 0);
+				final float animationDamagePoint = unitType.getFieldAsFloat(ATTACK1_DAMAGE_POINT, 0);
+				final int areaOfEffectFullDamage = unitType.getFieldAsInteger(ATTACK1_AREA_OF_EFFECT_FULL_DMG, 0);
+				final int areaOfEffectMediumDamage = unitType.getFieldAsInteger(ATTACK1_AREA_OF_EFFECT_HALF_DMG, 0);
+				final int areaOfEffectSmallDamage = unitType.getFieldAsInteger(ATTACK1_AREA_OF_EFFECT_QUARTER_DMG, 0);
+				final EnumSet<CTargetType> areaOfEffectTargets = CTargetType
+						.parseTargetTypeSet(unitType.getFieldAsList(ATTACK1_AREA_OF_EFFECT_TARGETS));
+				final CAttackType attackType = CAttackType
+						.parseAttackType(unitType.getFieldAsString(ATTACK1_ATTACK_TYPE, 0));
+				final float cooldownTime = unitType.getFieldAsFloat(ATTACK1_COOLDOWN, 0);
+				final int damageBase = unitType.getFieldAsInteger(ATTACK1_DMG_BASE, 0);
+				final float damageFactorMedium = unitType.getFieldAsFloat(ATTACK1_DAMAGE_FACTOR_HALF, 0);
+				final float damageFactorSmall = unitType.getFieldAsFloat(ATTACK1_DAMAGE_FACTOR_QUARTER, 0);
+				final float damageLossFactor = unitType.getFieldAsFloat(ATTACK1_DAMAGE_LOSS_FACTOR, 0);
+				final int damageDice = unitType.getFieldAsInteger(ATTACK1_DMG_DICE, 0);
+				final int damageSidesPerDie = unitType.getFieldAsInteger(ATTACK1_DMG_SIDES_PER_DIE, 0);
+				final float damageSpillDistance = unitType.getFieldAsFloat(ATTACK1_DMG_SPILL_DIST, 0);
+				final float damageSpillRadius = unitType.getFieldAsFloat(ATTACK1_DMG_SPILL_RADIUS, 0);
+				final int damageUpgradeAmount = unitType.getFieldAsInteger(ATTACK1_DMG_UPGRADE_AMT, 0);
+				final int maximumNumberOfTargets = unitType.getFieldAsInteger(ATTACK1_TARGET_COUNT, 0);
+				final float projectileArc = unitType.getFieldAsFloat(ATTACK1_PROJECTILE_ARC, 0);
+				final String projectileArt = unitType.getFieldAsString(ATTACK1_MISSILE_ART, 0);
+				final boolean projectileHomingEnabled = unitType.getFieldAsBoolean(ATTACK1_PROJECTILE_HOMING_ENABLED,
+						0);
+				final int projectileSpeed = unitType.getFieldAsInteger(ATTACK1_PROJECTILE_SPEED, 0);
+				final int range = unitType.getFieldAsInteger(ATTACK1_RANGE, 0);
+				final float rangeMotionBuffer = unitType.getFieldAsFloat(ATTACK1_RANGE_MOTION_BUFFER, 0);
+				final boolean showUI = unitType.getFieldAsBoolean(ATTACK1_SHOW_UI, 0);
+				final EnumSet<CTargetType> targetsAllowed = CTargetType
+						.parseTargetTypeSet(unitType.getFieldAsList(ATTACK1_TARGETS_ALLOWED));
+				final String weaponSound = unitType.getFieldAsString(ATTACK1_WEAPON_SOUND, 0);
+				final String weapon_type_temp = unitType.getFieldAsString(ATTACK1_WEAPON_TYPE, 0);
+				CWeaponType weaponType = CWeaponType.NONE;
+				if (!"_".equals(weapon_type_temp)) {
+					weaponType = CWeaponType.parseWeaponType(weapon_type_temp);
+				}
+				attacks.add(createAttack(animationBackswingPoint, animationDamagePoint, areaOfEffectFullDamage,
+						areaOfEffectMediumDamage, areaOfEffectSmallDamage, areaOfEffectTargets, attackType,
+						cooldownTime, damageBase, damageFactorMedium, damageFactorSmall, damageLossFactor, damageDice,
+						damageSidesPerDie, damageSpillDistance, damageSpillRadius, damageUpgradeAmount,
+						maximumNumberOfTargets, projectileArc, projectileArt, projectileHomingEnabled, projectileSpeed,
+						range, rangeMotionBuffer, showUI, targetsAllowed, weaponSound, weaponType, SequenceUtils.ONE));
+			}
+			catch (final Exception exc) {
+				System.err.println("Attack 1 failed to parse with: " + exc.getClass() + ":" + exc.getMessage());
+			}
+			try {
+				// attack two
+				final float animationBackswingPoint = unitType.getFieldAsFloat(ATTACK2_BACKSWING_POINT, 0);
+				final float animationDamagePoint = unitType.getFieldAsFloat(ATTACK2_DAMAGE_POINT, 0);
+				final int areaOfEffectFullDamage = unitType.getFieldAsInteger(ATTACK2_AREA_OF_EFFECT_FULL_DMG, 0);
+				final int areaOfEffectMediumDamage = unitType.getFieldAsInteger(ATTACK2_AREA_OF_EFFECT_HALF_DMG, 0);
+				final int areaOfEffectSmallDamage = unitType.getFieldAsInteger(ATTACK2_AREA_OF_EFFECT_QUARTER_DMG, 0);
+				final EnumSet<CTargetType> areaOfEffectTargets = CTargetType
+						.parseTargetTypeSet(unitType.getFieldAsList(ATTACK2_AREA_OF_EFFECT_TARGETS));
+				final CAttackType attackType = CAttackType
+						.parseAttackType(unitType.getFieldAsString(ATTACK2_ATTACK_TYPE, 0));
+				final float cooldownTime = unitType.getFieldAsFloat(ATTACK2_COOLDOWN, 0);
+				final int damageBase = unitType.getFieldAsInteger(ATTACK2_DMG_BASE, 0);
+				final float damageFactorMedium = unitType.getFieldAsFloat(ATTACK2_DAMAGE_FACTOR_HALF, 0);
+				final float damageFactorSmall = unitType.getFieldAsFloat(ATTACK2_DAMAGE_FACTOR_QUARTER, 0);
+				final float damageLossFactor = unitType.getFieldAsFloat(ATTACK2_DAMAGE_LOSS_FACTOR, 0);
+				final int damageDice = unitType.getFieldAsInteger(ATTACK2_DMG_DICE, 0);
+				final int damageSidesPerDie = unitType.getFieldAsInteger(ATTACK2_DMG_SIDES_PER_DIE, 0);
+				final float damageSpillDistance = unitType.getFieldAsFloat(ATTACK2_DMG_SPILL_DIST, 0);
+				final float damageSpillRadius = unitType.getFieldAsFloat(ATTACK2_DMG_SPILL_RADIUS, 0);
+				final int damageUpgradeAmount = unitType.getFieldAsInteger(ATTACK2_DMG_UPGRADE_AMT, 0);
+				final int maximumNumberOfTargets = unitType.getFieldAsInteger(ATTACK2_TARGET_COUNT, 0);
+				float projectileArc = unitType.getFieldAsFloat(ATTACK2_PROJECTILE_ARC, 0);
+				String projectileArt = unitType.getFieldAsString(ATTACK2_MISSILE_ART, 0);
+				int projectileSpeed = unitType.getFieldAsInteger(ATTACK2_PROJECTILE_SPEED, 0);
+				if ("_".equals(projectileArt) || projectileArt.isEmpty()) {
+					projectileArt = unitType.getFieldAsString(ATTACK1_MISSILE_ART, 0);
+					projectileSpeed = unitType.getFieldAsInteger(ATTACK1_PROJECTILE_SPEED, 0);
+					projectileArc = unitType.getFieldAsFloat(ATTACK1_PROJECTILE_ARC, 0);
+				}
+				final boolean projectileHomingEnabled = unitType.getFieldAsBoolean(ATTACK2_PROJECTILE_HOMING_ENABLED,
+						0);
+				final int range = unitType.getFieldAsInteger(ATTACK2_RANGE, 0);
+				final float rangeMotionBuffer = unitType.getFieldAsFloat(ATTACK2_RANGE_MOTION_BUFFER, 0);
+				boolean showUI = unitType.getFieldAsBoolean(ATTACK2_SHOW_UI, 0);
+				final EnumSet<CTargetType> targetsAllowed = CTargetType
+						.parseTargetTypeSet(unitType.getFieldAsList(ATTACK2_TARGETS_ALLOWED));
+				final String weaponSound = unitType.getFieldAsString(ATTACK2_WEAPON_SOUND, 0);
+				final String weapon_type_temp = unitType.getFieldAsString(ATTACK2_WEAPON_TYPE, 0);
+				CWeaponType weaponType = CWeaponType.NONE;
+				if (!"_".equals(weapon_type_temp)) {
+					weaponType = CWeaponType.parseWeaponType(weapon_type_temp);
+				}
+				if (!attacks.isEmpty()) {
+					final CUnitAttack otherAttack = attacks.get(0);
+					if ((otherAttack.getAttackType() == attackType) && (targetsAllowed.size() == 1)
+							&& (targetsAllowed.contains(CTargetType.TREE)
+									|| (targetsAllowed.contains(CTargetType.STRUCTURE)
+											&& (otherAttack.getDamageBase() == damageBase)
+											&& (otherAttack.getDamageSidesPerDie() == damageSidesPerDie)
+											&& (otherAttack.getDamageDice() == damageDice)))) {
+						showUI = false;
+					}
+				}
+				attacks.add(createAttack(animationBackswingPoint, animationDamagePoint, areaOfEffectFullDamage,
+						areaOfEffectMediumDamage, areaOfEffectSmallDamage, areaOfEffectTargets, attackType,
+						cooldownTime, damageBase, damageFactorMedium, damageFactorSmall, damageLossFactor, damageDice,
+						damageSidesPerDie, damageSpillDistance, damageSpillRadius, damageUpgradeAmount,
+						maximumNumberOfTargets, projectileArc, projectileArt, projectileHomingEnabled, projectileSpeed,
+						range, rangeMotionBuffer, showUI, targetsAllowed, weaponSound, weaponType, SequenceUtils.TWO));
+			}
+			catch (final Exception exc) {
+				System.err.println("Attack 2 failed to parse with: " + exc.getClass() + ":" + exc.getMessage());
+			}
+			final List<CUnitAttack> enabledAttacks = getEnabledAttacks(attacks, attacksEnabled);
+			final int deathType = unitType.getFieldAsInteger(DEATH_TYPE, 0);
+			final boolean raise = (deathType & 0x1) != 0;
+			final boolean decay = (deathType & 0x2) != 0;
+			final String armorType = unitType.getFieldAsString(ARMOR_TYPE, 0);
+			final float impactZ = unitType.getFieldAsFloat(PROJECTILE_IMPACT_Z, 0);
+			final CDefenseType defenseType = CDefenseType.parseDefenseType(unitType.getFieldAsString(DEFENSE_TYPE, 0));
+			final float deathTime = unitType.getFieldAsFloat(DEATH_TIME, 0);
+			final int goldCost = unitType.getFieldAsInteger(GOLD_COST, 0);
+			final int lumberCost = unitType.getFieldAsInteger(LUMBER_COST, 0);
+			final int buildTime = (int) Math
+					.ceil(unitType.getFieldAsInteger(BUILD_TIME, 0) * WarsmashConstants.GAME_SPEED_TIME_FACTOR);
+			final int goldRepairCost = unitType.getFieldAsInteger(GOLD_REPAIR_COST, 0);
+			final int lumberRepairCost = unitType.getFieldAsInteger(LUMBER_REPAIR_COST, 0);
+			final int repairTime = (int) Math
+					.ceil(unitType.getFieldAsInteger(REPAIR_TIME, 0) * WarsmashConstants.GAME_SPEED_TIME_FACTOR);
+			final int foodUsed = unitType.getFieldAsInteger(FOOD_USED, 0);
+			final int foodMade = unitType.getFieldAsInteger(FOOD_MADE, 0);
+
+			final float castBackswingPoint = unitType.getFieldAsFloat(CAST_BACKSWING_POINT, 0);
+			final float castPoint = unitType.getFieldAsFloat(CAST_POINT, 0);
+
+			final int pointValue = unitType.getFieldAsInteger(POINT_VALUE, 0);
+
+			final int sightRadiusDay = unitType.getFieldAsInteger(SIGHT_RADIUS_DAY, 0);
+			final int sightRadiusNight = unitType.getFieldAsInteger(SIGHT_RADIUS_NIGHT, 0);
+			final boolean extendedLineOfSight = unitType.getFieldAsBoolean(EXTENDED_LOS, 0);
+
+			final int goldBountyAwardedBase = unitType.getFieldAsInteger(GOLD_BOUNTY_AWARDED_BASE, 0);
+			final int goldBountyAwardedDice = unitType.getFieldAsInteger(GOLD_BOUNTY_AWARDED_DICE, 0);
+			final int goldBountyAwardedSides = unitType.getFieldAsInteger(GOLD_BOUNTY_AWARDED_SIDES, 0);
+
+			final int lumberBountyAwardedBase = unitType.getFieldAsInteger(LUMBER_BOUNTY_AWARDED_BASE, 0);
+			final int lumberBountyAwardedDice = unitType.getFieldAsInteger(LUMBER_BOUNTY_AWARDED_DICE, 0);
+			final int lumberBountyAwardedSides = unitType.getFieldAsInteger(LUMBER_BOUNTY_AWARDED_SIDES, 0);
+
+			final boolean revivesHeroes = unitType.getFieldAsBoolean(REVIVES_HEROES, 0);
+
+			final List<War3ID> unitsTrained = parseIDList(unitType.getFieldAsList(UNITS_TRAINED));
+			final List<War3ID> unitsSold = parseIDList(unitType.getFieldAsList(UNITS_SOLD));
+
+			final List<War3ID> upgradesTo = parseIDList(unitType.getFieldAsList(UPGRADES_TO));
+
+			final List<War3ID> researchesAvailable = parseIDList(unitType.getFieldAsList(RESEARCHES_AVAILABLE));
+
+			final List<War3ID> dependencyOr = parseIDList(unitType.getFieldAsList(DEPENDENCY_EQUIVALENTS));
+
+			final List<War3ID> upgradesUsed = parseIDList(unitType.getFieldAsList(UPGRADES_USED));
+			final EnumMap<CUpgradeClass, War3ID> upgradeClassToType = new EnumMap<>(CUpgradeClass.class);
+			for (final War3ID upgradeUsed : upgradesUsed) {
+				final CUpgradeType upgradeType = this.upgradeData.getType(upgradeUsed);
+				if (upgradeType != null) {
+					final CUpgradeClass upgradeClass = upgradeType.getUpgradeClass();
+					if (upgradeClass != null) {
+						upgradeClassToType.put(upgradeClass, upgradeUsed);
+					}
+				}
+			}
+
+			final List<War3ID> structuresBuilt = parseIDList(unitType.getFieldAsList(STRUCTURES_BUILT));
+
+			final List<War3ID> itemsSold = parseIDList(unitType.getFieldAsList(ITEMS_SOLD));
+			final List<War3ID> itemsMade = parseIDList(unitType.getFieldAsList(ITEMS_MADE));
+
+			final War3ID defaultAutocastAbilityId;
+			if ((defaultAutocastAbility != null) && !defaultAutocastAbility.isEmpty()
+					&& !defaultAutocastAbility.equals("_")) {
+				defaultAutocastAbilityId = War3ID.fromString(defaultAutocastAbility);
+			}
+			else {
+				defaultAutocastAbilityId = null;
+			}
+			final List<War3ID> heroAbilityList = parseIDList(heroAbilityListString);
+			final List<War3ID> abilityList = parseIDList(abilityListString);
+
+			final List<String> requirementsString = unitType.getFieldAsList(REQUIRES);
+			final List<String> requirementsLevelsString = unitType.getFieldAsList(REQUIRES_AMOUNT);
+			final List<CUnitTypeRequirement> requirements = parseRequirements(requirementsString,
+					requirementsLevelsString);
+			final int requirementsTiersCount = unitType.getFieldAsInteger(REQUIRES_TIER_COUNT, 0);
+			final List<List<CUnitTypeRequirement>> requirementTiers = new ArrayList<>();
+			for (int i = 1; i <= requirementsTiersCount; i++) {
+				final List<String> requirementsTierString = unitType.getFieldAsList(REQUIRES_TIER_X[i - 1]);
+				final List<CUnitTypeRequirement> tierRequirements = parseRequirements(requirementsTierString,
+						Collections.emptyList());
+				requirementTiers.add(tierRequirements);
+			}
+
+			final EnumSet<CBuildingPathingType> preventedPathingTypes = CBuildingPathingType
+					.parsePathingTypeListSet(unitType.getFieldAsString(PREVENT_PLACE, 0));
+			final EnumSet<CBuildingPathingType> requiredPathingTypes = CBuildingPathingType
+					.parsePathingTypeListSet(unitType.getFieldAsString(REQUIRE_PLACE, 0));
+
+			final String raceString = unitType.getFieldAsString(UNIT_RACE, 0);
+			final CUnitRace unitRace = CUnitRace.parseRace(raceString);
+
+			final boolean hero = Character.isUpperCase(typeId.charAt(0));
+
+			final List<String> heroProperNames = Arrays.asList(properNames.split(","));
+
+			final boolean neutralBuildingShowMinimapIcon = unitType.getFieldAsBoolean(NEUTRAL_BUILDING_SHOW_ICON, 0);
+
+			final String tilesets = unitType.getField(TILESETS);
+			final boolean special = unitType.getFieldAsBoolean(SPECIAL, 0);
+
+			unitTypeInstance = new CUnitType(unitName, legacyName, typeId, life, lifeRegen, manaRegen, lifeRegenType,
+					manaInitial, manaMaximum, speed, maxSpeed, minSpeed, defense, defaultAutocastAbilityId, abilityList,
+					isBldg, movementType, moveHeight, collisionSize, classifications, attacks, attacksEnabled,
+					armorType, raise, decay, defenseType, impactZ, null, deathTime, targetedAs, acquisitionRange,
+					minimumAttackRange, structuresBuilt, unitsTrained, unitsSold, researchesAvailable, upgradesUsed,
+					dependencyOr, upgradeClassToType, upgradesTo, itemsSold, itemsMade, unitRace, goldCost, lumberCost,
+					foodUsed, foodMade, buildTime, goldRepairCost, lumberRepairCost, repairTime, preventedPathingTypes,
+					requiredPathingTypes, propWindow, turnRate, requirements, requirementTiers, unitLevel, hero,
+					strength, strPlus, agility, agiPlus, intelligence, intPlus, primaryAttribute, heroAbilityList,
+					heroProperNames, properNamesCount, canFlee, priority, revivesHeroes, pointValue, castBackswingPoint,
+					castPoint, canBeBuiltOnThem, canBuildOnMe, defenseUpgradeBonus, sightRadiusDay, sightRadiusNight,
+					extendedLineOfSight, goldBountyAwardedBase, goldBountyAwardedDice, goldBountyAwardedSides,
+					lumberBountyAwardedBase, lumberBountyAwardedDice, lumberBountyAwardedSides,
+					neutralBuildingShowMinimapIcon, tilesets, special);
+			this.unitIdToUnitTypeLightweight.put(typeId, unitTypeInstance);
+		}
+		return unitTypeInstance;
+	}
+
+	public CUnitType getUnitTypeLightweight(final War3ID rawcode) {
+		final CUnitType unitTypeInstance = this.unitIdToUnitType.get(rawcode);
+		if (unitTypeInstance != null) {
+			return unitTypeInstance;
+		}
+		final GameObject unitType = this.unitData.get(rawcode.asStringValue());
+		if (unitType == null) {
+			return null;
+		}
+		return getUnitTypeInstanceLightweight(rawcode, unitType);
+	}
+
+	public Collection<CUnitType> getAllUnitTypesLightweight() {
+		final Set<String> keys = this.unitData.keySet();
+		if (this.unitIdToUnitTypeLightweight.size() < keys.size()) {
+			for (final String key : keys) {
+				this.getUnitTypeLightweight(War3ID.fromString(key));
+			}
+		}
+		return this.unitIdToUnitTypeLightweight.values();
 	}
 }

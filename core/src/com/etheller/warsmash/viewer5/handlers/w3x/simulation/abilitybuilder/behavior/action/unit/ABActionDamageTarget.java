@@ -12,6 +12,8 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.beha
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.unitcallbacks.ABUnitCallback;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABSingleAction;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CAttackType;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CDamageFlags;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CGenericDamageFlags;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CDamageType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CWeaponSoundTypeJass;
 
@@ -26,22 +28,36 @@ public class ABActionDamageTarget implements ABSingleAction {
 	private ABFloatCallback damage;
 
 	private ABBooleanCallback ignoreLTEZero;
+	private ABBooleanCallback damageInvulnerable;
+	private ABBooleanCallback explodeOnDeath;
+	private ABBooleanCallback onlyDamageSummons;
+	private ABBooleanCallback nonlethal;
 
 	@Override
-	public void runAction(final CSimulation game, final CUnit caster, final Map<String, Object> localStore,
-			final int castId) {
-		boolean isItAttack = false;
-		boolean isItRanged = true;
+	public void runAction(CSimulation game, CUnit caster, Map<String, Object> localStore, final int castId) {
 		CAttackType theAttackType = CAttackType.SPELLS;
 		CDamageType theDamageType = CDamageType.MAGIC;
+		CDamageFlags flags = new CGenericDamageFlags(false, true);
 
-		final float theDamage = this.damage.callback(game, caster, localStore, castId);
+		float theDamage = damage.callback(game, caster, localStore, castId);
 
-		if (this.isAttack != null) {
-			isItAttack = this.isAttack.callback(game, caster, localStore, castId);
+		if (isAttack != null) {
+			flags.setAttack(isAttack.callback(game, caster, localStore, castId));
 		}
-		if (this.isRanged != null) {
-			isItRanged = this.isRanged.callback(game, caster, localStore, castId);
+		if (isRanged != null) {
+			flags.setRanged(isRanged.callback(game, caster, localStore, castId));
+		}
+		if (damageInvulnerable != null) {
+			flags.setIgnoreInvulnerable(damageInvulnerable.callback(game, caster, localStore, castId));
+		}
+		if (explodeOnDeath != null) {
+			flags.setExplode(explodeOnDeath.callback(game, caster, localStore, castId));
+		}
+		if (onlyDamageSummons != null) {
+			flags.setOnlyDamageSummons(onlyDamageSummons.callback(game, caster, localStore, castId));
+		}
+		if (nonlethal != null) {
+			flags.setNonlethal(nonlethal.callback(game, caster, localStore, castId));
 		}
 		if (this.attackType != null) {
 			theAttackType = this.attackType.callback(game, caster, localStore, castId);
@@ -49,12 +65,10 @@ public class ABActionDamageTarget implements ABSingleAction {
 		if (this.damageType != null) {
 			theDamageType = this.damageType.callback(game, caster, localStore, castId);
 		}
-		if ((this.ignoreLTEZero == null) || !this.ignoreLTEZero.callback(game, caster, localStore, castId)
-				|| (theDamage > 0)) {
-			this.target.callback(game, caster, localStore, castId).damage(game,
-					this.source.callback(game, caster, localStore, castId), isItAttack, isItRanged, theAttackType,
-					theDamageType, CWeaponSoundTypeJass.WHOKNOWS.name(),
-					this.damage.callback(game, caster, localStore, castId));
+		if (theDamage > 0 || ignoreLTEZero == null || !ignoreLTEZero.callback(game, caster, localStore, castId)) {
+			target.callback(game, caster, localStore, castId).damage(game,
+					source.callback(game, caster, localStore, castId), flags, theAttackType, theDamageType,
+					CWeaponSoundTypeJass.WHOKNOWS.name(), damage.callback(game, caster, localStore, castId));
 		}
 	}
 

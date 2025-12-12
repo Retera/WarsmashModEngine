@@ -52,29 +52,31 @@ public class CAbilityLoad extends AbstractGenericSingleIconActiveAbility impleme
 	}
 
 	@Override
-	public CBehavior begin(final CSimulation game, final CUnit caster, final int orderId, final CWidget target) {
+	public CBehavior begin(final CSimulation game, final CUnit caster, final int playerIndex, final int orderId,
+			final boolean autoOrder, final CWidget target) {
 		return this.behaviorLoad.reset(game, target);
 	}
 
 	@Override
-	public CBehavior begin(final CSimulation game, final CUnit caster, final int orderId,
-			final AbilityPointTarget point) {
+	public CBehavior begin(final CSimulation game, final CUnit caster, final int playerIndex, final int orderId,
+			final boolean autoOrder, final AbilityPointTarget point) {
 		return null;
 	}
 
 	@Override
-	public CBehavior beginNoTarget(final CSimulation game, final CUnit caster, final int orderId) {
+	public CBehavior beginNoTarget(final CSimulation game, final CUnit caster, final int playerIndex, final int orderId,
+			final boolean autoOrder) {
 		return null;
 	}
 
 	@Override
-	protected void innerCheckCanUse(final CSimulation game, final CUnit unit, final int orderId,
+	protected void innerCheckCanUse(final CSimulation game, final CUnit unit, final int playerIndex, final int orderId,
 			final AbilityActivationReceiver receiver) {
 		receiver.useOk();
 	}
 
 	@Override
-	public void onCancelFromQueue(final CSimulation game, final CUnit unit, final int orderId) {
+	public void onCancelFromQueue(final CSimulation game, final CUnit unit, final int playerIndex, final int orderId) {
 	}
 
 	@Override
@@ -169,13 +171,14 @@ public class CAbilityLoad extends AbstractGenericSingleIconActiveAbility impleme
 			if (potentialLoadAbility instanceof CAbilityLoad) {
 				final CAbilityLoad abilityLoad = (CAbilityLoad) potentialLoadAbility;
 				final BooleanAbilityActivationReceiver transportUnitReceiver = BooleanAbilityActivationReceiver.INSTANCE;
-				abilityLoad.checkCanUse(game, transport, OrderIds.smart, transportUnitReceiver);
+				abilityLoad.checkCanUse(game, transport, caster.getPlayerIndex(), OrderIds.smart, false,
+						transportUnitReceiver);
 				// NOTE: disabled load ability should enable later in case of under construction
 				// entangled gold mine
 				if (transportUnitReceiver.isOk() || (ignoreDisabled && abilityLoad.isDisabled())) {
 					final ExternStringMsgTargetCheckReceiver<CWidget> transportUnitTargetCheckReceiver = ExternStringMsgTargetCheckReceiver
 							.getInstance();
-					abilityLoad.checkCanTarget(game, transport, OrderIds.smart, caster,
+					abilityLoad.checkCanTarget(game, transport, caster.getPlayerIndex(), OrderIds.smart, false, caster,
 							transportUnitTargetCheckReceiver.reset());
 					if ((transportUnitTargetCheckReceiver.getTarget() != null)
 							|| (ignoreRange && (transportUnitTargetCheckReceiver
@@ -190,6 +193,11 @@ public class CAbilityLoad extends AbstractGenericSingleIconActiveAbility impleme
 
 	@Override
 	public boolean isPhysical() {
+		return false;
+	}
+
+	@Override
+	public boolean isMagic() {
 		return false;
 	}
 

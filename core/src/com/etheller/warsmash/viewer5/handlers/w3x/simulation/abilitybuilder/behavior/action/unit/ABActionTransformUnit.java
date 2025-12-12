@@ -7,6 +7,7 @@ import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnitType;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.ability.AbilityBuilderAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.ability.AbilityBuilderActiveAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.CBehaviorFinishTransformation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.booleancallbacks.ABBooleanCallback;
@@ -16,6 +17,8 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.beha
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABAction;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABLocalStoreKeys;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayer;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.JassGameEventsWar3;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.handler.TransformationHandler;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.handler.TransformationHandler.OnTransformationActions;
 
 public class ABActionTransformUnit implements ABAction {
@@ -23,6 +26,8 @@ public class ABActionTransformUnit implements ABAction {
 	private ABUnitCallback unit;
 	private ABIDCallback baseUnitId;
 	private ABIDCallback alternateUnitId;
+
+	private ABBooleanCallback keepRatios;
 
 	private ABBooleanCallback immediateLanding; // true: play morph immediately, false: play morph after
 	private ABBooleanCallback immediateTakeOff; // true: play morph immediately, false: play morph after
@@ -42,6 +47,8 @@ public class ABActionTransformUnit implements ABAction {
 	private ABIDCallback buffId;
 	private ABBooleanCallback instantTransformAtDurationEnd;
 
+	private ABBooleanCallback onlyTransformToAlternate;
+
 	private List<ABAction> onTransformActions;
 	private List<ABAction> onUntransformActions;
 
@@ -59,7 +66,7 @@ public class ABActionTransformUnit implements ABAction {
 		if (this.requiresPayment != null) {
 			charge = this.requiresPayment.callback(game, caster, localStore, castId);
 		}
-		AbilityBuilderActiveAbility abil = (AbilityBuilderActiveAbility) localStore.get(ABLocalStoreKeys.ABILITY);
+		AbilityBuilderAbility abil = (AbilityBuilderAbility) localStore.get(ABLocalStoreKeys.ABILITY);
 
 		if (baseId == null || altId == null) {
 			localStore.put(ABLocalStoreKeys.FAILEDTOCAST + castId, true);
@@ -68,7 +75,12 @@ public class ABActionTransformUnit implements ABAction {
 
 		CUnitType targetType = null;
 
-		if (u1.getTypeId().equals(altId)) {
+		boolean onlyToAlt = false;
+		if (onlyTransformToAlternate != null) {
+			onlyToAlt = onlyTransformToAlternate.callback(game, caster, localStore, castId);
+		}
+
+		if (!onlyToAlt && u1.getTypeId().equals(altId)) {
 			// Transforming back
 			targetType = game.getUnitData().getUnitType(baseId);
 			if (targetType.equals(u1.getUnitType())) {
@@ -106,9 +118,11 @@ public class ABActionTransformUnit implements ABAction {
 				return;
 			}
 		}
-		OnTransformationActions actions = new OnTransformationActions(goldCost, lumberCost, foodCost, onTransformActions, onUntransformActions);
+		OnTransformationActions actions = new OnTransformationActions(goldCost, lumberCost, foodCost,
+				onTransformActions, onUntransformActions, castId);
 
 		boolean perm = false;
+		boolean isKeepRatios = true;
 		float dur = 0;
 		float transTime = 0;
 		float landTime = 0;
@@ -120,6 +134,9 @@ public class ABActionTransformUnit implements ABAction {
 		boolean instant = false;
 		if (permanent != null) {
 			perm = permanent.callback(game, caster, localStore, castId);
+		}
+		if (keepRatios != null) {
+			isKeepRatios = keepRatios.callback(game, caster, localStore, castId);
 		}
 		if (duration != null) {
 			dur = duration.callback(game, caster, localStore, castId);
@@ -149,12 +166,31 @@ public class ABActionTransformUnit implements ABAction {
 			instant = instantTransformAtDurationEnd.callback(game, caster, localStore, castId);
 		}
 
-		localStore.put(ABLocalStoreKeys.TRANSFORMINGTOALT + castId, addAlternateTagAfter);
-		localStore.put(ABLocalStoreKeys.NEWBEHAVIOR,
-				new CBehaviorFinishTransformation(localStore, u1, abil, targetType, actions, addAlternateTagAfter,
-						addAlternateTagAfter ? abil.getBaseOrderId() : abil.getOffOrderId(), perm, dur, transTime,
-						landTime, atlAdDelay, altAdTime, imLand, imTakeOff, theBuffId,
-						game.getUnitData().getUnitType(baseId), instant));
+		if (transTime > 0) {
+			int orderId = -1;
+			if (abil instanceof AbilityBuilderActiveAbility) {
+				AbilityBuilderActiveAbility activeabil = (AbilityBuilderActiveAbility) abil;
+				orderId = addAlternateTagAfter ? activeabil.getBaseOrderId() : activeabil.getOffOrderId();
+			}
+
+			localStore.put(ABLocalStoreKeys.TRANSFORMINGTOALT + castId, addAlternateTagAfter);
+			localStore.put(ABLocalStoreKeys.NEWBEHAVIOR,
+					new CBehaviorFinishTransformation(caster, localStore, u1, abil, targetType, isKeepRatios, actions,
+							addAlternateTagAfter, orderId, perm, dur, transTime, landTime, atlAdDelay, altAdTime,
+							imLand, imTakeOff, theBuffId, game.getUnitData().getUnitType(baseId), instant));
+		} else {
+			TransformationHandler.instantTransformation(game, localStore, u1, targetType, isKeepRatios, actions, abil,
+					addAlternateTagAfter, perm, true);
+			if (dur > 0) {
+				OnTransformationActions unActions = new OnTransformationActions(-goldCost, -lumberCost, null, null,
+						onUntransformActions, castId);
+				TransformationHandler.createInstantTransformBackBuff(game, caster, localStore, u1,
+						game.getUnitData().getUnitType(baseId), isKeepRatios, unActions, abil, theBuffId,
+						addAlternateTagAfter, transTime, dur, perm);
+			}
+			u1.fireSpellEvents(game, JassGameEventsWar3.EVENT_UNIT_SPELL_EFFECT, abil, null);
+			u1.fireSpellEvents(game, JassGameEventsWar3.EVENT_UNIT_SPELL_FINISH, abil, null);
+		}
 
 	}
 

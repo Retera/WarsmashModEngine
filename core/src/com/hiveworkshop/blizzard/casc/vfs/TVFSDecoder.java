@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import com.hiveworkshop.ReteraCASCUtils;
 import com.hiveworkshop.blizzard.casc.Key;
 import com.hiveworkshop.blizzard.casc.nio.MalformedCASCStructureException;
 
@@ -59,9 +60,12 @@ public class TVFSDecoder {
 	 * decode these numbers.
 	 */
 	private final ByteBuffer contentsOffsetDecoder;
+	
+	private final boolean old131Format;
 
-	public TVFSDecoder() {
+	public TVFSDecoder(final boolean old131Format) {
 		contentsOffsetDecoder = ByteBuffer.allocate(Integer.BYTES);
+		this.old131Format = old131Format;
 	}
 
 	public List<PathNode> decodeContainer() throws MalformedCASCStructureException {
@@ -155,7 +159,9 @@ public class TVFSDecoder {
 					storageBuffer.get(encodingKeyDecoder);
 
 					final int physicalSize = storageBuffer.getInt();
-					storageBuffer.get();
+					if (!old131Format) {
+						storageBuffer.get();
+					}
 					final int actualSize = storageBuffer.getInt();
 
 					final StorageReference reference = new StorageReference(offset, size, new Key(encodingKeyDecoder),

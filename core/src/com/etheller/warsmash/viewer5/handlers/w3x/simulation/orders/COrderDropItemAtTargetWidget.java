@@ -9,14 +9,16 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehavior
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.ExternStringMsgTargetCheckReceiver;
 
 public class COrderDropItemAtTargetWidget implements COrder {
+	private final int playerIndex;
 	private final int abilityHandleId;
 	private final int orderId;
 	private final int itemHandleId;
 	private final int targetHeroHandleId;
 	private final boolean queued;
 
-	public COrderDropItemAtTargetWidget(final int abilityHandleId, final int orderId, final int itemHandleId,
-			final int targetHeroHandleId, final boolean queued) {
+	public COrderDropItemAtTargetWidget(final int playerIndex, final int abilityHandleId, final int orderId,
+			final int itemHandleId, final int targetHeroHandleId, final boolean queued) {
+		this.playerIndex = playerIndex;
 		this.abilityHandleId = abilityHandleId;
 		this.orderId = orderId;
 		this.itemHandleId = itemHandleId;
@@ -32,6 +34,11 @@ public class COrderDropItemAtTargetWidget implements COrder {
 	@Override
 	public int getOrderId() {
 		return this.orderId;
+	}
+
+	@Override
+	public int getPlayerIndex() {
+		return this.playerIndex;
 	}
 
 	@Override
@@ -52,17 +59,20 @@ public class COrderDropItemAtTargetWidget implements COrder {
 			game.getCommandErrorListener().showInterfaceError(caster.getPlayerIndex(), "NOTEXTERN: No such ability");
 			return caster.pollNextOrderBehavior(game);
 		}
-		ability.checkCanUse(game, caster, this.orderId, this.abilityActivationReceiver.reset());
+		ability.checkCanUse(game, caster, this.playerIndex, this.orderId, false,
+				this.abilityActivationReceiver.reset());
 		if (this.abilityActivationReceiver.isUseOk()) {
 			final CItem itemToDrop = (CItem) game.getWidget(this.itemHandleId);
 			final CUnit targetHero = (CUnit) game.getWidget(this.targetHeroHandleId);
 			final ExternStringMsgTargetCheckReceiver<CWidget> targetReceiver = (ExternStringMsgTargetCheckReceiver<CWidget>) targetCheckReceiver;
-			ability.checkCanTarget(game, caster, this.orderId, targetHero, targetReceiver.reset());
+			ability.checkCanTarget(game, caster, this.playerIndex, this.orderId, false, targetHero,
+					targetReceiver.reset());
 			if (targetReceiver.getTarget() != null) {
-				return ability.beginDropItem(game, caster, this.orderId, itemToDrop, targetHero);
+				return ability.beginDropItem(game, caster, this.playerIndex, this.orderId, itemToDrop, targetHero);
 			}
 			else {
-				game.getCommandErrorListener().showInterfaceError(caster.getPlayerIndex(), targetReceiver.getExternStringKey());
+				game.getCommandErrorListener().showInterfaceError(caster.getPlayerIndex(),
+						targetReceiver.getExternStringKey());
 				return caster.pollNextOrderBehavior(game);
 			}
 		}

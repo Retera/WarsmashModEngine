@@ -14,6 +14,7 @@ import com.etheller.interpreter.ast.util.CHandle;
 import com.etheller.warsmash.parsers.jass.scope.CommonTriggerExecutionScope;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CAttackType;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CDamageFlags;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CTargetType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.JassGameEventsWar3;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CDamageType;
@@ -70,13 +71,13 @@ public abstract class CWidget extends CExtensibleHandleAbstract implements Abili
 		this.life = life;
 	}
 
-	public abstract float damage(final CSimulation simulation, final CUnit source, final boolean isAttack,
-			final boolean isRanged, final CAttackType attackType, final CDamageType damageType,
-			final String weaponSoundType, final float damage);
+	public abstract float damage(final CSimulation simulation, final CUnit source, final CDamageFlags flags,
+			final CAttackType attackType, final CDamageType damageType, final String weaponSoundType,
+			final float damage);
 
-	public abstract float damage(final CSimulation simulation, final CUnit source, final boolean isAttack,
-			final boolean isRanged, final CAttackType attackType, final CDamageType damageType,
-			final String weaponSoundType, final float damage, final float bonusDamage);
+	public abstract float damage(final CSimulation simulation, final CUnit source, final CDamageFlags flags,
+			final CAttackType attackType, final CDamageType damageType, final String weaponSoundType,
+			final float damage, final float bonusDamage);
 
 	public abstract float getFlyHeight();
 

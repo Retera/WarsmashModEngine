@@ -15,15 +15,14 @@ public class ABActionActivateToggledAbility implements ABSingleAction {
 	@Override
 	public void runAction(final CSimulation game, final CUnit caster, final Map<String, Object> localStore,
 			final int castId) {
-		final AbilityBuilderActiveAbility ability = (AbilityBuilderActiveAbility) localStore
-				.get(ABLocalStoreKeys.TOGGLEDABILITY);
+		AbilityBuilderActiveAbility ability = (AbilityBuilderActiveAbility) localStore
+				.get(ABLocalStoreKeys.ABILITY);
 		ability.activate(game, caster);
 	}
 
 	@Override
 	public String generateJassEquivalent(final JassTextGenerator jassTextGenerator) {
-		return "AbilityActivate(" + jassTextGenerator.getCaster() + ", "
-				+ jassTextGenerator.getUserDataExpr("AB_LOCAL_STORE_KEY_TOGGLEDABILITY", JassTextGeneratorType.AbilityHandle)
-				+ ")";
+		return "AbilityActivate(" + jassTextGenerator.getCaster() + ", " + jassTextGenerator
+				.getUserDataExpr("AB_LOCAL_STORE_KEY_TOGGLEDABILITY", JassTextGeneratorType.AbilityHandle) + ")";
 	}
 }

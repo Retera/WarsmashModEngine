@@ -12,6 +12,7 @@ import com.etheller.interpreter.ast.expression.FunctionCallJassExpression;
 import com.etheller.interpreter.ast.expression.FunctionReferenceJassExpression;
 import com.etheller.interpreter.ast.expression.JassExpression;
 import com.etheller.interpreter.ast.expression.JassExpressionVisitor;
+import com.etheller.interpreter.ast.expression.JassNewArrayExpression;
 import com.etheller.interpreter.ast.expression.JassNewExpression;
 import com.etheller.interpreter.ast.expression.LiteralJassExpression;
 import com.etheller.interpreter.ast.expression.MemberJassExpression;
@@ -66,10 +67,12 @@ public class ReplaceNewExpressionVisitor
 
 	@Override
 	public JassExpression visit(final ArrayRefJassExpression expression) {
+		final JassExpression identifierExpression = expression.getIdentifierExpression();
 		final JassExpression indexExpression = expression.getIndexExpression();
+		final JassExpression newIdentifierExpression = identifierExpression.accept(this);
 		final JassExpression newIndexExpression = indexExpression.accept(this);
-		if (indexExpression != newIndexExpression) {
-			return new ArrayRefJassExpression(expression.getIdentifier(), newIndexExpression);
+		if ((identifierExpression != newIdentifierExpression) || (indexExpression != newIndexExpression)) {
+			return new ArrayRefJassExpression(newIdentifierExpression, newIndexExpression);
 		}
 		return expression;
 	}
@@ -188,6 +191,12 @@ public class ReplaceNewExpressionVisitor
 	}
 
 	@Override
+	public JassExpression visit(final JassNewArrayExpression expression) {
+//		if(expression.getType().getPrimitiveType() ==
+		return expression;
+	}
+
+	@Override
 	public JassExpression visit(final AllocateAsNewTypeExpression expression) {
 		return expression;
 	}
@@ -199,13 +208,15 @@ public class ReplaceNewExpressionVisitor
 
 	@Override
 	public JassStatement visit(final JassArrayedAssignmentStatement statement) {
+		final JassExpression identifierExpression = statement.getIdentifierExpression();
 		final JassExpression indexExpression = statement.getIndexExpression();
 		final JassExpression valueExpression = statement.getExpression();
+		final JassExpression newIdentifierExpression = identifierExpression.accept(this);
 		final JassExpression newIndexExpression = indexExpression.accept(this);
 		final JassExpression newValueExpression = valueExpression.accept(this);
-		if ((newIndexExpression != indexExpression) || (newValueExpression != valueExpression)) {
-			return new JassArrayedAssignmentStatement(statement.getIdentifier(), newIndexExpression,
-					newValueExpression);
+		if ((newIdentifierExpression != identifierExpression) || (newIndexExpression != indexExpression)
+				|| (newValueExpression != valueExpression)) {
+			return new JassArrayedAssignmentStatement(newIdentifierExpression, newIndexExpression, newValueExpression);
 		}
 		return statement;
 	}

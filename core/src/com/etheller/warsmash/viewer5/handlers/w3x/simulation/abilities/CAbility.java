@@ -12,11 +12,17 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehavior
 public interface CAbility extends CAbilityView, CExtensibleHandle {
 	/* should fire when ability added to unit */
 	void onAddDisabled(CSimulation game, CUnit unit);
-	
-	/* should fire when ability added to unit only if the ability is not disabled at the time */
+
+	/*
+	 * should fire when ability added to unit only if the ability is not disabled at
+	 * the time
+	 */
 	void onAdd(CSimulation game, CUnit unit);
 
-	/* should fire when ability removed from unit only if the ability is not disabled at the time */
+	/*
+	 * should fire when ability removed from unit only if the ability is not
+	 * disabled at the time
+	 */
 	void onRemove(CSimulation game, CUnit unit);
 
 	/* should fire when ability removed from unit */
@@ -31,18 +37,24 @@ public interface CAbility extends CAbilityView, CExtensibleHandle {
 	 */
 	void onSetUnitType(CSimulation game, CUnit cUnit);
 
-	void onCancelFromQueue(CSimulation game, CUnit unit, int orderId);
+	void onCancelFromQueue(CSimulation game, CUnit unit, int playerIndex, int orderId);
 
 	/* return false to not do anything, such as for toggling autocast */
-	boolean checkBeforeQueue(CSimulation game, CUnit caster, int orderId, AbilityTarget target);
+	boolean checkBeforeQueue(CSimulation game, CUnit caster, int playerIndex, int orderId, boolean autoOrder,
+			AbilityTarget target);
 
-	CBehavior begin(CSimulation game, CUnit caster, int orderId, CWidget target);
+	CBehavior begin(CSimulation game, CUnit caster, int playerIndex, int orderId, boolean autoOrder, CWidget target);
 
-	CBehavior begin(CSimulation game, CUnit caster, int orderId, AbilityPointTarget point);
+	CBehavior begin(CSimulation game, CUnit caster, int playerIndex, int orderId, boolean autoOrder,
+			AbilityPointTarget point);
 
-	CBehavior beginNoTarget(CSimulation game, CUnit caster, int orderId);
+	CBehavior beginNoTarget(CSimulation game, CUnit caster, int playerIndex, int orderId, boolean autoOrder);
+
+	void setHero(boolean isHero);
 
 	void setDisabled(boolean disabled, CAbilityDisableType type);
+
+	void setClickDisabled(boolean disabled, CAbilityDisableType type);
 
 	void setIconShowing(boolean iconShowing);
 
@@ -51,5 +63,17 @@ public interface CAbility extends CAbilityView, CExtensibleHandle {
 	void setItemAbility(CItem item, int slot);
 
 	CItem getItem();
+
+	boolean hasUniqueFlag(String flag);
+
+	void addUniqueFlag(String flag);
+
+	void removeUniqueFlag(String flag);
+
+	<T> T getUniqueValue(String key, Class<T> cls);
+
+	void addUniqueValue(Object item, String key);
+
+	void removeUniqueValue(String key);
 
 }

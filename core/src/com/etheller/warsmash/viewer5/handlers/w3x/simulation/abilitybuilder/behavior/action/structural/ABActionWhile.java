@@ -19,8 +19,8 @@ public class ABActionWhile implements ABAction {
 	@Override
 	public void runAction(final CSimulation game, final CUnit caster, final Map<String, Object> localStore,
 			final int castId) {
-		while (this.condition.evaluate(game, caster, localStore, castId)) {
-			for (final ABAction periodicAction : this.loopActions) {
+		while (condition.callback(game, caster, localStore, castId)) {
+			for (ABAction periodicAction : loopActions) {
 				periodicAction.runAction(game, caster, localStore, castId);
 			}
 			final Boolean brk = (Boolean) localStore.remove(ABLocalStoreKeys.BREAK);

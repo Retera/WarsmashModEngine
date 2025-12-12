@@ -7,6 +7,9 @@ import java.util.Map;
 import com.etheller.warsmash.parsers.jass.JassTextGenerator;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.ability.AbilityBuilderAbility;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.ability.AbilityBuilderActiveAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.unitcallbacks.ABUnitCallback;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.widget.ABWidgetCallback;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABCondition;
@@ -14,20 +17,26 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.types.impl.CAbilityTypeAbilityBuilderLevelData;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CTargetType;
 
-public class ABConditionIsValidTarget implements ABCondition {
+public class ABConditionIsValidTarget extends ABCondition {
 
 	private ABUnitCallback caster;
 	private ABWidgetCallback target;
 
 	@SuppressWarnings("unchecked")
 	@Override
-	public boolean evaluate(CSimulation game, CUnit casterUnit, Map<String, Object> localStore, final int castId) {
+	public Boolean callback(CSimulation game, CUnit casterUnit, Map<String, Object> localStore, final int castId) {
 		CUnit theCaster = casterUnit;
 
-		final List<CAbilityTypeAbilityBuilderLevelData> levelData = (List<CAbilityTypeAbilityBuilderLevelData>) localStore
-				.get(ABLocalStoreKeys.LEVELDATA);
-		final EnumSet<CTargetType> targetsAllowed = levelData
-				.get(((int) localStore.get(ABLocalStoreKeys.CURRENTLEVEL)) - 1).getTargetsAllowed();
+		EnumSet<CTargetType> targetsAllowed = null;
+		AbilityBuilderAbility ability = (AbilityBuilderAbility) localStore.get(ABLocalStoreKeys.ABILITY);
+		if (ability != null && ability instanceof AbilityBuilderActiveAbility) {
+			targetsAllowed = ((AbilityBuilderActiveAbility) ability).getTargetsAllowed();
+		} else {
+			List<CAbilityTypeAbilityBuilderLevelData> levelData = (List<CAbilityTypeAbilityBuilderLevelData>) localStore
+					.get(ABLocalStoreKeys.LEVELDATA);
+			targetsAllowed = levelData.get(((int) localStore.get(ABLocalStoreKeys.CURRENTLEVEL)) - 1)
+					.getTargetsAllowed();
+		}
 
 		if (targetsAllowed.isEmpty()) {
 			return true;
@@ -36,13 +45,12 @@ public class ABConditionIsValidTarget implements ABCondition {
 			theCaster = this.caster.callback(game, casterUnit, localStore, castId);
 		}
 
-//		CWidget theTarget = target.callback(game, theCaster, localStore, castId);
-//		for (CTargetType tar : targetsAllowed) {
-//			System.err.println("Matches " + tar + "? " + theTarget.canBeTargetedBy(game, theCaster, EnumSet.of(tar)));
-//		}
+		CWidget widget = this.target.callback(game, casterUnit, localStore, castId);
+		if (widget == null) {
+			return false;
+		}
 
-		return this.target.callback(game, casterUnit, localStore, castId).canBeTargetedBy(game, theCaster,
-				targetsAllowed);
+		return widget.canBeTargetedBy(game, theCaster, targetsAllowed);
 	}
 
 	@Override
@@ -50,8 +58,7 @@ public class ABConditionIsValidTarget implements ABCondition {
 		String casterExpr;
 		if (this.caster == null) {
 			casterExpr = jassTextGenerator.getCaster();
-		}
-		else {
+		} else {
 			casterExpr = this.caster.generateJassEquivalent(jassTextGenerator);
 		}
 		return "IsValidTargetAU(" + this.target.generateJassEquivalent(jassTextGenerator) + ", " + casterExpr + ", "

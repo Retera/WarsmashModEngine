@@ -6,6 +6,7 @@ import java.util.Map;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CDestructable;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityPointTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTargetVisitor;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABAction;
@@ -51,12 +52,14 @@ public class ABProjectileListener implements CAbilityProjectileListener {
 			localStore.put(ABLocalStoreKeys.THISPROJECTILE+castId, projectile);
 			localStore.put(ABLocalStoreKeys.PROJECTILEHITUNIT+castId, targetUnit);
 			localStore.put(ABLocalStoreKeys.PROJECTILEHITDEST+castId, targetDest);
+			localStore.put(ABLocalStoreKeys.PROJECTILECURRENTLOC+castId, new AbilityPointTarget(projectile.getX(), projectile.getY()));
 			for (ABAction action : onHit) {
 				action.runAction(game, caster, localStore, castId);
 			}
 			localStore.remove(ABLocalStoreKeys.PROJECTILEHITUNIT+castId);
 			localStore.remove(ABLocalStoreKeys.PROJECTILEHITDEST+castId);
 			localStore.remove(ABLocalStoreKeys.THISPROJECTILE+castId);
+			localStore.remove(ABLocalStoreKeys.PROJECTILECURRENTLOC+castId);
 		}
 	}
 

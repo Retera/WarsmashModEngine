@@ -12,7 +12,7 @@ public class ABCallbackGetUnitCurrentMana extends ABFloatCallback {
 	
 	@Override
 	public Float callback(CSimulation game, CUnit caster, Map<String, Object> localStore, final int castId) {
-		return unit.callback(game, caster, localStore, castId).getMana();
+		return unit == null ? caster.getMana() : unit.callback(game, caster, localStore, castId).getMana();
 	}
 
 }

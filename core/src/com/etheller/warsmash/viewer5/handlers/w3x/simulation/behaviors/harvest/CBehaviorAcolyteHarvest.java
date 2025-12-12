@@ -2,6 +2,7 @@ package com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.harvest;
 
 import com.badlogic.gdx.math.Vector2;
 import com.etheller.warsmash.viewer5.handlers.w3x.AnimationTokens.PrimaryTag;
+import com.etheller.warsmash.util.WarsmashConstants;
 import com.etheller.warsmash.viewer5.handlers.w3x.SequenceUtils;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
@@ -21,12 +22,15 @@ public class CBehaviorAcolyteHarvest extends CAbstractRangedBehavior {
 	private boolean harvesting = false;
 	private float harvestStandX, harvestStandY;
 
+	private int nextNotifyTick = 0;
+
 	public CBehaviorAcolyteHarvest(final CUnit unit, final CAbilityAcolyteHarvest abilityWispHarvest) {
 		super(unit);
 		this.abilityAcolyteHarvest = abilityWispHarvest;
 	}
 
 	public CBehavior reset(CSimulation game, final CWidget target) {
+		this.nextNotifyTick = 0;
 		return innerReset(game, target, false);
 	}
 
@@ -53,6 +57,14 @@ public class CBehaviorAcolyteHarvest extends CAbstractRangedBehavior {
 				simulation.unitRepositioned(this.unit); // dont interpolate, instant jump
 			}
 			this.unit.getUnitAnimationListener().playAnimation(false, PrimaryTag.STAND, SequenceUtils.WORK, 1.0f, true);
+			if (this.nextNotifyTick == 0 || simulation.getGameTurnTick() >= this.nextNotifyTick) {
+				if (this.nextNotifyTick == 0) {
+					this.nextNotifyTick = (int) (simulation.getGameTurnTick()
+							+ WarsmashConstants.ONGOING_BEHAVIOR_NOTIFICATION_TICKS);
+				} else {
+					this.unit.fireBehaviorChangeEvent(simulation, this, true);
+				}
+			}
 		}
 		return this;
 	}

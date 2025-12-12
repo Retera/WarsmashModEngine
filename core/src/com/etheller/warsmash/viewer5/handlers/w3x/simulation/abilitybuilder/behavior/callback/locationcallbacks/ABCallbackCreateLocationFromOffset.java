@@ -6,6 +6,7 @@ import com.etheller.warsmash.parsers.jass.JassTextGenerator;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityPointTarget;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.booleancallbacks.ABBooleanCallback;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.floatcallbacks.ABFloatCallback;
 
 public class ABCallbackCreateLocationFromOffset extends ABLocationCallback {
@@ -13,6 +14,8 @@ public class ABCallbackCreateLocationFromOffset extends ABLocationCallback {
 	private ABLocationCallback origin;
 	private ABFloatCallback dist;
 	private ABFloatCallback angle;
+	
+	private ABBooleanCallback angleInDegrees;
 
 	@Override
 	public AbilityPointTarget callback(CSimulation game, CUnit caster, Map<String, Object> localStore,
@@ -20,7 +23,10 @@ public class ABCallbackCreateLocationFromOffset extends ABLocationCallback {
 		final AbilityPointTarget orig = this.origin.callback(game, caster, localStore, castId);
 		final float d = this.dist.callback(game, caster, localStore, castId);
 		final float a = this.angle.callback(game, caster, localStore, castId);
-
+		
+		if (angleInDegrees != null && angleInDegrees.callback(game, caster, localStore, castId)) {
+			return new AbilityPointTarget((float) (orig.x + (d * Math.cos(Math.toRadians(a)))), (float) (orig.y + (d * Math.sin(Math.toRadians(a)))));
+		}
 		return new AbilityPointTarget((float) (orig.x + (d * Math.cos(a))), (float) (orig.y + (d * Math.sin(a))));
 	}
 

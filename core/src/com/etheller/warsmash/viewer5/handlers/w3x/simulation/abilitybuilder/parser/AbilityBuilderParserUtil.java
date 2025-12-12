@@ -10,9 +10,12 @@ import com.google.gson.JsonParseException;
 
 public class AbilityBuilderParserUtil {
 	public static void loadAbilityBuilderFiles(final AbilityBuilderFileListener listener) {
+		loadAbilityBuilderFiles(listener, "abilityBehaviors");
+	}
+	public static void loadAbilityBuilderFiles(final AbilityBuilderFileListener listener, String folder) {
 		final Gson gson = AbilityBuilderGsonBuilder.create();
 		try {
-			final File abilityBehaviorsDir = new File("abilityBehaviors");
+			final File abilityBehaviorsDir = new File(folder);
 			final File[] abilityBehaviorFiles = abilityBehaviorsDir.listFiles();
 			if (abilityBehaviorFiles != null) {
 				for (final File abilityBehaviorFile : abilityBehaviorFiles) {
@@ -48,6 +51,9 @@ public class AbilityBuilderParserUtil {
 		}
 		catch (final IllegalArgumentException e) {
 			System.err.println("Failed to load Ability Builder config file: " + abilityBehaviorFile.getName());
+			e.printStackTrace();
+		} catch (FileNotFoundException e) {
+			System.err.println("Failed to find Ability Builder config file: " + abilityBehaviorFile.getName());
 			e.printStackTrace();
 		}
 	}

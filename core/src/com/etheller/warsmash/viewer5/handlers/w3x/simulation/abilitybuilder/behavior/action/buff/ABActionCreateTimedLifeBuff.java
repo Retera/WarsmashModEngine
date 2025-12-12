@@ -17,7 +17,7 @@ public class ABActionCreateTimedLifeBuff implements ABSingleAction {
 	private ABIDCallback buffId;
 	private ABFloatCallback duration;
 	private ABBooleanCallback explode;
-
+	
 	@Override
 	public void runAction(final CSimulation game, final CUnit caster, final Map<String, Object> localStore,
 			final int castId) {

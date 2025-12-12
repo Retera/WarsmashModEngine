@@ -39,6 +39,10 @@ public class CWidgetEvent extends RemovableTriggerEvent {
 		return this.eventType;
 	}
 
+	public CWidget getWidget() {
+		return this.widget;
+	}
+
 	@Override
 	public void remove() {
 		this.widget.removeEvent(this);

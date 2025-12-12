@@ -215,6 +215,16 @@ local :
 		$$ = new JassLocalDefinitionStatement($3, $2, $4);
 	}
 	|
+	LOCAL type STRUCT
+	{
+		$$ = new JassLocalStatement("struct", $2);
+	}
+	|
+	LOCAL type STRUCT assignTail
+	{
+		$$ = new JassLocalDefinitionStatement("struct", $2, $4);
+	}
+	|
 	type ID
 	{
 		$$ = new JassLocalStatement($2, $1);
@@ -334,6 +344,11 @@ baseExpression:
 		$$ = new ReferenceJassExpression($1);
 	}
 	|
+	STRUCT // a ReferenceExpression for a variable named "struct" despite this being silly
+	{
+		$$ = new ReferenceJassExpression("struct");
+	}
+	|
 	STRING_LITERAL //StringLiteralExpression
 	{
 		$$ = new LiteralJassExpression(StringJassValue.of($1));
@@ -389,7 +404,7 @@ baseExpression:
 		$$ = new LiteralJassExpression(BooleanJassValue.FALSE);
 	}
 	|
-	ID OPEN_BRACKET expression CLOSE_BRACKET // ArrayReferenceExpression
+	baseExpression OPEN_BRACKET expression CLOSE_BRACKET // ArrayReferenceExpression
 	{
 		$$ = new ArrayRefJassExpression($1, $3);
 	}
@@ -490,12 +505,17 @@ setPart:
 		$$ = new JassSetStatement($1, $3);
 	}
 	|
-	ID OPEN_BRACKET expression CLOSE_BRACKET EQUALS expression // ArrayedAssignmentStatement
+	STRUCT EQUALS expression //SetStatement
+	{
+		$$ = new JassSetStatement("struct", $3);
+	}
+	|
+	baseExpression OPEN_BRACKET expression CLOSE_BRACKET EQUALS expression // ArrayedAssignmentStatement
 	{
 		$$ = new JassArrayedAssignmentStatement($1, $3, $6);
 	}
 	|
-	baseExpression DOT ID EQUALS expression //SetStatement
+	baseExpression DOT ID EQUALS expression //SetMemberStatement
 	{
 		$$ = new JassSetMemberStatement($1, $3, $5);
 	}

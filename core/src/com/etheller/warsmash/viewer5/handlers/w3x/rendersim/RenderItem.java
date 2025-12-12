@@ -17,10 +17,11 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.vision.CPla
 
 public class RenderItem implements RenderWidget {
 	private final CItem simulationItem;
-	public final MdxComplexInstance instance;
+	public MdxComplexInstance instance;
 	public final float[] location = new float[3];
+	public final float angle;
 	public float radius;
-	public final MdxModel portraitModel;
+	public MdxModel portraitModel;
 	public SplatMover shadow;
 	public SplatMover selectionCircle;
 	public SplatMover selectionPreviewHighlight;
@@ -33,12 +34,34 @@ public class RenderItem implements RenderWidget {
 		this.simulationItem = simulationItem;
 		final MdxComplexInstance instance = (MdxComplexInstance) itemType.getModel().addInstance();
 
+		this.angle = angle;
 		this.location[0] = x;
 		this.location[1] = y;
 		this.location[2] = z;
 		instance.move(this.location);
 //		instance.localRotation.setFromAxisRad(RenderMathUtils.VEC3_UNIT_Z, angle);
 		instance.rotate(new Quaternion().setFromAxisRad(RenderMathUtils.VEC3_UNIT_Z, angle));
+		instance.setScene(map.worldScene);
+
+		if (itemType != null) {
+			final Vector3 tintingColor = itemType.getTintingColor();
+			instance.setVertexColor(new float[] { tintingColor.x, tintingColor.y, tintingColor.z });
+			instance.uniformScale(itemType.getModelScale());
+
+			this.radius = 1 * 36;
+		}
+
+		this.instance = instance;
+	}
+	
+	public void updateItemModel(final War3MapViewer map, RenderItemType itemType) {
+		this.instance.detach();
+		this.portraitModel.detach();
+		
+		this.portraitModel = itemType.getPortraitModel();
+		final MdxComplexInstance instance = (MdxComplexInstance) itemType.getModel().addInstance();
+		instance.move(this.location);
+		instance.rotate(new Quaternion().setFromAxisRad(RenderMathUtils.VEC3_UNIT_Z, this.angle));
 		instance.setScene(map.worldScene);
 
 		if (itemType != null) {

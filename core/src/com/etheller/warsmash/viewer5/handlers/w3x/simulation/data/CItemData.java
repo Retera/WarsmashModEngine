@@ -1,6 +1,7 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.data;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -12,6 +13,7 @@ import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CItem;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CItemType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnitTypeRequirement;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.item.CItemTypeJass;
 
 public class CItemData {
@@ -132,11 +134,16 @@ public class CItemData {
 				// do not bother to log this, means it didn't match constant (it's a user input)
 			}
 
-			itemTypeInstance = new CItemType(abilityList, cooldownGroup, ignoreCooldown, numberOfCharges, activelyUsed,
+			final List<String> requirementsString = itemType.getFieldAsList(CUnitData.REQUIRES);
+			final List<String> requirementsLevelsString = itemType.getFieldAsList(CUnitData.REQUIRES_AMOUNT);
+			final List<CUnitTypeRequirement> requirements = CUnitData.parseRequirements(requirementsString,
+					requirementsLevelsString);
+
+			itemTypeInstance = new CItemType(typeId, abilityList, cooldownGroup, ignoreCooldown, numberOfCharges, activelyUsed,
 					perishable, useAutomaticallyWhenAcquired, goldCost, lumberCost, stockMax, stockReplenishInterval,
 					stockStartDelay, hitPoints, armorType, level, levelUnclassified, priority, sellable, pawnable,
 					droppedWhenCarrierDies, canBeDropped, validTargetForTransformation, includeAsRandomChoice,
-					itemClass);
+					itemClass, requirements);
 			this.itemIdToItemType.put(typeId, itemTypeInstance);
 
 			if (includeAsRandomChoice) {
@@ -188,5 +195,9 @@ public class CItemData {
 	private static final class RandomItemSet {
 		private final List<War3ID> unclassifiedItems = new ArrayList<>();
 		private final Map<CItemTypeJass, List<War3ID>> classificationToItems = new HashMap<>();
+	}
+
+	public Collection<CItemType> getAllItemTypes() {
+		return this.itemIdToItemType.values();
 	}
 }

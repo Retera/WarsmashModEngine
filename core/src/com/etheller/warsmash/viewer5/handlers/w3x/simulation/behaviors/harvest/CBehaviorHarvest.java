@@ -69,6 +69,9 @@ public class CBehaviorHarvest extends CAbstractRangedBehavior
 
 	@Override
 	public CBehavior accept(final CUnit target) {
+		if (this.popoutFromMineTurnTick != 0) {
+			return this; // stay in mine
+		}
 		if ((this.abilityHarvest.getCarriedResourceAmount() == 0)
 				|| (this.abilityHarvest.getCarriedResourceType() != ResourceType.GOLD)) {
 			for (final CAbility ability : target.getAbilities()) {
@@ -76,11 +79,10 @@ public class CBehaviorHarvest extends CAbstractRangedBehavior
 					final CAbilityGoldMinable abilityGoldMine = (CAbilityGoldMinable) ability;
 					final int activeMiners = abilityGoldMine.getActiveMinerCount();
 					if (activeMiners < abilityGoldMine.getMiningCapacity()) {
+						this.unit.fireBehaviorChangeEvent(this.simulation, this, true);
 						abilityGoldMine.addMiner(this);
 						this.unit.setHidden(true);
 						this.unit.setInvulnerable(true);
-						this.unit.setPaused(true);
-						this.unit.setAcceptingOrders(false);
 						this.popoutFromMineTurnTick = this.simulation.getGameTurnTick()
 								+ (int) (abilityGoldMine.getMiningDuration() / WarsmashConstants.SIMULATION_STEP_TIME);
 					}
@@ -111,8 +113,6 @@ public class CBehaviorHarvest extends CAbstractRangedBehavior
 		this.popoutFromMineTurnTick = 0;
 		this.unit.setHidden(false);
 		this.unit.setInvulnerable(false);
-		this.unit.setPaused(false);
-		this.unit.setAcceptingOrders(true);
 		dropResources();
 		this.abilityHarvest.setCarriedResources(ResourceType.GOLD, goldMined);
 		if (this.unit.getUnitAnimationListener().addSecondaryTag(SecondaryTag.GOLD)) {
@@ -140,7 +140,7 @@ public class CBehaviorHarvest extends CAbstractRangedBehavior
 			dropResources();
 		}
 		this.abilityHarvest.setCarriedResources(ResourceType.LUMBER,
-				Math.min(this.abilityHarvest.getCarriedResourceAmount() + this.abilityHarvest.getDamageToTree(),
+				Math.min(this.abilityHarvest.getCarriedResourceAmount() + (this.abilityHarvest.getDamageToTree() * 15),
 						this.abilityHarvest.getLumberCapacity()));
 		if (this.unit.getUnitAnimationListener().addSecondaryTag(SecondaryTag.LUMBER)) {
 			this.unit.getUnitAnimationListener().forceResetCurrentAnimation();
@@ -249,7 +249,7 @@ public class CBehaviorHarvest extends CAbstractRangedBehavior
 
 	@Override
 	public boolean interruptable() {
-		return true;
+		return this.popoutFromMineTurnTick == 0;
 	}
 
 	@Override

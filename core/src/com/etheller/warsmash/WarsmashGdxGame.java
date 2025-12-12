@@ -1,8 +1,14 @@
 package com.etheller.warsmash;
 
+import java.io.BufferedReader;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.IntBuffer;
+import java.util.ArrayList;
+import java.util.List;
 
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
@@ -81,6 +87,7 @@ public class WarsmashGdxGame extends ApplicationAdapter implements CanvasProvide
 //		music.play();
 
 		this.mainModel = (MdxModel) this.viewer.load("Doodads\\Cinematic\\ArthasIllidanFight\\ArthasIllidanFight.mdx",
+//		this.mainModel = (MdxModel) this.viewer.load("MenuDoodle11graphs.mdx",
 //		this.mainModel = (MdxModel) this.viewer.load("UI\\Glues\\SinglePlayer\\NightElf_Exp\\NightElf_Exp.mdx",
 //		this.mainModel = (MdxModel) this.viewer.load("Abilities\\Spells\\Orc\\FeralSpirit\\feralspirittarget.mdx",
 				new PathSolver() {
@@ -101,11 +108,11 @@ public class WarsmashGdxGame extends ApplicationAdapter implements CanvasProvide
 
 		this.mainInstance.setScene(scene);
 //
-		final int animIndex = 1;
+		final int animIndex = 0;
 		this.modelCamera = this.mainModel.cameras.get(animIndex);
 		this.mainInstance.setSequence(animIndex);
 //
-//		this.mainInstance.setSequenceLoopMode(SequenceLoopMode.LOOP_TO_NEXT_ANIMATION);
+//		this.mainInstance.setSequenceLoopMode(SequenceLoopMode.ALWAYS_LOOP);
 
 //		acolytesHarvestingSceneJoke2(scene);
 
@@ -119,6 +126,26 @@ public class WarsmashGdxGame extends ApplicationAdapter implements CanvasProvide
 
 		this.font = new BitmapFont();
 		this.batch = new SpriteBatch();
+
+		this.gooberCameras = loadAllGooberCameras();
+	}
+
+	public static List<GooberCamera> loadAllGooberCameras() {
+		final List<GooberCamera> results = new ArrayList<>();
+		try (BufferedReader reader = new BufferedReader(new FileReader("/tmp/cameras.txt"))) {
+			String line;
+			while ((line = reader.readLine()) != null) {
+				final String[] splitLine = line.split(",");
+				results.add(new GooberCamera(Long.parseLong(splitLine[0]), Integer.parseInt(splitLine[1])));
+			}
+			return results;
+		}
+		catch (final FileNotFoundException e) {
+			throw new RuntimeException(e);
+		}
+		catch (final IOException e) {
+			throw new RuntimeException(e);
+		}
 	}
 
 	private void makeDruidSquare(final Scene scene) {
@@ -368,6 +395,9 @@ public class WarsmashGdxGame extends ApplicationAdapter implements CanvasProvide
 	private final float[] cameraPositionTemp = new float[3];
 	private final float[] cameraTargetTemp = new float[3];
 	private boolean firstFrame = true;
+	private List<GooberCamera> gooberCameras;
+	private final int gooberCameraIndex = 0;
+	private Long firstTime;
 
 	@Override
 	public void render() {
@@ -378,6 +408,18 @@ public class WarsmashGdxGame extends ApplicationAdapter implements CanvasProvide
 				this.cameraManager.horizontalAngle = 0;
 			}
 		}
+//		if (this.gooberCameraIndex < (this.gooberCameras.size() - 1)) {
+//			final GooberCamera nextCam = this.gooberCameras.get(this.gooberCameraIndex + 1);
+//			final long currentTimeMillis = System.currentTimeMillis();
+//			if (this.firstTime == null) {
+//				this.firstTime = currentTimeMillis;
+//			}
+//			final long elapsed = currentTimeMillis - this.firstTime;
+//			if (elapsed >= nextCam.time) {
+//				this.gooberCameraIndex++;
+//			}
+//		}
+//		this.modelCamera = this.mainModel.cameras.get(this.gooberCameras.get(this.gooberCameraIndex).index - 1);
 		this.modelCamera = this.mainModel.cameras.get(this.mainInstance.sequence);
 		this.cameraManager.updateCamera();
 		this.viewer.updateAndRender();
@@ -401,7 +443,8 @@ public class WarsmashGdxGame extends ApplicationAdapter implements CanvasProvide
 		if (this.firstFrame) {
 			final Music music = Gdx.audio.newMusic(new DataSourceFileHandle(this.viewer.dataSource,
 					"Sound\\Ambient\\DoodadEffects\\FinalCinematic.mp3"));
-			music.setVolume(0.2f);
+//					"Bring order in the night.mp3"));
+//			music.setVolume(0.2f);
 			music.setLooping(true);
 			music.play();
 			this.firstFrame = false;
@@ -531,5 +574,15 @@ public class WarsmashGdxGame extends ApplicationAdapter implements CanvasProvide
 
 	public DataSource getCodebase() {
 		return this.codebase;
+	}
+
+	private static final class GooberCamera {
+		private final long time;
+		private final int index;
+
+		public GooberCamera(final long time, final int index) {
+			this.time = time;
+			this.index = index;
+		}
 	}
 }

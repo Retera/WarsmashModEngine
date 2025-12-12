@@ -374,6 +374,7 @@ public final class GlobalScope {
 
 	public void resetGlobalInitialization() {
 		this.lastGlobalsBlockEndInstructionPtr = -1;
+		this.functionNameToInstructionPtr.remove(INIT_GLOBALS_AUTOGEN_FXN_NAME);
 	}
 
 	public void innerBeginDefiningGlobals(final int lineNo, final String sourceFile) {
@@ -751,6 +752,29 @@ public final class GlobalScope {
 	public HandleJassType getHandleType(final String typeName) {
 		// TODO avoid cast
 		return (HandleJassType) parseType(typeName);
+	}
+
+	public void inheritFrom(final GlobalScope other) {
+		this.indexedGlobals.clear();
+		this.indexedGlobals.addAll(other.indexedGlobals);
+		this.instructions.clear();
+		this.instructions.addAll(other.instructions);
+		this.globals.clear();
+		this.globals.putAll(other.globals);
+		this.fastGlobals.clear();
+		this.fastGlobals.putAll(other.fastGlobals);
+		this.functionNameToDefinition.clear();
+		this.functionNameToDefinition.putAll(other.functionNameToDefinition);
+		this.functionNameToInstructionPtr.clear();
+		this.functionNameToInstructionPtr.putAll(other.functionNameToInstructionPtr);
+		this.functionNameToNativeId.clear();
+		this.functionNameToNativeId.putAll(other.functionNameToNativeId);
+		this.indexedNativeFunctions.clear();
+		this.indexedNativeFunctions.addAll(other.indexedNativeFunctions);
+		this.types.clear();
+		this.types.putAll(other.types);
+		this.modules.clear();
+		this.modules.putAll(other.modules);
 	}
 
 }

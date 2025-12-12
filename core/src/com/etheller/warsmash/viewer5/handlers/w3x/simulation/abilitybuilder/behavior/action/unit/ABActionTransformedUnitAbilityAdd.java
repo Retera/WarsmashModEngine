@@ -8,7 +8,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.environment.PathingGrid.Moveme
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnitType;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.ability.AbilityBuilderActiveAbility;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.ability.AbilityBuilderAbility;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.booleancallbacks.ABBooleanCallback;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.floatcallbacks.ABFloatCallback;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.idcallbacks.ABIDCallback;
@@ -23,6 +23,8 @@ public class ABActionTransformedUnitAbilityAdd implements ABAction {
 	private ABUnitCallback unit;
 	private ABIDCallback baseUnitId;
 	private ABIDCallback alternateUnitId;
+
+	private ABBooleanCallback keepRatios;
 
 	private ABBooleanCallback instantTransformAtDurationEnd; // should the transform back be instant?
 
@@ -53,7 +55,7 @@ public class ABActionTransformedUnitAbilityAdd implements ABAction {
 		}
 		War3ID baseId = baseUnitId.callback(game, caster, localStore, castId);
 		War3ID altId = alternateUnitId.callback(game, caster, localStore, castId);
-		AbilityBuilderActiveAbility abil = (AbilityBuilderActiveAbility) localStore.get(ABLocalStoreKeys.ABILITY);
+		AbilityBuilderAbility abil = (AbilityBuilderAbility) localStore.get(ABLocalStoreKeys.ABILITY);
 
 		if (baseId == null || altId == null) {
 			localStore.put(ABLocalStoreKeys.FAILEDTOCAST + castId, true);
@@ -72,6 +74,7 @@ public class ABActionTransformedUnitAbilityAdd implements ABAction {
 		boolean instant = false;
 		boolean perm = false;
 		boolean charge = false;
+		boolean isKeepRatios = true;
 		float dur = 0;
 		float transTime = 0;
 		float landTime = 0;
@@ -88,6 +91,9 @@ public class ABActionTransformedUnitAbilityAdd implements ABAction {
 		}
 		if (this.requiresPayment != null) {
 			charge = this.requiresPayment.callback(game, caster, localStore, castId);
+		}
+		if (keepRatios != null) {
+			isKeepRatios = keepRatios.callback(game, caster, localStore, castId);
 		}
 		if (duration != null) {
 			dur = duration.callback(game, caster, localStore, castId);
@@ -123,7 +129,7 @@ public class ABActionTransformedUnitAbilityAdd implements ABAction {
 				action.runAction(game, u1, localStore, castId);
 			}
 		}
-		
+
 		if (dur > 0 && !perm) {
 			OnTransformationActions actions;
 			if (charge) {
@@ -131,29 +137,30 @@ public class ABActionTransformedUnitAbilityAdd implements ABAction {
 				int lumberCost = 0;
 				Integer foodCost = null;
 				if (game.getGameplayConstants().isRelativeUpgradeCosts()) {
-					
+
 					goldCost = baseType.getGoldCost() - u1.getUnitType().getGoldCost();
 					lumberCost = baseType.getLumberCost() - u1.getUnitType().getLumberCost();
 				} else {
 					goldCost = baseType.getGoldCost();
 					lumberCost = baseType.getLumberCost();
 				}
-				actions = new OnTransformationActions(goldCost, lumberCost, foodCost, null, onUntransformActions);
+				actions = new OnTransformationActions(goldCost, lumberCost, foodCost, null, onUntransformActions,
+						castId);
 			} else {
-				actions = new OnTransformationActions(onUntransformActions);
+				actions = new OnTransformationActions(onUntransformActions, castId);
 			}
-			
+
 			if (instant) {
-				TransformationHandler.createInstantTransformBackBuff(game, localStore, u1, baseType,
+				TransformationHandler.createInstantTransformBackBuff(game, caster, localStore, u1, baseType, isKeepRatios,
 						actions, abil, theBuffId, true, transTime, dur, perm);
 			} else {
 				boolean takingOff = u1.getMovementType() != MovementType.FLY
 						&& baseType.getMovementType() == MovementType.FLY;
 				boolean landing = u1.getMovementType() == MovementType.FLY
 						&& baseType.getMovementType() != MovementType.FLY;
-				TransformationHandler.createSlowTransformBackBuff(game, localStore, u1, baseType,
-						actions, abil, theBuffId, true, transTime, dur, perm,
-						takingOff, landing, imTakeOff, imLand, atlAdDelay, landTime, altAdTime);
+				TransformationHandler.createSlowTransformBackBuff(game, caster, localStore, u1, baseType, isKeepRatios, actions,
+						abil, theBuffId, true, transTime, dur, perm, takingOff, landing, imTakeOff, imLand, atlAdDelay,
+						landTime, altAdTime);
 			}
 		}
 

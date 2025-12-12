@@ -2,33 +2,39 @@ package com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks;
 
 import java.util.EnumSet;
 
+import com.etheller.warsmash.viewer5.handlers.w3x.AnimationTokens.SecondaryTag;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityPointTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTarget;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTargetVisitor;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTargetWidgetVisitor;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CAttackDamageFlags;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CAttackType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CTargetType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CWeaponType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.listeners.CUnitAttackPreDamageListenerDamageModResult;
 
 public class CUnitAttackNormal extends CUnitAttack {
+	private static CAttackDamageFlags ATTACK_FLAGS = new CAttackDamageFlags(false);
 
 	public CUnitAttackNormal(final float animationBackswingPoint, final float animationDamagePoint,
 			final CAttackType attackType, final float cooldownTime, final int damageBase, final int damageDice,
 			final int damageSidesPerDie, final int damageUpgradeAmount, final int range, final float rangeMotionBuffer,
 			final boolean showUI, final EnumSet<CTargetType> targetsAllowed, final String weaponSound,
-			final CWeaponType weaponType) {
+			final CWeaponType weaponType, final EnumSet<SecondaryTag> animationTag) {
 		super(animationBackswingPoint, animationDamagePoint, attackType, cooldownTime, damageBase, damageDice,
 				damageSidesPerDie, damageUpgradeAmount, range, rangeMotionBuffer, showUI, targetsAllowed, weaponSound,
-				weaponType);
+				weaponType, animationTag);
 	}
 
 	@Override
 	public CUnitAttack copy() {
 		return new CUnitAttackNormal(getAnimationBackswingPoint(), getAnimationDamagePoint(), getAttackType(),
 				getCooldownTime(), getDamageBase(), getDamageDice(), getDamageSidesPerDie(), getDamageUpgradeAmount(),
-				getRange(), getRangeMotionBuffer(), isShowUI(), getTargetsAllowed(), getWeaponSound(), getWeaponType());
+				getRange(), getRangeMotionBuffer(), isShowUI(), getTargetsAllowed(), getWeaponSound(), getWeaponType(),
+				getAnimationTag());
 	}
 
 	@Override
@@ -37,10 +43,14 @@ public class CUnitAttackNormal extends CUnitAttack {
 		attackListener.onLaunch();
 		final CWidget widget = target.visit(AbilityTargetWidgetVisitor.INSTANCE);
 		if (widget != null) {
-			CUnitAttackPreDamageListenerDamageModResult modDamage = runPreDamageListeners(simulation, unit, target, damage);
-			float damageDealt = widget.damage(simulation, unit, true, false, getAttackType(), getWeaponType().getDamageType(),
-					modDamage.isMiss() ? null : getWeaponSound(), modDamage.computeFinalDamage(), modDamage.getBonusDamage());
-			runPostDamageListeners(simulation, unit, target, damageDealt);
+			CUnitAttackPreDamageListenerDamageModResult modDamage = runPreDamageListeners(simulation, unit, target,
+					target.visit(AbilityTargetVisitor.POINT) != null ? target.visit(AbilityTargetVisitor.POINT)
+							: new AbilityPointTarget(target.getX(), target.getY()),
+					damage, this.attackModifier);
+			float damageDealt = widget.damage(simulation, unit, ATTACK_FLAGS, getAttackType(),
+					getWeaponType().getDamageType(), modDamage.isMiss() ? null : getWeaponSound(),
+					modDamage.computeFinalDamage(), modDamage.getBonusDamage());
+			runPostDamageListeners(simulation, unit, target, damageDealt, this.attackModifier);
 			attackListener.onHit(target, damage);
 		}
 	}

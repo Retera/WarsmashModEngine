@@ -4,6 +4,7 @@ import java.util.EnumSet;
 import java.util.List;
 
 import com.etheller.warsmash.util.War3ID;
+import com.etheller.warsmash.viewer5.handlers.w3x.SequenceUtils;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CDestructable;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
@@ -42,8 +43,8 @@ public class CAbilityHarvest extends AbstractGenericSingleIconActiveAbility {
 	private CWidget lastHarvestTarget;
 	private CBehaviorAttack behaviorTreeAttack;
 
-	public CAbilityHarvest(final int handleId, final War3ID code, final War3ID alias, final int damageToTree, final int goldCapacity,
-			final int lumberCapacity, final float castRange, final float duration) {
+	public CAbilityHarvest(final int handleId, final War3ID code, final War3ID alias, final int damageToTree,
+			final int goldCapacity, final int lumberCapacity, final float castRange, final float duration) {
 		super(handleId, code, alias);
 		this.damageToTree = damageToTree;
 		this.goldCapacity = goldCapacity;
@@ -74,7 +75,7 @@ public class CAbilityHarvest extends AbstractGenericSingleIconActiveAbility {
 				bestFitTreeAttack == null ? false : bestFitTreeAttack.isShowUI(),
 				bestFitTreeAttack == null ? EnumSet.of(CTargetType.TREE) : bestFitTreeAttack.getTargetsAllowed(),
 				bestFitTreeAttack == null ? "AxeMediumChop" : bestFitTreeAttack.getWeaponSound(),
-				bestFitTreeAttack == null ? CWeaponType.NORMAL : bestFitTreeAttack.getWeaponType());
+				bestFitTreeAttack == null ? CWeaponType.NORMAL : bestFitTreeAttack.getWeaponType(), SequenceUtils.WORK);
 	}
 
 	@Override
@@ -86,18 +87,20 @@ public class CAbilityHarvest extends AbstractGenericSingleIconActiveAbility {
 	}
 
 	@Override
-	public CBehavior begin(final CSimulation game, final CUnit caster, final int orderId, final CWidget target) {
+	public CBehavior begin(final CSimulation game, final CUnit caster, final int playerIndex, final int orderId,
+			final boolean autoOrder, final CWidget target) {
 		return this.behaviorHarvest.reset(game, target);
 	}
 
 	@Override
-	public CBehavior begin(final CSimulation game, final CUnit caster, final int orderId,
-			final AbilityPointTarget point) {
+	public CBehavior begin(final CSimulation game, final CUnit caster, final int playerIndex, final int orderId,
+			final boolean autoOrder, final AbilityPointTarget point) {
 		return caster.pollNextOrderBehavior(game);
 	}
 
 	@Override
-	public CBehavior beginNoTarget(final CSimulation game, final CUnit caster, final int orderId) {
+	public CBehavior beginNoTarget(final CSimulation game, final CUnit caster, final int playerIndex, final int orderId,
+			final boolean autoOrder) {
 		if (isToggleOn() && (orderId == OrderIds.returnresources)) {
 			return this.behaviorReturnResources.reset(game);
 		}
@@ -115,7 +118,7 @@ public class CAbilityHarvest extends AbstractGenericSingleIconActiveAbility {
 	}
 
 	@Override
-	protected void innerCheckCanUse(final CSimulation game, final CUnit unit, final int orderId,
+	protected void innerCheckCanUse(final CSimulation game, final CUnit unit, final int playerIndex, final int orderId,
 			final AbilityActivationReceiver receiver) {
 		receiver.useOk();
 	}
@@ -124,7 +127,7 @@ public class CAbilityHarvest extends AbstractGenericSingleIconActiveAbility {
 	protected void innerCheckCanTarget(final CSimulation game, final CUnit unit, final int orderId,
 			final CWidget target, final AbilityTargetCheckReceiver<CWidget> receiver) {
 		if (target instanceof CUnit) {
-			if(this.goldCapacity <= 0){
+			if (this.goldCapacity <= 0) {
 				receiver.targetCheckFailed(CommandStringErrorKeys.MUST_TARGET_A_TREE);
 				return;
 			}
@@ -145,7 +148,7 @@ public class CAbilityHarvest extends AbstractGenericSingleIconActiveAbility {
 			receiver.targetCheckFailed(CommandStringErrorKeys.MUST_TARGET_RESOURCES);
 		}
 		else if (target instanceof CDestructable) {
-			if(this.lumberCapacity <= 0){
+			if (this.lumberCapacity <= 0) {
 				receiver.targetCheckFailed(CommandStringErrorKeys.MUST_TARGET_A_GOLD_MINE);
 				return;
 			}
@@ -234,7 +237,7 @@ public class CAbilityHarvest extends AbstractGenericSingleIconActiveAbility {
 	}
 
 	@Override
-	public void onCancelFromQueue(final CSimulation game, final CUnit unit, final int orderId) {
+	public void onCancelFromQueue(final CSimulation game, final CUnit unit, final int playerIndex, final int orderId) {
 	}
 
 	public CBehaviorAttack getBehaviorTreeAttack() {
@@ -264,6 +267,11 @@ public class CAbilityHarvest extends AbstractGenericSingleIconActiveAbility {
 	@Override
 	public boolean isPhysical() {
 		return true;
+	}
+
+	@Override
+	public boolean isMagic() {
+		return false;
 	}
 
 	@Override

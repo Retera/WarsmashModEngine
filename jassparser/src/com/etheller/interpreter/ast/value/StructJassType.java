@@ -14,6 +14,7 @@ import com.etheller.interpreter.ast.expression.AllocateAsNewTypeExpression;
 import com.etheller.interpreter.ast.expression.ExtendHandleExpression;
 import com.etheller.interpreter.ast.expression.FunctionCallJassExpression;
 import com.etheller.interpreter.ast.expression.JassExpression;
+import com.etheller.interpreter.ast.expression.JassNewArrayExpression;
 import com.etheller.interpreter.ast.expression.JassNewExpression;
 import com.etheller.interpreter.ast.expression.MethodCallJassExpression;
 import com.etheller.interpreter.ast.expression.ReferenceJassExpression;
@@ -30,6 +31,7 @@ import com.etheller.interpreter.ast.statement.JassStatement;
 import com.etheller.interpreter.ast.struct.JassStructMemberType;
 import com.etheller.interpreter.ast.type.LiteralJassTypeToken;
 import com.etheller.interpreter.ast.type.NothingJassTypeToken;
+import com.etheller.interpreter.ast.value.visitor.ArrayTypeVisitor;
 import com.etheller.interpreter.ast.value.visitor.HandleJassTypeVisitor;
 import com.etheller.interpreter.ast.value.visitor.StructJassTypeVisitor;
 
@@ -289,6 +291,15 @@ public class StructJassType implements JassType, StructJassTypeInterface {
 		if (defaultValueExpression != null) {
 			this.defaultMemberInitializerStatements.add(new JassSetMemberStatement(
 					new ReferenceJassExpression(GlobalScope.KEYWORD_THIS), memberType.getId(), defaultValueExpression));
+		}
+		else {
+			final JassType type = memberType.getType();
+			final ArrayJassType arrayType = type.visit(ArrayTypeVisitor.getInstance());
+			if (arrayType != null) {
+				this.defaultMemberInitializerStatements
+						.add(new JassSetMemberStatement(new ReferenceJassExpression(GlobalScope.KEYWORD_THIS),
+								memberType.getId(), new JassNewArrayExpression(arrayType, 0)));
+			}
 		}
 	}
 

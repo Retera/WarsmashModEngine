@@ -9,6 +9,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.environment.PathingGrid.Moveme
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.inventory.CAbilityInventory;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTargetVisitor;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CAttackType;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CDamageFlags;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CTargetType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CDamageType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetCheckReceiver;
@@ -16,8 +17,8 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.CommandStringE
 
 public class CItem extends CWidget {
 	private final static int COLLISION_SIZE = 16;
-	private final War3ID typeId;
-	private final CItemType itemType;
+	private War3ID typeId;
+	private CItemType itemType;
 	private boolean hidden;
 	private boolean invulnerable;
 	private int charges;
@@ -40,6 +41,26 @@ public class CItem extends CWidget {
 		this.droppable = itemTypeInstance.isCanBeDropped();
 		this.pawnable = itemTypeInstance.isPawnable();
 	}
+	
+	public void setTypeId(CSimulation game, War3ID typeId) {
+		int slot = 0;
+		if (this.containedInventory != null) {
+			slot = this.getContainedInventory().getSlot(this);
+			this.forceDropIfHeld(game);
+		}
+		this.typeId = typeId;
+		this.itemType = game.getItemData().getItemType(typeId);
+		this.charges = this.itemType.getNumberOfCharges();
+		this.dropOnDeath = this.itemType.isDroppedWhenCarrierDies();
+		this.droppable = this.itemType.isCanBeDropped();
+		this.pawnable = this.itemType.isPawnable();
+		
+		game.updateItemModel(this);
+		if (this.containedInventory != null) {
+			this.containedInventory.giveItem(game, this.containedUnit, this, slot, false);
+		}
+		
+	}
 
 	@Override
 	public float getFlyHeight() {
@@ -52,10 +73,10 @@ public class CItem extends CWidget {
 	}
 
 	@Override
-	public float damage(final CSimulation simulation, final CUnit source, final boolean isAttack,
-			final boolean isRanged, final CAttackType attackType, final CDamageType damageType,
-			final String weaponSoundType, final float damage) {
-		if (this.invulnerable) {
+	public float damage(final CSimulation simulation, final CUnit source, final CDamageFlags flags,
+			final CAttackType attackType, final CDamageType damageType, final String weaponSoundType,
+			final float damage) {
+		if (this.invulnerable && !flags.isIgnoreInvulnerable()) {
 			return 0;
 		}
 		final boolean wasDead = isDead();
@@ -70,11 +91,10 @@ public class CItem extends CWidget {
 	}
 
 	@Override
-	public float damage(final CSimulation simulation, final CUnit source, final boolean isAttack,
-			final boolean isRanged, final CAttackType attackType, final CDamageType damageType,
-			final String weaponSoundType, final float damage, final float bonusDamage) {
-		return this.damage(simulation, source, isAttack, isRanged, attackType, damageType, weaponSoundType,
-				damage + bonusDamage);
+	public float damage(final CSimulation simulation, final CUnit source, final CDamageFlags flags,
+			final CAttackType attackType, final CDamageType damageType, final String weaponSoundType,
+			final float damage, final float bonusDamage) {
+		return this.damage(simulation, source, flags, attackType, damageType, weaponSoundType, damage + bonusDamage);
 	}
 
 	public void forceDropIfHeld(final CSimulation simulation) {

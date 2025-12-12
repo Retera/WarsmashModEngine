@@ -2169,4 +2169,37 @@ public class TerrainWdt extends TerrainInterface {
 		/* return true if complete */
 		boolean run();
 	}
+
+	@Override
+	public int[] getTerrainModBufferSize(final float x, final float y, final float width, final float height) {
+		return new int[] { Math.min(this.rows - 1, Math.max(0, get128CellX(x))),
+				Math.min(this.columns - 1, Math.max(0, get128CellY(y))),
+				Math.min(this.rows - 1, Math.max(0, get128CellX(x + width) + 1)),
+				Math.min(this.columns - 1, Math.max(0, get128CellY(y + height) + 1)) };
+	}
+
+	@Override
+	public int[] getTerrainModBufferSize(final float centerX, final float centerY, final float radius) {
+		return getTerrainModBufferSize(centerX - radius, centerY - radius, radius * 2, radius * 2);
+	}
+
+	@Override
+	public void updateGroundBuffer(final int[] rect, final float[] modBuffer) {
+
+	}
+
+	@Override
+	public void updateGroundBuffer(final float x, final float y, final float i) {
+
+	}
+
+	@Override
+	public float getTerrainSpaceX(final float x) {
+		return (x - this.centerOffset[0]) / 128.0f;
+	}
+
+	@Override
+	public float getTerrainSpaceY(final float y) {
+		return (y - this.centerOffset[1]) / 128.0f;
+	}
 }

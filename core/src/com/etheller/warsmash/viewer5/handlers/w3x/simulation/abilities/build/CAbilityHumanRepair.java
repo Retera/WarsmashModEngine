@@ -28,8 +28,8 @@ public class CAbilityHumanRepair extends AbstractGenericSingleIconActiveAbility 
 	private float castRange;
 	private CBehaviorHumanRepair behaviorRepair;
 	private boolean autocasting = false;
-	private float powerBuildCostRatio;
-	private float powerBuildTimeRatio;
+	private final float powerBuildCostRatio;
+	private final float powerBuildTimeRatio;
 
 	public CAbilityHumanRepair(final int handleId, final War3ID code, final War3ID alias,
 			final EnumSet<CTargetType> targetsAllowed, final float navalRangeBonus, final float powerBuildCostRatio,
@@ -37,6 +37,7 @@ public class CAbilityHumanRepair extends AbstractGenericSingleIconActiveAbility 
 			final float castRange) {
 		super(handleId, code, alias);
 		this.targetsAllowed = targetsAllowed;
+		this.targetsAllowed.add(CTargetType.REPAIRABLE);
 		this.navalRangeBonus = navalRangeBonus;
 		this.powerBuildCostRatio = powerBuildCostRatio;
 		this.powerBuildTimeRatio = powerBuildTimeRatio;
@@ -48,29 +49,37 @@ public class CAbilityHumanRepair extends AbstractGenericSingleIconActiveAbility 
 	@Override
 	protected void innerCheckCanTarget(final CSimulation game, final CUnit unit, final int orderId,
 			final CWidget target, final AbilityTargetCheckReceiver<CWidget> receiver) {
-		if(target.getLife() < target.getMaxLife()) {
-			if (target.canBeTargetedBy(game, unit, this.targetsAllowed, receiver)) {
-				final CUnit targetUnit = target.visit(AbilityTargetVisitor.UNIT);
-				if ((targetUnit != null) && targetUnit.isConstructing() && (this.powerBuildTimeRatio == 0 || !targetUnit.isConstructingPaused())) {
-					if(orderId == OrderIds.smart) {
-						receiver.orderIdNotAccepted();
-					} else {
-						receiver.targetCheckFailed(CommandStringErrorKeys.THAT_BUILDING_IS_CURRENTLY_UNDER_CONSTRUCTION);
-					}
+		if (target.canBeTargetedBy(game, unit, this.targetsAllowed, receiver)) {
+			final CUnit targetUnit = target.visit(AbilityTargetVisitor.UNIT);
+			final boolean underConstruction = (targetUnit != null) && targetUnit.isConstructing();
+			final boolean doHumanBuild = underConstruction && targetUnit.isConstructingPaused()
+					&& (this.powerBuildTimeRatio != 0);
+			if (doHumanBuild) {
+				// you can human build something even if it is mysteriously 100% hp somehow
+				receiver.targetOk(target);
+			}
+			else if (underConstruction) {
+				if (orderId == OrderIds.smart) {
+					receiver.orderIdNotAccepted();
 				}
 				else {
-					receiver.targetOk(target);
+					receiver.targetCheckFailed(CommandStringErrorKeys.THAT_BUILDING_IS_CURRENTLY_UNDER_CONSTRUCTION);
 				}
 			}
-			// else receiver called by canBeTargetedBy
-		}
-		else {
-			if(orderId == OrderIds.smart) {
-				receiver.orderIdNotAccepted();
-			} else {
-				receiver.targetCheckFailed(CommandStringErrorKeys.TARGET_IS_NOT_DAMAGED);
+			else if (target.getLife() < target.getMaxLife()) {
+				receiver.targetOk(target);
+			}
+			else {
+				if (orderId == OrderIds.smart) {
+					receiver.orderIdNotAccepted();
+				}
+				else {
+					receiver.targetCheckFailed(CommandStringErrorKeys.TARGET_IS_NOT_DAMAGED);
+				}
 			}
 		}
+		// else receiver called by canBeTargetedBy
+
 	}
 
 	@Override
@@ -98,7 +107,7 @@ public class CAbilityHumanRepair extends AbstractGenericSingleIconActiveAbility 
 	}
 
 	@Override
-	protected void innerCheckCanUse(final CSimulation game, final CUnit unit, final int orderId,
+	protected void innerCheckCanUse(final CSimulation game, final CUnit unit, final int playerIndex, final int orderId,
 			final AbilityActivationReceiver receiver) {
 		receiver.useOk();
 	}
@@ -119,23 +128,25 @@ public class CAbilityHumanRepair extends AbstractGenericSingleIconActiveAbility 
 	}
 
 	@Override
-	public void onCancelFromQueue(final CSimulation game, final CUnit unit, final int orderId) {
+	public void onCancelFromQueue(final CSimulation game, final CUnit unit, final int playerIndex, final int orderId) {
 
 	}
 
 	@Override
-	public CBehavior begin(final CSimulation game, final CUnit caster, final int orderId, final CWidget target) {
+	public CBehavior begin(final CSimulation game, final CUnit caster, final int playerIndex, final int orderId,
+			final boolean autoOrder, final CWidget target) {
 		return this.behaviorRepair.reset(game, target);
 	}
 
 	@Override
-	public CBehavior begin(final CSimulation game, final CUnit caster, final int orderId,
-			final AbilityPointTarget point) {
+	public CBehavior begin(final CSimulation game, final CUnit caster, final int playerIndex, final int orderId,
+			final boolean autoOrder, final AbilityPointTarget point) {
 		return null;
 	}
 
 	@Override
-	public CBehavior beginNoTarget(final CSimulation game, final CUnit caster, final int orderId) {
+	public CBehavior beginNoTarget(final CSimulation game, final CUnit caster, final int playerIndex, final int orderId,
+			final boolean autoOrder) {
 		return null;
 	}
 
@@ -203,19 +214,17 @@ public class CAbilityHumanRepair extends AbstractGenericSingleIconActiveAbility 
 	}
 
 	@Override
-	public void setAutoCastOn(final CUnit caster, final boolean autoCastOn) {
+	public void setAutoCastOn(final CSimulation simulation, final CUnit caster, final boolean autoCastOn,
+			final boolean notify) {
 		this.autocasting = autoCastOn;
-		caster.setAutocastAbility(autoCastOn ? this : null);
-	}
-
-	@Override
-	public void setAutoCastOff() {
-		this.autocasting = false;
+		if (notify) {
+			caster.setAutocastAbility(simulation, autoCastOn ? this : null);
+		}
 	}
 
 	@Override
 	public boolean isAutoCastOn() {
-		return autocasting;
+		return this.autocasting;
 	}
 
 	@Override
@@ -229,26 +238,31 @@ public class CAbilityHumanRepair extends AbstractGenericSingleIconActiveAbility 
 	}
 
 	@Override
-	public void checkCanAutoTarget(CSimulation game, CUnit unit, int orderId, CWidget target,
-			AbilityTargetCheckReceiver<CWidget> receiver) {
-		this.checkCanTarget(game, unit, orderId, target, receiver);
+	public void checkCanAutoTarget(final CSimulation game, final CUnit unit, final int playerIndex, final int orderId,
+			final CWidget target, final AbilityTargetCheckReceiver<CWidget> receiver) {
+		this.checkCanTarget(game, unit, playerIndex, orderId, false, target, receiver);
 	}
 
 	@Override
-	public void checkCanAutoTarget(CSimulation game, CUnit unit, int orderId, AbilityPointTarget target,
-			AbilityTargetCheckReceiver<AbilityPointTarget> receiver) {
+	public void checkCanAutoTarget(final CSimulation game, final CUnit unit, final int playerIndex, final int orderId,
+			final AbilityPointTarget target, final AbilityTargetCheckReceiver<AbilityPointTarget> receiver) {
 		receiver.orderIdNotAccepted();
 	}
 
 	@Override
-	public void checkCanAutoTargetNoTarget(CSimulation game, CUnit unit, int orderId,
-			AbilityTargetCheckReceiver<Void> receiver) {
+	public void checkCanAutoTargetNoTarget(final CSimulation game, final CUnit unit, final int playerIndex,
+			final int orderId, final AbilityTargetCheckReceiver<Void> receiver) {
 		receiver.orderIdNotAccepted();
 	}
 
 	@Override
 	public boolean isPhysical() {
 		return true;
+	}
+
+	@Override
+	public boolean isMagic() {
+		return false;
 	}
 
 	@Override

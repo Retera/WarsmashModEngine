@@ -8,6 +8,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.floatcallbacks.ABFloatCallback;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.behavior.callback.timercallbacks.ABTimerCallback;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABSingleAction;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.timers.CTimer;
 
 public class ABActionUpdateTimerTimeout implements ABSingleAction {
 
@@ -17,8 +18,8 @@ public class ABActionUpdateTimerTimeout implements ABSingleAction {
 	@Override
 	public void runAction(final CSimulation game, final CUnit caster, final Map<String, Object> localStore,
 			final int castId) {
-		this.timer.callback(game, caster, localStore, castId)
-				.setTimeoutTime(this.timeout.callback(game, caster, localStore, castId));
+		CTimer theT = this.timer.callback(game, caster, localStore, castId);
+		theT.resetTimeoutTime(this.timeout.callback(game, caster, localStore, castId));
 	}
 
 	@Override

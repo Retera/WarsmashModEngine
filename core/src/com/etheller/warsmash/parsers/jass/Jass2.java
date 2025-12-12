@@ -173,6 +173,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.jass.CAbs
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.jass.CBehaviorJass;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.jass.CRangedBehaviorJass;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CAttackType;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CGenericDamageFlags;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CTargetType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.projectile.CAbilityProjectileListener;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.projectile.CAttackProjectile;
@@ -829,7 +830,10 @@ public class Jass2 {
 						final Double timeout = arguments.get(1).visit(RealJassValueVisitor.getInstance());
 						final boolean periodic = arguments.get(2).visit(BooleanJassValueVisitor.getInstance());
 						final CodeJassValue handlerFunc = nullable(arguments, 3, CodeJassValueVisitor.getInstance());
-						if ((timer != null) && !timer.isRunning()) {
+						if ((timer != null) && timer.isRunning()) {
+							timer.pause(this.simulation);
+						}
+						if ((timer != null)) {
 							timer.setTimeoutTime(timeout.floatValue());
 							timer.setRepeats(periodic);
 							timer.setHandlerFunc(handlerFunc);
@@ -1009,12 +1013,13 @@ public class Jass2 {
 						int abilityHandleId = 0;
 						AbilityPointTarget targetAsPoint = new AbilityPointTarget(whichLocation.x, whichLocation.y);
 						for (final CAbility ability : whichUnit.getAbilities()) {
-							ability.checkCanUse(CommonEnvironment.this.simulation, whichUnit, orderId,
-									activationReceiver);
+							ability.checkCanUse(CommonEnvironment.this.simulation, whichUnit,
+									whichUnit.getPlayerIndex(), orderId, false, activationReceiver);
 							if (activationReceiver.isOk()) {
 								final PointAbilityTargetCheckReceiver targetReceiver = PointAbilityTargetCheckReceiver.INSTANCE;
-								ability.checkCanTarget(CommonEnvironment.this.simulation, whichUnit, orderId,
-										targetAsPoint, targetReceiver.reset());
+								ability.checkCanTarget(CommonEnvironment.this.simulation, whichUnit,
+										whichUnit.getPlayerIndex(), orderId, false, targetAsPoint,
+										targetReceiver.reset());
 								if (targetReceiver.getTarget() != null) {
 									targetAsPoint = targetReceiver.getTarget();
 									abilityHandleId = ability.getHandleId();
@@ -1042,11 +1047,12 @@ public class Jass2 {
 				AbilityPointTarget targetAsPoint = new AbilityPointTarget((float) whichLocationX,
 						(float) whichLocationY);
 				for (final CAbility ability : whichUnit.getAbilities()) {
-					ability.checkCanUse(CommonEnvironment.this.simulation, whichUnit, orderId, activationReceiver);
+					ability.checkCanUse(CommonEnvironment.this.simulation, whichUnit, whichUnit.getPlayerIndex(),
+							orderId, false, activationReceiver);
 					if (activationReceiver.isOk()) {
 						final PointAbilityTargetCheckReceiver targetReceiver = PointAbilityTargetCheckReceiver.INSTANCE;
-						ability.checkCanTarget(CommonEnvironment.this.simulation, whichUnit, orderId, targetAsPoint,
-								targetReceiver.reset());
+						ability.checkCanTarget(CommonEnvironment.this.simulation, whichUnit, whichUnit.getPlayerIndex(),
+								orderId, false, targetAsPoint, targetReceiver.reset());
 						if (targetReceiver.getTarget() != null) {
 							targetAsPoint = targetReceiver.getTarget();
 							abilityHandleId = ability.getHandleId();
@@ -1077,12 +1083,13 @@ public class Jass2 {
 						final int orderId = OrderIdUtils.getOrderId(orderString);
 						int abilityHandleId = 0;
 						for (final CAbility ability : whichUnit.getAbilities()) {
-							ability.checkCanUse(CommonEnvironment.this.simulation, whichUnit, orderId,
-									activationReceiver);
+							ability.checkCanUse(CommonEnvironment.this.simulation, whichUnit,
+									whichUnit.getPlayerIndex(), orderId, false, activationReceiver);
 							if (activationReceiver.isOk()) {
 								final CWidgetAbilityTargetCheckReceiver targetReceiver = CWidgetAbilityTargetCheckReceiver.INSTANCE;
-								ability.checkCanTarget(CommonEnvironment.this.simulation, whichUnit, orderId,
-										whichTarget, targetReceiver.reset());
+								ability.checkCanTarget(CommonEnvironment.this.simulation, whichUnit,
+										whichUnit.getPlayerIndex(), orderId, false, whichTarget,
+										targetReceiver.reset());
 								if (targetReceiver.getTarget() != null) {
 									whichTarget = targetReceiver.getTarget();
 									abilityHandleId = ability.getHandleId();
@@ -1108,12 +1115,13 @@ public class Jass2 {
 						final BooleanAbilityActivationReceiver activationReceiver = BooleanAbilityActivationReceiver.INSTANCE;
 						int abilityHandleId = 0;
 						for (final CAbility ability : whichUnit.getAbilities()) {
-							ability.checkCanUse(CommonEnvironment.this.simulation, whichUnit, orderId,
-									activationReceiver);
+							ability.checkCanUse(CommonEnvironment.this.simulation, whichUnit,
+									whichUnit.getPlayerIndex(), orderId, false, activationReceiver);
 							if (activationReceiver.isOk()) {
 								final CWidgetAbilityTargetCheckReceiver targetReceiver = CWidgetAbilityTargetCheckReceiver.INSTANCE;
-								ability.checkCanTarget(CommonEnvironment.this.simulation, whichUnit, orderId,
-										whichTarget, targetReceiver.reset());
+								ability.checkCanTarget(CommonEnvironment.this.simulation, whichUnit,
+										whichUnit.getPlayerIndex(), orderId, false, whichTarget,
+										targetReceiver.reset());
 								if (targetReceiver.getTarget() != null) {
 									whichTarget = targetReceiver.getTarget();
 									abilityHandleId = ability.getHandleId();
@@ -1139,13 +1147,13 @@ public class Jass2 {
 						final int orderId = OrderIdUtils.getOrderId(orderString);
 						int abilityHandleId = 0;
 						for (final CAbility ability : whichUnit.getAbilities()) {
-							ability.checkCanUse(CommonEnvironment.this.simulation, whichUnit, orderId,
-									activationReceiver);
+							ability.checkCanUse(CommonEnvironment.this.simulation, whichUnit,
+									whichUnit.getPlayerIndex(), orderId, false, activationReceiver);
 							if (activationReceiver.isOk()) {
 								final BooleanAbilityTargetCheckReceiver<Void> targetReceiver = BooleanAbilityTargetCheckReceiver
 										.<Void>getInstance();
-								ability.checkCanTargetNoTarget(CommonEnvironment.this.simulation, whichUnit, orderId,
-										targetReceiver.reset());
+								ability.checkCanTargetNoTarget(CommonEnvironment.this.simulation, whichUnit,
+										whichUnit.getPlayerIndex(), orderId, false, targetReceiver.reset());
 								if (targetReceiver.isTargetable()) {
 									abilityHandleId = ability.getHandleId();
 								}
@@ -1167,13 +1175,13 @@ public class Jass2 {
 						final BooleanAbilityActivationReceiver activationReceiver = BooleanAbilityActivationReceiver.INSTANCE;
 						int abilityHandleId = 0;
 						for (final CAbility ability : whichUnit.getAbilities()) {
-							ability.checkCanUse(CommonEnvironment.this.simulation, whichUnit, orderId,
-									activationReceiver);
+							ability.checkCanUse(CommonEnvironment.this.simulation, whichUnit,
+									whichUnit.getPlayerIndex(), orderId, false, activationReceiver);
 							if (activationReceiver.isOk()) {
 								final BooleanAbilityTargetCheckReceiver<Void> targetReceiver = BooleanAbilityTargetCheckReceiver
 										.<Void>getInstance();
-								ability.checkCanTargetNoTarget(CommonEnvironment.this.simulation, whichUnit, orderId,
-										targetReceiver.reset());
+								ability.checkCanTargetNoTarget(CommonEnvironment.this.simulation, whichUnit,
+										whichUnit.getPlayerIndex(), orderId, false, targetReceiver.reset());
 								if (targetReceiver.isTargetable()) {
 									abilityHandleId = ability.getHandleId();
 								}
@@ -1183,6 +1191,108 @@ public class Jass2 {
 								orderId, false);
 						return BooleanJassValue.of(abilityHandleId != 0);
 					});
+
+			jassProgramVisitor.getJassNativeManager().createNative("UnitUseItem",
+					(arguments, globalScope, triggerScope) -> {
+						final CUnit whichUnit = nullable(arguments, 0, ObjectJassValueVisitor.getInstance());
+						if (whichUnit == null) {
+							return BooleanJassValue.FALSE;
+						}
+						final CItem item = arguments.get(1).visit(ObjectJassValueVisitor.getInstance());
+						final CPlayerUnitOrderExecutor defaultPlayerUnitOrderExecutor = CommonEnvironment.this.simulation
+								.getDefaultPlayerUnitOrderExecutor(whichUnit.getPlayerIndex());
+						final BooleanAbilityActivationReceiver activationReceiver = BooleanAbilityActivationReceiver.INSTANCE;
+						final int orderId = OrderIdUtils.getOrderId(
+								"itemuse" + String.format("%02d", item.getContainedInventory().getSlot(item)));
+						int abilityHandleId = 0;
+						for (final CAbility ability : whichUnit.getAbilities()) {
+							ability.checkCanUse(CommonEnvironment.this.simulation, whichUnit, whichUnit.getPlayerIndex(), orderId, false,
+									activationReceiver);
+							if (activationReceiver.isOk()) {
+								final BooleanAbilityTargetCheckReceiver<Void> targetReceiver = BooleanAbilityTargetCheckReceiver
+										.<Void>getInstance();
+								ability.checkCanTargetNoTarget(CommonEnvironment.this.simulation, whichUnit, whichUnit.getPlayerIndex(), orderId,
+										false, targetReceiver.reset());
+								if (targetReceiver.isTargetable()) {
+									abilityHandleId = ability.getHandleId();
+								}
+							}
+						}
+						defaultPlayerUnitOrderExecutor.issueImmediateOrder(whichUnit.getHandleId(), abilityHandleId,
+								orderId, false);
+						return BooleanJassValue.of(abilityHandleId != 0);
+					});
+			final JassFunction unitUseItemTarget = (arguments, globalScope, triggerScope) -> {
+				final CUnit whichUnit = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());
+				if (whichUnit == null) {
+					return BooleanJassValue.FALSE;
+				}
+				final CItem item = arguments.get(1).visit(ObjectJassValueVisitor.getInstance());
+				CWidget whichTarget = arguments.get(2).visit(ObjectJassValueVisitor.getInstance());
+				final CPlayerUnitOrderExecutor defaultPlayerUnitOrderExecutor = CommonEnvironment.this.simulation
+						.getDefaultPlayerUnitOrderExecutor(whichUnit.getPlayerIndex());
+				final BooleanAbilityActivationReceiver activationReceiver = BooleanAbilityActivationReceiver.INSTANCE;
+				final int orderId = OrderIdUtils
+						.getOrderId("itemuse" + String.format("%02d", item.getContainedInventory().getSlot(item)));
+				int abilityHandleId = 0;
+				for (final CAbility ability : whichUnit.getAbilities()) {
+					ability.checkCanUse(CommonEnvironment.this.simulation, whichUnit, whichUnit.getPlayerIndex(), orderId, false,
+							activationReceiver);
+					if (activationReceiver.isOk()) {
+						final CWidgetAbilityTargetCheckReceiver targetReceiver = CWidgetAbilityTargetCheckReceiver.INSTANCE;
+						ability.checkCanTarget(CommonEnvironment.this.simulation, whichUnit, whichUnit.getPlayerIndex(), orderId, false,
+								whichTarget, targetReceiver.reset());
+						if (targetReceiver.getTarget() != null) {
+							whichTarget = targetReceiver.getTarget();
+							abilityHandleId = ability.getHandleId();
+						}
+					}
+				}
+				if (abilityHandleId != 0) {
+					defaultPlayerUnitOrderExecutor.issueTargetOrder(whichUnit.getHandleId(), abilityHandleId, orderId,
+							whichTarget.getHandleId(), false);
+				}
+				return BooleanJassValue.of(abilityHandleId != 0);
+			};
+			jassProgramVisitor.getJassNativeManager().createNative("UnitUseItemTarget", unitUseItemTarget);
+			jassProgramVisitor.getJassNativeManager().createNative("UnitUseItemDestructable", unitUseItemTarget);
+			jassProgramVisitor.getJassNativeManager().createNative("UnitUseItemPointLoc",
+					(arguments, globalScope, triggerScope) -> {
+						final CUnit whichUnit = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());
+						if (whichUnit == null) {
+							return BooleanJassValue.FALSE;
+						}
+						final CItem item = arguments.get(1).visit(ObjectJassValueVisitor.getInstance());
+						final AbilityPointTarget whichLocation = arguments.get(2)
+								.visit(ObjectJassValueVisitor.getInstance());
+						final CPlayerUnitOrderExecutor defaultPlayerUnitOrderExecutor = CommonEnvironment.this.simulation
+								.getDefaultPlayerUnitOrderExecutor(whichUnit.getPlayerIndex());
+						final BooleanAbilityActivationReceiver activationReceiver = BooleanAbilityActivationReceiver.INSTANCE;
+						final int orderId = OrderIdUtils.getOrderId(
+								"itemuse" + String.format("%02d", item.getContainedInventory().getSlot(item)));
+						int abilityHandleId = 0;
+						AbilityPointTarget targetAsPoint = new AbilityPointTarget(whichLocation.x, whichLocation.y);
+						for (final CAbility ability : whichUnit.getAbilities()) {
+							ability.checkCanUse(CommonEnvironment.this.simulation, whichUnit,
+									whichUnit.getPlayerIndex(), orderId, false, activationReceiver);
+							if (activationReceiver.isOk()) {
+								final PointAbilityTargetCheckReceiver targetReceiver = PointAbilityTargetCheckReceiver.INSTANCE;
+								ability.checkCanTarget(CommonEnvironment.this.simulation, whichUnit,
+										whichUnit.getPlayerIndex(), orderId, false, targetAsPoint,
+										targetReceiver.reset());
+								if (targetReceiver.getTarget() != null) {
+									targetAsPoint = targetReceiver.getTarget();
+									abilityHandleId = ability.getHandleId();
+								}
+							}
+						}
+						if (abilityHandleId != 0) {
+							defaultPlayerUnitOrderExecutor.issuePointOrder(whichUnit.getHandleId(), abilityHandleId,
+									orderId, targetAsPoint.x, targetAsPoint.y, false);
+						}
+						return BooleanJassValue.of(abilityHandleId != 0);
+					});
+
 			jassProgramVisitor.getJassNativeManager().createNative("UnitDamageTarget",
 					(arguments, globalScope, triggerScope) -> {
 						final CUnit whichUnit = nullable(arguments, 0, ObjectJassValueVisitor.getInstance());
@@ -1204,8 +1314,9 @@ public class Jass2 {
 								if (damageType == null) {
 									damageType = CDamageType.UNKNOWN;
 								}
-								target.damage(CommonEnvironment.this.simulation, whichUnit, attack, ranged, attackType,
-										damageType, weaponType.name(), (float) amount);
+								target.damage(CommonEnvironment.this.simulation, whichUnit,
+										new CGenericDamageFlags(attack, ranged), attackType, damageType,
+										weaponType.name(), (float) amount);
 								return BooleanJassValue.TRUE;
 							}
 						}
@@ -3072,6 +3183,23 @@ public class Jass2 {
 						else {
 							System.err.println("got SetUnitState(null," + whichUnitState + "," + value
 									+ ")  call (skipping because unit is null)");
+						}
+						return null;
+					});
+			jassProgramVisitor.getJassNativeManager().createNative("SetWidgetLife",
+					(arguments, globalScope, triggerScope) -> {
+						final CWidget whichUnit = nullable(arguments, 0, ObjectJassValueVisitor.getInstance());
+						final float value = arguments.get(1).visit(RealJassValueVisitor.getInstance()).floatValue();
+						if (whichUnit != null) {
+							whichUnit.setLife(this.simulation, value);
+						}
+						return null;
+					});
+			jassProgramVisitor.getJassNativeManager().createNative("GetWidgetLife",
+					(arguments, globalScope, triggerScope) -> {
+						final CWidget whichUnit = nullable(arguments, 0, ObjectJassValueVisitor.getInstance());
+						if (whichUnit != null) {
+							return RealJassValue.of(whichUnit.getLife());
 						}
 						return null;
 					});
@@ -5097,6 +5225,15 @@ public class Jass2 {
 						return new HandleJassValue(unitType,
 								((CommonTriggerExecutionScope) triggerScope).getKillingUnit());
 					});
+			jassProgramVisitor.getJassNativeManager().createNative("GetEventDamageSource",
+					(arguments, globalScope, triggerScope) -> {
+						return new HandleJassValue(unitType,
+								((CommonTriggerExecutionScope) triggerScope).getDamageSource());
+					});
+			jassProgramVisitor.getJassNativeManager().createNative("GetEventDamage",
+					(arguments, globalScope, triggerScope) -> {
+						return RealJassValue.of(((CommonTriggerExecutionScope) triggerScope).getDamageTaken());
+					});
 			jassProgramVisitor.getJassNativeManager().createNative("GetTriggerUnit",
 					(arguments, globalScope, triggerScope) -> {
 						return new HandleJassValue(unitType,
@@ -5629,6 +5766,43 @@ public class Jass2 {
 					(arguments, globalScope, triggerScope) -> {
 						return BooleanJassValue.FALSE;
 					});
+
+			jassProgramVisitor.getJassNativeManager().createNative("StartMeleeAI",
+					(arguments, globalScope, triggerScope) -> {
+						final CPlayer player = nullable(arguments, 0, ObjectJassValueVisitor.getInstance());
+						final String filePath = nullable(arguments, 1, StringJassValueVisitor.getInstance());
+						if (filePath != null) {
+							doAIScript(dataSource, uiViewport, uiScene, war3MapViewer, player, filePath, meleeUI,
+									originalFiles, jassProgramVisitor, this.simulation, "main");
+						}
+						return null;
+					});
+			jassProgramVisitor.getJassNativeManager().createNative("StartMeleeAI",
+					(arguments, globalScope, triggerScope) -> {
+						final CPlayer player = nullable(arguments, 0, ObjectJassValueVisitor.getInstance());
+						final String filePath = nullable(arguments, 1, StringJassValueVisitor.getInstance());
+						if (filePath != null) {
+							doAIScript(dataSource, uiViewport, uiScene, war3MapViewer, player, filePath, meleeUI,
+									originalFiles, jassProgramVisitor, this.simulation, "main");
+						}
+						return null;
+					});
+			jassProgramVisitor.getJassNativeManager().createNative("PauseCompAI",
+					(arguments, globalScope, triggerScope) -> {
+						final CPlayer player = nullable(arguments, 0, ObjectJassValueVisitor.getInstance());
+						final boolean pause = arguments.get(1).visit(BooleanJassValueVisitor.getInstance());
+						if (player != null) {
+							if (player.getAiScript() != null) {
+								player.getAiScript().setPaused(pause);
+							}
+						}
+						return null;
+					});
+			////// ====== Common AI functions =======
+			/// These are getting declared in Jass2 here so that you can magically use them
+			////// from outside
+			// common ai, maybe, sometimes
+			registerSharedCommonAIFunctions(jassProgramVisitor, war3MapViewer, meleeUI, this.simulation);
 
 			// Warsmash Ability API
 			jassProgramVisitor.getJassNativeManager().createNative("GetUnitMoveFollowBehavior",
@@ -7916,11 +8090,13 @@ public class Jass2 {
 						final Map<String, Object> localStore = nullable(arguments, 7,
 								ObjectJassValueVisitor.getInstance());
 						final int castId = arguments.get(8).visit(IntegerJassValueVisitor.getInstance());
+						final boolean leveled = arguments.get(9).visit(BooleanJassValueVisitor.getInstance());
+						final boolean positive = arguments.get(10).visit(BooleanJassValueVisitor.getInstance());
 
 						final ABPermanentPassiveBuff ability = new ABPermanentPassiveBuff(
 								CommonEnvironment.this.simulation.getHandleIdAllocator().createId(),
-								new War3ID(buffRawcode), localStore, ABActionJass.wrap(onAddAction),
-								ABActionJass.wrap(onRemoveAction), showIcon, castId);
+								new War3ID(buffRawcode), null, null, localStore, ABActionJass.wrap(onAddAction),
+								ABActionJass.wrap(onRemoveAction), showIcon, castId, leveled, positive);
 						if (artType != null) {
 							ability.setArtType(artType);
 						}
@@ -7933,10 +8109,12 @@ public class Jass2 {
 			jassProgramVisitor.getJassNativeManager().createNative("CreateTargetingBuff",
 					(arguments, globalScope, triggerScope) -> {
 						final int buffRawcode = arguments.get(0).visit(IntegerJassValueVisitor.getInstance());
+						final Map<String, Object> localStore = nullable(arguments, 1,
+								ObjectJassValueVisitor.getInstance());
 
 						final CBuff ability = new ABTargetingBuff(
 								CommonEnvironment.this.simulation.getHandleIdAllocator().createId(),
-								new War3ID(buffRawcode));
+								new War3ID(buffRawcode), localStore, null, null);
 
 						return new HandleJassValue(buffType, ability);
 					});
@@ -7947,10 +8125,15 @@ public class Jass2 {
 						final float duration = arguments.get(1).visit(RealJassValueVisitor.getInstance()).floatValue();
 						final boolean showIcon = arguments.get(2).visit(BooleanJassValueVisitor.getInstance());
 						final CEffectType artType = nullable(arguments, 3, ObjectJassValueVisitor.getInstance());
+						final boolean leveled = arguments.get(4).visit(BooleanJassValueVisitor.getInstance());
+						final boolean positive = arguments.get(5).visit(BooleanJassValueVisitor.getInstance());
+						final boolean dispellable = arguments.get(6).visit(BooleanJassValueVisitor.getInstance());
+						final Map<String, Object> localStore = nullable(arguments, 7,
+								ObjectJassValueVisitor.getInstance());
 
 						final ABTimedArtBuff ability = new ABTimedArtBuff(
-								this.simulation.getHandleIdAllocator().createId(), new War3ID(buffRawcode), duration,
-								showIcon);
+								this.simulation.getHandleIdAllocator().createId(), new War3ID(buffRawcode), localStore,
+								null, null, duration, showIcon, leveled, positive, dispellable);
 						if (artType != null) {
 							ability.setArtType(artType);
 						}
@@ -7970,11 +8153,14 @@ public class Jass2 {
 						final Map<String, Object> localStore = nullable(arguments, 8,
 								ObjectJassValueVisitor.getInstance());
 						final int castId = arguments.get(9).visit(IntegerJassValueVisitor.getInstance());
+						final boolean leveled = arguments.get(10).visit(BooleanJassValueVisitor.getInstance());
+						final boolean positive = arguments.get(11).visit(BooleanJassValueVisitor.getInstance());
+						final boolean dispellable = arguments.get(12).visit(BooleanJassValueVisitor.getInstance());
 
 						final ABTimedBuff ability = new ABTimedBuff(this.simulation.getHandleIdAllocator().createId(),
-								new War3ID(buffRawcode), duration, showTimedLifeBar, localStore,
+								new War3ID(buffRawcode), localStore, null, null, duration, showTimedLifeBar,
 								ABActionJass.wrap(onAddAction), ABActionJass.wrap(onRemoveAction),
-								ABActionJass.wrap(onExpireAction), showIcon, castId);
+								ABActionJass.wrap(onExpireAction), showIcon, castId, leveled, positive, dispellable);
 						ability.setArtType(artType);
 
 						return new HandleJassValue(buffType, ability);
@@ -7995,9 +8181,12 @@ public class Jass2 {
 					(arguments, globalScope, triggerScope) -> {
 						final int buffRawcode = arguments.get(0).visit(IntegerJassValueVisitor.getInstance());
 						final float duration = arguments.get(1).visit(RealJassValueVisitor.getInstance()).floatValue();
+						final Map<String, Object> localStore = nullable(arguments, 2,
+								ObjectJassValueVisitor.getInstance());
 
 						final CBuff ability = new ABTimedTargetingBuff(
-								this.simulation.getHandleIdAllocator().createId(), new War3ID(buffRawcode), duration);
+								this.simulation.getHandleIdAllocator().createId(), new War3ID(buffRawcode), localStore,
+								null, null, duration);
 
 						return new HandleJassValue(buffType, ability);
 					});
@@ -8015,12 +8204,15 @@ public class Jass2 {
 						final Map<String, Object> localStore = nullable(arguments, 9,
 								ObjectJassValueVisitor.getInstance());
 						final int castId = arguments.get(10).visit(IntegerJassValueVisitor.getInstance());
+						final boolean leveled = arguments.get(11).visit(BooleanJassValueVisitor.getInstance());
+						final boolean positive = arguments.get(12).visit(BooleanJassValueVisitor.getInstance());
+						final boolean dispellable = arguments.get(13).visit(BooleanJassValueVisitor.getInstance());
 
 						final ABTimedTickingBuff ability = new ABTimedTickingBuff(
-								this.simulation.getHandleIdAllocator().createId(), new War3ID(buffRawcode), duration,
-								showTimedLifeBar, localStore, ABActionJass.wrap(onAddAction),
+								this.simulation.getHandleIdAllocator().createId(), new War3ID(buffRawcode), localStore,
+								null, null, duration, showTimedLifeBar, ABActionJass.wrap(onAddAction),
 								ABActionJass.wrap(onRemoveAction), ABActionJass.wrap(onExpireAction),
-								ABActionJass.wrap(onTickAction), showIcon, castId);
+								ABActionJass.wrap(onTickAction), showIcon, castId, leveled, positive, dispellable);
 						ability.setArtType(artType);
 
 						return new HandleJassValue(buffType, ability);
@@ -8039,12 +8231,15 @@ public class Jass2 {
 						final Map<String, Object> localStore = nullable(arguments, 9,
 								ObjectJassValueVisitor.getInstance());
 						final int castId = arguments.get(10).visit(IntegerJassValueVisitor.getInstance());
+						final boolean leveled = arguments.get(11).visit(BooleanJassValueVisitor.getInstance());
+						final boolean positive = arguments.get(12).visit(BooleanJassValueVisitor.getInstance());
+						final boolean dispellable = arguments.get(13).visit(BooleanJassValueVisitor.getInstance());
 
 						final ABTimedTickingPausedBuff ability = new ABTimedTickingPausedBuff(
-								this.simulation.getHandleIdAllocator().createId(), new War3ID(buffRawcode), duration,
-								showTimedLifeBar, localStore, ABActionJass.wrap(onAddAction),
+								this.simulation.getHandleIdAllocator().createId(), new War3ID(buffRawcode), localStore,
+								null, null, duration, showTimedLifeBar, ABActionJass.wrap(onAddAction),
 								ABActionJass.wrap(onRemoveAction), ABActionJass.wrap(onExpireAction),
-								ABActionJass.wrap(onTickAction), showIcon, castId);
+								ABActionJass.wrap(onTickAction), showIcon, castId, leveled, positive, dispellable);
 						ability.setArtType(artType);
 
 						return new HandleJassValue(buffType, ability);
@@ -8063,12 +8258,15 @@ public class Jass2 {
 						final Map<String, Object> localStore = nullable(arguments, 9,
 								ObjectJassValueVisitor.getInstance());
 						final int castId = arguments.get(10).visit(IntegerJassValueVisitor.getInstance());
+						final boolean leveled = arguments.get(11).visit(BooleanJassValueVisitor.getInstance());
+						final boolean positive = arguments.get(12).visit(BooleanJassValueVisitor.getInstance());
+						final boolean dispellable = arguments.get(13).visit(BooleanJassValueVisitor.getInstance());
 
 						final ABTimedTickingPostDeathBuff ability = new ABTimedTickingPostDeathBuff(
-								this.simulation.getHandleIdAllocator().createId(), new War3ID(buffRawcode), duration,
-								showTimedLifeBar, localStore, ABActionJass.wrap(onAddAction),
+								this.simulation.getHandleIdAllocator().createId(), new War3ID(buffRawcode), localStore,
+								null, null, duration, showTimedLifeBar, ABActionJass.wrap(onAddAction),
 								ABActionJass.wrap(onRemoveAction), ABActionJass.wrap(onExpireAction),
-								ABActionJass.wrap(onTickAction), showIcon, castId);
+								ABActionJass.wrap(onTickAction), showIcon, castId, leveled, positive, dispellable);
 						ability.setArtType(artType);
 
 						return new HandleJassValue(buffType, ability);
@@ -8113,7 +8311,7 @@ public class Jass2 {
 						final CDestructableBuff ability = new ABDestructableBuff(
 								this.simulation.getHandleIdAllocator().createId(), new War3ID(buffRawcode), level,
 								localStore, ABActionJass.wrap(onAddAction), ABActionJass.wrap(onRemoveAction),
-								ABActionJass.wrap(onDeathAction), castId, casterUnit);
+								ABActionJass.wrap(onDeathAction), castId, casterUnit, true);
 
 						return new HandleJassValue(destructablebuffType, ability);
 					});
@@ -8568,6 +8766,17 @@ public class Jass2 {
 					});
 			jassProgramVisitor.getJassNativeManager().createNative("GetUnitGoldCost",
 					(arguments, globalScope, triggerScope) -> {
+						if (arguments.get(0) instanceof IntegerJassValue) {
+							// Something dumb happened here, there seems to be a SmashJass version of this
+							// and a CommonAI version of this both
+							final Integer typeId = arguments.get(0).visit(IntegerJassValueVisitor.getInstance());
+							final CUnitType unitTypeData = this.simulation.getUnitData()
+									.getUnitType(new War3ID(typeId));
+							if (unitTypeData != null) {
+								return IntegerJassValue.of(unitTypeData.getGoldCost());
+							}
+							return IntegerJassValue.ZERO;
+						}
 						final CUnit targetUnit = nullable(arguments, 0, ObjectJassValueVisitor.getInstance());
 						if (targetUnit != null) {
 							return IntegerJassValue.of(targetUnit.getUnitType().getGoldCost());
@@ -8576,6 +8785,17 @@ public class Jass2 {
 					});
 			jassProgramVisitor.getJassNativeManager().createNative("GetUnitWoodCost",
 					(arguments, globalScope, triggerScope) -> {
+						if (arguments.get(0) instanceof IntegerJassValue) {
+							// Something dumb happened here, there seems to be a SmashJass version of this
+							// and a CommonAI version of this both
+							final Integer typeId = arguments.get(0).visit(IntegerJassValueVisitor.getInstance());
+							final CUnitType unitTypeData = this.simulation.getUnitData()
+									.getUnitType(new War3ID(typeId));
+							if (unitTypeData != null) {
+								return IntegerJassValue.of(unitTypeData.getLumberCost());
+							}
+							return IntegerJassValue.ZERO;
+						}
 						final CUnit targetUnit = nullable(arguments, 0, ObjectJassValueVisitor.getInstance());
 						if (targetUnit != null) {
 							return IntegerJassValue.of(targetUnit.getUnitType().getLumberCost());
@@ -8841,14 +9061,14 @@ public class Jass2 {
 					(arguments, globalScope, triggerScope) -> {
 						final CUnit unit = nullable(arguments, 0, ObjectJassValueVisitor.getInstance());
 						final NonStackingStatBuff buff = arguments.get(1).visit(ObjectJassValueVisitor.getInstance());
-						unit.addNonStackingStatBuff(buff);
+						unit.addNonStackingStatBuff(this.simulation, buff);
 						return null;
 					});
 			jassProgramVisitor.getJassNativeManager().createNative("RemoveUnitNonStackingStatBonus",
 					(arguments, globalScope, triggerScope) -> {
 						final CUnit unit = nullable(arguments, 0, ObjectJassValueVisitor.getInstance());
 						final NonStackingStatBuff buff = arguments.get(1).visit(ObjectJassValueVisitor.getInstance());
-						unit.removeNonStackingStatBuff(buff);
+						unit.removeNonStackingStatBuff(this.simulation, buff);
 						return null;
 					});
 			jassProgramVisitor.getJassNativeManager().createNative("RecomputeStatBonusesOnUnit",
@@ -8856,7 +9076,12 @@ public class Jass2 {
 						final CUnit unit = nullable(arguments, 0, ObjectJassValueVisitor.getInstance());
 						final NonStackingStatBuffType whichBuffType = arguments.get(1)
 								.visit(ObjectJassValueVisitor.getInstance());
-						unit.computeDerivedFields(whichBuffType);
+						if (whichBuffType.isHeroStat()) {
+							unit.computeDerivedHeroFields(this.simulation, whichBuffType);
+						}
+						else {
+							unit.computeDerivedFields(whichBuffType);
+						}
 						return null;
 					});
 			jassProgramVisitor.getJassNativeManager().createNative("UpdateNonStackingStatBonus",
@@ -9438,6 +9663,139 @@ public class Jass2 {
 
 	}
 
+	private static void registerSharedCommonAIFunctions(final JassProgram jassProgramVisitor,
+			final War3MapViewer war3MapViewer, final WarsmashUI meleeUI, final CSimulation simulation) {
+		jassProgramVisitor.getJassNativeManager().createNative("Sleep", new JassFunction() {
+			@Override
+			public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+					final TriggerExecutionScope triggerScope) {
+				final Double seconds = arguments.get(0).visit(RealJassValueVisitor.getInstance());
+				final JassThread currentThread = globalScope.getCurrentThread();
+				if (currentThread != null) {
+					currentThread.setSleeping(true);
+					final CTimerSleepAction timer = new CTimerSleepAction(currentThread);
+					timer.setRepeats(false);
+					timer.setTimeoutTime(seconds.floatValue());
+					timer.start(simulation);
+				}
+				else {
+					throw new JassException(globalScope, "Needs to sleep " + seconds + " but no thread was found",
+							null);
+				}
+				return null;
+			}
+		});
+		jassProgramVisitor.getJassNativeManager().createNative("DebugS", new JassFunction() {
+			@Override
+			public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+					final TriggerExecutionScope triggerScope) {
+				final String str = nullable(arguments, 0, StringJassValueVisitor.getInstance());
+				final String value = "DebugS: " + str;
+				meleeUI.displayTimedText(0, 0, 20, value);
+				System.err.println(value);
+				return null;
+			}
+		});
+		jassProgramVisitor.getJassNativeManager().createNative("DebugFI", new JassFunction() {
+			@Override
+			public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+					final TriggerExecutionScope triggerScope) {
+				final String str = nullable(arguments, 0, StringJassValueVisitor.getInstance());
+				final int val = arguments.get(1).visit(IntegerJassValueVisitor.getInstance());
+
+				final String value = "DebugFI: " + String.format(str, val);
+				meleeUI.displayTimedText(0, 0, 20, value);
+				System.err.println(value);
+				return null;
+			}
+		});
+		jassProgramVisitor.getJassNativeManager().createNative("DebugUnitID", new JassFunction() {
+			@Override
+			public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+					final TriggerExecutionScope triggerScope) {
+				final String str = nullable(arguments, 0, StringJassValueVisitor.getInstance());
+				final int valRawcode = arguments.get(1).visit(IntegerJassValueVisitor.getInstance());
+				final War3ID valId = new War3ID(valRawcode);
+
+				final String value = "DebugUnitID: " + String.format(str, valId);
+				meleeUI.displayTimedText(0, 0, 20, value);
+				System.err.println(value);
+				return null;
+			}
+		});
+		jassProgramVisitor.getJassNativeManager().createNative("DisplayText", new JassFunction() {
+			@Override
+			public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+					final TriggerExecutionScope triggerScope) {
+				final int p = arguments.get(0).visit(IntegerJassValueVisitor.getInstance());
+				final String str = nullable(arguments, 1, StringJassValueVisitor.getInstance());
+
+				if (war3MapViewer.getLocalPlayerIndex() == p) {
+					meleeUI.displayTimedText(0, 0, 20, str);
+				}
+				System.err.println(p + ": " + str);
+				return null;
+			}
+		});
+		jassProgramVisitor.getJassNativeManager().createNative("DisplayTextI", new JassFunction() {
+			@Override
+			public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+					final TriggerExecutionScope triggerScope) {
+				final int p = arguments.get(0).visit(IntegerJassValueVisitor.getInstance());
+				final String str = nullable(arguments, 1, StringJassValueVisitor.getInstance());
+				final int v1 = arguments.get(2).visit(IntegerJassValueVisitor.getInstance());
+				final String value = String.format(str, v1);
+				if (war3MapViewer.getLocalPlayerIndex() == p) {
+					meleeUI.displayTimedText(0, 0, 20, value);
+				}
+				System.err.println(p + ": " + value);
+				return null;
+			}
+		});
+		jassProgramVisitor.getJassNativeManager().createNative("DisplayTextII", new JassFunction() {
+			@Override
+			public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+					final TriggerExecutionScope triggerScope) {
+				final int p = arguments.get(0).visit(IntegerJassValueVisitor.getInstance());
+				final String str = nullable(arguments, 1, StringJassValueVisitor.getInstance());
+				final int v1 = arguments.get(2).visit(IntegerJassValueVisitor.getInstance());
+				final int v2 = arguments.get(3).visit(IntegerJassValueVisitor.getInstance());
+				final String value = String.format(str, v1, v2);
+				if (war3MapViewer.getLocalPlayerIndex() == p) {
+					meleeUI.displayTimedText(0, 0, 20, value);
+				}
+				System.err.println(p + ": " + value);
+				return null;
+			}
+		});
+		jassProgramVisitor.getJassNativeManager().createNative("DisplayTextIII", new JassFunction() {
+			@Override
+			public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
+					final TriggerExecutionScope triggerScope) {
+				final int p = arguments.get(0).visit(IntegerJassValueVisitor.getInstance());
+				final String str = nullable(arguments, 1, StringJassValueVisitor.getInstance());
+				final int v1 = arguments.get(2).visit(IntegerJassValueVisitor.getInstance());
+				final int v2 = arguments.get(3).visit(IntegerJassValueVisitor.getInstance());
+				final int v3 = arguments.get(4).visit(IntegerJassValueVisitor.getInstance());
+				final String value = String.format(str, v1, v2, v3);
+				if (war3MapViewer.getLocalPlayerIndex() == p) {
+					meleeUI.displayTimedText(0, 0, 20, value);
+				}
+				System.err.println(p + ": " + value);
+				return null;
+			}
+		});
+		jassProgramVisitor.getJassNativeManager().createNative("GetUnitBuildTime",
+				(arguments, globalScope, triggerScope) -> {
+					final Integer typeId = arguments.get(0).visit(IntegerJassValueVisitor.getInstance());
+					final CUnitType unitTypeData = simulation.getUnitData().getUnitType(new War3ID(typeId));
+					if (unitTypeData != null) {
+						return IntegerJassValue.of(unitTypeData.getBuildTime());
+					}
+					return IntegerJassValue.ZERO;
+				});
+	}
+
 	private static void setupTriggerAPI(final JassProgram jassProgramVisitor, final HandleJassType triggerType,
 			final HandleJassType triggeractionType, final HandleJassType triggerconditionType,
 			final HandleJassType boolexprType, final HandleJassType conditionfuncType,
@@ -9516,7 +9874,8 @@ public class Jass2 {
 					System.out.println("ExecuteFunc (\"" + funcName + "\")");
 					if (functionByName != null) {
 						// TODO below TriggerExecutionScope.EMPTY is probably not correct
-						globalScope.queueThread(globalScope.createThread(functionByName, TriggerExecutionScope.EMPTY));
+						globalScope.runThreadUntilCompletion(
+								globalScope.createThread(functionByName, TriggerExecutionScope.EMPTY));
 					}
 					return null;
 				});
@@ -9672,6 +10031,43 @@ public class Jass2 {
 				throw new JassException(jassProgramVisitor.getGlobals(), "Unable to run: " + filename, e);
 			}
 		}
+	}
+
+	private static void doAIScript(final DataSource dataSource, final Viewport uiViewport, final Scene uiScene,
+			final War3MapViewer war3MapViewer, final CPlayer player, final String filename, final WarsmashUI meleeUI,
+			final String[] originalFiles, final JassProgram jassProgramVisitor, final CSimulation game,
+			final String mainFunction) {
+		final JassProgram jassProgram = new JassProgram();
+		jassProgram.inheritFrom(jassProgramVisitor);
+		// NOTE: the above "inheritFrom" does same as:
+		// registerSharedCommonAIFunctions(jassProgram, war3MapViewer, meleeUI, game);
+		final JassAIEnvironment jassAIEnvironment = new JassAIEnvironment(jassProgram, dataSource, uiViewport, uiScene,
+				game, player.getId(), meleeUI);
+		final Integer prevPtr = jassProgram.getGlobals().getUserFunctionInstructionPtr(mainFunction);
+		try {
+			try (InputStreamReader reader = new InputStreamReader(dataSource.getResourceAsStream(filename))) {
+				final SmashJassParser smashJassParser = new SmashJassParser(reader);
+				smashJassParser.scanAndParse(filename, jassProgram);
+			}
+			jassProgram.initialize();
+		}
+		catch (final Exception e) {
+			e.printStackTrace();
+			JassLog.report(e);
+		}
+		final Integer loadedPtr = jassProgram.getGlobals().getUserFunctionInstructionPtr(mainFunction);
+		if (prevPtr != loadedPtr) {
+			// else we didn't actually load a new fxn
+			try {
+				final JassThread preloadThread = jassProgram.getGlobals().createThread(mainFunction,
+						Collections.emptyList(), TriggerExecutionScope.EMPTY);
+				jassProgram.getGlobals().queueThread(preloadThread);
+			}
+			catch (final Exception e) {
+				throw new JassException(jassProgram.getGlobals(), "Unable to run: " + filename, e);
+			}
+		}
+		player.setAiScript(jassAIEnvironment);
 	}
 
 	private static final class SaveHashtableValueFunc implements JassFunction {

@@ -19,6 +19,5 @@ public class ABActionDeathReplacementSetReviving implements ABAction {
 		stacking.setAllowStacking(false);
 		stacking.setAllowSamePriorityStacking(false);
 		result.setReviving(true);
-		caster.setFalseDeath(true);
 	}
 }

@@ -178,4 +178,16 @@ public abstract class TerrainInterface {
 		public float opacity = 1;
 		public boolean aboveWater = false;
 	}
+
+	public abstract int[] getTerrainModBufferSize(float x, float y, float width, float height);
+
+	public abstract int[] getTerrainModBufferSize(float centerX, float centerY, float radius);
+
+	public abstract void updateGroundBuffer(int[] rect, float[] modBuffer);
+
+	public abstract void updateGroundBuffer(float x, float y, float i);
+
+	public abstract float getTerrainSpaceX(float x);
+
+	public abstract float getTerrainSpaceY(float y);
 }

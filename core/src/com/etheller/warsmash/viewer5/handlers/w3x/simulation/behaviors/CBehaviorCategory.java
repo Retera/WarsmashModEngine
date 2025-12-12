@@ -6,7 +6,8 @@ public enum CBehaviorCategory implements CHandle {
 	IDLE,
 	MOVEMENT,
 	ATTACK,
-	SPELL;
+	SPELL,
+	BUILD;
 
 	@Override
 	public int getHandleId() {

@@ -16,7 +16,7 @@ import net.warsmash.uberserver.GamingNetwork;
 
 public class WarsmashServer implements ClientToServerListener {
 	private static final boolean VERBOSE_LOGGING = false;
-	private static final int MAGIC_DELAY_OFFSET = 4; // 4
+	private static final int MAGIC_DELAY_OFFSET = 8; // 4
 	private final OrderedUdpServer udpServer;
 	private final Set<SocketAddress> socketAddressesKnown = new HashSet<>();
 	private final Map<Long, Integer> sessionTokenToPermittedSlot;

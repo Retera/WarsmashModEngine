@@ -18,6 +18,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.definitions.impl.AbilityFields;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.definitions.impl.AbstractCAbilityTypeDefinition;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CAttackType;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CSpellDamageFlags;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.projectile.CAbilityProjectileListener;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.OrderIds;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CDamageType;
@@ -73,20 +74,20 @@ public class CAbilityClusterRockets extends CAbilityPointTargetSpellBase {
 		this.currentMissile = 0;
 		final int missileTravelTicks = (int) StrictMath
 				.ceil(MISSILE_ARRIVAL_DELAY / WarsmashConstants.SIMULATION_STEP_TIME);
-		int durationTicks = (int) StrictMath.ceil(effectDuration / WarsmashConstants.SIMULATION_STEP_TIME);
+		int durationTicks = (int) StrictMath.ceil(this.effectDuration / WarsmashConstants.SIMULATION_STEP_TIME);
 		this.nextWaveTick = gameTurnTick + missileTravelTicks;
 		this.nextMissileTick = gameTurnTick;
-		this.effectDurationEndTick = nextWaveTick + durationTicks;
+		this.effectDurationEndTick = this.nextWaveTick + durationTicks;
 
-		final int expectedMissileCount = (int) StrictMath.ceil((effectDuration) / PER_ROCKET_DELAY);
-		missileLaunchingEndTick = gameTurnTick + durationTicks;
+		final int expectedMissileCount = (int) StrictMath.ceil((this.effectDuration) / PER_ROCKET_DELAY);
+		this.missileLaunchingEndTick = gameTurnTick + durationTicks;
 		if (expectedMissileCount > this.missileCount) {
 			final int shortenedDurationTicks = this.missileCount
 					* (int) StrictMath.ceil(PER_ROCKET_DELAY / WarsmashConstants.SIMULATION_STEP_TIME);
-			missileLaunchingEndTick = gameTurnTick + shortenedDurationTicks;
+			this.missileLaunchingEndTick = gameTurnTick + shortenedDurationTicks;
 			durationTicks = shortenedDurationTicks;
 		}
-		missileLaunchDurationTicks = durationTicks;
+		this.missileLaunchDurationTicks = durationTicks;
 		return true;
 	}
 
@@ -96,12 +97,14 @@ public class CAbilityClusterRockets extends CAbilityPointTargetSpellBase {
 		if ((gameTurnTick >= this.nextMissileTick) && (this.currentMissile < this.missileCount)) {
 			final Random seededRandom = simulation.getSeededRandom();
 			final float elapsedTimeRatio = 1.0f
-					- ((missileLaunchingEndTick - gameTurnTick) / (float) missileLaunchDurationTicks);
+					- ((this.missileLaunchingEndTick - gameTurnTick) / (float) this.missileLaunchDurationTicks);
 			final float targetingAngle = (float) ((unit.angleTo(target) + StrictMath.PI)
 					- (elapsedTimeRatio * (StrictMath.PI * 2)));
 
-			final float targetingX = target.getX() + ((float) StrictMath.cos(targetingAngle) * areaOfEffect * 0.5f);
-			final float targetingY = target.getY() + ((float) StrictMath.sin(targetingAngle) * areaOfEffect * 0.5f);
+			final float targetingX = target.getX()
+					+ ((float) StrictMath.cos(targetingAngle) * this.areaOfEffect * 0.5f);
+			final float targetingY = target.getY()
+					+ ((float) StrictMath.sin(targetingAngle) * this.areaOfEffect * 0.5f);
 			final float randomAngle = seededRandom.nextFloat((float) (StrictMath.PI * 2));
 			final float randomDistance = seededRandom.nextFloat() * this.areaOfEffect * 0.25f;
 			final float missileLandX = targetingX + ((float) StrictMath.cos(randomAngle) * randomDistance);
@@ -117,7 +120,7 @@ public class CAbilityClusterRockets extends CAbilityPointTargetSpellBase {
 					(float) speed, false, missileLandPoint, CAbilityProjectileListener.DO_NOTHING);
 			this.nextMissileTick = gameTurnTick
 					+ (int) StrictMath.ceil(PER_ROCKET_DELAY / WarsmashConstants.SIMULATION_STEP_TIME);
-			currentMissile++;
+			this.currentMissile++;
 		}
 		if (gameTurnTick >= this.nextWaveTick) {
 			this.currentWave++;
@@ -135,19 +138,19 @@ public class CAbilityClusterRockets extends CAbilityPointTargetSpellBase {
 									return false;
 								}
 							});
-			if (currentWave == 1) {
+			if (this.currentWave == 1) {
 				// stun
 				for (final CUnit damageTarget : damageTargets) {
-					damageTarget.add(simulation, new CBuffStun(simulation.getHandleIdAllocator().createId(), buffId,
-							getDurationForTarget(damageTarget)));
+					damageTarget.add(simulation, new CBuffStun(simulation.getHandleIdAllocator().createId(),
+							this.buffId, getDurationForTarget(damageTarget)));
 				}
 			}
 			else {
 				float damagePerTarget = this.damage;
-				if ((damagePerTarget * damageTargets.size()) > maximumDamagePerWave) {
-					damagePerTarget = maximumDamagePerWave / damageTargets.size();
+				if ((damagePerTarget * damageTargets.size()) > this.maximumDamagePerWave) {
+					damagePerTarget = this.maximumDamagePerWave / damageTargets.size();
 				}
-				final float damagePerTargetBuilding = damagePerTarget * (buildingReduction);
+				final float damagePerTargetBuilding = damagePerTarget * (this.buildingReduction);
 				for (final CUnit damageTarget : damageTargets) {
 					float thisTargetDamage;
 					if (damageTarget.isBuilding()) {
@@ -156,14 +159,14 @@ public class CAbilityClusterRockets extends CAbilityPointTargetSpellBase {
 					else {
 						thisTargetDamage = damagePerTarget;
 					}
-					damageTarget.damage(simulation, unit, false, true, CAttackType.SPELLS, CDamageType.FIRE,
+					damageTarget.damage(simulation, unit, DAMAGE_FLAGS, CAttackType.SPELLS, CDamageType.FIRE,
 							CWeaponSoundTypeJass.WHOKNOWS.name(), thisTargetDamage);
 				}
 			}
 			this.nextWaveTick = gameTurnTick
-					+ (int) StrictMath.ceil(damageInterval / WarsmashConstants.SIMULATION_STEP_TIME);
+					+ (int) StrictMath.ceil(this.damageInterval / WarsmashConstants.SIMULATION_STEP_TIME);
 		}
-		return gameTurnTick < effectDurationEndTick;
+		return gameTurnTick < this.effectDurationEndTick;
 	}
 
 	@Override

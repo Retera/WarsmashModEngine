@@ -32,12 +32,12 @@ public class CAbilityItemPermanentLifeGain extends CAbilitySpellBase {
 	}
 
 	@Override
-	public boolean checkBeforeQueue(final CSimulation game, final CUnit caster, final int orderId,
-			final AbilityTarget target) {
+	public boolean checkBeforeQueue(final CSimulation game, final CUnit caster, final int playerIndex,
+			final int orderId, final boolean autoOrder, final AbilityTarget target) {
 		if (orderId == getBaseOrderId()) {
 			final float life = caster.getLife();
 			final int maximumLife = caster.getMaximumLife();
-			caster.setMaximumLife(maximumLife + lifeToGain);
+			caster.setMaximumLife(maximumLife + this.lifeToGain);
 			caster.setLife(game, (life / maximumLife) * caster.getMaximumLife());
 			game.createTemporarySpellEffectOnUnit(caster, getAlias(), CEffectType.CASTER);
 			return false;
@@ -61,18 +61,20 @@ public class CAbilityItemPermanentLifeGain extends CAbilitySpellBase {
 	}
 
 	@Override
-	public CBehavior begin(final CSimulation game, final CUnit caster, final int orderId, final CWidget target) {
+	public CBehavior begin(final CSimulation game, final CUnit caster, final int playerIndex, final int orderId,
+			final boolean autoOrder, final CWidget target) {
 		return null;
 	}
 
 	@Override
-	public CBehavior begin(final CSimulation game, final CUnit caster, final int orderId,
-			final AbilityPointTarget point) {
+	public CBehavior begin(final CSimulation game, final CUnit caster, final int playerIndex, final int orderId,
+			final boolean autoOrder, final AbilityPointTarget point) {
 		return null;
 	}
 
 	@Override
-	public CBehavior beginNoTarget(final CSimulation game, final CUnit caster, final int orderId) {
+	public CBehavior beginNoTarget(final CSimulation game, final CUnit caster, final int playerIndex, final int orderId,
+			final boolean autoOrder) {
 		return null;
 	}
 
@@ -100,13 +102,13 @@ public class CAbilityItemPermanentLifeGain extends CAbilitySpellBase {
 	}
 
 	@Override
-	protected void innerCheckCanUse(final CSimulation game, final CUnit unit, final int orderId,
+	protected void innerCheckCanUse(final CSimulation game, final CUnit unit, final int playerIndex, final int orderId,
 			final AbilityActivationReceiver receiver) {
 		receiver.useOk();
 	}
 
 	@Override
-	public void onCancelFromQueue(final CSimulation game, final CUnit unit, final int orderId) {
+	public void onCancelFromQueue(final CSimulation game, final CUnit unit, final int playerIndex, final int orderId) {
 	}
 
 	@Override
@@ -119,7 +121,7 @@ public class CAbilityItemPermanentLifeGain extends CAbilitySpellBase {
 	}
 
 	public int getLifeToGain() {
-		return lifeToGain;
+		return this.lifeToGain;
 	}
 
 	public void setLifeToGain(final int lifeToGain) {

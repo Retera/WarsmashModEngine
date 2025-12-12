@@ -16,20 +16,19 @@ public interface CAutocastAbility {
 
 	boolean isAutoCastOn();
 
-	void setAutoCastOn(final CUnit caster, final boolean autoCastOn);
+	void setAutoCastOn(final CSimulation simulation, final CUnit caster, final boolean autoCastOn,
+			final boolean notify);
 
-	void setAutoCastOff();
-
-	void checkCanAutoTarget(CSimulation game, CUnit unit, int orderId, CWidget target,
+	void checkCanAutoTarget(CSimulation game, CUnit unit, int playerIndex, int orderId, CWidget target,
 			AbilityTargetCheckReceiver<CWidget> receiver);
 
-	void checkCanAutoTarget(CSimulation game, CUnit unit, int orderId, AbilityPointTarget target,
+	void checkCanAutoTarget(CSimulation game, CUnit unit, int playerIndex, int orderId, AbilityPointTarget target,
 			AbilityTargetCheckReceiver<AbilityPointTarget> receiver);
 
-	void checkCanAutoTargetNoTarget(CSimulation game, CUnit unit, int orderId,
+	void checkCanAutoTargetNoTarget(CSimulation game, CUnit unit, int playerIndex, int orderId,
 			AbilityTargetCheckReceiver<Void> receiver);
 
-	void checkCanUse(final CSimulation game, final CUnit unit, final int orderId,
+	void checkCanUse(final CSimulation game, final CUnit unit, int playerIndex, final int orderId, boolean autoOrder,
 			final AbilityActivationReceiver receiver);
 
 }

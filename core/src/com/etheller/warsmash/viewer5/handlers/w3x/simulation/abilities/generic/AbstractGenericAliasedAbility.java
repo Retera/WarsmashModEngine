@@ -16,11 +16,12 @@ public abstract class AbstractGenericAliasedAbility extends AbstractCAbility imp
 	}
 
 	@Override
-	public boolean checkBeforeQueue(final CSimulation game, final CUnit caster, final int orderId,
-			final AbilityTarget target) {
+	public boolean checkBeforeQueue(final CSimulation game, final CUnit caster, final int playerIndex,
+			final int orderId, final boolean autoOrder, final AbilityTarget target) {
 		return true;
 	}
 
+	@Override
 	public War3ID getAlias() {
 		return this.alias;
 	}
@@ -31,7 +32,7 @@ public abstract class AbstractGenericAliasedAbility extends AbstractCAbility imp
 	}
 
 	@Override
-	public void setLevel(CSimulation simulation, CUnit unit, final int level) {
+	public void setLevel(final CSimulation simulation, final CUnit unit, final int level) {
 		this.level = level;
 	}
 }

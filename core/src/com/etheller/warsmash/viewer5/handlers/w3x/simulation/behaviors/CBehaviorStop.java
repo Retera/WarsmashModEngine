@@ -29,7 +29,8 @@ public class CBehaviorStop implements CBehavior {
 
 	@Override
 	public void begin(final CSimulation game) {
-		if (!this.unit.isConstructingOrUpgrading()) {
+		if (!this.unit.isConstructingOrUpgrading()
+				&& !unit.getUnitAnimationListener().isAnimationQueued(PrimaryTag.STAND)) {
 			this.unit.getUnitAnimationListener().playAnimation(false, PrimaryTag.STAND, SequenceUtils.EMPTY, 1.0f,
 					true);
 		}

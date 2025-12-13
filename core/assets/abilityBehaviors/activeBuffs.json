@@ -1,0 +1,1160 @@
+{
+	"abilityList": [{
+		"ids": [{"id":"Absk", "castId": "berserk"}],
+		"type": "NORMAL_NOTARGET",
+		"displayFields": {
+			"castlessNoTarget": {
+				"type": "rawBoolean",
+				"value": "true"
+			}
+		},
+		"overrideFields": {
+			"physicalSpell": {
+				"type": "rawBoolean",
+				"value": "false"
+			},
+			"magicSpell": {
+				"type": "rawBoolean",
+				"value": "false"
+			}
+		},
+		"reuseActions": {
+			"setupBuffs": [{
+					"type": "createNonStackingStatBuff",
+					"buffType": {
+						"type": "getNonStackingStatBuffTypeFromString",
+						"id": {
+							"type": "rawString",
+							"value": "MVSPDPCT"
+						}
+					},
+					"stackingKey": {
+						"type": "rawString",
+						"value": "berserk"
+					},
+					"value": {
+						"type": "getAbilityDataAsFloat",
+						"dataField": "A"
+					}
+				},{
+					"type": "storeValueLocally",
+					"key": {
+						"type": "rawString",
+						"value": "mvbuff"
+					},
+					"instanceValue": {
+						"type": "rawBoolean",
+						"value": "false"
+					},
+					"valueToStore": {
+						"type": "getLastCreatedNonStackingStatBuff"
+					}
+				},{
+					"type": "createNonStackingStatBuff",
+					"buffType": {
+						"type": "getNonStackingStatBuffTypeFromString",
+						"id": {
+							"type": "rawString",
+							"value": "ATKSPD"
+						}
+					},
+					"stackingKey": {
+						"type": "rawString",
+						"value": "berserk"
+					},
+					"value": {
+						"type": "getAbilityDataAsFloat",
+						"dataField": "B"
+					}
+				},{
+					"type": "storeValueLocally",
+					"key": {
+						"type": "rawString",
+						"value": "asbuff"
+					},
+					"instanceValue": {
+						"type": "rawBoolean",
+						"value": "false"
+					},
+					"valueToStore": {
+						"type": "getLastCreatedNonStackingStatBuff"
+					}
+			}]
+		},
+		"onAddDisabledAbility": [{
+				"type": "runReuseAction",
+				"name": {
+					"type": "rawString",
+					"value": "setupBuffs"
+				}
+			},{
+				"type": "createDamageTakenModificationListener",
+				"actions": [{
+					"type": "multiplyDamageTakenMultiplier",
+					"multiplier": {
+						"type": "f+",
+						"value1": {
+							"type": "rawFloat",
+							"value": 1
+						},
+						"value2": {
+								"type": "getAbilityDataAsFloat",
+								"dataField": "C"
+							}
+					}
+				}]
+		}],
+		"onEndCasting": [{
+				"type": "createTemporarySpellEffectOnUnit",
+				"target": {
+					"type": "getCastingUnit"
+				},
+				"id": {
+					"type": "getAlias"
+				},
+				"effectType": "CASTER"
+			},{
+				"type": "createTimedBuff",
+				"buffId": {
+					"type": "getFirstBuffId"
+				},
+				"duration": {
+					"type": "getAbilityDuration",
+					"target": {
+						"type": "getCastingUnit"
+					}
+				},
+				"statBuffs": [{
+						"type": "getStoredNonStackingStatBuffByKey",
+						"instanceValue": {
+							"type": "rawBoolean",
+							"value": "false"
+						},
+						"key": {
+							"type": "rawString",
+							"value": "mvbuff"
+						}
+					},{
+						"type": "getStoredNonStackingStatBuffByKey",
+						"instanceValue": {
+							"type": "rawBoolean",
+							"value": "false"
+						},
+						"key": {
+							"type": "rawString",
+							"value": "asbuff"
+						}
+				}],
+				"onAddActions": [{
+					"type": "addDamageTakenModificationListener",
+					"targetUnit": {
+						"type": "getCastingUnit"
+					},
+					"listener": {
+						"type": "getLastCreatedDamageTakenModificationListener"
+					}
+				}],
+				"onRemoveActions": [{
+					"type": "removeDamageTakenModificationListener",
+					"targetUnit": {
+						"type": "getCastingUnit"
+					},
+					"listener": {
+						"type": "getLastCreatedDamageTakenModificationListener"
+					}
+				}]
+			},{
+				"type": "addBuff",
+				"target": {
+					"type": "getCastingUnit"
+				},
+				"buff": {
+					"type": "getLastCreatedBuff"
+				}
+		}],
+		"onLevelChange": [{
+			"type": "runReuseAction",
+			"name": {
+				"type": "rawString",
+				"value": "setupBuffs"
+			}
+		}]
+	},{
+		"ids": [{"id":"AHav", "castId": "avatar"}],
+		"type": "NORMAL_NOTARGET",
+		"displayFields": {
+			"castlessNoTarget": {
+				"type": "rawBoolean",
+				"value": "true"
+			}
+		},
+		"reuseActions": {
+			"setupBuffs": [{
+					"type": "createNonStackingStatBuff",
+					"buffType": {
+						"type": "getNonStackingStatBuffTypeFromString",
+						"id": {
+							"type": "rawString",
+							"value": "DEF"
+						}
+					},
+					"stackingKey": {
+						"type": "rawString",
+						"value": "avatar"
+					},
+					"value": {
+						"type": "getAbilityDataAsFloat",
+						"dataField": "A"
+					}
+				},{
+					"type": "storeValueLocally",
+					"key": {
+						"type": "rawString",
+						"value": "defbuff"
+					},
+					"instanceValue": {
+						"type": "rawBoolean",
+						"value": "false"
+					},
+					"valueToStore": {
+						"type": "getLastCreatedNonStackingStatBuff"
+					}
+				},{
+					"type": "createNonStackingStatBuff",
+					"buffType": {
+						"type": "getNonStackingStatBuffTypeFromString",
+						"id": {
+							"type": "rawString",
+							"value": "MAXHP"
+						}
+					},
+					"stackingKey": {
+						"type": "rawString",
+						"value": "avatar"
+					},
+					"value": {
+						"type": "getAbilityDataAsFloat",
+						"dataField": "B"
+					}
+				},{
+					"type": "storeValueLocally",
+					"key": {
+						"type": "rawString",
+						"value": "hpbuff"
+					},
+					"instanceValue": {
+						"type": "rawBoolean",
+						"value": "false"
+					},
+					"valueToStore": {
+						"type": "getLastCreatedNonStackingStatBuff"
+					}
+				},{
+					"type": "createNonStackingStatBuff",
+					"buffType": {
+						"type": "getNonStackingStatBuffTypeFromString",
+						"id": {
+							"type": "rawString",
+							"value": "ALLATK"
+						}
+					},
+					"stackingKey": {
+						"type": "rawString",
+						"value": "avatar"
+					},
+					"value": {
+						"type": "getAbilityDataAsFloat",
+						"dataField": "C"
+					}
+				},{
+					"type": "storeValueLocally",
+					"key": {
+						"type": "rawString",
+						"value": "atkbuff"
+					},
+					"instanceValue": {
+						"type": "rawBoolean",
+						"value": "false"
+					},
+					"valueToStore": {
+						"type": "getLastCreatedNonStackingStatBuff"
+					}
+			}]
+		},
+		"onAddDisabledAbility": [{
+				"type": "createStateModBuff",
+				"buffType": "MAGIC_IMMUNE"
+			},{
+				"type": "runReuseAction",
+				"name": {
+					"type": "rawString",
+					"value": "setupBuffs"
+				}
+			},{
+				"type": "createDamageTakenModificationListener",
+				"actions": [{
+					"type": "if",
+					"condition": {
+						"type": "isAttackTypeEqual",
+						"attackType1": {
+							"type": "getTriggeringAttackType"
+						},
+						"attackType2": {
+							"type": "getAttackTypeFromString",
+							"id": {
+								"type": "rawString",
+								"value": "SPELLS"
+							}
+						}
+					},
+					"thenActions": [{
+						"type": "multiplyDamageTakenMultiplier",
+						"multiplier": {
+							"type": "f-",
+							"value1": {
+								"type": "rawFloat",
+								"value": 1
+							},
+							"value2": {
+								"type": "getAbilityDataAsFloat",
+								"dataField": "D"
+							}
+						}
+					}],
+					"elseActions": []
+				}]
+		}],
+		"onEndCasting": [{
+				"type": "createTemporarySpellEffectOnUnit",
+				"target": {
+					"type": "getCastingUnit"
+				},
+				"id": {
+					"type": "getAlias"
+				},
+				"effectType": "CASTER"
+			},{
+				"type": "createTimedBuff",
+				"buffId": {
+					"type": "getWar3IDFromString",
+					"id": "BHav"
+				},
+				"magic": {
+					"type": "rawBoolean",
+					"value": "false"
+				},
+				"duration": {
+					"type": "getAbilityDuration",
+					"target": {
+						"type": "getCastingUnit"
+					}
+				},
+				"showTimedLifeBar": {
+					"type": "rawBoolean",
+					"value": "true"
+				},
+				"statBuffs": [{
+						"type": "getStoredNonStackingStatBuffByKey",
+						"instanceValue": {
+							"type": "rawBoolean",
+							"value": "false"
+						},
+						"key": {
+							"type": "rawString",
+							"value": "defbuff"
+						}
+					},{
+						"type": "getStoredNonStackingStatBuffByKey",
+						"instanceValue": {
+							"type": "rawBoolean",
+							"value": "false"
+						},
+						"key": {
+							"type": "rawString",
+							"value": "hpbuff"
+						}
+					},{
+						"type": "getStoredNonStackingStatBuffByKey",
+						"instanceValue": {
+							"type": "rawBoolean",
+							"value": "false"
+						},
+						"key": {
+							"type": "rawString",
+							"value": "atkbuff"
+						}
+				}],
+				"stateMods": [{
+					"type": "getLastCreatedStateModBuff"
+				}],
+				"onAddActions": [{
+						"type": "disableAbility"
+					},{
+						"type": "dispelBuffs",
+						"filter": {
+							"type": "isBuffMagic",
+							"buff": {
+								"type": "enumBuff"
+							}
+						}
+					},{
+						"type": "multiplyUnitScale",
+						"unit": {
+							"type": "getBuffedUnit"
+						},
+						"value": {
+							"type": "rawFloat",
+							"value": "1.5"
+						}
+					},{
+						"type": "addSecondaryAnimationTag",
+						"unit": {
+							"type": "getBuffedUnit"
+						},
+						"tag": {
+							"type": "rawString",
+							"value": "ALTERNATE"
+						}
+					},{
+						"type": "playAnimation",
+						"unit": {
+							"type": "getBuffedUnit"
+						},
+						"tag": {
+							"type": "rawString",
+							"value": "MORPH"
+						}
+					},{
+						"type": "queueAnimation",
+						"unit": {
+							"type": "getBuffedUnit"
+						},
+						"tag": {
+							"type": "rawString",
+							"value": "STAND"
+						}
+					},{
+						"type": "addDamageTakenModificationListener",
+						"targetUnit": {
+							"type": "getBuffedUnit"
+						},
+						"listener": {
+							"type": "getLastCreatedDamageTakenModificationListener"
+						}
+				}],
+				"onRemoveActions": [{
+						"type": "enableAbility"
+					},{
+						"type": "multiplyUnitScale",
+						"unit": {
+							"type": "getBuffedUnit"
+						},
+						"value": {
+							"type": "rawFloat",
+							"value": "0.66666666666667"
+						}
+					},{
+						"type": "removeSecondaryAnimationTag",
+						"unit": {
+							"type": "getBuffedUnit"
+						},
+						"tag": {
+							"type": "rawString",
+							"value": "ALTERNATE"
+						}
+					},{
+						"type": "playAnimation",
+						"unit": {
+							"type": "getBuffedUnit"
+						},
+						"tag": {
+							"type": "rawString",
+							"value": "MORPH"
+						}
+					},{
+						"type": "queueAnimation",
+						"unit": {
+							"type": "getBuffedUnit"
+						},
+						"tag": {
+							"type": "rawString",
+							"value": "STAND"
+						}
+					},{
+						"type": "removeDamageTakenModificationListener",
+						"targetUnit": {
+							"type": "getBuffedUnit"
+						},
+						"listener": {
+							"type": "getLastCreatedDamageTakenModificationListener"
+						}
+				}]
+			},{
+				"type": "addBuff",
+				"target": {
+					"type": "getCastingUnit"
+				},
+				"buff": {
+					"type": "getLastCreatedBuff"
+				}
+		}],
+		"onLevelChange": [{
+			"type": "runReuseAction",
+			"name": {
+				"type": "rawString",
+				"value": "setupBuffs"
+			}
+		}]
+	},{
+		"ids": [{"id":"Auhf", "castId": "unholyfrenzy"}],
+		"type": "NORMAL_UNITTARGET",
+		"reuseActions": {
+			"setupBuffs": [{
+				"type": "createNonStackingStatBuff",
+				"buffType": {
+					"type": "getNonStackingStatBuffTypeFromString",
+					"id": {
+						"type": "rawString",
+						"value": "ATKSPD"
+					}
+				},
+				"stackingKey": {
+					"type": "rawString",
+					"value": "unholyfrenzy"
+				},
+				"value": {
+					"type": "getAbilityDataAsFloat",
+					"dataField": "A"
+				}
+			}]
+		},
+		"onAddDisabledAbility": [{
+			"type": "runReuseAction",
+			"name": {
+				"type": "rawString",
+				"value": "setupBuffs"
+			}
+		}],
+		"onEndCasting": [{
+				"type": "createTemporarySpellEffectOnUnit",
+				"target": {
+					"type": "getCastingUnit"
+				},
+				"id": {
+					"type": "getAlias"
+				},
+				"effectType": "CASTER"
+			},{
+				"type": "checkAbilityEffectReaction",
+				"target": {
+					"type": "getAbilityTargetedUnit"
+				},
+				"onHitActions": [{
+						"type": "createTimedTickingBuff",
+						"buffId": {
+							"type": "getFirstBuffId"
+						},
+						"duration": {
+							"type": "getAbilityDuration",
+							"target": {
+								"type": "getAbilityTargetedUnit"
+							}
+						},
+						"positive": {
+							"type": "isUnitShareSpells",
+							"unit": {
+								"type": "getAbilityTargetedUnit"
+							}
+						},
+						"statBuffs": [{
+							"type": "getLastCreatedNonStackingStatBuff"
+						}],
+						"onTickActions": [{
+								"type": "periodicExecute",
+								"periodicActions": [{
+									"type": "damageTarget",
+									"source": {
+										"type": "getBuffCastingUnit"
+									},
+									"target": {
+										"type": "getBuffedUnit"
+									},
+									"damage": {
+										"type": "getAbilityDataAsFloat",
+										"dataField": "B"
+									}
+								}],
+								"delaySeconds": {
+									"type": "rawFloat",
+									"value": 1
+								},
+								"unique": {
+									"type": "getUnitHandleAsString",
+									"unit": {
+										"type": "getBuffedUnit"
+									}
+								}
+						}]
+					},{
+						"type": "addBuff",
+						"target": {
+							"type": "getAbilityTargetedUnit"
+						},
+						"buff": {
+							"type": "getLastCreatedBuff"
+						}
+				}]
+		}],
+		"onLevelChange": [{
+			"type": "runReuseAction",
+			"name": {
+				"type": "rawString",
+				"value": "setupBuffs"
+			}
+		}]
+	},{
+		"ids": [{"id":"AUfu", "castId": "frostarmor", "autoCastOnId": "frostarmoron", "autoCastOffId": "frostarmoroff", "autoCastType": "ATTACKINGENEMY"},
+				{"id":"AUfa", "castId": "frostarmor"}],
+		"type": "NORMAL_UNITTARGET",
+		"extraAutoTargetConditions": [{
+			"type": "not",
+			"condition": {
+				"type": "doesUnitHaveBuff",
+				"unit": {
+					"type": "getAbilityTargetedUnit"
+				},
+				"id": {
+					"type": "getFirstBuffId"
+				}
+			}
+		}],
+		"reuseActions": {
+			"setupBuffs": [{
+				"type": "createNonStackingStatBuff",
+				"buffType": {
+					"type": "getNonStackingStatBuffTypeFromString",
+					"id": {
+						"type": "rawString",
+						"value": "DEF"
+					}
+				},
+				"stackingKey": {
+					"type": "rawString",
+					"value": "frostarmor"
+				},
+				"value": {
+					"type": "getAbilityDataAsFloat",
+					"dataField": "B"
+				}
+			}]
+		},
+		"onAddDisabledAbility": [{
+				"type": "runReuseAction",
+				"name": {
+					"type": "rawString",
+					"value": "setupBuffs"
+				}
+			},{
+				"type": "createDamageTakenListener",
+				"actions": [{
+					"type": "if",
+					"condition": {
+						"type": "and",
+						"conditions": [{
+								"type": "isTriggeringDamageAnAttack"
+							},{
+								"type": "not",
+								"condition": {
+									"type": "isTriggeringDamageRanged"
+								}
+							},{
+								"type": "not",
+								"condition": {
+									"type": "isUnitMagicImmune",
+									"unit": {
+										"type": "getDamagingUnit"
+									}
+								}
+						}]
+					},
+					"thenActions": [{
+						"type": "addSlowBuff",
+						"unit": {
+							"type": "getDamagingUnit"
+						},
+						"duration": {
+							"type": "getAbilityDuration",
+							"target": {
+								"type": "getDamagingUnit"
+							}
+						}
+					}]
+				}]
+		}],
+		"onEndCasting": [{
+			"type": "checkAbilityEffectReaction",
+			"target": {
+				"type": "getAbilityTargetedUnit"
+			},
+			"onHitActions": [{
+					"type": "createTimedBuff",
+					"buffId": {
+						"type": "getFirstBuffId"
+					},
+					"duration": {
+						"type": "getAbilityDataAsFloat",
+						"dataField": "A"
+					},
+					"statBuffs": [{
+						"type": "getLastCreatedNonStackingStatBuff"
+					}],
+					"onAddActions": [{
+							"type": "addDamageTakenListener",
+							"targetUnit": {
+								"type": "getBuffedUnit"
+							},
+							"listener": {
+								"type": "getLastCreatedDamageTakenListener"
+							}
+					}],
+					"onRemoveActions": [{
+							"type": "removeDamageTakenListener",
+							"targetUnit": {
+								"type": "getBuffedUnit"
+							},
+							"listener": {
+								"type": "getLastCreatedDamageTakenListener"
+							}
+					}]
+				},{
+					"type": "addBuff",
+					"target": {
+						"type": "getAbilityTargetedUnit"
+					},
+					"buff": {
+						"type": "getLastCreatedBuff"
+					}
+			}]
+		}],
+		"onLevelChange": [{
+			"type": "runReuseAction",
+			"name": {
+				"type": "rawString",
+				"value": "setupBuffs"
+			}
+		}]
+	},{
+		"ids": [{"id":"Ablo", "castId": "bloodlust", "autoCastOnId": "bloodluston", "autoCastOffId": "bloodlustoff", "autoCastType": "ATTACKINGENEMY"}],
+		"type": "NORMAL_UNITTARGET",
+		"extraAutoTargetConditions": [{
+			"type": "not",
+			"condition": {
+				"type": "doesUnitHaveBuff",
+				"unit": {
+					"type": "getAbilityTargetedUnit"
+				},
+				"id": {
+					"type": "getFirstBuffId"
+				}
+			}
+		}],
+		"reuseActions": {
+			"setupBuffs": [{
+					"type": "createNonStackingStatBuff",
+					"buffType": {
+						"type": "getNonStackingStatBuffTypeFromString",
+						"id": {
+							"type": "rawString",
+							"value": "ATKSPD"
+						}
+					},
+					"stackingKey": {
+						"type": "rawString",
+						"value": "bloodlust"
+					},
+					"value": {
+						"type": "getAbilityDataAsFloat",
+						"dataField": "A"
+					}
+				},{
+					"type": "storeValueLocally",
+					"key": {
+						"type": "rawString",
+						"value": "asbuff"
+					},
+					"instanceValue": {
+						"type": "rawBoolean",
+						"value": "false"
+					},
+					"valueToStore": {
+						"type": "getLastCreatedNonStackingStatBuff"
+					}
+				},{
+					"type": "createNonStackingStatBuff",
+					"buffType": {
+						"type": "getNonStackingStatBuffTypeFromString",
+						"id": {
+							"type": "rawString",
+							"value": "MVSPDPCT"
+						}
+					},
+					"stackingKey": {
+						"type": "rawString",
+						"value": "bloodlust"
+					},
+					"value": {
+						"type": "getAbilityDataAsFloat",
+						"dataField": "B"
+					}
+				},{
+					"type": "storeValueLocally",
+					"key": {
+						"type": "rawString",
+						"value": "mvbuff"
+					},
+					"instanceValue": {
+						"type": "rawBoolean",
+						"value": "false"
+					},
+					"valueToStore": {
+						"type": "getLastCreatedNonStackingStatBuff"
+					}
+			}]
+		},
+		"onAddDisabledAbility": [{
+			"type": "runReuseAction",
+			"name": {
+				"type": "rawString",
+				"value": "setupBuffs"
+			}
+		}],
+		"onEndCasting": [{
+			"type": "checkAbilityEffectReaction",
+			"target": {
+				"type": "getAbilityTargetedUnit"
+			},
+			"onHitActions": [{
+					"type": "createTimedBuff",
+					"buffId": {
+						"type": "getFirstBuffId"
+					},
+					"duration": {
+						"type": "getAbilityDuration",
+						"target": {
+							"type": "getAbilityTargetedUnit"
+						}
+					},
+					"statBuffs": [{
+							"type": "getStoredNonStackingStatBuffByKey",
+							"instanceValue": {
+								"type": "rawBoolean",
+								"value": "false"
+							},
+							"key": {
+								"type": "rawString",
+								"value": "asbuff"
+							}
+						},{
+							"type": "getStoredNonStackingStatBuffByKey",
+							"instanceValue": {
+								"type": "rawBoolean",
+								"value": "false"
+							},
+							"key": {
+								"type": "rawString",
+								"value": "mvbuff"
+							}
+					}],
+					"onAddActions": [{
+						"type": "multiplyUnitScale",
+						"unit": {
+							"type": "getBuffedUnit"
+						},
+						"value": {
+							"type": "f+",
+							"value1": {
+								"type": "rawFloat",
+								"value": 1.0
+							},
+							"value2": {
+								"type": "getAbilityDataAsFloat",
+								"dataField": "C"
+							}
+						}
+					}],
+					"onRemoveActions": [{
+						"type": "multiplyUnitScale",
+						"unit": {
+							"type": "getBuffedUnit"
+						},
+						"value": {
+							"type": "f/",
+							"value1": {
+								"type": "rawFloat",
+								"value": 1.0
+							},
+							"value2": {
+								"type": "f+",
+								"value1": {
+									"type": "rawFloat",
+									"value": 1.0
+								},
+								"value2": {
+									"type": "getAbilityDataAsFloat",
+									"dataField": "C"
+								}
+							}
+						}
+					}]
+				},{
+					"type": "addBuff",
+					"target": {
+						"type": "getAbilityTargetedUnit"
+					},
+					"buff": {
+						"type": "getLastCreatedBuff"
+					}
+			}]
+		}],
+		"onLevelChange": [{
+			"type": "runReuseAction",
+			"name": {
+				"type": "rawString",
+				"value": "setupBuffs"
+			}
+		}]
+	},{
+		"ids": [{"id":"Afzy", "castId": "frenzy", "autoCastOnId": "frenzyon", "autoCastOffId": "frenzyoff", "autoCastType": "NOTARGET"}],
+		"type": "NORMAL_NOTARGET",
+		"extraAutoNoTargetConditions": [{
+				"type": "isCurrentBehaviorCategoryInList",
+				"list": ["ATTACK"]
+			},{
+				"type": "not",
+				"condition": {
+					"type": "doesUnitHaveBuff",
+					"unit": {
+						"type": "getAbilityTargetedUnit"
+					},
+					"id": {
+						"type": "getFirstBuffId"
+					}
+				}
+		}],
+		"reuseActions": {
+			"setupBuffs": [{
+					"type": "createNonStackingStatBuff",
+					"buffType": {
+						"type": "getNonStackingStatBuffTypeFromString",
+						"id": {
+							"type": "rawString",
+							"value": "ATKSPD"
+						}
+					},
+					"stackingKey": {
+						"type": "rawString",
+						"value": "bloodlust"
+					},
+					"value": {
+						"type": "getAbilityDataAsFloat",
+						"dataField": "A"
+					}
+				},{
+					"type": "storeValueLocally",
+					"key": {
+						"type": "rawString",
+						"value": "asbuff"
+					},
+					"instanceValue": {
+						"type": "rawBoolean",
+						"value": "false"
+					},
+					"valueToStore": {
+						"type": "getLastCreatedNonStackingStatBuff"
+					}
+				},{
+					"type": "createNonStackingStatBuff",
+					"buffType": {
+						"type": "getNonStackingStatBuffTypeFromString",
+						"id": {
+							"type": "rawString",
+							"value": "MVSPDPCT"
+						}
+					},
+					"stackingKey": {
+						"type": "rawString",
+						"value": "bloodlust"
+					},
+					"value": {
+						"type": "getAbilityDataAsFloat",
+						"dataField": "B"
+					}
+				},{
+					"type": "storeValueLocally",
+					"key": {
+						"type": "rawString",
+						"value": "mvbuff"
+					},
+					"instanceValue": {
+						"type": "rawBoolean",
+						"value": "false"
+					},
+					"valueToStore": {
+						"type": "getLastCreatedNonStackingStatBuff"
+					}
+			}]
+		},
+		"onAddDisabledAbility": [{
+			"type": "runReuseAction",
+			"name": {
+				"type": "rawString",
+				"value": "setupBuffs"
+			}
+		}],
+		"onEndCasting": [{
+				"type": "createTimedBuff",
+				"buffId": {
+					"type": "getFirstBuffId"
+				},
+				"duration": {
+					"type": "getAbilityDuration",
+					"target": {
+						"type": "getAbilityTargetedUnit"
+					}
+				},
+				"statBuffs": [{
+						"type": "getStoredNonStackingStatBuffByKey",
+						"instanceValue": {
+							"type": "rawBoolean",
+							"value": "false"
+						},
+						"key": {
+							"type": "rawString",
+							"value": "asbuff"
+						}
+					},{
+						"type": "getStoredNonStackingStatBuffByKey",
+						"instanceValue": {
+							"type": "rawBoolean",
+							"value": "false"
+						},
+						"key": {
+							"type": "rawString",
+							"value": "mvbuff"
+						}
+				}]
+			},{
+				"type": "addBuff",
+				"target": {
+					"type": "getAbilityTargetedUnit"
+				},
+				"buff": {
+					"type": "getLastCreatedBuff"
+				}
+		}],
+		"onLevelChange": [{
+			"type": "runReuseAction",
+			"name": {
+				"type": "rawString",
+				"value": "setupBuffs"
+			}
+		}]
+	},{
+		"ids": [{"id":"AHds", "castId": "divineshield", "uncastId": "undivineshield"}],
+		"type": "NORMAL_NOTARGET",
+		"displayFields": {
+			"castlessNoTarget": {
+				"type": "rawBoolean",
+				"value": "true"
+			},
+			"toggleable": {
+				"type": "and",
+				"conditions": [{
+					"type": "getAbilityDataAsBoolean",
+					"dataField": "A"
+				},{
+					"type": "gameplayConstantCanDisableDivineShield"
+				}]
+			},
+			"castToggleOff": {
+				"type": "rawBoolean",
+				"value": "false"
+			}
+		},
+		"onAddDisabledAbility": [{
+			"type": "createStateModBuff",
+			"buffType": "INVULNERABLE"
+		}],
+		"onEndCasting": [{
+				"type": "createTemporarySpellEffectOnUnit",
+				"target": {
+					"type": "getCastingUnit"
+				},
+				"id": {
+					"type": "getAlias"
+				},
+				"effectType": "CASTER"
+			},{
+				"type": "createTimedBuff",
+				"buffId": {
+					"type": "getFirstBuffId"
+				},
+				"magic": {
+					"type": "rawBoolean",
+					"value": "false"
+				},
+				"duration": {
+					"type": "getAbilityDuration",
+					"target": {
+						"type": "getCastingUnit"
+					}
+				},
+				"stateMods": [{
+					"type": "getLastCreatedStateModBuff"
+				}],
+				"onAddActions": [{
+						"type": "if",
+						"condition": {
+							"type": "and",
+							"conditions": [{
+								"type": "getAbilityDataAsBoolean",
+								"dataField": "A"
+							},{
+								"type": "gameplayConstantCanDisableDivineShield"
+							}]
+						},
+						"elseActions": [{
+							"type": "disableAbility"
+						}]
+					},{
+						"type": "dispelBuffs",
+						"filter": {
+							"type": "isBuffMagic",
+							"buff": {
+								"type": "enumBuff"
+							}
+						}
+				}],
+				"onRemoveActions": [{
+					"type": "enableAbility"
+				}]
+			},{
+				"type": "addBuff",
+				"target": {
+					"type": "getCastingUnit"
+				},
+				"buff": {
+					"type": "getLastCreatedBuff"
+				}
+		}],
+		"onDeactivate": [{
+			"type": "removeBuff",
+			"target": {
+				"type": "getCastingUnit"
+			},
+			"buff": {
+				"type": "getLastCreatedBuff"
+			}
+		}]
+	}]
+}

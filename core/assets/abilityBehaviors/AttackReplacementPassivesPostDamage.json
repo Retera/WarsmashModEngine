@@ -1,0 +1,315 @@
+{
+	"abilityList": [{
+		"ids": [{"id":"Awar"}],
+		"type": "PASSIVE",
+		"onAddDisabledAbility": [{
+				"type": "createAttackPostDamageListener",
+				"priority": {
+					"type": "rawInteger",
+					"value": 0
+				},
+				"actions": [{
+						"type": "createSoundEffectOnUnit",
+						"unit": {
+							"type": "getCastingUnit"
+						},
+						"id": {
+							"type": "getAlias"
+						}
+					},{
+						"type": "damageBurst",
+						"source": {
+							"type": "getAttackingUnit"
+						},
+						"target": {
+							"type": "getUnitLocation",
+							"unit": {
+								"type": "getAttackingUnit"
+							}
+						},
+						"validTarget": {
+							"type": "isUnitValidTarget",
+							"target": {
+								"type": "getEnumUnit"
+							}
+						},
+						"damageType": {
+							"type": "getDamageTypeFromString",
+							"id": {
+								"type": "rawString",
+								"value": "ENHANCED"
+							}
+						},
+						"damage": {
+							"type": "getAbilityDataAsFloat",
+							"dataField": "B"
+						},
+						"fullDamageRadius": {
+							"type": "getAbilityDataAsFloat",
+							"dataField": "C"
+						},
+						"partialDamage": {
+							"type": "f/",
+							"value1": {
+								"type": "getAbilityDataAsFloat",
+								"dataField": "B"
+							},
+							"value2": {
+								"type": "rawFloat",
+								"value": 2.0
+							}
+						},
+						"partialDamageRadius": {
+							"type": "getAbilityDataAsFloat",
+							"dataField": "D"
+						},
+						"extraActions": [{
+							"type": "createTemporarySpellEffectOnUnit",
+							"target": {
+								"type": "getEnumUnit"
+							},
+							"id": {
+								"type": "getAlias"
+							},
+							"effectType": "SPECIAL"
+						}]
+				}]
+			},{
+				"type": "createAttackModifier",
+				"priority": {
+					"type": "rawInteger",
+					"value": 1
+				},
+				"preLaunchCondition": {
+					"type": "isUnitValidTarget",
+					"target": {
+						"type": "getAttackedUnit"
+					}
+				},
+				"preLaunchModification": [{
+					"type": "if",
+					"condition": {
+						"type": "f<",
+						"value1": {
+							"type": "randomBoundedFloat",
+							"bound": {
+								"type": "rawFloat",
+								"value": 100
+							}
+						},
+						"value2": {
+							"type": "getAbilityDataAsFloat",
+							"dataField": "A"
+						}
+					},
+					"thenActions": [{
+							"type": "attackModifierAddAnimationTag",
+							"tag": {
+								"type": "rawString",
+								"value": "SLAM"
+							}
+						},{
+							"type": "storeValueLocally",
+							"key": {
+								"type": "rawString",
+								"value": "pulving"
+							},
+							"valueToStore": {
+								"type": "rawBoolean",
+								"value": "true"
+							}
+					}],
+					"elseActions": [{
+							"type": "storeValueLocally",
+							"key": {
+								"type": "rawString",
+								"value": "pulving"
+							},
+							"valueToStore": {
+								"type": "rawBoolean",
+								"value": "false"
+							}
+					}]
+				}],
+				"condition": {
+					"type": "isUnitValidTarget",
+					"target": {
+						"type": "getAttackedUnit"
+					}
+				},
+				"modification": [{
+					"type": "if",
+					"condition": {
+						"type": "getStoredBooleanByKey",
+						"key": {
+							"type": "rawString",
+							"value": "pulving"
+						}
+					},
+					"thenActions": [{
+						"type": "attackModifierAddPostDamageListener",
+						"listener": {
+							"type": "getLastCreatedAttackPostDamageListener"
+						}
+					}]
+				}]
+		}],
+		"onAddAbility": [{
+			"type": "addAttackModifier",
+			"unit": {
+				"type": "getCastingUnit"
+			},
+			"modifier": {
+				"type": "getLastCreatedAttackModifier"
+			}
+		}],
+		"onRemoveAbility": [{
+			"type": "removeAttackModifier",
+			"unit": {
+				"type": "getCastingUnit"
+			},
+			"modifier": {
+				"type": "getLastCreatedAttackModifier"
+			}
+		}]
+	},{
+		"ids": [{"id":"ANca"}],
+		"type": "PASSIVE",
+		"onAddDisabledAbility": [{
+				"type": "createAttackPostDamageListener",
+				"priority": {
+					"type": "rawInteger",
+					"value": 0
+				},
+				"actions": [{
+						"type": "damageArea",
+						"source": {
+							"type": "getAttackingUnit"
+						},
+						"target": {
+							"type": "createLocationFromOffset",
+							"origin": {
+								"type": "getUnitLocation",
+								"unit": {
+									"type": "getAttackingUnit"
+								}
+							},
+							"dist": {
+								"type": "getAbilityArea"
+							},
+							"angle": {
+								"type": "getUnitFacing",
+								"unit": {
+									"type": "getAttackingUnit"
+								}
+							},
+							"angleInDegrees": {
+								"type": "rawBoolean",
+								"value": "true"
+							}
+						},
+						"validTarget": {
+							"type": "and",
+							"conditions": [{
+									"type": "isUnitValidTarget",
+									"target": {
+										"type": "getEnumUnit"
+									}
+								},{
+									"type": "not",
+									"condition": {
+										"type": "isUnitEqual",
+										"unit1": {
+											"type": "getAttackedUnit"
+										},
+										"unit2": {
+											"type": "getEnumUnit"
+										}
+									}
+							}]
+						},
+						"damageType": {
+							"type": "getDamageTypeFromString",
+							"id": {
+								"type": "rawString",
+								"value": "ENHANCED"
+							}
+						},
+						"damage": {
+							"type": "f*",
+							"value1": {
+								"type": "getTotalDamageDealt"
+							},
+							"value2": {
+								"type": "getAbilityDataAsFloat",
+								"dataField": "A"
+							}
+						},
+						"radius": {
+							"type": "getAbilityArea"
+						},
+						"extraActions": [{
+							"type": "createTemporarySpellEffectOnUnit",
+							"target": {
+								"type": "getEnumUnit"
+							},
+							"id": {
+								"type": "getAlias"
+							},
+							"effectType": "SPECIAL"
+						}]
+				}]
+			},{
+				"type": "createAttackModifier",
+				"priority": {
+					"type": "rawInteger",
+					"value": 1
+				},
+				"preLaunchCondition": {
+					"type": "isUnitValidTarget",
+					"target": {
+						"type": "getAttackedUnit"
+					}
+				},
+				"preLaunchModification": [{
+					"type": "attackModifierAddAnimationTag",
+					"tag": {
+						"type": "rawString",
+						"value": "SLAM"
+					}
+				}],
+				"condition": {
+					"type": "isUnitValidTarget",
+					"target": {
+						"type": "getAttackedUnit"
+					}
+				},
+				"modification": [{
+						"type": "attackModifierAddPostDamageListener",
+						"listener": {
+							"type": "getLastCreatedAttackPostDamageListener"
+						}
+					},{
+						"type": "attackModifierApplyArt"
+				}]
+		}],
+		"onAddAbility": [{
+			"type": "addAttackModifier",
+			"unit": {
+				"type": "getCastingUnit"
+			},
+			"modifier": {
+				"type": "getLastCreatedAttackModifier"
+			}
+		}],
+		"onRemoveAbility": [{
+			"type": "removeAttackModifier",
+			"unit": {
+				"type": "getCastingUnit"
+			},
+			"modifier": {
+				"type": "getLastCreatedAttackModifier"
+			}
+		}]
+	}]
+}

@@ -1762,7 +1762,7 @@ public class MenuUI {
 				for (int i = 0; i < WarsmashConstants.MAX_PLAYERS; i++) {
 					final CBasePlayer player = this.currentMapConfig.getPlayer(i);
 					player.setController(CMapControl.USER);
-					player.setRacePref(WarsmashConstants.RACE_MANAGER.getRacePreference(1));
+					player.setRacePref(WarsmashConstants.RACE_MANAGER.getRacePreference(4));
 				}
 			}
 			else {

@@ -1,0 +1,837 @@
+{
+	"abilityList": [{
+		"ids": [{"id":"Alit"}],
+		"type": "HIDDEN",
+		"onAddDisabledAbility": [{
+			"type": "createAttackModifier",
+			"priority": {
+				"type": "rawInteger",
+				"value": 11
+			},
+			"preLaunchModification": [{
+				"type": "attackModifierApplyArt",
+				"applyArtIfMissing": {
+					"type": "rawBoolean",
+					"value": "true"
+				}
+			}],
+			"condition": {
+				"type": "isUnitValidTarget",
+				"target": {
+					"type": "getAttackedUnit"
+				}
+			},
+			"modification": [{
+					"type": "attackModifierApplyArtAndSpeed",
+					"applyArtIfMissing": {
+						"type": "rawBoolean",
+						"value": "true"
+					}
+				},{
+					"type": "createTemporarySpellEffectOnUnit",
+					"target": {
+						"type": "getAttackedUnit"
+					},
+					"effectType": "TARGET"
+				},{
+					"type": "if",
+					"condition": {
+						"type": "notNull",
+						"value": {
+							"type": "getLastCreatedLightningEffect"
+						}
+					},
+					"thenActions": [{
+						"type": "removeLightningEffect",
+						"effect": {
+							"type": "getLastCreatedLightningEffect"
+						}
+					}]
+				},{
+					"type": "createLightningEffect",
+					"origin": {
+						"type": "getAttackingUnit"
+					},
+					"target": {
+						"type": "getAttackedUnit"
+					},
+					"duration": {
+						"type": "getAbilityDataAsFloat",
+						"dataField": "B"
+					}
+			}]
+		}],
+		"onAddAbility": [{
+			"type": "addAttackModifier",
+			"unit": {
+				"type": "getCastingUnit"
+			},
+			"modifier": {
+				"type": "getLastCreatedAttackModifier"
+			}
+		}],
+		"onRemoveAbility": [{
+			"type": "removeAttackModifier",
+			"unit": {
+				"type": "getCastingUnit"
+			},
+			"modifier": {
+				"type": "getLastCreatedAttackModifier"
+			}
+		}]
+	},{
+		"ids": [{"id":"Apts"}],
+		"type": "PASSIVE",
+		"reuseActions": {
+			"setup": [{
+					"type": "createStateModBuff",
+					"buffType": "INVULNERABLE"
+				},{
+					"type": "storeValueLocally",
+					"key": {
+						"type": "rawString",
+						"value": "invulBuff"
+					},
+					"instanceValue": {
+						"type": "rawBoolean",
+						"value": "false"
+					},
+					"valueToStore": {
+						"type": "getLastCreatedStateModBuff"
+					}
+				},{
+					"type": "createStateModBuff",
+					"buffType": "MAGIC_IMMUNE"
+				},{
+					"type": "storeValueLocally",
+					"key": {
+						"type": "rawString",
+						"value": "mimBuff"
+					},
+					"instanceValue": {
+						"type": "rawBoolean",
+						"value": "false"
+					},
+					"valueToStore": {
+						"type": "getLastCreatedStateModBuff"
+					}
+				},{
+					"type": "createStateModBuff",
+					"buffType": "UNSELECTABLE",
+					"value": {
+						"type": "playerMaskAllPlayers"
+					}
+				},{
+					"type": "storeValueLocally",
+					"key": {
+						"type": "rawString",
+						"value": "selBuff"
+					},
+					"instanceValue": {
+						"type": "rawBoolean",
+						"value": "false"
+					},
+					"valueToStore": {
+						"type": "getLastCreatedStateModBuff"
+					}
+				},{
+					"type": "createStateModBuff",
+					"buffType": "UNENUMERABLE"
+				},{
+					"type": "storeValueLocally",
+					"key": {
+						"type": "rawString",
+						"value": "enumBuff"
+					},
+					"instanceValue": {
+						"type": "rawBoolean",
+						"value": "false"
+					},
+					"valueToStore": {
+						"type": "getLastCreatedStateModBuff"
+					}
+			}],
+			"onHit": [{
+					"type": "createUnit",
+					"id": {
+						"type": "getAbilityUnitId"
+					},
+					"loc": {
+						"type": "getAttackImpactLocation"
+					},
+					"facing": {
+						"type": "rawFloat",
+						"value": 225
+					}
+				},{
+					"type": "createTimedLifeBuff",
+					"buffId": {
+						"type": "getWar3IDFromString",
+						"id": "Bplg"
+					},
+					"duration": {
+						"type": "getAbilityDuration"
+					},
+					"explode": {
+						"type": "rawBoolean",
+						"value": "false"
+					}
+				},{
+					"type": "addBuff",
+					"target": {
+						"type": "getLastCreatedUnit"
+					},
+					"buff": {
+						"type": "getLastCreatedBuff"
+					}
+				},{
+					"type": "addStateModBuff",
+					"targetUnit": {
+						"type": "getLastCreatedUnit"
+					},
+					"buff": {
+						"type": "getStoredStateModBuffByKey",
+						"key": {
+							"type": "rawString",
+							"value": "invulBuff"
+						},
+						"instanceValue": {
+							"type": "rawBoolean",
+							"value": "false"
+						}
+					}
+				},{
+					"type": "addStateModBuff",
+					"targetUnit": {
+						"type": "getLastCreatedUnit"
+					},
+					"buff": {
+						"type": "getStoredStateModBuffByKey",
+						"key": {
+							"type": "rawString",
+							"value": "mimBuff"
+						},
+						"instanceValue": {
+							"type": "rawBoolean",
+							"value": "false"
+						}
+					}
+				},{
+					"type": "addStateModBuff",
+					"targetUnit": {
+						"type": "getLastCreatedUnit"
+					},
+					"buff": {
+						"type": "getStoredStateModBuffByKey",
+						"key": {
+							"type": "rawString",
+							"value": "selBuff"
+						},
+						"instanceValue": {
+							"type": "rawBoolean",
+							"value": "false"
+						}
+					}
+				},{
+					"type": "addStateModBuff",
+					"targetUnit": {
+						"type": "getLastCreatedUnit"
+					},
+					"buff": {
+						"type": "getStoredStateModBuffByKey",
+						"key": {
+							"type": "rawString",
+							"value": "enumBuff"
+						},
+						"instanceValue": {
+							"type": "rawBoolean",
+							"value": "false"
+						}
+					}
+			}]
+		},
+		"onAddDisabledAbility": [{
+				"type": "runReuseAction",
+				"name": {
+					"type": "rawString",
+					"value": "setup"
+				}
+			},{
+				"type": "createAttackPreDamageListener",
+				"actions": [{
+						"type": "runReuseAction",
+						"name": {
+							"type": "rawString",
+							"value": "onHit"
+						}
+					},{
+						"type": "setStacking",
+						"allowStacking": {
+							"type": "rawBoolean",
+							"value": "false"
+						},
+						"allowSamePriorityStacking": {
+							"type": "rawBoolean",
+							"value": "false"
+						}
+				}]
+			},{
+				"type": "createAttackModifier",
+				"priority": {
+					"type": "rawInteger",
+					"value": 11
+				},
+				"modification": [{
+						"type": "attackModifierApplyArt"
+					},{
+						"type": "attackModifierAddPreDamageListener",
+						"listener": {
+							"type": "getLastCreatedAttackPreDamageListener"
+						}
+					},{
+						"type": "attackModifierPreventOtherModifications"
+				}]
+		}],
+		"onAddAbility": [{
+			"type": "addAttackModifier",
+			"unit": {
+				"type": "getCastingUnit"
+			},
+			"modifier": {
+				"type": "getLastCreatedAttackModifier"
+			}
+		}],
+		"onLevelChange": [{
+			"type": "runReuseAction",
+			"name": {
+				"type": "rawString",
+				"value": "levelChange"
+			}
+		}],
+		"onRemoveAbility": [{
+			"type": "removeAttackModifier",
+			"unit": {
+				"type": "getCastingUnit"
+			},
+			"modifier": {
+				"type": "getLastCreatedAttackModifier"
+			}
+		}]
+	},{
+		"ids": [{"id":"Afra"}],
+		"type": "PASSIVE",
+		"reuseActions": {
+			"onHit": [{
+					"type": "if",
+					"condition": {
+						"type": "and",
+						"conditions": [{
+								"type": "not",
+								"condition": {
+									"type": "isAttackArtillery"
+								}
+							},{
+								"type": "isUnitValidTarget",
+								"target": {
+									"type": "getAttackedUnit"
+								}
+						}]
+					},
+					"thenActions": [{
+						"type": "addSlowBuff",
+						"unit": {
+							"type": "getAttackedUnit"
+						},
+						"duration": {
+							"type": "getAbilityDuration",
+							"target": {
+								"type": "getAttackedUnit"
+							}
+						}
+					}]
+				},{
+					"type": "iterateUnitsInRangeOfLocationMatchingCondition",
+					"location": {
+						"type": "getAttackImpactLocation"
+					},
+					"range": {
+						"type": "i2f",
+						"value": {
+							"type": "getAttackMaximumSplashRadius"
+						}
+					},
+					"condition": {
+						"type": "or",
+						"conditions": [{
+								"type": "and",
+								"conditions": [{
+										"type": "isAttackArtillery"
+									},{
+										"type": "isUnitEqual",
+										"unit1": {
+											"type": "getMatchingUnit"
+										},
+										"unit2": {
+											"type": "getAttackedUnit"
+										}
+									},{
+										"type": "isUnitValidTarget",
+										"target": {
+											"type": "getMatchingUnit"
+										}
+								}]
+							},{
+								"type": "and",
+								"conditions": [{
+										"type": "not",
+										"condition": {
+											"type": "isUnitEqual",
+											"unit1": {
+												"type": "getMatchingUnit"
+											},
+											"unit2": {
+												"type": "getAttackedUnit"
+											}
+										}
+									},{
+										"type": "isUnitValidTarget",
+										"target": {
+											"type": "getMatchingUnit"
+										}
+									},{
+										"type": "isUnitValidSplashDamageTarget",
+										"unit": {
+											"type": "getMatchingUnit"
+										}
+								}]
+						}]
+					},
+					"iterationActions": [{
+						"type": "addSlowBuff",
+						"unit": {
+							"type": "getEnumUnit"
+						},
+						"duration": {
+							"type": "getAbilityDuration",
+							"target": {
+								"type": "getEnumUnit"
+							}
+						}
+					}]
+			}]
+		},
+		"onAddDisabledAbility": [{
+				"type": "runReuseAction",
+				"name": {
+					"type": "rawString",
+					"value": "setup"
+				}
+			},{
+				"type": "createAttackPreDamageListener",
+				"actions": [{
+						"type": "runReuseAction",
+						"name": {
+							"type": "rawString",
+							"value": "onHit"
+						}
+					},{
+						"type": "setStacking",
+						"allowStacking": {
+							"type": "rawBoolean",
+							"value": "false"
+						},
+						"allowSamePriorityStacking": {
+							"type": "rawBoolean",
+							"value": "false"
+						}
+				}]
+			},{
+				"type": "createAttackModifier",
+				"priority": {
+					"type": "rawInteger",
+					"value": 11
+				},
+				"modification": [{
+						"type": "attackModifierApplyArt"
+					},{
+						"type": "attackModifierAddPreDamageListener",
+						"listener": {
+							"type": "getLastCreatedAttackPreDamageListener"
+						}
+					},{
+						"type": "attackModifierPreventOtherModifications"
+				}]
+		}],
+		"onAddAbility": [{
+			"type": "addAttackModifier",
+			"unit": {
+				"type": "getCastingUnit"
+			},
+			"modifier": {
+				"type": "getLastCreatedAttackModifier"
+			}
+		}],
+		"onLevelChange": [{
+			"type": "runReuseAction",
+			"name": {
+				"type": "rawString",
+				"value": "levelChange"
+			}
+		}],
+		"onRemoveAbility": [{
+			"type": "removeAttackModifier",
+			"unit": {
+				"type": "getCastingUnit"
+			},
+			"modifier": {
+				"type": "getLastCreatedAttackModifier"
+			}
+		}]
+	},{
+		"ids": [{"id":"Afrb"}],
+		"type": "HIDDEN",
+		"reuseActions": {
+			"onHit": [{
+					"type": "if",
+					"condition": {
+						"type": "and",
+						"conditions": [{
+								"type": "not",
+								"condition": {
+									"type": "isAttackArtillery"
+								}
+							},{
+								"type": "isUnitValidTarget",
+								"target": {
+									"type": "getAttackedUnit"
+								}
+						}]
+					},
+					"thenActions": [{
+						"type": "addSlowBuff",
+						"unit": {
+							"type": "getAttackedUnit"
+						},
+						"duration": {
+							"type": "getAbilityDuration",
+							"target": {
+								"type": "getAttackedUnit"
+							}
+						}
+					}]
+				},{
+					"type": "iterateUnitsInRangeOfLocationMatchingCondition",
+					"location": {
+						"type": "getAttackImpactLocation"
+					},
+					"range": {
+						"type": "i2f",
+						"value": {
+							"type": "getAttackMaximumSplashRadius"
+						}
+					},
+					"condition": {
+						"type": "or",
+						"conditions": [{
+								"type": "and",
+								"conditions": [{
+										"type": "isAttackArtillery"
+									},{
+										"type": "isUnitEqual",
+										"unit1": {
+											"type": "getMatchingUnit"
+										},
+										"unit2": {
+											"type": "getAttackedUnit"
+										}
+									},{
+										"type": "isUnitValidTarget",
+										"target": {
+											"type": "getMatchingUnit"
+										}
+								}]
+							},{
+								"type": "and",
+								"conditions": [{
+										"type": "not",
+										"condition": {
+											"type": "isUnitEqual",
+											"unit1": {
+												"type": "getMatchingUnit"
+											},
+											"unit2": {
+												"type": "getAttackedUnit"
+											}
+										}
+									},{
+										"type": "isUnitValidTarget",
+										"target": {
+											"type": "getMatchingUnit"
+										}
+									},{
+										"type": "isUnitValidSplashDamageTarget",
+										"unit": {
+											"type": "getMatchingUnit"
+										}
+								}]
+						}]
+					},
+					"iterationActions": [{
+						"type": "addSlowBuff",
+						"unit": {
+							"type": "getEnumUnit"
+						},
+						"duration": {
+							"type": "getAbilityDuration",
+							"target": {
+								"type": "getEnumUnit"
+							}
+						}
+					}]
+			}]
+		},
+		"onAddDisabledAbility": [{
+				"type": "runReuseAction",
+				"name": {
+					"type": "rawString",
+					"value": "setup"
+				}
+			},{
+				"type": "createAttackPreDamageListener",
+				"actions": [{
+						"type": "runReuseAction",
+						"name": {
+							"type": "rawString",
+							"value": "onHit"
+						}
+					},{
+						"type": "setStacking",
+						"allowStacking": {
+							"type": "rawBoolean",
+							"value": "false"
+						},
+						"allowSamePriorityStacking": {
+							"type": "rawBoolean",
+							"value": "false"
+						}
+				}]
+			},{
+				"type": "createAttackModifier",
+				"priority": {
+					"type": "rawInteger",
+					"value": 11
+				},
+				"modification": [{
+						"type": "attackModifierApplyArt"
+					},{
+						"type": "attackModifierAddPreDamageListener",
+						"listener": {
+							"type": "getLastCreatedAttackPreDamageListener"
+						}
+					},{
+						"type": "attackModifierPreventOtherModifications"
+				}]
+		}],
+		"onAddAbility": [{
+			"type": "addAttackModifier",
+			"unit": {
+				"type": "getCastingUnit"
+			},
+			"modifier": {
+				"type": "getLastCreatedAttackModifier"
+			}
+		}],
+		"onLevelChange": [{
+			"type": "runReuseAction",
+			"name": {
+				"type": "rawString",
+				"value": "levelChange"
+			}
+		}],
+		"onRemoveAbility": [{
+			"type": "removeAttackModifier",
+			"unit": {
+				"type": "getCastingUnit"
+			},
+			"modifier": {
+				"type": "getLastCreatedAttackModifier"
+			}
+		}]
+	},{
+		"ids": [{"id":"Aspa"}],
+		"type": "HIDDEN",
+		"reuseActions": {
+			"onHit": [{
+				"type": "if",
+				"condition": {
+					"type": "notNull",
+					"value": {
+						"type": "getAttackedUnit"
+					}
+				},
+				"thenActions": [{
+						"type": "storeValueLocally",
+						"key": {
+							"type": "rawString",
+							"value": "settings"
+						},
+						"valueToStore": {
+							"type": "getCurrentAttackSettings"
+						}
+					},{
+						"type": "createTimedBuff",
+						"buffId": {
+							"type": "getWar3IDFromString",
+							"id": "Bspa"
+						},
+						"duration": {
+							"type": "getAbilityDuration"
+						},
+						"showIcon": {
+							"type": "rawBoolean",
+							"value": "false"
+						},
+						"stacks": {
+							"type": "rawBoolean",
+							"value": "true"
+						},
+						"positive": {
+							"type": "rawBoolean",
+							"value": "false"
+						},
+						"magic": {
+							"type": "rawBoolean",
+							"value": "false"
+						},
+						"onRemoveActions": [{
+							"type": "createUnitTargetedProjectile",
+							"source": {
+								"type": "getBuffedUnit"
+							},
+							"target": {
+								"type": "getBuffCastingUnit"
+							},
+							"settings": {
+								"type": "getStoredAttackSettingsByKey",
+								"key": {
+									"type": "rawString",
+									"value": "settings"
+								}
+							}
+						},{
+							"type": "cleanUpCastInstance"
+						}]
+					},{
+						"type": "addBuff",
+						"target": {
+							"type": "getAttackedUnit"
+						},
+						"buff": {
+							"type": "getLastCreatedBuff"
+						}
+				}]
+			}]
+		},
+		"onAddDisabledAbility": [{
+				"type": "runReuseAction",
+				"name": {
+					"type": "rawString",
+					"value": "setup"
+				}
+			},{
+				"type": "createAttackPreDamageListener",
+				"useCastId": {
+					"type": "rawBoolean",
+					"value": "false"
+				},
+				"actions": [{
+						"type": "runReuseAction",
+						"name": {
+							"type": "rawString",
+							"value": "onHit"
+						}
+					},{
+						"type": "setStacking",
+						"allowStacking": {
+							"type": "rawBoolean",
+							"value": "false"
+						},
+						"allowSamePriorityStacking": {
+							"type": "rawBoolean",
+							"value": "false"
+						}
+				}]
+			},{
+				"type": "createAttackModifier",
+				"priority": {
+					"type": "rawInteger",
+					"value": 11
+				},
+				"modification": [{
+						"type": "attackModifierApplyArt"
+					},{
+						"type": "attackModifierSetAttackArc",
+						"arc": {
+							"type": "rawFloat",
+							"value": 0.0
+						}
+					},{
+						"type": "attackModifierSetAttackStartZ",
+						"z": {
+							"type": "rawFloat",
+							"value": 0.0
+						}
+					},{
+						"type": "attackModifierSetAttackImpactZ",
+						"impactZ": {
+							"type": "rawFloat",
+							"value": 0.0
+						}
+					},{
+						"type": "attackModifierSetAttackDeathTime",
+						"deathTime": {
+							"type": "rawFloat",
+							"value": 0.0
+						}
+					},{
+						"type": "attackModifierSetAttackHoming",
+						"homing": {
+							"type": "rawBoolean",
+							"value": "true"
+						}
+					},{
+						"type": "attackModifierAddPreDamageListener",
+						"listener": {
+							"type": "getLastCreatedAttackPreDamageListener"
+						}
+					},{
+						"type": "attackModifierPreventOtherModifications"
+				}]
+		}],
+		"onAddAbility": [{
+			"type": "addAttackModifier",
+			"unit": {
+				"type": "getCastingUnit"
+			},
+			"modifier": {
+				"type": "getLastCreatedAttackModifier"
+			}
+		}],
+		"onLevelChange": [{
+			"type": "runReuseAction",
+			"name": {
+				"type": "rawString",
+				"value": "levelChange"
+			}
+		}],
+		"onRemoveAbility": [{
+			"type": "removeAttackModifier",
+			"unit": {
+				"type": "getCastingUnit"
+			},
+			"modifier": {
+				"type": "getLastCreatedAttackModifier"
+			}
+		}]
+	}]
+}

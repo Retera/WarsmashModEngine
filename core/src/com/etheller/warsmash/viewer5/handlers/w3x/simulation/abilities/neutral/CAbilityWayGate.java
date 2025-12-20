@@ -16,6 +16,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.skills.CA
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityPointTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTargetVisitor;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.definitions.impl.AbilityFields;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.parser.template.DataFieldLetter;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehavior;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.OrderIds;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CEffectType;
@@ -41,8 +42,8 @@ public class CAbilityWayGate extends AbstractGenericAliasedAbility
 
 	@Override
 	public void populate(final GameObject worldEditorAbility, final int level) {
-		this.teleportAreaWidth = worldEditorAbility.getFieldAsFloat(AbilityFields.DATA_A + level, 0);
-		this.teleportAreaHeight = worldEditorAbility.getFieldAsFloat(AbilityFields.DATA_B + level, 0);
+		this.teleportAreaWidth = worldEditorAbility.getFieldAsFloat(AbilityFields.DATA + DataFieldLetter.A + level, 0);
+		this.teleportAreaHeight = worldEditorAbility.getFieldAsFloat(AbilityFields.DATA + DataFieldLetter.B + level, 0);
 		this.range = Math.min(this.teleportAreaWidth, this.teleportAreaHeight) / 2;
 	}
 

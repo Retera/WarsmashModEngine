@@ -1202,13 +1202,13 @@ public class Jass2 {
 								"itemuse" + String.format("%02d", item.getContainedInventory().getSlot(item)));
 						int abilityHandleId = 0;
 						for (final CAbility ability : whichUnit.getAbilities()) {
-							ability.checkCanUse(CommonEnvironment.this.simulation, whichUnit, whichUnit.getPlayerIndex(), orderId, false,
-									activationReceiver);
+							ability.checkCanUse(CommonEnvironment.this.simulation, whichUnit,
+									whichUnit.getPlayerIndex(), orderId, false, activationReceiver);
 							if (activationReceiver.isOk()) {
 								final BooleanAbilityTargetCheckReceiver<Void> targetReceiver = BooleanAbilityTargetCheckReceiver
 										.<Void>getInstance();
-								ability.checkCanTargetNoTarget(CommonEnvironment.this.simulation, whichUnit, whichUnit.getPlayerIndex(), orderId,
-										false, targetReceiver.reset());
+								ability.checkCanTargetNoTarget(CommonEnvironment.this.simulation, whichUnit,
+										whichUnit.getPlayerIndex(), orderId, false, targetReceiver.reset());
 								if (targetReceiver.isTargetable()) {
 									abilityHandleId = ability.getHandleId();
 								}
@@ -1232,12 +1232,12 @@ public class Jass2 {
 						.getOrderId("itemuse" + String.format("%02d", item.getContainedInventory().getSlot(item)));
 				int abilityHandleId = 0;
 				for (final CAbility ability : whichUnit.getAbilities()) {
-					ability.checkCanUse(CommonEnvironment.this.simulation, whichUnit, whichUnit.getPlayerIndex(), orderId, false,
-							activationReceiver);
+					ability.checkCanUse(CommonEnvironment.this.simulation, whichUnit, whichUnit.getPlayerIndex(),
+							orderId, false, activationReceiver);
 					if (activationReceiver.isOk()) {
 						final CWidgetAbilityTargetCheckReceiver targetReceiver = CWidgetAbilityTargetCheckReceiver.INSTANCE;
-						ability.checkCanTarget(CommonEnvironment.this.simulation, whichUnit, whichUnit.getPlayerIndex(), orderId, false,
-								whichTarget, targetReceiver.reset());
+						ability.checkCanTarget(CommonEnvironment.this.simulation, whichUnit, whichUnit.getPlayerIndex(),
+								orderId, false, whichTarget, targetReceiver.reset());
 						if (targetReceiver.getTarget() != null) {
 							whichTarget = targetReceiver.getTarget();
 							abilityHandleId = ability.getHandleId();
@@ -3138,8 +3138,10 @@ public class Jass2 {
 			jassProgramVisitor.getJassNativeManager().createNative("RemoveUnit",
 					(arguments, globalScope, triggerScope) -> {
 						final CUnit whichUnit = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());
-						CommonEnvironment.this.simulation.removeUnit(whichUnit);
-						meleeUI.removedUnit(whichUnit);
+						if (whichUnit != null) {
+							CommonEnvironment.this.simulation.removeUnit(whichUnit);
+							meleeUI.removedUnit(whichUnit);
+						}
 						return null;
 					});
 			jassProgramVisitor.getJassNativeManager().createNative("ShowUnit",

@@ -33,12 +33,12 @@ public class CGameplayConstants {
 	private final float foggedAttackRevealRadius;
 
 	private final float defenseArmor;
-	
+
 	private final boolean canDisableDivineShield;
 
 	private final float[] etherealDamageBonus;
 	private final boolean etherealDamageBonusAlly;
-	
+
 	private final float frostAttackSpeedDecrease;
 	private final float frostMoveSpeedDecrease;
 
@@ -159,7 +159,7 @@ public class CGameplayConstants {
 		this.fogFlashTime = miscData.getFieldFloatValue("FogFlashTime");
 		this.dyingRevealRadius = miscData.getFieldFloatValue("DyingRevealRadius");
 		this.foggedAttackRevealRadius = miscData.getFieldFloatValue("FoggedAttackRevealRadius");
-		
+
 		this.canDisableDivineShield = miscData.getFieldValue("CanDeactivateDivineShield") != 0;
 
 		final CDefenseType[] defenseTypeOrder = { CDefenseType.SMALL, CDefenseType.MEDIUM, CDefenseType.LARGE,
@@ -169,7 +169,7 @@ public class CGameplayConstants {
 			Arrays.fill(this.damageBonusTable[i], 1.0f);
 			final CAttackType attackType = CAttackType.VALUES[i];
 			String fieldName = "DamageBonus" + attackType.getDamageKey();
-			if (!miscData.hasField(fieldName) && attackType == CAttackType.SPELLS) {
+			if (!miscData.hasField(fieldName) && (attackType == CAttackType.SPELLS)) {
 				fieldName = "DamageBonus" + CAttackType.MAGIC.getDamageKey();
 			}
 			final String damageBonus = miscData.getField(fieldName);
@@ -180,7 +180,8 @@ public class CGameplayConstants {
 					try {
 						this.damageBonusTable[i][defenseType.ordinal()] = Float.parseFloat(damageComponents[j]);
 //						System.out.println(attackType + ":" + defenseType + ": " + damageComponents[j]);
-					} catch (final NumberFormatException e) {
+					}
+					catch (final NumberFormatException e) {
 						throw new RuntimeException(fieldName, e);
 					}
 				}
@@ -197,32 +198,35 @@ public class CGameplayConstants {
 			int iter = 0;
 			if (j < 5) {
 				iter = j + 1;
-			} else if (j > 5) {
+			}
+			else if (j > 5) {
 				iter = j;
 			}
 			/*
 			 * The above reordering is to match the War3 attack type order. The ethereal
 			 * table is organized:
-			 * 
+			 *
 			 * Normal,Pierce,Siege,Magic,Chaos,Spells,Hero
-			 * 
-			 * 
+			 *
+			 *
 			 * But the actual internal attack types are ordered:
-			 * 
+			 *
 			 * Spells,Normal,Pierce,Siege,Magic,Chaos,Hero
 			 */
 			if (damageComponents[j].length() > 0) {
 				try {
 					this.etherealDamageBonus[iter] = Float.parseFloat(damageComponents[j]);
-				} catch (final NumberFormatException e) {
+				}
+				catch (final NumberFormatException e) {
 					throw new RuntimeException("EtherealDamageBonus", e);
 				}
-			} else {
+			}
+			else {
 				this.etherealDamageBonus[iter] = 0;
 			}
 		}
 		this.etherealDamageBonusAlly = miscData.getFieldValue("EtherealDamageBonusAlly") != 0;
-		
+
 		this.frostAttackSpeedDecrease = miscData.getFieldFloatValue("FrostAttackSpeedDecrease");
 		this.frostMoveSpeedDecrease = miscData.getFieldFloatValue("FrostMoveSpeedDecrease");
 
@@ -289,7 +293,8 @@ public class CGameplayConstants {
 		for (int i = 0; i < this.needHeroXpSum.length; i++) {
 			if (i == 0) {
 				this.needHeroXpSum[i] = this.needHeroXp[i];
-			} else {
+			}
+			else {
 				this.needHeroXpSum[i] = this.needHeroXp[i] + this.needHeroXpSum[i - 1];
 			}
 		}
@@ -395,15 +400,15 @@ public class CGameplayConstants {
 	}
 
 	public float getFogFlashTime() {
-		return fogFlashTime;
+		return this.fogFlashTime;
 	}
 
 	public float getDyingRevealRadius() {
-		return dyingRevealRadius;
+		return this.dyingRevealRadius;
 	}
 
 	public float getFoggedAttackRevealRadius() {
-		return foggedAttackRevealRadius;
+		return this.foggedAttackRevealRadius;
 	}
 
 	public float getDefenseArmor() {
@@ -411,55 +416,55 @@ public class CGameplayConstants {
 	}
 
 	public boolean isCanDisableDivineShield() {
-		return canDisableDivineShield;
+		return this.canDisableDivineShield;
 	}
 
 	public float[] getEtherealDamageBonus() {
-		return etherealDamageBonus;
+		return this.etherealDamageBonus;
 	}
 
 	public boolean isEtherealDamageBonusAlly() {
-		return etherealDamageBonusAlly;
+		return this.etherealDamageBonusAlly;
 	}
 
 	public float getFrostAttackSpeedDecrease() {
-		return frostAttackSpeedDecrease;
+		return this.frostAttackSpeedDecrease;
 	}
 
 	public float getFrostMoveSpeedDecrease() {
-		return frostMoveSpeedDecrease;
+		return this.frostMoveSpeedDecrease;
 	}
 
 	public boolean isAllowMultiBounce() {
-		return allowMultiBounce;
+		return this.allowMultiBounce;
 	}
 
 	public boolean isAbolishMagicSmartDispel() {
-		return abolishMagicSmartDispel;
+		return this.abolishMagicSmartDispel;
 	}
 
 	public boolean isInvulnerableSummonsTakeDispelDamage() {
-		return invulnerableSummonsTakeDispelDamage;
+		return this.invulnerableSummonsTakeDispelDamage;
 	}
 
 	public boolean isMagicImmuneResistsDamage() {
-		return magicImmuneResistsDamage;
+		return this.magicImmuneResistsDamage;
 	}
 
 	public boolean isMagicImmuneResistsLeech() {
-		return magicImmuneResistsLeech;
+		return this.magicImmuneResistsLeech;
 	}
 
 	public boolean isMagicImmuneResistsThorns() {
-		return magicImmuneResistsThorns;
+		return this.magicImmuneResistsThorns;
 	}
 
 	public boolean isMagicImmuneResistsUltimates() {
-		return magicImmuneResistsUltimates;
+		return this.magicImmuneResistsUltimates;
 	}
 
 	public boolean isDefendDeflection() {
-		return defendDeflection;
+		return this.defendDeflection;
 	}
 
 	public boolean isGlobalExperience() {
@@ -620,27 +625,27 @@ public class CGameplayConstants {
 	}
 
 	public float getMinUnitSpeed() {
-		return minUnitSpeed;
+		return this.minUnitSpeed;
 	}
 
 	public float getMaxUnitSpeed() {
-		return maxUnitSpeed;
+		return this.maxUnitSpeed;
 	}
 
 	public float getMinBldgSpeed() {
-		return minBldgSpeed;
+		return this.minBldgSpeed;
 	}
 
 	public float getMaxBldgSpeed() {
-		return maxBldgSpeed;
+		return this.maxBldgSpeed;
 	}
 
 	public float getChanceToMiss() {
-		return chanceToMiss;
+		return this.chanceToMiss;
 	}
 
 	public float getMissDamageReduction() {
-		return missDamageReduction;
+		return this.missDamageReduction;
 	}
 
 	private static int getTableValue(final int[] table, int level) {
@@ -659,12 +664,16 @@ public class CGameplayConstants {
 	 */
 	private static int[] parseTable(final String txt, final int formulaA, final int formulaB, final int formulaC,
 			final int tableSize) {
+		if (txt.isEmpty()) {
+			return new int[] {};
+		}
 		final String[] splitTxt = txt.split(",");
 		final int[] result = new int[tableSize];
 		for (int i = 0; i < tableSize; i++) {
 			if (i < splitTxt.length) {
 				result[i] = Integer.parseInt(splitTxt[i]);
-			} else {
+			}
+			else {
 				result[i] = (formulaA * result[i - 1]) + (formulaB * i) + formulaC;
 			}
 		}
@@ -672,6 +681,9 @@ public class CGameplayConstants {
 	}
 
 	private static int[] parseIntArray(final String txt) {
+		if (txt.isEmpty()) {
+			return new int[] {};
+		}
 		final String[] splitTxt = txt.split(",");
 		final int[] result = new int[splitTxt.length];
 		for (int i = 0; i < splitTxt.length; i++) {

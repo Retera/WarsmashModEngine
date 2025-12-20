@@ -1,15 +1,18 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.definitions.impl;
 
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.parser.template.DataFieldLetter;
+
 public interface AbilityFields {
 	public static final String CODE = "code";
-	public static final String DATA_A = "DataA";
-	public static final String DATA_B = "DataB";
-	public static final String DATA_C = "DataC";
-	public static final String DATA_D = "DataD";
-	public static final String DATA_E = "DataE";
-	public static final String DATA_F = "DataF";
-	public static final String DATA_G = "DataG";
-	public static final String DATA_H = "DataH";
+	public static final String DATA = "Data";
+	public static final String DATA_A = DATA + DataFieldLetter.A;
+	public static final String DATA_B = DATA + DataFieldLetter.B;
+	public static final String DATA_C = DATA + DataFieldLetter.C;
+	public static final String DATA_D = DATA + DataFieldLetter.D;
+	public static final String DATA_E = DATA + DataFieldLetter.E;
+	public static final String DATA_F = DATA + DataFieldLetter.F;
+	public static final String DATA_G = DATA + DataFieldLetter.G;
+	public static final String DATA_H = DATA + DataFieldLetter.H;
 	public static final String UNIT_ID = "UnitID";
 	public static final String TARGETS_ALLOWED = "targs"; // replaced from 'atar'
 	public static final String LEVELS = "levels"; // replaced from 'alev'

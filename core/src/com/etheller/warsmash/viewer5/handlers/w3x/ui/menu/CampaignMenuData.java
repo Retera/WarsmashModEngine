@@ -20,14 +20,14 @@ public class CampaignMenuData {
 	private final CampaignMission endCinematic;
 	private final List<CampaignMission> missions = new ArrayList<>();
 
-	public CampaignMenuData(final Element element) {
+	public CampaignMenuData(final Element element, final boolean oldFormatCampaignData) {
 		this.header = element.getField("Header");
 		this.name = element.getField("Name");
 		this.defaultOpen = element.getFieldValue("DefaultOpen") == 1;
 		this.background = element.getField("Background");
 		this.backgroundFogSettings = new FogSettings();
 		final int backgroundFogStyle = element.getFieldValue("BackgroundFogStyle") + 1;
-		backgroundFogSettings.setStyleByIndex(backgroundFogStyle);
+		this.backgroundFogSettings.setStyleByIndex(backgroundFogStyle);
 		this.backgroundFogSettings.color = new Color(element.getFieldFloatValue("BackgroundFogColor", 1) / 255f,
 				element.getFieldFloatValue("BackgroundFogColor", 2) / 255f,
 				element.getFieldFloatValue("BackgroundFogColor", 3) / 255f,
@@ -37,14 +37,29 @@ public class CampaignMenuData {
 		this.backgroundFogSettings.end = element.getFieldFloatValue("BackgroundFogEnd");
 		this.cursor = element.getFieldValue("Cursor");
 		this.ambientSound = element.getField("AmbientSound");
-		this.introCinematic = readMission(element, "IntroCinematic");
-		this.openCinematic = readMission(element, "OpenCinematic");
-		this.endCinematic = readMission(element, "EndCinematic");
-		int missionIndex = 0;
-		CampaignMission currentMission;
-		while ((currentMission = readMission(element, "Mission" + missionIndex)) != null) {
-			this.missions.add(currentMission);
-			missionIndex++;
+		if (oldFormatCampaignData) {
+			// TODO we need an exterior element named "Label" to use InCinematic,
+			// OpCinematic and EdCinematic here
+			this.introCinematic = null;
+			this.openCinematic = null;
+			this.endCinematic = null;
+			int missionIndex = 0;
+			CampaignMission currentMission;
+			while ((currentMission = readOldFormatMission(element, missionIndex)) != null) {
+				this.missions.add(currentMission);
+				missionIndex++;
+			}
+		}
+		else {
+			this.introCinematic = readMission(element, "IntroCinematic");
+			this.openCinematic = readMission(element, "OpenCinematic");
+			this.endCinematic = readMission(element, "EndCinematic");
+			int missionIndex = 0;
+			CampaignMission currentMission;
+			while ((currentMission = readMission(element, "Mission" + missionIndex)) != null) {
+				this.missions.add(currentMission);
+				missionIndex++;
+			}
 		}
 	}
 
@@ -65,7 +80,7 @@ public class CampaignMenuData {
 	}
 
 	public FogSettings getBackgroundFogSettings() {
-		return backgroundFogSettings;
+		return this.backgroundFogSettings;
 	}
 
 	public int getCursor() {
@@ -97,5 +112,16 @@ public class CampaignMenuData {
 			return null;
 		}
 		return new CampaignMission(element.getField(field, 0), element.getField(field, 1), element.getField(field, 2));
+	}
+
+	private CampaignMission readOldFormatMission(final Element element, final int missionIndex) {
+		final String missionKey = "Mission" + missionIndex;
+		if ("".equals(element.getField(missionKey, 0))) {
+			return null;
+		}
+		final String titleKey = "Title" + missionIndex;
+		final String fileKey = "File" + missionIndex;
+		return new CampaignMission(element.getField(titleKey, 0), element.getField(missionKey, 0),
+				"Maps\\Campaign\\" + element.getField(fileKey, 0) + ".w3m");
 	}
 }

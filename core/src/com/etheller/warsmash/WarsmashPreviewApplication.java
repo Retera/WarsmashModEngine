@@ -15,7 +15,6 @@ import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Rectangle;
-import com.badlogic.gdx.math.Vector3;
 import com.etheller.warsmash.datasources.CompoundDataSource;
 import com.etheller.warsmash.datasources.DataSource;
 import com.etheller.warsmash.datasources.FolderDataSource;
@@ -65,7 +64,7 @@ public class WarsmashPreviewApplication extends ApplicationAdapter implements Ca
 		System.err.println("Renderer: " + renderer);
 
 		this.codebase = WarsmashGdxMapScreen.parseDataSources(this.warsmashIni);
-		this.viewer = new MdxViewer(this.codebase, this, new Vector3(0.3f, 0.3f, -0.25f));
+		this.viewer = new MdxViewer(this.codebase, this);// , new Vector3(0.3f, 0.3f, -0.25f));
 
 		this.mdxHandler = new MdxHandler();
 		this.viewer.addHandler(this.mdxHandler);

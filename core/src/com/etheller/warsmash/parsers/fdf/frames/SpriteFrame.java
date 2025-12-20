@@ -135,6 +135,9 @@ public class SpriteFrame extends AbstractUIFrame {
 	}
 
 	public boolean isSequenceEnded() {
+		if (this.instance == null) {
+			return true;
+		}
 		return this.instance.sequenceEnded;
 	}
 
@@ -151,7 +154,7 @@ public class SpriteFrame extends AbstractUIFrame {
 		}
 	}
 
-	public void setModelScale(float scale) {
+	public void setModelScale(final float scale) {
 		if (this.instance != null) {
 			this.instance.setUniformScale(scale);
 		}

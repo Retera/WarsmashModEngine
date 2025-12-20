@@ -117,16 +117,21 @@ public class WarsmashGdxMapScreen implements InputProcessor, Screen {
 		if (cameraListenerData == null) {
 			cameraListenerData = new Element("Listener", new DataTable(null));
 		}
-		final CameraPreset[] cameraPresets = new CameraPreset[6];
-		for (int i = 0; i < cameraPresets.length; i++) {
-			cameraPresets[i] = new CameraPreset(cameraData.getFieldFloatValue("AOA", i),
-					cameraData.getFieldFloatValue("FOV", i), cameraData.getFieldFloatValue("Rotation", i),
-					cameraData.getFieldFloatValue("Rotation", i + cameraPresets.length),
-					cameraData.getFieldFloatValue("Rotation", i + (cameraPresets.length * 2)),
-					cameraData.getFieldFloatValue("Distance", i), cameraData.getFieldFloatValue("FarZ", i),
-					cameraData.getFieldFloatValue("NearZ", i), cameraData.getFieldFloatValue("Height", i),
-					cameraListenerData.getFieldFloatValue("ListenerDistance", i),
-					cameraListenerData.getFieldFloatValue("ListenerAOA", i));
+		final CameraPreset[] cameraPresets = new CameraPreset[cameraData == null ? 1 : 6];
+		if (cameraData != null) {
+			for (int i = 0; i < cameraPresets.length; i++) {
+				cameraPresets[i] = new CameraPreset(cameraData.getFieldFloatValue("AOA", i),
+						cameraData.getFieldFloatValue("FOV", i), cameraData.getFieldFloatValue("Rotation", i),
+						cameraData.getFieldFloatValue("Rotation", i + cameraPresets.length),
+						cameraData.getFieldFloatValue("Rotation", i + (cameraPresets.length * 2)),
+						cameraData.getFieldFloatValue("Distance", i), cameraData.getFieldFloatValue("FarZ", i),
+						cameraData.getFieldFloatValue("NearZ", i), cameraData.getFieldFloatValue("Height", i),
+						cameraListenerData.getFieldFloatValue("ListenerDistance", i),
+						cameraListenerData.getFieldFloatValue("ListenerAOA", i));
+			}
+		}
+		else {
+			cameraPresets[0] = new CameraPreset(304, 70, 90, 20, 160, 1650, 5000, 100, 0, 1650, 304);
 		}
 
 		System.out.println("Loaded");
@@ -180,10 +185,16 @@ public class WarsmashGdxMapScreen implements InputProcessor, Screen {
 		this.shapeRenderer = new ShapeRenderer();
 
 		final Element cameraRatesElement = this.viewer.miscData.get("CameraRates");
-		final CameraRates cameraRates = new CameraRates(cameraRatesElement.getFieldFloatValue("AOA"),
-				cameraRatesElement.getFieldFloatValue("FOV"), cameraRatesElement.getFieldFloatValue("Rotation"),
-				cameraRatesElement.getFieldFloatValue("Distance"), cameraRatesElement.getFieldFloatValue("Forward"),
-				cameraRatesElement.getFieldFloatValue("Strafe"));
+		CameraRates cameraRates;
+		if (cameraRatesElement != null) {
+			cameraRates = new CameraRates(cameraRatesElement.getFieldFloatValue("AOA"),
+					cameraRatesElement.getFieldFloatValue("FOV"), cameraRatesElement.getFieldFloatValue("Rotation"),
+					cameraRatesElement.getFieldFloatValue("Distance"), cameraRatesElement.getFieldFloatValue("Forward"),
+					cameraRatesElement.getFieldFloatValue("Strafe"));
+		}
+		else {
+			cameraRates = new CameraRates(90, 90, 90, 100, 100, 100);
+		}
 		final MeleeUI baseMeleeUI = new MeleeUI(this.viewer.mapMpq, this.uiViewport, this.uiScene, portraitScene,
 				cameraPresets, cameraRates, this.viewer, new RootFrameListener() {
 					@Override

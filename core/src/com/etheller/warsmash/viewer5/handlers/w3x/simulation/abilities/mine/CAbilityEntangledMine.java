@@ -10,6 +10,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.cargohold
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.skills.CAbilitySpell;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityPointTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.definitions.impl.AbilityFields;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.parser.template.DataFieldLetter;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehavior;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayer;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityActivationReceiver;
@@ -108,8 +109,8 @@ public class CAbilityEntangledMine extends CAbilityOverlayedMine implements CAbi
 
 	@Override
 	public void populate(final GameObject worldEditorAbility, final int level) {
-		this.goldPerInterval = worldEditorAbility.getFieldAsInteger(AbilityFields.DATA_A + level, 0);
-		this.intervalDuration = worldEditorAbility.getFieldAsFloat(AbilityFields.DATA_B + level, 0);
+		this.goldPerInterval = worldEditorAbility.getFieldAsInteger(AbilityFields.DATA + DataFieldLetter.A + level, 0);
+		this.intervalDuration = worldEditorAbility.getFieldAsFloat(AbilityFields.DATA + DataFieldLetter.B + level, 0);
 	}
 
 	@Override

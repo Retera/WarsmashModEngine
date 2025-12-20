@@ -21,6 +21,7 @@ public class WarsmashConstants {
 	public static final String KEY_CRASH_ON_INCOMPATIBLE132_FEATURES = "CrashOnIncompatible132Features";
 	public static final String KEY_INPUT_HOTKEY_MODE = "InputHotkeyMode";
 	public static final String KEY_PARSE_REIGN_OF_CHAOS_BETA_MODELS_INSTEAD = "ParseReignOfChaosBetaModelsInstead";
+	public static final String KEY_PARSE_ABILITY_DATA_NUMERIC = "AbilityDataNumbersNotLettersForIndex";
 	public static final String KEY_USE_NINE_ITEM_INVENTORY = "UseNineItemInventory";
 
 	public static int MAX_PLAYERS = 28;
@@ -65,6 +66,7 @@ public class WarsmashConstants {
 	public static final boolean FIRE_DEATH_EVENTS_ON_REMOVEUNIT = false;
 	public static int INPUT_HOTKEY_MODE = 1;
 	public static boolean PARSE_REIGN_OF_CHAOS_BETA_MODELS_INSTEAD = false;
+	public static boolean PARSE_ABILITY_DATA_NUMERIC = false;
 
 	public static boolean USE_NINE_ITEM_INVENTORY = true;
 
@@ -75,6 +77,7 @@ public class WarsmashConstants {
 	public static final int ONGOING_BEHAVIOR_NOTIFICATION_TICKS = (int) (0.5f / SIMULATION_STEP_TIME);
 
 	public static final boolean SHOW_FPS = true;
+	public static String[] ABILITY_DATA_LETTERS;
 
 	public static List<String> ABILITY_COMPATIBILITY = null;
 
@@ -99,6 +102,13 @@ public class WarsmashConstants {
 		INPUT_HOTKEY_MODE = emulatorConstants.getFieldValue(KEY_INPUT_HOTKEY_MODE);
 		PARSE_REIGN_OF_CHAOS_BETA_MODELS_INSTEAD = emulatorConstants
 				.getFieldValue(KEY_PARSE_REIGN_OF_CHAOS_BETA_MODELS_INSTEAD) == 1;
+		PARSE_ABILITY_DATA_NUMERIC = emulatorConstants.getFieldValue(KEY_PARSE_ABILITY_DATA_NUMERIC) == 1;
+		if (PARSE_ABILITY_DATA_NUMERIC) {
+			ABILITY_DATA_LETTERS = new String[] { "1", "2", "3", "4", "5", "6", "7", "8", "9" };
+		}
+		else {
+			ABILITY_DATA_LETTERS = new String[] { "A", "B", "C", "D", "E", "F", "G", "H", "I" };
+		}
 		USE_NINE_ITEM_INVENTORY = emulatorConstants.getFieldValue(KEY_USE_NINE_ITEM_INVENTORY) == 1;
 		final String races = emulatorConstants.getField("Races");
 		RACE_MANAGER = new CRaceManager();

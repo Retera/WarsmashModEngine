@@ -10,6 +10,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.skills.ut
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.definitions.impl.AbilityFields;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.definitions.impl.AbstractCAbilityTypeDefinition;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.parser.template.DataFieldLetter;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.OrderIds;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CEffectType;
 
@@ -27,12 +28,14 @@ public class CAbilityItemFigurineSummon extends CAbilityNoTargetSpellBase {
 
 	@Override
 	public void populateData(final GameObject worldEditorAbility, final int level) {
-		final String unitTypeOne = worldEditorAbility.getFieldAsString(AbilityFields.DATA_C + level, 0);
+		final String unitTypeOne = worldEditorAbility.getFieldAsString(AbilityFields.DATA + DataFieldLetter.C + level,
+				0);
 		this.summonUnitId = unitTypeOne.length() == 4 ? War3ID.fromString(unitTypeOne) : War3ID.NONE;
-		this.summonUnitCount = worldEditorAbility.getFieldAsInteger(AbilityFields.DATA_A + level, 0);
-		final String unitTypeTwo = worldEditorAbility.getFieldAsString(AbilityFields.DATA_D + level, 0);
+		this.summonUnitCount = worldEditorAbility.getFieldAsInteger(AbilityFields.DATA + DataFieldLetter.A + level, 0);
+		final String unitTypeTwo = worldEditorAbility.getFieldAsString(AbilityFields.DATA + DataFieldLetter.D + level,
+				0);
 		this.summonUnit2Id = unitTypeTwo.length() == 4 ? War3ID.fromString(unitTypeTwo) : War3ID.NONE;
-		this.summonUnit2Count = worldEditorAbility.getFieldAsInteger(AbilityFields.DATA_B + level, 0);
+		this.summonUnit2Count = worldEditorAbility.getFieldAsInteger(AbilityFields.DATA + DataFieldLetter.B + level, 0);
 		this.buffId = AbstractCAbilityTypeDefinition.getBuffId(worldEditorAbility, level);
 		this.areaOfEffect = worldEditorAbility.getFieldAsFloat(AbilityFields.AREA_OF_EFFECT + level, 0);
 	}

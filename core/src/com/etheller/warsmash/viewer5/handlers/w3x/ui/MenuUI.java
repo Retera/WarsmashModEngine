@@ -93,9 +93,11 @@ import com.etheller.warsmash.viewer5.handlers.w3x.ui.mapsetup.PlayerSlotPaneList
 import com.etheller.warsmash.viewer5.handlers.w3x.ui.mapsetup.TeamSetupPane;
 import com.etheller.warsmash.viewer5.handlers.w3x.ui.menu.BattleNetUI;
 import com.etheller.warsmash.viewer5.handlers.w3x.ui.menu.BattleNetUIActionListener;
+import com.etheller.warsmash.viewer5.handlers.w3x.ui.menu.BattleNetUIInterface;
 import com.etheller.warsmash.viewer5.handlers.w3x.ui.menu.CampaignMenuData;
 import com.etheller.warsmash.viewer5.handlers.w3x.ui.menu.CampaignMenuUI;
 import com.etheller.warsmash.viewer5.handlers.w3x.ui.menu.CampaignMission;
+import com.etheller.warsmash.viewer5.handlers.w3x.ui.menu.NoBattleNetUI;
 import com.etheller.warsmash.viewer5.handlers.w3x.ui.sound.KeyedSounds;
 
 import net.warsmash.map.NetMapDownloader;
@@ -177,6 +179,7 @@ public class MenuUI {
 	private GlueTextButtonFrame customCampaignButton;
 	private GlueTextButtonFrame skirmishButton;
 	private GlueTextButtonFrame singlePlayerCancelButton;
+	private boolean campaignButtonEnabled;
 	private GlueButtonFrame editionButton;
 
 	private GlueTextButtonFrame skirmishCancelButton;
@@ -203,7 +206,7 @@ public class MenuUI {
 	private CampaignMenuData[] campaignDatas;
 
 	// BattleNet
-	private BattleNetUI battleNetUI;
+	private BattleNetUIInterface battleNetUI;
 
 	private UnitSound mainMenuGlueScreenLoop;
 	private GlueTextButtonFrame addProfileButton;
@@ -224,7 +227,6 @@ public class MenuUI {
 	private BeginGameInformation beginGameInformation;
 	private LoadingMap loadingMap;
 	private SpriteFrame loadingBackground;
-	private boolean unifiedCampaignInfo = false;
 	private MapInfoPane skirmishMapInfoPane;
 	private War3MapConfig currentMapConfig;
 	private final DataTable musicSLK;
@@ -799,13 +801,17 @@ public class MenuUI {
 			}
 		}
 		else {
-			try (InputStream campaignStringStream = this.dataSource
-					.getResourceAsStream("UI\\CampaignInfoClassic.txt")) {
-				this.campaignStrings.readTXT(campaignStringStream, true);
-				this.unifiedCampaignInfo = true;
-			}
-			catch (final IOException e) {
-				throw new RuntimeException(e);
+			final String[] attempts = { "UI\\CampaignInfoClassic.txt", "UI\\CampaignStrings.txt" };
+			for (final String stringPath : attempts) {
+				if (this.dataSource.has(stringPath)) {
+					try (InputStream campaignStringStream = this.dataSource.getResourceAsStream(stringPath)) {
+						this.campaignStrings.readTXT(campaignStringStream, true);
+					}
+					catch (final IOException e) {
+						throw new RuntimeException(e);
+					}
+					break;
+				}
 			}
 		}
 
@@ -817,7 +823,7 @@ public class MenuUI {
 		this.warcraftIIILogo.addSetPoint(new SetPoint(FramePoint.TOPLEFT, this.mainMenuFrame, FramePoint.TOPLEFT,
 				GameUI.convertX(this.uiViewport, 0.13f), GameUI.convertY(this.uiViewport, -0.08f)));
 		setMainMenuVisible(false);
-		this.rootFrame.getFrameByName("RealmSelect", 0).setVisible(false);
+//		this.rootFrame.getFrameByName("RealmSelect", 0).setVisible(false);
 
 		this.glueSpriteLayerTopRight = (SpriteFrame) this.rootFrame.createFrameByType("SPRITE",
 				"SmashGlueSpriteLayerTopRight", this.rootFrame, "", 0);
@@ -836,8 +842,10 @@ public class MenuUI {
 		this.glueSpriteLayerCenter = (SpriteFrame) this.rootFrame.createFrameByType("SPRITE",
 				"SmashGlueSpriteLayerCenter", this.rootFrame, "", 0);
 		this.glueSpriteLayerCenter.setSetAllPoints(true);
-		final String centerModel = this.rootFrame.getSkinField("GlueSpriteLayerCenter");
-		this.rootFrame.setSpriteFrameModel(this.glueSpriteLayerCenter, centerModel);
+		final String centerModel = this.rootFrame.trySkinField("GlueSpriteLayerCenter");
+		if (centerModel != null) {
+			this.rootFrame.setSpriteFrameModel(this.glueSpriteLayerCenter, centerModel);
+		}
 		this.glueSpriteLayerCenter.setVisible(false);
 
 		this.cursorFrame = (SpriteFrame) this.rootFrame.createFrameByType("SPRITE", "SmashCursorFrame", this.rootFrame,
@@ -933,12 +941,14 @@ public class MenuUI {
 				}
 			}
 		});
-		this.realmButton.setOnClick(new Runnable() {
-			@Override
-			public void run() {
-				MenuUI.this.battleNetConnectDialog.setVisible(true);
-			}
-		});
+		if (this.realmButton != null) {
+			this.realmButton.setOnClick(new Runnable() {
+				@Override
+				public void run() {
+					MenuUI.this.battleNetConnectDialog.setVisible(true);
+				}
+			});
+		}
 
 		// Create single player
 		this.singlePlayerMenu = this.rootFrame.createFrame("SinglePlayerMenu", this.rootFrame, 0, 0);
@@ -1284,7 +1294,19 @@ public class MenuUI {
 				}
 			}
 		});
-		final Element campaignIndex = this.campaignStrings.get("Index");
+		Element campaignIndex = this.campaignStrings.get("Index");
+		boolean oldFormatCampaignData = false;
+		if ((campaignIndex == null) && (this.campaignStrings.keySet().size() != 0)) {
+			final List<String> defaultCampaignIndex = new ArrayList<>();
+			defaultCampaignIndex.add("Tutorial");
+			for (int i = 0; i < WarsmashConstants.RACE_MANAGER.getEntryCount(); i++) {
+				final CRaceManagerEntry entry = WarsmashConstants.RACE_MANAGER.get(i);
+				defaultCampaignIndex.add(entry.getKey());
+			}
+			campaignIndex = new Element("Index", this.campaignStrings);
+			campaignIndex.setField("CampaignList", defaultCampaignIndex);
+			oldFormatCampaignData = true;
+		}
 		if (campaignIndex != null) {
 			this.campaignList = campaignIndex.getField("CampaignList").split(",");
 			this.campaignDatas = new CampaignMenuData[this.campaignList.length];
@@ -1292,7 +1314,7 @@ public class MenuUI {
 				final String campaign = this.campaignList[i];
 				final Element campaignElement = this.campaignStrings.get(campaign);
 				if (campaignElement != null) {
-					final CampaignMenuData newCampaign = new CampaignMenuData(campaignElement);
+					final CampaignMenuData newCampaign = new CampaignMenuData(campaignElement, oldFormatCampaignData);
 					this.campaignDatas[i] = newCampaign;
 					if (this.currentCampaign == null) {
 						this.currentCampaign = newCampaign;
@@ -1380,9 +1402,11 @@ public class MenuUI {
 					}
 				}
 			}
+			this.campaignButtonEnabled = true;
 		}
 		else {
 			this.campaignButton.setEnabled(false);
+			this.campaignButtonEnabled = false;
 		}
 
 		this.confirmDialog = this.rootFrame.createFrame("DialogWar3", this.rootFrame, 0, 0);
@@ -1401,218 +1425,226 @@ public class MenuUI {
 		this.loadingMeleePanel = this.rootFrame.getFrameByName("LoadingMeleePanel", 0);
 		this.loadingMeleePanel.setVisible(false);
 
-		this.battleNetUI = new BattleNetUI(this.rootFrame, this.uiViewport, this.uiScene, this.dataSource,
-				new BattleNetUIActionListener() {
+		if (this.gamingNetworkConnection.getGatewayString() != null) {
+			this.battleNetUI = new BattleNetUI(this.rootFrame, this.uiViewport, this.uiScene, this.dataSource,
+					new BattleNetUIActionListener() {
 
-					@Override
-					public void cancelLoginPrompt() {
-						MenuUI.this.battleNetUI.hide();
-						MenuUI.this.battleNetUI.getDoors().setSequence(PrimaryTag.DEATH);
-						MenuUI.this.menuScreen.unAlternateModelBackToNormal();
-						MenuUI.this.menuState = MenuState.LEAVING_BATTLE_NET;
-						MenuUI.this.gamingNetworkConnection.userRequestDisconnect();
-					}
-
-					@Override
-					public void recoverPassword(final String text) {
-
-					}
-
-					@Override
-					public void logon(final String accountName, final String password) {
-						if (accountName.isEmpty()) {
-							MenuUI.this.dialog.showError("ERROR_ID_NAMEBLANK", null);
+						@Override
+						public void cancelLoginPrompt() {
+							MenuUI.this.battleNetUI.hide();
+							MenuUI.this.battleNetUI.getDoors().setSequence(PrimaryTag.DEATH);
+							MenuUI.this.menuScreen.unAlternateModelBackToNormal();
+							MenuUI.this.menuState = MenuState.LEAVING_BATTLE_NET;
+							MenuUI.this.gamingNetworkConnection.userRequestDisconnect();
 						}
-						else if (password.isEmpty()) {
-							MenuUI.this.dialog.showError("NETERROR_NOPASSWORD", null);
-						}
-						else {
-							final char[] passwordData = getPasswordData(password);
-							MenuUI.this.gamingNetworkConnection.login(accountName, passwordData);
-						}
-					}
 
-					private char[] getPasswordData(final String password) {
-						final int nPasswordChars = password.length();
-						final char[] passwordData = new char[nPasswordChars];
-						password.getChars(0, nPasswordChars, passwordData, 0);
-						return passwordData;
-					}
+						@Override
+						public void recoverPassword(final String text) {
 
-					@Override
-					public void quitBattleNet() {
-						MenuUI.this.battleNetUI.hide();
-						playCurrentBattleNetGlueSpriteDeath();
-						MenuUI.this.glueSpriteLayerCenter.setSequence("Death");
-						MenuUI.this.menuState = MenuState.LEAVING_BATTLE_NET_FROM_LOGGED_IN;
-						MenuUI.this.gamingNetworkConnection.userRequestDisconnect();
-					}
+						}
 
-					@Override
-					public void openCustomGameMenu() {
-						MenuUI.this.battleNetUI.hideCurrentScreen();
-						playCurrentBattleNetGlueSpriteDeath();
-						final boolean insideTopBarMode = isInsideTopBarMode();
-						if (insideTopBarMode) {
-							MenuUI.this.glueSpriteLayerCenter.setSequence("Death");
-						}
-						MenuUI.this.menuState = MenuState.GOING_TO_BATTLE_NET_CUSTOM_GAME_MENU;
-						if (MenuUI.this.gameListQueryTask != null) {
-							MenuUI.this.gameListQueryTask.cancel();
-						}
-						MenuUI.this.gameListQueryTask = Timer.instance().scheduleTask(new Task() {
-							@Override
-							public void run() {
-								MenuUI.this.gamingNetworkConnection
-										.queryGamesList(MenuUI.this.battleNetUI.getGamingNetworkSessionToken());
+						@Override
+						public void logon(final String accountName, final String password) {
+							if (accountName.isEmpty()) {
+								MenuUI.this.dialog.showError("ERROR_ID_NAMEBLANK", null);
 							}
-						}, 0.0f, 5.0f);
-					}
-
-					@Override
-					public void enterDefaultChat() {
-						requestEnterDefaultChat();
-					}
-
-					@Override
-					public void returnToChat() {
-						MenuUI.this.battleNetUI.hideCurrentScreen();
-						playCurrentBattleNetGlueSpriteDeath();
-						if (MenuUI.this.battleNetUI.getCurrentChannel() == null) {
-							MenuUI.this.menuState = MenuState.GOING_TO_BATTLE_NET_WELCOME;
-						}
-						else {
-							final boolean insideTopBarMode = isInsideTopBarMode();
-							if (insideTopBarMode) {
-								MenuUI.this.menuState = MenuState.GOING_TO_BATTLE_NET_CHAT_CHANNEL;
+							else if (password.isEmpty()) {
+								MenuUI.this.dialog.showError("NETERROR_NOPASSWORD", null);
 							}
 							else {
-								MenuUI.this.menuState = MenuState.GOING_TO_BATTLE_NET_CHAT_CHANNEL_FROM_OUTSIDE;
+								final char[] passwordData = getPasswordData(password);
+								MenuUI.this.gamingNetworkConnection.login(accountName, passwordData);
 							}
 						}
-					}
 
-					@Override
-					public void requestJoinChannel(final String text) {
-						MenuUI.this.gamingNetworkConnection
-								.joinChannel(MenuUI.this.battleNetUI.getGamingNetworkSessionToken(), text);
-					}
-
-					@Override
-					public void createAccount(final String username, final String password,
-							final String repeatPassword) {
-						if (!password.equals(repeatPassword)) {
-							MenuUI.this.dialog.showError("NETERROR_PASSWORDMISMATCH", null);
+						private char[] getPasswordData(final String password) {
+							final int nPasswordChars = password.length();
+							final char[] passwordData = new char[nPasswordChars];
+							password.getChars(0, nPasswordChars, passwordData, 0);
+							return passwordData;
 						}
-						else if (username.isEmpty()) {
-							MenuUI.this.dialog.showError("ERROR_ID_NAMEBLANK", null);
-						}
-						else if (password.isEmpty()) {
-							MenuUI.this.dialog.showError("NETERROR_NOPASSWORD", null);
-						}
-						else if (username.length() < 3) {
-							// TODO checks like this should be server side!!!
-							MenuUI.this.dialog.showError("NETERROR_USERNAMETOOSHORT", null);
-						}
-						else if (password.length() < 3) {
-							MenuUI.this.dialog.showError("NETERROR_PASSWORDTOOSHORT", null);
-						}
-						else {
-							final char[] passwordData = getPasswordData(password);
-							MenuUI.this.gamingNetworkConnection.createAccount(username, passwordData);
-						}
-					}
 
-					@Override
-					public void submitChatText(final String text) {
-						if (text.startsWith("/me ")) {
-							MenuUI.this.gamingNetworkConnection.emoteMessage(
-									MenuUI.this.battleNetUI.getGamingNetworkSessionToken(), text.substring(4));
+						@Override
+						public void quitBattleNet() {
+							MenuUI.this.battleNetUI.hide();
+							playCurrentBattleNetGlueSpriteDeath();
+							MenuUI.this.glueSpriteLayerCenter.setSequence("Death");
+							MenuUI.this.menuState = MenuState.LEAVING_BATTLE_NET_FROM_LOGGED_IN;
+							MenuUI.this.gamingNetworkConnection.userRequestDisconnect();
 						}
-						else {
-							MenuUI.this.gamingNetworkConnection
-									.chatMessage(MenuUI.this.battleNetUI.getGamingNetworkSessionToken(), text);
-						}
-					}
 
-					@Override
-					public void showChannelChooserPanel() {
-						MenuUI.this.battleNetUI.hideCurrentScreen();
-						playCurrentBattleNetGlueSpriteDeath();
-						MenuUI.this.menuState = MenuState.GOING_TO_BATTLE_NET_CHANNEL_MENU;
-
-					}
-
-					@Override
-					public void showCreateGameMenu() {
-						MenuUI.this.battleNetUI.hideCurrentScreen();
-						playCurrentBattleNetGlueSpriteDeath();
-						MenuUI.this.menuState = MenuState.GOING_TO_BATTLE_NET_CREATE_CUSTOM_GAME_MENU;
-					}
-
-					@Override
-					public void requestJoinGame(final String text) {
-						MenuUI.this.gamingNetworkConnection
-								.joinGame(MenuUI.this.battleNetUI.getGamingNetworkSessionToken(), text);
-					}
-
-					@Override
-					public void showError(final String errorKey) {
-						MenuUI.this.dialog.showError(errorKey, null);
-					}
-
-					@Override
-					public void createGame(final String gameName, final String mapPath, final int mapPlayerSlots,
-							final LobbyGameSpeed gameSpeed, final HostedGameVisibility hostedGameVisibility,
-							final long mapChecksum, final War3Map map) {
-						MenuUI.this.gamingNetworkConnection.createGame(
-								MenuUI.this.battleNetUI.getGamingNetworkSessionToken(), gameName, mapPath,
-								mapPlayerSlots, gameSpeed, hostedGameVisibility, mapChecksum);
-						final SeekableByteChannel inputChannel = map.getInternalMpqContentsDataSource()
-								.getInputChannel();
-						try {
-							inputChannel.position(0);
-							final ByteBuffer mapDataBuffer = ByteBuffer.allocate(1300).clear();
-							int mapSeqNo = 0;
-							while (inputChannel.read(mapDataBuffer) != -1) {
-								mapDataBuffer.flip();
-								MenuUI.this.gamingNetworkConnection.uploadMapData(
-										MenuUI.this.battleNetUI.getGamingNetworkSessionToken(), mapSeqNo++,
-										mapDataBuffer);
-								mapDataBuffer.clear();
+						@Override
+						public void openCustomGameMenu() {
+							MenuUI.this.battleNetUI.hideCurrentScreen();
+							playCurrentBattleNetGlueSpriteDeath();
+							final boolean insideTopBarMode = isInsideTopBarMode();
+							if (insideTopBarMode) {
+								MenuUI.this.glueSpriteLayerCenter.setSequence("Death");
 							}
+							MenuUI.this.menuState = MenuState.GOING_TO_BATTLE_NET_CUSTOM_GAME_MENU;
+							if (MenuUI.this.gameListQueryTask != null) {
+								MenuUI.this.gameListQueryTask.cancel();
+							}
+							MenuUI.this.gameListQueryTask = Timer.instance().scheduleTask(new Task() {
+								@Override
+								public void run() {
+									MenuUI.this.gamingNetworkConnection
+											.queryGamesList(MenuUI.this.battleNetUI.getGamingNetworkSessionToken());
+								}
+							}, 0.0f, 5.0f);
+						}
+
+						@Override
+						public void enterDefaultChat() {
+							requestEnterDefaultChat();
+						}
+
+						@Override
+						public void returnToChat() {
+							MenuUI.this.battleNetUI.hideCurrentScreen();
+							playCurrentBattleNetGlueSpriteDeath();
+							if (MenuUI.this.battleNetUI.getCurrentChannel() == null) {
+								MenuUI.this.menuState = MenuState.GOING_TO_BATTLE_NET_WELCOME;
+							}
+							else {
+								final boolean insideTopBarMode = isInsideTopBarMode();
+								if (insideTopBarMode) {
+									MenuUI.this.menuState = MenuState.GOING_TO_BATTLE_NET_CHAT_CHANNEL;
+								}
+								else {
+									MenuUI.this.menuState = MenuState.GOING_TO_BATTLE_NET_CHAT_CHANNEL_FROM_OUTSIDE;
+								}
+							}
+						}
+
+						@Override
+						public void requestJoinChannel(final String text) {
 							MenuUI.this.gamingNetworkConnection
-									.mapDone(MenuUI.this.battleNetUI.getGamingNetworkSessionToken(), mapSeqNo);
+									.joinChannel(MenuUI.this.battleNetUI.getGamingNetworkSessionToken(), text);
 						}
-						catch (final IOException e) {
-							throw new IllegalStateException(e);
+
+						@Override
+						public void createAccount(final String username, final String password,
+								final String repeatPassword) {
+							if (!password.equals(repeatPassword)) {
+								MenuUI.this.dialog.showError("NETERROR_PASSWORDMISMATCH", null);
+							}
+							else if (username.isEmpty()) {
+								MenuUI.this.dialog.showError("ERROR_ID_NAMEBLANK", null);
+							}
+							else if (password.isEmpty()) {
+								MenuUI.this.dialog.showError("NETERROR_NOPASSWORD", null);
+							}
+							else if (username.length() < 3) {
+								// TODO checks like this should be server side!!!
+								MenuUI.this.dialog.showError("NETERROR_USERNAMETOOSHORT", null);
+							}
+							else if (password.length() < 3) {
+								MenuUI.this.dialog.showError("NETERROR_PASSWORDTOOSHORT", null);
+							}
+							else {
+								final char[] passwordData = getPasswordData(password);
+								MenuUI.this.gamingNetworkConnection.createAccount(username, passwordData);
+							}
 						}
-					}
 
-					@Override
-					public void leaveCustomGame() {
-						MenuUI.this.gamingNetworkConnection
-								.leaveGame(MenuUI.this.battleNetUI.getGamingNetworkSessionToken());
-					}
+						@Override
+						public void submitChatText(final String text) {
+							if (text.startsWith("/me ")) {
+								MenuUI.this.gamingNetworkConnection.emoteMessage(
+										MenuUI.this.battleNetUI.getGamingNetworkSessionToken(), text.substring(4));
+							}
+							else {
+								MenuUI.this.gamingNetworkConnection
+										.chatMessage(MenuUI.this.battleNetUI.getGamingNetworkSessionToken(), text);
+							}
+						}
 
-					@Override
-					public void gameLobbySetPlayerRace(final int serverSlot, final int raceItemIndex) {
-						MenuUI.this.gamingNetworkConnection.gameLobbySetPlayerRace(
-								MenuUI.this.battleNetUI.getGamingNetworkSessionToken(), serverSlot, raceItemIndex);
-					}
+						@Override
+						public void showChannelChooserPanel() {
+							MenuUI.this.battleNetUI.hideCurrentScreen();
+							playCurrentBattleNetGlueSpriteDeath();
+							MenuUI.this.menuState = MenuState.GOING_TO_BATTLE_NET_CHANNEL_MENU;
 
-					@Override
-					public void gameLobbySetPlayerSlot(final int serverSlot, final LobbyPlayerType lobbyPlayerType) {
-						MenuUI.this.gamingNetworkConnection.gameLobbySetPlayerSlot(
-								MenuUI.this.battleNetUI.getGamingNetworkSessionToken(), serverSlot, lobbyPlayerType);
-					}
+						}
 
-					@Override
-					public void startGame() {
-						MenuUI.this.gamingNetworkConnection
-								.gameLobbyStartGame(MenuUI.this.battleNetUI.getGamingNetworkSessionToken());
-					}
-				});
+						@Override
+						public void showCreateGameMenu() {
+							MenuUI.this.battleNetUI.hideCurrentScreen();
+							playCurrentBattleNetGlueSpriteDeath();
+							MenuUI.this.menuState = MenuState.GOING_TO_BATTLE_NET_CREATE_CUSTOM_GAME_MENU;
+						}
+
+						@Override
+						public void requestJoinGame(final String text) {
+							MenuUI.this.gamingNetworkConnection
+									.joinGame(MenuUI.this.battleNetUI.getGamingNetworkSessionToken(), text);
+						}
+
+						@Override
+						public void showError(final String errorKey) {
+							MenuUI.this.dialog.showError(errorKey, null);
+						}
+
+						@Override
+						public void createGame(final String gameName, final String mapPath, final int mapPlayerSlots,
+								final LobbyGameSpeed gameSpeed, final HostedGameVisibility hostedGameVisibility,
+								final long mapChecksum, final War3Map map) {
+							MenuUI.this.gamingNetworkConnection.createGame(
+									MenuUI.this.battleNetUI.getGamingNetworkSessionToken(), gameName, mapPath,
+									mapPlayerSlots, gameSpeed, hostedGameVisibility, mapChecksum);
+							final SeekableByteChannel inputChannel = map.getInternalMpqContentsDataSource()
+									.getInputChannel();
+							try {
+								inputChannel.position(0);
+								final ByteBuffer mapDataBuffer = ByteBuffer.allocate(1300).clear();
+								int mapSeqNo = 0;
+								while (inputChannel.read(mapDataBuffer) != -1) {
+									mapDataBuffer.flip();
+									MenuUI.this.gamingNetworkConnection.uploadMapData(
+											MenuUI.this.battleNetUI.getGamingNetworkSessionToken(), mapSeqNo++,
+											mapDataBuffer);
+									mapDataBuffer.clear();
+								}
+								MenuUI.this.gamingNetworkConnection
+										.mapDone(MenuUI.this.battleNetUI.getGamingNetworkSessionToken(), mapSeqNo);
+							}
+							catch (final IOException e) {
+								throw new IllegalStateException(e);
+							}
+						}
+
+						@Override
+						public void leaveCustomGame() {
+							MenuUI.this.gamingNetworkConnection
+									.leaveGame(MenuUI.this.battleNetUI.getGamingNetworkSessionToken());
+						}
+
+						@Override
+						public void gameLobbySetPlayerRace(final int serverSlot, final int raceItemIndex) {
+							MenuUI.this.gamingNetworkConnection.gameLobbySetPlayerRace(
+									MenuUI.this.battleNetUI.getGamingNetworkSessionToken(), serverSlot, raceItemIndex);
+						}
+
+						@Override
+						public void gameLobbySetPlayerSlot(final int serverSlot,
+								final LobbyPlayerType lobbyPlayerType) {
+							MenuUI.this.gamingNetworkConnection.gameLobbySetPlayerSlot(
+									MenuUI.this.battleNetUI.getGamingNetworkSessionToken(), serverSlot,
+									lobbyPlayerType);
+						}
+
+						@Override
+						public void startGame() {
+							MenuUI.this.gamingNetworkConnection
+									.gameLobbyStartGame(MenuUI.this.battleNetUI.getGamingNetworkSessionToken());
+						}
+					});
+		}
+		else {
+			this.battleNetUI = new NoBattleNetUI(
+					(SpriteFrame) this.rootFrame.createFrameByType("SPRITE", "doorsdummy", this.rootFrame, "", 0));
+		}
 
 		this.dialog = new DialogWar3(this.rootFrame, this.uiViewport);
 
@@ -1778,7 +1810,7 @@ public class MenuUI {
 
 	protected void setSinglePlayerButtonsEnabled(final boolean b) {
 		this.profileButton.setEnabled(b);
-		this.campaignButton.setEnabled(b);
+		this.campaignButton.setEnabled(b ? this.campaignButtonEnabled : false);
 		this.loadSavedButton.setEnabled(b && ENABLE_NOT_YET_IMPLEMENTED_BUTTONS);
 		this.viewReplayButton.setEnabled(b && ENABLE_NOT_YET_IMPLEMENTED_BUTTONS);
 		if (this.customCampaignButton != null) {
@@ -2149,8 +2181,10 @@ public class MenuUI {
 				final String currentCampaignBackgroundModel = getCurrentBackgroundModel();
 				final String currentCampaignAmbientSound = this.rootFrame
 						.trySkinField(this.currentCampaign.getAmbientSound());
-				this.menuScreen.setModel(currentCampaignBackgroundModel,
-						this.currentCampaign.getBackgroundFogSettings());
+				if (currentCampaignBackgroundModel != null) {
+					this.menuScreen.setModel(currentCampaignBackgroundModel,
+							this.currentCampaign.getBackgroundFogSettings());
+				}
 				this.glueScreenLoop.stop();
 				this.glueScreenLoop = this.uiSounds.getSound(currentCampaignAmbientSound);
 				this.glueScreenLoop.play(this.uiScene.audioContext, 0f, 0f, 0f);
@@ -2545,11 +2579,10 @@ public class MenuUI {
 
 	private String getCurrentBackgroundModel() {
 		final String background = this.currentCampaign.getBackground();
-		final String versionedBackground = background;
-		if (this.rootFrame.hasSkinField(versionedBackground)) {
-			return this.rootFrame.getSkinField(versionedBackground);
+		if (this.rootFrame.hasSkinField(background)) {
+			return this.rootFrame.getSkinField(background);
 		}
-		return this.rootFrame.getSkinField(background);
+		return null;
 	}
 
 	private static final class LoadingMap {

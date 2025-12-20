@@ -54,6 +54,8 @@ import com.etheller.warsmash.viewer5.handlers.w3x.SequenceUtils;
 import com.etheller.warsmash.viewer5.handlers.w3x.War3MapViewer;
 import com.etheller.warsmash.viewer5.handlers.w3x.ui.MenuUI;
 
+import net.warsmash.uberserver.GamingNetworkConnection;
+
 public class WarsmashGdxMenuScreen implements InputProcessor, Screen, SingleModelScreen {
 	private static final String MAPS_DOWNLOAD_DEFAULT = "Maps/Download";
 	private static final boolean ENABLE_AUDIO = true;
@@ -193,13 +195,16 @@ public class WarsmashGdxMenuScreen implements InputProcessor, Screen, SingleMode
 				server = "localhost";
 				mapDownloadDir = MAPS_DOWNLOAD_DEFAULT;
 			}
+			final GamingNetworkConnection gamingNetworkConnection = ("NONE".equals(server) || "".equals(server))
+					? GamingNetworkConnection.NONE
+					: new GamingNetworkConnectionImpl(server);
 			this.menuUI = new MenuUI(this.viewer.dataSource, this.uiViewport, this.uiScene, this.viewer, this.game,
 					this, this.warsmashIni, new RootFrameListener() {
 						@Override
 						public void onCreate(final GameUI rootFrame) {
 //						WarsmashGdxMapGame.this.viewer.setGameUI(rootFrame);
 						}
-					}, new GamingNetworkConnectionImpl(server), mapDownloadDir);
+					}, gamingNetworkConnection, mapDownloadDir);
 
 			final ModelInstance libgdxContentInstance = new LibGDXContentLayerModel(null, this.viewer, "",
 					PathSolver.DEFAULT, "").addInstance();

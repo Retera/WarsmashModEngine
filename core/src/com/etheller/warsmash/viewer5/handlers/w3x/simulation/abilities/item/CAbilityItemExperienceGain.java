@@ -10,6 +10,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.skills.CA
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityPointTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.definitions.impl.AbilityFields;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.parser.template.DataFieldLetter;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehavior;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.OrderIds;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CEffectType;
@@ -25,7 +26,7 @@ public class CAbilityItemExperienceGain extends CAbilitySpellBase {
 
 	@Override
 	public void populateData(final GameObject worldEditorAbility, final int level) {
-		this.xpToGain = worldEditorAbility.getFieldAsInteger(AbilityFields.DATA_A + level, 0);
+		this.xpToGain = worldEditorAbility.getFieldAsInteger(AbilityFields.DATA + DataFieldLetter.A + level, 0);
 	}
 
 	@Override

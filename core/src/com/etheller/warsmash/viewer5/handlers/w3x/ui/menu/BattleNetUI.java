@@ -52,7 +52,7 @@ import net.warsmash.uberserver.HostedGameVisibility;
 import net.warsmash.uberserver.LobbyGameSpeed;
 import net.warsmash.uberserver.LobbyPlayerType;
 
-public class BattleNetUI {
+public class BattleNetUI implements BattleNetUIInterface {
 	private final GameUI rootFrame;
 	private final Viewport uiViewport;
 	private final Scene uiScene;

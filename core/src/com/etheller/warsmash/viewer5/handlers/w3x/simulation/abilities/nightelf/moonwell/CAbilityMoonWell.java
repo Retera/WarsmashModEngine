@@ -15,6 +15,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTargetVisitor;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.definitions.impl.AbilityFields;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.parser.template.DataFieldLetter;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehavior;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.data.CUnitRace;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.OrderIds;
@@ -182,11 +183,11 @@ public class CAbilityMoonWell extends CAbilitySpellBase implements CAutocastAbil
 
 	@Override
 	public void populateData(final GameObject worldEditorAbility, final int level) {
-		this.manaGained = worldEditorAbility.getFieldAsFloat(AbilityFields.DATA_A + level, 0);
-		this.hitPointsGained = worldEditorAbility.getFieldAsFloat(AbilityFields.DATA_B + level, 0);
-		this.autocastRequirement = worldEditorAbility.getFieldAsFloat(AbilityFields.DATA_C + level, 0);
-		this.waterHeight = worldEditorAbility.getFieldAsFloat(AbilityFields.DATA_D + level, 0);
-		this.regenerateOnlyAtNight = worldEditorAbility.getFieldAsBoolean(AbilityFields.DATA_E + level, 0);
+		this.manaGained = worldEditorAbility.getFieldAsFloat(AbilityFields.DATA + DataFieldLetter.A + level, 0);
+		this.hitPointsGained = worldEditorAbility.getFieldAsFloat(AbilityFields.DATA + DataFieldLetter.B + level, 0);
+		this.autocastRequirement = worldEditorAbility.getFieldAsFloat(AbilityFields.DATA + DataFieldLetter.C + level, 0);
+		this.waterHeight = worldEditorAbility.getFieldAsFloat(AbilityFields.DATA + DataFieldLetter.D + level, 0);
+		this.regenerateOnlyAtNight = worldEditorAbility.getFieldAsBoolean(AbilityFields.DATA + DataFieldLetter.E + level, 0);
 		this.areaOfEffect = worldEditorAbility.getFieldAsFloat(AbilityFields.AREA_OF_EFFECT + level, 0);
 		setCastRange(this.areaOfEffect); // TODO use cast range as a smart right click interact radius
 	}

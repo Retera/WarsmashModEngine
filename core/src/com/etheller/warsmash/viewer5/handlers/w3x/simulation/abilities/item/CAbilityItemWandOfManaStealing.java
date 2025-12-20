@@ -9,6 +9,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.skills.CA
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTargetVisitor;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.definitions.impl.AbilityFields;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.parser.template.DataFieldLetter;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.OrderIds;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CEffectType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityActivationReceiver;
@@ -112,11 +113,11 @@ public class CAbilityItemWandOfManaStealing extends CAbilityTargetSpellBase {
 
 	@Override
 	public void populateData(final GameObject worldEditorAbility, final int level) {
-		leaveTargetAlive = worldEditorAbility.getFieldAsBoolean(AbilityFields.DATA_E + level, 0);
-		lifeConversionAsValue = worldEditorAbility.getFieldAsBoolean(AbilityFields.DATA_D + level, 0);
-		manaConversionAsValue = worldEditorAbility.getFieldAsBoolean(AbilityFields.DATA_C + level, 0);
-		lifeConvertedToLife = worldEditorAbility.getFieldAsFloat(AbilityFields.DATA_B + level, 0);
-		lifeConvertedToMana = worldEditorAbility.getFieldAsFloat(AbilityFields.DATA_A + level, 0);
+		leaveTargetAlive = worldEditorAbility.getFieldAsBoolean(AbilityFields.DATA + DataFieldLetter.E + level, 0);
+		lifeConversionAsValue = worldEditorAbility.getFieldAsBoolean(AbilityFields.DATA + DataFieldLetter.D + level, 0);
+		manaConversionAsValue = worldEditorAbility.getFieldAsBoolean(AbilityFields.DATA + DataFieldLetter.C + level, 0);
+		lifeConvertedToLife = worldEditorAbility.getFieldAsFloat(AbilityFields.DATA + DataFieldLetter.B + level, 0);
+		lifeConvertedToMana = worldEditorAbility.getFieldAsFloat(AbilityFields.DATA + DataFieldLetter.A + level, 0);
 	}
 
 	@Override

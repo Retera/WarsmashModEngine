@@ -13,6 +13,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTargetVisitor;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.definitions.impl.AbilityFields;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.definitions.impl.AbstractCAbilityTypeDefinition;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.parser.template.DataFieldLetter;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.OrderIds;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CEffectType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetCheckReceiver;
@@ -39,9 +40,9 @@ public class CAbilityEatTree extends CAbilityTargetSpellBase {
 
 	@Override
 	public void populateData(final GameObject worldEditorAbility, final int level) {
-		this.ripDelay = worldEditorAbility.getFieldAsFloat(AbilityFields.DATA_A + level, 0);
-		this.eatDelay = worldEditorAbility.getFieldAsFloat(AbilityFields.DATA_B + level, 0);
-		this.hitPointsGained = worldEditorAbility.getFieldAsFloat(AbilityFields.DATA_C + level, 0);
+		this.ripDelay = worldEditorAbility.getFieldAsFloat(AbilityFields.DATA + DataFieldLetter.A + level, 0);
+		this.eatDelay = worldEditorAbility.getFieldAsFloat(AbilityFields.DATA + DataFieldLetter.B + level, 0);
+		this.hitPointsGained = worldEditorAbility.getFieldAsFloat(AbilityFields.DATA + DataFieldLetter.C + level, 0);
 		this.buffId = AbstractCAbilityTypeDefinition.getBuffId(worldEditorAbility, level);
 		setCastingSecondaryTags(SequenceUtils.SPELL_EATTREE);
 	}

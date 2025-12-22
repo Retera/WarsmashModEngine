@@ -670,6 +670,14 @@ public class TerrainWdt extends TerrainInterface {
 							final int cellY = (int) StrictMath.floor(userCellSpaceY);
 
 							final float[][] heightMap = chunk.getHeightMap();
+
+							final int holes = chunk.getHoles();
+							final int holeCellX = (cellX / 2);
+							final int holeCellY = (7 - cellY) / 2;
+							if ((((holes >> ((holeCellY) * 4)) >> (holeCellX)) & 1) == 1) {
+								return NO_TERRAIN_HEIGHT;
+							}
+
 							final float bottomLeft = heightMap[8 - cellY][cellX]
 									* WdtChunkModelInstance.wowToHiveWEFactor;
 							final float bottomRight = heightMap[8 - cellY][cellX + 1]
@@ -987,6 +995,7 @@ public class TerrainWdt extends TerrainInterface {
 					TerrainWdt.this.centerOffset[1]);
 			gl.glUniform1i(TerrainWdt.this.groundShader.getUniformLocation("tileOffsetX"), this.tileOffset[0]);
 			gl.glUniform1i(TerrainWdt.this.groundShader.getUniformLocation("tileOffsetY"), this.tileOffset[1]);
+			gl.glUniform1i(TerrainWdt.this.groundShader.getUniformLocation("holes"), this.chunk.getHoles());
 			gl.glUniform2i(TerrainWdt.this.groundShader.getUniformLocation("chunkOffset"), this.chunkOffset[0],
 					this.chunkOffset[1]);
 			gl.glUniform2f(TerrainWdt.this.groundShader.getUniformLocation("size_world"), TerrainWdt.this.columns,
@@ -1162,6 +1171,7 @@ public class TerrainWdt extends TerrainInterface {
 		public static final int CHUNKS_PER_BLOCK = 16;
 		public static final int BLOCK_GRID_SIZE = CHUNK_GRID_SIZE * CHUNKS_PER_BLOCK;
 		public static final int BLOCK_INTERIOR_GRID_SIZE = CHUNK_INTERIOR_GRID_SIZE * CHUNKS_PER_BLOCK;
+		public static final int CHUNK_HOLE_GRID_SIZE = WdtChunkModelInstance.CHUNK_INTERIOR_GRID_SIZE / 2;
 
 		private final TileHeader tileHeader;
 
@@ -1237,6 +1247,7 @@ public class TerrainWdt extends TerrainInterface {
 			final float[] groundCornerNormalsInterior = new float[BLOCK_INTERIOR_GRID_SIZE * BLOCK_INTERIOR_GRID_SIZE
 					* 3];
 			final ByteBuffer[] alphaMapData = new ByteBuffer[3];
+			final ByteBuffer holeMapData = ByteBuffer.allocateDirect((16 * 16 * 16)).order(ByteOrder.nativeOrder());
 			final GL30 gl = Gdx.gl30;
 			this.alphaMapHandleIds = new int[3];
 			for (int i = 0; i < this.alphaMapHandleIds.length; i++) {
@@ -1293,6 +1304,7 @@ public class TerrainWdt extends TerrainInterface {
 						}
 					}
 				}
+
 				final int withinSpacedChunkIndexX = (int) ((15 - indexY) * 66);
 				final int withinSpacedChunkIndexY = (int) ((indexX) * 66);
 				final IntIntFunction getIndex = (userX, userY) -> {

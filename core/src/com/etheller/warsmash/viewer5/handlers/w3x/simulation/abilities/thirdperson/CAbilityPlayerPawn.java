@@ -20,7 +20,7 @@ public class CAbilityPlayerPawn extends AbstractGenericNoIconAbility implements 
 	public static final War3ID CODE = War3ID.fromString("Apwn");
 
 	private static final int RENDER_MOVE_SPEED = (int) (18 * (1 / WarsmashConstants.SIMULATION_STEP_TIME));
-	private float z;
+	private float z = 20000;
 	private CBehaviorPlayerPawn behaviorPlayerPawn;
 	private static final Vector3 tempVec = new Vector3();
 

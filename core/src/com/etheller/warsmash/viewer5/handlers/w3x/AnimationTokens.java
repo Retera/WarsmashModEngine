@@ -31,7 +31,8 @@ public class AnimationTokens {
 		WALKBACKWARDS,
 		SHUFFLERIGHT,
 		SHUFFLELEFT,
-		MOUNT;
+		MOUNT,
+		BATTLEROAR;
 
 		@Override
 		public int getHandleId() {

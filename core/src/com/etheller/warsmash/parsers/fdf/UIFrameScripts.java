@@ -87,10 +87,6 @@ public class UIFrameScripts {
 			this.OnHyperlinkLeave = loadSingle(this.luaEnvironment, this.frameDef, "OnHyperlinkLeave");
 		}
 
-		if (this.thisFrame.getFrame().getName().equals("SpellButton1")) {
-			System.out.println("SB1");
-		}
-
 		this.frameDef = null;
 		if (this.OnLoad != null) {
 			this.luaEnvironment.load(this.thisFrame);

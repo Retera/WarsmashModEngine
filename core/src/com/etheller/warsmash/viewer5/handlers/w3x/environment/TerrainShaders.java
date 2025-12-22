@@ -325,6 +325,7 @@ public class TerrainShaders {
 					"uniform float centerOffsetY;\r\n" + //
 					"uniform int tileOffsetX;\r\n" + //
 					"uniform int tileOffsetY;\r\n" + //
+					"uniform int holes;\r\n" + //
 					"uniform ivec2 chunkOffset;\r\n" + //
 					"uniform vec2 size_world;\r\n" + //
 					"uniform sampler2D lightTexture;\r\n" + //
@@ -369,9 +370,8 @@ public class TerrainShaders {
 					"	vec3 positionWorld = vec3((vPosition.x + pos_tile.x)*128.0 + centerOffsetX, (vPosition.y + pos_tile.y)*128.0 + centerOffsetY, height.r*128.0);\r\n"
 					+ //
 					"	position = positionWorld;\r\n" + //
-//					"	gl_Position = ((texture_indices.a & 32768u) == 0u) ? MVP * vec4(position.xyz, 1) : vec4(2.0, 0.0, 0.0, 1.0);\r\n"
-//					+ //
-					"	gl_Position = MVP * vec4(position.xyz, 1);\r\n" + //
+					"	gl_Position = ((((holes >> ((3 - (pos.y / 2)) * 4)) >> (pos.x / 2)) & 1) == 0) ? MVP * vec4(position.xyz, 1) : vec4(2.0, 0.0, 0.0, 1.0);\r\n"
+					+ //
 					"   v_suv = (vPosition + pos + chunkOffset) / vec2(128.0, 128.0);\r\n" + //
 					"   v_auv = vec2((vPosition.x * 8.0 + pos.x * 8) + (chunkOffset.x / 8) * 66 + 1, (vPosition.y * 8.0 + pos.y * 8) + (chunkOffset.y / 8) * 66 + 1) / vec2(1056.0, 1056.0);\r\n"
 					+ //

@@ -18,6 +18,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CFogMaskSettings;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.vision.CPlayerFogOfWarInterface;
 
 public abstract class TerrainInterface {
+	public static final float NO_TERRAIN_HEIGHT = -99999f;
 	public PathingGrid pathingGrid;
 	public DataTable uberSplatTable;
 	public float[] centerOffset;

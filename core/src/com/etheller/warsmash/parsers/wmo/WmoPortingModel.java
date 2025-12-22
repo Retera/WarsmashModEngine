@@ -84,7 +84,7 @@ public class WmoPortingModel extends MdxModel {
 			final float[] vertices = group.getVertices();
 			for (int i = 0; i < vertices.length; i += 3) {
 				for (int j = 0; j < 3; j++) {
-					final float value = vertices[i + j];
+					final float value = vertices[i + j] * 2.0f;
 					if (value < min[j]) {
 						min[j] = value;
 					}

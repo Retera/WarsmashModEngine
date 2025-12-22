@@ -2095,7 +2095,7 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 	public float getNearestIntersectingZBeneath(final float x, final float y, final float z,
 			final RenderUnit[] intersectorUnitOut) {
 		final float groundHeight = this.terrain.getGroundHeight(x, y);
-		if (z < groundHeight) {
+		if ((z < groundHeight) && false) {
 			return groundHeight;
 		}
 		intersectorUnitOut[0] = null;
@@ -2104,18 +2104,41 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 		if (this.walkableBuildingIntersector.bestIntersectedUnit != null) {
 			intersectorUnitOut[0] = this.walkableBuildingIntersector.bestIntersectedUnit;
 		}
-		return Math.max(groundHeight,
-				Math.max(this.walkableComponentsIntersector.z, this.walkableBuildingIntersector.z));
+		final float walkablesMax = Math.max(this.walkableComponentsIntersector.z, this.walkableBuildingIntersector.z);
+		if (z > groundHeight) {
+			return Math.max(groundHeight, walkablesMax);
+		}
+		else {
+			return walkablesMax;
+		}
 	}
 
 	public boolean is3DTravelBlocked(final Vector3 prevLocation, final Vector3 newLocation, final float stairsHeight,
 			final float pawnHeight, final Vector3 bestClosestAvailableLocationIfFailed) {
 		final float prevGroundHeight = this.terrain.getGroundHeight(prevLocation.x, prevLocation.y);
 		final float newGroundHeight = this.terrain.getGroundHeight(newLocation.x, newLocation.y);
-		if (((prevLocation.z - prevGroundHeight) <= pawnHeight) && ((newLocation.z - newGroundHeight) <= pawnHeight)
-				&& ((newGroundHeight - prevGroundHeight) > stairsHeight)) {
-			bestClosestAvailableLocationIfFailed.set(prevLocation);
-			return true;
+		final boolean previouslyAboveGround = prevLocation.z >= prevGroundHeight;
+		final boolean isNowAboveGround = newLocation.z >= newGroundHeight;
+		if (previouslyAboveGround) {
+			if (isNowAboveGround) {
+				// else the stairs height rule doesn't apply for hugely negative underground
+				// areas, where ground height shouldn't even be considered
+				if (((prevLocation.z - prevGroundHeight) <= pawnHeight)
+						&& ((newLocation.z - newGroundHeight) <= pawnHeight)
+						&& ((newGroundHeight - prevGroundHeight) > stairsHeight)) {
+					bestClosestAvailableLocationIfFailed.set(prevLocation);
+					return true;
+				}
+			}
+			else if (prevGroundHeight >= TerrainInterface.NO_TERRAIN_HEIGHT) {
+				if (newGroundHeight >= TerrainInterface.NO_TERRAIN_HEIGHT) {
+					if ((newGroundHeight - prevGroundHeight) < stairsHeight) {
+						bestClosestAvailableLocationIfFailed.set(newLocation);
+						bestClosestAvailableLocationIfFailed.z = newGroundHeight;
+//						return true;// dont fall through world
+					}
+				}
+			}
 		}
 		final float dx = newLocation.x - prevLocation.x;
 		final float dy = newLocation.y - prevLocation.y;

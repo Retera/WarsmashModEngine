@@ -1,0 +1,231 @@
+{
+	"abilityList": [{
+		"ids": [{"id":"Aply", "castId": "polymorph"},{"id":"AOhx", "castId": "hex"}],
+		"type": "NORMAL_UNITTARGET",
+		"extraTargetConditions": [{
+			"type": "not",
+			"condition": {
+				"type": "isUnitMorphImmune",
+				"unit": {
+					"type": "getAbilityTargetedUnit"
+				}
+			}
+		}],
+		"onAddDisabledAbility": [{
+			"type": "createStateModBuff",
+			"buffType": "POLYMORPHED"
+		}],
+		"onEndCasting": [{
+			"type": "checkAbilityEffectReaction",
+			"target": {
+				"type": "getAbilityTargetedUnit"
+			},
+			"onHitActions": [{
+					"type": "createTemporarySpellEffectOnUnit",
+					"target": {
+						"type": "getCastingUnit"
+					},
+					"id": {
+						"type": "getAlias"
+					},
+					"effectType": "CASTER"
+				},{
+					"type": "createTemporarySpellEffectOnUnit",
+					"target": {
+						"type": "getAbilityTargetedUnit"
+					},
+					"id": {
+						"type": "getAlias"
+					},
+					"effectType": "SPECIAL"
+				},{
+					"type": "if",
+					"condition": {
+						"type": "isMovementTypeEqual",
+						"movementType1": {
+							"type": "getUnitMovementType",
+							"unit": {
+								"type": "getAbilityTargetedUnit"
+							}
+						},
+						"movementType2": {
+							"type": "getMovementTypeFromString",
+							"id": {
+								"type": "rawString",
+								"value": "FLY"
+							}
+						}
+					},
+					"thenActions": [{
+						"type": "storeValueLocally",
+						"key": {
+							"type": "rawString",
+							"value": "unitType"
+						},
+						"valueToStore": {
+							"type": "getAbilityDataAsRandomIDFromList",
+							"dataField": "C"
+						}
+					}],
+					"elseActions": [{
+						"type": "if",
+						"condition": {
+							"type": "isMovementTypeEqual",
+							"movementType1": {
+								"type": "getUnitMovementType",
+								"unit": {
+									"type": "getAbilityTargetedUnit"
+								}
+							},
+							"movementType2": {
+								"type": "getMovementTypeFromString",
+								"id": {
+									"type": "rawString",
+									"value": "FLOAT"
+								}
+							}
+						},
+						"thenActions": [{
+							"type": "storeValueLocally",
+							"key": {
+								"type": "rawString",
+								"value": "unitType"
+							},
+							"valueToStore": {
+								"type": "getAbilityDataAsRandomIDFromList",
+								"dataField": "E"
+							}
+						}],
+						"elseActions": [{
+							"type": "if",
+							"condition": {
+								"type": "isMovementTypeEqual",
+								"movementType1": {
+									"type": "getUnitMovementType",
+									"unit": {
+										"type": "getAbilityTargetedUnit"
+									}
+								},
+								"movementType2": {
+									"type": "getMovementTypeFromString",
+									"id": {
+										"type": "rawString",
+										"value": "AMPHIBIOUS"
+									}
+								}
+							},
+							"thenActions": [{
+								"type": "storeValueLocally",
+								"key": {
+									"type": "rawString",
+									"value": "unitType"
+								},
+								"valueToStore": {
+									"type": "getAbilityDataAsRandomIDFromList",
+									"dataField": "D"
+								}
+							}],
+							"elseActions": [{
+								"type": "storeValueLocally",
+								"key": {
+									"type": "rawString",
+									"value": "unitType"
+								},
+								"valueToStore": {
+									"type": "getAbilityDataAsRandomIDFromList",
+									"dataField": "B"
+								}
+							}]
+						}]
+					}]
+				},{
+					"type": "createTimedBuff",
+					"buffId": {
+						"type": "getFirstBuffId",
+						"defaultId": {
+							"type": "getBuffIdFromCode"
+						}
+					},
+					"duration": {
+						"type": "getAbilityDuration",
+						"target": {
+							"type": "getAbilityTargetedUnit"
+						}
+					},
+					"showTimedLifeBar": {
+						"type": "rawBoolean",
+						"value": "true"
+					},
+					"positive": {
+						"type": "rawBoolean",
+						"value": "false"
+					},
+					"stateMods": [{
+						"type": "getLastCreatedStateModBuff"
+					}],
+					"onAddActions": [{
+							"type": "transformUnitAppearance",
+							"unit": {
+								"type": "getBuffedUnit"
+							},
+							"id": {
+								"type": "getStoredIDByKey",
+								"key": {
+									"type": "rawString",
+									"value": "unitType"
+								}
+							}
+						},{
+							"type": "setSpeed",
+							"unit": {
+								"type": "getBuffedUnit"
+							},
+							"value": {
+								"type": "getUnitTypeSpeed",
+								"id": {
+									"type": "getStoredIDByKey",
+									"key": {
+										"type": "rawString",
+										"value": "unitType"
+									}
+								}
+							}
+					}],
+					"onRemoveActions": [{
+							"type": "transformUnitAppearance",
+							"unit": {
+								"type": "getBuffedUnit"
+							},
+							"id": {
+								"type": "getUnitType",
+								"unit": {
+									"type": "getBuffedUnit"
+								}
+							}
+						},{
+							"type": "setSpeed",
+							"unit": {
+								"type": "getBuffedUnit"
+							},
+							"value": {
+								"type": "getUnitTypeSpeed",
+								"id": {
+									"type": "getUnitType",
+									"unit": {
+										"type": "getBuffedUnit"
+									}
+								}
+							}
+					}]
+				},{
+					"type": "addBuff",
+					"target": {
+						"type": "getAbilityTargetedUnit"
+					},
+					"buff": {
+						"type": "getLastCreatedBuff"
+					}
+			}]
+		}]
+	}]
+}

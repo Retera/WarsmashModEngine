@@ -100,6 +100,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.environment.Terrain;
 import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.RenderDestructable;
 import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.RenderItem;
 import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.RenderUnit;
+import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.RenderUnitReplaceableTex;
 import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.RenderUnitType;
 import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.RenderWidget;
 import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.ability.AbilityDataUI;
@@ -2780,6 +2781,11 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 						this.modelInstance.setScene(this.portraitScene);
 						this.modelInstance.setVertexColor(unit.instance.vertexColor);
 						this.modelInstance.setTeamColor(unit.playerIndex);
+						for (final RenderUnitReplaceableTex replaceableTex : unit.getTypeData()
+								.getReplaceableTextures()) {
+							this.modelInstance.setReplaceableTexture(replaceableTex.getReplaceableId(),
+									replaceableTex.getPath());
+						}
 					}
 				}
 			}

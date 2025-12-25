@@ -1,6 +1,7 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.rendersim;
 
 import com.badlogic.gdx.math.Quaternion;
+import com.etheller.warsmash.parsers.wmo.WmoDoodadDefinition;
 import com.etheller.warsmash.units.GameObject;
 import com.etheller.warsmash.util.RenderMathUtils;
 import com.etheller.warsmash.util.War3ID;
@@ -39,6 +40,55 @@ public class RenderDoodad {
 	private final War3ID typeId;
 	private final float facingRadians;
 	private final long uniqueId;
+
+	public RenderDoodad(final War3MapViewer map, final MdxModel model, final WmoDoodadDefinition definition,
+			final float[] location3D, final float[] scale3D, final float facingRadians, final float selectionScale) {
+		this.facingRadians = facingRadians;
+		this.maxPitch = 0;
+		this.maxRoll = 0;
+		this.uniqueId = -1;
+		final ModelInstance instance = model.addInstance();
+		((MdxComplexInstance) instance).setSequenceLoopMode(SequenceLoopMode.NEVER_LOOP);
+
+		instance.move(location3D);
+		this.x = location3D[0];
+		this.y = location3D[1];
+
+		((MdxComplexInstance) instance).setVertexColor(new float[] { definition.getColor()[3] / 255f,
+				definition.getColor()[2] / 255f, definition.getColor()[1] / 255f, definition.getColor()[0] });
+
+		this.vertexColorBase = new float[] { ((MdxComplexInstance) instance).vertexColor[0],
+				((MdxComplexInstance) instance).vertexColor[1], ((MdxComplexInstance) instance).vertexColor[2] };
+		this.vertexColorFogged = new float[] { this.vertexColorBase[0] / 2, this.vertexColorBase[1] / 2,
+				this.vertexColorBase[2] / 2 };
+
+		// rotate for the exterior wmo thing
+		instance.rotate(new Quaternion().setFromAxisRad(RenderMathUtils.VEC3_UNIT_Z, facingRadians));
+		// rotate for the quaternions in the dood
+		final float[] orientation = definition.getOrientation();
+		instance.rotate(new Quaternion(orientation[0], orientation[1], orientation[2], orientation[3]));
+
+		instance.scale(scale3D);
+
+		this.selectionScale = selectionScale;
+		instance.setScene(map.worldScene);
+
+		this.instance = instance;
+		this.row = null;
+
+		final CPlayerFogOfWarInterface fogOfWar = map.getFogOfWar();
+		final PathingGrid pathingGrid = map.simulation.getPathingGrid();
+		final int fogOfWarIndexX = pathingGrid.getFogOfWarIndexX(this.x);
+		final int fogOfWarIndexY = pathingGrid.getFogOfWarIndexY(this.y);
+		this.fogState = fogOfWar.getFogState(map.simulation, fogOfWarIndexX, fogOfWarIndexY);
+		this.lastFogStateColor = this.fogState.getMask();
+		for (int i = 0; i < this.vertexColorBase.length; i++) {
+			VERTEX_COLOR_HEAP[i] = (this.vertexColorBase[i] * (255 - (this.lastFogStateColor & 0xFF))) / 255f;
+		}
+		((MdxComplexInstance) this.instance).setVertexColor(VERTEX_COLOR_HEAP);
+
+		this.typeId = null;
+	}
 
 	public RenderDoodad(final War3MapViewer map, final MdxModel model, final GameObject row, final float[] location3D,
 			final float[] scale3D, final float facingRadians, final float maxPitch, final float maxRoll,

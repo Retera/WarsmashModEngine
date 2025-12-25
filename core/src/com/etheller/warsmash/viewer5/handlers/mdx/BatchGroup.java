@@ -231,6 +231,7 @@ public class BatchGroup extends GenericGroup {
 					}
 					shader.setUniformi("u_unfogged",
 							((layer.unfogged != 0) || (instance.unshadedOverride != 0)) ? 1 : 0);
+					shader.setUniformf("u_lightOmitOffset", layer.lightOmitOffset);
 					shader.setUniformf("u_fogColor", scene.fogSettings.color);
 					shader.setUniformf("u_fogParams", scene.fogSettings.style.ordinal(), scene.fogSettings.start,
 							scene.fogSettings.end, scene.fogSettings.density);

@@ -4,7 +4,7 @@ import com.etheller.warsmash.viewer5.Shaders;
 import com.etheller.warsmash.viewer5.handlers.mdx.MdxHandler.ShaderEnvironmentType;
 
 public class MdxShaders {
-	private static final boolean SCALE_PARTICLE2_BY_MODEL = true;
+	public static final boolean SCALE_PARTICLE2_BY_MODEL = true;
 
 	public static final String vsHd = "#version 120\r\n" + Shaders.boneTexture + "\r\n" + //
 			"    uniform mat4 u_VP;\r\n" + //
@@ -642,6 +642,7 @@ public class MdxShaders {
 				"    uniform float u_uvScale;\r\n" + //
 				"    uniform bool u_hasBones;\r\n" + //
 				"    uniform float u_unshaded;\r\n" + //
+				"    uniform float u_lightOmitOffset;\r\n" + //
 				"    attribute vec3 a_position;\r\n" + //
 				"    attribute vec3 a_normal;\r\n" + //
 				"    attribute vec2 a_uv;\r\n" + //
@@ -716,7 +717,7 @@ public class MdxShaders {
 				"      gl_Position = u_mvp * vec4(position, 1.0);\r\n" + //
 				"      //if(!u_unshaded) {\r\n" + //
 				Shaders.lightSystem("normal", "position", "u_lightTexture", "u_lightTextureHeight", "u_lightCount",
-						false)
+						" + u_lightOmitOffset", false)
 				+ "\r\n" + //
 				"        v_color.xyz *= (1.0 - u_unshaded) * clamp(lightFactor, 0.0, 1.0) + u_unshaded;\r\n" + //
 				"      //}\r\n" + //
@@ -937,7 +938,7 @@ public class MdxShaders {
 				"      }\r\n" + //
 				"      if(!u_unshaded) {\r\n" + //
 				Shaders.lightSystem("lightingNormal", "position", "u_lightTexture", "u_lightTextureHeight",
-						"u_lightCount", false)
+						"u_lightCount", "", false)
 				+ "\r\n" + //
 				"        v_color.xyz *= clamp(lightFactor, 0.0, 1.0);\r\n" + //
 				"      }\r\n" + //
@@ -1002,7 +1003,7 @@ public class MdxShaders {
 				"      gl_Position = u_mvp * vec4(position, 1.0);\r\n" + //
 				"      if(!u_unshaded) {\r\n" + //
 				Shaders.lightSystem("lightingNormal", "position", "u_lightTexture", "u_lightTextureHeight",
-						"u_lightCount", false)
+						"u_lightCount", "", false)
 				+ "\r\n" + //
 				"        v_color.xyz *= clamp(lightFactor, 0.0, 1.0);\r\n" + //
 				"      }\r\n" + //

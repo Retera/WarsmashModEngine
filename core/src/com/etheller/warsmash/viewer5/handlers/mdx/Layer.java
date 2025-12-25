@@ -21,6 +21,7 @@ public class Layer extends AnimatedObject {
 	public int unfogged;
 	public int noDepthTest;
 	public int noDepthSet;
+	public int lightOmitOffset;
 	public boolean depthMaskValue;
 	public int blendSrc;
 	public int blendDst;
@@ -49,6 +50,7 @@ public class Layer extends AnimatedObject {
 		this.unfogged = flags & MdlxLayer.Flags.UNFOGGED;
 		this.noDepthTest = flags & MdlxLayer.Flags.NO_DEPTH_TEST;
 		this.noDepthSet = flags & MdlxLayer.Flags.NO_DEPTH_SET;
+		this.lightOmitOffset = ((flags & MdlxLayer.Flags.WARSMASH_ONLY_NOT_EXTERIOR_LIT) != 0) ? 2 : 0;
 
 		this.depthMaskValue = ((filterMode == MdlxLayer.FilterMode.NONE)
 				|| (filterMode == MdlxLayer.FilterMode.TRANSPARENT));

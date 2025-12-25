@@ -10,7 +10,7 @@ public class ReplaceableIds {
 	private static final Map<Long, String> REPLACEABLE_ID_TO_STR = new HashMap<>();
 
 	static {
-		for (int i = 0; i < WarsmashConstants.MAX_PLAYERS; i++) {
+		for (int i = 0; i < Math.max(WarsmashConstants.MAX_PLAYERS, 28); i++) {
 			ID_TO_STR.put(Long.valueOf(i), String.format("%2d", i).replace(' ', '0'));
 		}
 		REPLACEABLE_ID_TO_STR.put(Long.valueOf(1), "TeamColor\\TeamColor");

@@ -10,7 +10,6 @@ import org.apache.commons.compress.utils.SeekableInMemoryByteChannel;
 import com.etheller.warsmash.datasources.SourcedData;
 import com.etheller.warsmash.viewer5.ModelViewer;
 import com.etheller.warsmash.viewer5.PathSolver;
-import com.etheller.warsmash.viewer5.handlers.mdx.MdxHandler;
 
 import mpq.ArchivedFile;
 import mpq.ArchivedFileExtractor;
@@ -19,19 +18,19 @@ import mpq.HashLookup;
 import mpq.MPQArchive;
 import mpq.MPQException;
 
-public class WmoMpqPortingModel extends WmoPortingModel {
-	public WmoMpqPortingModel(final MdxHandler handler, final ModelViewer viewer, final String extension,
+public class WmoMpqPortingModel extends WmoPortingModel2 {
+	public WmoMpqPortingModel(final WmoPortingHandler handler, final ModelViewer viewer, final String extension,
 			final PathSolver pathSolver, final String fetchUrl) {
 		super(handler, viewer, extension, pathSolver, fetchUrl);
 	}
 
 	@Override
-	public void load(final Object bufferOrParser) throws IOException {
+	public void load(final SourcedData src, final Object options) {
 		final ArchivedFileExtractor extractor = new ArchivedFileExtractor();
 		SeekableByteChannel sbc;
 		final ByteBuffer dataBuffer;
 		try {
-			sbc = new SeekableInMemoryByteChannel(((SourcedData) bufferOrParser).read().array());
+			sbc = new SeekableInMemoryByteChannel(src.read().array());
 			final MPQArchive mpqArchive = new MPQArchive(sbc);
 
 			String internalName = this.fetchUrl;
@@ -64,6 +63,7 @@ public class WmoMpqPortingModel extends WmoPortingModel {
 			public InputStream getResourceAsStream() {
 				throw new UnsupportedOperationException();
 			}
-		});
+		}, options);
 	}
+
 }

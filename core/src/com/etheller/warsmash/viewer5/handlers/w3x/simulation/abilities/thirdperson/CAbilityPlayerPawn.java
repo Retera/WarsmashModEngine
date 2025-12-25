@@ -179,8 +179,7 @@ public class CAbilityPlayerPawn extends AbstractGenericNoIconAbility implements 
 	}
 
 	public float getRenderMoveSpeed() {
-		final Vector3 vec = tempVec.set(getBehaviorPlayerPawn().getVelocity());
-		vec.z = 0;
-		return vec.len() / WarsmashConstants.SIMULATION_STEP_TIME;
+		return Math.max(getBehaviorPlayerPawn().getVelocity().len(),
+				getBehaviorPlayerPawn().getPreviousVelocity().len()) / WarsmashConstants.SIMULATION_STEP_TIME;
 	}
 }

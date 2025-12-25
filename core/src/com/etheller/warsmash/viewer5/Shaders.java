@@ -114,9 +114,11 @@ public class Shaders {
 			"  ";
 
 	public static String lightSystem(final String normalName, final String positionName, final String lightTexture,
-			final String lightTextureHeight, final String lightCount, final boolean terrain) {
+			final String lightTextureHeight, final String lightCount, final String lightOmitOffset,
+			final boolean terrain) {
 		return "        vec3 lightFactor = vec3(0.0,0.0,0.0);\r\n" + //
-				"        for(float lightIndex = 0.5; lightIndex < " + lightCount + "; lightIndex += 1.0) {\r\n" + //
+				"        for(float lightIndex = 0.5" + lightOmitOffset + "; lightIndex < " + lightCount
+				+ "; lightIndex += 1.0) {\r\n" + //
 				"          float rowPos = (lightIndex) / " + lightTextureHeight + ";\r\n" + //
 				"          vec4 lightPosition = texture2D(" + lightTexture + ", vec2(0.125, rowPos));\r\n" + //
 				"          vec3 lightExtra = texture2D(" + lightTexture + ", vec2(0.375, rowPos)).xyz;\r\n" + //

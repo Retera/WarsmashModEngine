@@ -77,7 +77,7 @@ public class TerrainShaders {
 					"\r\n" + //
 					"	Normal = terrain_normal;\r\n" + //
 					Shaders.lightSystem("terrain_normal", "myposition.xyz", "lightTexture", "lightTextureHeight",
-							"lightCount", true)
+							"lightCount", "", true)
 					+ "\r\n" + //
 					"        shadeColor = clamp(lightFactor, 0.0, 1.0);\r\n" + //
 					"}";
@@ -176,7 +176,7 @@ public class TerrainShaders {
 					"	position.x = (position.x - centerOffsetX) / (size.x * 128.0);\r\n" + //
 					"	position.y = (position.y - centerOffsetY) / (size.y * 128.0);\r\n" + //
 					Shaders.lightSystem("normal", "positionWorld", "lightTexture", "lightTextureHeight", "lightCount",
-							true)
+							"", true)
 					+ "\r\n" + //
 					"        shadeColor = clamp(lightFactor, 0.0, 1.0);\r\n" + //
 					"}";
@@ -378,7 +378,7 @@ public class TerrainShaders {
 					"	position.x = (position.x - centerOffsetX) / (chunkSize.x * 128.0);\r\n" + //
 					"	position.y = (position.y - centerOffsetY) / (chunkSize.y * 128.0);\r\n" + //
 					Shaders.lightSystem("normal", "positionWorld", "lightTexture", "lightTextureHeight", "lightCount",
-							true)
+							"", true)
 					+ "\r\n" + //
 					"        shadeColor = clamp(lightFactor, 0.0, 1.0);\r\n" + //
 					"}";
@@ -531,7 +531,7 @@ public class TerrainShaders {
 					"		vertexColor = deep_color_min * (1.f - value) + deep_color_max * value;\r\n" + //
 					"	}\r\n" + //
 					Shaders.lightSystem("Normal", "myposition.xyz", "lightTexture", "lightTextureHeight", "lightCount",
-							true)
+							"", true)
 					+ "\r\n" + //
 					"        shadeColor = clamp(lightFactor, 0.0, 1.0);\r\n" + //
 					"        v_suv = (vPosition + pos) / size;\r\n" + //
@@ -632,7 +632,7 @@ public class TerrainShaders {
 					"		vertexColor = deep_color_min * (1.f - value) + deep_color_max * value;\r\n" + //
 					"	}\r\n" + //
 					Shaders.lightSystem("Normal", "myposition.xyz", "lightTexture", "lightTextureHeight", "lightCount",
-							true)
+							"", true)
 					+ "\r\n" + //
 					"        shadeColor = clamp(lightFactor, 0.0, 1.0);\r\n" + //
 					"        v_suv = (vPosition + pos) / size;\r\n" + //

@@ -25,8 +25,11 @@ public class WmoPortingHandler extends ModelHandler {
 
 	@Override
 	public HandlerResource<?> construct(final ResourceHandlerConstructionParams params) {
-		return new WmoPortingModel(this.mdxHandler, params.getViewer(), params.getExtension(), params.getPathSolver(),
+		return new WmoPortingModel2(this, params.getViewer(), params.getExtension(), params.getPathSolver(),
 				params.getFetchUrl());
 	}
 
+	public MdxHandler getMdxHandler() {
+		return this.mdxHandler;
+	}
 }

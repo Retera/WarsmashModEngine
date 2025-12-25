@@ -272,6 +272,10 @@ public class ModelObjectHeaders {
 		return this.doodadFileNames;
 	}
 
+	public LongMap<String> getDoodadFileNamesOffsetLookup() {
+		return this.doodadFileNamesOffsetLookup;
+	}
+
 	public List<WmoMaterial> getMaterials() {
 		return this.materials;
 	}

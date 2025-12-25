@@ -377,5 +377,6 @@ public class MdlxLayer extends MdlxAnimatedObject {
 		public static final int NO_DEPTH_TEST = 0x40;
 		public static final int NO_DEPTH_SET = 0x80;
 		public static final int UNLIT = 0x100;
+		public static final int WARSMASH_ONLY_NOT_EXTERIOR_LIT = 0x200;
 	}
 }

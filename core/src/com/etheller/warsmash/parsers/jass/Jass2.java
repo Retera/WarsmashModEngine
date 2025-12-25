@@ -270,7 +270,7 @@ public class Jass2 {
 				jassFilePath = jassFilePath
 						.substring(Math.max(jassFilePath.lastIndexOf('/'), jassFilePath.lastIndexOf('\\')) + 1);
 			}
-			if (!dataSource.has(jassFilePath)) {
+			if (!dataSource.has(jassFilePath) || (jassFilePath.isEmpty() && !file.isEmpty())) {
 				final String lowerCaseDirectoryPath = file.toLowerCase(Locale.US);
 				final String lowerCaseDirectoryPathLinux = file.toLowerCase(Locale.US).replace("\\", "/");
 
@@ -288,8 +288,8 @@ public class Jass2 {
 							readJassFile(dataSource, jassProgramVisitor, realPath);
 						}
 						catch (final Exception e) {
-							e.printStackTrace();
 							JassLog.report(e);
+							new RuntimeException(e);
 						}
 					}
 				}
@@ -1206,13 +1206,13 @@ public class Jass2 {
 								"itemuse" + String.format("%02d", item.getContainedInventory().getSlot(item)));
 						int abilityHandleId = 0;
 						for (final CAbility ability : whichUnit.getAbilities()) {
-							ability.checkCanUse(CommonEnvironment.this.simulation, whichUnit, whichUnit.getPlayerIndex(), orderId, false,
-									activationReceiver);
+							ability.checkCanUse(CommonEnvironment.this.simulation, whichUnit,
+									whichUnit.getPlayerIndex(), orderId, false, activationReceiver);
 							if (activationReceiver.isOk()) {
 								final BooleanAbilityTargetCheckReceiver<Void> targetReceiver = BooleanAbilityTargetCheckReceiver
 										.<Void>getInstance();
-								ability.checkCanTargetNoTarget(CommonEnvironment.this.simulation, whichUnit, whichUnit.getPlayerIndex(), orderId,
-										false, targetReceiver.reset());
+								ability.checkCanTargetNoTarget(CommonEnvironment.this.simulation, whichUnit,
+										whichUnit.getPlayerIndex(), orderId, false, targetReceiver.reset());
 								if (targetReceiver.isTargetable()) {
 									abilityHandleId = ability.getHandleId();
 								}
@@ -1236,12 +1236,12 @@ public class Jass2 {
 						.getOrderId("itemuse" + String.format("%02d", item.getContainedInventory().getSlot(item)));
 				int abilityHandleId = 0;
 				for (final CAbility ability : whichUnit.getAbilities()) {
-					ability.checkCanUse(CommonEnvironment.this.simulation, whichUnit, whichUnit.getPlayerIndex(), orderId, false,
-							activationReceiver);
+					ability.checkCanUse(CommonEnvironment.this.simulation, whichUnit, whichUnit.getPlayerIndex(),
+							orderId, false, activationReceiver);
 					if (activationReceiver.isOk()) {
 						final CWidgetAbilityTargetCheckReceiver targetReceiver = CWidgetAbilityTargetCheckReceiver.INSTANCE;
-						ability.checkCanTarget(CommonEnvironment.this.simulation, whichUnit, whichUnit.getPlayerIndex(), orderId, false,
-								whichTarget, targetReceiver.reset());
+						ability.checkCanTarget(CommonEnvironment.this.simulation, whichUnit, whichUnit.getPlayerIndex(),
+								orderId, false, whichTarget, targetReceiver.reset());
 						if (targetReceiver.getTarget() != null) {
 							whichTarget = targetReceiver.getTarget();
 							abilityHandleId = ability.getHandleId();

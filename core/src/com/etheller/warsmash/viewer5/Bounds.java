@@ -18,10 +18,14 @@ public class Bounds {
 		final float d = max[1] - y;
 		final float h = max[2] - z;
 
-		this.x = x + (w / 2f);
-		this.y = y + (d / 2f);
-		this.z = z + (h / 2f);
-		this.r = boundsRadius > 0 ? boundsRadius : (float) (Math.max(Math.max(w, d), h) / 2.);
+		final float halfW = w / 2f;
+		this.x = x + halfW;
+		final float halfD = d / 2f;
+		this.y = y + halfD;
+		final float halfH = h / 2f;
+		this.z = z + halfH;
+		this.r = boundsRadius > 0 ? boundsRadius
+				: (float) Math.sqrt((halfW * halfW) + (halfD * halfD) + (halfH * halfH));
 		this.boundingBox = new BoundingBox(new Vector3(min), new Vector3(max));
 	}
 

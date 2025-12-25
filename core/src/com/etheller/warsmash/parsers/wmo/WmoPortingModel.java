@@ -68,7 +68,7 @@ public class WmoPortingModel extends MdxModel {
 	public static MdlxModel createPortedModel(final String fetchUrl, final WorldModelObject parser) {
 		final MdlxModel portedModel = new MdlxModel();
 
-		portedModel.name = fetchUrl;
+		portedModel.name = fetchUrl.length() > 80 ? fetchUrl.substring(fetchUrl.length() - 80) : fetchUrl;
 		portedModel.blendTime = 0;
 
 		final List<ModelObjectGroup> groups = parser.getGroups();
@@ -84,7 +84,7 @@ public class WmoPortingModel extends MdxModel {
 			final float[] vertices = group.getVertices();
 			for (int i = 0; i < vertices.length; i += 3) {
 				for (int j = 0; j < 3; j++) {
-					final float value = vertices[i + j] * 2.0f;
+					final float value = vertices[i + j];
 					if (value < min[j]) {
 						min[j] = value;
 					}
@@ -154,6 +154,10 @@ public class WmoPortingModel extends MdxModel {
 
 			if (FlagUtils.hasFlag(material.getFlags(), WmoMaterial.Flags.Unculled)) {
 				portedLayer.flags |= MdlxLayer.Flags.TWO_SIDED;
+			}
+
+			if (!FlagUtils.hasFlag(material.getFlags(), WmoMaterial.Flags.ExteriorLit)) {
+				portedLayer.flags |= MdlxLayer.Flags.WARSMASH_ONLY_NOT_EXTERIOR_LIT;
 			}
 			portedLayer.textureId = textureId;
 

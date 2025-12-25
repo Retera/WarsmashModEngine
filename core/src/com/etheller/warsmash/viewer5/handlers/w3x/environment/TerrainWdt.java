@@ -80,7 +80,11 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.vision.CPla
 public class TerrainWdt extends TerrainInterface {
 	private static final boolean LOAD_DOODREF_BY_CHUNK = false;
 	private static final int WORST_MS_PER_FRAME = 8000000;
-	private static final int LOAD_RADIUS = 1;
+	private static final int LOAD_AREA = 2;
+	private static final int LOAD_AREA_LESS_ONE = LOAD_AREA - 1;
+	private static final int HALF_LOAD_AREA = LOAD_AREA / 2;
+	private static final int HALF_LOAD_AREA_PLUS_ONE = (LOAD_AREA + 1) / 2;
+	private static final boolean LOAD_AREA_EVEN = (LOAD_AREA % 2) == 0;
 	public static final float CELL_SIZE = 128f;
 	private static final String[] colorTags = { "R", "G", "B", "A" };
 	private static final float[] sizeHeap = new float[2];
@@ -379,29 +383,77 @@ public class TerrainWdt extends TerrainInterface {
 		final int cellY = this.worldGrid.getCellY(cameraLocation.y);
 		this.lastCameraCellX = cellX;
 		this.lastCameraCellY = cellY;
-		for (int k = this.activeTiles.size() - 1; k >= 0; k--) {
-			final Tile tile = this.activeTiles.get(k);
-			final int dx = Math.abs(tile.terrainModel.blockX - cellX);
-			final int dy = Math.abs(tile.terrainModel.blockY - cellY);
-			if ((dx > (LOAD_RADIUS)) || (dy > (LOAD_RADIUS))) {
-				tile.deactivate();
-				System.out.println("DEACTIVATING (" + tile.terrainModel.blockX + ", " + tile.terrainModel.blockY + ")");
-				this.activeTiles.remove(k);
+		if (LOAD_AREA_EVEN) {
+			final float worldX = this.worldGrid.getWorldX(cellX);
+			final float worldY = this.worldGrid.getWorldY(cellY);
+			final int xBiasPositive = (cameraLocation.x > worldX) ? 1 : 0;
+			final int yBiasPositive = (cameraLocation.y > worldY) ? 1 : 0;
+
+			for (int k = this.activeTiles.size() - 1; k >= 0; k--) {
+				final Tile tile = this.activeTiles.get(k);
+				final float blockWorldX = this.worldGrid.getWorldX(tile.terrainModel.blockX);
+				final float blockWorldY = this.worldGrid.getWorldY(tile.terrainModel.blockY);
+
+				final int xTileBiasPositive = (blockWorldX > worldX) ? 1 : 0;
+				final int yTileBiasPositive = (blockWorldY > worldY) ? 1 : 0;
+
+				final int dx = Math.abs(tile.terrainModel.blockX - cellX);
+				final int dy = Math.abs(tile.terrainModel.blockY - cellY);
+				if ((dx > (HALF_LOAD_AREA + xTileBiasPositive)) || (dy > (HALF_LOAD_AREA + yTileBiasPositive))) {
+					tile.deactivate();
+					System.out.println(
+							"DEACTIVATING (" + tile.terrainModel.blockX + ", " + tile.terrainModel.blockY + ")");
+					this.activeTiles.remove(k);
+				}
+			}
+
+			for (int i = -HALF_LOAD_AREA + xBiasPositive; i < (HALF_LOAD_AREA + xBiasPositive); i++) {
+				for (int j = -HALF_LOAD_AREA + yBiasPositive; j < (HALF_LOAD_AREA + yBiasPositive); j++) {
+					final int x = cellX + i;
+					final int y = cellY + j;
+
+					if ((x >= 0) && (x < this.tiles.length)) {
+						if ((y >= 0) && (y < this.tiles[x].length)) {
+							final Tile tile = this.tiles[x][y];
+							if (tile != null) {
+								if (tile.activate()) {
+									System.out.println("ACTIVATING (" + tile.terrainModel.blockX + ", "
+											+ tile.terrainModel.blockY + ")  <---> (" + x + ", " + y + ")");
+									this.activeTiles.add(this.tiles[x][y]);
+								}
+							}
+						}
+					}
+				}
 			}
 		}
-		for (int i = -LOAD_RADIUS; i <= LOAD_RADIUS; i++) {
-			for (int j = -LOAD_RADIUS; j <= LOAD_RADIUS; j++) {
-				final int x = cellX + i;
-				final int y = cellY + j;
+		else {
+			for (int k = this.activeTiles.size() - 1; k >= 0; k--) {
+				final Tile tile = this.activeTiles.get(k);
+				final int dx = Math.abs(tile.terrainModel.blockX - cellX);
+				final int dy = Math.abs(tile.terrainModel.blockY - cellY);
+				if ((dx > (HALF_LOAD_AREA)) || (dy > (HALF_LOAD_AREA))) {
+					tile.deactivate();
+					System.out.println(
+							"DEACTIVATING (" + tile.terrainModel.blockX + ", " + tile.terrainModel.blockY + ")");
+					this.activeTiles.remove(k);
+				}
+			}
 
-				if ((x >= 0) && (x < this.tiles.length)) {
-					if ((y >= 0) && (y < this.tiles[x].length)) {
-						final Tile tile = this.tiles[x][y];
-						if (tile != null) {
-							if (tile.activate()) {
-								System.out.println("ACTIVATING (" + tile.terrainModel.blockX + ", "
-										+ tile.terrainModel.blockY + ")  <---> (" + x + ", " + y + ")");
-								this.activeTiles.add(this.tiles[x][y]);
+			for (int i = -HALF_LOAD_AREA; i <= HALF_LOAD_AREA; i++) {
+				for (int j = -HALF_LOAD_AREA; j <= HALF_LOAD_AREA; j++) {
+					final int x = cellX + i;
+					final int y = cellY + j;
+
+					if ((x >= 0) && (x < this.tiles.length)) {
+						if ((y >= 0) && (y < this.tiles[x].length)) {
+							final Tile tile = this.tiles[x][y];
+							if (tile != null) {
+								if (tile.activate()) {
+									System.out.println("ACTIVATING (" + tile.terrainModel.blockX + ", "
+											+ tile.terrainModel.blockY + ")  <---> (" + x + ", " + y + ")");
+									this.activeTiles.add(this.tiles[x][y]);
+								}
 							}
 						}
 					}
@@ -1949,10 +2001,10 @@ public class TerrainWdt extends TerrainInterface {
 									ActiveTile.this.staticShadowData[(war3IndexX * shadowRows)
 											+ war3IndexY] = (dataEndBit == 0 ? (byte) 0 : (byte) 128);
 								}
-								final long data = shadowMap[62];
+								final long data = shadowMap[1];
 								{
 									final long dataEndBit = (data >> j) & 0x1;
-									final int war3IndexX = (int) ((war3ChunkIndexX * 64) + (0));
+									final int war3IndexX = (int) ((war3ChunkIndexX * 64) + (63));
 									final int war3IndexY = (int) ((war3ChunkIndexY * 64) + j);
 									ActiveTile.this.staticShadowData[(war3IndexX * shadowRows)
 											+ war3IndexY] = (dataEndBit == 0 ? (byte) 0 : (byte) 128);
@@ -2062,10 +2114,10 @@ public class TerrainWdt extends TerrainInterface {
 														+ TerrainWdt.this.centerOffset[1],
 												position[1] * WdtChunkModelInstance.wowToWc3Factor };
 
-										final RenderDoodad renderDoodad = TerrainWdt.this.viewer
+										final List<RenderDoodad> renderDoodads = TerrainWdt.this.viewer
 												.createWdtWorldModelObject(row, 0, location, rotation, finalScale,
 														(doodad.getFlags() & 0x2) != 0, uniqueId);
-										ActiveTile.this.renderWmoDoodads.add(renderDoodad);
+										ActiveTile.this.renderWmoDoodads.addAll(renderDoodads);
 										// ---
 									}
 								}
@@ -2153,9 +2205,9 @@ public class TerrainWdt extends TerrainInterface {
 									* WdtChunkModelInstance.wowToWc3Factor) + TerrainWdt.this.centerOffset[1],
 							position[1] * WdtChunkModelInstance.wowToWc3Factor };
 
-					final RenderDoodad renderDoodad = TerrainWdt.this.viewer.createWdtWorldModelObject(row, 0, location,
-							rotation, finalScale, (doodad.getFlags() & 0x2) != 0, uniqueId);
-					ActiveTile.this.renderWmoDoodads.add(renderDoodad);
+					final List<RenderDoodad> renderDoodads = TerrainWdt.this.viewer.createWdtWorldModelObject(row, 0,
+							location, rotation, finalScale, (doodad.getFlags() & 0x2) != 0, uniqueId);
+					ActiveTile.this.renderWmoDoodads.addAll(renderDoodads);
 					// ---
 				}
 				return true;

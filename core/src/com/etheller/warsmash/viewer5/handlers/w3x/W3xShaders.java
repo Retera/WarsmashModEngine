@@ -75,7 +75,7 @@ public class W3xShaders {
 					"      gl_Position = u_mvp * vec4(myposition.xyz, 1.0);\r\n" + //
 					"      a_positionHeight = a_position.z;\r\n" + //
 					Shaders.lightSystem("v_normal", "myposition", "u_lightTexture", "u_lightTextureHeight",
-							"u_lightCount", true)
+							"u_lightCount", "", true)
 					+ "\r\n" + //
 					"        shadeColor = clamp(lightFactor, 0.0, 1.0);\r\n" + //
 					"    }\r\n" + //

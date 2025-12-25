@@ -65,7 +65,7 @@ public class CBehaviorPlayerPawn implements CBehavior {
 
 	@Override
 	public CBehavior update(final CSimulation game) {
-		if (this.velocity.len2() != 0) {
+		if (this.velocity.len2() >= 0.00001) {
 			this.previousVelocity.set(this.velocity);
 		}
 		int shuffle = 0;

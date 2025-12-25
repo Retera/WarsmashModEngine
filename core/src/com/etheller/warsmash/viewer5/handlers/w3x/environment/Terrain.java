@@ -70,6 +70,7 @@ public class Terrain extends TerrainInterface {
 	// voodoo. Enabling this setting should be coupled with creating
 	// new artwork for advanced ramp use cases that don't exist in WC3.
 	private static final boolean DISALLOW_HEIGHT_3_RAMPS = true;
+	public static final float HIGHEST_HEIGHT = 99999; // was 2180 for wc3
 
 	public ShaderProgram groundShader;
 	public ShaderProgram waterShader;

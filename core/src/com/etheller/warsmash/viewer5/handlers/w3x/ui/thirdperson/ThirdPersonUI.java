@@ -8,12 +8,13 @@ import java.util.Scanner;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
+import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.viewport.ExtendViewport;
-import com.badlogic.gdx.utils.viewport.Viewport;
 import com.etheller.warsmash.parsers.dbc.DbcParser;
 import com.etheller.warsmash.parsers.dbc.decoders.DbcDecoderSoundEntries;
 import com.etheller.warsmash.parsers.fdf.GameUI;
@@ -54,7 +55,7 @@ public class ThirdPersonUI implements WarsmashToggleableUI {
 	private ThirdPersonCameraManager cameraManager;
 	private final War3MapViewer war3MapViewer;
 	private final Scene uiScene;
-	private final Viewport uiViewport;
+	private final ExtendViewport uiViewport;
 	private final Scene portraitScene;
 	private final Rectangle tempRect = new Rectangle();
 	private int lastX;
@@ -88,7 +89,7 @@ public class ThirdPersonUI implements WarsmashToggleableUI {
 	private final AnyTargetableUnitFilter anyTargetableUnitFilter;
 	private KeyedSounds uiSounds;
 
-	public ThirdPersonUI(final War3MapViewer war3MapViewer, final Scene uiScene, final Viewport uiViewport,
+	public ThirdPersonUI(final War3MapViewer war3MapViewer, final Scene uiScene, final ExtendViewport uiViewport,
 			final Scene portraitScene, final CPlayerUnitOrderListener uiOrderListener, final War3ID pawnId) {
 		this.war3MapViewer = war3MapViewer;
 		this.uiScene = uiScene;
@@ -290,9 +291,22 @@ public class ThirdPersonUI implements WarsmashToggleableUI {
 
 	@Override
 	public void render(final SpriteBatch batch, final GlyphLayout glyphLayout) {
+		final BitmapFont font = this.rootFrame.getFont();
+		if (WarsmashConstants.SHOW_FPS) {
+			final Color originalColor = font.getColor();
+			final String fpsString = "FPS: " + Gdx.graphics.getFramesPerSecond();
+			glyphLayout.setText(font, fpsString);
+			font.setColor(Color.BLACK);
+			font.draw(batch, fpsString, ((this.uiViewport.getMinWorldWidth() - glyphLayout.width) / 2) + 2,
+					(this.uiViewport.getMinWorldHeight() * 0.93f) + 2);
+			font.setColor(Color.YELLOW);
+			font.draw(batch, fpsString, (this.uiViewport.getMinWorldWidth() - glyphLayout.width) / 2,
+					this.uiViewport.getMinWorldHeight() * 0.93f);
+			font.setColor(originalColor);
+		}
 		this.rootFrame.render(batch, this.rootFrame.getFont20(), glyphLayout);
-		final float worldWidth = ((ExtendViewport) this.uiViewport).getMinWorldWidth();
-		final float worldHeight = ((ExtendViewport) this.uiViewport).getMinWorldHeight();
+		final float worldWidth = this.uiViewport.getMinWorldWidth();
+		final float worldHeight = this.uiViewport.getMinWorldHeight();
 	}
 
 	@Override

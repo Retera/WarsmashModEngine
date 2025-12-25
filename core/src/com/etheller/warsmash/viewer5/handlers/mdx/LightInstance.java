@@ -31,21 +31,28 @@ public class LightInstance implements UpdatableObject, SceneLightInstance {
 		final int frame = this.instance.frame;
 		final int counter = this.instance.counter;
 		this.light.getAttenuationStart(scalarHeap, sequence, frame, counter);
-		final float attenuationStart = scalarHeap[0];
+		float attenuationStart = scalarHeap[0];
 		this.light.getAttenuationEnd(scalarHeap, sequence, frame, counter);
-		final float attenuationEnd = scalarHeap[0];
+		float attenuationEnd = scalarHeap[0];
 		this.light.getIntensity(scalarHeap, sequence, frame, counter);
-		final float intensity = scalarHeap[0];
+		float intensity = scalarHeap[0];
 		this.light.getColor(vectorHeap, sequence, frame, counter);
 		final float colorRed = vectorHeap[0];
 		final float colorGreen = vectorHeap[1];
 		final float colorBlue = vectorHeap[2];
 		this.light.getAmbientIntensity(scalarHeap, sequence, frame, counter);
-		final float ambientIntensity = scalarHeap[0];
+		float ambientIntensity = scalarHeap[0];
 		this.light.getAmbientColor(vectorHeap, sequence, frame, counter);
 		final float ambientColorRed = vectorHeap[0];
 		final float ambientColorGreen = vectorHeap[1];
 		final float ambientColorBlue = vectorHeap[2];
+		if (MdxShaders.SCALE_PARTICLE2_BY_MODEL) {
+			final float scaleSq = this.node.worldScale.x;
+			intensity *= scaleSq;
+			ambientIntensity *= scaleSq;
+			attenuationStart *= this.node.worldScale.x;
+			attenuationEnd *= this.node.worldScale.x;
+		}
 		switch (this.light.getType()) {
 		case AMBIENT:
 		case OMNIDIRECTIONAL:

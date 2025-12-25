@@ -10,9 +10,11 @@ import com.etheller.warsmash.viewer5.handlers.mdx.MdxHandler;
 
 public class WmoMpqPortingHandler extends ModelHandler {
 	private final MdxHandler mdxHandler;
+	private final WmoPortingHandler wmoPortingHandler;
 
-	public WmoMpqPortingHandler(final MdxHandler mdxHandler) {
+	public WmoMpqPortingHandler(final MdxHandler mdxHandler, final WmoPortingHandler wmoPortingHandler) {
 		this.mdxHandler = mdxHandler;
+		this.wmoPortingHandler = wmoPortingHandler;
 		this.extensions = new ArrayList<>();
 		this.extensions.add(new String[] { ".mpq", "arrayBuffer" });
 		this.load = true;
@@ -25,7 +27,7 @@ public class WmoMpqPortingHandler extends ModelHandler {
 
 	@Override
 	public HandlerResource<?> construct(final ResourceHandlerConstructionParams params) {
-		return new WmoMpqPortingModel(this.mdxHandler, params.getViewer(), params.getExtension(),
+		return new WmoMpqPortingModel(this.wmoPortingHandler, params.getViewer(), params.getExtension(),
 				params.getPathSolver(), params.getFetchUrl());
 	}
 

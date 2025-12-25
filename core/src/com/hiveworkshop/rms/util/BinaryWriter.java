@@ -33,12 +33,11 @@ public class BinaryWriter {
 
 	public void writeWithNulls(final String value, final int length) {
 		final byte[] bytes = value.getBytes();
-		final int nulls = length - bytes.length;
-
-		writeInt8Array(bytes);
-
-		if (nulls > 0) {
-			for (int i = 0; i < nulls; i++) {
+		for (int i = 0; i < length; i++) {
+			if (i < bytes.length) {
+				writeInt8(bytes[i]);
+			}
+			else {
 				writeInt8((byte) 0);
 			}
 		}

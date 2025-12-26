@@ -120,6 +120,9 @@ public abstract class Scene {
 			}
 
 			instance.scene = this;
+			for (final ModelInstance modelInstance : instance.childrenInstances) {
+				modelInstance.scene = this;
+			}
 
 			// Only allow instances that are actually ok to be added the scene.
 			if (instance.model.ok) {

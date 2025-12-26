@@ -1,8 +1,6 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.rendersim;
 
-import java.util.ArrayList;
 import java.util.EnumSet;
-import java.util.List;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.math.Rectangle;
@@ -12,7 +10,6 @@ import com.etheller.warsmash.viewer5.handlers.mdx.MdxComplexInstance;
 import com.etheller.warsmash.viewer5.handlers.mdx.MdxModel;
 import com.etheller.warsmash.viewer5.handlers.w3x.AnimationTokens.PrimaryTag;
 import com.etheller.warsmash.viewer5.handlers.w3x.AnimationTokens.SecondaryTag;
-import com.etheller.warsmash.viewer5.handlers.w3x.CollidableDoodadGeosetComponent;
 import com.etheller.warsmash.viewer5.handlers.w3x.SequenceUtils;
 import com.etheller.warsmash.viewer5.handlers.w3x.SplatModel.SplatMover;
 import com.etheller.warsmash.viewer5.handlers.w3x.War3MapViewer;
@@ -39,8 +36,6 @@ public class RenderDestructable extends RenderDoodad implements RenderWidget {
 	private boolean blighted = false;
 	private final int replaceableTextureId;
 	private String replaceableTextureFile;
-
-	private final List<CollidableDoodadGeosetComponent> collidableComponents = new ArrayList<>();
 
 	public RenderDestructable(final War3MapViewer map, final MdxModel model, final MdxModel portraitModel,
 			final GameObject row, final float[] location3D, final float[] scale3D, final float facingRadians,
@@ -263,11 +258,4 @@ public class RenderDestructable extends RenderDoodad implements RenderWidget {
 		((MdxComplexInstance) instance).setVertexColor(new float[] { vertR / 255f, vertG / 255f, vertB / 255f });
 	}
 
-	public void add(final CollidableDoodadGeosetComponent collidableComponent) {
-		this.collidableComponents.add(collidableComponent);
-	}
-
-	public List<CollidableDoodadGeosetComponent> getCollidableComponents() {
-		return this.collidableComponents;
-	}
 }

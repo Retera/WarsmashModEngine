@@ -311,6 +311,12 @@ public class RenderUnit implements RenderWidget {
 					groundHeight = groundHeightTerrainAndWater;
 					currentWalkableUnder = null;
 				}
+				if (currentWalkableUnder != null) {
+					this.instance.setLightOmitOffsetOverride(currentWalkableUnder.isInterior() ? 1 : 0);
+				}
+				else {
+					this.instance.setLightOmitOffsetOverride(0);
+				}
 			}
 			else {
 				currentWalkableUnder = map.getHighestWalkableUnder(this.location[0], this.location[1]);

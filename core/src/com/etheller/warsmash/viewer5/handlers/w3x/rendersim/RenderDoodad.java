@@ -1,8 +1,12 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.rendersim;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import com.badlogic.gdx.math.Quaternion;
 import com.etheller.warsmash.parsers.wmo.WmoDoodadDefinition;
 import com.etheller.warsmash.units.GameObject;
+import com.etheller.warsmash.util.FlagUtils;
 import com.etheller.warsmash.util.RenderMathUtils;
 import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.viewer5.ModelInstance;
@@ -10,6 +14,7 @@ import com.etheller.warsmash.viewer5.handlers.mdx.MdxComplexInstance;
 import com.etheller.warsmash.viewer5.handlers.mdx.MdxModel;
 import com.etheller.warsmash.viewer5.handlers.mdx.SequenceLoopMode;
 import com.etheller.warsmash.viewer5.handlers.w3x.AnimationTokens.PrimaryTag;
+import com.etheller.warsmash.viewer5.handlers.w3x.CollidableDoodadComponent;
 import com.etheller.warsmash.viewer5.handlers.w3x.War3MapViewer;
 import com.etheller.warsmash.viewer5.handlers.w3x.environment.PathingGrid;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.vision.CPlayerFogOfWarInterface;
@@ -41,21 +46,27 @@ public class RenderDoodad {
 	private final float facingRadians;
 	private final long uniqueId;
 
+	private final List<CollidableDoodadComponent> walkableComponents = new ArrayList<>();
+
 	public RenderDoodad(final War3MapViewer map, final MdxModel model, final WmoDoodadDefinition definition,
-			final float[] location3D, final float[] scale3D, final float facingRadians, final float selectionScale) {
+			final float[] location3D, final float[] scale3D, final float facingRadians, final float selectionScale,
+			final boolean exterior) {
 		this.facingRadians = facingRadians;
 		this.maxPitch = 0;
 		this.maxRoll = 0;
 		this.uniqueId = -1;
 		final ModelInstance instance = model.addInstance();
 		((MdxComplexInstance) instance).setSequenceLoopMode(SequenceLoopMode.NEVER_LOOP);
+		if (FlagUtils.hasFlag((int) definition.getFlags(), WmoDoodadDefinition.Flags.Unknown_0x2) || !exterior) {
+			((MdxComplexInstance) instance).lightOmitOffsetOverride = 1;
+		}
 
 		instance.move(location3D);
 		this.x = location3D[0];
 		this.y = location3D[1];
 
-		((MdxComplexInstance) instance).setVertexColor(new float[] { definition.getColor()[3] / 255f,
-				definition.getColor()[2] / 255f, definition.getColor()[1] / 255f, definition.getColor()[0] });
+//		((MdxComplexInstance) instance).setVertexColor(new float[] { definition.getColor()[2] / 255f,
+//				definition.getColor()[1] / 255f, definition.getColor()[0] / 255f, definition.getColor()[3] / 255f });
 
 		this.vertexColorBase = new float[] { ((MdxComplexInstance) instance).vertexColor[0],
 				((MdxComplexInstance) instance).vertexColor[1], ((MdxComplexInstance) instance).vertexColor[2] };
@@ -234,5 +245,13 @@ public class RenderDoodad {
 
 	public long getUniqueId() {
 		return this.uniqueId;
+	}
+
+	public void add(final CollidableDoodadComponent component) {
+		this.walkableComponents.add(component);
+	}
+
+	public List<CollidableDoodadComponent> getWalkableComponents() {
+		return this.walkableComponents;
 	}
 }

@@ -169,6 +169,7 @@ public abstract class ModelInstance extends Node {
 		final GenericNode previousParentRoot = getRoot(this.parent);
 		if (previousParentRoot instanceof ModelInstance) {
 			((ModelInstance) previousParentRoot).childrenInstances.remove(this);
+			onRootSceneChange(null);
 		}
 
 		final Node returnValue = super.setParent(parent);
@@ -176,8 +177,16 @@ public abstract class ModelInstance extends Node {
 		final GenericNode newParentRoot = getRoot(parent);
 		if (newParentRoot instanceof ModelInstance) {
 			((ModelInstance) newParentRoot).childrenInstances.add(this);
+			onRootSceneChange(((ModelInstance) newParentRoot).scene);
 		}
 		return returnValue;
+	}
+
+	private void onRootSceneChange(final Scene scene) {
+		this.scene = scene;
+		for (final ModelInstance childInstance : this.childrenInstances) {
+			childInstance.onRootSceneChange(scene);
+		}
 	}
 
 	@Override

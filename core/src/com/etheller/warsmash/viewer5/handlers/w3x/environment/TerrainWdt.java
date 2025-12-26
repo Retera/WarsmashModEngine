@@ -2116,7 +2116,8 @@ public class TerrainWdt extends TerrainInterface {
 
 										final List<RenderDoodad> renderDoodads = TerrainWdt.this.viewer
 												.createWdtWorldModelObject(row, 0, location, rotation, finalScale,
-														(doodad.getFlags() & 0x2) != 0, uniqueId);
+														(doodad.getFlags() & 0x2) != 0, uniqueId,
+														doodad.getDoodadSet());
 										ActiveTile.this.renderWmoDoodads.addAll(renderDoodads);
 										// ---
 									}
@@ -2206,7 +2207,8 @@ public class TerrainWdt extends TerrainInterface {
 							position[1] * WdtChunkModelInstance.wowToWc3Factor };
 
 					final List<RenderDoodad> renderDoodads = TerrainWdt.this.viewer.createWdtWorldModelObject(row, 0,
-							location, rotation, finalScale, (doodad.getFlags() & 0x2) != 0, uniqueId);
+							location, rotation, finalScale, (doodad.getFlags() & 0x2) != 0, uniqueId,
+							doodad.getDoodadSet());
 					ActiveTile.this.renderWmoDoodads.addAll(renderDoodads);
 					// ---
 				}

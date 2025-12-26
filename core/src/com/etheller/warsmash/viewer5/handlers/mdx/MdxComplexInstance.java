@@ -81,6 +81,7 @@ public class MdxComplexInstance extends ModelInstance {
 	protected float blendTimeRemaining;
 	public boolean additiveOverrideMeshMode = false;
 	public float unshadedOverride = 0.0f;
+	public int lightOmitOffsetOverride = 0;
 	private boolean hasAnyUnselectableMesh = false;
 	private final Descriptor<MdxNode> mdxNodeDescriptor;
 
@@ -1088,5 +1089,14 @@ public class MdxComplexInstance extends ModelInstance {
 			DataTexturePool.INSTANCE.release(this.boneTexture);
 		}
 		this.boneTexture = null;
+	}
+
+	public void setLightOmitOffsetOverride(final int newValue) {
+		this.lightOmitOffsetOverride = newValue;
+		for (final ModelInstance childInstance : this.childrenInstances) {
+			if (childInstance instanceof MdxComplexInstance) {
+				((MdxComplexInstance) childInstance).setLightOmitOffsetOverride(newValue);
+			}
+		}
 	}
 }

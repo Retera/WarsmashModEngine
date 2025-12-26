@@ -103,6 +103,7 @@ public class RenderMountEffect implements RenderEffect {
 		if (this.unitModelInstance.parent != null) {
 			this.unitModelInstance.setParent(null);
 		}
+		war3MapViewer.worldScene.addInstance(this.unitModelInstance);
 		this.unitModelInstance.setLocation(this.mountModelInstance.localLocation);
 		this.unitModelInstance.setRotation(this.mountModelInstance.localRotation);
 		this.unitModelInstance.setScale(this.mountModelInstance.localScale);

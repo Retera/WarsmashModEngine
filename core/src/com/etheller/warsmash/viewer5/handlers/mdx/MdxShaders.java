@@ -5,6 +5,7 @@ import com.etheller.warsmash.viewer5.handlers.mdx.MdxHandler.ShaderEnvironmentTy
 
 public class MdxShaders {
 	public static final boolean SCALE_PARTICLE2_BY_MODEL = true;
+	public static final boolean VERTEX_LIGHTS_NOT_FRAGMENT_LIGHTS = true; // better approximation of 2003 game
 
 	public static final String vsHd = "#version 120\r\n" + Shaders.boneTexture + "\r\n" + //
 			"    uniform mat4 u_VP;\r\n" + //
@@ -656,6 +657,8 @@ public class MdxShaders {
 				+ //
 				"    varying vec2 v_uv;\r\n" + //
 				"    varying vec4 v_color;\r\n" + //
+				"    varying vec3 v_position;\r\n" + //
+				"    varying vec3 v_normal;\r\n" + //
 				"    varying vec4 v_uvTransRot;\r\n" + //
 				"    varying float v_uvScale;\r\n" + //
 				"    uniform sampler2D u_lightTexture;\r\n" + //
@@ -716,10 +719,14 @@ public class MdxShaders {
 				"      v_uvScale = u_uvScale;\r\n" + //
 				"      gl_Position = u_mvp * vec4(position, 1.0);\r\n" + //
 				"      //if(!u_unshaded) {\r\n" + //
-				Shaders.lightSystem("normal", "position", "u_lightTexture", "u_lightTextureHeight", "u_lightCount",
-						" + u_lightOmitOffset", false)
-				+ "\r\n" + //
+				(VERTEX_LIGHTS_NOT_FRAGMENT_LIGHTS
+						? (Shaders.lightSystem("normal", "position", "u_lightTexture", "u_lightTextureHeight",
+								"u_lightCount", " + u_lightOmitOffset", false) + "\r\n")
+						: "")
+				+ //
 				"        v_color.xyz *= (1.0 - u_unshaded) * clamp(lightFactor, 0.0, 1.0) + u_unshaded;\r\n" + //
+				"		 v_position = position;\r\n" + //
+				"		 v_normal = normal;\r\n" + //
 				"      //}\r\n" + //
 				"    }";
 	}
@@ -731,9 +738,17 @@ public class MdxShaders {
 			"    uniform bool u_unfogged;\r\n" + //
 			"    uniform vec4 u_fogColor;\r\n" + //
 			"    uniform vec4 u_fogParams;\r\n" + //
+			"    uniform float u_unshaded;\r\n" + //
+			(VERTEX_LIGHTS_NOT_FRAGMENT_LIGHTS ? "" : "    uniform sampler2D u_lightTexture;\r\n" + //
+					"    uniform float u_lightCount;\r\n" + //
+					"    uniform float u_lightTextureHeight;\r\n" + //
+					"    uniform float u_lightOmitOffset;\r\n")
+			+ //
 			"    varying vec2 v_uv;\r\n" + //
 			"    varying vec4 v_color;\r\n" + //
 			"    varying vec4 v_uvTransRot;\r\n" + //
+			"    varying vec3 v_position;\r\n" + //
+			"    varying vec3 v_normal;\r\n" + //
 			"    varying float v_uvScale;\r\n" + //
 			"    void main() {\r\n" + //
 			"      vec2 uv = v_uv;\r\n" + //
@@ -754,7 +769,14 @@ public class MdxShaders {
 			"        discard;\r\n" + //
 			"      }\r\n" + //
 			Shaders.fogSystem(true, "u_filterMode < 3.0 || u_filterMode > 4.0") + //
-			"      gl_FragColor = color;\r\n" + //
+			(!VERTEX_LIGHTS_NOT_FRAGMENT_LIGHTS ? Shaders.lightSystem("v_normal", "v_position", "u_lightTexture",
+					"u_lightTextureHeight", "u_lightCount", " + u_lightOmitOffset", false)
+
+					+ "\r\n" + //
+					"      gl_FragColor = color * vec4( ((1.0 - u_unshaded) * clamp(lightFactor, 0.0, 1.0) + u_unshaded).xyz, 1.0);\r\n"
+					: ("\r\n" + //
+							"      gl_FragColor = color;\r\n"))
+			+ //
 			"    }";
 
 	public static final String fsComplexShadowMap = "\r\n\r\n" + //

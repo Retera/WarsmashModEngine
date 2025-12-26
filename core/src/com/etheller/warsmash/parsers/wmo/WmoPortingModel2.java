@@ -34,6 +34,7 @@ public class WmoPortingModel2 extends com.etheller.warsmash.viewer5.Model<WmoPor
 	private GroupModel[] portedModels;
 	private List<WmoDoodadDefinition> doodadDefinitions;
 	private LongMap<String> doodadFileNamesOffsetLookup;
+	private List<WmoDoodadSet> doodadSets;
 
 	public WmoPortingModel2(final WmoPortingHandler handler, final ModelViewer viewer, final String extension,
 			final PathSolver pathSolver, final String fetchUrl) {
@@ -67,6 +68,10 @@ public class WmoPortingModel2 extends com.etheller.warsmash.viewer5.Model<WmoPor
 		return this.doodadDefinitions;
 	}
 
+	public List<WmoDoodadSet> getDoodadSets() {
+		return this.doodadSets;
+	}
+
 	public LongMap<String> getDoodadFileNamesOffsetLookup() {
 		return this.doodadFileNamesOffsetLookup;
 	}
@@ -78,11 +83,13 @@ public class WmoPortingModel2 extends com.etheller.warsmash.viewer5.Model<WmoPor
 
 		this.doodadFileNamesOffsetLookup = parser.getHeaders().getDoodadFileNamesOffsetLookup();
 		this.doodadDefinitions = parser.getHeaders().getDoodadDefinitions();
+		this.doodadSets = parser.getHeaders().getDoodadSets();
 		this.portedModels = new GroupModel[portedModelsData.length];
 		for (int i = 0; i < portedModelsData.length; i++) {
 			final MdxModel mdxModel = new MdxModel(this.handler.getMdxHandler(), this.viewer, "mdx", this.pathSolver,
 					this.fetchUrl);
-			this.portedModels[i] = new GroupModel(mdxModel, portedModelsData[i].extentCenter);
+			this.portedModels[i] = new GroupModel(mdxModel, portedModelsData[i].extentCenter,
+					portedModelsData[i].flags);
 			try {
 				mdxModel.load(portedModelsData[i].model);
 				mdxModel.ok = true;
@@ -446,7 +453,7 @@ public class WmoPortingModel2 extends com.etheller.warsmash.viewer5.Model<WmoPor
 				}
 			}
 
-			portedModels[groupIndex] = new GroupModelLoader(portedModel, extentCenter);
+			portedModels[groupIndex] = new GroupModelLoader(portedModel, extentCenter, group.getFlags());
 		}
 
 		return portedModels;
@@ -455,10 +462,12 @@ public class WmoPortingModel2 extends com.etheller.warsmash.viewer5.Model<WmoPor
 	public static final class GroupModel {
 		private final MdxModel model;
 		private final Vector3 extentCenter;
+		private final int flags;
 
-		private GroupModel(final MdxModel model, final Vector3 extentCenter) {
+		private GroupModel(final MdxModel model, final Vector3 extentCenter, final int flags) {
 			this.model = model;
 			this.extentCenter = extentCenter;
+			this.flags = flags;
 		}
 
 		public MdxModel getModel() {
@@ -468,15 +477,21 @@ public class WmoPortingModel2 extends com.etheller.warsmash.viewer5.Model<WmoPor
 		public Vector3 getExtentCenter() {
 			return this.extentCenter;
 		}
+
+		public int getFlags() {
+			return this.flags;
+		}
 	}
 
 	private static final class GroupModelLoader {
 		private final MdlxModel model;
 		private final Vector3 extentCenter;
+		private final int flags;
 
-		public GroupModelLoader(final MdlxModel model, final Vector3 extentCenter) {
+		public GroupModelLoader(final MdlxModel model, final Vector3 extentCenter, final int flags) {
 			this.model = model;
 			this.extentCenter = extentCenter;
+			this.flags = flags;
 		}
 	}
 

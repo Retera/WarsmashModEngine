@@ -14,13 +14,15 @@ public class CollidableDoodadGeosetComponent implements CollidableDoodadComponen
 	private final Rectangle geosetRotatedBounds;
 	private final BoundingBox geosetBoundingBox;
 	private final IntersectableBox collision;
+	private final boolean interior;
 
 	public CollidableDoodadGeosetComponent(final MdxComplexInstance instance, final Geoset geoset,
-			final Rectangle geosetRotatedBounds, final BoundingBox geosetBoundingBox) {
+			final Rectangle geosetRotatedBounds, final BoundingBox geosetBoundingBox, final boolean interior) {
 		this.instance = instance;
 		this.geoset = geoset;
 		this.geosetRotatedBounds = geosetRotatedBounds;
 		this.geosetBoundingBox = geosetBoundingBox;
+		this.interior = interior;
 		this.collision = new IntersectableBox(geoset.mdlxGeoset.extent.min, geoset.mdlxGeoset.extent.max);
 	}
 
@@ -46,5 +48,10 @@ public class CollidableDoodadGeosetComponent implements CollidableDoodadComponen
 	public boolean intersectRayWithCollision(final Ray ray, final Vector3 intersection, final boolean b,
 			final boolean c) {
 		return this.collision.checkIntersect(ray, this.instance, intersection);
+	}
+
+	@Override
+	public boolean isInterior() {
+		return this.interior;
 	}
 }

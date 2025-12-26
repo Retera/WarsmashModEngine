@@ -10,4 +10,6 @@ public interface CollidableDoodadComponent {
 	Rectangle getGeosetRotatedBounds();
 
 	boolean intersectRayWithCollision(final Ray ray, final Vector3 intersection, final boolean b, final boolean c);
+
+	boolean isInterior();
 }

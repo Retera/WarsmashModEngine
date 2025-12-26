@@ -60,6 +60,8 @@ import com.etheller.warsmash.parsers.wdt.DoodadDefinition;
 import com.etheller.warsmash.parsers.wdt.WdtMap;
 import com.etheller.warsmash.parsers.wdt.WdtMap.TileHeader;
 import com.etheller.warsmash.parsers.wmo.WmoDoodadDefinition;
+import com.etheller.warsmash.parsers.wmo.WmoDoodadSet;
+import com.etheller.warsmash.parsers.wmo.WmoGroupInfo;
 import com.etheller.warsmash.parsers.wmo.WmoMpqPortingHandler;
 import com.etheller.warsmash.parsers.wmo.WmoPortingHandler;
 import com.etheller.warsmash.parsers.wmo.WmoPortingModel2;
@@ -72,6 +74,7 @@ import com.etheller.warsmash.units.StandardObjectData;
 import com.etheller.warsmash.units.custom.WTS;
 import com.etheller.warsmash.units.manager.MutableObjectData;
 import com.etheller.warsmash.units.manager.MutableObjectData.WorldEditorDataType;
+import com.etheller.warsmash.util.FlagUtils;
 import com.etheller.warsmash.util.MappedData;
 import com.etheller.warsmash.util.Quadtree;
 import com.etheller.warsmash.util.QuadtreeIntersector;
@@ -842,8 +845,10 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 				final Rectangle geosetRotatedBounds = getRotatedBoundingBox(location[0], location[1], scale,
 						facingRadians, geosetBoundingBox);
 				final CollidableDoodadGeosetComponent collidableComponent = new CollidableDoodadGeosetComponent(
-						(MdxComplexInstance) renderDoodad.instance, geoset, geosetRotatedBounds, geosetBoundingBox);
+						(MdxComplexInstance) renderDoodad.instance, geoset, geosetRotatedBounds, geosetBoundingBox,
+						false);
 				this.walkableComponentTree.add(collidableComponent, geosetRotatedBounds);
+				renderDoodad.add(collidableComponent);
 			}
 		}
 		this.doodads.add(renderDoodad);
@@ -889,8 +894,9 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 				if (entireMap.overlaps(geosetRotatedBounds)) {
 					final CollidableDoodadComponent collidableComponent = new CollidableDoodadCollisionComponent(
 							(MdxComplexInstance) renderDoodad.instance, collisionGeometry, geosetRotatedBounds,
-							geosetBoundingBox, min, max);
+							geosetBoundingBox, min, max, false);
 					this.walkableComponentTree.add(collidableComponent, geosetRotatedBounds);
+					renderDoodad.add(collidableComponent);
 				}
 			}
 		}
@@ -905,8 +911,10 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 						facingRadians, geosetBoundingBox);
 				if (entireMap.overlaps(geosetRotatedBounds)) {
 					final CollidableDoodadGeosetComponent collidableComponent = new CollidableDoodadGeosetComponent(
-							(MdxComplexInstance) renderDoodad.instance, geoset, geosetRotatedBounds, geosetBoundingBox);
+							(MdxComplexInstance) renderDoodad.instance, geoset, geosetRotatedBounds, geosetBoundingBox,
+							false);
 					this.walkableComponentTree.add(collidableComponent, geosetRotatedBounds);
+					renderDoodad.add(collidableComponent);
 				}
 			}
 		}
@@ -917,7 +925,7 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 
 	public List<RenderDoodad> createWdtWorldModelObject(final GameObject row, final int doodadVariation,
 			final float[] location, final float[] rotation, final float scale, final boolean shrubbery,
-			final long uniqueId) {
+			final long uniqueId, final int doodadSet) {
 		final String file = row.readSLKTag("file").replace("/", "\\");
 		final WmoPortingModel2 worldModelObject = (WmoPortingModel2) load(file, this.mapPathSolver, this.solverParams);
 		final float maxPitch = row.readSLKTagFloat("maxPitch");
@@ -969,8 +977,10 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 				if (entireMap.overlaps(geosetRotatedBounds)) {
 					final CollidableDoodadComponent collidableComponent = new CollidableDoodadCollisionComponent(
 							(MdxComplexInstance) renderDoodad.instance, collisionGeometry, geosetRotatedBounds,
-							geosetBoundingBox, min, max);
+							geosetBoundingBox, min, max,
+							!FlagUtils.hasFlag(groupModel.getFlags(), WmoGroupInfo.Flags.IsExterior));
 					this.walkableComponentTree.add(collidableComponent, geosetRotatedBounds);
+					renderDoodad.add(collidableComponent);
 				}
 			}
 			this.doodads.add(renderDoodad);
@@ -978,7 +988,11 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 			renderDoodads.add(renderDoodad);
 		}
 
-		for (final WmoDoodadDefinition wmoDoodadDefinition : worldModelObject.getDoodadDefinitions()) {
+		final WmoDoodadSet wmoDoodadSet = worldModelObject.getDoodadSets().get(doodadSet);
+		for (long doodadIdx = 0; doodadIdx < wmoDoodadSet.getCount(); doodadIdx++) {
+			final WmoDoodadDefinition wmoDoodadDefinition = worldModelObject.getDoodadDefinitions()
+					.get((int) (wmoDoodadSet.getStartIndex() + doodadIdx));
+			final boolean exterior = false; // TODO read from flag
 			final Vector3 usedCenter = new Vector3(wmoDoodadDefinition.getPosition());
 			usedCenter.scl(scale);
 			usedCenter.rotateRad(RenderMathUtils.VEC3_UNIT_Z, facingRadians);
@@ -998,7 +1012,7 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 			final MdxModel model = (MdxModel) load(fileName, this.mapPathSolver, this.solverParams);
 
 			final RenderDoodad renderDoodad = new RenderDoodad(this, model, wmoDoodadDefinition, specificLocation,
-					scale3DSubDood, facingRadians, defScale);
+					scale3DSubDood, facingRadians, defScale, exterior);
 
 			final Rectangle entireMap = this.terrain.getEntireMap();
 			for (final MdlxCollisionGeometry collisionGeometry : model.getCollisionGeometries()) {
@@ -1023,8 +1037,9 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 				if (entireMap.overlaps(geosetRotatedBounds)) {
 					final CollidableDoodadComponent collidableComponent = new CollidableDoodadCollisionComponent(
 							(MdxComplexInstance) renderDoodad.instance, collisionGeometry, geosetRotatedBounds,
-							geosetBoundingBox, min, max);
+							geosetBoundingBox, min, max, !exterior);
 					this.walkableComponentTree.add(collidableComponent, geosetRotatedBounds);
+					renderDoodad.add(collidableComponent);
 				}
 			}
 			this.doodads.add(renderDoodad);
@@ -1040,18 +1055,10 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 		this.doodads.remove(renderDoodad);
 		this.decals.remove(renderDoodad);
 		final MdxModel model = (MdxModel) renderDoodad.instance.model;
-		for (final Geoset geoset : model.getGeosets()) {
-			final MdlxExtent extent = geoset.mdlxGeoset.extent;
-			final Bounds bounds = new Bounds();
-			bounds.fromExtents(extent.getMin(), extent.getMax(), extent.getBoundsRadius());
-			final BoundingBox geosetBoundingBox = bounds.getBoundingBox();
-			final Rectangle geosetRotatedBounds = getRotatedBoundingBox(renderDoodad.getX(), renderDoodad.getY(),
-					renderDoodad.instance.localScale.x, renderDoodad.instance.localScale.y,
-					renderDoodad.getFacingRadians(), geosetBoundingBox);
+		for (final CollidableDoodadComponent component : renderDoodad.getWalkableComponents()) {
+			final Rectangle geosetRotatedBounds = component.getGeosetRotatedBounds();
 			if (entireMap.overlaps(geosetRotatedBounds)) {
-				final CollidableDoodadGeosetComponent collidableComponent = new CollidableDoodadGeosetComponent(
-						(MdxComplexInstance) renderDoodad.instance, geoset, geosetRotatedBounds, geosetBoundingBox);
-				this.walkableComponentTree.remove(collidableComponent, geosetRotatedBounds);
+				this.walkableComponentTree.remove(component, geosetRotatedBounds);
 			}
 		}
 
@@ -1124,7 +1131,7 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 				final BoundingBox geosetBoundingBox = bounds.getBoundingBox();
 				final Rectangle geosetRotatedBounds = getRotatedBoundingBox(x, y, scale, angle, geosetBoundingBox);
 				final CollidableDoodadGeosetComponent collidableComponent = new CollidableDoodadGeosetComponent(
-						complexInstance, geoset, geosetRotatedBounds, geosetBoundingBox);
+						complexInstance, geoset, geosetRotatedBounds, geosetBoundingBox, false);
 				this.walkableComponentTree.add(collidableComponent, geosetRotatedBounds);
 				renderDestructable.add(collidableComponent);
 			}
@@ -2969,13 +2976,14 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 						else {
 							// TODO This is not consistent with War3, is it? Should look nice though.
 							modelInstance.setLocation(renderDest.getX(), renderDest.getY(), 0);
+							modelInstance.setScene(War3MapViewer.this.worldScene);
 						}
 					}
 				}
 				else {
 					modelInstance.setLocation(0, 0, 0);
+					modelInstance.setScene(War3MapViewer.this.worldScene);
 				}
-				modelInstance.setScene(War3MapViewer.this.worldScene);
 				final RenderSpellEffect renderAttackInstant = new RenderSpellEffect(modelInstance, War3MapViewer.this,
 						0, RenderSpellEffect.DEFAULT_ANIMATION_QUEUE, SequenceUtils.EMPTY);
 				War3MapViewer.this.projectiles.add(renderAttackInstant);
@@ -3044,32 +3052,29 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 				final MdxComplexInstance unitModelInstance = renderUnit.instance;
 				modelInstance.setTeamColor(renderUnit.playerIndex);
 				modelInstance.setReplaceableTexture(11, "Creature\\Horse\\HorseSkinPalamino.blp");
-				{
-					final MdxModel model = (MdxModel) modelInstance.model;
-					int index = -1;
-					for (int i = 0; i < model.attachments.size(); i++) {
-						final Attachment attachment = model.attachments.get(i);
-						if (attachment.getAttachmentId() == attachmentId) {
-							index = i;
-						}
+				final MdxModel model = (MdxModel) modelInstance.model;
+				int index = -1;
+				for (int i = 0; i < model.attachments.size(); i++) {
+					final Attachment attachment = model.attachments.get(i);
+					if (attachment.getAttachmentId() == attachmentId) {
+						index = i;
 					}
-					modelInstance.setLocation(unitModelInstance.localLocation);
-					modelInstance.setRotation(unitModelInstance.localRotation);
-					modelInstance.setScale(unitModelInstance.localScale);
-//					unitModelInstance.detach();
-					if (index != -1) {
-						final MdxNode attachment = modelInstance.getAttachment(index);
-						unitModelInstance.setParent(attachment);
-					}
-					else {
-						// TODO Mount attachment fail, both models smashed into one or something
-						unitModelInstance.setParent(modelInstance);
-					}
-					unitModelInstance.setLocation(0, 0, 0);
-					renderUnit.setModelInstance(modelInstance);
 				}
-				unitModelInstance.setScene(War3MapViewer.this.worldScene);
 				modelInstance.setScene(War3MapViewer.this.worldScene);
+				modelInstance.setLocation(unitModelInstance.localLocation);
+				modelInstance.setRotation(unitModelInstance.localRotation);
+				modelInstance.setScale(unitModelInstance.localScale);
+				unitModelInstance.detach();
+				if (index != -1) {
+					final MdxNode attachment = modelInstance.getAttachment(index);
+					unitModelInstance.setParent(attachment);
+				}
+				else {
+					// TODO Mount attachment fail, both models smashed into one or something
+					unitModelInstance.setParent(modelInstance);
+				}
+				unitModelInstance.setLocation(0, 0, 0);
+				renderUnit.setModelInstance(modelInstance);
 				final EnumSet<SecondaryTag> requiredAnimationNamesForAttachments = renderUnit == null
 						? SequenceUtils.EMPTY
 						: renderUnit.getTypeData().getRequiredAnimationNamesForAttachments();
@@ -4204,7 +4209,7 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 				War3MapViewer.this.walkableObjectsTree.remove((MdxComplexInstance) renderPeer.instance,
 						renderPeer.walkableBounds);
 			}
-			for (final CollidableDoodadGeosetComponent component : renderPeer.getCollidableComponents()) {
+			for (final CollidableDoodadComponent component : renderPeer.getWalkableComponents()) {
 				War3MapViewer.this.walkableComponentTree.remove(component, component.getGeosetRotatedBounds());
 			}
 

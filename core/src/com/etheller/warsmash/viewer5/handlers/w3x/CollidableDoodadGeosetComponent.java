@@ -54,4 +54,9 @@ public class CollidableDoodadGeosetComponent implements CollidableDoodadComponen
 	public boolean isInterior() {
 		return this.interior;
 	}
+
+	@Override
+	public W3xScenePortraitLightManager getModelOnlyLightManager() {
+		return this.instance.modelOnlyLightManager;
+	}
 }

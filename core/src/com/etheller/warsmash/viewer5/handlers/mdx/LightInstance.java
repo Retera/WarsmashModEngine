@@ -7,6 +7,7 @@ import com.badlogic.gdx.math.Vector3;
 import com.etheller.warsmash.viewer5.Scene;
 import com.etheller.warsmash.viewer5.SceneLightInstance;
 import com.etheller.warsmash.viewer5.UpdatableObject;
+import com.etheller.warsmash.viewer5.handlers.w3x.W3xScenePortraitLightManager;
 
 public class LightInstance implements UpdatableObject, SceneLightInstance {
 	private static final Matrix4 matrix4Heap = new Matrix4();
@@ -47,7 +48,7 @@ public class LightInstance implements UpdatableObject, SceneLightInstance {
 		final float ambientColorGreen = vectorHeap[1];
 		final float ambientColorBlue = vectorHeap[2];
 		if (MdxShaders.SCALE_PARTICLE2_BY_MODEL) {
-			final float scaleSq = this.node.worldScale.x;
+			final float scaleSq = this.node.worldScale.x * this.node.worldScale.y;
 			intensity *= scaleSq;
 			ambientIntensity *= scaleSq;
 			attenuationStart *= this.node.worldScale.x;
@@ -104,7 +105,20 @@ public class LightInstance implements UpdatableObject, SceneLightInstance {
 	}
 
 	private void updateVisibility(final Scene scene, final boolean visible) {
-		if (scene != null) {
+		if (this.light.isModelOnly()) {
+			final W3xScenePortraitLightManager lightManager = this.instance.modelOnlyLightManager;
+			if (this.loadedInScene != visible) {
+				if (visible) {
+					lightManager.add(this);
+				}
+				else {
+					lightManager.remove(this);
+				}
+				this.loadedInScene = visible;
+				lightManager.update();
+			}
+		}
+		else if (scene != null) {
 			if (this.loadedInScene != visible) {
 				if (visible) {
 					scene.addLight(this);

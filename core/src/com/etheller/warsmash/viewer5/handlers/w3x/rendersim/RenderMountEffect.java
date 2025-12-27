@@ -103,12 +103,12 @@ public class RenderMountEffect implements RenderEffect {
 		if (this.unitModelInstance.parent != null) {
 			this.unitModelInstance.setParent(null);
 		}
-		war3MapViewer.worldScene.addInstance(this.unitModelInstance);
+		war3MapViewer.worldScene.removeInstance(this.mountModelInstance);
+		this.unitModelInstance.setScene(war3MapViewer.worldScene);
 		this.unitModelInstance.setLocation(this.mountModelInstance.localLocation);
 		this.unitModelInstance.setRotation(this.mountModelInstance.localRotation);
 		this.unitModelInstance.setScale(this.mountModelInstance.localScale);
 		this.renderUnit.setModelInstance(this.unitModelInstance);
-		war3MapViewer.worldScene.removeInstance(this.mountModelInstance);
 		this.dismounted = true;
 		this.renderUnit.setMaxPitch(this.originalMaxPitch);
 		this.renderUnit.setMaxRoll(this.originalMaxRoll);

@@ -6,9 +6,9 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.List;
 
+import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.IntIntMap;
-import com.badlogic.gdx.utils.IntSet;
 import com.badlogic.gdx.utils.LongMap;
 import com.etheller.warsmash.datasources.SourcedData;
 import com.etheller.warsmash.util.FlagUtils;
@@ -133,7 +133,6 @@ public class WmoPortingModel2 extends com.etheller.warsmash.viewer5.Model<WmoPor
 		final String namePrefix = fetchUrl.length() > 76 ? fetchUrl.substring(fetchUrl.length() - 76) : fetchUrl;
 
 		final List<ModelObjectGroup> groups = parser.getGroups();
-		final IntSet usedLightIndices = new IntSet();
 		for (int groupIndex = 0; groupIndex < parser.getHeaders().getnGroups(); groupIndex++) {
 			final MdlxModel portedModel = new MdlxModel();
 			portedModel.name = namePrefix + Integer.toString(groupIndex);
@@ -270,81 +269,192 @@ public class WmoPortingModel2 extends com.etheller.warsmash.viewer5.Model<WmoPor
 
 			final WmoGroupInfo groupInfo = parser.getHeaders().getGroupInfos().get(groupIndex);
 
-			final int[] groupVertexIndices = group.getVertexIndices();
-			for (final GroupBatch groupBatch : group.getBatches()) {
-				final MdlxGeoset portedGeoset = new MdlxGeoset();
-				final short[][] boundingBox = groupBatch.getBoundingBox();
-				for (int i = 0; i < 3; i++) {
-					portedGeoset.extent.min[i] = boundingBox[0][i];
-					portedGeoset.extent.max[i] = boundingBox[1][i];
-				}
-				portedGeoset.extent.min[0] -= extentCenter.x;
-				portedGeoset.extent.min[1] -= extentCenter.y;
-				portedGeoset.extent.min[2] -= extentCenter.z;
-				portedGeoset.extent.max[0] -= extentCenter.x;
-				portedGeoset.extent.max[1] -= extentCenter.y;
-				portedGeoset.extent.max[2] -= extentCenter.z;
+			int[] groupVertexIndices = group.getVertexIndices();
+			final int[] stupidestFaces = new int[group.getPolygons().size() * 3];
+			for (int i = 0, k = 0; i < group.getPolygons().size(); i++) {
+				stupidestFaces[(i * 3) + 0] = k++;
+				stupidestFaces[(i * 3) + 1] = k++;
+				stupidestFaces[(i * 3) + 2] = k++;
+			}
+			groupVertexIndices = stupidestFaces;
+			final int[] triangleStripIndices = group.getTriangleStripIndices();
+			for (final GroupGxBatch gxBatch : group.getIntBatch()) {
+				for (int groupBatchIndex = gxBatch.getBatchStart(); groupBatchIndex < (gxBatch.getBatchStart()
+						+ gxBatch.getBatchCount()); groupBatchIndex++) {
+					final GroupBatch groupBatch = group.getBatches().get(groupBatchIndex);
 
-				final int usedVertexCount = ((groupBatch.getMaxIndex() - groupBatch.getMinIndex()) + 1);
+					final boolean triangleStrip = (triangleStripIndices != null) || (groupBatch.getFlags() != 0);
+					if (triangleStrip) {
+						continue;
+					}
+					final MdlxGeoset portedGeoset = new MdlxGeoset();
+					portedGeoset.wmo = true;
+					final short[][] boundingBox = groupBatch.getBoundingBox();
+					for (int i = 0; i < 3; i++) {
+						portedGeoset.extent.min[i] = boundingBox[0][i];
+						portedGeoset.extent.max[i] = boundingBox[1][i];
+					}
+					portedGeoset.extent.min[0] -= extentCenter.x;
+					portedGeoset.extent.min[1] -= extentCenter.y;
+					portedGeoset.extent.min[2] -= extentCenter.z;
+					portedGeoset.extent.max[0] -= extentCenter.x;
+					portedGeoset.extent.max[1] -= extentCenter.y;
+					portedGeoset.extent.max[2] -= extentCenter.z;
 
-				portedGeoset.vertices = new float[usedVertexCount * 3];
-				System.arraycopy(group.getVertices(), groupBatch.getMinIndex() * 3, portedGeoset.vertices, 0,
-						usedVertexCount * 3);
-				for (int i = 0; i < portedGeoset.vertices.length; i += 3) {
-					portedGeoset.vertices[i + 0] -= extentCenter.x;
-					portedGeoset.vertices[i + 1] -= extentCenter.y;
-					portedGeoset.vertices[i + 2] -= extentCenter.z;
+					final int minIndex = gxBatch.getVertStart();
+					final int maxIndex = (minIndex + gxBatch.getVertCount()) - 1;
+					final int usedVertexCount = ((maxIndex - minIndex) + 1);
+
+					portedGeoset.vertices = new float[usedVertexCount * 3];
+					System.arraycopy(group.getVertices(), minIndex * 3, portedGeoset.vertices, 0, usedVertexCount * 3);
+					for (int i = 0; i < portedGeoset.vertices.length; i += 3) {
+						portedGeoset.vertices[i + 0] -= extentCenter.x;
+						portedGeoset.vertices[i + 1] -= extentCenter.y;
+						portedGeoset.vertices[i + 2] -= extentCenter.z;
+					}
+					portedGeoset.vertexLightingColors = new float[usedVertexCount * 3];
+					final int[] vertexColors = group.getVertexColors();
+					for (int i = 0; i < usedVertexCount; i++) {
+						final int vertexIndex = minIndex + i;
+						final int colorInt = vertexColors[vertexIndex];
+						portedGeoset.vertexLightingColors[(i * 3) + 0] = ((colorInt >> 16) & 0xFF) / 255f;
+						portedGeoset.vertexLightingColors[(i * 3) + 1] = ((colorInt >> 8) & 0xFF) / 255f;
+						portedGeoset.vertexLightingColors[(i * 3) + 2] = ((colorInt >> 0) & 0xFF) / 255f;
+					}
+					portedGeoset.normals = new float[usedVertexCount * 3];
+					System.arraycopy(group.getNormals(), minIndex * 3, portedGeoset.normals, 0, usedVertexCount * 3);
+					portedGeoset.faces = new int[groupBatch.getCount()];
+					System.arraycopy(triangleStrip ? triangleStripIndices : groupVertexIndices,
+							(int) groupBatch.getStartIndex(), portedGeoset.faces, 0, groupBatch.getCount());
+					for (int i = 0; i < portedGeoset.faces.length; i++) {
+						portedGeoset.faces[i] -= minIndex;
+					}
+					portedGeoset.faceGroups = new long[portedGeoset.faces.length / 3];
+					portedGeoset.faceTypeGroups = new long[] {
+							triangleStrip ? GL20.GL_TRIANGLE_STRIP : GL20.GL_TRIANGLES };
+					portedGeoset.uvSets = new float[1][usedVertexCount * 2];
+					System.arraycopy(group.getTextureVertices(), minIndex * 2, portedGeoset.uvSets[0], 0,
+							usedVertexCount * 2);
+					portedGeoset.vertexGroups = new short[usedVertexCount];
+					portedGeoset.matrixGroups = new long[] { 1 };
+					portedGeoset.matrixIndices = new long[] { 0 };
+					if (groupBatch.getMaterialId() == -1) {
+//						final int materialId = textureToMdlxMat.get(, -1);
+//						if (materialId == -1) {
+//							throw new IllegalStateException("bad mat id");
+//						}
+						portedGeoset.materialId = groupBatch.getTexture() & 0xFF;
+					}
+					else {
+						portedGeoset.materialId = groupBatch.getMaterialId() & 0xFF;
+					}
+					portedModel.geosets.add(portedGeoset);
 				}
-				portedGeoset.normals = new float[usedVertexCount * 3];
-				System.arraycopy(group.getNormals(), groupBatch.getMinIndex() * 3, portedGeoset.normals, 0,
-						usedVertexCount * 3);
-				portedGeoset.faces = new int[groupBatch.getCount()];
-				System.arraycopy(groupVertexIndices, (int) groupBatch.getStartIndex(), portedGeoset.faces, 0,
-						groupBatch.getCount());
-				for (int i = 0; i < portedGeoset.faces.length; i += 3) {
-					portedGeoset.faces[i] -= groupBatch.getMinIndex();
-					portedGeoset.faces[i + 1] -= groupBatch.getMinIndex();
-					portedGeoset.faces[i + 2] -= groupBatch.getMinIndex();
+			}
+			for (final GroupGxBatch gxBatch : group.getExtBatch()) {
+				for (int groupBatchIndex = gxBatch.getBatchStart(); groupBatchIndex < (gxBatch.getBatchStart()
+						+ gxBatch.getBatchCount()); groupBatchIndex++) {
+					final GroupBatch groupBatch = group.getBatches().get(groupBatchIndex);
+
+					final boolean triangleStrip = (triangleStripIndices != null) || (groupBatch.getFlags() != 0);
+					if (triangleStrip) {
+						continue;
+					}
+					final MdlxGeoset portedGeoset = new MdlxGeoset();
+					portedGeoset.wmo = true;
+					final short[][] boundingBox = groupBatch.getBoundingBox();
+					for (int i = 0; i < 3; i++) {
+						portedGeoset.extent.min[i] = boundingBox[0][i];
+						portedGeoset.extent.max[i] = boundingBox[1][i];
+					}
+					portedGeoset.extent.min[0] -= extentCenter.x;
+					portedGeoset.extent.min[1] -= extentCenter.y;
+					portedGeoset.extent.min[2] -= extentCenter.z;
+					portedGeoset.extent.max[0] -= extentCenter.x;
+					portedGeoset.extent.max[1] -= extentCenter.y;
+					portedGeoset.extent.max[2] -= extentCenter.z;
+
+					final int minIndex = gxBatch.getVertStart();
+					final int maxIndex = (minIndex + gxBatch.getVertCount()) - 1;
+					final int usedVertexCount = ((maxIndex - minIndex) + 1);
+
+					portedGeoset.vertices = new float[usedVertexCount * 3];
+					System.arraycopy(group.getVertices(), minIndex * 3, portedGeoset.vertices, 0, usedVertexCount * 3);
+					for (int i = 0; i < portedGeoset.vertices.length; i += 3) {
+						portedGeoset.vertices[i + 0] -= extentCenter.x;
+						portedGeoset.vertices[i + 1] -= extentCenter.y;
+						portedGeoset.vertices[i + 2] -= extentCenter.z;
+					}
+					portedGeoset.vertexLightingColors = new float[usedVertexCount * 3];
+					final int[] vertexColors = group.getVertexColors();
+					for (int i = 0; i < usedVertexCount; i++) {
+						final int vertexIndex = minIndex + i;
+						final int colorInt = vertexColors[vertexIndex];
+						portedGeoset.vertexLightingColors[(i * 3) + 0] = ((colorInt >> 16) & 0xFF) / 255f;
+						portedGeoset.vertexLightingColors[(i * 3) + 1] = ((colorInt >> 8) & 0xFF) / 255f;
+						portedGeoset.vertexLightingColors[(i * 3) + 2] = ((colorInt >> 0) & 0xFF) / 255f;
+					}
+					portedGeoset.normals = new float[usedVertexCount * 3];
+					System.arraycopy(group.getNormals(), minIndex * 3, portedGeoset.normals, 0, usedVertexCount * 3);
+					portedGeoset.faces = new int[groupBatch.getCount()];
+					System.arraycopy(triangleStrip ? triangleStripIndices : groupVertexIndices,
+							(int) groupBatch.getStartIndex(), portedGeoset.faces, 0, groupBatch.getCount());
+					for (int i = 0; i < portedGeoset.faces.length; i++) {
+						portedGeoset.faces[i] -= minIndex;
+					}
+					portedGeoset.faceGroups = new long[portedGeoset.faces.length / 3];
+					portedGeoset.faceTypeGroups = new long[] {
+							triangleStrip ? GL20.GL_TRIANGLE_STRIP : GL20.GL_TRIANGLES };
+					portedGeoset.uvSets = new float[1][usedVertexCount * 2];
+					System.arraycopy(group.getTextureVertices(), minIndex * 2, portedGeoset.uvSets[0], 0,
+							usedVertexCount * 2);
+					portedGeoset.vertexGroups = new short[usedVertexCount];
+					portedGeoset.matrixGroups = new long[] { 1 };
+					portedGeoset.matrixIndices = new long[] { 0 };
+					if (groupBatch.getMaterialId() == -1) {
+//						final int materialId = textureToMdlxMat.get(, -1);
+//						if (materialId == -1) {
+//							throw new IllegalStateException("bad mat id");
+//						}
+						portedGeoset.materialId = groupBatch.getTexture() & 0xFF;
+					}
+					else {
+						portedGeoset.materialId = groupBatch.getMaterialId() & 0xFF;
+					}
+					portedModel.geosets.add(portedGeoset);
 				}
-				portedGeoset.faceGroups = new long[portedGeoset.faces.length / 3];
-				portedGeoset.faceTypeGroups = new long[] { 4 };
-				portedGeoset.uvSets = new float[1][usedVertexCount * 2];
-				System.arraycopy(group.getTextureVertices(), groupBatch.getMinIndex() * 2, portedGeoset.uvSets[0], 0,
-						usedVertexCount * 2);
-				portedGeoset.vertexGroups = new short[usedVertexCount];
-				portedGeoset.matrixGroups = new long[] { 1 };
-				portedGeoset.matrixIndices = new long[] { 0 };
-				if (groupBatch.getMaterialId() == -1) {
-//					final int materialId = textureToMdlxMat.get(, -1);
-//					if (materialId == -1) {
-//						throw new IllegalStateException("bad mat id");
-//					}
-					portedGeoset.materialId = groupBatch.getTexture() & 0xFF;
-				}
-				else {
-					portedGeoset.materialId = groupBatch.getMaterialId() & 0xFF;
-				}
-				portedModel.geosets.add(portedGeoset);
 			}
 
 			// NOTE: for now, instead of building BSP we are being very dumb, creating
 			// corresponding
 			// "CollisionGeometry" in our engine (TODO should be BSP instead later)
 			final int[] bspFaceIndices = group.getBspFaceIndices();
-			final int[] bspVertexIndices = new int[bspFaceIndices.length * 3];
+			int[] bspVertexIndices = new int[bspFaceIndices.length * 3];
 			int maxEL = 0;
 			int minErr = Integer.MAX_VALUE;
+			int usedIdx = 0;
 			for (int i = 0; i < bspFaceIndices.length; i++) {
-				for (int vertIdInFace = 0; vertIdInFace < 3; vertIdInFace++) {
-					final int expectedLookup = (bspFaceIndices[i] * 3) + vertIdInFace;
-					if (expectedLookup < groupVertexIndices.length) {
-						bspVertexIndices[(i * 3) + vertIdInFace] = groupVertexIndices[expectedLookup];
+				final int faceIndex = bspFaceIndices[i];
+				final GroupPolygon groupPolygon = group.getPolygons().get(faceIndex);
+				if (groupPolygon.isCollidable()) {
+					for (int vertIdInFace = 0; vertIdInFace < 3; vertIdInFace++) {
+
+						final int expectedLookup = (faceIndex * 3) + vertIdInFace;
+						if (expectedLookup < groupVertexIndices.length) {
+							bspVertexIndices[((usedIdx) * 3) + vertIdInFace] = groupVertexIndices[expectedLookup];
+						}
+						else {
+							minErr = Math.min(minErr, expectedLookup);
+						}
+						maxEL = Math.max(expectedLookup, maxEL);
 					}
-					else {
-						minErr = Math.min(minErr, expectedLookup);
-					}
-					maxEL = Math.max(expectedLookup, maxEL);
+					usedIdx++;
 				}
+			}
+			if (false) {
+				final int[] usedBspVertexIndices = new int[usedIdx * 3];
+				System.arraycopy(bspVertexIndices, 0, usedBspVertexIndices, 0, usedIdx * 3);
+				bspVertexIndices = usedBspVertexIndices;
 			}
 			System.out.println(maxEL + ";" + minErr);
 			for (final GroupBSPNode bspNode : group.getBspNodes()) {
@@ -402,42 +512,12 @@ public class WmoPortingModel2 extends com.etheller.warsmash.viewer5.Model<WmoPor
 
 			if (group.getLightReferences() != null) {
 				for (final int lightReference : group.getLightReferences()) {
-					if (usedLightIndices.add(lightReference)) {
-						// arbitrarily throw the light into one or the other group (we are being dumb),
-						// but only load it once
-
-						final WmoLight wmoLight = parser.getHeaders().getLights().get(lightReference);
-
-						final MdlxLight light = new MdlxLight();
-						switch (wmoLight.type) {
-						case AMBIENT:
-							light.type = Type.AMBIENT;
-							break;
-						case DIRECTIONAL:
-							light.type = Type.DIRECTIONAL;
-							break;
-						case OMNIDIRECTIONAL:
-							light.type = Type.OMNIDIRECTIONAL;
-							break;
-						default:
-						case SPOT:
-							System.err.println("Unsupported light: " + wmoLight.type);
-							continue;
-						}
-						final short[] bgraColor = wmoLight.getColor();
-
-						light.color[0] = bgraColor[3] / 255f;
-						light.color[1] = bgraColor[2] / 255f;
-						light.color[2] = bgraColor[1] / 255f;
-						light.intensity = wmoLight.getIntensity();
-						light.attenuation[0] = wmoLight.getAttenStart();
-						light.attenuation[1] = wmoLight.getAttenEnd();
-
-						final float[] wmoLightPosition = wmoLight.getPosition();
-						portedModel.pivotPoints.add(new float[] { wmoLightPosition[0] - extentCenter.x,
-								wmoLightPosition[1] - extentCenter.y, wmoLightPosition[2] - extentCenter.z });
-						portedModel.lights.add(light);
-					}
+					loadLight(parser, portedModel, extentCenter, lightReference);
+				}
+				if (!FlagUtils.hasFlag(group.getFlags(), WmoGroupInfo.Flags.IsExterior)
+						|| !FlagUtils.hasFlag(group.getFlags(), WmoGroupInfo.Flags.IsExteriorLit)
+						|| !FlagUtils.hasFlag(group.getFlags(), WmoGroupInfo.Flags.IsInterior)) {
+					loadLight(parser, portedModel, extentCenter, 0);
 				}
 			}
 
@@ -457,6 +537,42 @@ public class WmoPortingModel2 extends com.etheller.warsmash.viewer5.Model<WmoPor
 		}
 
 		return portedModels;
+	}
+
+	private static void loadLight(final WorldModelObject parser, final MdlxModel portedModel,
+			final Vector3 extentCenter, final int lightReference) {
+		final WmoLight wmoLight = parser.getHeaders().getLights().get(lightReference);
+
+		final MdlxLight light = new MdlxLight();
+		switch (wmoLight.type) {
+		case AMBIENT:
+			light.type = Type.AMBIENT;
+			break;
+		case DIRECTIONAL:
+			light.type = Type.DIRECTIONAL;
+			break;
+		case OMNIDIRECTIONAL:
+			light.type = Type.OMNIDIRECTIONAL;
+			break;
+		default:
+		case SPOT:
+			System.err.println("Unsupported light: " + wmoLight.type);
+			return;
+		}
+		final short[] bgraColor = wmoLight.getColor();
+
+		light.color[0] = bgraColor[2] / 255f;
+		light.color[1] = bgraColor[1] / 255f;
+		light.color[2] = bgraColor[0] / 255f;
+		light.intensity = wmoLight.getIntensity();
+		light.attenuation[0] = wmoLight.getAttenStart();
+		light.attenuation[1] = wmoLight.getAttenEnd();
+		light.setModelOnly(true);
+
+		final float[] wmoLightPosition = wmoLight.getPosition();
+		portedModel.pivotPoints.add(new float[] { wmoLightPosition[0] - extentCenter.x,
+				wmoLightPosition[1] - extentCenter.y, wmoLightPosition[2] - extentCenter.z });
+		portedModel.lights.add(light);
 	}
 
 	public static final class GroupModel {

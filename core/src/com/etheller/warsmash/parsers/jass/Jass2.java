@@ -3238,6 +3238,15 @@ public class Jass2 {
 						}
 						return null;
 					});
+			jassProgramVisitor.getJassNativeManager().createNative("SetTerrainWdtHole",
+					(arguments, globalScope, triggerScope) -> {
+						final float worldX = arguments.get(0).visit(RealJassValueVisitor.getInstance()).floatValue();
+						final float worldY = arguments.get(1).visit(RealJassValueVisitor.getInstance()).floatValue();
+						final boolean hole = arguments.get(2).visit(BooleanJassValueVisitor.getInstance());
+
+						war3MapViewer.terrain.setWdtHole(worldX, worldY, hole);
+						return null;
+					});
 			jassProgramVisitor.getJassNativeManager().createNative("SetUnitPosition",
 					(arguments, globalScope, triggerScope) -> {
 						final CUnit whichUnit = nullable(arguments, 0, ObjectJassValueVisitor.getInstance());

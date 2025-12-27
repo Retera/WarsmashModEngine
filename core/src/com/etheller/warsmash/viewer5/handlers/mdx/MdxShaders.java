@@ -657,8 +657,9 @@ public class MdxShaders {
 				+ //
 				"    varying vec2 v_uv;\r\n" + //
 				"    varying vec4 v_color;\r\n" + //
-				"    varying vec3 v_position;\r\n" + //
-				"    varying vec3 v_normal;\r\n" + //
+				(!VERTEX_LIGHTS_NOT_FRAGMENT_LIGHTS ? ("    varying vec3 v_position;\r\n" + //
+						"    varying vec3 v_normal;\r\n") : "")
+				+ //
 				"    varying vec4 v_uvTransRot;\r\n" + //
 				"    varying float v_uvScale;\r\n" + //
 				"    uniform sampler2D u_lightTexture;\r\n" + //
@@ -725,8 +726,10 @@ public class MdxShaders {
 						: "")
 				+ //
 				"        v_color.xyz *= (1.0 - u_unshaded) * clamp(lightFactor, 0.0, 1.0) + u_unshaded;\r\n" + //
-				"		 v_position = position;\r\n" + //
-				"		 v_normal = normal;\r\n" + //
+				(VERTEX_LIGHTS_NOT_FRAGMENT_LIGHTS ? "" : //
+						"		 v_position = position;\r\n" + //
+								"		 v_normal = normal;\r\n")
+				+ //
 				"      //}\r\n" + //
 				"    }";
 	}
@@ -747,8 +750,9 @@ public class MdxShaders {
 			"    varying vec2 v_uv;\r\n" + //
 			"    varying vec4 v_color;\r\n" + //
 			"    varying vec4 v_uvTransRot;\r\n" + //
-			"    varying vec3 v_position;\r\n" + //
-			"    varying vec3 v_normal;\r\n" + //
+			(!VERTEX_LIGHTS_NOT_FRAGMENT_LIGHTS ? ("    varying vec3 v_position;\r\n" + //
+					"    varying vec3 v_normal;\r\n") : "")
+			+ //
 			"    varying float v_uvScale;\r\n" + //
 			"    void main() {\r\n" + //
 			"      vec2 uv = v_uv;\r\n" + //
@@ -777,6 +781,230 @@ public class MdxShaders {
 					: ("\r\n" + //
 							"      gl_FragColor = color;\r\n"))
 			+ //
+			"    }";
+	public static final String vsWmo = "#version 120\r\n" + //
+			"" + //
+			"\r\n" + //
+			"    uniform mat4 u_mvp;\r\n" + //
+			"    uniform vec4 u_vertexColor;\r\n" + //
+			"    uniform vec4 u_geosetColor;\r\n" + //
+			"    uniform float u_layerAlpha;\r\n" + //
+			"    uniform vec2 u_uvTrans;\r\n" + //
+			"    uniform vec2 u_uvRot;\r\n" + //
+			"    uniform float u_uvScale;\r\n" + //
+			"    uniform bool u_hasBones;\r\n" + //
+			"    uniform float u_unshaded;\r\n" + //
+			"    uniform float u_lightOmitOffset;\r\n" + //
+			"    attribute vec3 a_position;\r\n" + //
+			"    attribute vec3 a_normal;\r\n" + //
+			"    attribute vec2 a_uv;\r\n" + //
+			"    attribute vec4 a_bones;\r\n" + //
+			"    #ifdef EXTENDED_BONES\r\n" + //
+			"    attribute vec4 a_extendedBones;\r\n" + //
+			"    #endif\r\n" + //
+			(false ? //
+					"    attribute vec4 a_weights;\r\n" : //
+					"    attribute float a_boneNumber;\r\n")
+			+ //
+			"    attribute vec3 a_vertexLightingColors;\r\n" + //
+			"    varying vec2 v_uv;\r\n" + //
+			"    varying vec4 v_color;\r\n" + //
+			(!VERTEX_LIGHTS_NOT_FRAGMENT_LIGHTS ? ("    varying vec3 v_position;\r\n" + //
+					"    varying vec3 v_normal;\r\n") : "")
+			+ //
+			"    varying vec4 v_uvTransRot;\r\n" + //
+			"    varying float v_uvScale;\r\n" + //
+			"    uniform sampler2D u_lightTexture;\r\n" + //
+			"    uniform float u_lightCount;\r\n" + //
+			"    uniform float u_lightTextureHeight;\r\n" + //
+			Shaders.boneTexture + "\r\n" + //
+			(!false ? ("    void transform(inout vec3 position, inout vec3 normal) {\r\n" + //
+					"      // For the broken models out there, since the game supports this.\r\n" + //
+					"      if (a_boneNumber > 0.0) {\r\n" + //
+					"        vec4 position4 = vec4(position, 1.0);\r\n" + //
+					"        vec4 normal4 = vec4(normal, 0.0);\r\n" + //
+					"        mat4 bone;\r\n" + //
+					"        vec4 p = vec4(0.0,0.0,0.0,0.0);\r\n" + //
+					"        vec4 n = vec4(0.0,0.0,0.0,0.0);\r\n" + //
+					"        for (int i = 0; i < 4; i++) {\r\n" + //
+					"          if (a_bones[i] > 0.0) {\r\n" + //
+					"            bone = fetchMatrix(a_bones[i] - 1.0, 0.0);\r\n" + //
+					"            p += bone * position4;\r\n" + //
+					"            n += bone * normal4;\r\n" + //
+					"          }\r\n" + //
+					"        }\r\n" + //
+					"        #ifdef EXTENDED_BONES\r\n" + //
+					"          for (int i = 0; i < 4; i++) {\r\n" + //
+					"            if (a_extendedBones[i] > 0.0) {\r\n" + //
+					"              bone = fetchMatrix(a_extendedBones[i] - 1.0, 0.0);\r\n" + //
+					"              p += bone * position4;\r\n" + //
+					"              n += bone * normal4;\r\n" + //
+					"            }\r\n" + //
+					"          }\r\n" + //
+					"        #endif\r\n" + //
+					"        position = p.xyz / a_boneNumber;\r\n" + //
+					"        normal = normalize(n.xyz);\r\n" + //
+					"      } else {\r\n" + //
+					"        position.x += 100.0;\r\n" + //
+					"      }\r\n" + //
+					"\r\n" + //
+					"    }\r\n") : //
+					("    void transform(inout vec3 position, inout vec3 normal) {\r\n" + //
+							"      mat4 bone = mat4(0);\r\n" + //
+							"      bone += fetchMatrix(a_bones[0], 0.0) * a_weights[0];\r\n" + //
+							"      bone += fetchMatrix(a_bones[1], 0.0) * a_weights[1];\r\n" + //
+							"      bone += fetchMatrix(a_bones[2], 0.0) * a_weights[2];\r\n" + //
+							"      bone += fetchMatrix(a_bones[3], 0.0) * a_weights[3];\r\n" + //
+							"      mat3 rotation = mat3(bone);\r\n" + //
+							"      position = vec3(bone * vec4(position, 1.0));\r\n" + //
+							"      normal = rotation * normal;\r\n" + //
+							"    }\r\n") //
+			) + //
+			"    void main() {\r\n" + //
+			"      vec3 position = a_position;\r\n" + //
+			"      vec3 normal = a_normal;\r\n" + //
+			"      if (u_hasBones) {\r\n" + //
+			"        transform(position, normal);\r\n" + //
+			"      }\r\n" + //
+			"      v_uv = a_uv;\r\n" + //
+			"      v_color = u_vertexColor * u_geosetColor.bgra * vec4(1.0, 1.0, 1.0, u_layerAlpha);\r\n" + //
+			"      v_uvTransRot = vec4(u_uvTrans, u_uvRot);\r\n" + //
+			"      v_uvScale = u_uvScale;\r\n" + //
+			"      gl_Position = u_mvp * vec4(position, 1.0);\r\n" + //
+			"      //if(!u_unshaded) {\r\n" + //
+			(VERTEX_LIGHTS_NOT_FRAGMENT_LIGHTS
+					? (Shaders.lightSystem("normal", "position", "u_lightTexture", "u_lightTextureHeight",
+							"u_lightCount", " + u_lightOmitOffset", false) + "\r\n")
+					: "")
+			+ //
+			"        v_color.xyz *= (1.0 - u_unshaded) * clamp(u_lightOmitOffset == 0 ? (lightFactor + a_vertexLightingColors) : a_vertexLightingColors, 0.0, 1.0) + u_unshaded;\r\n"
+			+ //
+			(VERTEX_LIGHTS_NOT_FRAGMENT_LIGHTS ? "" : //
+					"		 v_position = position;\r\n" + //
+							"		 v_normal = normal;\r\n")
+			+ //
+			"      //}\r\n" + //
+			"    }";
+
+	public static final String fsWmo = Shaders.quatTransform + "\r\n\r\n" + //
+			"    uniform sampler2D u_texture;\r\n" + //
+			"    uniform vec4 u_vertexColor;\r\n" + //
+			"    uniform float u_filterMode;\r\n" + //
+			"    uniform bool u_unfogged;\r\n" + //
+			"    uniform vec4 u_fogColor;\r\n" + //
+			"    uniform vec4 u_fogParams;\r\n" + //
+			"    uniform float u_unshaded;\r\n" + //
+			(VERTEX_LIGHTS_NOT_FRAGMENT_LIGHTS ? "" : "    uniform sampler2D u_lightTexture;\r\n" + //
+					"    uniform float u_lightCount;\r\n" + //
+					"    uniform float u_lightTextureHeight;\r\n" + //
+					"    uniform float u_lightOmitOffset;\r\n")
+			+ //
+			"    varying vec2 v_uv;\r\n" + //
+			"    varying vec4 v_color;\r\n" + //
+			"    varying vec4 v_uvTransRot;\r\n" + //
+			(!VERTEX_LIGHTS_NOT_FRAGMENT_LIGHTS ? ("    varying vec3 v_position;\r\n" + //
+					"    varying vec3 v_normal;\r\n") : "")
+			+ //
+			"    varying float v_uvScale;\r\n" + //
+			"    void main() {\r\n" + //
+			"      vec2 uv = v_uv;\r\n" + //
+			"      // Translation animation\r\n" + //
+			"      uv += v_uvTransRot.xy;\r\n" + //
+			"      // Rotation animation\r\n" + //
+			"      uv = quat_transform(v_uvTransRot.zw, uv - 0.5) + 0.5;\r\n" + //
+			"      // Scale animation\r\n" + //
+			"      uv = v_uvScale * (uv - 0.5) + 0.5;\r\n" + //
+			"      vec4 texel = texture2D(u_texture, uv);\r\n" + //
+			"      vec4 color = texel * v_color;\r\n" + //
+			"      // 1bit Alpha\r\n" + //
+			"      if (u_vertexColor.a == 1.0 && u_filterMode == 1.0 && color.a < 0.75) {\r\n" + //
+			"        discard;\r\n" + //
+			"      }\r\n" + //
+			"      // \"Close to 0 alpha\"\r\n" + //
+			"      if (u_filterMode >= 5.0 && color.a < 0.02) {\r\n" + //
+			"        discard;\r\n" + //
+			"      }\r\n" + //
+			Shaders.fogSystem(true, "u_filterMode < 3.0 || u_filterMode > 4.0") + //
+			(!VERTEX_LIGHTS_NOT_FRAGMENT_LIGHTS ? Shaders.lightSystem("v_normal", "v_position", "u_lightTexture",
+					"u_lightTextureHeight", "u_lightCount", " + u_lightOmitOffset", false)
+
+					+ "\r\n" + //
+					"      gl_FragColor = color * vec4( ((1.0 - u_unshaded) * clamp(lightFactor, 0.0, 1.0) + u_unshaded).xyz, 1.0);\r\n"
+					: ("\r\n" + //
+							"      gl_FragColor = color;\r\n"))
+			+ //
+			"    }";
+	public static final String vsWmo1 = "#version 120\r\n" + //
+			"\r\n" + //
+			"    uniform mat4 u_mvp;\r\n" + //
+			"    uniform vec4 u_vertexColor;\r\n" + //
+			"    uniform vec4 u_geosetColor;\r\n" + //
+			"    uniform float u_layerAlpha;\r\n" + //
+			"    uniform vec2 u_uvTrans;\r\n" + //
+			"    uniform vec2 u_uvRot;\r\n" + //
+			"    uniform float u_uvScale;\r\n" + //
+			"    uniform float u_unshaded;\r\n" + //
+			"    uniform float u_lightOmitOffset;\r\n" + //
+			"    uniform sampler2D u_lightTexture;\r\n" + //
+			"    uniform float u_lightCount;\r\n" + //
+			"    uniform float u_lightTextureHeight;\r\n" + //
+			"    attribute vec3 a_position;\r\n" + //
+			"    attribute vec3 a_normal;\r\n" + //
+			"    attribute vec3 a_vertexLightingColors;\r\n" + //
+			"    attribute vec2 a_uv;\r\n" + //
+			"    varying vec2 v_uv;\r\n" + //
+			"    varying vec4 v_color;\r\n" + //
+			"    varying vec4 v_uvTransRot;\r\n" + //
+			"    varying float v_uvScale;\r\n" + //
+			"    void main() {\r\n" + //
+			"      vec3 position = a_position;\r\n" + //
+			"      vec3 normal = a_normal;\r\n" + //
+			"      v_uv = a_uv;\r\n" + //
+			"      v_color = u_vertexColor * u_geosetColor.bgra * vec4(1.0, 1.0, 1.0, u_layerAlpha);\r\n" + //
+			"      v_uvTransRot = vec4(u_uvTrans, u_uvRot);\r\n" + //
+			"      v_uvScale = u_uvScale;\r\n" + //
+			"      gl_Position = u_mvp * vec4(position, 1.0);\r\n" + //
+			"      //if(!u_unshaded) {\r\n" + //
+			Shaders.lightSystem("normal", "position", "u_lightTexture", "u_lightTextureHeight", "u_lightCount",
+					""/* " + u_lightOmitOffset" */, false)
+			+ "\r\n" +
+//			"        v_color.xyz *= (1.0 - u_unshaded) * clamp(a_position, 0.0, 1.0) + u_unshaded;\r\n" + //
+			"      //}\r\n" + //
+			"    }";
+
+	public static final String fsWmo1 = Shaders.quatTransform + "\r\n\r\n" + //
+			"    uniform sampler2D u_texture;\r\n" + //
+			"    uniform vec4 u_vertexColor;\r\n" + //
+			"    uniform float u_filterMode;\r\n" + //
+			"    uniform bool u_unfogged;\r\n" + //
+			"    uniform vec4 u_fogColor;\r\n" + //
+			"    uniform vec4 u_fogParams;\r\n" + //
+			"    uniform float u_unshaded;\r\n" + //
+			"    varying vec2 v_uv;\r\n" + //
+			"    varying vec4 v_color;\r\n" + //
+			"    varying vec4 v_uvTransRot;\r\n" + //
+			"    varying float v_uvScale;\r\n" + //
+			"    void main() {\r\n" + //
+			"      vec2 uv = v_uv;\r\n" + //
+			"      // Translation animation\r\n" + //
+			"      uv += v_uvTransRot.xy;\r\n" + //
+			"      // Rotation animation\r\n" + //
+			"      uv = quat_transform(v_uvTransRot.zw, uv - 0.5) + 0.5;\r\n" + //
+			"      // Scale animation\r\n" + //
+			"      uv = v_uvScale * (uv - 0.5) + 0.5;\r\n" + //
+			"      vec4 texel = texture2D(u_texture, uv);\r\n" + //
+			"      vec4 color = texel * v_color;\r\n" + //
+			"      // 1bit Alpha\r\n" + //
+			"      if (u_vertexColor.a == 1.0 && u_filterMode == 1.0 && color.a < 0.75) {\r\n" + //
+			"        discard;\r\n" + //
+			"      }\r\n" + //
+			"      // \"Close to 0 alpha\"\r\n" + //
+			"      if (u_filterMode >= 5.0 && color.a < 0.02) {\r\n" + //
+			"        discard;\r\n" + //
+			"      }\r\n" + //
+			Shaders.fogSystem(true, "u_filterMode < 3.0 || u_filterMode > 4.0") + //
+			"\r\n" + //
+			"      gl_FragColor = /*color * 0.0001 + */vec4(1.0, 1.0, 1.0, 1.0);\r\n" + //
 			"    }";
 
 	public static final String fsComplexShadowMap = "\r\n\r\n" + //

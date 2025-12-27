@@ -233,8 +233,10 @@ public class RenderUnit implements RenderWidget {
 		final float simDx = simulationX - this.location[0];
 		final float simDy = simulationY - this.location[1];
 		final float groundHeightTerrain;
+		final float prevZ = this.location[2];
+		final float distanceToSimulation2D = (float) Math.sqrt((simDx * simDx) + (simDy * simDy));
 		if (isPlayerPawn()) {
-			final float simDz = this.playerPawn.getZ() - this.location[2];
+			final float simDz = this.playerPawn.getZ() - prevZ;
 			final float distanceToSimulation = (float) Math.sqrt((simDx * simDx) + (simDy * simDy) + (simDz * simDz));
 			final float speed = this.playerPawn.getRenderMoveSpeed();
 			final float speedDelta = speed * deltaTime;
@@ -252,7 +254,7 @@ public class RenderUnit implements RenderWidget {
 			}
 		}
 		else {
-			final float distanceToSimulation = (float) Math.sqrt((simDx * simDx) + (simDy * simDy));
+			final float distanceToSimulation = distanceToSimulation2D;
 			final float speed = isPlayerPawn() ? this.playerPawn.getRenderMoveSpeed() : this.simulationUnit.getSpeed();
 			final float speedDelta = speed * deltaTime;
 			if ((distanceToSimulation > speedDelta) && (deltaTime < 1.0)) {
@@ -302,8 +304,12 @@ public class RenderUnit implements RenderWidget {
 						downwardRayTestHeight);
 
 				War3MapViewer.gdxRayHeap.set(this.location[0], this.location[1], downwardRayTestHeight, 0, 0, -81920);
-				if ((currentWalkableUnder != null) && currentWalkableUnder
-						.intersectRayWithGeosetSlow(War3MapViewer.gdxRayHeap, War3MapViewer.intersectionHeap)) {
+				if ((currentWalkableUnder != null)
+						&& currentWalkableUnder.intersectRayWithGeosetSlow(War3MapViewer.gdxRayHeap,
+								War3MapViewer.intersectionHeap)
+						&& !((War3MapViewer.intersectionHeap.z < groundHeightTerrain)
+								&& (groundHeightTerrain <= (this.location[2]
+										+ this.playerPawn.getBehaviorPlayerPawn().getHeight())))) {
 					groundHeight = War3MapViewer.intersectionHeap.z;
 					swimming = false; // Naga Royal Guard should slither across a bridge, not swim in rock
 				}
@@ -312,10 +318,17 @@ public class RenderUnit implements RenderWidget {
 					currentWalkableUnder = null;
 				}
 				if (currentWalkableUnder != null) {
-					this.instance.setLightOmitOffsetOverride(currentWalkableUnder.isInterior() ? 1 : 0);
+					if (currentWalkableUnder.isInterior()) {
+						this.instance.setModelOnlyLightManager(currentWalkableUnder.getModelOnlyLightManager());
+					}
+					else {
+						this.instance.setModelOnlyLightManager(null);
+					}
+//					this.instance.setLightOmitOffsetOverride(currentWalkableUnder.isInterior() ? 1 : 0);
 				}
 				else {
-					this.instance.setLightOmitOffsetOverride(0);
+//					this.instance.setLightOmitOffsetOverride(0);
+					this.instance.setModelOnlyLightManager(null);
 				}
 			}
 			else {
@@ -486,45 +499,68 @@ public class RenderUnit implements RenderWidget {
 		final float rollSampleGroundHeight1;
 		final float rollSampleGroundHeight2;
 		if (isPlayerPawn()) {
-			if (currentWalkableUnder != null) {
-				pitchSampleGroundHeight1 = getGroundHeightSample(groundHeight, currentWalkableUnder,
-						pitchSampleBackwardX, pitchSampleBackwardY);
-				pitchSampleGroundHeight2 = getGroundHeightSample(groundHeight, currentWalkableUnder,
-						pitchSampleForwardX, pitchSampleForwardY);
-				rollSampleGroundHeight1 = getGroundHeightSample(groundHeight, currentWalkableUnder, rollSampleBackwardX,
-						rollSampleBackwardY);
-				rollSampleGroundHeight2 = getGroundHeightSample(groundHeight, currentWalkableUnder, rollSampleForwardX,
-						rollSampleForwardY);
+			if (this.playerPawn.getBehaviorPlayerPawn().isSwimming()) {
+				pitch = 0;// (float) Math.atan2(this.location[2] - prevZ, distanceToSimulation2D);
+				roll = 0;
 			}
 			else {
-				final float pitchGroundHeight1 = map.getNearestIntersectingZBeneath(pitchSampleBackwardX,
-						pitchSampleBackwardY,
-						this.playerPawn.getZ() + this.playerPawn.getBehaviorPlayerPawn().getHeight(), intersectingUnit);
-				final float pitchGroundHeight2 = map.getNearestIntersectingZBeneath(pitchSampleForwardX,
-						pitchSampleForwardY,
-						this.playerPawn.getZ() + this.playerPawn.getBehaviorPlayerPawn().getHeight(), intersectingUnit);
-				final float rollGroundHeight1 = map.getNearestIntersectingZBeneath(rollSampleBackwardX,
-						rollSampleBackwardY,
-						this.playerPawn.getZ() + this.playerPawn.getBehaviorPlayerPawn().getHeight(), intersectingUnit);
-				final float rollGroundHeight2 = map.getNearestIntersectingZBeneath(rollSampleForwardX,
-						rollSampleForwardY,
-						this.playerPawn.getZ() + this.playerPawn.getBehaviorPlayerPawn().getHeight(), intersectingUnit);
-				if (standingOnWater) {
-					pitchSampleGroundHeight1 = Math.max(pitchGroundHeight1,
-							map.terrain.getWaterHeight(pitchSampleBackwardX, pitchSampleBackwardY));
-					pitchSampleGroundHeight2 = Math.max(pitchGroundHeight2,
-							map.terrain.getWaterHeight(pitchSampleForwardX, pitchSampleForwardY));
-					rollSampleGroundHeight1 = Math.max(rollGroundHeight1,
-							map.terrain.getWaterHeight(rollSampleBackwardX, rollSampleBackwardY));
-					rollSampleGroundHeight2 = Math.max(rollGroundHeight2,
-							map.terrain.getWaterHeight(rollSampleForwardX, rollSampleForwardY));
+				if (this.playerPawn.getBehaviorPlayerPawn().wasFalling) {
+					pitchSampleGroundHeight1 = 0;
+					pitchSampleGroundHeight2 = 0;
+					rollSampleGroundHeight1 = 0;
+					rollSampleGroundHeight2 = 0;
+				}
+				else if (currentWalkableUnder != null) {
+					pitchSampleGroundHeight1 = getGroundHeightSample(map, groundHeight, currentWalkableUnder,
+							pitchSampleBackwardX, pitchSampleBackwardY, groundHeightTerrain);
+					pitchSampleGroundHeight2 = getGroundHeightSample(map, groundHeight, currentWalkableUnder,
+							pitchSampleForwardX, pitchSampleForwardY, groundHeightTerrain);
+					rollSampleGroundHeight1 = getGroundHeightSample(map, groundHeight, currentWalkableUnder,
+							rollSampleBackwardX, rollSampleBackwardY, groundHeightTerrain);
+					rollSampleGroundHeight2 = getGroundHeightSample(map, groundHeight, currentWalkableUnder,
+							rollSampleForwardX, rollSampleForwardY, groundHeightTerrain);
 				}
 				else {
-					pitchSampleGroundHeight1 = pitchGroundHeight1;
-					pitchSampleGroundHeight2 = pitchGroundHeight2;
-					rollSampleGroundHeight1 = rollGroundHeight1;
-					rollSampleGroundHeight2 = rollGroundHeight2;
+//				final float pitchGroundHeight1 = map.getNearestIntersectingZBeneath(pitchSampleBackwardX,
+//						pitchSampleBackwardY,
+//						this.playerPawn.getZ() + this.playerPawn.getBehaviorPlayerPawn().getHeight(), intersectingUnit);
+//				final float pitchGroundHeight2 = map.getNearestIntersectingZBeneath(pitchSampleForwardX,
+//						pitchSampleForwardY,
+//						this.playerPawn.getZ() + this.playerPawn.getBehaviorPlayerPawn().getHeight(), intersectingUnit);
+//				final float rollGroundHeight1 = map.getNearestIntersectingZBeneath(rollSampleBackwardX,
+//						rollSampleBackwardY,
+//						this.playerPawn.getZ() + this.playerPawn.getBehaviorPlayerPawn().getHeight(), intersectingUnit);
+//				final float rollGroundHeight2 = map.getNearestIntersectingZBeneath(rollSampleForwardX,
+//						rollSampleForwardY,
+//						this.playerPawn.getZ() + this.playerPawn.getBehaviorPlayerPawn().getHeight(), intersectingUnit);
+					final float pitchGroundHeight1 = map.terrain.getGroundHeight(pitchSampleBackwardX,
+							pitchSampleBackwardY);
+					final float pitchGroundHeight2 = map.terrain.getGroundHeight(pitchSampleForwardX,
+							pitchSampleForwardY);
+					final float rollGroundHeight1 = map.terrain.getGroundHeight(rollSampleBackwardX,
+							rollSampleBackwardY);
+					final float rollGroundHeight2 = map.terrain.getGroundHeight(rollSampleForwardX, rollSampleForwardY);
+					if (standingOnWater) {
+						pitchSampleGroundHeight1 = Math.max(pitchGroundHeight1,
+								map.terrain.getWaterHeight(pitchSampleBackwardX, pitchSampleBackwardY));
+						pitchSampleGroundHeight2 = Math.max(pitchGroundHeight2,
+								map.terrain.getWaterHeight(pitchSampleForwardX, pitchSampleForwardY));
+						rollSampleGroundHeight1 = Math.max(rollGroundHeight1,
+								map.terrain.getWaterHeight(rollSampleBackwardX, rollSampleBackwardY));
+						rollSampleGroundHeight2 = Math.max(rollGroundHeight2,
+								map.terrain.getWaterHeight(rollSampleForwardX, rollSampleForwardY));
+					}
+					else {
+						pitchSampleGroundHeight1 = pitchGroundHeight1;
+						pitchSampleGroundHeight2 = pitchGroundHeight2;
+						rollSampleGroundHeight1 = rollGroundHeight1;
+						rollSampleGroundHeight2 = rollGroundHeight2;
+					}
 				}
+				pitch = Math.max(-this.maxPitch, Math.min(this.maxPitch,
+						(float) Math.atan2(pitchSampleGroundHeight2 - pitchSampleGroundHeight1, sampleRadius * 2)));
+				roll = Math.max(-this.maxRoll, Math.min(this.maxRoll,
+						(float) Math.atan2(rollSampleGroundHeight2 - rollSampleGroundHeight1, sampleRadius * 2)));
 			}
 		}
 		else {
@@ -561,11 +597,11 @@ public class RenderUnit implements RenderWidget {
 					rollSampleGroundHeight2 = rollGroundHeight2;
 				}
 			}
+			pitch = Math.max(-this.maxPitch, Math.min(this.maxPitch,
+					(float) Math.atan2(pitchSampleGroundHeight2 - pitchSampleGroundHeight1, sampleRadius * 2)));
+			roll = Math.max(-this.maxRoll, Math.min(this.maxRoll,
+					(float) Math.atan2(rollSampleGroundHeight2 - rollSampleGroundHeight1, sampleRadius * 2)));
 		}
-		pitch = Math.max(-this.maxPitch, Math.min(this.maxPitch,
-				(float) Math.atan2(pitchSampleGroundHeight2 - pitchSampleGroundHeight1, sampleRadius * 2)));
-		roll = Math.max(-this.maxRoll, Math.min(this.maxRoll,
-				(float) Math.atan2(rollSampleGroundHeight2 - rollSampleGroundHeight1, sampleRadius * 2)));
 		this.instance.rotate(tempQuat.setFromAxisRad(RenderMathUtils.VEC3_UNIT_Y, -pitch));
 		this.instance.rotate(tempQuat.setFromAxisRad(RenderMathUtils.VEC3_UNIT_X, roll));
 
@@ -645,6 +681,36 @@ public class RenderUnit implements RenderWidget {
 						this.typeData.getUberSplatScaleValue());
 			}
 		}
+	}
+
+	private float getGroundHeightSample(final War3MapViewer map, final float groundHeight,
+			CollidableDoodadComponent currentWalkableUnder, final float sampleX, final float sampleY,
+			final float groundHeightTerrain) {
+
+		final float downwardRayTestHeight = this.location[2] + this.playerPawn.getBehaviorPlayerPawn().getHeight();
+		final CollidableDoodadComponent newCurrentWalkableUnder = map.getHighestWalkableUnder(sampleX, sampleY,
+				downwardRayTestHeight);
+
+		War3MapViewer.gdxRayHeap.set(sampleX, sampleY, downwardRayTestHeight, 0, 0, -81920);
+		if ((newCurrentWalkableUnder != null) && (newCurrentWalkableUnder != currentWalkableUnder)
+				&& newCurrentWalkableUnder.intersectRayWithGeosetSlow(War3MapViewer.gdxRayHeap,
+						War3MapViewer.intersectionHeap)
+				&& !((War3MapViewer.intersectionHeap.z < groundHeightTerrain)
+						&& (groundHeightTerrain <= (this.location[2]
+								+ this.playerPawn.getBehaviorPlayerPawn().getHeight())))) {
+			currentWalkableUnder = newCurrentWalkableUnder;
+		}
+		final float sampleGroundHeight;
+		War3MapViewer.gdxRayHeap.origin.x = sampleX;
+		War3MapViewer.gdxRayHeap.origin.y = sampleY;
+		if (currentWalkableUnder.intersectRayWithCollision(War3MapViewer.gdxRayHeap, War3MapViewer.intersectionHeap,
+				true, true)) {
+			sampleGroundHeight = War3MapViewer.intersectionHeap.z;
+		}
+		else {
+			sampleGroundHeight = groundHeight;
+		}
+		return sampleGroundHeight;
 	}
 
 	private float getGroundHeightSample(final float groundHeight, final CollidableDoodadComponent currentWalkableUnder,

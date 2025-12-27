@@ -1,5 +1,7 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.thirdperson;
 
+import java.util.EnumSet;
+
 import com.badlogic.gdx.math.Quaternion;
 import com.badlogic.gdx.math.Vector3;
 import com.etheller.warsmash.util.WarsmashConstants;
@@ -7,6 +9,7 @@ import com.etheller.warsmash.viewer5.handlers.mdx.MdxCharacterInstance;
 import com.etheller.warsmash.viewer5.handlers.mdx.MdxCharacterNode;
 import com.etheller.warsmash.viewer5.handlers.mdx.MdxModel;
 import com.etheller.warsmash.viewer5.handlers.w3x.AnimationTokens.PrimaryTag;
+import com.etheller.warsmash.viewer5.handlers.w3x.AnimationTokens.SecondaryTag;
 import com.etheller.warsmash.viewer5.handlers.w3x.SequenceUtils;
 import com.etheller.warsmash.viewer5.handlers.w3x.War3MapViewer;
 import com.etheller.warsmash.viewer5.handlers.w3x.camera.CameraPanControls;
@@ -33,7 +36,7 @@ public class CBehaviorPlayerPawn implements CBehavior {
 	private final Vector3 previousVelocity;
 
 	boolean wasAirborn = false;
-	private boolean wasFalling;
+	public boolean wasFalling;
 	private RenderUnit lastIntersectedUnit;
 
 	private final Vector3 lastIntersectedUnitLocation = new Vector3();
@@ -43,6 +46,7 @@ public class CBehaviorPlayerPawn implements CBehavior {
 
 	private War3MapViewer viewerWorldAccess;
 	private MdxCharacterInstance characterModelInstance;
+	private boolean sitting;
 
 	public CBehaviorPlayerPawn(final CUnit unit, final CAbilityPlayerPawn playerPawn) {
 		this.unit = unit;
@@ -65,6 +69,8 @@ public class CBehaviorPlayerPawn implements CBehavior {
 
 	@Override
 	public CBehavior update(final CSimulation game) {
+		final boolean swimming = isSwimming();
+		final EnumSet<SecondaryTag> secondaryTags = swimming ? SequenceUtils.SWIM : SequenceUtils.EMPTY;
 		if (this.velocity.len2() >= 0.00001) {
 			this.previousVelocity.set(this.velocity);
 		}
@@ -113,7 +119,7 @@ public class CBehaviorPlayerPawn implements CBehavior {
 			this.lastIntersectedUnitLocation.set(intersectingUnit[0].location);
 			this.lastIntersectedUnitFacing = this.lastIntersectedUnit.getFacing();
 		}
-		final boolean falling = prevZBeneath < this.playerPawn.getZ();
+		final boolean falling = (prevZBeneath < this.playerPawn.getZ()) && !swimming;
 		if (falling) {
 			// falling
 			this.velocity.z -= 3;
@@ -126,18 +132,24 @@ public class CBehaviorPlayerPawn implements CBehavior {
 		}
 		else {
 			final double facingRad = Math.toRadians(this.unit.getFacing());
-			this.velocity.x = (float) (Math.cos(facingRad));
-			this.velocity.y = (float) (Math.sin(facingRad));
-			this.velocity.z = 0;
-			tempVec.set(this.unit.getX(), this.unit.getY(), this.playerPawn.getZ()).add(this.velocity);
-			final float nextZBeneath = this.viewerWorldAccess.getNearestIntersectingZBeneath(tempVec.x, tempVec.y,
-					tempVec.z + halfSpeed, intersectingUnit);
-			this.velocity.z = Math.max(-absForwardSpeed,
-					Math.min(absForwardSpeed, nextZBeneath - this.playerPawn.getZ()));
-			this.velocity.nor();
-			this.velocity.scl(this.forwardSpeed);
+			if (!swimming) {
+				this.velocity.x = (float) (Math.cos(facingRad));
+				this.velocity.y = (float) (Math.sin(facingRad));
+				this.velocity.z = 0;
+				tempVec.set(this.unit.getX(), this.unit.getY(), this.playerPawn.getZ()).add(this.velocity);
+				final float nextZBeneath = this.viewerWorldAccess.getNearestIntersectingZBeneath(tempVec.x, tempVec.y,
+						tempVec.z + halfSpeed, intersectingUnit);
+				this.velocity.z = Math.max(-absForwardSpeed,
+						Math.min(absForwardSpeed, nextZBeneath - this.playerPawn.getZ()));
+				this.velocity.nor();
+				this.velocity.scl(this.forwardSpeed);
+			}
+			else {
+				this.velocity.x = (float) (Math.cos(facingRad) * this.forwardSpeed);
+				this.velocity.y = (float) (Math.sin(facingRad) * this.forwardSpeed);
+			}
 		}
-		this.wasFalling = (prevZBeneath + halfSpeed) < this.playerPawn.getZ();
+		this.wasFalling = ((prevZBeneath + halfSpeed) < this.playerPawn.getZ()) && !swimming;
 		final float speed = this.velocity.len();
 		tempVec.set(this.unit.getX(), this.unit.getY(), this.playerPawn.getZ()).add(this.velocity);
 		final float stairsHeight = halfSpeed;
@@ -152,10 +164,15 @@ public class CBehaviorPlayerPawn implements CBehavior {
 				this.lastIntersectedUnitFacing = this.lastIntersectedUnit.getFacing();
 			}
 			this.unit.setPoint(tempVec.x, tempVec.y, game.getWorldCollision(), game.getRegionManager());
-			this.playerPawn.setZ(
-					falling ? Math.max(tempVec.z, nextZBeneath) : Math.max(tempVec.z - absForwardSpeed, nextZBeneath));
+			if (swimming) {
+				this.playerPawn.setZ(tempVec.z);
+			}
+			else {
+				this.playerPawn.setZ(falling ? Math.max(tempVec.z, nextZBeneath)
+						: Math.max(tempVec.z - absForwardSpeed, nextZBeneath));
+			}
 		}
-		else {
+		else if (!swimming) {
 			tempVec2.set(this.unit.getX(), this.unit.getY(),
 					Math.max(prevZBeneath, this.playerPawn.getZ() + this.velocity.z));
 			if (!this.viewerWorldAccess.is3DTravelBlocked(
@@ -176,8 +193,9 @@ public class CBehaviorPlayerPawn implements CBehavior {
 			this.wasAirborn = true;
 			if (this.characterModelInstance.sequenceEnded) {
 				this.unit.getUnitAnimationListener().playAnimation(false,
-						this.velocity.z > 0 ? PrimaryTag.JUMP : PrimaryTag.FALL, SequenceUtils.EMPTY, 1.0f, true);
+						this.velocity.z > 0 ? PrimaryTag.JUMP : PrimaryTag.FALL, secondaryTags, 1.0f, true);
 			}
+			this.sitting = false;
 		}
 		else {
 			if (this.wasAirborn) {
@@ -185,8 +203,8 @@ public class CBehaviorPlayerPawn implements CBehavior {
 					this.wasAirborn = false;
 				}
 				else {
-					if (this.unit.getUnitAnimationListener().playAnimation(false, PrimaryTag.JUMPEND,
-							SequenceUtils.EMPTY, 1.0f, true)) {
+					if (this.unit.getUnitAnimationListener().playAnimation(false, PrimaryTag.JUMPEND, secondaryTags,
+							1.0f, true)) {
 						if (this.spineLow != null) {
 							this.spineLow.subSequencer.setSequence(this.characterModelInstance.sequence,
 									(MdxModel) this.characterModelInstance.model, this.characterModelInstance);
@@ -196,26 +214,40 @@ public class CBehaviorPlayerPawn implements CBehavior {
 						this.wasAirborn = false;
 					}
 				}
+				this.sitting = false;
 			}
 			else {
 				if (walking != 0) {
 					this.unit.getUnitAnimationListener().playAnimation(false,
-							walking > 0 ? PrimaryTag.RUN : PrimaryTag.WALKBACKWARDS, SequenceUtils.EMPTY,
+							walking > 0 ? PrimaryTag.RUN : PrimaryTag.WALKBACKWARDS, secondaryTags,
 							1.0f /* baseUnitSpeed / 218.0f */, true);
+					this.sitting = false;
 				}
 				else {
 					switch (shuffle) {
 					case 1:
-						this.unit.getUnitAnimationListener().playAnimation(false, PrimaryTag.SHUFFLELEFT,
-								SequenceUtils.EMPTY, 1.0f, true);
+						this.unit.getUnitAnimationListener().playAnimation(false, PrimaryTag.SHUFFLELEFT, secondaryTags,
+								1.0f, true);
+						this.sitting = false;
 						break;
 					case 0:
-						this.unit.getUnitAnimationListener().playAnimation(false, PrimaryTag.STAND, SequenceUtils.EMPTY,
-								1.0f, true);
+						PrimaryTag primaryTag;
+						if (this.sitting) {
+							primaryTag = PrimaryTag.SITGROUND;
+						}
+						else if (swimming) {
+							primaryTag = PrimaryTag.SWIMIDLE;
+						}
+						else {
+							primaryTag = PrimaryTag.STAND;
+						}
+						this.unit.getUnitAnimationListener().playAnimation(false, primaryTag, secondaryTags, 1.0f,
+								true);
 						break;
 					case -1:
 						this.unit.getUnitAnimationListener().playAnimation(false, PrimaryTag.SHUFFLERIGHT,
-								SequenceUtils.EMPTY, 1.0f, true);
+								secondaryTags, 1.0f, true);
+						this.sitting = false;
 						break;
 					}
 				}
@@ -258,12 +290,38 @@ public class CBehaviorPlayerPawn implements CBehavior {
 	}
 
 	public void jump() {
-		if (!this.wasFalling || HACKON) {
-			setVelocityZ(HACKON ? 200 : 20);
+		final boolean swimming = isSwimming();
+		if (!this.wasFalling || swimming) {
+			setVelocityZ(20);
 			this.playerPawn.setZ(this.playerPawn.getZ() + 1);
-			this.unit.getUnitAnimationListener().playAnimation(true, PrimaryTag.JUMPSTART, SequenceUtils.EMPTY, 1.0f,
-					true);
+			if (!swimming) {
+				this.unit.getUnitAnimationListener().playAnimation(true, PrimaryTag.JUMPSTART, SequenceUtils.EMPTY,
+						1.0f, true);
+			}
 		}
+	}
+
+	public void sit() {
+		final boolean swimming = isSwimming();
+		if (swimming) {
+			setVelocityZ(-20);
+		}
+		else if (!this.wasFalling && !this.wasAirborn) {
+			if (this.sitting) {
+				this.sitting = false;
+				this.unit.getUnitAnimationListener().playAnimation(true, PrimaryTag.SITGROUNDUP, SequenceUtils.EMPTY,
+						1.0f, true);
+			}
+			else {
+				this.sitting = true;
+				this.unit.getUnitAnimationListener().playAnimation(true, PrimaryTag.SITGROUNDDOWN, SequenceUtils.EMPTY,
+						1.0f, true);
+			}
+		}
+	}
+
+	public boolean isSwimming() {
+		return HACKON;
 	}
 
 	public float getForwardSpeed() {
@@ -297,5 +355,11 @@ public class CBehaviorPlayerPawn implements CBehavior {
 	@Override
 	public <T> T visit(final CBehaviorVisitor<T> visitor) {
 		return visitor.accept(this);
+	}
+
+	public void jumpReleased() {
+		if (isSwimming()) {
+			setVelocityZ(0);
+		}
 	}
 }

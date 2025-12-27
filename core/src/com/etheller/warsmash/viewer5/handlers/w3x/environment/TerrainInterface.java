@@ -191,4 +191,6 @@ public abstract class TerrainInterface {
 	public abstract float getTerrainSpaceX(float x);
 
 	public abstract float getTerrainSpaceY(float y);
+
+	public abstract void setWdtHole(float worldX, float worldY, boolean hole);
 }

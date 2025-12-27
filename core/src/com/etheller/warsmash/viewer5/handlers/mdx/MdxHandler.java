@@ -15,7 +15,8 @@ public class MdxHandler extends ModelHandler {
 	public final Shaders shaders = new Shaders();
 
 	public static enum ShaderEnvironmentType {
-		MENU, GAME
+		MENU,
+		GAME
 	};
 
 	public static ShaderEnvironmentType CURRENT_SHADER_TYPE;
@@ -42,12 +43,13 @@ public class MdxHandler extends ModelHandler {
 		// Shaders.simple = viewer.webGL.createShaderProgram(MdxShaders.vsSimple,
 		// MdxShaders.fsSimple);
 		this.shaders.hd = viewer.webGL.createShaderProgram(MdxShaders.vsHd, MdxShaders.fsHd());
+		this.shaders.wmo = viewer.webGL.createShaderProgram(MdxShaders.vsWmo, MdxShaders.fsWmo);
 		// TODO HD reforged
 
 		// If a shader failed to compile, don't allow the handler to be registered, and
 		// send an error instead.
 		return this.shaders.complex.isCompiled() && this.shaders.extended.isCompiled()
-				&& this.shaders.particles.isCompiled()
+				&& this.shaders.particles.isCompiled() && this.shaders.wmo.isCompiled()
 		/* && Shaders.simple.isCompiled() && Shaders.hd.isCompiled() */;
 	}
 
@@ -62,6 +64,7 @@ public class MdxHandler extends ModelHandler {
 
 		}
 
+		public ShaderProgram wmo;
 		public ShaderProgram complex;
 		public ShaderProgram complexSkin;
 		public ShaderProgram extended;

@@ -20,7 +20,7 @@ public class W3xScenePortraitLightManager implements SceneLightManager, W3xScene
 	private final DataTexture unitLightsTexture;
 	private int unitLightCount;
 
-	public W3xScenePortraitLightManager(GL20 gl) {
+	public W3xScenePortraitLightManager(final GL20 gl) {
 		this.lights = new ArrayList<>();
 		this.unitLightsTexture = new DataTexture(gl, 4, 4, 1);
 		this.lightDataCopyHeap = ByteBuffer.allocateDirect(16 * 1 * 4).order(ByteOrder.nativeOrder()).asFloatBuffer();
@@ -81,5 +81,9 @@ public class W3xScenePortraitLightManager implements SceneLightManager, W3xScene
 	@Override
 	public int getTerrainLightCount() {
 		return 0;
+	}
+
+	public void dispose() {
+		this.unitLightsTexture.delete();
 	}
 }

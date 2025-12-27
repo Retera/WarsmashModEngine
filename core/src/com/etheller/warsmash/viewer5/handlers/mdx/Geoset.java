@@ -15,6 +15,7 @@ public class Geoset {
 	public int uvOffset;
 	public final int tangentOffset;
 	public int skinOffset;
+	public final int vertexLightingColorsOffset;
 	public int faceOffset;
 	public int vertices;
 	public int elements;
@@ -28,11 +29,13 @@ public class Geoset {
 	private final int boneCountOffsetBytes;
 	public final boolean unselectable;
 	public final MdlxGeoset mdlxGeoset;
+	public final int renderType;
 
 	public Geoset(final MdxModel model, final int index, final int positionOffset, final int normalOffset,
-			final int uvOffset, final int tangentOffset, final int skinOffset, final int faceOffset, final int vertices,
-			final int elements, final int openGLSkinType, final int skinStride, final int boneCountOffsetBytes,
-			final boolean unselectable, final MdlxGeoset mdlxGeoset) {
+			final int uvOffset, final int tangentOffset, final int skinOffset, final int vertexLightingColorsOffset,
+			final int faceOffset, final int vertices, final int elements, final int openGLSkinType,
+			final int skinStride, final int boneCountOffsetBytes, final boolean unselectable,
+			final MdlxGeoset mdlxGeoset, final int renderType) {
 		this.model = model;
 		this.index = index;
 		this.positionOffset = positionOffset;
@@ -40,6 +43,7 @@ public class Geoset {
 		this.uvOffset = uvOffset;
 		this.tangentOffset = tangentOffset;
 		this.skinOffset = skinOffset;
+		this.vertexLightingColorsOffset = vertexLightingColorsOffset;
 		this.faceOffset = faceOffset;
 		this.vertices = vertices;
 		this.elements = elements;
@@ -48,6 +52,7 @@ public class Geoset {
 		this.boneCountOffsetBytes = boneCountOffsetBytes;
 		this.unselectable = unselectable;
 		this.mdlxGeoset = mdlxGeoset;
+		this.renderType = renderType;
 
 		for (final GeosetAnimation geosetAnimation : model.getGeosetAnimations()) {
 			if (geosetAnimation.geosetId == index) {
@@ -116,6 +121,18 @@ public class Geoset {
 				this.skinOffset + this.boneCountOffsetBytes);
 	}
 
+	public void bindWmo(final ShaderProgram shader, final int coordId) {
+		// TODO use indices instead of strings for attributes
+		shader.setVertexAttribute("a_position", 3, GL20.GL_FLOAT, false, 0, this.positionOffset);
+		shader.setVertexAttribute("a_normal", 3, GL20.GL_FLOAT, false, 0, this.normalOffset);
+		shader.setVertexAttribute("a_uv", 2, GL20.GL_FLOAT, false, 0, this.uvOffset + (coordId * this.vertices * 8));
+		shader.setVertexAttribute("a_bones", 4, this.openGLSkinType, false, this.skinStride, this.skinOffset);
+		shader.setVertexAttribute("a_boneNumber", 1, this.openGLSkinType, false, this.skinStride,
+				this.skinOffset + this.boneCountOffsetBytes);
+		shader.setVertexAttribute("a_vertexLightingColors", 3, GL20.GL_FLOAT, false, 0,
+				this.vertexLightingColorsOffset);
+	}
+
 	public void bindSkin(final ShaderProgram shader, final int coordId) {
 		// TODO use indices instead of strings for attributes
 		shader.setVertexAttribute("a_position", 3, GL20.GL_FLOAT, false, 0, this.positionOffset);
@@ -140,7 +157,8 @@ public class Geoset {
 	public void render() {
 		final GL20 gl = this.model.viewer.gl;
 
-		gl.glDrawElements(GL20.GL_TRIANGLES, this.elements, GL20.GL_UNSIGNED_SHORT, this.faceOffset);
+		gl.glDrawElements(this.renderType /* GL20.GL_TRIANGLES */, this.elements, GL20.GL_UNSIGNED_SHORT,
+				this.faceOffset);
 	}
 
 	public void bindSimple(final ShaderProgram shader) {

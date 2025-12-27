@@ -5,6 +5,7 @@ import java.util.List;
 
 import com.badlogic.gdx.math.Quaternion;
 import com.etheller.warsmash.parsers.wmo.WmoDoodadDefinition;
+import com.etheller.warsmash.parsers.wmo.WmoPortingModel2.GroupModel;
 import com.etheller.warsmash.units.GameObject;
 import com.etheller.warsmash.util.FlagUtils;
 import com.etheller.warsmash.util.RenderMathUtils;
@@ -186,6 +187,62 @@ public class RenderDoodad {
 
 		this.typeId = War3ID.fromString(row.getId());
 
+	}
+
+	public RenderDoodad(final War3MapViewer map, final MdxModel model, final GroupModel groupModel,
+			final float[] location3D, final float[] scale3D, final float facingRadians, final float maxPitch,
+			final float maxRoll, final float selectionScale, final int doodadVariation, final long uniqueId) {
+		this.facingRadians = facingRadians;
+		this.maxPitch = maxPitch;
+		this.maxRoll = maxRoll;
+		this.uniqueId = uniqueId;
+		ModelInstance instance;
+
+		instance = model.addInstance();
+		((MdxComplexInstance) instance).setSequenceLoopMode(SequenceLoopMode.NEVER_LOOP);
+
+		instance.move(location3D);
+		// TODO: the following pitch/roll system is a heuristic, and we probably want to
+		// revisit it later.
+		// Specifically, I was pretty convinced that whichever is applied first
+		// (pitch/roll) should be used to do a projection onto the already-tilted plane
+		// to find the angle used for the other of the two
+		// (instead of measuring down from an imaginary flat ground plane, as we do
+		// currently).
+		final float pitch, roll;
+		this.x = location3D[0];
+		this.y = location3D[1];
+		{
+			if (!map.terrain.inPlayableArea(this.x, this.y)) {
+				((MdxComplexInstance) instance).setVertexColor(VERTEX_COLOR_BLACK);
+			}
+		}
+		this.vertexColorBase = new float[] { ((MdxComplexInstance) instance).vertexColor[0],
+				((MdxComplexInstance) instance).vertexColor[1], ((MdxComplexInstance) instance).vertexColor[2] };
+		this.vertexColorFogged = new float[] { this.vertexColorBase[0] / 2, this.vertexColorBase[1] / 2,
+				this.vertexColorBase[2] / 2 };
+		instance.scale(scale3D);
+		this.selectionScale = selectionScale;
+		instance.setScene(map.worldScene);
+
+		this.instance = instance;
+		this.row = null;
+
+//		this.fogState = CFogState.MASKED;
+//		this.lastFogStateColor = this.fogState.getMask();
+//		((MdxComplexInstance) instance).setVertexColor(VERTEX_COLOR_BLACK);
+		final CPlayerFogOfWarInterface fogOfWar = map.getFogOfWar();
+		final PathingGrid pathingGrid = map.simulation.getPathingGrid();
+		final int fogOfWarIndexX = pathingGrid.getFogOfWarIndexX(this.x);
+		final int fogOfWarIndexY = pathingGrid.getFogOfWarIndexY(this.y);
+		this.fogState = fogOfWar.getFogState(map.simulation, fogOfWarIndexX, fogOfWarIndexY);
+		this.lastFogStateColor = this.fogState.getMask();
+		for (int i = 0; i < this.vertexColorBase.length; i++) {
+			VERTEX_COLOR_HEAP[i] = (this.vertexColorBase[i] * (255 - (this.lastFogStateColor & 0xFF))) / 255f;
+		}
+		((MdxComplexInstance) this.instance).setVertexColor(VERTEX_COLOR_HEAP);
+
+		this.typeId = null;
 	}
 
 	public void applyColor(final GameObject row, final int doodadVariation, final ModelInstance instance) {

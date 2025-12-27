@@ -42,10 +42,20 @@ public class BatchGroup extends GenericGroup {
 		final SkinningType skinningType = this.skinningType;
 		final boolean hd = this.hd;
 		final ShaderProgram shader;
-		final W3xSceneLightManager lightManager = (W3xSceneLightManager) scene.getLightManager();
+		final W3xSceneLightManager lightManager;
+
+		if (instance.modelOnlyLightManager != null) {
+			lightManager = instance.modelOnlyLightManager;
+		}
+		else {
+			lightManager = (W3xSceneLightManager) scene.getLightManager();
+		}
 
 		if (hd) {
 			shader = handler.shaders.hd;
+		}
+		else if (skinningType == SkinningType.Wmo) {
+			shader = handler.shaders.wmo;
 		}
 		else if (skinningType == SkinningType.ExtendedVertexGroups) {
 			shader = handler.shaders.extended;
@@ -280,6 +290,9 @@ public class BatchGroup extends GenericGroup {
 					}
 					else if (skinningType == SkinningType.Skin) {
 						geoset.bindSkin(shader, layer.coordId);
+					}
+					else if (skinningType == SkinningType.Wmo) {
+						geoset.bindWmo(shader, layer.coordId);
 					}
 					else {
 						geoset.bind(shader, layer.coordId);

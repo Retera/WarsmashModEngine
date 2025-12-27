@@ -17,6 +17,7 @@ public class SetupGeosets {
 			int normalBytes = 0;
 			int uvBytes = 0;
 			int tangentBytes = 0;
+			int vertexLightingColorBytes = 0;
 			int skinBytes = 0;
 			int faceBytes = 0;
 			final SkinningType[] batchTypes = new SkinningType[geosets.size()];
@@ -66,6 +67,10 @@ public class SetupGeosets {
 							batchTypes[i] = SkinningType.VertexGroups;
 						}
 					}
+					if (geoset.isWmo()) {
+						vertexLightingColorBytes += vertices * 12;
+						batchTypes[i] = SkinningType.Wmo;
+					}
 
 					faceBytes += geoset.getFaces().length * 2;
 				}
@@ -76,11 +81,13 @@ public class SetupGeosets {
 			int uvOffset = normalOffset + normalBytes;
 			int tangentOffset = uvOffset + uvBytes;
 			int skinOffset = tangentOffset + tangentBytes;
+			int vertexLightingColorsOffset = skinOffset + skinBytes;
 			int faceOffset = 0;
 
 			model.arrayBuffer = gl.glGenBuffer();
 			gl.glBindBuffer(GL20.GL_ARRAY_BUFFER, model.arrayBuffer);
-			gl.glBufferData(GL20.GL_ARRAY_BUFFER, skinOffset + skinBytes, null, GL20.GL_STATIC_DRAW);
+			gl.glBufferData(GL20.GL_ARRAY_BUFFER, vertexLightingColorsOffset + vertexLightingColorBytes, null,
+					GL20.GL_STATIC_DRAW);
 
 			model.elementBuffer = gl.glGenBuffer();
 			gl.glBindBuffer(GL20.GL_ELEMENT_ARRAY_BUFFER, model.elementBuffer);
@@ -95,6 +102,7 @@ public class SetupGeosets {
 					final float[] normals = geoset.getNormals();
 					final float[][] uvSets = geoset.getUvSets();
 					final float[] tangents = geoset.getTangents();
+					final float[] vertexLightingColors = geoset.getVertexLightingColors();
 					final int[] faces = geoset.getFaces();
 					int[] skin = null;
 					final int vertices = geoset.getVertices().length / 3;
@@ -164,8 +172,9 @@ public class SetupGeosets {
 
 					final boolean unselectable = geoset.getSelectionFlags() == 4;
 					final Geoset vGeoset = new Geoset(model, model.getGeosets().size(), positionOffset, normalOffset,
-							uvOffset, tangentOffset, skinOffset, faceOffset, vertices, faces.length, openGLSkinType,
-							skinStride, boneCountOffsetBytes, unselectable, geoset);
+							uvOffset, tangentOffset, skinOffset, vertexLightingColorsOffset, faceOffset, vertices,
+							faces.length, openGLSkinType, skinStride, boneCountOffsetBytes, unselectable, geoset,
+							(int) geoset.getFaceTypeGroups()[0]);
 
 					model.getGeosets().add(vGeoset);
 
@@ -203,6 +212,11 @@ public class SetupGeosets {
 						tangentOffset += tangents.length * 4;
 					}
 
+					if (geoset.isWmo()) {
+						gl.glBufferSubData(GL20.GL_ARRAY_BUFFER, vertexLightingColorsOffset,
+								vertexLightingColors.length, RenderMathUtils.wrap(vertexLightingColors));
+						vertexLightingColorsOffset += vertexLightingColors.length * 4;
+					}
 					// Skin.
 					gl.glBufferSubData(GL20.GL_ARRAY_BUFFER, skinOffset, skin.length,
 							bigNodeSpace ? RenderMathUtils.wrap(skin) : RenderMathUtils.wrapAsBytes(skin));

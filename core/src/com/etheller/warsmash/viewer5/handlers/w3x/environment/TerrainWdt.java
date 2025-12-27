@@ -11,11 +11,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.GL20;
@@ -80,8 +78,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.vision.CPla
 public class TerrainWdt extends TerrainInterface {
 	private static final boolean LOAD_DOODREF_BY_CHUNK = false;
 	private static final int WORST_MS_PER_FRAME = 8000000;
-	private static final int LOAD_AREA = 2;
-	private static final int LOAD_AREA_LESS_ONE = LOAD_AREA - 1;
+	private static final int LOAD_AREA = 3;
 	private static final int HALF_LOAD_AREA = LOAD_AREA / 2;
 	private static final int HALF_LOAD_AREA_PLUS_ONE = (LOAD_AREA + 1) / 2;
 	private static final boolean LOAD_AREA_EVEN = (LOAD_AREA % 2) == 0;
@@ -161,8 +158,8 @@ public class TerrainWdt extends TerrainInterface {
 	private final int waterTextureArray;
 
 	private final ArrayDeque<DynamicTask> tasks = new ArrayDeque<>();
-	final Set<Long> usedDoodadSet = new HashSet<>();
-	final Set<Long> usedWmoSet = new HashSet<>();
+	final Map<Long, ActiveDoodad> doodadUniqueIdToUsage = new HashMap<>();
+	final Map<Long, ActiveWmo> wmoUniqueIdToUsage = new HashMap<>();
 
 	public TerrainWdt(final WdtMap map, final War3MapW3e w3eFile, final War3MapWpm terrainPathing,
 			final War3MapW3i w3iFile, final WebGL webGL, final DataSource dataSource,
@@ -1569,10 +1566,51 @@ public class TerrainWdt extends TerrainInterface {
 		}
 	}
 
+	private static final class ActiveDoodad {
+		RenderDoodad renderDoodad;
+		int usageCount;
+		long uniqueId;
+
+		public ActiveDoodad(final RenderDoodad renderDoodad, final int usageCount, final long uniqueId) {
+			this.renderDoodad = renderDoodad;
+			this.usageCount = usageCount;
+			this.uniqueId = uniqueId;
+		}
+
+		public long getUniqueId() {
+			return this.uniqueId;
+		}
+
+		public RenderDoodad getRenderDoodad() {
+			return this.renderDoodad;
+		}
+	}
+
+	private static final class ActiveWmo {
+		List<RenderDoodad> renderDoodads;
+		int usageCount;
+		long uniqueId;
+
+		public ActiveWmo(final List<RenderDoodad> renderDoodads, final int usageCount, final long uniqueId) {
+			super();
+			this.renderDoodads = renderDoodads;
+			this.usageCount = usageCount;
+			this.uniqueId = uniqueId;
+		}
+
+		public long getUniqueId() {
+			return this.uniqueId;
+		}
+
+		public List<RenderDoodad> getRenderDoodads() {
+			return this.renderDoodads;
+		}
+	}
+
 	private final class ActiveTile {
 		List<ModelInstance> modelInstances = new ArrayList<>();
-		List<RenderDoodad> renderDoodads = new ArrayList<>();
-		List<RenderDoodad> renderWmoDoodads = new ArrayList<>();
+		List<ActiveDoodad> renderDoodads = new ArrayList<>();
+		List<ActiveWmo> renderWmoDoodads = new ArrayList<>();
 
 		private int shadowMap;
 		private final int groundCornerHeightLinear;
@@ -1894,10 +1932,15 @@ public class TerrainWdt extends TerrainInterface {
 
 			@Override
 			public boolean run() {
-				final RenderDoodad renderDoodad = ActiveTile.this.renderDoodads.get(this.i);
-				TerrainWdt.this.viewer.removeWdtDoodad(renderDoodad);
+				final ActiveDoodad renderDoodad = ActiveTile.this.renderDoodads.get(this.i);
 				ActiveTile.this.renderDoodads.remove(this.i);
-				TerrainWdt.this.usedDoodadSet.remove(renderDoodad.getUniqueId());
+				if (renderDoodad.usageCount > 1) {
+					renderDoodad.usageCount--;
+				}
+				else {
+					TerrainWdt.this.doodadUniqueIdToUsage.remove(renderDoodad.getUniqueId());
+					TerrainWdt.this.viewer.removeWdtDoodad(renderDoodad.getRenderDoodad());
+				}
 				return true;
 			}
 		}
@@ -1911,10 +1954,17 @@ public class TerrainWdt extends TerrainInterface {
 
 			@Override
 			public boolean run() {
-				final RenderDoodad renderDoodad = ActiveTile.this.renderWmoDoodads.get(this.i);
-				TerrainWdt.this.viewer.removeWdtDoodad(renderDoodad);
+				final ActiveWmo activeDoodad = ActiveTile.this.renderWmoDoodads.get(this.i);
 				ActiveTile.this.renderWmoDoodads.remove(this.i);
-				TerrainWdt.this.usedWmoSet.remove(renderDoodad.getUniqueId());
+				if (activeDoodad.usageCount > 1) {
+					activeDoodad.usageCount--;
+				}
+				else {
+					TerrainWdt.this.wmoUniqueIdToUsage.remove(activeDoodad.getUniqueId());
+					for (final RenderDoodad renderDoodad : activeDoodad.getRenderDoodads()) {
+						TerrainWdt.this.viewer.removeWdtDoodad(renderDoodad);
+					}
+				}
 				return true;
 			}
 		}
@@ -2001,10 +2051,10 @@ public class TerrainWdt extends TerrainInterface {
 									ActiveTile.this.staticShadowData[(war3IndexX * shadowRows)
 											+ war3IndexY] = (dataEndBit == 0 ? (byte) 0 : (byte) 128);
 								}
-								final long data = shadowMap[1];
+								final long data = shadowMap[62];
 								{
 									final long dataEndBit = (data >> j) & 0x1;
-									final int war3IndexX = (int) ((war3ChunkIndexX * 64) + (63));
+									final int war3IndexX = (int) ((war3ChunkIndexX * 64) + (0));
 									final int war3IndexY = (int) ((war3ChunkIndexY * 64) + j);
 									ActiveTile.this.staticShadowData[(war3IndexX * shadowRows)
 											+ war3IndexY] = (dataEndBit == 0 ? (byte) 0 : (byte) 128);
@@ -2053,7 +2103,8 @@ public class TerrainWdt extends TerrainInterface {
 									final DoodadDefinition doodad = ActiveTile.this.tile.tileHeader.doodads
 											.get((int) ref);
 									final long uniqueId = doodad.getUniqueId();
-									if (TerrainWdt.this.usedDoodadSet.add(uniqueId)) {
+									ActiveDoodad activeDoodad = TerrainWdt.this.doodadUniqueIdToUsage.get(uniqueId);
+									if (activeDoodad == null) {
 										final long nameId = doodad.getNameId();
 										final float[] position = doodad.getPosition();
 										final float[] rotation = doodad.getRotation();
@@ -2078,9 +2129,16 @@ public class TerrainWdt extends TerrainInterface {
 										final RenderDoodad renderDoodad = TerrainWdt.this.viewer.createWdtDoodad(row, 0,
 												location, rotation, finalScale, (doodad.getFlags() & 0x2) != 0,
 												uniqueId);
-										ActiveTile.this.renderDoodads.add(renderDoodad);
+										activeDoodad = new ActiveDoodad(renderDoodad, 1, uniqueId);
+										ActiveTile.this.renderDoodads.add(activeDoodad);
+										TerrainWdt.this.doodadUniqueIdToUsage.put(uniqueId, activeDoodad);
 										// ---
 									}
+									else {
+										activeDoodad.usageCount++;
+										ActiveTile.this.renderDoodads.add(activeDoodad);
+									}
+
 								}
 							}
 						}
@@ -2091,7 +2149,8 @@ public class TerrainWdt extends TerrainInterface {
 									final MapObjectDefinition doodad = ActiveTile.this.tile.tileHeader.mapObjectDefinitions
 											.get((int) ref);
 									final long uniqueId = doodad.getUniqueId();
-									if (TerrainWdt.this.usedWmoSet.add(uniqueId)) {
+									ActiveWmo activeWmo = TerrainWdt.this.wmoUniqueIdToUsage.get(uniqueId);
+									if (activeWmo == null) {
 										final long nameId = doodad.getNameId();
 										final float[] position = doodad.getPosition();
 										final float[] rotation = doodad.getRotation();
@@ -2118,8 +2177,14 @@ public class TerrainWdt extends TerrainInterface {
 												.createWdtWorldModelObject(row, 0, location, rotation, finalScale,
 														(doodad.getFlags() & 0x2) != 0, uniqueId,
 														doodad.getDoodadSet());
-										ActiveTile.this.renderWmoDoodads.addAll(renderDoodads);
+										activeWmo = new ActiveWmo(renderDoodads, 1, uniqueId);
+										ActiveTile.this.renderWmoDoodads.add(activeWmo);
+										TerrainWdt.this.wmoUniqueIdToUsage.put(uniqueId, activeWmo);
 										// ---
+									}
+									else {
+										activeWmo.usageCount++;
+										ActiveTile.this.renderWmoDoodads.add(activeWmo);
 									}
 								}
 							}
@@ -2145,7 +2210,8 @@ public class TerrainWdt extends TerrainInterface {
 				}
 				final DoodadDefinition doodad = ActiveTile.this.tile.tileHeader.doodads.get(this.i);
 				final long uniqueId = doodad.getUniqueId();
-				if (TerrainWdt.this.usedDoodadSet.add(uniqueId)) {
+				ActiveDoodad activeDoodad = TerrainWdt.this.doodadUniqueIdToUsage.get(uniqueId);
+				if (activeDoodad == null) {
 					final long nameId = doodad.getNameId();
 					final float[] position = doodad.getPosition();
 					final float[] rotation = doodad.getRotation();
@@ -2166,8 +2232,14 @@ public class TerrainWdt extends TerrainInterface {
 
 					final RenderDoodad renderDoodad = TerrainWdt.this.viewer.createWdtDoodad(row, 0, location, rotation,
 							finalScale, (doodad.getFlags() & 0x2) != 0, uniqueId);
-					ActiveTile.this.renderDoodads.add(renderDoodad);
+					activeDoodad = new ActiveDoodad(renderDoodad, 1, uniqueId);
+					ActiveTile.this.renderDoodads.add(activeDoodad);
+					TerrainWdt.this.doodadUniqueIdToUsage.put(uniqueId, activeDoodad);
 					// ---
+				}
+				else {
+					activeDoodad.usageCount++;
+					ActiveTile.this.renderDoodads.add(activeDoodad);
 				}
 				return true;
 			}
@@ -2187,7 +2259,8 @@ public class TerrainWdt extends TerrainInterface {
 				}
 				final MapObjectDefinition doodad = ActiveTile.this.tile.tileHeader.mapObjectDefinitions.get(this.i);
 				final long uniqueId = doodad.getUniqueId();
-				if (TerrainWdt.this.usedWmoSet.add(uniqueId)) {
+				ActiveWmo activeWmo = TerrainWdt.this.wmoUniqueIdToUsage.get(uniqueId);
+				if (activeWmo == null) {
 					final long nameId = doodad.getNameId();
 					final float[] position = doodad.getPosition();
 					final float[] rotation = doodad.getRotation();
@@ -2209,8 +2282,14 @@ public class TerrainWdt extends TerrainInterface {
 					final List<RenderDoodad> renderDoodads = TerrainWdt.this.viewer.createWdtWorldModelObject(row, 0,
 							location, rotation, finalScale, (doodad.getFlags() & 0x2) != 0, uniqueId,
 							doodad.getDoodadSet());
-					ActiveTile.this.renderWmoDoodads.addAll(renderDoodads);
+					activeWmo = new ActiveWmo(renderDoodads, 1, uniqueId);
+					ActiveTile.this.renderWmoDoodads.add(activeWmo);
+					TerrainWdt.this.wmoUniqueIdToUsage.put(uniqueId, activeWmo);
 					// ---
+				}
+				else {
+					activeWmo.usageCount++;
+					ActiveTile.this.renderWmoDoodads.add(activeWmo);
 				}
 				return true;
 			}
@@ -2267,5 +2346,53 @@ public class TerrainWdt extends TerrainInterface {
 	@Override
 	public float getTerrainSpaceY(final float y) {
 		return (y - this.centerOffset[1]) / 128.0f;
+	}
+
+	@Override
+	public void setWdtHole(final float x, final float y, final boolean hole) {
+		final double userCellSpaceXWc3 = (StrictMath.floor(x) - this.centerOffset[0]) / 128.0;
+		final double userCellSpaceYWc3 = (StrictMath.floor(y) - this.centerOffset[1]) / 128.0;
+		final int cellXWc3 = (int) StrictMath.floor(userCellSpaceXWc3);
+		final int cellYWc3 = (int) StrictMath.floor(userCellSpaceYWc3);
+
+		if ((cellXWc3 >= 0) && (cellXWc3 < (this.mapSize[0] - 1)) && (cellYWc3 >= 0)
+				&& (cellYWc3 < (this.mapSize[1] - 1))) {
+			final int worldGridCellX = this.worldGrid.getCellX(x);
+			final int worldGridCellY = this.worldGrid.getCellY(y);
+			if ((worldGridCellX >= 0) && (worldGridCellX < this.tiles.length)) {
+				final Tile[] column = this.tiles[worldGridCellX];
+				if ((worldGridCellY >= 0) && (worldGridCellY < column.length)) {
+					final Tile tile = column[worldGridCellY];
+					if (tile != null) {
+						final float cornerX = this.worldGrid.getCornerX(worldGridCellX);
+						final float cornerY = this.worldGrid.getCornerY(worldGridCellY);
+						final double xWithinBlock = StrictMath.floor(x) - cornerX;
+						final double yWithinBlock = StrictMath.floor(y) - cornerY;
+
+						final float chunkSize = 128.0f * 8;
+						final int chunkX = (int) StrictMath.floor(xWithinBlock / chunkSize);
+						final int chunkY = (int) StrictMath.floor(yWithinBlock / chunkSize);
+						final Chunk chunk = tile.chunks[chunkX][chunkY];
+						if (chunk != null) {
+							final double userCellSpaceX = (xWithinBlock - (chunkX * chunkSize)) / 128.0;
+							final double userCellSpaceY = (yWithinBlock - (chunkY * chunkSize)) / 128.0;
+							final int cellX = (int) StrictMath.floor(userCellSpaceX);
+							final int cellY = (int) StrictMath.floor(userCellSpaceY);
+
+							final int holes = chunk.getHoles();
+							final int holeCellX = (cellX / 2);
+							final int holeCellY = (7 - cellY) / 2;
+							final int modifyBit = ((1 << holeCellX) << ((holeCellY) * 4));
+							if (hole) {
+								chunk.setHoles(holes | modifyBit);
+							}
+							else {
+								chunk.setHoles(holes & (~modifyBit));
+							}
+						}
+					}
+				}
+			}
+		}
 	}
 }

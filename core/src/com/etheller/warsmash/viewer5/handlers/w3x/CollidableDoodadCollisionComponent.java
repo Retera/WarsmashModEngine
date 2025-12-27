@@ -51,4 +51,9 @@ public class CollidableDoodadCollisionComponent implements CollidableDoodadCompo
 	public boolean isInterior() {
 		return this.interior;
 	}
+
+	@Override
+	public W3xScenePortraitLightManager getModelOnlyLightManager() {
+		return this.instance.modelOnlyLightManager;
+	}
 }

@@ -12,4 +12,6 @@ public interface CollidableDoodadComponent {
 	boolean intersectRayWithCollision(final Ray ray, final Vector3 intersection, final boolean b, final boolean c);
 
 	boolean isInterior();
+
+	W3xScenePortraitLightManager getModelOnlyLightManager();
 }

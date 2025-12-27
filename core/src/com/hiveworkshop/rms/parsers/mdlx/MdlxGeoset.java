@@ -29,6 +29,7 @@ public class MdlxGeoset implements MdlxBlock, MdlxChunk {
 
 	public float[] vertices;
 	public float[] normals;
+	public float[] vertexLightingColors;
 	public long[] faceTypeGroups; // unsigned int[]
 	public long[] faceGroups; // unsigned int[]
 	public int[] faces; // unsigned short[]
@@ -57,6 +58,8 @@ public class MdlxGeoset implements MdlxBlock, MdlxChunk {
 	 */
 	public short[] skin;
 	public float[][] uvSets;
+
+	public boolean wmo;
 
 	@Override
 	public void readMdx(final BinaryReader reader, final int version) {
@@ -492,6 +495,10 @@ public class MdlxGeoset implements MdlxBlock, MdlxChunk {
 		return this.vertices;
 	}
 
+	public float[] getVertexLightingColors() {
+		return this.vertexLightingColors;
+	}
+
 	public float[][] getUvSets() {
 		return this.uvSets;
 	}
@@ -558,5 +565,13 @@ public class MdlxGeoset implements MdlxBlock, MdlxChunk {
 
 	public short[] getSkin() {
 		return this.skin;
+	}
+
+	public void setWmo(final boolean wmo) {
+		this.wmo = wmo;
+	}
+
+	public boolean isWmo() {
+		return this.wmo;
 	}
 }

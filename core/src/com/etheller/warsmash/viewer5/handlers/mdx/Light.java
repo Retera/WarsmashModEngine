@@ -11,6 +11,7 @@ public class Light extends GenericObject {
 	private float intensity;
 	private final float[] ambientColor;
 	private float ambientIntensity;
+	private final boolean modelOnly;
 
 	public Light(final MdxModel model, final MdlxLight light, final int index) {
 		super(model, light, index);
@@ -34,6 +35,7 @@ public class Light extends GenericObject {
 		this.intensity = light.getIntensity();
 		this.ambientColor = light.getAmbientColor();
 		this.ambientIntensity = light.getAmbientIntensity();
+		this.modelOnly = light.isModelOnly();
 	}
 
 	public Type getType() {
@@ -86,5 +88,9 @@ public class Light extends GenericObject {
 
 	public void setAmbientIntensity(final float ambientIntensity) {
 		this.ambientIntensity = ambientIntensity;
+	}
+
+	public boolean isModelOnly() {
+		return this.modelOnly;
 	}
 }

@@ -130,6 +130,9 @@ public class ThirdPersonUI implements WarsmashToggleableUI {
 					this.war3MapViewer.getLocalPlayerIndex(), startLocation[0] + 24126.52f,
 					startLocation[1] - 172875.25f, 0));
 //			pawnUnits.add(this.war3MapViewer.simulation.createUnitSimple(this.pawnId,
+//					this.war3MapViewer.getLocalPlayerIndex(), startLocation[0] + 3250, startLocation[1] - 29795.25f,
+//					0));
+//			pawnUnits.add(this.war3MapViewer.simulation.createUnitSimple(this.pawnId,
 //					this.war3MapViewer.getLocalPlayerIndex(), startLocation[0] + 96242.28f,
 //					startLocation[1] -202859.8f, 0));
 //			this.war3MapViewer.getLocalPlayerIndex(), startLocation[0] + 80000, startLocation[1] - 400000, 0));
@@ -160,23 +163,48 @@ public class ThirdPersonUI implements WarsmashToggleableUI {
 						final String nextLine = scanner.nextLine();
 						final String[] bits = nextLine.split(" ");
 						try {
-							final War3ID unitId = War3ID.fromString(bits[0]);
-							int playerId = 0;
-							if (bits.length > 0) {
-								playerId = Integer.parseInt(bits[1]);
-							}
-							final int finalPlayerId = playerId;
 							Gdx.app.postRunnable(new Runnable() {
 
 								@Override
 								public void run() {
-									ThirdPersonUI.this.war3MapViewer.simulation.createUnit(unitId, finalPlayerId,
-											ThirdPersonUI.this.pawnUnit.getX(), ThirdPersonUI.this.pawnUnit.getY(),
-											ThirdPersonUI.this.pawnUnit.getFacing());
-									System.out.println("call CreateUnit(Player(" + finalPlayerId + "), '"
-											+ unitId.toString() + "', " + ThirdPersonUI.this.pawnUnit.getX() + ", "
-											+ ThirdPersonUI.this.pawnUnit.getY() + ", "
-											+ ThirdPersonUI.this.pawnUnit.getFacing() + ")");
+									if ("SetTerrainWdtHole".equals(bits[0])) {
+										final boolean isHole = "true".equals(bits[1]);
+
+										System.out.println(
+												"call SetTerrainWdtHole(" + ThirdPersonUI.this.pawnUnit.getX() + ", "
+														+ ThirdPersonUI.this.pawnUnit.getY() + ", " + isHole + ")");
+										ThirdPersonUI.this.war3MapViewer.terrain.setWdtHole(
+												ThirdPersonUI.this.pawnUnit.getX(), ThirdPersonUI.this.pawnUnit.getY(),
+												isHole);
+									}
+									else {
+
+										final War3ID unitId = War3ID.fromString(bits[0]);
+										int playerId = 0;
+										if (bits.length > 0) {
+											playerId = Integer.parseInt(bits[1]);
+										}
+										final int finalPlayerId = playerId;
+										final CUnit createdUnit = ThirdPersonUI.this.war3MapViewer.simulation
+												.createUnit(unitId, finalPlayerId, ThirdPersonUI.this.pawnUnit.getX(),
+														ThirdPersonUI.this.pawnUnit.getY(),
+														ThirdPersonUI.this.pawnUnit.getFacing());
+										if (createdUnit.getFirstAbilityOfType(CAbilityPlayerPawn.class) != null) {
+											System.out.println("set u = CreateUnit(Player(" + finalPlayerId + "), '"
+													+ unitId.toString() + "', " + ThirdPersonUI.this.pawnUnit.getX()
+													+ ", " + ThirdPersonUI.this.pawnUnit.getY() + ", "
+													+ ThirdPersonUI.this.pawnUnit.getFacing() + ")");
+											System.out.println("call SetPlayerPawnZ(u, "
+													+ ThirdPersonUI.this.abilityPlayerPawn.getZ() + ")");
+										}
+										else {
+											System.out.println("call CreateUnit(Player(" + finalPlayerId + "), '"
+													+ unitId.toString() + "', " + ThirdPersonUI.this.pawnUnit.getX()
+													+ ", " + ThirdPersonUI.this.pawnUnit.getY() + ", "
+													+ ThirdPersonUI.this.pawnUnit.getFacing() + ")");
+										}
+									}
+
 								}
 							});
 						}
@@ -338,6 +366,10 @@ public class ThirdPersonUI implements WarsmashToggleableUI {
 			this.uiOrderListener.issueImmediateOrder(this.pawnUnit.getHandleId(), this.abilityPlayerPawn.getHandleId(),
 					OrderIds.pawnJumpPressed, false);
 		}
+		else if (keycode == Input.Keys.X) {
+			this.uiOrderListener.issueImmediateOrder(this.pawnUnit.getHandleId(), this.abilityPlayerPawn.getHandleId(),
+					OrderIds.pawnSitPressed, false);
+		}
 		if (keycode == Input.Keys.Z) {
 			CBehaviorPlayerPawn.HACKON = !CBehaviorPlayerPawn.HACKON;
 		}
@@ -366,7 +398,11 @@ public class ThirdPersonUI implements WarsmashToggleableUI {
 
 	@Override
 	public boolean keyUp(final int keycode) {
-		if ((keycode == Input.Keys.LEFT) || (keycode == Input.Keys.A)) {
+		if (keycode == Input.Keys.SPACE) {
+			this.uiOrderListener.issueImmediateOrder(this.pawnUnit.getHandleId(), this.abilityPlayerPawn.getHandleId(),
+					OrderIds.pawnJumpReleased, false);
+		}
+		else if ((keycode == Input.Keys.LEFT) || (keycode == Input.Keys.A)) {
 			this.uiOrderListener.issueImmediateOrder(this.pawnUnit.getHandleId(), this.abilityPlayerPawn.getHandleId(),
 					OrderIds.pawnLeftReleased, false);
 			return true;

@@ -1,5 +1,6 @@
 package com.etheller.warsmash.parsers.wmo;
 
+import com.etheller.warsmash.util.FlagUtils;
 import com.hiveworkshop.rms.parsers.mdlx.MdlxBlock;
 import com.hiveworkshop.rms.parsers.mdlx.MdlxChunk;
 import com.hiveworkshop.rms.parsers.mdlx.mdl.MdlTokenInputStream;
@@ -58,6 +59,26 @@ public class GroupPolygon implements MdlxBlock, MdlxChunk {
 
 	public byte getMaterialId() {
 		return this.materialId;
+	}
+
+	/**
+	 * @return true if we blend lighting from exterior to interior
+	 */
+	public boolean isTransitionFace() {
+		return FlagUtils.hasFlag(this.flags, Flags.Unknown_0x1)
+				&& (FlagUtils.hasFlag(this.flags, Flags.Detail) || FlagUtils.hasFlag(this.flags, Flags.Render));
+	}
+
+	public boolean isColor() {
+		return !FlagUtils.hasFlag(this.flags, Flags.HasCollision);
+	}
+
+	public boolean isRenderFace() {
+		return FlagUtils.hasFlag(this.flags, Flags.Render) && !FlagUtils.hasFlag(this.flags, Flags.Detail);
+	}
+
+	public boolean isCollidable() {
+		return FlagUtils.hasFlag(this.flags, Flags.HasCollision) || isRenderFace();
 	}
 
 	public static class Flags {

@@ -104,6 +104,8 @@ public class ModelObjectGroup {
 				loadDynamicObjects(this.polygons, GroupPolygon::new, reader, size, version);
 				break;
 			case MOVI:
+				this.vertexIndices = reader.readUInt16Array(size / 2);
+				break;
 			case MOIN:
 				this.vertexIndices = reader.readUInt16Array(size / 2);
 				break;

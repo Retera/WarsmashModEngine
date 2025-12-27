@@ -41,6 +41,7 @@ public class GroupBatch implements MdlxBlock, MdlxChunk {
 
 		this.materialId = reader.readInt8();
 		if (version == 14) {
+			this.flags |= this.materialId;
 			this.materialId = -1; // ?
 		}
 		if (version == 16) {

@@ -942,18 +942,19 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 			final Vector3 usedCenter = new Vector3(extentCenter);
 			usedCenter.scl(scale);
 			usedCenter.rotateRad(RenderMathUtils.VEC3_UNIT_Z, facingRadians);
-			usedCenter.rotateRad(RenderMathUtils.VEC3_UNIT_Y, (float) Math.toRadians(rotation[0]));
-			usedCenter.rotateRad(RenderMathUtils.VEC3_UNIT_X, (float) Math.toRadians(rotation[2]));
+			usedCenter.rotateRad(RenderMathUtils.VEC3_UNIT_Y, (float) Math.toRadians(rotation[2]));
+			usedCenter.rotateRad(RenderMathUtils.VEC3_UNIT_X, (float) Math.toRadians(rotation[0]));
 			final float[] specificLocation = { location[0] + usedCenter.x, location[1] + usedCenter.y,
 					location[2] + usedCenter.z };
 
-			final RenderDoodad renderDoodad = new RenderDoodad(this, model, row, specificLocation, scale3D,
+			final RenderDoodad renderDoodad = new RenderDoodad(this, model, groupModel, specificLocation, scale3D,
 					facingRadians, maxPitch, maxRoll, defScale, doodadVariation, uniqueId);
 //			renderDoodad.instance.uniformScale(defScale);
+			renderDoodad.instance.rotate(new Quaternion().setFromAxisRad(RenderMathUtils.VEC3_UNIT_Z, facingRadians));
 			renderDoodad.instance.rotate(
-					new Quaternion().setFromAxisRad(RenderMathUtils.VEC3_UNIT_Y, (float) Math.toRadians(rotation[0])));
+					new Quaternion().setFromAxisRad(RenderMathUtils.VEC3_UNIT_Y, (float) Math.toRadians(rotation[2])));
 			renderDoodad.instance.rotate(
-					new Quaternion().setFromAxisRad(RenderMathUtils.VEC3_UNIT_X, (float) Math.toRadians(rotation[2])));
+					new Quaternion().setFromAxisRad(RenderMathUtils.VEC3_UNIT_X, (float) Math.toRadians(rotation[0])));
 			final Rectangle entireMap = this.terrain.getEntireMap();
 			for (final MdlxCollisionGeometry collisionGeometry : model.getCollisionGeometries()) {
 				final Bounds bounds = new Bounds();
@@ -996,8 +997,8 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 			final Vector3 usedCenter = new Vector3(wmoDoodadDefinition.getPosition());
 			usedCenter.scl(scale);
 			usedCenter.rotateRad(RenderMathUtils.VEC3_UNIT_Z, facingRadians);
-			usedCenter.rotateRad(RenderMathUtils.VEC3_UNIT_Y, (float) Math.toRadians(rotation[0]));
-			usedCenter.rotateRad(RenderMathUtils.VEC3_UNIT_X, (float) Math.toRadians(rotation[2]));
+			usedCenter.rotateRad(RenderMathUtils.VEC3_UNIT_Y, (float) Math.toRadians(rotation[2]));
+			usedCenter.rotateRad(RenderMathUtils.VEC3_UNIT_X, (float) Math.toRadians(rotation[0]));
 
 			final float[] specificLocation = { location[0] + usedCenter.x, location[1] + usedCenter.y,
 					location[2] + usedCenter.z };
@@ -1009,7 +1010,7 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 			final String fileName = worldModelObject.getDoodadFileNamesOffsetLookup()
 					.get((int) wmoDoodadDefinition.getNameIndex());
 
-			final MdxModel model = (MdxModel) load(fileName, this.mapPathSolver, this.solverParams);
+			final MdxModel model = loadModelMdx(this.dataSource, this, fileName, this.mapPathSolver, this.solverParams);
 
 			final RenderDoodad renderDoodad = new RenderDoodad(this, model, wmoDoodadDefinition, specificLocation,
 					scale3DSubDood, facingRadians, defScale, exterior);
@@ -1608,7 +1609,7 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 		}
 		for (final RenderWidget unit : this.selected) {
 			unit.unassignSelectionCircle();
-			unit.getInstance().unshadedOverride = 0.0f;
+			unit.getInstance().setUnshadedOverride(0.0f);
 		}
 		this.selectedSplatModelKeys.clear();
 		this.selected.clear();
@@ -1737,7 +1738,7 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 		}
 
 		for (final RenderWidget unit : units) {
-			unit.getInstance().unshadedOverride = 1.0f;
+			unit.getInstance().setUnshadedOverride(1.0f);
 			this.selected.add(unit);
 		}
 	}
@@ -1750,7 +1751,7 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 		}
 		unit.unassignSelectionPreviewHighlight();
 		if (unit.getInstance().unshadedOverride < 0.5f) {
-			unit.getInstance().unshadedOverride = 0.0f;
+			unit.getInstance().setUnshadedOverride(0.0f);
 		}
 	}
 
@@ -1761,7 +1762,7 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 		for (final RenderWidget widget : this.mouseHighlightWidgets) {
 			widget.unassignSelectionPreviewHighlight();
 			if (widget.getInstance().unshadedOverride < 0.5f) {
-				widget.getInstance().unshadedOverride = 0.0f;
+				widget.getInstance().setUnshadedOverride(0.0f);
 			}
 		}
 		this.mouseHighlightSplatModelKeys.clear();
@@ -1872,7 +1873,7 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 
 	public void showUnitMouseOverHighlightThirdPerson(final RenderWidget unit) {
 		if (unit.getInstance().unshadedOverride < 0.5f) {
-			unit.getInstance().unshadedOverride = 0.4f;
+			unit.getInstance().setUnshadedOverride(0.4f);
 		}
 		this.mouseHighlightWidgets.add(unit);
 	}
@@ -2213,12 +2214,15 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 					return true;
 				}
 			}
-			else if (prevGroundHeight >= TerrainInterface.NO_TERRAIN_HEIGHT) {
-				if (newGroundHeight >= TerrainInterface.NO_TERRAIN_HEIGHT) {
+			else if (prevGroundHeight > TerrainInterface.NO_TERRAIN_HEIGHT) {
+				if (newGroundHeight > TerrainInterface.NO_TERRAIN_HEIGHT) {
 					if ((newGroundHeight - prevGroundHeight) < stairsHeight) {
 						bestClosestAvailableLocationIfFailed.set(newLocation);
 						bestClosestAvailableLocationIfFailed.z = newGroundHeight;
 //						return true;// dont fall through world
+					}
+					else {
+						return true;
 					}
 				}
 			}

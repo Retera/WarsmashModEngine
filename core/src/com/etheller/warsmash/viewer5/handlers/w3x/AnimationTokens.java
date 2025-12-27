@@ -32,7 +32,11 @@ public class AnimationTokens {
 		SHUFFLERIGHT,
 		SHUFFLELEFT,
 		MOUNT,
-		BATTLEROAR;
+		BATTLEROAR,
+		SWIMIDLE,
+		SITGROUNDDOWN,
+		SITGROUND,
+		SITGROUNDUP;
 
 		@Override
 		public int getHandleId() {

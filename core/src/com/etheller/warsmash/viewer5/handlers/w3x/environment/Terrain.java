@@ -1774,4 +1774,9 @@ public class Terrain extends TerrainInterface {
 		this.updateGroundHeights(tempRect.set(x, y, width, height));
 
 	}
+
+	@Override
+	public void setWdtHole(final float worldX, final float worldY, final boolean hole) {
+
+	}
 }

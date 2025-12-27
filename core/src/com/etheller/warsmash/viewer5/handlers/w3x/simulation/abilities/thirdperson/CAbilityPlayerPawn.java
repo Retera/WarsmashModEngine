@@ -65,6 +65,12 @@ public class CAbilityPlayerPawn extends AbstractGenericNoIconAbility implements 
 		else if (orderId == OrderIds.pawnJumpPressed) {
 			receiver.targetOk(null);
 		}
+		else if (orderId == OrderIds.pawnJumpReleased) {
+			receiver.targetOk(null);
+		}
+		else if (orderId == OrderIds.pawnSitPressed) {
+			receiver.targetOk(null);
+		}
 		else if (orderId == OrderIds.pawnDownReleased) {
 			receiver.targetOk(null);
 		}
@@ -155,6 +161,14 @@ public class CAbilityPlayerPawn extends AbstractGenericNoIconAbility implements 
 		}
 		else if (orderId == OrderIds.pawnJumpPressed) {
 			this.behaviorPlayerPawn.jump();
+			return this.behaviorPlayerPawn;
+		}
+		else if (orderId == OrderIds.pawnJumpReleased) {
+			this.behaviorPlayerPawn.jumpReleased();
+			return this.behaviorPlayerPawn;
+		}
+		else if (orderId == OrderIds.pawnSitPressed) {
+			this.behaviorPlayerPawn.sit();
 			return this.behaviorPlayerPawn;
 		}
 		else {

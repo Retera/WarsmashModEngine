@@ -29,6 +29,7 @@ import com.etheller.warsmash.viewer5.UpdatableObject;
 import com.etheller.warsmash.viewer5.gl.DataTexture;
 import com.etheller.warsmash.viewer5.gl.DataTexturePool;
 import com.etheller.warsmash.viewer5.handlers.w3x.DynamicShadowManager;
+import com.etheller.warsmash.viewer5.handlers.w3x.W3xScenePortraitLightManager;
 import com.hiveworkshop.rms.parsers.mdlx.MdlxCollisionGeometry;
 import com.hiveworkshop.rms.parsers.mdlx.MdlxGeoset;
 
@@ -84,6 +85,7 @@ public class MdxComplexInstance extends ModelInstance {
 	public int lightOmitOffsetOverride = 0;
 	private boolean hasAnyUnselectableMesh = false;
 	private final Descriptor<MdxNode> mdxNodeDescriptor;
+	public W3xScenePortraitLightManager modelOnlyLightManager = null;
 
 	public MdxComplexInstance(final MdxModel model) {
 		this(model, MdxNodeDescriptor.INSTANCE);
@@ -131,10 +133,17 @@ public class MdxComplexInstance extends ModelInstance {
 			this.initNode(this.nodes, this.nodes[nodeIndex++], bone);
 		}
 
+		boolean modelOnlyLights = false;
 		for (final Light light : model.lights) {
 			final LightInstance lightInstance = new LightInstance(this, light);
 			this.lights.add(lightInstance);
 			this.initNode(this.nodes, this.nodes[nodeIndex++], light, lightInstance);
+			if (light.isModelOnly()) {
+				modelOnlyLights = true;
+			}
+		}
+		if (modelOnlyLights) {
+			this.modelOnlyLightManager = new W3xScenePortraitLightManager(Gdx.gl);
 		}
 
 		for (final Helper helper : model.helpers) {
@@ -1089,6 +1098,9 @@ public class MdxComplexInstance extends ModelInstance {
 			DataTexturePool.INSTANCE.release(this.boneTexture);
 		}
 		this.boneTexture = null;
+		if (this.modelOnlyLightManager != null) {
+			this.modelOnlyLightManager.dispose();
+		}
 	}
 
 	public void setLightOmitOffsetOverride(final int newValue) {
@@ -1096,6 +1108,24 @@ public class MdxComplexInstance extends ModelInstance {
 		for (final ModelInstance childInstance : this.childrenInstances) {
 			if (childInstance instanceof MdxComplexInstance) {
 				((MdxComplexInstance) childInstance).setLightOmitOffsetOverride(newValue);
+			}
+		}
+	}
+
+	public void setUnshadedOverride(final float unshadedOverride) {
+		this.unshadedOverride = unshadedOverride;
+		for (final ModelInstance childInstance : this.childrenInstances) {
+			if (childInstance instanceof MdxComplexInstance) {
+				((MdxComplexInstance) childInstance).setUnshadedOverride(unshadedOverride);
+			}
+		}
+	}
+
+	public void setModelOnlyLightManager(final W3xScenePortraitLightManager sceneLightManager) {
+		this.modelOnlyLightManager = sceneLightManager;
+		for (final ModelInstance childInstance : this.childrenInstances) {
+			if (childInstance instanceof MdxComplexInstance) {
+				((MdxComplexInstance) childInstance).setModelOnlyLightManager(sceneLightManager);
 			}
 		}
 	}

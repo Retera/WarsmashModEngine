@@ -39,6 +39,7 @@ import com.etheller.warsmash.parsers.jass.Jass2.RootFrameListener;
 import com.etheller.warsmash.units.DataTable;
 import com.etheller.warsmash.units.Element;
 import com.etheller.warsmash.util.ImageUtils;
+import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.util.WarsmashConstants;
 import com.etheller.warsmash.util.WarsmashUtils;
 import com.etheller.warsmash.viewer5.Model;
@@ -53,7 +54,6 @@ import com.etheller.warsmash.viewer5.handlers.mdx.MdxModel;
 import com.etheller.warsmash.viewer5.handlers.w3x.War3MapViewer;
 import com.etheller.warsmash.viewer5.handlers.w3x.camera.CameraPreset;
 import com.etheller.warsmash.viewer5.handlers.w3x.camera.CameraRates;
-import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.RenderUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayerUnitOrderListener;
 import com.etheller.warsmash.viewer5.handlers.w3x.ui.MeleeUI;
 import com.etheller.warsmash.viewer5.handlers.w3x.ui.WarsmashUI;
@@ -61,6 +61,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.ui.thirdperson.ThirdPersonUI;
 import com.etheller.warsmash.viewer5.handlers.w3x.ui.toggle.MeleeToggleUI;
 
 public class WarsmashGdxMapScreen implements InputProcessor, Screen {
+	public static final War3ID PLAYER_PAWN_ID = War3ID.fromString("Plyr");
 	public static final boolean ENABLE_AUDIO = true;
 	private final War3MapViewer viewer;
 	private final Rectangle tempRect = new Rectangle();
@@ -200,7 +201,7 @@ public class WarsmashGdxMapScreen implements InputProcessor, Screen {
 					}
 				});
 		final ThirdPersonUI thirdPersonUI = new ThirdPersonUI(this.viewer, this.uiScene, this.uiViewport, portraitScene,
-				this.uiOrderListener, RenderUnit.PLAYER_PAWN_ID);
+				this.uiOrderListener, PLAYER_PAWN_ID);
 //		final ThirdPersonUI thirdPersonUI = new ThirdPersonUI(this.viewer, this.uiScene, this.uiViewport, portraitScene,
 //				"Creature\\TempScarletCrusaderLight\\ScarletCrusaderLight.mdx");
 //		final MdxComplexInstance pawnComplexInstance = thirdPersonUI.getPlayerPawn().getPawnComplexInstance();

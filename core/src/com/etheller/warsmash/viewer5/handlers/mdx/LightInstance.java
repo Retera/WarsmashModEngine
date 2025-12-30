@@ -48,7 +48,7 @@ public class LightInstance implements UpdatableObject, SceneLightInstance {
 		final float ambientColorGreen = vectorHeap[1];
 		final float ambientColorBlue = vectorHeap[2];
 		if (MdxShaders.SCALE_PARTICLE2_BY_MODEL) {
-			final float scaleSq = this.node.worldScale.x * this.node.worldScale.y;
+			final float scaleSq = this.node.worldScale.x;// * this.node.worldScale.y;
 			intensity *= scaleSq;
 			ambientIntensity *= scaleSq;
 			attenuationStart *= this.node.worldScale.x;

@@ -232,9 +232,11 @@ public class WmoPortingModel2 extends com.etheller.warsmash.viewer5.Model<WmoPor
 					portedLayer.flags |= MdlxLayer.Flags.TWO_SIDED;
 				}
 
-				if (!FlagUtils.hasFlag(group.getFlags(), WmoGroupInfo.Flags.IsExterior)
-						|| FlagUtils.hasFlag(group.getFlags(), WmoGroupInfo.Flags.IsInterior)) {
-					portedLayer.flags |= MdlxLayer.Flags.WARSMASH_ONLY_NOT_EXTERIOR_LIT;
+				if (false) {
+					if (!FlagUtils.hasFlag(group.getFlags(), WmoGroupInfo.Flags.IsExterior)
+							|| FlagUtils.hasFlag(group.getFlags(), WmoGroupInfo.Flags.IsInterior)) {
+						portedLayer.flags |= MdlxLayer.Flags.WARSMASH_ONLY_NOT_EXTERIOR_LIT;
+					}
 				}
 				portedLayer.textureId = textureId;
 
@@ -541,6 +543,9 @@ public class WmoPortingModel2 extends com.etheller.warsmash.viewer5.Model<WmoPor
 
 	private static void loadLight(final WorldModelObject parser, final MdlxModel portedModel,
 			final Vector3 extentCenter, final int lightReference) {
+		if (true) {
+			return;
+		}
 		final WmoLight wmoLight = parser.getHeaders().getLights().get(lightReference);
 
 		final MdlxLight light = new MdlxLight();
@@ -567,7 +572,7 @@ public class WmoPortingModel2 extends com.etheller.warsmash.viewer5.Model<WmoPor
 		light.intensity = wmoLight.getIntensity();
 		light.attenuation[0] = wmoLight.getAttenStart();
 		light.attenuation[1] = wmoLight.getAttenEnd();
-		light.setModelOnly(true);
+//		light.setModelOnly(true);
 
 		final float[] wmoLightPosition = wmoLight.getPosition();
 		portedModel.pivotPoints.add(new float[] { wmoLightPosition[0] - extentCenter.x,

@@ -566,6 +566,10 @@ public class MdxComplexInstance extends ModelInstance {
 
 	@Override
 	public void renderOpaque(final Matrix4 mvp) {
+		if (this.scene == null) {
+			System.err.println("renderfail bad scene");
+			return;
+		}
 		final MdxModel model = (MdxModel) this.model;
 
 		if (!this.additiveOverrideMeshMode) {
@@ -582,6 +586,10 @@ public class MdxComplexInstance extends ModelInstance {
 
 	@Override
 	public void renderTranslucent() {
+		if (this.scene == null) {
+			System.err.println("renderfail bad scene");
+			return;
+		}
 		if (DynamicShadowManager.IS_SHADOW_MAPPING) {
 			return;
 		}

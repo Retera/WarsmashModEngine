@@ -8,7 +8,6 @@ import com.badlogic.gdx.math.Quaternion;
 import com.badlogic.gdx.math.Vector3;
 import com.etheller.warsmash.parsers.fdf.GameUI;
 import com.etheller.warsmash.util.RenderMathUtils;
-import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.viewer5.handlers.mdx.MdxComplexInstance;
 import com.etheller.warsmash.viewer5.handlers.mdx.MdxModel;
 import com.etheller.warsmash.viewer5.handlers.mdx.Sequence;
@@ -39,7 +38,6 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.C
 
 public class RenderUnit implements RenderWidget {
 	private static final RenderUnit[] intersectingUnit = new RenderUnit[1];
-	public static final War3ID PLAYER_PAWN_ID = War3ID.fromString("Plyr");
 	public static final Color ETHEREAL = new Color(0.75f, 1, 0.5f, 0.5f);
 	public static final Color DEFAULT = new Color(1, 1, 1, 1);
 	public static final Quaternion tempQuat = new Quaternion();
@@ -109,7 +107,7 @@ public class RenderUnit implements RenderWidget {
 		}
 		this.playerPawn = simulationUnit.getFirstAbilityOfType(CAbilityPlayerPawn.class);
 		final MdxModel model = typeData.getModel();
-		final boolean playerPawnFlag = simulationUnit.getTypeId().equals(PLAYER_PAWN_ID);
+		final boolean playerPawnFlag = simulationUnit.getTypeId().asStringValue().charAt(0) == 'P';
 		final MdxComplexInstance instance = (MdxComplexInstance) (playerPawnFlag ? model.addInstance(2)
 				: model.addInstance());
 

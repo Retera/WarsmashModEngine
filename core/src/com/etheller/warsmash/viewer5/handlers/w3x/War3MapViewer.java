@@ -678,9 +678,9 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 			}
 			else {
 				modelInstance.setLocation(renderUnit.location);
+				modelInstance.setScene(War3MapViewer.this.worldScene);
 			}
 
-			modelInstance.setScene(War3MapViewer.this.worldScene);
 			SequenceUtils.randomBirthSequence(modelInstance);
 			War3MapViewer.this.projectiles.add(new RenderAttackInstant(modelInstance, War3MapViewer.this,
 					(float) Math.toRadians(renderUnit.getSimulationUnit().getFacing())));
@@ -993,7 +993,7 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 		for (long doodadIdx = 0; doodadIdx < wmoDoodadSet.getCount(); doodadIdx++) {
 			final WmoDoodadDefinition wmoDoodadDefinition = worldModelObject.getDoodadDefinitions()
 					.get((int) (wmoDoodadSet.getStartIndex() + doodadIdx));
-			final boolean exterior = false; // TODO read from flag
+			final boolean exterior = true; // TODO read from flag
 			final Vector3 usedCenter = new Vector3(wmoDoodadDefinition.getPosition());
 			usedCenter.scl(scale);
 			usedCenter.rotateRad(RenderMathUtils.VEC3_UNIT_Z, facingRadians);
@@ -2906,6 +2906,7 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 						else {
 							// TODO This is not consistent with War3, is it? Should look nice though.
 							modelInstance.setLocation(renderUnit.location);
+							modelInstance.setScene(War3MapViewer.this.worldScene);
 							yaw = (float) Math.toRadians(renderUnit.getSimulationUnit().getFacing());
 						}
 					}
@@ -2916,8 +2917,8 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 				}
 				else {
 					modelInstance.setLocation(0, 0, 0);
+					modelInstance.setScene(War3MapViewer.this.worldScene);
 				}
-				modelInstance.setScene(War3MapViewer.this.worldScene);
 				final EnumSet<SecondaryTag> requiredAnimationNamesForAttachments = renderUnit == null
 						? SequenceUtils.EMPTY
 						: renderUnit.getTypeData().getRequiredAnimationNamesForAttachments();

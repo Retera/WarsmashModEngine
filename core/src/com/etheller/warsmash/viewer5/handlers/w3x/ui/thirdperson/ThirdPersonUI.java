@@ -126,9 +126,18 @@ public class ThirdPersonUI implements WarsmashToggleableUI {
 		else {
 			final float[] startLocation = this.war3MapViewer.simulation
 					.getPlayer(this.war3MapViewer.getLocalPlayerIndex()).getStartLocation();
+
+			// WESTFALL====
+			// -31797.357, -341638.3
 			pawnUnits.add(this.war3MapViewer.simulation.createUnitSimple(this.pawnId,
-					this.war3MapViewer.getLocalPlayerIndex(), startLocation[0] + 24126.52f,
-					startLocation[1] - 172875.25f, 0));
+					this.war3MapViewer.getLocalPlayerIndex(), startLocation[0] - 31797.357f,
+					startLocation[1] - 341638.3f, 0));
+
+			// IF=====
+
+//			pawnUnits.add(this.war3MapViewer.simulation.createUnitSimple(this.pawnId,
+//					this.war3MapViewer.getLocalPlayerIndex(), startLocation[0] + 24126.52f,
+//					startLocation[1] - 172875.25f, 0));
 //			pawnUnits.add(this.war3MapViewer.simulation.createUnitSimple(this.pawnId,
 //					this.war3MapViewer.getLocalPlayerIndex(), startLocation[0] + 3250, startLocation[1] - 29795.25f,
 //					0));
@@ -189,19 +198,21 @@ public class ThirdPersonUI implements WarsmashToggleableUI {
 												.createUnit(unitId, finalPlayerId, ThirdPersonUI.this.pawnUnit.getX(),
 														ThirdPersonUI.this.pawnUnit.getY(),
 														ThirdPersonUI.this.pawnUnit.getFacing());
-										if (createdUnit.getFirstAbilityOfType(CAbilityPlayerPawn.class) != null) {
-											System.out.println("set u = CreateUnit(Player(" + finalPlayerId + "), '"
-													+ unitId.toString() + "', " + ThirdPersonUI.this.pawnUnit.getX()
-													+ ", " + ThirdPersonUI.this.pawnUnit.getY() + ", "
-													+ ThirdPersonUI.this.pawnUnit.getFacing() + ")");
-											System.out.println("call SetPlayerPawnZ(u, "
-													+ ThirdPersonUI.this.abilityPlayerPawn.getZ() + ")");
-										}
-										else {
-											System.out.println("call CreateUnit(Player(" + finalPlayerId + "), '"
-													+ unitId.toString() + "', " + ThirdPersonUI.this.pawnUnit.getX()
-													+ ", " + ThirdPersonUI.this.pawnUnit.getY() + ", "
-													+ ThirdPersonUI.this.pawnUnit.getFacing() + ")");
+										if (createdUnit != null) {
+											if (createdUnit.getFirstAbilityOfType(CAbilityPlayerPawn.class) != null) {
+												System.out.println("set u = CreateUnit(Player(" + finalPlayerId + "), '"
+														+ unitId.toString() + "', " + ThirdPersonUI.this.pawnUnit.getX()
+														+ ", " + ThirdPersonUI.this.pawnUnit.getY() + ", "
+														+ ThirdPersonUI.this.pawnUnit.getFacing() + ")");
+												System.out.println("call SetPlayerPawnZ(u, "
+														+ ThirdPersonUI.this.abilityPlayerPawn.getZ() + ")");
+											}
+											else {
+												System.out.println("call CreateUnit(Player(" + finalPlayerId + "), '"
+														+ unitId.toString() + "', " + ThirdPersonUI.this.pawnUnit.getX()
+														+ ", " + ThirdPersonUI.this.pawnUnit.getY() + ", "
+														+ ThirdPersonUI.this.pawnUnit.getFacing() + ")");
+											}
 										}
 									}
 

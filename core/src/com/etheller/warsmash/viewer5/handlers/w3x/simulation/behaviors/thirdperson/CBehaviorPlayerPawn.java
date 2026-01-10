@@ -69,6 +69,11 @@ public class CBehaviorPlayerPawn implements CBehavior {
 
 	@Override
 	public CBehavior update(final CSimulation game) {
+		final float prevX = this.unit.getX();
+		final float prevY = this.unit.getY();
+		if (!this.viewerWorldAccess.canPawnMoveAt(prevX, prevY)) {
+			return this;
+		}
 		final boolean swimming = isSwimming();
 		final EnumSet<SecondaryTag> secondaryTags = swimming ? SequenceUtils.SWIM : SequenceUtils.EMPTY;
 		if (this.velocity.len2() >= 0.00001) {
@@ -99,8 +104,6 @@ public class CBehaviorPlayerPawn implements CBehavior {
 			this.forwardSpeed = (0);
 		}
 		final float absForwardSpeed = Math.abs(this.forwardSpeed);
-		final float prevX = this.unit.getX();
-		final float prevY = this.unit.getY();
 		if (this.lastIntersectedUnit != null) {
 			tempVec.set(prevX, prevY, this.playerPawn.getZ()).sub(this.lastIntersectedUnitLocation);
 			final float newFacing = this.lastIntersectedUnit.getFacing();

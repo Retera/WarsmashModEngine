@@ -934,6 +934,66 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 		final float defScale = scale;
 		final float facingRadians = (float) Math.toRadians(rotation[1] - 90);
 		final List<RenderDoodad> renderDoodads = new ArrayList<>();
+
+		final WmoDoodadSet wmoDoodadSet = worldModelObject.getDoodadSets().get(doodadSet);
+		for (long doodadIdx = 0; doodadIdx < wmoDoodadSet.getCount(); doodadIdx++) {
+			final WmoDoodadDefinition wmoDoodadDefinition = worldModelObject.getDoodadDefinitions()
+					.get((int) (wmoDoodadSet.getStartIndex() + doodadIdx));
+			final boolean exterior = !FlagUtils.hasFlag((int) wmoDoodadDefinition.getFlags(),
+					WmoDoodadDefinition.Flags.Unknown_0x2);
+			final Vector3 usedCenter = new Vector3(wmoDoodadDefinition.getPosition());
+			usedCenter.scl(scale);
+			usedCenter.rotateRad(RenderMathUtils.VEC3_UNIT_Z, facingRadians);
+			usedCenter.rotateRad(RenderMathUtils.VEC3_UNIT_Y, (float) Math.toRadians(rotation[2]));
+			usedCenter.rotateRad(RenderMathUtils.VEC3_UNIT_X, (float) Math.toRadians(rotation[0]));
+
+			final float[] specificLocation = { location[0] + usedCenter.x, location[1] + usedCenter.y,
+					location[2] + usedCenter.z };
+
+			final float subDoodScale = wmoDoodadDefinition.getScale();
+			final float[] scale3DSubDood = new float[] { scale3D[0] * subDoodScale, scale3D[1] * subDoodScale,
+					scale3D[2] * subDoodScale };
+
+			final String fileName = worldModelObject.getDoodadFileNamesOffsetLookup()
+					.get((int) wmoDoodadDefinition.getNameIndex());
+
+			final MdxModel model = loadModelMdx(this.dataSource, this, fileName, this.mapPathSolver, this.solverParams);
+
+			final RenderDoodad renderDoodad = new RenderDoodad(this, model, wmoDoodadDefinition, specificLocation,
+					scale3DSubDood, facingRadians, defScale, exterior);
+
+			final Rectangle entireMap = this.terrain.getEntireMap();
+			for (final MdlxCollisionGeometry collisionGeometry : model.getCollisionGeometries()) {
+				final Bounds bounds = new Bounds();
+				final float[] min = new float[] { Float.MAX_VALUE, Float.MAX_VALUE, Float.MAX_VALUE };
+				final float[] max = new float[] { -Float.MAX_VALUE, -Float.MAX_VALUE, -Float.MAX_VALUE };
+				final float[] vertices = collisionGeometry.getVertices();
+				for (int i = 0; i < vertices.length; i += 3) {
+					for (int k = 0; k < 3; k++) {
+						if (vertices[i + k] < min[k]) {
+							min[k] = vertices[i + k];
+						}
+						if (vertices[i + k] > max[k]) {
+							max[k] = vertices[i + k];
+						}
+					}
+				}
+				bounds.fromExtents(min, max, 0);
+				final BoundingBox geosetBoundingBox = bounds.getBoundingBox();
+				final Rectangle geosetRotatedBounds = getRotatedBoundingBox(specificLocation[0], specificLocation[1],
+						scale3D, facingRadians, geosetBoundingBox);
+				if (entireMap.overlaps(geosetRotatedBounds)) {
+					final CollidableDoodadComponent collidableComponent = new CollidableDoodadCollisionComponent(
+							(MdxComplexInstance) renderDoodad.instance, collisionGeometry, geosetRotatedBounds,
+							geosetBoundingBox, min, max, !exterior);
+					this.walkableComponentTree.add(collidableComponent, geosetRotatedBounds);
+					renderDoodad.add(collidableComponent);
+				}
+			}
+			this.doodads.add(renderDoodad);
+			this.decals.add(renderDoodad);
+			renderDoodads.add(renderDoodad);
+		}
 		for (int groupIndex = 0; groupIndex < worldModelObject.getGroupCount(); groupIndex++) {
 			final GroupModel groupModel = worldModelObject.getGroup(groupIndex);
 			final MdxModel model = groupModel.getModel();
@@ -987,66 +1047,21 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 			this.doodads.add(renderDoodad);
 			this.decals.add(renderDoodad);
 			renderDoodads.add(renderDoodad);
-		}
 
-		final WmoDoodadSet wmoDoodadSet = worldModelObject.getDoodadSets().get(doodadSet);
-		for (long doodadIdx = 0; doodadIdx < wmoDoodadSet.getCount(); doodadIdx++) {
-			final WmoDoodadDefinition wmoDoodadDefinition = worldModelObject.getDoodadDefinitions()
-					.get((int) (wmoDoodadSet.getStartIndex() + doodadIdx));
-			final boolean exterior = true; // TODO read from flag
-			final Vector3 usedCenter = new Vector3(wmoDoodadDefinition.getPosition());
-			usedCenter.scl(scale);
-			usedCenter.rotateRad(RenderMathUtils.VEC3_UNIT_Z, facingRadians);
-			usedCenter.rotateRad(RenderMathUtils.VEC3_UNIT_Y, (float) Math.toRadians(rotation[2]));
-			usedCenter.rotateRad(RenderMathUtils.VEC3_UNIT_X, (float) Math.toRadians(rotation[0]));
-
-			final float[] specificLocation = { location[0] + usedCenter.x, location[1] + usedCenter.y,
-					location[2] + usedCenter.z };
-
-			final float subDoodScale = wmoDoodadDefinition.getScale();
-			final float[] scale3DSubDood = new float[] { scale3D[0] * subDoodScale, scale3D[1] * subDoodScale,
-					scale3D[2] * subDoodScale };
-
-			final String fileName = worldModelObject.getDoodadFileNamesOffsetLookup()
-					.get((int) wmoDoodadDefinition.getNameIndex());
-
-			final MdxModel model = loadModelMdx(this.dataSource, this, fileName, this.mapPathSolver, this.solverParams);
-
-			final RenderDoodad renderDoodad = new RenderDoodad(this, model, wmoDoodadDefinition, specificLocation,
-					scale3DSubDood, facingRadians, defScale, exterior);
-
-			final Rectangle entireMap = this.terrain.getEntireMap();
-			for (final MdlxCollisionGeometry collisionGeometry : model.getCollisionGeometries()) {
-				final Bounds bounds = new Bounds();
-				final float[] min = new float[] { Float.MAX_VALUE, Float.MAX_VALUE, Float.MAX_VALUE };
-				final float[] max = new float[] { -Float.MAX_VALUE, -Float.MAX_VALUE, -Float.MAX_VALUE };
-				final float[] vertices = collisionGeometry.getVertices();
-				for (int i = 0; i < vertices.length; i += 3) {
-					for (int k = 0; k < 3; k++) {
-						if (vertices[i + k] < min[k]) {
-							min[k] = vertices[i + k];
-						}
-						if (vertices[i + k] > max[k]) {
-							max[k] = vertices[i + k];
-						}
-					}
-				}
-				bounds.fromExtents(min, max, 0);
-				final BoundingBox geosetBoundingBox = bounds.getBoundingBox();
-				final Rectangle geosetRotatedBounds = getRotatedBoundingBox(specificLocation[0], specificLocation[1],
-						scale3D, facingRadians, geosetBoundingBox);
-				if (entireMap.overlaps(geosetRotatedBounds)) {
-					final CollidableDoodadComponent collidableComponent = new CollidableDoodadCollisionComponent(
-							(MdxComplexInstance) renderDoodad.instance, collisionGeometry, geosetRotatedBounds,
-							geosetBoundingBox, min, max, !exterior);
-					this.walkableComponentTree.add(collidableComponent, geosetRotatedBounds);
-					renderDoodad.add(collidableComponent);
+			final int[] doodadReferences = groupModel.getDoodadReferences();
+			for (final int doodadIdx : doodadReferences) {
+				final WmoDoodadDefinition wmoDoodadDefinition = worldModelObject.getDoodadDefinitions()
+						.get((int) (wmoDoodadSet.getStartIndex() + doodadIdx));
+				final RenderDoodad renderDoodadInGroup = renderDoodads.get(doodadIdx);
+				if (!renderDoodadInGroup.exterior) {
+					final short[] color = wmoDoodadDefinition.getColor();
+					final short aComponent = color[3];
+					if (aComponent == 0xFF) {
+						// supposed to make shading direction based on group center rather than sun in
+						// this case
+					} // else if (aComponent > groupModel.get)
 				}
 			}
-			this.doodads.add(renderDoodad);
-			this.decals.add(renderDoodad);
-			renderDoodads.add(renderDoodad);
-
 		}
 		return renderDoodads;
 	}
@@ -4861,5 +4876,9 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 			behaviorPlayerPawn.setViewerWorldAccess(War3MapViewer.this);
 			renderUnit.setupPlayerPawn(abilityPlayerPawn);
 		}
+	}
+
+	public boolean canPawnMoveAt(final float x, final float y) {
+		return this.terrain.inPlayableArea(x, y);
 	}
 }

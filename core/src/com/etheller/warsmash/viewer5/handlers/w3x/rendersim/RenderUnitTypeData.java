@@ -14,6 +14,7 @@ import com.etheller.warsmash.units.Element;
 import com.etheller.warsmash.units.GameObject;
 import com.etheller.warsmash.units.ObjectData;
 import com.etheller.warsmash.util.War3ID;
+import com.etheller.warsmash.viewer5.handlers.mdx.MdxCharacterInstance;
 import com.etheller.warsmash.viewer5.handlers.mdx.MdxModel;
 import com.etheller.warsmash.viewer5.handlers.w3x.AnimationTokens.SecondaryTag;
 import com.etheller.warsmash.viewer5.handlers.w3x.MdxAssetLoader;
@@ -52,6 +53,7 @@ public class RenderUnitTypeData extends RenderWidgetTypeData<RenderUnitType> {
 	private static final String UNIT_SELECT_HEIGHT = "selZ"; // replaced from 'uslz'
 	private static final String REPLACEABLE_TEXTURE_PATHS = "ReplaceableTexturePaths";
 	private static final String REPLACEABLE_TEXTURE_IDS = "ReplaceableTextureId";
+	private static final String SELECTION_GROUP_SETTING = "SelectionGroupSetting";
 
 	private final DataTable unitAckSoundsTable;
 	private final DataTable uberSplatTable;
@@ -177,6 +179,12 @@ public class RenderUnitTypeData extends RenderWidgetTypeData<RenderUnitType> {
 			}
 		}
 
+		final int[] selectionGroupSettings = new int[MdxCharacterInstance.ITEM_SLOT_COUNT];
+		for (int i = 0; i < MdxCharacterInstance.ITEM_SLOT_COUNT; i++) {
+			final int selectionGroupValue = row.getFieldAsInteger(SELECTION_GROUP_SETTING, i);
+			selectionGroupSettings[i] = selectionGroupValue;
+		}
+
 		return new RenderUnitType(model, portraitModel, specialArtModel, buildingPathingPixelMap,
 				row.getFieldAsFloat(MAX_PITCH, 0), row.getFieldAsFloat(MAX_ROLL, 0),
 				row.getFieldAsFloat(ELEVATION_SAMPLE_RADIUS, 0), row.getFieldAsBoolean(ALLOW_CUSTOM_TEAM_COLOR, 0),
@@ -184,7 +192,7 @@ public class RenderUnitTypeData extends RenderWidgetTypeData<RenderUnitType> {
 				row.getFieldAsFloat(ANIMATION_WALK_SPEED, 0), row.getFieldAsFloat(MODEL_SCALE, 0), buildingShadow,
 				uberSplatTexturePath, uberSplatScaleValue, requiredAnimationNamesForAttachments, requiredAnimationNames,
 				renderShadowType, soundset, new Vector3(red, green, blue), selectScale, selectHeight,
-				orientationInterpolation, blendTime, replaceables);
+				orientationInterpolation, blendTime, replaceables, selectionGroupSettings);
 	}
 
 	private EnumSet<SecondaryTag> parseSecondaryTags(final String requiredAnimationNamesForAttachmentsString) {

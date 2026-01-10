@@ -18,8 +18,15 @@ public class MdxCharacterInstance extends MdxComplexInstance implements Sequence
 		}
 	};
 
+	public static final int ITEM_SLOT_COUNT = 21; // 21 or so of these
+	private final int[] slotSettings = new int[ITEM_SLOT_COUNT];
+
 	public MdxCharacterInstance(final MdxModel model) {
 		super(model, NODE_DESCRIPTOR);
+	}
+
+	public void setItemSlotSetting(final int slotKey, final int slotValue) {
+		this.slotSettings[slotKey] = slotValue;
 	}
 
 	/**
@@ -190,20 +197,26 @@ public class MdxCharacterInstance extends MdxComplexInstance implements Sequence
 			if (geoset.mdlxGeoset.selectionGroup > 0) {
 				final int slotKey = (int) (geoset.mdlxGeoset.selectionGroup / 100);
 				final int slotValue = (int) (geoset.mdlxGeoset.selectionGroup % 100);
-				switch (slotKey) {
-				case 0:
-					show = (slotValue == 3);
-					break;
-				case 5:
-					show = (slotValue == 2);
-					break;
-				case 10:
-					show = (slotValue == 2);
-					break;
-				default:
-					show = (slotValue == 1);
-					break;
+				final int setting = this.slotSettings[slotKey];
+				if (setting != 0) {
+					show = (slotValue == setting);
 				}
+
+//				switch (slotKey) {
+//				case 0:
+//					show = (slotValue == 3);
+//					break;
+//				case 5:
+//					show = (slotValue == 2);
+//					break;
+//				case 10:
+//					show = (slotValue == 2);
+//					break;
+//				default:
+//					show = (slotValue == 1);
+//					break;
+//				}
+
 			}
 			if (!show) {
 				this.geosetColors[i][3] = 0.0f;

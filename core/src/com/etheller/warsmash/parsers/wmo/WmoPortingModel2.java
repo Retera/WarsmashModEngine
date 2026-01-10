@@ -88,8 +88,9 @@ public class WmoPortingModel2 extends com.etheller.warsmash.viewer5.Model<WmoPor
 		for (int i = 0; i < portedModelsData.length; i++) {
 			final MdxModel mdxModel = new MdxModel(this.handler.getMdxHandler(), this.viewer, "mdx", this.pathSolver,
 					this.fetchUrl);
-			this.portedModels[i] = new GroupModel(mdxModel, portedModelsData[i].extentCenter,
-					portedModelsData[i].flags);
+			final GroupModelLoader groupModelLoader = portedModelsData[i];
+			this.portedModels[i] = new GroupModel(mdxModel, groupModelLoader.extentCenter, groupModelLoader.flags,
+					groupModelLoader.doodadReferences);
 			try {
 				mdxModel.load(portedModelsData[i].model);
 				mdxModel.ok = true;
@@ -516,11 +517,6 @@ public class WmoPortingModel2 extends com.etheller.warsmash.viewer5.Model<WmoPor
 				for (final int lightReference : group.getLightReferences()) {
 					loadLight(parser, portedModel, extentCenter, lightReference);
 				}
-				if (!FlagUtils.hasFlag(group.getFlags(), WmoGroupInfo.Flags.IsExterior)
-						|| !FlagUtils.hasFlag(group.getFlags(), WmoGroupInfo.Flags.IsExteriorLit)
-						|| !FlagUtils.hasFlag(group.getFlags(), WmoGroupInfo.Flags.IsInterior)) {
-					loadLight(parser, portedModel, extentCenter, 0);
-				}
 			}
 
 			if (true) {
@@ -535,7 +531,8 @@ public class WmoPortingModel2 extends com.etheller.warsmash.viewer5.Model<WmoPor
 				}
 			}
 
-			portedModels[groupIndex] = new GroupModelLoader(portedModel, extentCenter, group.getFlags());
+			portedModels[groupIndex] = new GroupModelLoader(portedModel, extentCenter, group.getFlags(),
+					group.getDoodadReferences());
 		}
 
 		return portedModels;
@@ -543,9 +540,6 @@ public class WmoPortingModel2 extends com.etheller.warsmash.viewer5.Model<WmoPor
 
 	private static void loadLight(final WorldModelObject parser, final MdlxModel portedModel,
 			final Vector3 extentCenter, final int lightReference) {
-		if (true) {
-			return;
-		}
 		final WmoLight wmoLight = parser.getHeaders().getLights().get(lightReference);
 
 		final MdlxLight light = new MdlxLight();
@@ -572,7 +566,7 @@ public class WmoPortingModel2 extends com.etheller.warsmash.viewer5.Model<WmoPor
 		light.intensity = wmoLight.getIntensity();
 		light.attenuation[0] = wmoLight.getAttenStart();
 		light.attenuation[1] = wmoLight.getAttenEnd();
-//		light.setModelOnly(true);
+		light.setModelOnly(true);
 
 		final float[] wmoLightPosition = wmoLight.getPosition();
 		portedModel.pivotPoints.add(new float[] { wmoLightPosition[0] - extentCenter.x,
@@ -584,11 +578,14 @@ public class WmoPortingModel2 extends com.etheller.warsmash.viewer5.Model<WmoPor
 		private final MdxModel model;
 		private final Vector3 extentCenter;
 		private final int flags;
+		private final int[] doodadReferences;
 
-		private GroupModel(final MdxModel model, final Vector3 extentCenter, final int flags) {
+		private GroupModel(final MdxModel model, final Vector3 extentCenter, final int flags,
+				final int[] doodadReferences) {
 			this.model = model;
 			this.extentCenter = extentCenter;
 			this.flags = flags;
+			this.doodadReferences = doodadReferences;
 		}
 
 		public MdxModel getModel() {
@@ -602,17 +599,24 @@ public class WmoPortingModel2 extends com.etheller.warsmash.viewer5.Model<WmoPor
 		public int getFlags() {
 			return this.flags;
 		}
+
+		public int[] getDoodadReferences() {
+			return this.doodadReferences;
+		}
 	}
 
 	private static final class GroupModelLoader {
 		private final MdlxModel model;
 		private final Vector3 extentCenter;
 		private final int flags;
+		private final int[] doodadReferences;
 
-		public GroupModelLoader(final MdlxModel model, final Vector3 extentCenter, final int flags) {
+		public GroupModelLoader(final MdlxModel model, final Vector3 extentCenter, final int flags,
+				final int[] doodadReferences) {
 			this.model = model;
 			this.extentCenter = extentCenter;
 			this.flags = flags;
+			this.doodadReferences = doodadReferences;
 		}
 	}
 

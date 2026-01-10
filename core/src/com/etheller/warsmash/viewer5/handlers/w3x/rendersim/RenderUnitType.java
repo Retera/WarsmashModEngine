@@ -36,17 +36,18 @@ public class RenderUnitType implements RenderWidgetType {
 	private final int orientationInterpolation;
 	private final float blendTime;
 	private final List<RenderUnitReplaceableTex> replaceableTextures;
+	private final int[] selectionGroupSettings;
 
-	public RenderUnitType(MdxModel model, MdxModel portraitModel, MdxModel specialArtModel,
-			BufferedImage buildingPathingPixelMap, final float maxPitch, final float maxRoll, final float sampleRadius,
-			final boolean allowCustomTeamColor, final int teamColor, final float animationRunSpeed,
-			final float animationWalkSpeed, final float scalingValue, final String buildingShadow,
-			final String uberSplat, final float uberSplatScaleValue,
+	public RenderUnitType(final MdxModel model, final MdxModel portraitModel, final MdxModel specialArtModel,
+			final BufferedImage buildingPathingPixelMap, final float maxPitch, final float maxRoll,
+			final float sampleRadius, final boolean allowCustomTeamColor, final int teamColor,
+			final float animationRunSpeed, final float animationWalkSpeed, final float scalingValue,
+			final String buildingShadow, final String uberSplat, final float uberSplatScaleValue,
 			final EnumSet<SecondaryTag> requiredAnimationNamesForAttachments,
-			EnumSet<SecondaryTag> requiredAnimationNames, RenderShadowType renderShadowType, UnitSoundset soundset,
-			Vector3 tintingColor, float selectScale, float selectHeight, int orientationInterpolation,
-			float blendTime,
-			final List<RenderUnitReplaceableTex> replaceableTextures) {
+			final EnumSet<SecondaryTag> requiredAnimationNames, final RenderShadowType renderShadowType,
+			final UnitSoundset soundset, final Vector3 tintingColor, final float selectScale, final float selectHeight,
+			final int orientationInterpolation, final float blendTime,
+			final List<RenderUnitReplaceableTex> replaceableTextures, final int[] selectionGroupSettings) {
 		this.model = model;
 		this.portraitModel = portraitModel;
 		this.specialArtModel = specialArtModel;
@@ -72,6 +73,7 @@ public class RenderUnitType implements RenderWidgetType {
 		this.orientationInterpolation = orientationInterpolation;
 		this.blendTime = blendTime;
 		this.replaceableTextures = replaceableTextures;
+		this.selectionGroupSettings = selectionGroupSettings;
 	}
 
 	public MdxModel getModel() {
@@ -174,8 +176,12 @@ public class RenderUnitType implements RenderWidgetType {
 	public WorldEditorDataType getType() {
 		return WorldEditorDataType.UNITS;
 	}
-	
+
 	public List<RenderUnitReplaceableTex> getReplaceableTextures() {
-		return replaceableTextures;
+		return this.replaceableTextures;
+	}
+
+	public int[] getSelectionGroupSettings() {
+		return this.selectionGroupSettings;
 	}
 }

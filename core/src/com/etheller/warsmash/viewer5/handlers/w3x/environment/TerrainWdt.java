@@ -907,6 +907,26 @@ public class TerrainWdt extends TerrainInterface {
 		if (y >= (this.mapSize[1] - this.mapBounds[3] - 1)) {
 			return false;
 		} // TODO why do we use floor if we can use int cast?
+
+		final double userCellSpaceXWc3 = (StrictMath.floor(x) - this.centerOffset[0]) / 128.0;
+		final double userCellSpaceYWc3 = (StrictMath.floor(y) - this.centerOffset[1]) / 128.0;
+		final int cellXWc3 = (int) StrictMath.floor(userCellSpaceXWc3);
+		final int cellYWc3 = (int) StrictMath.floor(userCellSpaceYWc3);
+
+		if ((cellXWc3 >= 0) && (cellXWc3 < (this.mapSize[0] - 1)) && (cellYWc3 >= 0)
+				&& (cellYWc3 < (this.mapSize[1] - 1))) {
+			final int worldGridCellX = this.worldGrid.getCellX(x);
+			final int worldGridCellY = this.worldGrid.getCellY(y);
+			if ((worldGridCellX >= 0) && (worldGridCellX < this.tiles.length)) {
+				final Tile[] column = this.tiles[worldGridCellX];
+				if ((worldGridCellY >= 0) && (worldGridCellY < column.length)) {
+					final Tile tile = column[worldGridCellY];
+					if (tile != null) {
+						return tile.isFullyActive();
+					}
+				}
+			}
+		}
 		return true;
 	}
 
@@ -1550,6 +1570,10 @@ public class TerrainWdt extends TerrainInterface {
 				this.chunks[(int) war3ChunkIndexX][(int) war3ChunkIndexY] = chunk;
 			}
 			wdtChunkModel.tile = this;
+		}
+
+		public boolean isFullyActive() {
+			return (this.activeTile != null) && this.activeTile.loadingFinished;
 		}
 
 		public boolean activate() {

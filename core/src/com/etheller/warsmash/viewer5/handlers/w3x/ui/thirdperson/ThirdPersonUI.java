@@ -129,18 +129,18 @@ public class ThirdPersonUI implements WarsmashToggleableUI {
 
 			// WESTFALL====
 			// -31797.357, -341638.3
-			pawnUnits.add(this.war3MapViewer.simulation.createUnitSimple(this.pawnId,
-					this.war3MapViewer.getLocalPlayerIndex(), startLocation[0] - 31797.357f,
-					startLocation[1] - 341638.3f, 0));
+			//pawnUnits.add(this.war3MapViewer.simulation.createUnitSimple(this.pawnId,
+			//		this.war3MapViewer.getLocalPlayerIndex(), startLocation[0] - 31797.357f,
+			//		startLocation[1] - 341638.3f, 0));
 
 			// IF=====
 
-//			pawnUnits.add(this.war3MapViewer.simulation.createUnitSimple(this.pawnId,
-//					this.war3MapViewer.getLocalPlayerIndex(), startLocation[0] + 24126.52f,
-//					startLocation[1] - 172875.25f, 0));
-//			pawnUnits.add(this.war3MapViewer.simulation.createUnitSimple(this.pawnId,
-//					this.war3MapViewer.getLocalPlayerIndex(), startLocation[0] + 3250, startLocation[1] - 29795.25f,
-//					0));
+			//pawnUnits.add(this.war3MapViewer.simulation.createUnitSimple(this.pawnId,
+			//		this.war3MapViewer.getLocalPlayerIndex(), startLocation[0] + 24126.52f,
+			//		startLocation[1] - 172875.25f, 0));
+			pawnUnits.add(this.war3MapViewer.simulation.createUnitSimple(this.pawnId,
+					this.war3MapViewer.getLocalPlayerIndex(), startLocation[0] + 3250, startLocation[1] - 29795.25f,
+					0));
 //			pawnUnits.add(this.war3MapViewer.simulation.createUnitSimple(this.pawnId,
 //					this.war3MapViewer.getLocalPlayerIndex(), startLocation[0] + 96242.28f,
 //					startLocation[1] -202859.8f, 0));

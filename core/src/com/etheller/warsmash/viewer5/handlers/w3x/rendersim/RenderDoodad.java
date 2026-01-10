@@ -7,7 +7,6 @@ import com.badlogic.gdx.math.Quaternion;
 import com.etheller.warsmash.parsers.wmo.WmoDoodadDefinition;
 import com.etheller.warsmash.parsers.wmo.WmoPortingModel2.GroupModel;
 import com.etheller.warsmash.units.GameObject;
-import com.etheller.warsmash.util.FlagUtils;
 import com.etheller.warsmash.util.RenderMathUtils;
 import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.viewer5.ModelInstance;
@@ -48,19 +47,18 @@ public class RenderDoodad {
 	private final long uniqueId;
 
 	private final List<CollidableDoodadComponent> walkableComponents = new ArrayList<>();
+	public boolean exterior;
 
 	public RenderDoodad(final War3MapViewer map, final MdxModel model, final WmoDoodadDefinition definition,
 			final float[] location3D, final float[] scale3D, final float facingRadians, final float selectionScale,
 			final boolean exterior) {
 		this.facingRadians = facingRadians;
+		this.exterior = exterior;
 		this.maxPitch = 0;
 		this.maxRoll = 0;
 		this.uniqueId = -1;
 		final ModelInstance instance = model.addInstance();
 		((MdxComplexInstance) instance).setSequenceLoopMode(SequenceLoopMode.NEVER_LOOP);
-		if (FlagUtils.hasFlag((int) definition.getFlags(), WmoDoodadDefinition.Flags.Unknown_0x2) || !exterior) {
-			((MdxComplexInstance) instance).lightOmitOffsetOverride = 1;
-		}
 
 		instance.move(location3D);
 		this.x = location3D[0];

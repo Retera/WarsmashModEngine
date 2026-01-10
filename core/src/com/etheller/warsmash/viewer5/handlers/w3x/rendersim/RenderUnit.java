@@ -8,6 +8,7 @@ import com.badlogic.gdx.math.Quaternion;
 import com.badlogic.gdx.math.Vector3;
 import com.etheller.warsmash.parsers.fdf.GameUI;
 import com.etheller.warsmash.util.RenderMathUtils;
+import com.etheller.warsmash.viewer5.handlers.mdx.MdxCharacterInstance;
 import com.etheller.warsmash.viewer5.handlers.mdx.MdxComplexInstance;
 import com.etheller.warsmash.viewer5.handlers.mdx.MdxModel;
 import com.etheller.warsmash.viewer5.handlers.mdx.Sequence;
@@ -123,6 +124,16 @@ public class RenderUnit implements RenderWidget {
 		instance.setTeamColor(this.playerIndex);
 		for (final RenderUnitReplaceableTex replaceableTex : typeData.getReplaceableTextures()) {
 			instance.setReplaceableTexture(replaceableTex.getReplaceableId(), replaceableTex.getPath());
+		}
+		if (instance instanceof MdxCharacterInstance) {
+			final MdxCharacterInstance characterInstance = (MdxCharacterInstance) instance;
+			final int[] selectionGroupSettings = typeData.getSelectionGroupSettings();
+			for (int idx = 0; idx < selectionGroupSettings.length; idx++) {
+				final int value = selectionGroupSettings[idx];
+				if (value != 0) {
+					characterInstance.setItemSlotSetting(idx, value);
+				}
+			}
 		}
 		instance.setScene(map.worldScene);
 		this.unitAnimationListenerImpl = new UnitAnimationListenerImpl(instance, animationWalkSpeed, animationRunSpeed);

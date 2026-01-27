@@ -331,12 +331,25 @@ public class TerrainWdt extends TerrainInterface {
 	public void intersectRayTerrain(final Ray gdxRayHeap, final Vector3 out, final boolean intersectWithWater) {
 //		out.set(gdxRayHeap.origin);
 //		out.add(gdxRayHeap.direction);
+		normalHeap1.set(gdxRayHeap.origin);
+		normalHeap1.add(gdxRayHeap.direction);
+		gdxRayHeap.direction.nor();
+		boolean hit = false;
+		double lastD2 = normalHeap1.dst2(gdxRayHeap.origin);
 		for (final Tile tile : this.activeTiles) {
 			if (tile.activeTile != null) {
-				if (tile.activeTile.intersectRayTerrain(gdxRayHeap, out, intersectWithWater)) {
-					return;
+				if (tile.activeTile.intersectRayTerrain(gdxRayHeap, normalHeap2, intersectWithWater)) {
+					final float dst2 = normalHeap2.dst2(gdxRayHeap.origin);
+					if (dst2 < lastD2) {
+						normalHeap1.set(normalHeap2);
+						hit = true;
+						lastD2 = dst2;
+					}
 				}
 			}
+		}
+		if (hit) {
+			out.set(normalHeap1);
 		}
 	}
 
@@ -892,19 +905,19 @@ public class TerrainWdt extends TerrainInterface {
 	}
 
 	@Override
-	public boolean inPlayableArea(float x, float y) {
-		x = (x - this.centerOffset[0]) / 128.0f;
-		y = (y - this.centerOffset[1]) / 128.0f;
-		if (x < this.mapBounds[0]) {
+	public boolean inPlayableArea(final float x, final float y) {
+		final float floatingCellX = (x - this.centerOffset[0]) / 128.0f;
+		final float floatingCellY = (y - this.centerOffset[1]) / 128.0f;
+		if (floatingCellX < this.mapBounds[0]) {
 			return false;
 		}
-		if (x >= (this.mapSize[0] - this.mapBounds[1] - 1)) {
+		if (floatingCellX >= (this.mapSize[0] - this.mapBounds[1] - 1)) {
 			return false;
 		}
-		if (y < this.mapBounds[2]) {
+		if (floatingCellY < this.mapBounds[2]) {
 			return false;
 		}
-		if (y >= (this.mapSize[1] - this.mapBounds[3] - 1)) {
+		if (floatingCellY >= (this.mapSize[1] - this.mapBounds[3] - 1)) {
 			return false;
 		} // TODO why do we use floor if we can use int cast?
 

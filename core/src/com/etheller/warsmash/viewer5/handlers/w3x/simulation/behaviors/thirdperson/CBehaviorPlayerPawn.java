@@ -10,6 +10,7 @@ import com.etheller.warsmash.viewer5.handlers.mdx.MdxCharacterNode;
 import com.etheller.warsmash.viewer5.handlers.mdx.MdxModel;
 import com.etheller.warsmash.viewer5.handlers.w3x.AnimationTokens.PrimaryTag;
 import com.etheller.warsmash.viewer5.handlers.w3x.AnimationTokens.SecondaryTag;
+import com.etheller.warsmash.viewer5.handlers.w3x.IndexedSequence;
 import com.etheller.warsmash.viewer5.handlers.w3x.SequenceUtils;
 import com.etheller.warsmash.viewer5.handlers.w3x.War3MapViewer;
 import com.etheller.warsmash.viewer5.handlers.w3x.camera.CameraPanControls;
@@ -47,6 +48,8 @@ public class CBehaviorPlayerPawn implements CBehavior {
 	private War3MapViewer viewerWorldAccess;
 	private MdxCharacterInstance characterModelInstance;
 	private boolean sitting;
+	private MdxCharacterNode handR;
+	private MdxCharacterNode handL;
 
 	public CBehaviorPlayerPawn(final CUnit unit, final CAbilityPlayerPawn playerPawn) {
 		this.unit = unit;
@@ -64,6 +67,19 @@ public class CBehaviorPlayerPawn implements CBehavior {
 		this.characterModelInstance = (MdxCharacterInstance) renderPeer.instance;
 		if (this.spineLow != null) {
 			this.spineLow.createSubSequencer(this.characterModelInstance);
+		}
+		this.handR = (MdxCharacterNode) renderPeer.instance.inefficientlyGetNodeByNameSearch("handr");
+		if (this.handR != null) {
+			this.handR.createSubSequencer(this.characterModelInstance);
+			final MdxModel model = (MdxModel) this.characterModelInstance.model;
+			final IndexedSequence handsClosedAnim = SequenceUtils.selectSequence("handsclosed", model.sequences);
+			if ((handsClosedAnim != null) && (handsClosedAnim.index != -1)) {
+				this.handR.subSequencer.setSequence(handsClosedAnim.index, model, this.characterModelInstance);
+			}
+		}
+		this.handL = (MdxCharacterNode) renderPeer.instance.inefficientlyGetNodeByNameSearch("handl");
+		if (this.handL != null) {
+			this.handL.createSubSequencer(this.characterModelInstance);
 		}
 	}
 
@@ -296,7 +312,11 @@ public class CBehaviorPlayerPawn implements CBehavior {
 		final boolean swimming = isSwimming();
 		if (!this.wasFalling || swimming) {
 			setVelocityZ(20);
-			this.playerPawn.setZ(this.playerPawn.getZ() + 1);
+			final float prevX = this.unit.getX();
+			final float prevY = this.unit.getY();
+			if (this.viewerWorldAccess.canPawnMoveAt(prevX, prevY)) {
+				this.playerPawn.setZ(this.playerPawn.getZ() + 1);
+			}
 			if (!swimming) {
 				this.unit.getUnitAnimationListener().playAnimation(true, PrimaryTag.JUMPSTART, SequenceUtils.EMPTY,
 						1.0f, true);

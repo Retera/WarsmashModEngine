@@ -1049,17 +1049,23 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 			renderDoodads.add(renderDoodad);
 
 			final int[] doodadReferences = groupModel.getDoodadReferences();
-			for (final int doodadIdx : doodadReferences) {
-				final WmoDoodadDefinition wmoDoodadDefinition = worldModelObject.getDoodadDefinitions()
-						.get((int) (wmoDoodadSet.getStartIndex() + doodadIdx));
-				final RenderDoodad renderDoodadInGroup = renderDoodads.get(doodadIdx);
-				if (!renderDoodadInGroup.exterior) {
-					final short[] color = wmoDoodadDefinition.getColor();
-					final short aComponent = color[3];
-					if (aComponent == 0xFF) {
-						// supposed to make shading direction based on group center rather than sun in
-						// this case
-					} // else if (aComponent > groupModel.get)
+			if (doodadReferences != null) {
+				for (final int doodadIdx : doodadReferences) {
+					if ((doodadIdx >= wmoDoodadSet.getStartIndex())
+							&& (doodadIdx < (wmoDoodadSet.getStartIndex() + wmoDoodadSet.getCount()))) {
+						final WmoDoodadDefinition wmoDoodadDefinition = worldModelObject.getDoodadDefinitions()
+								.get(doodadIdx);
+						final int ourAppliedIndex = doodadIdx - (int) wmoDoodadSet.getStartIndex();
+						final RenderDoodad renderDoodadInGroup = renderDoodads.get(ourAppliedIndex);
+						if (!renderDoodadInGroup.exterior) {
+							final short[] color = wmoDoodadDefinition.getColor();
+							final short aComponent = color[3];
+							if (aComponent == 0xFF) {
+								// supposed to make shading direction based on group center rather than sun in
+								// this case
+							} // else if (aComponent > groupModel.get)
+						}
+					}
 				}
 			}
 		}
@@ -1413,8 +1419,12 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 					renderUnit.uberSplat = buildingUberSplatDynamicIngame;
 				}
 				if (renderUnit.isPlayerPawn() || (renderUnit.instance instanceof MdxCharacterInstance)) {
-					final RenderSpellEffect weaponModel = addSpecialEffectTarget(
-							"Item\\ObjectComponents\\Weapon\\Bow_1H_Standard_A_01.mdx", simulationUnit, "_handl");
+//					final RenderSpellEffect weaponModel = addSpecialEffectTarget(
+//							"Item\\ObjectComponents\\Weapon\\Bow_1H_Standard_A_01.mdx", simulationUnit, "_handl");
+//					weaponModel.setReplaceableId(2, "Item\\ObjectComponents\\Weapon\\Bow_1H_Standard_A_01Black.blp");
+
+					final RenderSpellEffect weaponModel = addSpecialEffectTarget("SwordAshbringerReforged.mdx",
+							simulationUnit, "_handr");
 					weaponModel.setReplaceableId(2, "Item\\ObjectComponents\\Weapon\\Bow_1H_Standard_A_01Black.blp");
 //					final RenderSpellEffect ammoModel = addSpecialEffectTarget(
 //							"Item\\ObjectComponents\\Ammo\\ArrowFlight_01.mdx", simulationUnit, "_arrow");
@@ -2297,6 +2307,10 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 		final float prevGroundHeight = this.terrain.getGroundHeight(prevLocation.x, prevLocation.y);
 		final float newGroundHeight = this.terrain.getGroundHeight(newLocation.x, newLocation.y);
 		if ((prevLocation.z >= prevGroundHeight) != (newLocation.z >= newGroundHeight)) {
+			gdxRayHeap.direction.set(newLocation);
+			gdxRayHeap.origin.set(prevLocation);
+			gdxRayHeap.direction.sub(prevLocation);
+			this.terrain.intersectRayTerrain(gdxRayHeap, nearestHit, false);
 			return true;
 		}
 		final float dx = newLocation.x - prevLocation.x;

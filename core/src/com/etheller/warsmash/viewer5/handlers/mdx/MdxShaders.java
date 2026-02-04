@@ -42,6 +42,14 @@ public class MdxShaders {
 			"    varying vec4 v_lightDir6;\r\n" + //
 			"    varying vec4 v_lightDir7;\r\n" + //
 			"    varying vec4 v_lightDir8;\r\n" + //
+			"    varying float v_lightDist;\r\n" + //
+			"    varying float v_lightDist2;\r\n" + //
+			"    varying float v_lightDist3;\r\n" + //
+			"    varying float v_lightDist4;\r\n" + //
+			"    varying float v_lightDist5;\r\n" + //
+			"    varying float v_lightDist6;\r\n" + //
+			"    varying float v_lightDist7;\r\n" + //
+			"    varying float v_lightDist8;\r\n" + //
 			"    varying vec3 v_eyeVec;\r\n" + //
 			"    varying vec3 v_normal;\r\n" + //
 			"    \r\n" + //
@@ -80,144 +88,143 @@ public class MdxShaders {
 			"      float rowPos = (0.5) / u_lightTextureHeight;\r\n" + //
 			"      vec4 lightPosition = texture2D(u_lightTexture, vec2(0.125, rowPos));\r\n" + //
 			"      vec4 lightExtra = texture2D(u_lightTexture, vec2(0.375, rowPos));\r\n" + //
-			"      vec3 u_lightPos = mv * lightPosition.xyz;\r\n" + //
 			"      vec3 lightDir;\r\n" + //
 			"      if(lightExtra.x > 0.5) {\r\n" + //
 			"          // Sunlight ('directional')\r\n" + //
-			"      	   lightDir = normalize(u_lightPos);\r\n" + //
+			"      	   lightDir = normalize(mv * lightPosition.xyz);\r\n" + //
+			"          v_lightDist = 1.0;\r\n" + //
 			"          v_lightDir = vec4(normalize(TBN(lightDir, t, b, n)), 1.0);\r\n" + //
 			"      } else {\r\n" + //
 			"          // Point light ('omnidirectional')\r\n" + //
-			"          vec3 delta = u_lightPos - position_mv;\r\n" + //
+			"          vec3 delta = vec3(u_MV * vec4(lightPosition.xyz, 1)) - position_mv;\r\n" + //
 			"          lightDir = normalize(delta);\r\n" + //
-			"            float dist = length(delta) / 64.0 + 1.0;\r\n" + //
-			"          v_lightDir = vec4(normalize(TBN(lightDir, t, b, n)), 1.0/pow(dist, 2.0));\r\n" + //
+			"          v_lightDist = length(lightPosition.xyz - position) / 64.0 + 1.0;\r\n" + //
+			"          v_lightDir = vec4(normalize(TBN(lightDir, t, b, n)), 1.0);\r\n" + //
 			"      }\r\n" + //
 			"      \r\n" + //
 			"      if( u_lightTextureHeight > 1.5 ) {\r\n" + //
 			"          float rowPos = (1.5) / u_lightTextureHeight;\r\n" + //
 			"          vec4 lightPosition2 = texture2D(u_lightTexture, vec2(0.125, rowPos));\r\n" + //
 			"          vec4 lightExtra2 = texture2D(u_lightTexture, vec2(0.375, rowPos));\r\n" + //
-			"          vec3 u_lightPos2 = mv * lightPosition2.xyz;\r\n" + //
 
 			"          vec3 lightDir2;\r\n" + //
 			"          if(lightExtra2.x > 0.5) {\r\n" + //
 			"              // Sunlight ('directional')\r\n" + //
-			"          	   lightDir2 = normalize(u_lightPos2);\r\n" + //
+			"          	   lightDir2 = normalize(mv * lightPosition2.xyz);\r\n" + //
+			"              v_lightDist2 = 1.0;\r\n" + //
 			"              v_lightDir2 = vec4(normalize(TBN(lightDir2, t, b, n)), 1.0);\r\n" + //
 			"          } else {\r\n" + //
 			"              // Point light ('omnidirectional')\r\n" + //
-			"              vec3 delta = u_lightPos2 - position_mv;\r\n" + //
+			"              vec3 delta = vec3(u_MV * vec4(lightPosition2.xyz, 1)) - position_mv;\r\n" + //
 			"              lightDir2 = normalize(delta);\r\n" + //
-			"                float dist = length(delta) / 64.0 + 1.0;\r\n" + //
-			"              v_lightDir2 = vec4(normalize(TBN(lightDir2, t, b, n)), 1.0/pow(dist, 2.0));\r\n" + //
+			"              v_lightDist2 = length(lightPosition2.xyz - position) / 64.0 + 1.0;\r\n" + //
+			"              v_lightDir2 = vec4(normalize(TBN(lightDir2, t, b, n)), 1.0);\r\n" + //
 			"          }\r\n" + //
 			"          if( u_lightTextureHeight > 2.5 ) {\r\n" + //
 			"              float rowPos = (2.5) / u_lightTextureHeight;\r\n" + //
 			"              vec4 lightPosition3 = texture2D(u_lightTexture, vec2(0.125, rowPos));\r\n" + //
 			"              vec4 lightExtra3 = texture2D(u_lightTexture, vec2(0.375, rowPos));\r\n" + //
-			"              vec3 u_lightPos3 = mv * lightPosition3.xyz;\r\n" + //
 			"              vec3 lightDir3;\r\n" + //
 			"              if(lightExtra3.x > 0.5) {\r\n" + //
 			"                  // Sunlight ('directional')\r\n" + //
-			"              	   lightDir3 = normalize(u_lightPos3);\r\n" + //
+			"              	   lightDir3 = normalize(mv * lightPosition3.xyz);\r\n" + //
+			"                  v_lightDist3 = 1.0;\r\n" + //
 			"                  v_lightDir3 = vec4(normalize(TBN(lightDir3, t, b, n)), 1.0);\r\n" + //
 			"              } else {\r\n" + //
 			"                  // Point light ('omnidirectional')\r\n" + //
-			"                  vec3 delta = u_lightPos3 - position_mv;\r\n" + //
+			"                  vec3 delta = vec3(u_MV * vec4(lightPosition3.xyz, 1)) - position_mv;\r\n" + //
 			"                  lightDir3 = normalize(delta);\r\n" + //
-			"                    float dist = length(delta) / 64.0 + 1.0;\r\n" + //
-			"                  v_lightDir3 = vec4(normalize(TBN(lightDir3, t, b, n)), 1.0/pow(dist, 2.0));\r\n" + //
+			"                  v_lightDist3 = length(lightPosition3.xyz - position) / 64.0 + 1.0;\r\n" + //
+			"                  v_lightDir3 = vec4(normalize(TBN(lightDir3, t, b, n)), 1.0);\r\n" + //
 			"              }\r\n" + //
 			"              if( u_lightTextureHeight > 3.5 ) {\r\n" + //
 			"                  float rowPos = (3.5) / u_lightTextureHeight;\r\n" + //
 			"                  vec4 lightPosition4 = texture2D(u_lightTexture, vec2(0.125, rowPos));\r\n" + //
 			"                  vec4 lightExtra4 = texture2D(u_lightTexture, vec2(0.375, rowPos));\r\n" + //
-			"                  vec3 u_lightPos4 = mv * lightPosition4.xyz;\r\n" + //
 			"                  vec3 lightDir4;\r\n" + //
 			"                  if(lightExtra4.x > 0.5) {\r\n" + //
 			"                      // Sunlight ('directional')\r\n" + //
-			"                  	   lightDir4 = normalize(u_lightPos4);\r\n" + //
+			"                  	   lightDir4 = normalize(mv * lightPosition4.xyz);\r\n" + //
+			"                      v_lightDist4 = 1.0;\r\n" + //
 			"                      v_lightDir4 = vec4(normalize(TBN(lightDir4, t, b, n)), 1.0);\r\n" + //
 			"                  } else {\r\n" + //
 			"                      // Point light ('omnidirectional')\r\n" + //
-			"                      vec3 delta = u_lightPos4 - position_mv;\r\n" + //
+			"                      vec3 delta = vec3(u_MV * vec4(lightPosition4.xyz, 1)) - position_mv;\r\n" + //
 			"                      lightDir4 = normalize(delta);\r\n" + //
-			"                        float dist = length(delta) / 64.0 + 1.0;\r\n" + //
-			"                      v_lightDir4 = vec4(normalize(TBN(lightDir4, t, b, n)), 1.0/pow(dist, 2.0));\r\n" + //
+			"                      v_lightDist4 = length(lightPosition4.xyz - position) / 64.0 + 1.0;\r\n" + //
+			"                      v_lightDir4 = vec4(normalize(TBN(lightDir4, t, b, n)), 1.0);\r\n" + //
 			"                  }\r\n" + //
 			"                  if( u_lightTextureHeight > 4.5 ) {\r\n" + //
 			"                      float rowPos = (4.5) / u_lightTextureHeight;\r\n" + //
 			"                      vec4 lightPosition5 = texture2D(u_lightTexture, vec2(0.125, rowPos));\r\n" + //
 			"                      vec4 lightExtra5 = texture2D(u_lightTexture, vec2(0.375, rowPos));\r\n" + //
-			"                      vec3 u_lightPos5 = mv * lightPosition5.xyz;\r\n" + //
 			"                      vec3 lightDir5;\r\n" + //
 			"                      if(lightExtra5.x > 0.5) {\r\n" + //
 			"                          // Sunlight ('directional')\r\n" + //
-			"                      	   lightDir5 = normalize(u_lightPos5);\r\n" + //
+			"                      	   lightDir5 = normalize(mv * lightPosition5.xyz);\r\n" + //
+			"                          v_lightDist5 = 1.0;\r\n" + //
 			"                          v_lightDir5 = vec4(normalize(TBN(lightDir5, t, b, n)), 1.0);\r\n" + //
 			"                      } else {\r\n" + //
 			"                          // Point light ('omnidirectional')\r\n" + //
-			"                          vec3 delta = u_lightPos5 - position_mv;\r\n" + //
+			"                          vec3 delta = vec3(u_MV * vec4(lightPosition5.xyz, 1)) - position_mv;\r\n" + //
 			"                          lightDir5 = normalize(delta);\r\n" + //
-			"                            float dist = length(delta) / 64.0 + 1.0;\r\n" + //
-			"                          v_lightDir5 = vec4(normalize(TBN(lightDir5, t, b, n)), 1.0/pow(dist, 2.0));\r\n"
-			+ //
+			"                          v_lightDist5 = length(lightPosition5.xyz - position) / 64.0 + 1.0;\r\n" + //
+			"                          v_lightDir5 = vec4(normalize(TBN(lightDir5, t, b, n)), 1.0);\r\n" + //
 			"                      }\r\n" + //
 			"                      if( u_lightTextureHeight > 5.5 ) {\r\n" + //
 			"                          float rowPos = (5.5) / u_lightTextureHeight;\r\n" + //
 			"                          vec4 lightPosition6 = texture2D(u_lightTexture, vec2(0.125, rowPos));\r\n" + //
 			"                          vec4 lightExtra6 = texture2D(u_lightTexture, vec2(0.375, rowPos));\r\n" + //
-			"                          vec3 u_lightPos6 = mv * lightPosition6.xyz;\r\n" + //
 			"                          vec3 lightDir6;\r\n" + //
 			"                          if(lightExtra6.x > 0.5) {\r\n" + //
 			"                              // Sunlight ('directional')\r\n" + //
-			"                          	   lightDir6 = normalize(u_lightPos6);\r\n" + //
+			"                          	   lightDir6 = normalize(mv * lightPosition6.xyz);\r\n" + //
+			"                              v_lightDist6 = 1.0;\r\n" + //
 			"                              v_lightDir6 = vec4(normalize(TBN(lightDir6, t, b, n)), 1.0);\r\n" + //
 			"                          } else {\r\n" + //
 			"                              // Point light ('omnidirectional')\r\n" + //
-			"                              vec3 delta = u_lightPos6 - position_mv;\r\n" + //
+			"                              vec3 delta = vec3(u_MV * vec4(lightPosition6.xyz, 1)) - position_mv;\r\n" + //
 			"                              lightDir6 = normalize(delta);\r\n" + //
-			"                                float dist = length(delta) / 64.0 + 1.0;\r\n" + //
-			"                              v_lightDir6 = vec4(normalize(TBN(lightDir6, t, b, n)), 1.0/pow(dist, 2.0));\r\n"
-			+ //
+			"                              v_lightDist6 = length(lightPosition6.xyz - position) / 64.0 + 1.0;\r\n" + //
+			"                              v_lightDir6 = vec4(normalize(TBN(lightDir6, t, b, n)), 1.0);\r\n" + //
 			"                          }\r\n" + //
 			"                          if( u_lightTextureHeight > 6.5 ) {\r\n" + //
 			"                              float rowPos = (6.5) / u_lightTextureHeight;\r\n" + //
 			"                              vec4 lightPosition7 = texture2D(u_lightTexture, vec2(0.125, rowPos));\r\n" + //
 			"                              vec4 lightExtra7 = texture2D(u_lightTexture, vec2(0.375, rowPos));\r\n" + //
-			"                              vec3 u_lightPos7 = mv * lightPosition7.xyz;\r\n" + //
 			"                              vec3 lightDir7;\r\n" + //
 			"                              if(lightExtra7.x > 0.5) {\r\n" + //
 			"                                  // Sunlight ('directional')\r\n" + //
-			"                              	   lightDir7 = normalize(u_lightPos7);\r\n" + //
+			"                              	   lightDir7 = normalize(mv * lightPosition7.xyz);\r\n" + //
+			"                                  v_lightDist7 = 1.0;\r\n" + //
 			"                                  v_lightDir7 = vec4(normalize(TBN(lightDir7, t, b, n)), 1.0);\r\n" + //
 			"                              } else {\r\n" + //
 			"                                  // Point light ('omnidirectional')\r\n" + //
-			"                                  vec3 delta = u_lightPos7 - position_mv;\r\n" + //
-			"                                  lightDir7 = normalize(delta);\r\n" + //
-			"                                    float dist = length(delta) / 64.0 + 1.0;\r\n" + //
-			"                                  v_lightDir7 = vec4(normalize(TBN(lightDir7, t, b, n)), 1.0/pow(dist, 2.0));\r\n"
+			"                                  vec3 delta = vec3(u_MV * vec4(lightPosition7.xyz, 1)) - position_mv;\r\n"
 			+ //
+			"                                  lightDir7 = normalize(delta);\r\n" + //
+			"                                  v_lightDist7 = length(lightPosition7.xyz - position) / 64.0 + 1.0;\r\n" + //
+			"                                  v_lightDir7 = vec4(normalize(TBN(lightDir7, t, b, n)), 1.0);\r\n" + //
 			"                              }\r\n" + //
 			"                              if( u_lightTextureHeight > 7.5 ) {\r\n" + //
 			"                                  float rowPos = (7.5) / u_lightTextureHeight;\r\n" + //
 			"                                  vec4 lightPosition8 = texture2D(u_lightTexture, vec2(0.125, rowPos));\r\n"
 			+ //
 			"                                  vec4 lightExtra8 = texture2D(u_lightTexture, vec2(0.375, rowPos));\r\n" + //
-			"                                  vec3 u_lightPos8 = mv * lightPosition8.xyz;\r\n" + //
 			"                                  vec3 lightDir8;\r\n" + //
 			"                                  if(lightExtra8.x > 0.5) {\r\n" + //
 			"                                      // Sunlight ('directional')\r\n" + //
-			"                                  	   lightDir8 = normalize(u_lightPos8);\r\n" + //
+			"                                  	   lightDir8 = normalize(mv * lightPosition8.xyz);\r\n" + //
+			"                                      v_lightDist8 = 1.0;\r\n" + //
 			"                                      v_lightDir8 = vec4(normalize(TBN(lightDir8, t, b, n)), 1.0);\r\n" + //
 			"                                  } else {\r\n" + //
 			"                                      // Point light ('omnidirectional')\r\n" + //
-			"                                      vec3 delta = u_lightPos8 - position_mv;\r\n" + //
-			"                                      lightDir8 = normalize(delta);\r\n" + //
-			"                                        float dist = length(delta) / 64.0 + 1.0;\r\n" + //
-			"                                      v_lightDir8 = vec4(normalize(TBN(lightDir8, t, b, n)), 1.0/pow(dist, 2.0));\r\n"
+			"                                      vec3 delta = vec3(u_MV * vec4(lightPosition8.xyz, 1)) - position_mv;\r\n"
 			+ //
+			"                                      lightDir8 = normalize(delta);\r\n" + //
+			"                                      v_lightDist8 = length(lightPosition8.xyz - position) / 64.0 + 1.0;\r\n"
+			+ //
+			"                                      v_lightDir8 = vec4(normalize(TBN(lightDir8, t, b, n)), 1.0);\r\n" + //
 			"                                  }\r\n" + //
 			"                              } else {\r\n" + //
 			"                                  v_lightDir8 = vec4(0.0);\r\n" + //
@@ -287,6 +294,14 @@ public class MdxShaders {
 				"varying vec4 v_lightDir6;\r\n" + //
 				"varying vec4 v_lightDir7;\r\n" + //
 				"varying vec4 v_lightDir8;\r\n" + //
+				"varying float v_lightDist;\r\n" + //
+				"varying float v_lightDist2;\r\n" + //
+				"varying float v_lightDist3;\r\n" + //
+				"varying float v_lightDist4;\r\n" + //
+				"varying float v_lightDist5;\r\n" + //
+				"varying float v_lightDist6;\r\n" + //
+				"varying float v_lightDist7;\r\n" + //
+				"varying float v_lightDist8;\r\n" + //
 				"varying vec3 v_eyeVec;\r\n" + //
 				"varying vec3 v_normal;\r\n" + //
 				"// varying vec3 v_lightDirWorld;\r\n" + //
@@ -492,19 +507,21 @@ public class MdxShaders {
 				"  gl_FragColor = vec4(v_tangent, 1.0);\r\n" + //
 				"}\r\n" + //
 				"#endif\r\n" + //
-				"void applyLight(vec4 thisLightColor, vec4 thisLightDir, vec3 normal, vec3 baseColor, vec3 tc, vec4 ormTexel, vec3 reflectionsTexel, float tcFactor, inout vec3 color, inout vec3 lambertFactorSum) {\r\n"
+				"void applyLight(vec4 thisLightColor, vec4 thisLightAmbColor, vec4 thisLightDir, float thisLightDist, vec3 normal, vec3 baseColor, vec3 tc, vec4 ormTexel, vec3 reflectionsTexel, float tcFactor, inout vec3 color, inout vec3 lambertFactorSum) {\r\n"
 				+ //
 				"  if (thisLightColor.a > 0) {;\r\n" + //
-				"    float lambertFactor = clamp(dot(normal, thisLightDir.xyz) * 0.50 + 0.50, 0.0, 1.0);\r\n" + //
+				// " float lambertFactor = clamp(dot(normal, thisLightDir.xyz) * 0.50 + 0.50,
+				// 0.0, 1.0);\r\n" + //
+				"    float lambertFactor = dot(normal, thisLightDir.xyz);\r\n" + //
 				"    \r\n" + //
 				"			vec3 reflectDir = reflect(-thisLightDir.xyz, normal);\r\n" + //
 				"			vec3 halfwayDir = normalize(thisLightDir.xyz + v_eyeVec);\r\n" + //
-				"			float spec = pow(max(dot(normal, halfwayDir), 0.0), 32.0);\r\n" + //
+				"			float spec = pow(max(dot(normal, halfwayDir) * 0.5 + 0.5, 0.0), 32.0);\r\n" + //
 				"			vec3 specular = vec3(max(-ormTexel.g+0.5, 0.0)+ormTexel.b) * spec /* * (reflectionsTexel.rgb * (1.0 - ormTexel.g) + ormTexel.g * baseColor.rgb) */ *  thisLightColor.rgb;\r\n"
 				+ //
-				"    lambertFactorSum += clamp(lambertFactor, 0.0, 1.0) * thisLightColor.rgb * thisLightColor.a * thisLightDir.a;\r\n"
+				"    lambertFactorSum += (clamp(lambertFactor, 0.0, 1.0) * thisLightColor.rgb * thisLightColor.a + clamp(-lambertFactor, 0.0, 1.0) * thisLightAmbColor.rgb * thisLightAmbColor.a) / pow(thisLightDist, 2.0);\r\n"
 				+ //
-				"        color += (specular) * thisLightColor.a * thisLightDir.a;\r\n" + //
+				"        color += ((specular) * thisLightColor.a) / pow(thisLightDist, 2.0);\r\n" + //
 				"  };\r\n" + //
 				"}\r\n" + //
 				"void lambert() {\r\n" + //
@@ -522,42 +539,50 @@ public class MdxShaders {
 				"  \r\n" + //
 				"  float rowPos = (0.5) / u_lightTextureHeight;\r\n" + //
 				"  vec4 lightColor = texture2D(u_lightTexture, vec2(0.625, rowPos));\r\n" + //
-				"  applyLight(lightColor, v_lightDir, normal, baseColor.rgb, tc, orm, environmentMapColor, tcFactor, color, lambertFactorSum);\r\n"
+				"  vec4 lightAmbColor = texture2D(u_lightTexture, vec2(0.875, rowPos));\r\n" + //
+				"  applyLight(lightColor, lightAmbColor, v_lightDir, v_lightDist, normal, baseColor.rgb, tc, orm, environmentMapColor, tcFactor, color, lambertFactorSum);\r\n"
 				+ //
 				"  if( u_lightTextureHeight > 1.5 ) {\r\n" + //
 				"    rowPos = (1.5) / u_lightTextureHeight;\r\n" + //
 				"    lightColor = texture2D(u_lightTexture, vec2(0.625, rowPos));\r\n" + //
-				"    applyLight(lightColor, v_lightDir2, normal, baseColor.rgb, tc, orm, environmentMapColor, tcFactor, color, lambertFactorSum);\r\n"
+				"    lightAmbColor = texture2D(u_lightTexture, vec2(0.875, rowPos));\r\n" + //
+				"    applyLight(lightColor, lightAmbColor, v_lightDir2, v_lightDist2, normal, baseColor.rgb, tc, orm, environmentMapColor, tcFactor, color, lambertFactorSum);\r\n"
 				+ //
 				"    if( u_lightTextureHeight > 2.5 ) {\r\n" + //
 				"      rowPos = (2.5) / u_lightTextureHeight;\r\n" + //
 				"      lightColor = texture2D(u_lightTexture, vec2(0.625, rowPos));\r\n" + //
-				"      applyLight(lightColor, v_lightDir3, normal, baseColor.rgb, tc, orm, environmentMapColor, tcFactor, color, lambertFactorSum);\r\n"
+				"      lightAmbColor = texture2D(u_lightTexture, vec2(0.875, rowPos));\r\n" + //
+				"      applyLight(lightColor, lightAmbColor, v_lightDir3, v_lightDist3, normal, baseColor.rgb, tc, orm, environmentMapColor, tcFactor, color, lambertFactorSum);\r\n"
 				+ //
 				"      if( u_lightTextureHeight > 3.5 ) {\r\n" + //
 				"        rowPos = (3.5) / u_lightTextureHeight;\r\n" + //
 				"        lightColor = texture2D(u_lightTexture, vec2(0.625, rowPos));\r\n" + //
-				"        applyLight(lightColor, v_lightDir4, normal, baseColor.rgb, tc, orm, environmentMapColor, tcFactor, color, lambertFactorSum);\r\n"
+				"        lightAmbColor = texture2D(u_lightTexture, vec2(0.875, rowPos));\r\n" + //
+				"        applyLight(lightColor, lightAmbColor, v_lightDir4, v_lightDist4, normal, baseColor.rgb, tc, orm, environmentMapColor, tcFactor, color, lambertFactorSum);\r\n"
 				+ //
 				"        if( u_lightTextureHeight > 4.5 ) {\r\n" + //
 				"          rowPos = (4.5) / u_lightTextureHeight;\r\n" + //
 				"          lightColor = texture2D(u_lightTexture, vec2(0.625, rowPos));\r\n" + //
-				"          applyLight(lightColor, v_lightDir5, normal, baseColor.rgb, tc, orm, environmentMapColor, tcFactor, color, lambertFactorSum);\r\n"
+				"          lightAmbColor = texture2D(u_lightTexture, vec2(0.875, rowPos));\r\n" + //
+				"          applyLight(lightColor, lightAmbColor, v_lightDir5, v_lightDist5, normal, baseColor.rgb, tc, orm, environmentMapColor, tcFactor, color, lambertFactorSum);\r\n"
 				+ //
 				"          if( u_lightTextureHeight > 5.5 ) {\r\n" + //
 				"            rowPos = (5.5) / u_lightTextureHeight;\r\n" + //
 				"            lightColor = texture2D(u_lightTexture, vec2(0.625, rowPos));\r\n" + //
-				"            applyLight(lightColor, v_lightDir6, normal, baseColor.rgb, tc, orm, environmentMapColor, tcFactor, color, lambertFactorSum);\r\n"
+				"            lightAmbColor = texture2D(u_lightTexture, vec2(0.875, rowPos));\r\n" + //
+				"            applyLight(lightColor, lightAmbColor, v_lightDir6, v_lightDist6, normal, baseColor.rgb, tc, orm, environmentMapColor, tcFactor, color, lambertFactorSum);\r\n"
 				+ //
 				"            if( u_lightTextureHeight > 6.5 ) {\r\n" + //
 				"              rowPos = (6.5) / u_lightTextureHeight;\r\n" + //
 				"              lightColor = texture2D(u_lightTexture, vec2(0.625, rowPos));\r\n" + //
-				"              applyLight(lightColor, v_lightDir7, normal, baseColor.rgb, tc, orm, environmentMapColor, tcFactor, color, lambertFactorSum);\r\n"
+				"              lightAmbColor = texture2D(u_lightTexture, vec2(0.875, rowPos));\r\n" + //
+				"              applyLight(lightColor, lightAmbColor, v_lightDir7, v_lightDist7, normal, baseColor.rgb, tc, orm, environmentMapColor, tcFactor, color, lambertFactorSum);\r\n"
 				+ //
 				"              if( u_lightTextureHeight > 7.5 ) {\r\n" + //
 				"                rowPos = (7.5) / u_lightTextureHeight;\r\n" + //
 				"                lightColor = texture2D(u_lightTexture, vec2(0.625, rowPos));\r\n" + //
-				"                applyLight(lightColor, v_lightDir8, normal, baseColor.rgb, tc, orm, environmentMapColor, tcFactor, color, lambertFactorSum);\r\n"
+				"                lightAmbColor = texture2D(u_lightTexture, vec2(0.875, rowPos));\r\n" + //
+				"                applyLight(lightColor, lightAmbColor, v_lightDir8, v_lightDist8, normal, baseColor.rgb, tc, orm, environmentMapColor, tcFactor, color, lambertFactorSum);\r\n"
 				+ //
 				"              }\r\n" + //
 				"            }\r\n" + //

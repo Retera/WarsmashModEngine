@@ -921,6 +921,15 @@ public class TerrainWdt extends TerrainInterface {
 			return false;
 		} // TODO why do we use floor if we can use int cast?
 
+		return true;
+	}
+
+	@Override
+	public boolean inActivePlayableArea(final float x, final float y) {
+		if (!inPlayableArea(x, y)) {
+			return false;
+		}
+
 		final double userCellSpaceXWc3 = (StrictMath.floor(x) - this.centerOffset[0]) / 128.0;
 		final double userCellSpaceYWc3 = (StrictMath.floor(y) - this.centerOffset[1]) / 128.0;
 		final int cellXWc3 = (int) StrictMath.floor(userCellSpaceXWc3);

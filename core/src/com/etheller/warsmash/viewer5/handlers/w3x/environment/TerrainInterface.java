@@ -89,6 +89,8 @@ public abstract class TerrainInterface {
 
 	public abstract boolean inPlayableArea(float x, float y);
 
+	public abstract boolean inActivePlayableArea(float x, float y);
+
 	public abstract void intersectRayTerrain(Ray gdxRayHeap, final Vector3 out, final boolean intersectWithWater);
 
 	public static final class SoftwareGroundMesh {

@@ -1636,6 +1636,11 @@ public class Terrain extends TerrainInterface {
 	}
 
 	@Override
+	public boolean inActivePlayableArea(final float x, final float y) {
+		return inPlayableArea(x, y);
+	}
+
+	@Override
 	public Rectangle getPlayableMapArea() {
 		return this.shaderMapBoundsRectangle;
 	}

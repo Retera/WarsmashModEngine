@@ -4893,6 +4893,6 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 	}
 
 	public boolean canPawnMoveAt(final float x, final float y) {
-		return this.terrain.inPlayableArea(x, y);
+		return this.terrain.inActivePlayableArea(x, y);
 	}
 }

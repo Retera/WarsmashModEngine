@@ -21,6 +21,7 @@ import com.etheller.interpreter.ast.execution.JassStackFrame;
 import com.etheller.interpreter.ast.execution.JassThread;
 import com.etheller.interpreter.ast.execution.instruction.BeginFunctionInstruction;
 import com.etheller.interpreter.ast.execution.instruction.BranchInstruction;
+import com.etheller.interpreter.ast.execution.instruction.GlobalBeginFunctionInstruction;
 import com.etheller.interpreter.ast.execution.instruction.InstructionAppendingJassStatementVisitor;
 import com.etheller.interpreter.ast.execution.instruction.JassInstruction;
 import com.etheller.interpreter.ast.execution.instruction.PushLiteralInstruction;
@@ -384,7 +385,7 @@ public final class GlobalScope {
 		else {
 			this.functionNameToInstructionPtr.put(INIT_GLOBALS_AUTOGEN_FXN_NAME, this.instructions.size());
 		}
-		this.instructions.add(new BeginFunctionInstruction(lineNo, sourceFile, INIT_GLOBALS_AUTOGEN_FXN_NAME));
+		this.instructions.add(new GlobalBeginFunctionInstruction(lineNo, sourceFile, INIT_GLOBALS_AUTOGEN_FXN_NAME));
 	}
 
 	public UserJassFunction getFunctionDefinitionByName(final String name) {

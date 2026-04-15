@@ -286,12 +286,16 @@ public class CUnit extends CWidget {
 	private final IntIntMap rawcodeToCooldownExpireTime = new IntIntMap();
 	private final IntIntMap rawcodeToCooldownStartTime = new IntIntMap();
 
-	private byte invisLevels = 0;
+
+	private CUnitType baseUnitType;
+	private CUnitType polymorphUnitType;
 	private CTimer fadeTimer;
 	private final List<Integer> detectorLevels = new ArrayList<>(1);
 	private long detections = 0;
 
 	private MovementType movementOverride = null;
+	private byte invisLevels;
+
 
 	public CUnit(final int handleId, final int playerIndex, final float x, final float y, final float life,
 			final War3ID typeId, final float facing, final float mana, final int maximumLife, final float lifeRegen,
@@ -321,6 +325,8 @@ public class CUnit extends CWidget {
 		this.defaultBehavior = this.stopBehavior;
 		this.raisable = unitType.isRaise();
 		this.decays = unitType.isDecay();
+		this.baseUnitType = unitType;
+		this.polymorphUnitType = null;
 		initializeNonStackingBuffs();
 		initializeListenerLists();
 		addPreDamageListener(CUnitAttackPreDamageListenerPriority.ACCURACY, new CUnitDefaultAccuracyCheckListener());
@@ -4655,8 +4661,7 @@ public class CUnit extends CWidget {
 			throw new UnsupportedOperationException(
 					"cannot ask engine if unit is poisoned: poison is not yet implemented");
 		case POLYMORPHED:
-			throw new UnsupportedOperationException(
-					"cannot ask engine if unit is POLYMORPHED: POLYMORPHED is not yet implemented");
+				return this.classifications.contains(CUnitClassification.POLYMORPHED);
 		case SLEEPING:
 			boolean isSleeping = false;
 			for (final StateModBuff buff : this.stateModBuffs) {
@@ -5296,6 +5301,48 @@ public class CUnit extends CWidget {
 			}
 		}
 	}
+
+	// polymorphed methods
+	public void applyPolymorph(final CSimulation game, final CUnitType newUnitType) {
+		if (newUnitType == null || newUnitType == this.polymorphUnitType) {
+			return;
+		}
+		this.polymorphUnitType = newUnitType;
+		this.unitType = newUnitType;
+
+		computeAllDerivedFields();
+		notifyAttacksChanged();
+		notifyOrdersChanged();
+
+		// Notifie le rendu de swaper le modèle vers celui du type polymorphé (mouton/grenouille)
+		game.unitUpdatedType(this, newUnitType.getTypeId());
+
+		if (this.unitAnimationListener != null) {
+			this.unitAnimationListener.playAnimation(false, PrimaryTag.MORPH, SequenceUtils.EMPTY, 0, true);
+		}
+	}
+
+	public void removePolymorph(final CSimulation game) {
+		if (this.polymorphUnitType == null) {
+			return;
+		}
+		this.unitType = this.baseUnitType;
+		this.polymorphUnitType = null;
+
+		computeAllDerivedFields();
+		notifyAttacksChanged();
+		notifyOrdersChanged();
+
+		// Notifie le rendu de revenir au modèle d'origine
+		game.unitUpdatedType(this, this.baseUnitType.getTypeId());
+
+		if (this.unitAnimationListener != null) {
+			this.unitAnimationListener.playAnimation(false, PrimaryTag.MORPH, SequenceUtils.EMPTY, 0, true);
+		}
+	}
+
+
+
 
 	public void setExplodesOnDeath(final boolean explodesOnDeath) {
 		this.explodesOnDeath = explodesOnDeath;

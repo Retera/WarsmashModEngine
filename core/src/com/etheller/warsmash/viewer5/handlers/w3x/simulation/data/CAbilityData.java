@@ -37,9 +37,18 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.skills.ni
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.skills.nightelf.keeper.CAbilityForceOfNature;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.skills.nightelf.moonpriestess.CAbilitySummonOwlScout;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.skills.nightelf.warden.CAbilityBlink;
+
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.skills.orc.blademaster.CAbilityMirrorImage;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.skills.orc.shadowhunter.CAbilityHealingWave;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.skills.orc.shadowhunter.CAbilitySerpentWard;
+
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.skills.orc.blademaster.CAbilityWhirlWind;
+
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.skills.orc.farseer.CAbilityChainLightning;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.skills.orc.farseer.CAbilityFeralSpirit;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.skills.orc.shadowhunter.CAbilitySerpentWard;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.skills.orc.shadowhunter.CAbilityHex ;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.skills.orc.taurenchieftain.CAbilityShockWave;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.skills.orc.taurenchieftain.CAbilityWarStomp;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.skills.undead.deathknight.CAbilityDarkRitual;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.skills.undead.deathknight.CAbilityDeathCoil;
@@ -137,6 +146,8 @@ public class CAbilityData {
 				new CAbilityTypeDefinitionSpellBase((handleId, alias) -> new CAbilitySummonPhoenix(handleId, alias)));
 
 		// ----Orc----
+
+		// Far Seer
 		this.codeToAbilityTypeDefinition.put(War3ID.fromString("AOsf"),
 				new CAbilityTypeDefinitionSpellBase((handleId, alias) -> new CAbilityFeralSpirit(handleId, alias)));
 		this.codeToAbilityTypeDefinition.put(War3ID.fromString("AOcl"),
@@ -145,6 +156,26 @@ public class CAbilityData {
 		// Tauren Chieftain
 		this.codeToAbilityTypeDefinition.put(War3ID.fromString("AOws"),
 				new CAbilityTypeDefinitionSpellBase((handleId, alias) -> new CAbilityWarStomp(handleId, alias)));
+
+		this.codeToAbilityTypeDefinition.put(War3ID.fromString("AOsh"),
+				new CAbilityTypeDefinitionSpellBase((handleId, alias) -> new CAbilityShockWave(handleId, alias)));
+
+		// Shadow Spirit
+		this.codeToAbilityTypeDefinition.put(War3ID.fromString("AOwd"),
+				new CAbilityTypeDefinitionSpellBase((handleId, alias) -> new CAbilitySerpentWard(handleId, alias)));
+
+		this.codeToAbilityTypeDefinition.put(War3ID.fromString("AOhx"),
+				new CAbilityTypeDefinitionSpellBase((handleId, alias) -> new CAbilityHex(handleId, alias)));
+
+		this.codeToAbilityTypeDefinition.put(War3ID.fromString("AOhw"),
+				new CAbilityTypeDefinitionSpellBase((handleId, alias) -> new CAbilityHealingWave(handleId, alias)));
+
+		//Blade Master
+		this.codeToAbilityTypeDefinition.put(War3ID.fromString("AOww"),
+				new CAbilityTypeDefinitionSpellBase((handleId, alias) -> new CAbilityWhirlWind(handleId, alias)));
+		// Blademaster
+		this.codeToAbilityTypeDefinition.put(War3ID.fromString("AOmi"),
+				new CAbilityTypeDefinitionSpellBase((handleId, alias) -> new CAbilityMirrorImage(handleId, alias)));
 
 		// Burrow:
 		this.codeToAbilityTypeDefinition.put(War3ID.fromString("Abun"), new CAbilityTypeDefinitionCargoHoldBurrow());
@@ -275,8 +306,7 @@ public class CAbilityData {
 		this.codeToAbilityTypeDefinition.put(War3ID.fromString("ARal"), new CAbilityTypeDefinitionRally());
 		this.codeToAbilityTypeDefinition.put(War3ID.fromString("Awrp"),
 				new CAbilityTypeDefinitionSpellBase((handleId, alias) -> new CAbilityWayGate(handleId, alias)));
-		this.codeToAbilityTypeDefinition.put(War3ID.fromString("AOww"),
-				new CAbilityTypeDefinitionSpellBase((handleId, alias) -> new CAbilityWhirlWind(handleId, alias)));
+
 
 		System.err.println("========================================================================");
 		System.err.println("Starting to load ability builder");

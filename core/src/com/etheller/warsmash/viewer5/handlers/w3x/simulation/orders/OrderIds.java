@@ -536,7 +536,10 @@ public class OrderIds {
 	public static final int _gyrocopterbombs = 852061; //gyrocopter bombs (Agyb) -- 
 	public static final int _detectgyrocopter = 852062; //detect (gyrocopter) (Agyv) -- 
 	public static final int _detectmagicsentinel = 852070; //detect (magic sentinel) (Adts) -- 
-	public static final int _stormhammers = 852078; //storm hammers (Asth) -- 
+	public static final int _stormhammers = 852078; //storm hammers (Asth) --
+	public static final int bladestorm = 852696;
+	public static final int endurance = 852551;
+	public static final int criticalbash = 852532;
 	public static final int _brillianceaura = 852084; //brilliance aura (AHab) -- 
 	public static final int _devotionaura = 852085; //devotion aura (AHad) -- 
 	public static final int _bash = 852088; //bash (AHbh) -- 

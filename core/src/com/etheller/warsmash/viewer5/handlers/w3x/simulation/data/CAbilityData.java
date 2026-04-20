@@ -38,6 +38,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.skills.ni
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.skills.nightelf.moonpriestess.CAbilitySummonOwlScout;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.skills.nightelf.warden.CAbilityBlink;
 
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.skills.orc.blademaster.CAbilityBladeStorm;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.skills.orc.blademaster.CAbilityMirrorImage;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.skills.orc.shadowhunter.CAbilityHealingWave;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.skills.orc.shadowhunter.CAbilitySerpentWard;
@@ -48,6 +49,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.skills.or
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.skills.orc.farseer.CAbilityFeralSpirit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.skills.orc.shadowhunter.CAbilitySerpentWard;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.skills.orc.shadowhunter.CAbilityHex ;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.skills.orc.taurenchieftain.CAbilityEnduranceAura;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.skills.orc.taurenchieftain.CAbilityShockWave;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.skills.orc.taurenchieftain.CAbilityWarStomp;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.skills.undead.deathknight.CAbilityDarkRitual;
@@ -99,6 +101,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.pars
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.parser.AbilityBuilderParserUtil;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.parser.AbilityBuilderType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.types.definitions.impl.CAbilityTypeDefinitionAbilityTemplateBuilder;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.skills.orc.shadowhunter.CAbilityBigVoodoo ;
 
 public class CAbilityData {
 
@@ -160,6 +163,9 @@ public class CAbilityData {
 		this.codeToAbilityTypeDefinition.put(War3ID.fromString("AOsh"),
 				new CAbilityTypeDefinitionSpellBase((handleId, alias) -> new CAbilityShockWave(handleId, alias)));
 
+		this.codeToAbilityTypeDefinition.put(War3ID.fromString("AOae"),
+				new CAbilityTypeDefinitionSpellBase((handleId, alias) -> new CAbilityEnduranceAura(handleId, alias)));
+
 		// Shadow Spirit
 		this.codeToAbilityTypeDefinition.put(War3ID.fromString("AOwd"),
 				new CAbilityTypeDefinitionSpellBase((handleId, alias) -> new CAbilitySerpentWard(handleId, alias)));
@@ -169,13 +175,19 @@ public class CAbilityData {
 
 		this.codeToAbilityTypeDefinition.put(War3ID.fromString("AOhw"),
 				new CAbilityTypeDefinitionSpellBase((handleId, alias) -> new CAbilityHealingWave(handleId, alias)));
+		this.codeToAbilityTypeDefinition.put(War3ID.fromString("AOww"),
+				new CAbilityTypeDefinitionSpellBase((handleId, alias) -> new CAbilityBigVoodoo(handleId, alias)));
 
 		//Blade Master
 		this.codeToAbilityTypeDefinition.put(War3ID.fromString("AOww"),
 				new CAbilityTypeDefinitionSpellBase((handleId, alias) -> new CAbilityWhirlWind(handleId, alias)));
-		// Blademaster
+
 		this.codeToAbilityTypeDefinition.put(War3ID.fromString("AOmi"),
 				new CAbilityTypeDefinitionSpellBase((handleId, alias) -> new CAbilityMirrorImage(handleId, alias)));
+
+		this.codeToAbilityTypeDefinition.put(War3ID.fromString("AOsw"),
+				new CAbilityTypeDefinitionSpellBase((handleId, alias) -> new CAbilityBladeStorm(handleId, alias)));
+
 
 		// Burrow:
 		this.codeToAbilityTypeDefinition.put(War3ID.fromString("Abun"), new CAbilityTypeDefinitionCargoHoldBurrow());

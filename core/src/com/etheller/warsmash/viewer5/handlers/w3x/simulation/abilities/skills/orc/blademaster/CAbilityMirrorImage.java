@@ -2,16 +2,16 @@ package com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.skills.o
 
 import com.etheller.warsmash.units.GameObject;
 import com.etheller.warsmash.util.War3ID;
+import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.RenderUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnitClassification;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.skills.CAbilityNoTargetSpellBase;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.skills.util.CBuffTimedLife;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.skills.util.CBuffTimed;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.definitions.impl.AbilityFields;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.definitions.impl.AbstractCAbilityTypeDefinition;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.OrderIds;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.timers.CTimer;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CEffectType;
 
 import java.util.ArrayList;
@@ -19,9 +19,9 @@ import java.util.List;
 
 public class CAbilityMirrorImage extends CAbilityNoTargetSpellBase {
 
-    private int numberOfImages;
-    private float damagePercent;
-    private float duration;
+    private int    numberOfImages;
+    private float  damagePercent;
+    private float  duration;
     private War3ID buffId;
 
     private final List<CUnit> activeImages = new ArrayList<>();
@@ -33,9 +33,9 @@ public class CAbilityMirrorImage extends CAbilityNoTargetSpellBase {
     @Override
     public void populateData(final GameObject worldEditorAbility, final int level) {
         this.numberOfImages = worldEditorAbility.getFieldAsInteger(AbilityFields.DATA_A + level, 0);
-        this.damagePercent = worldEditorAbility.getFieldAsFloat(AbilityFields.DATA_B + level, 0) / 100f;
-        this.duration = worldEditorAbility.getFieldAsFloat(AbilityFields.DURATION + level, 0);
-        this.buffId = AbstractCAbilityTypeDefinition.getBuffId(worldEditorAbility, level);
+        this.damagePercent  = worldEditorAbility.getFieldAsFloat(AbilityFields.DATA_B + level, 0) / 100f;
+        this.duration       = worldEditorAbility.getFieldAsFloat(AbilityFields.DURATION + level, 0);
+        this.buffId         = AbstractCAbilityTypeDefinition.getBuffId(worldEditorAbility, level);
     }
 
     @Override
@@ -45,15 +45,15 @@ public class CAbilityMirrorImage extends CAbilityNoTargetSpellBase {
 
     @Override
     public boolean doEffect(final CSimulation simulation, final CUnit caster, final AbilityTarget target) {
-        activeImages.removeIf(CUnit::isDead);
+        this.activeImages.removeIf(CUnit::isDead);
 
         final float facing = caster.getFacing();
         final float offset = 120f;
 
         simulation.createTemporarySpellEffectOnUnit(caster, getAlias(), CEffectType.CASTER);
 
-        for (int i = 0; i < numberOfImages; i++) {
-            final float angle = (float) (i * (2 * Math.PI / numberOfImages));
+        for (int i = 0; i < this.numberOfImages; i++) {
+            final float angle = (float) (i * (2.0 * Math.PI / this.numberOfImages));
             final float x = caster.getX() + (float) Math.cos(angle) * offset;
             final float y = caster.getY() + (float) Math.sin(angle) * offset;
 
@@ -64,46 +64,67 @@ public class CAbilityMirrorImage extends CAbilityNoTargetSpellBase {
                     facing
             );
 
-            // Classifications importantes pour les illusions
             image.addClassification(CUnitClassification.SUMMONED);
-            image.addClassification(CUnitClassification.ILLUSION);   // Si cette classification n'existe pas, on la supprimera
-
-            // Copie état de base
             image.setLife(simulation, caster.getLife());
             image.setMana(caster.getMana());
 
-            // === Effet visuel bleu transparent (Mirror Image style) ===
-            // Méthode alternative plus sûre dans Warsmash
-            simulation.unitUpdatedType(image, image.getTypeId()); // Force refresh du modèle
-            if (image.getUnitAnimationListener() != null) {
-                image.getUnitAnimationListener().playAnimation(false,
-                        com.etheller.warsmash.viewer5.handlers.w3x.AnimationTokens.PrimaryTag.STAND,
-                        com.etheller.warsmash.viewer5.handlers.w3x.SequenceUtils.EMPTY, 0, true);
-            }
+            // Teinte bleue semi-transparente (même rendu que les unités éthérées)
+            simulation.changeUnitVertexColor(image, RenderUnit.ETHEREAL);
 
-            // Durée de vie
-            image.add(simulation, new CBuffTimedLife(
+            // ------------------------------------------------------------------
+            // Disparition sans animation ni explosion :
+            //
+            // Cas 1 – HP tombe à 0 (image tuée par des dégâts)
+            //   setExplodesOnDeath(true)   → dans CUnit.kill() : setHidden + removeUnit
+            //   explodesOnDeathBuffId = War3ID.NONE → createDeathExplodeEffect ne trouve
+            //   aucun art associé à NONE → aucun visuel, le clone disparaît proprement.
+            //
+            // Cas 2 – Buff expire (durée écoulée)
+            //   CBuffMirrorImageTimed.onBuffRemove → setHidden + removeUnit directement,
+            //   sans passer par kill() qui jouerait une animation de mort.
+            // ------------------------------------------------------------------
+            image.setExplodesOnDeath(true);
+            image.setExplodesOnDeathBuffId(War3ID.NONE);
+
+            image.add(simulation, new CBuffMirrorImageTimed(
                     simulation.getHandleIdAllocator().createId(),
                     this.buffId,
-                    this.duration,
-                    false
+                    this.duration
             ));
 
             simulation.createTemporarySpellEffectOnUnit(image, getAlias(), CEffectType.SPECIAL);
 
-            activeImages.add(image);
+            this.activeImages.add(image);
         }
 
-        // Invulnérabilité temporaire du vrai Blademaster
-        caster.setInvulnerable(true);
-        final CTimer invulnTimer = new CTimer() {
-            @Override
-            public void onFire(final CSimulation game) {
-                caster.setInvulnerable(false);
-            }
-        };
-        simulation.registerTimer(invulnTimer);
-
         return false;
+    }
+
+    // =========================================================================
+    // Buff interne : gère l'expiration propre du clone
+    // =========================================================================
+    private static final class CBuffMirrorImageTimed extends CBuffTimed {
+
+        public CBuffMirrorImageTimed(final int handleId, final War3ID alias, final float duration) {
+            super(handleId, alias, alias, duration);
+        }
+
+        @Override
+        protected void onBuffAdd(final CSimulation game, final CUnit unit) {
+            // Rien à faire ici : explode + War3ID.NONE déjà posés dans doEffect
+        }
+
+        @Override
+        protected void onBuffRemove(final CSimulation game, final CUnit unit) {
+            // Expiration de la durée : cacher et retirer directement,
+            // sans appeler unit.kill() qui jouerait une animation de mort.
+            unit.setHidden(true);
+            game.removeUnit(unit);
+        }
+
+        @Override
+        public boolean isTimedLifeBar() {
+            return false;
+        }
     }
 }

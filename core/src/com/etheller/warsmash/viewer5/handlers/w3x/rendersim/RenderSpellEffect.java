@@ -88,6 +88,7 @@ public class RenderSpellEffect implements RenderEffect {
 		this.animationQueueIndex = 0;
 		setKillWhenDone(killWhenDone);
 		applySequence();
+		this.animationQueueIndex++;
 	}
 
 	public void setKillWhenDone(final boolean killWhenDone) {

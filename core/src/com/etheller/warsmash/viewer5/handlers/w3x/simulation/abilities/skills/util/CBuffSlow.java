@@ -48,5 +48,10 @@ public class CBuffSlow extends CBuffTimed {
 	public boolean isTimedLifeBar() {
 		return false;
 	}
+	
+	@Override
+	public boolean isPositive() {
+		return false;
+	}
 
 }

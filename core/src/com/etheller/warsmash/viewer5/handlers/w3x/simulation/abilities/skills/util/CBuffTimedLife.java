@@ -3,6 +3,7 @@ package com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.skills.u
 import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayer;
 
 public class CBuffTimedLife extends CBuffTimed {
 
@@ -19,6 +20,10 @@ public class CBuffTimedLife extends CBuffTimed {
 			unit.setExplodesOnDeath(true);
 			unit.setExplodesOnDeathBuffId(getAlias());
 		}
+
+		final CPlayer player = game.getPlayer(unit.getPlayerIndex());
+		player.setUnitFoodMade(unit, 0);
+		player.setUnitFoodUsed(unit, 0);
 	}
 
 	@Override

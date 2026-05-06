@@ -17,6 +17,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.definitions.impl.AbilityFields;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.definitions.impl.AbstractCAbilityTypeDefinition;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CAttackType;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CSpellDamageFlags;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CTargetType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.projectile.CEffect;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.OrderIds;
@@ -65,7 +66,7 @@ public class CAbilityChainLightning extends CAbilityTargetSpellBase {
 					+ (int) StrictMath.ceil(SECONDS_BETWEEN_JUMPS / WarsmashConstants.SIMULATION_STEP_TIME);
 			final int boltLifetimeEndTick = simulation.getGameTurnTick()
 					+ (int) StrictMath.ceil(BOLT_LIFETIME_SECONDS / WarsmashConstants.SIMULATION_STEP_TIME);
-			targetUnit.damage(simulation, caster, false, true, CAttackType.SPELLS, CDamageType.LIGHTNING,
+			targetUnit.damage(simulation, caster, DAMAGE_FLAGS, CAttackType.SPELLS, CDamageType.LIGHTNING,
 					CWeaponSoundTypeJass.WHOKNOWS.name(), damagePerTarget);
 			final float remainingDamageJumpMultiplier = 1.0f - damageReductionPerTarget;
 			final Set<CUnit> previousTargets = new HashSet<>();
@@ -139,7 +140,7 @@ public class CAbilityChainLightning extends CAbilityTargetSpellBase {
 							+ (int) StrictMath.ceil(SECONDS_BETWEEN_JUMPS / WarsmashConstants.SIMULATION_STEP_TIME);
 					final int boltLifetimeEndTick = gameTurnTick
 							+ (int) StrictMath.ceil(BOLT_LIFETIME_SECONDS / WarsmashConstants.SIMULATION_STEP_TIME);
-					nextJumpTarget.damage(game, caster, false, true, CAttackType.SPELLS, CDamageType.LIGHTNING,
+					nextJumpTarget.damage(game, caster, DAMAGE_FLAGS, CAttackType.SPELLS, CDamageType.LIGHTNING,
 							CWeaponSoundTypeJass.WHOKNOWS.name(), remainingDamage);
 					previousTargets.add(nextJumpTarget);
 					game.registerEffect(new CEffectChainLightningBolt(boltLifetimeEndTick, jumpDelayEndTick,

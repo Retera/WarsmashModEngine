@@ -4,21 +4,24 @@ import com.etheller.interpreter.ast.util.CHandle;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CDamageType;
 
 public enum CWeaponType implements CHandle {
-	NONE(CDamageType.UNKNOWN, false),
-	NORMAL(CDamageType.NORMAL, false),
-	INSTANT(CDamageType.NORMAL, true),
-	ARTILLERY(CDamageType.NORMAL, true),
-	ALINE(CDamageType.NORMAL, true),
-	MISSILE(CDamageType.NORMAL, true),
-	MSPLASH(CDamageType.NORMAL, true),
-	MBOUNCE(CDamageType.NORMAL, true),
-	MLINE(CDamageType.NORMAL, true);
+	NONE(CDamageType.UNKNOWN, false, false),
+	NORMAL(CDamageType.NORMAL, false, false),
+	INSTANT(CDamageType.NORMAL, true, false),
+	ARTILLERY(CDamageType.NORMAL, true, true),
+	ALINE(CDamageType.NORMAL, true, true),
+	MISSILE(CDamageType.NORMAL, true, true),
+	MSPLASH(CDamageType.NORMAL, true, true),
+	MBOUNCE(CDamageType.NORMAL, true, true),
+	MLINE(CDamageType.NORMAL, true, true);
 
 	private CDamageType damageType;
 	private boolean ranged;
+	private boolean projectile;
 
-	CWeaponType(final CDamageType damageType, final boolean ranged) {
+	CWeaponType(final CDamageType damageType, final boolean ranged, final boolean projectile) {
 		this.damageType = damageType;
+		this.ranged = ranged;
+		this.projectile = projectile;
 	}
 
 	public CDamageType getDamageType() {
@@ -29,8 +32,8 @@ public enum CWeaponType implements CHandle {
 		return this.ranged;
 	}
 
-	public void setRanged(final boolean ranged) {
-		this.ranged = ranged;
+	public boolean isProjectile() {
+		return this.projectile;
 	}
 
 	public static CWeaponType parseWeaponType(final String weaponTypeString) {

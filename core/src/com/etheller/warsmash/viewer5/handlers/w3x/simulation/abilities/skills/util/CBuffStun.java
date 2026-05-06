@@ -35,5 +35,10 @@ public class CBuffStun extends CBuffTimed {
 	public boolean isTimedLifeBar() {
 		return false;
 	}
+	
+	@Override
+	public boolean isPositive() {
+		return false;
+	}
 
 }

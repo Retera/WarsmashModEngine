@@ -20,18 +20,18 @@ import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.AbilityBuilderGsonBuilder;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.parser.AbilityBuilderConfiguration;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.parser.AbilityBuilderDupe;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.parser.AbilityBuilderParserUtil;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.parser.AbilityBuilderType;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.adjustablebehaviors.core.ABAbilityBuilderGsonBuilder;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.adjustablebehaviors.parser.ABAbilityBuilderConfiguration;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.adjustablebehaviors.parser.ABAbilityBuilderDupe;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.adjustablebehaviors.parser.ABAbilityBuilderParserUtil;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.adjustablebehaviors.parser.ABAbilityBuilderType;
 import com.google.gson.Gson;
 
 public class AbilityBuilderUIPanel extends JPanel {
 	private final JFileChooser jsonFileChooser = new JFileChooser(new File("abilityBehaviors"));
-	private final Gson gson = AbilityBuilderGsonBuilder.create();
-	private DefaultListModel<AbilityBuilderConfiguration> idsListModel;
-	private JList<AbilityBuilderConfiguration> idsList;
+	private final Gson gson = ABAbilityBuilderGsonBuilder.create();
+	private DefaultListModel<ABAbilityBuilderConfiguration> idsListModel;
+	private JList<ABAbilityBuilderConfiguration> idsList;
 	private AbilityBuilderConfigTree abilityBuilderConfigTree;
 
 	public AbilityBuilderUIPanel() {
@@ -40,8 +40,8 @@ public class AbilityBuilderUIPanel extends JPanel {
 		jsonFileChooser.addChoosableFileFilter(jsonFilenameFilter);
 		jsonFileChooser.setFileFilter(jsonFilenameFilter);
 
-		idsListModel = new DefaultListModel<AbilityBuilderConfiguration>();
-		idsList = new JList<AbilityBuilderConfiguration>(idsListModel);
+		idsListModel = new DefaultListModel<ABAbilityBuilderConfiguration>();
+		idsList = new JList<ABAbilityBuilderConfiguration>(idsListModel);
 		idsList.setPreferredSize(new Dimension(200, 1));
 		idsList.setCellRenderer(new AbilityBuilderDupeCellRenderer());
 
@@ -52,7 +52,7 @@ public class AbilityBuilderUIPanel extends JPanel {
 			@Override
 			public void valueChanged(ListSelectionEvent e) {
 				if (!e.getValueIsAdjusting()) {
-					AbilityBuilderConfiguration selectedValue = idsList.getSelectedValue();
+					ABAbilityBuilderConfiguration selectedValue = idsList.getSelectedValue();
 					if (selectedValue != null) {
 						abilityBuilderConfigTree.setConfig(selectedValue);
 					}
@@ -89,16 +89,16 @@ public class AbilityBuilderUIPanel extends JPanel {
 				try {
 					idsListModel.clear();
 					abilityBuilderConfigTree.clearConfig();
-					AbilityBuilderParserUtil.loadAbilityBuilderFile(gson, selectedFile, behavior -> {
-						if (behavior.getType() == AbilityBuilderType.TEMPLATE) {
-							for (AbilityBuilderDupe dupe : behavior.getIds()) {
+					ABAbilityBuilderParserUtil.loadAbilityBuilderFile(gson, selectedFile, behavior -> {
+						if (behavior.getType() == ABAbilityBuilderType.TEMPLATE) {
+							for (ABAbilityBuilderDupe dupe : behavior.getIds()) {
 								System.out.println("template: " + dupe.getId());
-								idsListModel.addElement(new AbilityBuilderConfiguration(behavior, dupe));
+								idsListModel.addElement(new ABAbilityBuilderConfiguration(behavior, dupe));
 							}
 						} else {
-							for (AbilityBuilderDupe dupe : behavior.getIds()) {
+							for (ABAbilityBuilderDupe dupe : behavior.getIds()) {
 								System.out.println("non-template: " + dupe.getId());
-								idsListModel.addElement(new AbilityBuilderConfiguration(behavior, dupe));
+								idsListModel.addElement(new ABAbilityBuilderConfiguration(behavior, dupe));
 							}
 						}
 					});

@@ -13,8 +13,6 @@ import com.etheller.warsmash.viewer5.handlers.w3x.SequenceUtils;
 import com.etheller.warsmash.viewer5.handlers.w3x.War3MapViewer;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTargetWidgetVisitor;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CWeaponType;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.projectile.CAttackProjectile;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.projectile.CProjectile;
 
 public class RenderProjectile implements RenderEffect {
@@ -29,12 +27,13 @@ public class RenderProjectile implements RenderEffect {
 	private final float arcPeakHeight;
 	private float totalTravelDistance;
 
-	private final float targetHeight;
+	private float targetHeight;
 
 	private float yaw;
 
 	private float pitch;
 	private boolean done = false;
+	private float deathTime;
 	private float deathTimeElapsed;
 
 	public RenderProjectile(final CProjectile simulationProjectile, final MdxComplexInstance modelInstance,
@@ -65,6 +64,15 @@ public class RenderProjectile implements RenderEffect {
 		this.targetHeight = (war3MapViewer.terrain.getGroundHeight(targetX, targetY) + flyHeight + impactZ);
 		this.arcPeakHeight = arc * startingDistance;
 		this.yaw = (float) StrictMath.atan2(dyToTarget, dxToTarget);
+		this.deathTime = war3MapViewer.simulation.getGameplayConstants().getBulletDeathTime();
+	}
+
+	public void setDeathTime(float time) {
+		this.deathTime = time;
+	}
+
+	public void setImpactZ(final War3MapViewer war3MapViewer, float impactZ) {
+		this.targetHeight = (war3MapViewer.terrain.getGroundHeight(this.simulationProjectile.getTargetX(), this.simulationProjectile.getTargetY()) + impactZ);
 	}
 
 	@Override
@@ -131,7 +139,7 @@ public class RenderProjectile implements RenderEffect {
 		war3MapViewer.worldScene.instanceMoved(this.modelInstance, this.x, this.y);
 
 		final boolean everythingDone = this.simulationProjectile.isDone() && (this.modelInstance.sequenceEnded
-				|| (this.deathTimeElapsed >= war3MapViewer.simulation.getGameplayConstants().getBulletDeathTime()));
+				|| (this.deathTimeElapsed >= this.deathTime));
 		if (everythingDone) {
 			war3MapViewer.worldScene.removeInstance(this.modelInstance);
 		}

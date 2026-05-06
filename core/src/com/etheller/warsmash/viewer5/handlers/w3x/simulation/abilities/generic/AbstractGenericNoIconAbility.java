@@ -18,7 +18,12 @@ public abstract class AbstractGenericNoIconAbility extends AbstractGenericAliase
 
 	@Override
 	public boolean isPhysical() {
-		return true;
+		return false;
+	}
+
+	@Override
+	public boolean isMagic() {
+		return false;
 	}
 
 	@Override

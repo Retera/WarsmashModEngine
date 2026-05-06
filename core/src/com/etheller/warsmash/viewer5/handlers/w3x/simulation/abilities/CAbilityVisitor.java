@@ -22,7 +22,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.queue.CAb
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.queue.CAbilityRally;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.queue.CAbilityReviveHero;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.upgrade.CAbilityUpgrade;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.ability.AbilityBuilderActiveAbility;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.adjustablebehaviors.ability.ABAbilityBuilderActiveAbility;
 
 /**
  * A visitor for the lowest level inherent types of an ability. It's a bit of a
@@ -83,5 +83,5 @@ public interface CAbilityVisitor<T> {
 
 	T accept(CAbilityNeutralBuilding ability);
 
-	T accept(AbilityBuilderActiveAbility ability);
+	T accept(ABAbilityBuilderActiveAbility ability);
 }

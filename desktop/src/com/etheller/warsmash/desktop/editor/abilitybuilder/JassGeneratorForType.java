@@ -7,9 +7,9 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityC
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbilityDisableType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.autocast.AutocastType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.definitions.impl.AbilityFields;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABLocalStoreKeys;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.parser.AbilityBuilderType;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.parser.template.DataFieldLetter;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.adjustablebehaviors.datastore.ABLocalStoreKeys;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.adjustablebehaviors.parser.ABAbilityBuilderType;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.adjustablebehaviors.parser.template.ABDataFieldLetter;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehaviorCategory;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CTargetType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.unit.NonStackingStatBuffType;
@@ -38,7 +38,7 @@ public class JassGeneratorForType {
 			System.out.println(String.format("    constant statemodtype STATE_MOD_TYPE_%-34s= ConvertStateModType(%d)",
 					type.name(), type.ordinal()));
 		}
-		for (final DataFieldLetter type : DataFieldLetter.values()) {
+		for (final ABDataFieldLetter type : ABDataFieldLetter.values()) {
 			System.out.println(
 					String.format("    constant datafieldletter DATA_FIELD_LETTER_%-34s= ConvertDataFieldLetter(%d)",
 							type.name(), type.ordinal()));
@@ -47,7 +47,7 @@ public class JassGeneratorForType {
 			System.out.println(String.format("    constant autocasttype AUTOCAST_TYPE_%-34s= ConvertAutocastType(%d)",
 					type.name(), type.ordinal()));
 		}
-		for (final AbilityBuilderType type : AbilityBuilderType.values()) {
+		for (final ABAbilityBuilderType type : ABAbilityBuilderType.values()) {
 			System.out.println(String.format("    constant abconftype AB_CONF_TYPE_%-34s= ConvertABConfType(%d)",
 					type.name(), type.ordinal()));
 		}

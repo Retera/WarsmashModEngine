@@ -69,7 +69,7 @@ public class CBehaviorOrcBuild extends CAbstractRangedBehavior {
 			final int playerIndex = this.unit.getPlayerIndex();
 			if (!buildLocationObstructed) {
 				final CUnit constructedStructure = simulation.createUnit(this.orderId, playerIndex, this.target.getX()
-						, this.target.getY(), simulation.getGameplayConstants().getBuildingAngle());
+						, this.target.getY(), simulation.getGameplayConstants().getBuildingAngle(), true);
 				if (canBeBuiltOnThem) {
 					CAbilityGoldMinable abilityGoldMine = null;
 					if (this.buildOnBuildingIntersector.getUnitToBuildOn() != null) {
@@ -91,7 +91,6 @@ public class CBehaviorOrcBuild extends CAbstractRangedBehavior {
 						}
 					}
 				}
-				constructedStructure.setConstructing(true);
 				constructedStructure.setWorker(this.unit, true);
 				final CAbilityBuildInProgress abilityBuildInProgress =
 						new CAbilityBuildInProgress(simulation.getHandleIdAllocator().createId());
@@ -174,6 +173,6 @@ public class CBehaviorOrcBuild extends CAbstractRangedBehavior {
 
 	@Override
 	public CBehaviorCategory getBehaviorCategory() {
-		return CBehaviorCategory.SPELL;
+		return CBehaviorCategory.BUILD;
 	}
 }

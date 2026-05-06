@@ -153,7 +153,7 @@ public class CAbilityNeutralBuilding extends AbstractGenericAliasedAbility {
 	}
 
 	@Override
-	public CBehavior begin(final CSimulation game, final CUnit caster, final int orderId, final CWidget target) {
+	public CBehavior begin(final CSimulation game, final CUnit caster, final int orderId, boolean autoOrder, final CWidget target) {
 		final CUnit targetUnit = target.visit(AbilityTargetVisitor.UNIT);
 		if (showSelectUnitButton && (orderId == OrderIds.neutralinteract) && canSelectUnit(game, caster, targetUnit)) {
 			final int playerIndex = targetUnit.getPlayerIndex();
@@ -165,20 +165,20 @@ public class CAbilityNeutralBuilding extends AbstractGenericAliasedAbility {
 
 	@Override
 	public CBehavior begin(final CSimulation game, final CUnit caster, final int orderId,
-			final AbilityPointTarget point) {
+			boolean autoOrder, final AbilityPointTarget point) {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
-	public CBehavior beginNoTarget(final CSimulation game, final CUnit caster, final int orderId) {
+	public CBehavior beginNoTarget(final CSimulation game, final CUnit caster, final int orderId, boolean autoOrder) {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
-	public void checkCanTarget(final CSimulation game, final CUnit unit, final int orderId, final CWidget target,
-			final AbilityTargetCheckReceiver<CWidget> receiver) {
+	public void checkCanTarget(final CSimulation game, final CUnit unit, final int orderId, boolean autoOrder,
+			final CWidget target, final AbilityTargetCheckReceiver<CWidget> receiver) {
 		if (showSelectUnitButton && (orderId == OrderIds.neutralinteract)
 				&& canSelectUnit(game, unit, target.visit(AbilityTargetVisitor.UNIT))) {
 			receiver.targetOk(target);
@@ -190,13 +190,13 @@ public class CAbilityNeutralBuilding extends AbstractGenericAliasedAbility {
 
 	@Override
 	public void checkCanTarget(final CSimulation game, final CUnit unit, final int orderId,
-			final AbilityPointTarget target, final AbilityTargetCheckReceiver<AbilityPointTarget> receiver) {
+			boolean autoOrder, final AbilityPointTarget target, final AbilityTargetCheckReceiver<AbilityPointTarget> receiver) {
 		receiver.orderIdNotAccepted();
 	}
 
 	@Override
 	public void checkCanTargetNoTarget(final CSimulation game, final CUnit unit, final int orderId,
-			final AbilityTargetCheckReceiver<Void> receiver) {
+			boolean autoOrder, final AbilityTargetCheckReceiver<Void> receiver) {
 		receiver.orderIdNotAccepted();
 	}
 
@@ -257,6 +257,11 @@ public class CAbilityNeutralBuilding extends AbstractGenericAliasedAbility {
 
 	@Override
 	public boolean isPhysical() {
+		return false;
+	}
+
+	@Override
+	public boolean isMagic() {
 		return false;
 	}
 

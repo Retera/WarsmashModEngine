@@ -9,9 +9,9 @@ import javax.swing.JTree;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
 
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABAction;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABCondition;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.parser.AbilityBuilderConfiguration;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.adjustablebehaviors.behavior.condition.ABBooleanCallback;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.adjustablebehaviors.core.ABAction;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.adjustablebehaviors.parser.ABAbilityBuilderConfiguration;
 
 public class AbilityBuilderConfigTree extends JTree {
 	private DefaultMutableTreeNode root;
@@ -59,10 +59,10 @@ public class AbilityBuilderConfigTree extends JTree {
 		return conditionTreeNode;
 	}
 
-	public void setConfig(AbilityBuilderConfiguration config) {
+	public void setConfig(ABAbilityBuilderConfiguration config) {
 		root = new DefaultMutableTreeNode(config.getId() + " \"" + config.getCastId() + "\"");
 
-		Method[] declaredMethods = AbilityBuilderConfiguration.class.getDeclaredMethods();
+		Method[] declaredMethods = ABAbilityBuilderConfiguration.class.getDeclaredMethods();
 		for (Method declaredMethod : declaredMethods) {
 			String name = declaredMethod.getName();
 			if (name.startsWith("getOn")) {
@@ -84,10 +84,10 @@ public class AbilityBuilderConfigTree extends JTree {
 				String fixedName = fixConditionsName(name);
 				DefaultMutableTreeNode conditionsNode = createConditionsNode(fixedName);
 				try {
-					List<ABCondition> conditions = (List<ABCondition>) declaredMethod.invoke(config, new Object[0]);
+					List<ABBooleanCallback> conditions = (List<ABBooleanCallback>) declaredMethod.invoke(config, new Object[0]);
 					if (conditions != null) {
 						root.add(conditionsNode);
-						for (ABCondition condition : conditions) {
+						for (ABBooleanCallback condition : conditions) {
 							generateInto(conditionsNode, condition);
 						}
 					}
@@ -129,7 +129,7 @@ public class AbilityBuilderConfigTree extends JTree {
 				}
 			}
 			if (ABAction.class.isAssignableFrom(field.getType())
-					|| ABCondition.class.isAssignableFrom(field.getType())) {
+					|| ABBooleanCallback.class.isAssignableFrom(field.getType())) {
 				try {
 					DefaultMutableTreeNode nodeForField = new DefaultMutableTreeNode(field.getName());
 					nodeForAction.add(nodeForField);
@@ -176,7 +176,7 @@ public class AbilityBuilderConfigTree extends JTree {
 		boolean first = true;
 		for (Field field : fields) {
 			if (!ABAction.class.isAssignableFrom(field.getType())
-					&& !ABCondition.class.isAssignableFrom(field.getType())) {
+					&& !ABBooleanCallback.class.isAssignableFrom(field.getType())) {
 				String fieldName = field.getName();
 				if ("recycleRect".equals(fieldName)) {
 					continue;

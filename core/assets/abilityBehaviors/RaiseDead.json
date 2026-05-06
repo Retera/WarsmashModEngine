@@ -61,7 +61,11 @@
 		"onEndCasting": [{
 				"type": "createTimedLifeBuff",
 				"buffId": {
-					"type": "getFirstBuffId"
+					"type": "getFirstBuffId",
+					"defaultId": {
+						"type": "getWar3IDFromString",
+						"id": "Brai"
+					}
 				},
 				"duration": {
 					"type": "getAbilityDuration"
@@ -191,6 +195,19 @@
 			},
 			"reason": "THERE_ARE_NO_USABLE_CORPSES_NEARBY"
 		}],
+		"extraAutoNoTargetConditions": [{
+			"type": "i<",
+			"value1": {
+				"type": "getUnitQueueSize",
+				"queue": {
+					"type": "getLastCreatedUnitQueue"
+				}
+			},
+			"value2": {
+				"type": "getAbilityDataAsInteger",
+				"dataField": "E"
+			}
+		}],
 		"extraTargetConditions": [{
 			"type": "setCantUseReasonOnFailure",
 			"condition": {
@@ -282,6 +299,10 @@
 							"type": "createTimedBuff",
 							"buffId": {
 								"type": "getFirstBuffId"
+							},
+							"dispellable": {
+								"type": "rawBoolean",
+								"value": "false"
 							},
 							"duration": {
 								"type": "getAbilityDuration"
@@ -415,6 +436,10 @@
 							"type": "createTimedBuff",
 							"buffId": {
 								"type": "getFirstBuffId"
+							},
+							"dispellable": {
+								"type": "rawBoolean",
+								"value": "false"
 							},
 							"duration": {
 								"type": "getAbilityDuration"
@@ -705,6 +730,10 @@
 							"buffId": {
 								"type": "getFirstBuffId"
 							},
+							"dispellable": {
+								"type": "rawBoolean",
+								"value": "false"
+							},
 							"duration": {
 								"type": "getAbilityDuration"
 							},
@@ -866,6 +895,10 @@
 							"buffId": {
 								"type": "getFirstBuffId"
 							},
+							"dispellable": {
+								"type": "rawBoolean",
+								"value": "false"
+							},
 							"duration": {
 								"type": "getAbilityDuration"
 							},
@@ -1021,7 +1054,7 @@
 						"type": "while",
 						"condition": {
 							"type": "and",
-							"condition1": {
+							"conditions": [{
 								"type": "i>",
 								"value1": {
 									"type": "i+",
@@ -1044,8 +1077,7 @@
 									"type": "getAbilityDataAsInteger",
 									"dataField": "E"
 								}
-							},
-							"condition2": {
+							},{
 								"type": "i!=0",
 								"value": {
 									"type": "getUnitQueueSize",
@@ -1054,7 +1086,7 @@
 										"name": "summons2"
 									}
 								}
-							}
+							}]
 						},
 						"loopActions": [{
 							"type": "killUnit",

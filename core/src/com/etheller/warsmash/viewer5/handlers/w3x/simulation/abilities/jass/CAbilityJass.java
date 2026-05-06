@@ -122,7 +122,7 @@ public class CAbilityJass extends AbstractGenericAliasedAbility implements CExte
 	}
 
 	@Override
-	public CBehavior begin(final CSimulation game, final CUnit caster, final int orderId, final CWidget target) {
+	public CBehavior begin(final CSimulation game, final CUnit caster, final int orderId, boolean autoOrder, final CWidget target) {
 		for (final CAbilityOrderButtonJass orderButton : this.orderButtons) {
 			if ((orderButton.getType() == JassOrderButtonType.UNIT_TARGET)
 					|| (orderButton.getType() == JassOrderButtonType.UNIT_OR_POINT_TARGET)) {
@@ -137,7 +137,7 @@ public class CAbilityJass extends AbstractGenericAliasedAbility implements CExte
 
 	@Override
 	public CBehavior begin(final CSimulation game, final CUnit caster, final int orderId,
-			final AbilityPointTarget point) {
+			boolean autoOrder, final AbilityPointTarget point) {
 		for (final CAbilityOrderButtonJass orderButton : this.orderButtons) {
 			if ((orderButton.getType() == JassOrderButtonType.POINT_TARGET)
 					|| (orderButton.getType() == JassOrderButtonType.UNIT_OR_POINT_TARGET)) {
@@ -151,7 +151,7 @@ public class CAbilityJass extends AbstractGenericAliasedAbility implements CExte
 	}
 
 	@Override
-	public CBehavior beginNoTarget(final CSimulation game, final CUnit caster, final int orderId) {
+	public CBehavior beginNoTarget(final CSimulation game, final CUnit caster, final int orderId, boolean autoOrder) {
 		for (final CAbilityOrderButtonJass orderButton : this.orderButtons) {
 			if ((orderButton.getType() == JassOrderButtonType.INSTANT_NO_TARGET)
 					|| (orderButton.getType() == JassOrderButtonType.INSTANT_NO_TARGET_NO_INTERRUPT)) {
@@ -165,8 +165,8 @@ public class CAbilityJass extends AbstractGenericAliasedAbility implements CExte
 	}
 
 	@Override
-	public void checkCanTarget(final CSimulation game, final CUnit unit, final int orderId, final CWidget target,
-			final AbilityTargetCheckReceiver<CWidget> receiver) {
+	public void checkCanTarget(final CSimulation game, final CUnit unit, final int orderId, boolean autoOrder,
+			final CWidget target, final AbilityTargetCheckReceiver<CWidget> receiver) {
 		final RecordingAbilityTargetCheckReceiver<CWidget> delegateReceiver = RecordingAbilityTargetCheckReceiver
 				.getInstance();
 		String errorMessage = null;
@@ -195,7 +195,7 @@ public class CAbilityJass extends AbstractGenericAliasedAbility implements CExte
 
 	@Override
 	public void checkCanTarget(final CSimulation game, final CUnit unit, final int orderId,
-			final AbilityPointTarget target, final AbilityTargetCheckReceiver<AbilityPointTarget> receiver) {
+			boolean autoOrder, final AbilityPointTarget target, final AbilityTargetCheckReceiver<AbilityPointTarget> receiver) {
 		final RecordingAbilityTargetCheckReceiver<AbilityPointTarget> delegateReceiver = RecordingAbilityTargetCheckReceiver
 				.getInstance();
 		String errorMessage = null;
@@ -225,7 +225,7 @@ public class CAbilityJass extends AbstractGenericAliasedAbility implements CExte
 
 	@Override
 	public void checkCanTargetNoTarget(final CSimulation game, final CUnit unit, final int orderId,
-			final AbilityTargetCheckReceiver<Void> receiver) {
+			boolean autoOrder, final AbilityTargetCheckReceiver<Void> receiver) {
 		final RecordingAbilityTargetCheckReceiver<Void> delegateReceiver = RecordingAbilityTargetCheckReceiver
 				.getInstance();
 		String errorMessage = null;
@@ -286,7 +286,7 @@ public class CAbilityJass extends AbstractGenericAliasedAbility implements CExte
 
 	@Override
 	public boolean checkBeforeQueue(final CSimulation game, final CUnit caster, final int orderId,
-			final AbilityTarget target) {
+			boolean autoOrder, final AbilityTarget target) {
 		for (final CAbilityOrderButtonJass orderButton : this.orderButtons) {
 			if (orderButton.getType() == JassOrderButtonType.INSTANT_NO_TARGET_NO_INTERRUPT) {
 				if (orderButton.getOrderId() == orderId) {
@@ -323,6 +323,11 @@ public class CAbilityJass extends AbstractGenericAliasedAbility implements CExte
 	@Override
 	public boolean isPhysical() {
 		return this.physical;
+	}
+
+	@Override
+	public boolean isMagic() {
+		return true;
 	}
 
 	@Override
@@ -420,7 +425,7 @@ public class CAbilityJass extends AbstractGenericAliasedAbility implements CExte
 	}
 
 	@Override
-	protected void onSetDisabled(final boolean disabled, final CAbilityDisableType type) {
+	protected void onSetDisabled(final boolean disabled, final boolean wasDisabled, final CAbilityDisableType type) {
 		final List<JassValue> arguments = new ArrayList<>();
 		final StructJassValue structValue = getStructValue();
 		arguments.add(structValue);

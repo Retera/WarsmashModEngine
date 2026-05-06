@@ -30,7 +30,13 @@ public enum CDefenseType implements CodeKeyType, CHandle {
 		if (upperCaseTypeString.equals("HEAVY")) {
 			return LARGE;
 		}
-		return valueOf(upperCaseTypeString);
+		try {
+			return valueOf(upperCaseTypeString);
+		}
+		catch (final Exception exc) {
+			exc.printStackTrace();
+			return NONE;
+		}
 	}
 
 	@Override

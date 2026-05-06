@@ -136,7 +136,7 @@ public class CAbilityMoonWell extends CAbilitySpellBase implements CAutocastAbil
 	}
 
 	@Override
-	public CBehavior begin(final CSimulation game, final CUnit caster, final int orderId, final CWidget target) {
+	public CBehavior begin(final CSimulation game, final CUnit caster, final int orderId, boolean autoOrder, final CWidget target) {
 		final CUnit unitTarget = target.visit(AbilityTargetVisitor.UNIT);
 		if (unitTarget != null) {
 			final float life = unitTarget.getLife();
@@ -169,12 +169,12 @@ public class CAbilityMoonWell extends CAbilitySpellBase implements CAutocastAbil
 
 	@Override
 	public CBehavior begin(final CSimulation game, final CUnit caster, final int orderId,
-			final AbilityPointTarget point) {
+			boolean autoOrder, final AbilityPointTarget point) {
 		return null;
 	}
 
 	@Override
-	public CBehavior beginNoTarget(final CSimulation game, final CUnit caster, final int orderId) {
+	public CBehavior beginNoTarget(final CSimulation game, final CUnit caster, final int orderId, boolean autoOrder) {
 		return null;
 	}
 
@@ -230,9 +230,11 @@ public class CAbilityMoonWell extends CAbilitySpellBase implements CAutocastAbil
 	}
 
 	@Override
-	public void setAutoCastOn(final CUnit caster, final boolean autoCastOn) {
+	public void setAutoCastOn(final CSimulation simulation, final CUnit caster, final boolean autoCastOn, final boolean notify) {
 		this.autoCastActive = autoCastOn;
-		caster.setAutocastAbility(autoCastOn ? this : null);
+		if (notify) {
+			caster.setAutocastAbility(simulation, autoCastOn ? this : null);
+		}
 	}
 
 	@Override
@@ -251,14 +253,9 @@ public class CAbilityMoonWell extends CAbilitySpellBase implements CAutocastAbil
 	}
 
 	@Override
-	public void setAutoCastOff() {
-		this.autoCastActive = false;
-	}
-
-	@Override
 	public void checkCanAutoTarget(CSimulation game, CUnit unit, int orderId, CWidget target,
 			AbilityTargetCheckReceiver<CWidget> receiver) {
-		this.checkCanTarget(game, unit, orderId, target, receiver);
+		this.checkCanTarget(game, unit, orderId, false, target, receiver);
 	}
 
 	@Override

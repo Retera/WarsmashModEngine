@@ -9,9 +9,11 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.OrderIds;
 public class CBehaviorStun implements CBehavior {
 
 	private final CUnit unit;
+	private boolean updateAnims;
 
-	public CBehaviorStun(final CUnit unit) {
+	public CBehaviorStun(final CUnit unit, final boolean updateAnims) {
 		this.unit = unit;
+		this.updateAnims = updateAnims;
 	}
 
 	@Override
@@ -26,8 +28,9 @@ public class CBehaviorStun implements CBehavior {
 
 	@Override
 	public void begin(final CSimulation game) {
-		this.unit.getUnitAnimationListener().playAnimation(false, PrimaryTag.STAND, SequenceUtils.EMPTY, 1.0f,
-				true);
+		if (this.updateAnims)
+			this.unit.getUnitAnimationListener().playAnimation(false, PrimaryTag.STAND, SequenceUtils.EMPTY, 1.0f,
+					true);
 	}
 
 	@Override

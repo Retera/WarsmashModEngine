@@ -7,17 +7,20 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.CUnitAttack;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.CUnitAttackListener;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.CUnitAttackMissile;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.replacement.CUnitAttackSettings;
 
 public class CAttackProjectileMissile extends CAttackProjectile {
 	protected final CUnitAttackMissile unitAttack;
 	protected final int bounceIndex;
+	private CUnitAttackSettings settings;
 
 	public CAttackProjectileMissile(final float x, final float y, final float speed, final AbilityTarget target,
 			final CUnit source, final float damage, final CUnitAttackMissile unitAttack, final int bounceIndex,
-			final CUnitAttackListener attackListener) {
-		super(x, y, speed, target, source, damage, unitAttack.isProjectileHomingEnabled(), attackListener);
+			final CUnitAttackListener attackListener, final CUnitAttackSettings settings) {
+		super(x, y, speed, target, source, damage, settings.isProjectileHomingEnabled(), attackListener);
 		this.unitAttack = unitAttack;
 		this.bounceIndex = bounceIndex;
+		this.settings = settings;
 	}
 
 	@Override
@@ -25,7 +28,7 @@ public class CAttackProjectileMissile extends CAttackProjectile {
 		CUnit tarU = getTarget().visit(AbilityTargetVisitor.UNIT);
 		if (tarU == null || tarU.checkForAttackProjReaction(game, getSource(), this)) {
 			this.unitAttack.doDamage(game, getSource(), getTarget(), this.damage, getX(), getY(), this.bounceIndex,
-					this.attackListener);
+					this.attackListener, this.settings);
 		}
 		
 	}

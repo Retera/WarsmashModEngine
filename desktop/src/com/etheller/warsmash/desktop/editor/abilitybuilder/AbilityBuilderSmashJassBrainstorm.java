@@ -9,39 +9,39 @@ import java.util.List;
 import com.etheller.warsmash.parsers.jass.JassTextGenerator;
 import com.etheller.warsmash.parsers.jass.JassTextGeneratorImpl1;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.autocast.AutocastType;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.ABAction;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.core.AbilityBuilderGsonBuilder;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.parser.AbilityBuilderConfiguration;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.parser.AbilityBuilderDupe;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.parser.AbilityBuilderParser;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.parser.AbilityBuilderParserUtil;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.parser.AbilityBuilderParserUtil.AbilityBuilderFileListener;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.parser.AbilityBuilderType;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.adjustablebehaviors.core.ABAbilityBuilderGsonBuilder;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.adjustablebehaviors.core.ABAction;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.adjustablebehaviors.parser.ABAbilityBuilderConfiguration;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.adjustablebehaviors.parser.ABAbilityBuilderDupe;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.adjustablebehaviors.parser.ABAbilityBuilderParser;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.adjustablebehaviors.parser.ABAbilityBuilderParserUtil;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.adjustablebehaviors.parser.ABAbilityBuilderType;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.adjustablebehaviors.parser.ABAbilityBuilderParserUtil.AbilityBuilderFileListener;
 import com.google.gson.Gson;
 
 public class AbilityBuilderSmashJassBrainstorm {
 
 	public static void main(final String[] args) {
-		final Gson gson = AbilityBuilderGsonBuilder.create();
-		AbilityBuilderParserUtil.loadAbilityBuilderFiles(new AbilityBuilderFileListener() {
+		final Gson gson = ABAbilityBuilderGsonBuilder.create();
+		ABAbilityBuilderParserUtil.loadAbilityBuilderFiles(new AbilityBuilderFileListener() {
 			@Override
-			public void callback(final AbilityBuilderParser behavior) {
+			public void callback(final ABAbilityBuilderParser behavior) {
 				System.out.println(behavior);
 				convertTheThing(behavior);
 			}
 		});
 	}
 
-	private static void convertTheThing(final AbilityBuilderParser behavior) {
-		if (behavior.getType() == AbilityBuilderType.TEMPLATE) {
-			for (final AbilityBuilderDupe dupe : behavior.getIds()) {
+	private static void convertTheThing(final ABAbilityBuilderParser behavior) {
+		if (behavior.getType() == ABAbilityBuilderType.TEMPLATE) {
+			for (final ABAbilityBuilderDupe dupe : behavior.getIds()) {
 				System.out.println("//template: " + dupe.getId());
 //					idsListModel.addElement(new AbilityBuilderConfiguration(behavior, dupe));
 			}
 		}
 		else {
-			for (final AbilityBuilderDupe dupe : behavior.getIds()) {
-				final AbilityBuilderConfiguration abilityBuilderConfiguration = new AbilityBuilderConfiguration(
+			for (final ABAbilityBuilderDupe dupe : behavior.getIds()) {
+				final ABAbilityBuilderConfiguration abilityBuilderConfiguration = new ABAbilityBuilderConfiguration(
 						behavior, dupe);
 				try {
 					generateJassForConf(dupe, abilityBuilderConfiguration);
@@ -66,8 +66,8 @@ public class AbilityBuilderSmashJassBrainstorm {
 		}
 	}
 
-	private static void generateJassForConf(final AbilityBuilderDupe dupe,
-			final AbilityBuilderConfiguration abilityBuilderConfiguration) {
+	private static void generateJassForConf(final ABAbilityBuilderDupe dupe,
+			final ABAbilityBuilderConfiguration abilityBuilderConfiguration) {
 
 		String abilityName = null;
 		final StringBuilder structCode = new StringBuilder();
@@ -113,7 +113,7 @@ public class AbilityBuilderSmashJassBrainstorm {
 		if (autoCastType != null) {
 			initCode.append("    call SetABConfAutoCastType(abc, AUTOCAST_TYPE_" + autoCastType.name() + ")\n");
 		}
-		final AbilityBuilderType type = abilityBuilderConfiguration.getType();
+		final ABAbilityBuilderType type = abilityBuilderConfiguration.getType();
 		if (type != null) {
 			initCode.append("    call SetABConfType(abc, AB_CONF_TYPE_" + type.name() + ")\n");
 			switch (type) {
@@ -123,29 +123,19 @@ public class AbilityBuilderSmashJassBrainstorm {
 				break;
 			case NORMAL_FLEXTARGET:
 				break;
-			case NORMAL_FLEXTARGET_SIMPLE:
-				break;
 			case NORMAL_NOTARGET:
-				break;
-			case NORMAL_NOTARGET_SIMPLE:
 				break;
 			case NORMAL_PAIRING:
 				break;
 			case NORMAL_POINTTARGET:
 				break;
-			case NORMAL_POINTTARGET_SIMPLE:
-				break;
 			case NORMAL_UNITTARGET:
-				break;
-			case NORMAL_UNITTARGET_SIMPLE:
 				break;
 			case PASSIVE:
 				break;
-			case SMART:
-				break;
 			case TEMPLATE:
 				break;
-			case TOGGLE:
+			case INHERIT:
 				break;
 			}
 		}

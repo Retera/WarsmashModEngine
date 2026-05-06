@@ -1,0 +1,267 @@
+{
+	"abilityList": [{
+		"ids": [{"id":"ANic"}],
+		"type": "PASSIVE",
+		"reuseActions": {
+			"explode": [{
+				"type": "createTimer",
+				"timeout": {
+					"type": "getAbilityDataAsFloat",
+					"dataField": "F"
+				},
+				"actions": [{
+					"type": "damageBurst",
+					"source": {
+						"type": "getBuffCastingUnit"
+					},
+					"target": {
+						"type": "getUnitLocation",
+						"unit": {
+							"type": "getBuffedUnit"
+						}
+					},
+					"validTarget": {
+						"type": "isUnitEnemy",
+						"unit": {
+							"type": "getEnumUnit"
+						}
+					},
+					"damageType": {
+						"type": "getDamageTypeFromString",
+						"id": {
+							"type": "rawString",
+							"value": "FIRE"
+						}
+					},
+					"damage": {
+						"type": "getAbilityDataAsFloat",
+						"dataField": "B"
+					},
+					"fullDamageRadius": {
+						"type": "getAbilityDataAsFloat",
+						"dataField": "C"
+					},
+					"partialDamage": {
+						"type": "getAbilityDataAsFloat",
+						"dataField": "D"
+					},
+					"partialDamageRadius": {
+						"type": "getAbilityDataAsFloat",
+						"dataField": "E"
+					}
+				}]
+			}],
+			"onHit": [{
+					"type": "if",
+					"condition": {
+						"type": "doesUnitHaveBuff",
+						"unit": {
+							"type": "getAttackedUnit"
+						},
+						"id": {
+							"type": "getFirstBuffId"
+						}
+					},
+					"thenActions": [{
+							"type": "buffStoreUniqueValue",
+							"buff": {
+								"type": "getBuffById",
+								"unit": {
+									"type": "getAttackedUnit"
+								},
+								"id": {
+									"type": "getFirstBuffId"
+								}
+							},
+							"key": {
+								"type": "rawString",
+								"value": "incinerate"
+							},
+							"valueToStore": {
+								"type": "f+",
+								"value1": {
+									"type": "getAbilityDataAsFloat",
+									"dataField": "A"
+								},
+								"value2": {
+									"type": "getBuffUniqueValueFloat",
+									"buff": {
+										"type": "getBuffById",
+										"unit": {
+											"type": "getAttackedUnit"
+										},
+										"id": {
+											"type": "getFirstBuffId"
+										}
+									},
+									"key": {
+										"type": "rawString",
+										"value": "incinerate"
+									}
+								}
+							}
+						},{
+							"type": "addBonusDamageDealt",
+							"value": {
+								"type": "getBuffUniqueValueFloat",
+								"buff": {
+									"type": "getBuffById",
+									"unit": {
+										"type": "getAttackedUnit"
+									},
+									"id": {
+										"type": "getFirstBuffId"
+									}
+								},
+								"key": {
+									"type": "rawString",
+									"value": "incinerate"
+								}
+							}
+					}],
+					"elseActions": [{
+						"type": "addBonusDamageDealt",
+						"value": {
+							"type": "getAbilityDataAsFloat",
+							"dataField": "A"
+						}
+					}]
+				},{
+					"type": "createTimedBuff",
+					"buffId": {
+						"type": "getFirstBuffId"
+					},
+					"duration": {
+						"type": "getAbilityDuration",
+						"target": {
+							"type": "getAttackedUnit"
+						}
+					},
+					"positive": {
+						"type": "rawBoolean",
+						"value": "false"
+					},
+					"magic": {
+						"type": "rawBoolean",
+						"value": "false"
+					},
+					"uniqueValues": {
+						"incinerate": {
+							"type": "getAbilityDataAsFloat",
+							"dataField": "A"
+						}
+					},
+					"onAddActions": [{
+						"type": "setExplodesOnDeath",
+						"unit": {
+							"type": "getBuffedUnit"
+						},
+						"explodes": {
+							"type": "rawBoolean",
+							"value": "true"
+						},
+						"buffId": {
+							"type": "getFirstBuffId"
+						}
+					}],
+					"onRemoveActions": [{
+						"type": "if",
+						"condition": {
+							"type": "isUnitDead",
+							"unit": {
+								"type": "getBuffedUnit"
+							}
+						},
+						"thenActions": [{
+							"type": "runReuseAction",
+							"name": {
+								"type": "rawString",
+								"value": "explode"
+							}
+						}],
+						"elseActions": [{
+							"type": "setExplodesOnDeath",
+							"unit": {
+								"type": "getBuffedUnit"
+							},
+							"explodes": {
+								"type": "rawBoolean",
+								"value": "false"
+							},
+							"buffId": {
+								"type": "getFirstBuffId"
+							}
+						}]
+					}]
+				},{
+					"type": "addBuff",
+					"target": {
+						"type": "getAttackedUnit"
+					},
+					"buff": {
+						"type": "getLastCreatedBuff"
+					}
+			}]
+		},
+		"onAddDisabledAbility": [{
+				"type": "createAttackPreDamageListener",
+				"actions": [{
+						"type": "runReuseAction",
+						"name": {
+							"type": "rawString",
+							"value": "onHit"
+						}
+					},{
+						"type": "setStacking",
+						"allowStacking": {
+							"type": "rawBoolean",
+							"value": "false"
+						},
+						"allowSamePriorityStacking": {
+							"type": "rawBoolean",
+							"value": "false"
+						}
+				}]
+			},{
+				"type": "createAttackModifier",
+				"priority": {
+					"type": "rawInteger",
+					"value": 1
+				},
+				"condition": {
+					"type": "isUnitValidTarget",
+					"target": {
+						"type": "getAttackedUnit"
+					}
+				},
+				"modification": [{
+						"type": "attackModifierAddPreDamageListener",
+						"listener": {
+							"type": "getLastCreatedAttackPreDamageListener"
+						}
+					},{
+						"type": "attackModifierApplyArt"
+					},{
+						"type": "attackModifierPreventOtherModifications"
+				}]
+		}],
+		"onAddAbility": [{
+			"type": "addAttackModifier",
+			"unit": {
+				"type": "getCastingUnit"
+			},
+			"modifier": {
+				"type": "getLastCreatedAttackModifier"
+			}
+		}],
+		"onRemoveAbility": [{
+			"type": "removeAttackModifier",
+			"unit": {
+				"type": "getCastingUnit"
+			},
+			"modifier": {
+				"type": "getLastCreatedAttackModifier"
+			}
+		}]
+	}]
+}

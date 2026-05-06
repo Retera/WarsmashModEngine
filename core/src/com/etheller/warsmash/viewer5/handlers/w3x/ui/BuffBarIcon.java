@@ -16,6 +16,8 @@ public class BuffBarIcon extends AbstractClickableActionFrame implements Clickab
 
 	private String toolTip;
 	private String uberTip;
+	private boolean positive;
+	private boolean leveled;
 
 	public BuffBarIcon(final String name, final UIFrame parent) {
 		super(name, parent);
@@ -25,10 +27,13 @@ public class BuffBarIcon extends AbstractClickableActionFrame implements Clickab
 		this.iconFrame = iconFrame;
 	}
 
-	public void set(final Texture texture, final String toolTip, final String uberTip) {
+	public void set(final Texture texture, final String toolTip, final String uberTip, final boolean positive, final boolean leveled, final int level) {
 		this.iconFrame.setTexture(texture);
-		this.toolTip = toolTip;
-		this.uberTip = uberTip;
+		this.positive = positive;
+		this.leveled = leveled;
+		this.setLevel(level);
+		this.setToolTip(toolTip);
+		this.setUberTip(uberTip);
 		setVisible(true);
 	}
 
@@ -67,11 +72,27 @@ public class BuffBarIcon extends AbstractClickableActionFrame implements Clickab
 	}
 
 	public void setToolTip(final String toolTip) {
-		this.toolTip = toolTip;
+		if (toolTip != null && !toolTip.isBlank()) {
+			if (this.positive) {
+				this.toolTip = "|c0000FF00" + toolTip + "|r";
+			} else {
+				this.toolTip = "|c00FF0000" + toolTip + "|r";
+			}
+		} else {
+			this.toolTip = toolTip;
+		}
 	}
 
 	public void setUberTip(final String uberTip) {
-		this.uberTip = uberTip;
+		if (uberTip != null) {
+			if (this.leveled) {
+				this.uberTip = "|c007d7d7dLevel:|r " + this.level + "|n|n" + uberTip;
+			} else {
+				this.uberTip = uberTip;
+			}
+		} else {
+			this.uberTip = "|c007d7d7dLevel:|r " + this.level;
+		}
 	}
 
 	@Override

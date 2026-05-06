@@ -15,6 +15,12 @@ public abstract class CTimer {
 		this.timeoutTime = timeoutTime;
 	}
 
+	public void resetTimeoutTime(final float timeoutTime) {
+		this.timeoutTime = timeoutTime;
+		final int ticks = (int) (timeoutTime / WarsmashConstants.SIMULATION_STEP_TIME);
+		this.engineFireTick = this.scheduleTick + ticks;
+	}
+
 	public boolean isRepeats() {
 		return this.repeats;
 	}
@@ -54,6 +60,11 @@ public abstract class CTimer {
 	public void pause(final CSimulation simulation) {
 		this.remainingTimeAfterPause = getRemaining(simulation);
 		simulation.unregisterTimer(this);
+	}
+	
+	public void kill(final CSimulation simulation) {
+		this.pause(simulation);
+		this.repeats = false;
 	}
 
 	public void resume(final CSimulation simulation) {

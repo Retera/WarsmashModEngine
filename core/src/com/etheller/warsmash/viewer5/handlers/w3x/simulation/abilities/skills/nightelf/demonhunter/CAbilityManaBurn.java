@@ -12,6 +12,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.definitions.impl.AbilityFields;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.definitions.impl.AbstractCAbilityTypeDefinition;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CAttackType;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CSpellDamageFlags;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.projectile.CEffect;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.OrderIds;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CDamageType;
@@ -106,7 +107,7 @@ public class CAbilityManaBurn extends CAbilityTargetSpellBase {
 				final float targetMana = targetUnit.getMana();
 				final float manaDamage = StrictMath.min(targetMana, this.maxManaDrained);
 				targetUnit.setMana(targetMana - manaDamage);
-				targetUnit.damage(game, caster, false, true, CAttackType.SPELLS, CDamageType.FIRE,
+				targetUnit.damage(game, caster, DAMAGE_FLAGS, CAttackType.SPELLS, CDamageType.FIRE,
 						CWeaponSoundTypeJass.WHOKNOWS.name(), manaDamage);
 				game.spawnTextTag(targetUnit, caster.getPlayerIndex(), TextTagConfigType.MANA_BURN, (int) manaDamage);
 				this.boltDelayEndTick = Integer.MAX_VALUE;

@@ -75,12 +75,12 @@ public class CAbilityEntangleGoldMine extends CAbilityTargetSpellBase {
 	}
 
 	@Override
-	public void checkCanTarget(final CSimulation game, final CUnit unit, int orderId, final CWidget target,
-			final AbilityTargetCheckReceiver<CWidget> receiver) {
+	public void checkCanTarget(final CSimulation game, final CUnit unit, int orderId, boolean autoOrder,
+			final CWidget target, final AbilityTargetCheckReceiver<CWidget> receiver) {
 		if (orderId == OrderIds.entangleinstant) {
 			orderId = getBaseOrderId();
 		}
-		super.checkCanTarget(game, unit, orderId, target, receiver);
+		super.checkCanTarget(game, unit, orderId, autoOrder, target, receiver);
 	}
 
 	@Override
@@ -112,9 +112,9 @@ public class CAbilityEntangleGoldMine extends CAbilityTargetSpellBase {
 	}
 
 	@Override
-	public CBehavior begin(final CSimulation game, final CUnit caster, final int orderId, final CWidget target) {
+	public CBehavior begin(final CSimulation game, final CUnit caster, final int orderId, boolean autoOrder, final CWidget target) {
 		instant = orderId == OrderIds.entangleinstant;
-		return super.begin(game, caster, orderId, target);
+		return super.begin(game, caster, orderId, autoOrder, target);
 	}
 
 	@Override

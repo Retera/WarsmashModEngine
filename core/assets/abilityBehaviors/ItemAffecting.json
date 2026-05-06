@@ -1,0 +1,118 @@
+{
+	"abilityList": [{
+		"ids": [{"id":"AIri", "castId": "itemrandomitem"}],
+		"type": "NORMAL_UNITTARGET",
+		"extraTargetConditions": [{
+			"type": "and",
+			"conditions": [{
+					"type": "notNull",
+					"value": {
+						"type": "getAbilityTargetedItem"
+					}
+				},{
+					"type": "setCantUseReasonOnFailure",
+					"condition": {
+						"type": "and",
+						"conditions": [{
+								"type": "i!=0",
+								"value": {
+									"type": "getItemLevel",
+									"item": {
+										"type": "getAbilityTargetedItem"
+									}
+								}
+							},{
+								"type": "or",
+								"conditions": [{
+										"type": "not",
+										"condition": {
+											"type": "itemIsCharged",
+											"item": {
+												"type": "getAbilityTargetedItem"
+											}
+										}
+									},{
+										"type": "i=",
+										"value1": {
+											"type": "getItemCharges",
+											"item": {
+												"type": "getAbilityTargetedItem"
+											}
+										},
+										"value2": {
+											"type": "getItemMaxCharges",
+											"item": {
+												"type": "getAbilityTargetedItem"
+											}
+										}
+								}]
+							},{
+								"type": "notNull",
+								"value": {
+									"type": "randomItemId",
+									"previousId": {
+										"type": "getItemType",
+										"item": {
+											"type": "getAbilityTargetedItem"
+										}
+									},
+									"level": {
+										"type": "getItemLevel",
+										"item": {
+											"type": "getAbilityTargetedItem"
+										}
+									},
+									"ignoreValidFlag": {
+										"type": "rawBoolean",
+										"value": "false"
+									},
+									"ignoreRandomFlag": {
+										"type": "rawBoolean",
+										"value": "true"
+									}
+								}
+						}]
+					},
+					"reason": "UNABLE_TO_TRANSFORM_THIS_ITEM"
+			}]
+		}],
+		"onEndCasting": [{
+			"type": "if",
+			"condition": {
+				"type": "notNull",
+				"value": {
+					"type": "getAbilityTargetedItem"
+				}
+			},
+			"thenActions": [{
+				"type": "transformItem",
+				"item": {
+					"type": "getAbilityTargetedItem"
+				},
+				"newType": {
+					"type": "randomItemId",
+					"previousId": {
+						"type": "getItemType",
+						"item": {
+							"type": "getAbilityTargetedItem"
+						}
+					},
+					"level": {
+						"type": "getItemLevel",
+						"item": {
+							"type": "getAbilityTargetedItem"
+						}
+					},
+					"ignoreValidFlag": {
+						"type": "rawBoolean",
+						"value": "false"
+					},
+					"ignoreRandomFlag": {
+						"type": "rawBoolean",
+						"value": "true"
+					}
+				}
+			}]
+		}]
+	}]
+}

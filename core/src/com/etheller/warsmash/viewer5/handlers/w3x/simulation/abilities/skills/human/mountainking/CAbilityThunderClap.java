@@ -50,7 +50,7 @@ public class CAbilityThunderClap extends CAbilityNoTargetSpellBase {
 						new CBuffSlow(simulation.getHandleIdAllocator().createId(), CAbilityThunderClap.this.buffId,
 								getDurationForTarget(enumUnit), attackSpeedReductionPercent,
 								movementSpeedReductionPercent));
-				enumUnit.damage(simulation, caster, false, true, CAttackType.SPELLS, CDamageType.UNIVERSAL,
+				enumUnit.damage(simulation, caster, DAMAGE_FLAGS, CAttackType.SPELLS, CDamageType.UNIVERSAL,
 						CWeaponSoundTypeJass.WHOKNOWS.name(), CAbilityThunderClap.this.damage);
 			}
 			return false;

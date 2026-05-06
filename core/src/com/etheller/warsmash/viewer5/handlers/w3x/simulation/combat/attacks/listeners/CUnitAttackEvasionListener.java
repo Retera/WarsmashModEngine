@@ -2,8 +2,8 @@ package com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.lis
 
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CDamageType;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CDamageCalculation;
 
 public interface CUnitAttackEvasionListener {
-	public boolean onAttack(final CSimulation simulation, CUnit attacker, CUnit target, boolean isAttack, boolean isRanged, CDamageType weaponType);
+	public boolean onAttack(CSimulation simulation, CUnit cUnit, CDamageCalculation damage);
 }

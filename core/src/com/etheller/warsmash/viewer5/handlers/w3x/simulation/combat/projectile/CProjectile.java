@@ -22,7 +22,7 @@ public abstract class CProjectile extends CExtensibleHandleAbstract implements C
 			final boolean homingEnabled, final CUnit source) {
 		this.x = x;
 		this.y = y;
-		this.speed = speed;
+		this.speed = speed != 0 ? speed : 9999999;
 		this.target = target;
 		this.homingEnabled = homingEnabled;
 		this.source = source;
@@ -114,6 +114,9 @@ public abstract class CProjectile extends CExtensibleHandleAbstract implements C
 		else {
 			return this.initialTargetY;
 		}
+	}
+	public boolean isHomingEnabled() {
+		return this.homingEnabled;
 	}
 
 	public boolean isReflected() {

@@ -83,6 +83,10 @@ public class Corner {
 		ParseUtils.writeUInt8(stream, (short) ((this.cliffVariation << 5) | this.groundVariation));
 		ParseUtils.writeUInt8(stream, (short) ((this.cliffTexture << 4) + this.layerHeight));
 	}
+	
+	public void setGroundHeight(float groundHeight) {
+		this.groundHeight = groundHeight;
+	}
 
 	public float getGroundHeight() {
 		return this.groundHeight;

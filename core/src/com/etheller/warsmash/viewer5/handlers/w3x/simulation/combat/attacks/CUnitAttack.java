@@ -8,16 +8,17 @@ import java.util.Random;
 
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityPointTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CAttackType;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CDamageCalculation;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CDamageFlags;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CTargetType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CWeaponType;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.listeners.CUnitAttackEffectListenerStacking;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.listeners.CUnitAttackPostDamageListener;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.listeners.CUnitAttackPreDamageListener;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.listeners.CUnitAttackPreDamageListenerDamageModResult;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.listeners.CUnitAttackPreDamageListenerPriority;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.replacement.CUnitAttackReplacementEffect;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.replacement.CUnitAttackSettings;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.unit.NonStackingStatBuff;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.TextTagConfigType;
 
@@ -64,8 +65,8 @@ public abstract class CUnitAttack {
 
 	private Map<String, List<NonStackingStatBuff>> nonStackingFlatBuffs = new HashMap<>();
 	private Map<String, List<NonStackingStatBuff>> nonStackingPctBuffs = new HashMap<>();
-	
-	protected CUnitAttackReplacementEffect attackReplacement = null;
+
+	protected CUnitAttackSettings attackModifier = null;
 
 	// calculate
 	private int totalBaseDamage;
@@ -136,9 +137,8 @@ public abstract class CUnitAttack {
 			for (final NonStackingStatBuff buff : this.nonStackingFlatBuffs.get(key)) {
 				if (key.equals(NonStackingStatBuff.ALLOW_STACKING_KEY)) {
 					buffForKey += buff.getValue();
-				}
-				else {
-					buffForKey = Math.max(buffForKey, buff.getValue());
+				} else {
+					buffForKey = Math.abs(buffForKey) > Math.abs(buff.getValue()) ? buffForKey : buff.getValue();
 				}
 			}
 			totalNSAtkBuff += buffForKey;
@@ -149,13 +149,11 @@ public abstract class CUnitAttack {
 			for (final NonStackingStatBuff buff : this.nonStackingPctBuffs.get(key)) {
 				if (buffForKey == null) {
 					buffForKey = buff.getValue();
-				}
-				else {
+				} else {
 					if (key.equals(NonStackingStatBuff.ALLOW_STACKING_KEY)) {
 						buffForKey += buff.getValue();
-					}
-					else {
-						buffForKey = Math.max(buffForKey, buff.getValue());
+					} else {
+						buffForKey = Math.abs(buffForKey) > Math.abs(buff.getValue()) ? buffForKey : buff.getValue();
 					}
 				}
 			}
@@ -184,7 +182,8 @@ public abstract class CUnitAttack {
 				+ totalNSAtkBuff + totalNSAtkPctBuff;
 		float totalAttackSpeedBonus = this.agiAttackSpeedBonus + this.attackSpeedBonus + this.attackSpeedModifier;
 		float totalAttackSpeedPercent = 1.0f + Math.max(Math.min(totalAttackSpeedBonus, 4), -0.9f);
-		// TODO there might be a gameplay constants value for this instead of 0.0001, didn't look
+		// TODO there might be a gameplay constants value for this instead of 0.0001,
+		// didn't look
 		if (totalAttackSpeedPercent <= 0.0001f) {
 			totalAttackSpeedPercent = 0.0001f;
 		}
@@ -408,6 +407,8 @@ public abstract class CUnitAttack {
 	public float getTotalAttackSpeedPercent() {
 		return this.totalAttackSpeedPercent;
 	}
+	
+	public abstract CDamageFlags getBaseAttackDamageFlags();
 
 	public abstract void launch(CSimulation simulation, CUnit unit, AbilityTarget target, float damage,
 			CUnitAttackListener attackListener);
@@ -423,64 +424,108 @@ public abstract class CUnitAttack {
 		return damage + getTotalTemporaryDamageBonus();
 	}
 
-	public CUnitAttackPreDamageListenerDamageModResult runPreDamageListeners(final CSimulation simulation,
-			final CUnit attacker, final AbilityTarget target, final float damage) {
-		final CUnitAttackPreDamageListenerDamageModResult result = new CUnitAttackPreDamageListenerDamageModResult(
-				damage);
-		CUnitAttackEffectListenerStacking allowContinue = new CUnitAttackEffectListenerStacking();
+	public CDamageCalculation runPreDamageListeners(final CSimulation simulation, final CUnit attacker,
+			final AbilityTarget target, final AbilityPointTarget attackImpactLocation, final float damage,
+			final CUnitAttackSettings settings) {
+		final CDamageCalculation calc = new CDamageCalculation(attacker, damage, getAttackType(),
+				getWeaponType().getDamageType(), this.getBaseAttackDamageFlags(), getWeaponSound());
 
+		calc.resetLoop();
 		for (final CUnitAttackPreDamageListenerPriority priority : CUnitAttackPreDamageListenerPriority.values()) {
-			if (allowContinue.isAllowStacking()) {
-				if (priority == CUnitAttackPreDamageListenerPriority.ATTACKREPLACEMENT && this.attackReplacement != null && this.attackReplacement.getPreDamageListeners() != null) {
-					for (CUnitAttackPreDamageListener listener : this.attackReplacement.getPreDamageListeners()) {
-						if (allowContinue.isAllowSamePriorityStacking()) {
-							allowContinue = listener.onAttack(simulation, attacker, target, weaponType, attackType, weaponType.getDamageType(), result);
+			calc.startLoop(priority.getPriority());
+			if (!calc.isEndLoop()) {
+				if (priority == CUnitAttackPreDamageListenerPriority.ATTACKREPLACEMENT && settings != null
+						&& settings.getPreDamageListeners() != null) {
+					for (CUnitAttackPreDamageListener listener : settings.getPreDamageListeners()) {
+						if (!calc.isSkipCurrentLevel()) {
+							listener.onAttack(simulation, target, attackImpactLocation, this, settings,
+									calc);
 						}
 					}
 				} else {
 					for (CUnitAttackPreDamageListener listener : attacker.getPreDamageListenersForPriority(priority)) {
-						if (allowContinue.isAllowSamePriorityStacking()) {
-							allowContinue = listener.onAttack(simulation, attacker, target, weaponType, attackType, weaponType.getDamageType(), result);
+						if (!calc.isSkipCurrentLevel()) {
+							listener.onAttack(simulation, target, attackImpactLocation, this, settings,
+									calc);
 						}
 					}
 				}
 			}
 		}
-		if (result.isMiss()) {
-			if (this.weaponType == CWeaponType.ARTILLERY) {
-				result.setDamageMultiplier(simulation.getGameplayConstants().getMissDamageReduction());
-			}
-			else if (this.weaponType == CWeaponType.MSPLASH) {
-				result.setDamageMultiplier(simulation.getGameplayConstants().getMissDamageReduction());
+		if (calc.isMiss()) {
+			if (this.weaponType == CWeaponType.ARTILLERY || this.weaponType == CWeaponType.ALINE) {
+				// no miss text for artillery
+			} else {
 				simulation.spawnTextTag(attacker, attacker.getPlayerIndex(), TextTagConfigType.CRITICAL_STRIKE, "miss");
-			}
-			else {
-				result.setBaseDamage(0);
-				result.setBonusDamage(0);
-				result.setDamageMultiplier(0);
-				simulation.spawnTextTag(attacker, attacker.getPlayerIndex(), TextTagConfigType.CRITICAL_STRIKE, "miss"); // TODO
-																															// Technically
-																															// cheating
-																															// here
+				// TODO Technically cheating here, using Critical Strike color for miss
+				// For some reason, the actual miss doesn't seem to load the values properly
 			}
 		}
 
-		if (!result.isMiss() && (result.getDamageMultiplier() != 1) && (result.getDamageMultiplier() != 0)) {
-			simulation.spawnTextTag(attacker, attacker.getPlayerIndex(), TextTagConfigType.CRITICAL_STRIKE,
-					Math.round(result.computeFinalDamage()));
+		if (!calc.isMiss()) {
+			if ((calc.getDamageMultiplier() != 1) && (calc.getDamageMultiplier() != 0)
+					&& calc.computeRawTotalDamage() != 0) {
+				simulation.spawnTextTag(attacker, attacker.getPlayerIndex(), TextTagConfigType.CRITICAL_STRIKE,
+						Math.round(calc.computeRawTotalDamage()));
+			} else if (calc.computeRawBonusDamage() != 0) {
+				simulation.spawnTextTag(attacker, attacker.getPlayerIndex(), TextTagConfigType.BASH,
+						Math.round(calc.computeRawBonusDamage()));
+			}
 		}
-		else if (result.getBonusDamage() != 0) {
-			simulation.spawnTextTag(attacker, attacker.getPlayerIndex(), TextTagConfigType.BASH,
-					Math.round(result.getBonusDamage()));
-		}
-		return result;
+		return calc;
 	}
 
-	public void runPostDamageListeners(final CSimulation simulation, final CUnit attacker, final AbilityTarget target,
-			final float actualDamage) {
-		for (final CUnitAttackPostDamageListener listener : attacker.getPostDamageListeners()) {
-			listener.onHit(simulation, attacker, target, actualDamage);
+	public void runPostDamageListeners(final CSimulation simulation, final AbilityTarget target,
+			final CDamageCalculation damage, final CUnitAttackSettings settings) {
+		CUnit attacker = damage.getSource();
+		int maxPriority = 0;
+		int priorityMask = 0;
+		int i = 0;
+		boolean firstLoop = true;
+		damage.resetLoop();
+		while (i <= maxPriority) {
+			if (i == 0 || (priorityMask & (1 << (i < 31 ? i : 31))) != 0) {
+				damage.startLoop(i);
 
+				if (settings.getPostDamageListeners() != null) {
+					for (int j = settings.getPostDamageListeners().size() - 1; j >= 0; j--) {
+						CUnitAttackPostDamageListener listener = settings.getPostDamageListeners().get(j);
+						int prio = listener.getPriority(simulation, attacker, target, this);
+						if (firstLoop) {
+							if (prio > maxPriority) {
+								maxPriority = prio;
+							}
+							priorityMask |= 1 << (prio < 31 ? prio : 31);
+						}
+						if (prio == i && !damage.isSkipCurrentLevel()) {
+							listener.onHit(simulation, target, this, damage);
+						}
+					}
+				}
+				for (int j = attacker.getPostDamageListeners().size() - 1; j >= 0; j--) {
+					CUnitAttackPostDamageListener listener = attacker.getPostDamageListeners().get(j);
+					int prio = listener.getPriority(simulation, attacker, target, this);
+					if (firstLoop) {
+						if (prio > maxPriority) {
+							maxPriority = prio;
+						}
+						priorityMask |= 1 << (prio < 31 ? prio : 31);
+					}
+					if (prio == i && !damage.isSkipCurrentLevel()) {
+						listener.onHit(simulation, target, this, damage);
+					}
+				}
+				if (damage.isEndLoop()) {
+					break;
+				}
+			}
+			i++;
+			firstLoop = false;
 		}
+	}
+
+	public CUnitAttackSettings initialSettings() {
+		this.attackModifier = new CUnitAttackSettings();
+		return this.attackModifier;
 	}
 }

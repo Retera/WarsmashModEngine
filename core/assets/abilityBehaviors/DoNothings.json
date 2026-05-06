@@ -1,0 +1,176 @@
+{
+	"abilityList": [{
+		"ids": [{"id":"Agyb"},{"id":"Asth"},{"id":"Amgl"},{"id":"Aimp"}],
+		"type": "PASSIVE"
+	},{
+		"ids": [{"id":"Aspi"}],
+		"type": "HIDDEN",
+		"onAddAbility": [{
+			"type": "if",
+			"condition": {
+				"type": "unitHasResearch",
+				"researchId": {
+					"type": "getWar3IDFromString",
+					"id": "Rosp"
+				}
+			},
+			"thenActions": [{
+				"type": "createSpellEffectOnUnit",
+				"target": {
+					"type": "getCastingUnit"
+				},
+				"effectType": "TARGET"
+			}],
+			"elseActions": [{
+					"type": "createUnitStateListener",
+					"onUpgradesChanged": [{
+						"type": "if",
+						"condition": {
+							"type": "and",
+							"conditions": [{
+									"type": "isNull",
+									"value": {
+										"type": "getLastCreatedFX"
+									}
+								},{
+									"type": "unitHasResearch",
+									"researchId": {
+										"type": "getWar3IDFromString",
+										"id": "Rosp"
+									}
+							}]
+						},
+						"thenActions": [{
+							"type": "createSpellEffectOnUnit",
+							"target": {
+								"type": "getCastingUnit"
+							},
+							"effectType": "TARGET"
+						}]
+					}]
+				},{
+					"type": "addUnitStateListener",
+					"unit": {
+						"type": "getCastingUnit"
+					},
+					"listener": {
+						"type": "getLastCreatedUnitStateListener"
+					}
+			}]
+		}],
+		"onRemoveAbility": [{
+				"type": "if",
+				"condition": {
+					"type": "notNull",
+					"value": {
+						"type": "getLastCreatedFX"
+					}
+				},
+				"thenActions": [{
+					"type": "removeEffect",
+					"effect": {
+						"type": "getLastCreatedFX"
+					}
+				}]
+			},{
+				"type": "if",
+				"condition": {
+					"type": "notNull",
+					"value": {
+						"type": "getLastCreatedUnitStateListener"
+					}
+				},
+				"thenActions": [{
+					"type": "removeUnitStateListener",
+					"effectToRemove": {
+						"type": "getLastCreatedUnitStateListener"
+					}
+				}]
+		}]
+	},{
+		"ids": [{"id":"Arbr"}],
+		"type": "HIDDEN",
+		"onAddAbility": [{
+			"type": "if",
+			"condition": {
+				"type": "unitHasResearch",
+				"researchId": {
+					"type": "getWar3IDFromString",
+					"id": "Rorb"
+				}
+			},
+			"thenActions": [{
+				"type": "createSpellEffectOnUnit",
+				"target": {
+					"type": "getCastingUnit"
+				},
+				"effectType": "TARGET"
+			}],
+			"elseActions": [{
+					"type": "createUnitStateListener",
+					"onUpgradesChanged": [{
+						"type": "if",
+						"condition": {
+							"type": "and",
+							"conditions": [{
+									"type": "isNull",
+									"value": {
+										"type": "getLastCreatedFX"
+									}
+								},{
+									"type": "unitHasResearch",
+									"researchId": {
+										"type": "getWar3IDFromString",
+										"id": "Rorb"
+									}
+							}]
+						},
+						"thenActions": [{
+							"type": "createSpellEffectOnUnit",
+							"target": {
+								"type": "getCastingUnit"
+							},
+							"effectType": "TARGET"
+						}]
+					}]
+				},{
+					"type": "addUnitStateListener",
+					"unit": {
+						"type": "getCastingUnit"
+					},
+					"listener": {
+						"type": "getLastCreatedUnitStateListener"
+					}
+			}]
+		}],
+		"onRemoveAbility": [{
+				"type": "if",
+				"condition": {
+					"type": "notNull",
+					"value": {
+						"type": "getLastCreatedFX"
+					}
+				},
+				"thenActions": [{
+					"type": "removeEffect",
+					"effect": {
+						"type": "getLastCreatedFX"
+					}
+				}]
+			},{
+				"type": "if",
+				"condition": {
+					"type": "notNull",
+					"value": {
+						"type": "getLastCreatedUnitStateListener"
+					}
+				},
+				"thenActions": [{
+					"type": "removeUnitStateListener",
+					"effectToRemove": {
+						"type": "getLastCreatedUnitStateListener"
+					}
+				}]
+		}]
+	}]
+}

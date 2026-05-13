@@ -25,7 +25,11 @@ public class MdlxLayer extends MdlxAnimatedObject {
 		}
 
 		public static FilterMode fromId(final int id) {
-			return values()[id];
+			if (id > 0 || id < FilterMode.values().length) {
+				return values()[id];
+			}
+
+			return FilterMode.NONE;
 		}
 
 		public static int nameToId(final String name) {
@@ -80,7 +84,10 @@ public class MdlxLayer extends MdlxAnimatedObject {
 		final int position = reader.position();
 		final long size = reader.readUInt32();
 
-		this.filterMode = FilterMode.fromId(reader.readInt32());
+		final int filterModeIndex = reader.readInt32();
+		if (filterModeIndex > 0 && filterModeIndex < FilterMode.values().length) {
+			this.filterMode = FilterMode.fromId(filterModeIndex);
+		}
 		this.flags = reader.readInt32(); // UInt32 in JS
 		this.textureId = reader.readInt32();
 		this.textureAnimationId = reader.readInt32();

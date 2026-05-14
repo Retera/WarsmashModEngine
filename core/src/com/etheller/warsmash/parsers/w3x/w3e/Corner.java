@@ -53,12 +53,12 @@ public class Corner {
 		 if (version >= 12) {
 			final int textureAndFlags = ParseUtils.readUInt16(stream);
 
-			this.ramp = textureAndFlags & 0b00010000;
-			this.blight = textureAndFlags & 0b00100000;
-			this.water = textureAndFlags & 0b01000000;
-			this.boundary = textureAndFlags & 0b10000000;
+			 this.ramp = textureAndFlags & 0b00000000_01000000;
+			 this.blight = textureAndFlags & 0b00000000_10000000;
+			 this.water = textureAndFlags & 0b00000001_00000000;
+			 this.boundary = textureAndFlags & 0b00000010_00000000;
 
-			this.groundTexture = textureAndFlags & 0b00001111;
+			 this.groundTexture = textureAndFlags & 0b00111111;
 		} else {
 			final short textureAndFlags = ParseUtils.readUInt8(stream);
 
@@ -86,11 +86,16 @@ public class Corner {
 		stream.writeShort((short) ((this.groundHeight * 512f) + 8192f));
 		final int mapEdgeWrite = (this.mapEdge != 0) ? 0x4000 : 0;
 		stream.writeShort((short) ((int) ((this.waterHeight * 512f) + 8192f) | (mapEdgeWrite)));
-		final int rampWrite = (this.ramp != 0) ? 0b00010000 : 0;
-		final int blightWrite = (this.blight != 0) ? 0b00100000 : 0;
-		final int waterWrite = (this.water != 0) ? 0b01000000 : 0;
-		final int boundaryWrite = (this.boundary != 0) ? 0b10000000 : 0;
+		int rampWrite = (this.ramp != 0) ? 0b00010000 : 0;
+		int blightWrite = (this.blight != 0) ? 0b00100000 : 0;
+		int waterWrite = (this.water != 0) ? 0b01000000 : 0;
+		int boundaryWrite = (this.boundary != 0) ? 0b10000000 : 0;
 		if (version >= 12) {
+			rampWrite     <<= 2;
+			blightWrite   <<= 2;
+			waterWrite    <<= 2;
+			boundaryWrite <<= 2;
+
 			ParseUtils.writeUInt16(stream,
 					(int) ((rampWrite) | (blightWrite) | (waterWrite) | (boundaryWrite) | this.groundTexture));
 		} else {

@@ -175,7 +175,7 @@ public class CSimulation implements CPlayerAPI, CFogMaskSettings {
 		for (int i = 0; i < WarsmashConstants.MAX_PLAYERS; i++) {
 			final CBasePlayer configPlayer = config.getPlayer(i);
 			final War3MapConfigStartLoc startLoc = config.getStartLoc(configPlayer.getStartLocationIndex());
-			CRace defaultRace = null;
+			CRace defaultRace =  WarsmashConstants.RACE_MANAGER.getRace(1); // Make sure this is not null if nothing matching is found.
 			if (configPlayer.isRacePrefSet(WarsmashConstants.RACE_MANAGER.getRandomRacePreference())) {
 				final CRaceManagerEntry raceEntry = WarsmashConstants.RACE_MANAGER
 						.get(seededRandom.nextInt(WarsmashConstants.RACE_MANAGER.getEntryCount()));

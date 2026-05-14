@@ -28,6 +28,7 @@ import com.google.common.io.LittleEndianDataOutputStream;
  *
  * @author Eric
  *
+ * Reforged spec: https://github.com/stijnherfst/HiveWE/wiki/war3map(skin).w3*-Modifications
  */
 public final class War3ObjectDataChangeset {
 	public static final int VAR_TYPE_INT = 0;
@@ -480,10 +481,8 @@ public final class War3ObjectDataChangeset {
 			final WTS wts, final boolean inlineWTS) throws IOException {
 		final War3ID noid = new War3ID(0);
 		final StringBuilder stringBuilder = new StringBuilder();
-		int ptr;
 		final int count = stream.readInt();
 		for (int i = 0; i < count; i++) {
-			final long nanoTime = System.nanoTime();
 			War3ID origid;
 			War3ID newid = null;
 			origid = readWar3ID(stream);
@@ -553,12 +552,12 @@ public final class War3ObjectDataChangeset {
 					}
 
 					switch (newlyReadChange.getVartype()) {
-						case 0:
+						case 0: {
 							newlyReadChange.setLongval(stream.readInt());
 							debugprint("\t\tValue " + newlyReadChange.getLongval() + ",");
 							break;
-						case 3:
-							ptr = 0;
+						}
+						case 3: {
 							stringBuilder.setLength(0);
 							int charRead;
 							while ((charRead = stream.read()) != 0) {
@@ -576,14 +575,17 @@ public final class War3ObjectDataChangeset {
 							}
 							debugprint("\t\tValue \"" + newlyReadChange.getStrval() + "\",");
 							break;
-						case 4:
+						}
+						case 4: {
 							newlyReadChange.setBoolval(stream.readInt() == 1);
 							debugprint("\t\tValue " + newlyReadChange.isBoolval() + ",");
 							break;
-						default:
+						}
+						default: {
 							newlyReadChange.setRealval(stream.readFloat());
 							debugprint("\t\tValue " + newlyReadChange.getRealval() + ",");
 							break;
+						}
 					}
 					final War3ID crap = readWar3ID(stream);
 					debugprint("\t\tExtra \"" + crap + "\",");
@@ -624,8 +626,6 @@ public final class War3ObjectDataChangeset {
 				throw new IllegalStateException("custom unit has no ID!");
 			}
 			map.put(isOriginal ? origid : newid, existingObject);
-			final long endNanoTime = System.nanoTime();
-			final long deltaNanoTime = endNanoTime - nanoTime;
 		}
 		return true;
 	}
@@ -729,8 +729,8 @@ public final class War3ObjectDataChangeset {
 				ParseUtils.writeWar3ID(outputStream, cl.getOldId());
 				ParseUtils.writeWar3ID(outputStream, cl.getNewId());
 				if (this.version >= 3) {
-					outputStream.writeInt(1);
-					outputStream.writeInt(0);
+					outputStream.writeInt(1); // set count
+					outputStream.writeInt(0); // set flag
 				}
 				count = totalSize;// cl.getChanges().size();
 				outputStream.writeInt(count);
@@ -743,30 +743,34 @@ public final class War3ObjectDataChangeset {
 							outputStream.writeInt(change.getDataptr());
 						}
 						switch (change.getVartype()) {
-						case 0:
-							outputStream.writeInt(change.getLongval());
-							break;
-						case 3:
-							charBuffer.clear();
-							byteBuffer.clear();
-							charBuffer.put(change.getStrval());
-							charBuffer.flip();
-							encoder.encode(charBuffer, byteBuffer, false);
-							byteBuffer.flip();
-							final byte[] stringBytes = new byte[byteBuffer.remaining() + 1];
-							int i = 0;
-							while (byteBuffer.hasRemaining()) {
-								stringBytes[i++] = byteBuffer.get();
+							case 0: {
+								outputStream.writeInt(change.getLongval());
+								break;
 							}
-							stringBytes[i] = 0;
-							outputStream.write(stringBytes);
-							break;
-						case 4:
-							outputStream.writeInt(change.isBoolval() ? 1 : 0);
-							break;
-						default:
-							outputStream.writeFloat(change.getRealval());
-							break;
+							case 3: {
+								charBuffer.clear();
+								byteBuffer.clear();
+								charBuffer.put(change.getStrval());
+								charBuffer.flip();
+								encoder.encode(charBuffer, byteBuffer, false);
+								byteBuffer.flip();
+								final byte[] stringBytes = new byte[byteBuffer.remaining() + 1];
+								int i = 0;
+								while (byteBuffer.hasRemaining()) {
+									stringBytes[i++] = byteBuffer.get();
+								}
+								stringBytes[i] = 0;
+								outputStream.write(stringBytes);
+								break;
+							}
+							case 4: {
+								outputStream.writeInt(change.isBoolval() ? 1 : 0);
+								break;
+							}
+							default: {
+								outputStream.writeFloat(change.getRealval());
+								break;
+							}
 						}
 						// if (change.getJunkDNA() == null) {
 						// saveWriteChars(outputStream, cl.getNewId().asStringValue().toCharArray());

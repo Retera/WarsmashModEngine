@@ -30,13 +30,13 @@ public class Player {
 		ParseUtils.readFloatArray(stream, this.startLocation);
 		this.allyLowPriorities = ParseUtils.readUInt32(stream);
 		this.allyHighPriorities = ParseUtils.readUInt32(stream);
-		if (version > 30) {
+		if (version >= 31) {
 			this.enemyLowPrioritiesFlags = ParseUtils.readUInt32(stream);
 			this.enemyHighPrioritiesFlags = ParseUtils.readUInt32(stream);
 		}
 	}
 
-	public void save(final LittleEndianDataOutputStream stream) throws IOException {
+	public void save(final LittleEndianDataOutputStream stream, int version) throws IOException {
 		ParseUtils.writeUInt32(stream, this.id);
 		stream.writeInt(this.type);
 		stream.writeInt(this.race);
@@ -45,10 +45,10 @@ public class Player {
 		ParseUtils.writeFloatArray(stream, this.startLocation);
 		ParseUtils.writeUInt32(stream, this.allyLowPriorities);
 		ParseUtils.writeUInt32(stream, this.allyHighPriorities);
-	}
-
-	public int getByteLength() {
-		return 33 + this.name.length();
+		if (version >= 31) {
+			ParseUtils.writeUInt32(stream, this.enemyLowPrioritiesFlags);
+			ParseUtils.writeUInt32(stream, this.enemyHighPrioritiesFlags);
+		}
 	}
 
 	public int getId() {

@@ -22,16 +22,16 @@ class War3MapW3eTest {
 		assertEquals(50, mapInfo.getGroundTiles().size());
 		assertEquals(4, mapInfo.getCliffTiles().size());
 
-		java.io.File testFile = java.io.File.createTempFile("war3map_", ".w3e");
+		java.io.File testFile = java.io.File.createTempFile("war3map", ".w3e");
 		testFile.deleteOnExit();
 
-		try (LittleEndianDataOutputStream out = new LittleEndianDataOutputStream(new java.io.FileOutputStream(testFile))) {
-			mapInfo.save(out);
+		try (LittleEndianDataOutputStream stream = new LittleEndianDataOutputStream(new java.io.FileOutputStream(testFile))) {
+			mapInfo.save(stream);
 		}
 
 		War3MapW3e mapInfo2;
-		try (LittleEndianDataInputStream in = new LittleEndianDataInputStream(new java.io.FileInputStream(testFile))) {
-			mapInfo2 = new War3MapW3e(in);
+		try (LittleEndianDataInputStream stream = new LittleEndianDataInputStream(new java.io.FileInputStream(testFile))) {
+			mapInfo2 = new War3MapW3e(stream);
 		}
 
 		assertEquals(mapInfo.getVersion(), mapInfo2.getVersion());

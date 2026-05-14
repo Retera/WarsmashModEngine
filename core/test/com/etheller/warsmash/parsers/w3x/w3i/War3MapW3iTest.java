@@ -26,13 +26,13 @@ class War3MapW3iTest {
 		java.io.File testFile = java.io.File.createTempFile("war3map_", ".w3i");
 		testFile.deleteOnExit();
 
-		try (LittleEndianDataOutputStream out = new LittleEndianDataOutputStream(new java.io.FileOutputStream(testFile))) {
-			mapInfo.save(out);
+		try (LittleEndianDataOutputStream stream = new LittleEndianDataOutputStream(new java.io.FileOutputStream(testFile))) {
+			mapInfo.save(stream);
 		}
 
 		War3MapW3i mapInfo2;
-		try (LittleEndianDataInputStream in = new LittleEndianDataInputStream(new java.io.FileInputStream(testFile))) {
-			mapInfo2 = new War3MapW3i(in);
+		try (LittleEndianDataInputStream stream = new LittleEndianDataInputStream(new java.io.FileInputStream(testFile))) {
+			mapInfo2 = new War3MapW3i(stream);
 		}
 
 		assertEquals(mapInfo.getVersion(), mapInfo2.getVersion());

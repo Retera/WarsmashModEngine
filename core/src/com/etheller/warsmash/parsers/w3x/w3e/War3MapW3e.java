@@ -94,11 +94,6 @@ public class War3MapW3e {
 		}
 	}
 
-	public int getByteLength() {
-		return 37 + (this.groundTiles.size() * 4) + (this.cliffTiles.size() * 4)
-				+ (this.mapSize[0] * this.mapSize[1] * 7);
-	}
-
 	public int getVersion() {
 		return this.version;
 	}

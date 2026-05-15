@@ -3548,6 +3548,20 @@ public class Jass2 {
 						}
 						return null;
 					});
+			jassProgramVisitor.getJassNativeManager().createNative("GetHeroLevel",
+					(arguments, globalScope, triggerScope) -> {
+						final CUnit whichUnit = nullable(arguments, 0, ObjectJassValueVisitor.getInstance());
+
+						if (whichUnit != null) {
+							final CAbilityHero heroData = whichUnit.getHeroData();
+							if (heroData != null) {
+								return IntegerJassValue
+										.of(heroData.getHeroLevel());
+							}
+						}
+
+						return IntegerJassValue.ZERO;
+					});
 			jassProgramVisitor.getJassNativeManager().createNative("SetHeroLevel",
 					(arguments, globalScope, triggerScope) -> {
 						final CUnit whichUnit = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());

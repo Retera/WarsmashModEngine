@@ -2833,6 +2833,17 @@ public class Jass2 {
 						}
 						return null;
 					});
+			jassProgramVisitor.getJassNativeManager().createNative("UnitInventorySize", (arguments, globalScope, triggerScope) -> {
+				final CUnit unit = nullable(arguments, 0, ObjectJassValueVisitor.getInstance());
+
+				if (unit != null) {
+					final CAbilityInventory inventoryData = unit.getInventoryData();
+					if (inventoryData != null) {
+						return IntegerJassValue.of(inventoryData.getItemCapacity());
+					}
+				}
+				return IntegerJassValue.of(0);
+			});
 			jassProgramVisitor.getJassNativeManager().createNative("UnitAddItemById",
 					(arguments, globalScope, triggerScope) -> {
 						final CUnit unit = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());

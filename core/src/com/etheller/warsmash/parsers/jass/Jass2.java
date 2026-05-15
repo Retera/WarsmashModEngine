@@ -10048,15 +10048,20 @@ public class Jass2 {
 				});
 		jassProgramVisitor.getJassNativeManager().createNative("GetPlayerController",
 				(arguments, globalScope, triggerScope) -> {
-					final CPlayerJass player = arguments.get(0)
-							.visit(ObjectJassValueVisitor.<CPlayerJass>getInstance());
-					return new HandleJassValue(mapcontrolType, player.getController());
+					final CPlayerJass player = nullable(arguments, 0, ObjectJassValueVisitor.<CPlayerJass>getInstance());
+					if (player != null) {
+						return new HandleJassValue(mapcontrolType, player.getController());
+					}
+					return new HandleJassValue(mapcontrolType, null);
 				});
 		jassProgramVisitor.getJassNativeManager().createNative("GetPlayerSlotState",
 				(arguments, globalScope, triggerScope) -> {
-					final CPlayerJass player = arguments.get(0)
-							.visit(ObjectJassValueVisitor.<CPlayerJass>getInstance());
-					return new HandleJassValue(playerslotstateType, player.getSlotState());
+					final CPlayerJass player = nullable(arguments, 0, ObjectJassValueVisitor.<CPlayerJass>getInstance());
+					if (player != null) {
+						return new HandleJassValue(playerslotstateType, player.getSlotState());
+					}
+
+					return new HandleJassValue(playerslotstateType, null);
 				});
 		jassProgramVisitor.getJassNativeManager().createNative("GetPlayerTaxRate",
 				(arguments, globalScope, triggerScope) -> {
@@ -10085,7 +10090,10 @@ public class Jass2 {
 
 		jassProgramVisitor.getJassNativeManager().createNative("Player", (arguments, globalScope, triggerScope) -> {
 			final int playerIndex = arguments.get(0).visit(IntegerJassValueVisitor.getInstance());
-			return new HandleJassValue(playerType, playerAPI.getPlayer(playerIndex));
+			if (playerIndex >= 0 && playerIndex < playerAPI.getMaxPlayers()) {
+				return new HandleJassValue(playerType, playerAPI.getPlayer(playerIndex));
+			}
+			return new HandleJassValue(playerType, null);
 		});
 		jassProgramVisitor.getJassNativeManager().createNative("GetPlayerId",
 				(arguments, globalScope, triggerScope) -> {

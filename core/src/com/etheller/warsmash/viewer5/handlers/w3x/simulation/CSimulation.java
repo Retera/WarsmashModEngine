@@ -709,6 +709,11 @@ public class CSimulation implements CPlayerAPI, CFogMaskSettings {
 	}
 
 	@Override
+	public int getMaxPlayers() {
+		return this.players.size();
+	}
+
+	@Override
 	public CPlayer getPlayer(final int index) {
 		return this.players.get(index);
 	}

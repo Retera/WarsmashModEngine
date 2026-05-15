@@ -794,13 +794,13 @@ public class Jass2 {
 
 			jassProgramVisitor.getJassNativeManager().createNative("GetUnitName",
 					(arguments, globalScope, triggerScope) -> {
-						final CUnit whichWidget = nullable(arguments, 0, ObjectJassValueVisitor.getInstance());
+						final CUnit whichWidget = nullableWithWarning(arguments, 0, ObjectJassValueVisitor.getInstance(), globalScope, triggerScope);
 						return whichWidget == null ? JassType.STRING.getNullValue()
 								: new StringJassValue(whichWidget.getName());
 					});
 			jassProgramVisitor.getJassNativeManager().createNative("BlzSetUnitName",
 					(arguments, globalScope, triggerScope) -> {
-						final CUnit whichWidget = nullable(arguments, 0, ObjectJassValueVisitor.getInstance());
+						final CUnit whichWidget = nullableWithWarning(arguments, 0, ObjectJassValueVisitor.getInstance(), globalScope, triggerScope);
 						if (whichWidget != null) {
 							final String name = nullable(arguments, 1, ObjectJassValueVisitor.getInstance());
 							if (name != null) {
@@ -1698,51 +1698,59 @@ public class Jass2 {
 					});
 			jassProgramVisitor.getJassNativeManager().createNative("RemoveRect",
 					(arguments, globalScope, triggerScope) -> {
-						final CRect rect = arguments.get(0).visit(ObjectJassValueVisitor.<Rectangle>getInstance());
+						final CRect rect = nullable(arguments, 0, ObjectJassValueVisitor.getInstance());
 						System.err.println(
 								"RemoveRect called but in Java we don't have a destructor, so we need to unregister later when that is implemented");
 						return null;
 					});
 			jassProgramVisitor.getJassNativeManager().createNative("SetRect",
 					(arguments, globalScope, triggerScope) -> {
-						final CRect rect = arguments.get(0).visit(ObjectJassValueVisitor.<Rectangle>getInstance());
-						final float minx = arguments.get(1).visit(RealJassValueVisitor.getInstance()).floatValue();
-						final float miny = arguments.get(2).visit(RealJassValueVisitor.getInstance()).floatValue();
-						final float maxx = arguments.get(3).visit(RealJassValueVisitor.getInstance()).floatValue();
-						final float maxy = arguments.get(4).visit(RealJassValueVisitor.getInstance()).floatValue();
-						rect.set(minx, miny, maxx - minx, maxy - miny);
+						final CRect rect = nullable(arguments, 0, ObjectJassValueVisitor.getInstance());
+						if (rect != null) {
+							final float minx = arguments.get(1).visit(RealJassValueVisitor.getInstance()).floatValue();
+							final float miny = arguments.get(2).visit(RealJassValueVisitor.getInstance()).floatValue();
+							final float maxx = arguments.get(3).visit(RealJassValueVisitor.getInstance()).floatValue();
+							final float maxy = arguments.get(4).visit(RealJassValueVisitor.getInstance()).floatValue();
+							rect.set(minx, miny, maxx - minx, maxy - miny);
+						}
 						return null;
 					});
 			jassProgramVisitor.getJassNativeManager().createNative("SetRectFromLoc",
 					(arguments, globalScope, triggerScope) -> {
-						final CRect rect = arguments.get(0).visit(ObjectJassValueVisitor.<Rectangle>getInstance());
-						final AbilityPointTarget min = arguments.get(1)
-								.visit(ObjectJassValueVisitor.<AbilityPointTarget>getInstance());
-						final AbilityPointTarget max = arguments.get(2)
-								.visit(ObjectJassValueVisitor.<AbilityPointTarget>getInstance());
-						final float minx = min.x;
-						final float miny = min.y;
-						final float maxx = max.x;
-						final float maxy = max.y;
-						rect.set(minx, miny, maxx - minx, maxy - miny);
+						final CRect rect = nullable(arguments, 0, ObjectJassValueVisitor.getInstance());
+						if (rect != null) {
+							final AbilityPointTarget min = arguments.get(1)
+									.visit(ObjectJassValueVisitor.<AbilityPointTarget>getInstance());
+							final AbilityPointTarget max = arguments.get(2)
+									.visit(ObjectJassValueVisitor.<AbilityPointTarget>getInstance());
+							final float minx = min.x;
+							final float miny = min.y;
+							final float maxx = max.x;
+							final float maxy = max.y;
+							rect.set(minx, miny, maxx - minx, maxy - miny);
+						}
 						return null;
 					});
 			jassProgramVisitor.getJassNativeManager().createNative("MoveRectTo",
 					(arguments, globalScope, triggerScope) -> {
-						final CRect rect = arguments.get(0).visit(ObjectJassValueVisitor.<Rectangle>getInstance());
-						final float newCenterX = arguments.get(1).visit(RealJassValueVisitor.getInstance())
-								.floatValue();
-						final float newCenterY = arguments.get(2).visit(RealJassValueVisitor.getInstance())
-								.floatValue();
-						rect.setCenter(newCenterX, newCenterY);
+						final CRect rect = nullable(arguments, 0, ObjectJassValueVisitor.getInstance());
+						if (rect != null) {
+							final float newCenterX = arguments.get(1).visit(RealJassValueVisitor.getInstance())
+									.floatValue();
+							final float newCenterY = arguments.get(2).visit(RealJassValueVisitor.getInstance())
+									.floatValue();
+							rect.setCenter(newCenterX, newCenterY);
+						}
 						return null;
 					});
 			jassProgramVisitor.getJassNativeManager().createNative("MoveRectToLoc",
 					(arguments, globalScope, triggerScope) -> {
-						final CRect rect = arguments.get(0).visit(ObjectJassValueVisitor.<Rectangle>getInstance());
-						final AbilityPointTarget newCenterLoc = arguments.get(1)
-								.visit(ObjectJassValueVisitor.<AbilityPointTarget>getInstance());
-						rect.setCenter(newCenterLoc.x, newCenterLoc.y);
+						final CRect rect = nullable(arguments, 0, ObjectJassValueVisitor.getInstance());
+						if (rect != null) {
+							final AbilityPointTarget newCenterLoc = arguments.get(1)
+									.visit(ObjectJassValueVisitor.<AbilityPointTarget>getInstance());
+							rect.setCenter(newCenterLoc.x, newCenterLoc.y);
+						}
 						return null;
 					});
 			jassProgramVisitor.getJassNativeManager().createNative("GetRectCenterX", new JassFunction() {
@@ -1751,7 +1759,7 @@ public class Jass2 {
 				@Override
 				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
 						final TriggerExecutionScope triggerScope) {
-					final CRect rect = nullable(arguments, 0, ObjectJassValueVisitor.<Rectangle>getInstance());
+					final CRect rect = nullableWithWarning(arguments, 0, ObjectJassValueVisitor.getInstance(), globalScope, triggerScope);
 					if (rect == null) {
 						return RealJassValue.ZERO;
 					}
@@ -1764,7 +1772,7 @@ public class Jass2 {
 				@Override
 				public JassValue call(final List<JassValue> arguments, final GlobalScope globalScope,
 						final TriggerExecutionScope triggerScope) {
-					final CRect rect = nullable(arguments, 0, ObjectJassValueVisitor.<Rectangle>getInstance());
+					final CRect rect = nullableWithWarning(arguments, 0, ObjectJassValueVisitor.getInstance(), globalScope, triggerScope);
 					if (rect == null) {
 						return RealJassValue.ZERO;
 					}
@@ -1773,23 +1781,35 @@ public class Jass2 {
 			});
 			jassProgramVisitor.getJassNativeManager().createNative("GetRectMinX",
 					(arguments, globalScope, triggerScope) -> {
-						final CRect rect = arguments.get(0).visit(ObjectJassValueVisitor.<Rectangle>getInstance());
-						return RealJassValue.of(rect.getX());
+						final CRect rect = nullableWithWarning(arguments, 0, ObjectJassValueVisitor.getInstance(), globalScope, triggerScope);
+						if (rect != null) {
+							return RealJassValue.of(rect.getX());
+						}
+						return RealJassValue.ZERO;
 					});
 			jassProgramVisitor.getJassNativeManager().createNative("GetRectMinY",
 					(arguments, globalScope, triggerScope) -> {
-						final CRect rect = arguments.get(0).visit(ObjectJassValueVisitor.<Rectangle>getInstance());
-						return RealJassValue.of(rect.getY());
+						final CRect rect = nullableWithWarning(arguments, 0, ObjectJassValueVisitor.getInstance(), globalScope, triggerScope);
+						if (rect != null) {
+							return RealJassValue.of(rect.getY());
+						}
+						return RealJassValue.ZERO;
 					});
 			jassProgramVisitor.getJassNativeManager().createNative("GetRectMaxX",
 					(arguments, globalScope, triggerScope) -> {
-						final CRect rect = arguments.get(0).visit(ObjectJassValueVisitor.<Rectangle>getInstance());
-						return RealJassValue.of(rect.getX() + rect.getWidth());
+						final CRect rect = nullableWithWarning(arguments, 0, ObjectJassValueVisitor.getInstance(), globalScope, triggerScope);
+						if (rect != null) {
+							return RealJassValue.of(rect.getX() + rect.getWidth());
+						}
+						return RealJassValue.ZERO;
 					});
 			jassProgramVisitor.getJassNativeManager().createNative("GetRectMaxY",
 					(arguments, globalScope, triggerScope) -> {
-						final CRect rect = arguments.get(0).visit(ObjectJassValueVisitor.<Rectangle>getInstance());
-						return RealJassValue.of(rect.getY() + rect.getHeight());
+						final CRect rect = nullableWithWarning(arguments, 0, ObjectJassValueVisitor.getInstance(), globalScope, triggerScope);
+						if (rect != null) {
+							return RealJassValue.of(rect.getY() + rect.getHeight());
+						}
+						return RealJassValue.ZERO;
 					});
 			jassProgramVisitor.getJassNativeManager().createNative("CreateRegion",
 					(arguments, globalScope, triggerScope) -> {
@@ -1803,16 +1823,20 @@ public class Jass2 {
 					});
 			jassProgramVisitor.getJassNativeManager().createNative("RegionAddRect",
 					(arguments, globalScope, triggerScope) -> {
-						final CRegion region = arguments.get(0).visit(ObjectJassValueVisitor.<CRegion>getInstance());
-						final CRect rect = arguments.get(1).visit(ObjectJassValueVisitor.<Rectangle>getInstance());
-						region.addRect(rect, CommonEnvironment.this.simulation.getRegionManager());
+						final CRegion region = nullableWithWarning(arguments, 0, ObjectJassValueVisitor.getInstance(), globalScope, triggerScope);
+						final CRect rect = nullableWithWarning(arguments, 1, ObjectJassValueVisitor.getInstance(), globalScope, triggerScope);
+						if (region != null && rect != null) {
+							region.addRect(rect, CommonEnvironment.this.simulation.getRegionManager());
+						}
 						return null;
 					});
 			jassProgramVisitor.getJassNativeManager().createNative("RegionClearRect",
 					(arguments, globalScope, triggerScope) -> {
-						final CRegion region = arguments.get(0).visit(ObjectJassValueVisitor.<CRegion>getInstance());
-						final CRect rect = arguments.get(1).visit(ObjectJassValueVisitor.<Rectangle>getInstance());
-						region.clearRect(rect, CommonEnvironment.this.simulation.getRegionManager());
+						final CRegion region = nullableWithWarning(arguments, 0, ObjectJassValueVisitor.getInstance(), globalScope, triggerScope);
+						final CRect rect = nullableWithWarning(arguments, 1, ObjectJassValueVisitor.getInstance(), globalScope, triggerScope);
+						if (region != null && rect != null) {
+							region.clearRect(rect, CommonEnvironment.this.simulation.getRegionManager());
+						}
 						return null;
 					});
 			jassProgramVisitor.getJassNativeManager().createNative("RegionAddCell",
@@ -3555,7 +3579,7 @@ public class Jass2 {
 					});
 			jassProgramVisitor.getJassNativeManager().createNative("GetHeroLevel",
 					(arguments, globalScope, triggerScope) -> {
-						final CUnit whichUnit = nullable(arguments, 0, ObjectJassValueVisitor.getInstance());
+						final CUnit whichUnit = nullableWithWarning(arguments, 0, ObjectJassValueVisitor.getInstance(), globalScope, triggerScope);
 
 						if (whichUnit != null) {
 							final CAbilityHero heroData = whichUnit.getHeroData();
@@ -3569,18 +3593,20 @@ public class Jass2 {
 					});
 			jassProgramVisitor.getJassNativeManager().createNative("SetHeroLevel",
 					(arguments, globalScope, triggerScope) -> {
-						final CUnit whichUnit = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());
-						final int level = arguments.get(1).visit(IntegerJassValueVisitor.getInstance());
-						final boolean fx = arguments.get(2).visit(BooleanJassValueVisitor.getInstance());
-						final CAbilityHero heroData = whichUnit.getHeroData();
-						if (heroData != null) {
-							heroData.setHeroLevel(CommonEnvironment.this.simulation, whichUnit, level, fx);
+						final CUnit whichUnit = nullableWithWarning(arguments, 0, ObjectJassValueVisitor.getInstance(), globalScope, triggerScope);
+						if (whichUnit != null) {
+							final int level = arguments.get(1).visit(IntegerJassValueVisitor.getInstance());
+							final boolean fx = arguments.get(2).visit(BooleanJassValueVisitor.getInstance());
+							final CAbilityHero heroData = whichUnit.getHeroData();
+							if (heroData != null) {
+								heroData.setHeroLevel(CommonEnvironment.this.simulation, whichUnit, level, fx);
+							}
 						}
 						return null;
 					});
 			jassProgramVisitor.getJassNativeManager().createNative("GetHeroProperName",
 					(arguments, globalScope, triggerScope) -> {
-						final CUnit whichUnit = nullable(arguments, 0, ObjectJassValueVisitor.getInstance());
+						final CUnit whichUnit = nullableWithWarning(arguments, 0, ObjectJassValueVisitor.getInstance(), globalScope, triggerScope);
 
 						if (whichUnit != null) {
 							final CAbilityHero heroData = whichUnit.getHeroData();
@@ -3594,7 +3620,7 @@ public class Jass2 {
 					});
 			jassProgramVisitor.getJassNativeManager().createNative("BlzSetHeroProperName",
 					(arguments, globalScope, triggerScope) -> {
-						final CUnit whichUnit = nullable(arguments, 0, ObjectJassValueVisitor.getInstance());
+						final CUnit whichUnit = nullableWithWarning(arguments, 0, ObjectJassValueVisitor.getInstance(), globalScope, triggerScope);
 						String heroProperName = nullable(arguments, 1, ObjectJassValueVisitor.getInstance());
 
 						if (heroProperName == null) {
@@ -3612,11 +3638,13 @@ public class Jass2 {
 					});
 			jassProgramVisitor.getJassNativeManager().createNative("SelectHeroSkill",
 					(arguments, globalScope, triggerScope) -> {
-						final CUnit whichUnit = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());
-						final int skill = arguments.get(1).visit(IntegerJassValueVisitor.getInstance());
-						final CAbilityHero heroData = whichUnit.getHeroData();
-						if (heroData != null) {
-							heroData.selectHeroSkill(this.simulation, whichUnit, new War3ID(skill));
+						final CUnit whichUnit = nullableWithWarning(arguments, 0, ObjectJassValueVisitor.getInstance(), globalScope, triggerScope);
+						if (whichUnit != null) {
+							final int skill = arguments.get(1).visit(IntegerJassValueVisitor.getInstance());
+							final CAbilityHero heroData = whichUnit.getHeroData();
+							if (heroData != null) {
+								heroData.selectHeroSkill(this.simulation, whichUnit, new War3ID(skill));
+							}
 						}
 						return null;
 					});
@@ -9701,6 +9729,17 @@ public class Jass2 {
 			return null;
 		}
 		return arg.visit(visitor);
+	}
+
+	private static <T> T nullableWithWarning(final List<JassValue> arguments, final int index,
+											 final JassValueVisitor<T> visitor,
+											 final GlobalScope globalScope,
+											 final TriggerExecutionScope triggerScope) {
+		final T arg = nullable(arguments, index, visitor);
+		if (arg == null) {
+			System.err.println(JassException.message(globalScope, "Warning: JASS function argument " + index + " is null."));
+		}
+		return arg;
 	}
 
 	private static void doPreloadScript(final DataSource dataSource, final Viewport uiViewport, final Scene uiScene,

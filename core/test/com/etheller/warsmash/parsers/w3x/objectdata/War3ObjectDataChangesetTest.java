@@ -19,6 +19,7 @@ class War3ObjectDataChangesetTest {
 			changeset.load(stream, null, false);
 		}
 
+		assertEquals(732, changeset.getOriginal().size());
 		assertEquals(2199, changeset.getCustom().size());
 
 		java.io.File testFile = java.io.File.createTempFile("war3map", ".w3u");
@@ -33,6 +34,7 @@ class War3ObjectDataChangesetTest {
 			changeset2.load(stream, null, false);
 		}
 
+		assertEquals(721, changeset2.getOriginal().size(), "Expected several objects without actual modifications to be removed.");
 		assertEquals(changeset.getCustom().size(), changeset2.getCustom().size());
 	}
 
@@ -44,6 +46,7 @@ class War3ObjectDataChangesetTest {
 			changeset.load(stream, null, false);
 		}
 
+		assertEquals(62, changeset.getOriginal().size());
 		assertEquals(2148, changeset.getCustom().size());
 
 		java.io.File testFile = java.io.File.createTempFile("war3map", ".w3a");
@@ -58,6 +61,7 @@ class War3ObjectDataChangesetTest {
 			changeset2.load(stream, null, false);
 		}
 
+		assertEquals(21, changeset2.getOriginal().size(), "Expected several objects without actual modifications to be removed.");
 		assertEquals(changeset.getCustom().size(), changeset2.getCustom().size());
 	}
 }

@@ -2930,8 +2930,10 @@ public class Jass2 {
 					});
 			jassProgramVisitor.getJassNativeManager().createNative("KillDestructable",
 					(arguments, globalScope, triggerScope) -> {
-						final CDestructable dest = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());
-						dest.setLife(CommonEnvironment.this.simulation, 0f);
+						final CDestructable dest = nullable(arguments, 0, ObjectJassValueVisitor.getInstance());
+						if (dest != null) {
+							dest.setLife(CommonEnvironment.this.simulation, 0f);
+						}
 						return null;
 					});
 			jassProgramVisitor.getJassNativeManager().createNative("RemoveDestructable",

@@ -2916,6 +2916,25 @@ public class Jass2 {
 						return new HandleJassValue(destructableType, CommonEnvironment.this.simulation
 								.createDestructable(new War3ID(rawcode), x, y, facing, scale, variation));
 					});
+			jassProgramVisitor.getJassNativeManager().createNative("BlzCreateDestructableZWithSkin",
+					(arguments, globalScope, triggerScope) -> {
+						int rawcode = arguments.get(0).visit(IntegerJassValueVisitor.getInstance());
+						final float x = arguments.get(1).visit(RealJassValueVisitor.getInstance()).floatValue();
+						final float y = arguments.get(2).visit(RealJassValueVisitor.getInstance()).floatValue();
+						final float z = arguments.get(3).visit(RealJassValueVisitor.getInstance()).floatValue();
+						final float facing = arguments.get(4).visit(RealJassValueVisitor.getInstance()).floatValue();
+						final float scale = arguments.get(5).visit(RealJassValueVisitor.getInstance()).floatValue();
+						final int variation = arguments.get(6).visit(IntegerJassValueVisitor.getInstance());
+						final int skinId = arguments.get(7).visit(IntegerJassValueVisitor.getInstance());
+						if (skinId != rawcode) {
+							// throw new IllegalStateException("Our engine does not support
+							// DestructableSkinID != DestructableID (skinId="+ new War3ID(skinId) + ",
+							// destId=" + new War3ID(rawcode) + ")");
+							rawcode = skinId;
+						}
+						return new HandleJassValue(destructableType, CommonEnvironment.this.simulation
+								.createDestructableZ(new War3ID(rawcode), x, y, z, facing, scale, variation));
+					});
 			jassProgramVisitor.getJassNativeManager().createNative("CreateDestructableZ",
 					(arguments, globalScope, triggerScope) -> {
 						final int rawcode = arguments.get(0).visit(IntegerJassValueVisitor.getInstance());

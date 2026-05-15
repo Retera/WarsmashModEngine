@@ -2093,12 +2093,16 @@ public class Jass2 {
 					});
 			jassProgramVisitor.getJassNativeManager().createNative("TriggerRegisterEnterRegion",
 					(arguments, globalScope, triggerScope) -> {
-						final Trigger trigger = arguments.get(0).visit(ObjectJassValueVisitor.<Trigger>getInstance());
-						final CRegion region = arguments.get(1).visit(ObjectJassValueVisitor.<CRegion>getInstance());
+						final Trigger trigger = nullable(arguments, 0, ObjectJassValueVisitor.<Trigger>getInstance());
+						final CRegion region = nullable(arguments, 1, ObjectJassValueVisitor.<CRegion>getInstance());
 						final TriggerBooleanExpression boolexpr = nullable(arguments, 2,
 								ObjectJassValueVisitor.<TriggerBooleanExpression>getInstance());
-						return new HandleJassValue(eventType,
-								region.add(new CRegionTriggerEnter(globalScope, trigger, boolexpr)));
+						if (trigger != null && region != null) {
+							return new HandleJassValue(eventType,
+									region.add(new CRegionTriggerEnter(globalScope, trigger, boolexpr)));
+						}
+
+						return null;
 					});
 			jassProgramVisitor.getJassNativeManager().createNative("GetTriggeringRegion",
 					(arguments, globalScope, triggerScope) -> {

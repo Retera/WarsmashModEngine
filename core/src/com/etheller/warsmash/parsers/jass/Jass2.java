@@ -10097,7 +10097,7 @@ public class Jass2 {
 			if (playerIndex >= 0 && playerIndex < playerAPI.getMaxPlayers()) {
 				return new HandleJassValue(playerType, playerAPI.getPlayer(playerIndex));
 			}
-			return new HandleJassValue(playerType, null);
+			return playerType.getNullValue();
 		});
 		jassProgramVisitor.getJassNativeManager().createNative("GetPlayerId",
 				(arguments, globalScope, triggerScope) -> {

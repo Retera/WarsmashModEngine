@@ -3573,6 +3573,38 @@ public class Jass2 {
 						}
 						return null;
 					});
+			jassProgramVisitor.getJassNativeManager().createNative("GetHeroProperName",
+					(arguments, globalScope, triggerScope) -> {
+						final CUnit whichUnit = nullable(arguments, 0, ObjectJassValueVisitor.getInstance());
+
+						if (whichUnit != null) {
+							final CAbilityHero heroData = whichUnit.getHeroData();
+							if (heroData != null) {
+								return StringJassValue
+										.of(heroData.getProperName());
+							}
+						}
+
+						return StringJassValue.EMPTY_STRING;
+					});
+			jassProgramVisitor.getJassNativeManager().createNative("BlzSetHeroProperName",
+					(arguments, globalScope, triggerScope) -> {
+						final CUnit whichUnit = nullable(arguments, 0, ObjectJassValueVisitor.getInstance());
+						String heroProperName = nullable(arguments, 1, ObjectJassValueVisitor.getInstance());
+
+						if (heroProperName == null) {
+							heroProperName = "";
+						}
+
+						if (whichUnit != null) {
+							final CAbilityHero heroData = whichUnit.getHeroData();
+							if (heroData != null) {
+								heroData.setProperName(heroProperName);
+							}
+						}
+
+						return null;
+					});
 			jassProgramVisitor.getJassNativeManager().createNative("SelectHeroSkill",
 					(arguments, globalScope, triggerScope) -> {
 						final CUnit whichUnit = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());

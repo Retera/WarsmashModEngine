@@ -239,6 +239,10 @@ public class CAbilityHero extends AbstractCAbility {
 		return this.properName;
 	}
 
+	public void setProperName(String properName) {
+		this.properName = properName;
+	}
+
 	public void setAwaitingRevive(final boolean awaitingRevive) {
 		this.awaitingRevive = awaitingRevive;
 	}

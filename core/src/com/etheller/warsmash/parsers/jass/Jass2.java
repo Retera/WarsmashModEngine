@@ -4394,11 +4394,15 @@ public class Jass2 {
 					});
 			jassProgramVisitor.getJassNativeManager().createNative("GetHandleId",
 					(arguments, globalScope, triggerScope) -> {
-						final CHandle whichHandle = nullable(arguments, 0, ObjectJassValueVisitor.getInstance());
-						if (whichHandle == null) {
-							return IntegerJassValue.ZERO;
+						final Object arg0 = nullable(arguments, 0, ObjectJassValueVisitor.getInstance());
+						// Many of the JASS types do not implement CHandle yet.
+						if (arg0 instanceof CHandle) {
+							final CHandle whichHandle = CHandle.class.cast(arg0);
+							if (whichHandle != null) {
+								return IntegerJassValue.of(whichHandle.getHandleId());
+							}
 						}
-						return IntegerJassValue.of(whichHandle.getHandleId());
+						return IntegerJassValue.ZERO;
 					});
 			jassProgramVisitor.getJassNativeManager().createNative("TriggerSleepAction",
 					(arguments, globalScope, triggerScope) -> {

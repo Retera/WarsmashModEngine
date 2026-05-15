@@ -894,7 +894,7 @@ public class Jass2 {
 					(arguments, globalScope, triggerScope) -> {
 						final List<CUnit> group = nullable(arguments, 0,
 								ObjectJassValueVisitor.<List<CUnit>>getInstance());
-						final CUnit whichUnit = arguments.get(1).visit(ObjectJassValueVisitor.<CUnit>getInstance());
+						final CUnit whichUnit = nullable(arguments, 1, ObjectJassValueVisitor.<CUnit>getInstance());
 						if (group != null && whichUnit != null) {
 							if (!group.contains(whichUnit)) {
 								group.add(whichUnit);

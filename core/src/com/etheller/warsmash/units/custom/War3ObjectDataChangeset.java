@@ -8,6 +8,7 @@ import java.nio.CharBuffer;
 import java.nio.charset.Charset;
 import java.nio.charset.CharsetEncoder;
 import java.nio.charset.CodingErrorAction;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -513,22 +514,30 @@ public final class War3ObjectDataChangeset {
 				setsCount = stream.readInt();
 			}
 
+			debugprint("setsCount " + setsCount);
+
 			for (int setIndex = 0; setIndex < setsCount; setIndex++) {
 
 				if (this.version >= 3) {
 					final int setFlag = stream.readInt();
+
+					debugprint("setFlag " + setFlag);
 				}
 
 				final int ccount = stream.readInt();// Retera: I assume this is change count?
+
+				debugprint("ccount " + ccount);
+
 				if ((ccount == 0) && isOriginal) {
+					// tdauth: This seems to happen if object data has been reset in the World Editor but still is stored with zero modifications in the object data.
 					// throw new IOException("we seem to have reached the end of the stream and get
 					// zeroes");
-					System.err.println("we seem to have reached the end of the stream and get zeroes");
+					//System.err.println("we seem to have reached the end of the stream and get zeroes");
 				}
 				if (isOriginal) {
-					debugprint("StandardUnit \"" + origid + "\" " + ccount + " {");
+					debugprint("(" + i + "/" + count + ") StandardObject \"" + origid + "\" " + ccount + " {");
 				} else {
-					debugprint("CustomUnit \"" + origid + ":" + newid + "\" " + ccount + " {");
+					debugprint("(" + i + "/" + count + ") CustomObject \"" + origid + ":" + newid + "\" " + ccount + " {");
 				}
 				for (int j = 0; j < ccount; j++) {
 					final War3ID chid = readWar3ID(stream);
@@ -716,8 +725,20 @@ public final class War3ObjectDataChangeset {
 		final CharBuffer charBuffer = CharBuffer.allocate(1024);
 		final ByteBuffer byteBuffer = ByteBuffer.allocate(1024);
 		final War3ID noid = new War3ID(0);
-		int count;
-		count = map.size();
+		int count = 0;
+
+		for (final Map.Entry<War3ID, ObjectDataChangeEntry> entry : map) {
+			final ObjectDataChangeEntry cl = entry.getValue();
+			int totalSize = 0;
+			for (final Map.Entry<War3ID, List<Change>> changeEntry : cl.getChanges()) {
+				totalSize += changeEntry.getValue().size();
+			}
+
+			if ((totalSize > 0) || !isOriginal) {
+				count++;
+			}
+		}
+
 		outputStream.writeInt(count);
 		for (final Map.Entry<War3ID, ObjectDataChangeEntry> entry : map) {
 			final ObjectDataChangeEntry cl = entry.getValue();
@@ -730,11 +751,10 @@ public final class War3ObjectDataChangeset {
 				ParseUtils.writeWar3ID(outputStream, cl.getNewId());
 				if (this.version >= 3) {
 					outputStream.writeInt(1); // set count
-					outputStream.writeInt(0); // set flag
+					outputStream.writeInt(0); // set flag for the first set
 				}
-				count = totalSize;// cl.getChanges().size();
-				outputStream.writeInt(count);
-				for (final Map.Entry<War3ID, List<Change>> changes : entry.getValue().getChanges()) {
+				outputStream.writeInt(totalSize);
+				for (final Map.Entry<War3ID, List<Change>> changes : cl.getChanges()) {
 					for (final Change change : changes.getValue()) {
 						ParseUtils.writeWar3ID(outputStream, change.getId());
 						outputStream.writeInt(change.getVartype());
@@ -811,6 +831,6 @@ public final class War3ObjectDataChangeset {
 	}
 
 	private static void debugprint(final String s) {
-
+		//System.out.println(s);
 	}
 }

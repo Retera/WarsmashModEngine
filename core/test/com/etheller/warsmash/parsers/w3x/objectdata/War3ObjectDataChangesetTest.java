@@ -30,7 +30,7 @@ class War3ObjectDataChangesetTest {
 
 		final War3ObjectDataChangeset changeset2 = new War3ObjectDataChangeset('u');
 		try (LittleEndianDataInputStream stream = new LittleEndianDataInputStream(new java.io.FileInputStream(testFile))) {
-			changeset.load(stream, null, false);
+			changeset2.load(stream, null, false);
 		}
 
 		assertEquals(changeset.getCustom().size(), changeset2.getCustom().size());
@@ -55,7 +55,7 @@ class War3ObjectDataChangesetTest {
 
 		final War3ObjectDataChangeset changeset2 = new War3ObjectDataChangeset('a');
 		try (LittleEndianDataInputStream stream = new LittleEndianDataInputStream(new java.io.FileInputStream(testFile))) {
-			changeset.load(stream, null, false);
+			changeset2.load(stream, null, false);
 		}
 
 		assertEquals(changeset.getCustom().size(), changeset2.getCustom().size());

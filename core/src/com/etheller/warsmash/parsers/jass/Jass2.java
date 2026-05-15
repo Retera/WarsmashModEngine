@@ -4455,7 +4455,7 @@ public class Jass2 {
 					(arguments, globalScope, triggerScope) -> {
 						final Object arg0 = nullable(arguments, 0, ObjectJassValueVisitor.getInstance());
 						// Many of the JASS types do not implement CHandle yet.
-						if (arg0 != null && arg0 instanceof CHandle) {
+						if (arg0 instanceof CHandle) {
 							return IntegerJassValue.of(CHandle.class.cast(arg0).getHandleId());
 						}
 						return IntegerJassValue.ZERO;
@@ -5461,7 +5461,7 @@ public class Jass2 {
 			// });
 			jassProgramVisitor.getJassNativeManager().createNative("InitHashtable",
 					(arguments, globalScope, triggerScope) -> {
-						return new HandleJassValue(hashtableType, new CHashtable());
+						return new HandleJassValue(hashtableType, new CHashtable(simulation.getHandleIdAllocator().createId()));
 					});
 			jassProgramVisitor.getJassNativeManager().createNative("SaveInteger", new SaveHashtableValueFunc());
 			jassProgramVisitor.getJassNativeManager().createNative("SaveReal", new SaveHashtableValueFunc());

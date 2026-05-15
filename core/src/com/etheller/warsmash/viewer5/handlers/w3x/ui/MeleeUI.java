@@ -3371,7 +3371,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 					this.cargoUnitFrames[i].setVisible(false);
 				}
 				final CUnitType unitType = simulationUnit.getUnitType();
-				final String unitTypeName = simulationUnit.getName();
+				final String unitName = simulationUnit.getName();
 
 				final boolean anyAttacks = simulationUnit.getCurrentAttacks().size() > 0;
 				final UIFrame localArmorIcon = this.armorIcon;
@@ -3475,7 +3475,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 					final int heroLevel = heroData.getHeroLevel();
 					this.simpleClassValue.setVisible(true);
 					this.rootFrame.setText(this.simpleClassValue,
-							String.format(infopanelLevelClass, heroLevel, unitTypeName));
+							String.format(infopanelLevelClass, heroLevel, unitName));
 					this.rootFrame.setText(this.simpleNameValue, heroData.getProperName());
 					this.simpleHeroLevelBar.setVisible(true);
 					final CGameplayConstants gameplayConstants = this.war3MapViewer.simulation.getGameplayConstants();
@@ -3485,7 +3485,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 				}
 				else {
 					this.simpleClassValue.setVisible(!simulationUnit.isBuilding());
-					this.rootFrame.setText(this.simpleNameValue, unitTypeName);
+					this.rootFrame.setText(this.simpleNameValue, unitName);
 					String classText = null;
 					for (final CUnitClassification classification : simulationUnit.getClassifications()) {
 						if (classification.getDisplayName() != null) {

@@ -298,7 +298,6 @@ public class CUnit extends CWidget {
 			final War3ID typeId, final float facing, final float mana, final int maximumLife, final float lifeRegen,
 			final int maximumMana, final int speed, final CUnitType unitType) {
 		super(handleId, x, y, life);
-		this.name = unitType.getName();
 		this.playerIndex = playerIndex;
 		this.typeId = typeId;
 		this.facing = facing;
@@ -314,6 +313,7 @@ public class CUnit extends CWidget {
 		this.turnRate = unitType.getTurnRate();
 		this.propWindow = unitType.getPropWindow();
 		this.unitType = unitType;
+		this.name = unitType.getName();
 		this.defenseType = unitType.getDefenseType();
 		this.classifications.addAll(unitType.getClassifications());
 		this.targetedAs.addAll(unitType.getTargetedAs());
@@ -1773,6 +1773,7 @@ public class CUnit extends CWidget {
 		final float manaRatio = this.maximumMana == 0 ? Float.NaN : this.mana / this.maximumMana;
 		final CUnitType previousUnitType = getUnitType();
 		this.unitType = game.getUnitData().getUnitType(typeId);
+		this.name = this.unitType.getName();
 		this.maximumMana = this.unitType.getManaMaximum();
 		this.maximumLife = this.unitType.getMaxLife();
 		this.life = lifeRatio * this.maximumLife;

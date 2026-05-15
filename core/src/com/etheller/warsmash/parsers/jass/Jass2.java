@@ -802,7 +802,11 @@ public class Jass2 {
 						final CUnit whichWidget = nullable(arguments, 0, ObjectJassValueVisitor.getInstance());
 						if (whichWidget != null) {
 							final String name = nullable(arguments, 1, ObjectJassValueVisitor.getInstance());
-							whichWidget.setName(name);
+							if (name != null) {
+								whichWidget.setName(name);
+							} else {
+								whichWidget.setName(""); // tdauth: Avoid null to avoid exceptions in UI.
+							}
 						}
 
 						return null;

@@ -795,8 +795,19 @@ public class Jass2 {
 					(arguments, globalScope, triggerScope) -> {
 						final CUnit whichWidget = nullable(arguments, 0, ObjectJassValueVisitor.getInstance());
 						return whichWidget == null ? JassType.STRING.getNullValue()
-								: new StringJassValue(whichWidget.getUnitType().getName());
+								: new StringJassValue(whichWidget.getName());
 					});
+			jassProgramVisitor.getJassNativeManager().createNative("BlzSetUnitName",
+					(arguments, globalScope, triggerScope) -> {
+						final CUnit whichWidget = nullable(arguments, 0, ObjectJassValueVisitor.getInstance());
+						if (whichWidget != null) {
+							final String name = nullable(arguments, 1, ObjectJassValueVisitor.getInstance());
+							whichWidget.setName(name);
+						}
+
+						return null;
+					});
+
 			registerConversionAndStringNatives(jassProgramVisitor, war3MapViewer.getGameUI());
 			final War3MapConfig mapConfig = war3MapViewer.getMapConfig();
 			registerConfigNatives(jassProgramVisitor, mapConfig, startlocprioType, gametypeType, placementType,
@@ -1506,7 +1517,9 @@ public class Jass2 {
 						if (group != null) {
 							final CodeJassValue callback = arguments.get(1).visit(CodeJassValueVisitor.getInstance());
 							try {
-								for (final CUnit unit : group) {
+								// tdauth: Do never use a foreach loop here since the group size could be modified by the callback which would lead to a ConcurrentModificationException.
+								for (int i = 0; i < group.size(); i++) {
+									final CUnit unit = group.get(i);
 									globalScope.runThreadUntilCompletion(globalScope.createThread(callback,
 											CommonTriggerExecutionScope.enumScope(triggerScope, unit)));
 								}

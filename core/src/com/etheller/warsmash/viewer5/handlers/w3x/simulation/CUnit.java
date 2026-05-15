@@ -140,6 +140,7 @@ public class CUnit extends CWidget {
 	private static RegionCheckerImpl regionCheckerImpl = new RegionCheckerImpl();
 
 	private War3ID typeId;
+	private String name;
 	private float facing; // degrees
 	private float mana;
 	private int baseMaximumLife;
@@ -297,6 +298,7 @@ public class CUnit extends CWidget {
 			final War3ID typeId, final float facing, final float mana, final int maximumLife, final float lifeRegen,
 			final int maximumMana, final int speed, final CUnitType unitType) {
 		super(handleId, x, y, life);
+		this.name = unitType.getName();
 		this.playerIndex = playerIndex;
 		this.typeId = typeId;
 		this.facing = facing;
@@ -326,6 +328,14 @@ public class CUnit extends CWidget {
 		addPreDamageListener(CUnitAttackPreDamageListenerPriority.ACCURACY, new CUnitDefaultAccuracyCheckListener());
 		this.attackFogMod = new CUnitAttackVisionFogModifier(this, playerIndex);
 		computeAllDerivedFields();
+	}
+
+	public String getName() {
+		return this.name;
+	}
+
+	public void setName(String name) {
+		this.name = name;
 	}
 
 	private void beginBehavior(final CSimulation game, final CBehavior behavior) {

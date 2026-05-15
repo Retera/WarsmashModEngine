@@ -5,12 +5,23 @@ import java.util.List;
 
 import com.badlogic.gdx.math.Rectangle;
 import com.etheller.interpreter.ast.scope.trigger.RemovableTriggerEvent;
+import com.etheller.interpreter.ast.util.CHandle;
 
-public class CRegion {
+public class CRegion implements CHandle {
+	private final int handleId;
 	private Rectangle currentBounds;
 	private boolean complexRegion;
 	private final List<CRegionTriggerEnter> enterTriggers = new ArrayList<>();
 	private final List<CRegionTriggerLeave> leaveTriggers = new ArrayList<>();
+
+	public CRegion(int handleId) {
+		this.handleId = handleId;
+	}
+
+	@Override
+	public int getHandleId() {
+		return handleId;
+	}
 
 	public void addRect(final Rectangle rect, final CRegionManager regionManager) {
 		if (this.currentBounds == null) {

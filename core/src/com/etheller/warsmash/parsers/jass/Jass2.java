@@ -1775,7 +1775,7 @@ public class Jass2 {
 					});
 			jassProgramVisitor.getJassNativeManager().createNative("CreateRegion",
 					(arguments, globalScope, triggerScope) -> {
-						return new HandleJassValue(regionType, new CRegion());
+						return new HandleJassValue(regionType, new CRegion(CommonEnvironment.this.simulation.getHandleIdAllocator().createId()));
 					});
 			jassProgramVisitor.getJassNativeManager().createNative("RemoveRegion",
 					(arguments, globalScope, triggerScope) -> {
@@ -4394,7 +4394,7 @@ public class Jass2 {
 					});
 			jassProgramVisitor.getJassNativeManager().createNative("GetHandleId",
 					(arguments, globalScope, triggerScope) -> {
-						final CHandle whichHandle = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());
+						final CHandle whichHandle = nullable(arguments, 0, ObjectJassValueVisitor.getInstance());
 						if (whichHandle == null) {
 							return IntegerJassValue.ZERO;
 						}

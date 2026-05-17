@@ -252,6 +252,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.ui.WarsmashUI;
 import com.etheller.warsmash.viewer5.handlers.w3x.ui.dialog.CScriptDialog;
 import com.etheller.warsmash.viewer5.handlers.w3x.ui.dialog.CScriptDialogButton;
 
+import com.etheller.warsmash.viewer5.handlers.w3x.ui.dialog.CTimerDialog;
 import net.warsmash.parsers.jass.SmashJassParser;
 
 public class Jass2 {
@@ -4263,6 +4264,13 @@ public class Jass2 {
 					(arguments, globalScope, triggerScope) -> {
 						final CTimer timer = nullable(arguments, 0, ObjectJassValueVisitor.getInstance());
 						return new HandleJassValue(timerdialogType, meleeUI.createTimerDialog(timer));
+					});
+			jassProgramVisitor.getJassNativeManager().createNative("TimerDialogDisplay",
+					(arguments, globalScope, triggerScope) -> {
+						final CTimerDialog timerDialog = nullable(arguments, 0, ObjectJassValueVisitor.getInstance());
+						final boolean display = arguments.get(1).visit(BooleanJassValueVisitor.getInstance());
+						timerDialog.setVisible(display);
+						return null;
 					});
 			jassProgramVisitor.getJassNativeManager().createNative("IsPlayerObserver",
 					(arguments, globalScope, triggerScope) -> {

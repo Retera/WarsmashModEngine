@@ -4374,6 +4374,15 @@ public class Jass2 {
 						final CWidget whichWidget = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());
 						return RealJassValue.of(whichWidget.getY());
 					});
+			jassProgramVisitor.getJassNativeManager().createNative("GetDestructableTypeId",
+					(arguments, globalScope, triggerScope) -> {
+						final CDestructable d = nullableWithWarning(arguments, 0, ObjectJassValueVisitor.getInstance(), globalScope, triggerScope);
+						if (d != null && d.getDestType() != null) {
+							return IntegerJassValue.of(d.getDestType().getTypeId().getValue());
+						}
+
+						return IntegerJassValue.ZERO;
+					});
 			jassProgramVisitor.getJassNativeManager().createNative("GetDestructableX",
 					(arguments, globalScope, triggerScope) -> {
 						final CWidget whichWidget = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());

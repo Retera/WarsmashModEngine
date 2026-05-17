@@ -4265,11 +4265,22 @@ public class Jass2 {
 						final CTimer timer = nullable(arguments, 0, ObjectJassValueVisitor.getInstance());
 						return new HandleJassValue(timerdialogType, meleeUI.createTimerDialog(timer));
 					});
+			jassProgramVisitor.getJassNativeManager().createNative("TimerDialogSetTitle",
+					(arguments, globalScope, triggerScope) -> {
+						final CTimerDialog timerDialog = nullableWithWarning(arguments, 0, ObjectJassValueVisitor.getInstance(), globalScope, triggerScope);
+						final String title = arguments.get(1).visit(StringJassValueVisitor.getInstance());
+						if (timerDialog != null) {
+							meleeUI.setTimerDialogTitle(timerDialog, title);
+						}
+						return null;
+					});
 			jassProgramVisitor.getJassNativeManager().createNative("TimerDialogDisplay",
 					(arguments, globalScope, triggerScope) -> {
-						final CTimerDialog timerDialog = nullable(arguments, 0, ObjectJassValueVisitor.getInstance());
+						final CTimerDialog timerDialog = nullableWithWarning(arguments, 0, ObjectJassValueVisitor.getInstance(), globalScope, triggerScope);
 						final boolean display = arguments.get(1).visit(BooleanJassValueVisitor.getInstance());
-						timerDialog.setVisible(display);
+						if (timerDialog != null) {
+							timerDialog.setVisible(display);
+						}
 						return null;
 					});
 			jassProgramVisitor.getJassNativeManager().createNative("IsPlayerObserver",

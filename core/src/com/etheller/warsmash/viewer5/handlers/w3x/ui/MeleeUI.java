@@ -5154,6 +5154,11 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 	}
 
 	@Override
+	public void setTimerDialogTitle(CTimerDialog timerDialog, String title) {
+		timerDialog.setTitle(this.rootFrame, title);
+	}
+
+	@Override
 	public void displayTimedText(final float x, final float y, final float duration, final String message) {
 		showGameMessage(message, duration); // TODO x y
 	}

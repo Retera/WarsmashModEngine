@@ -4283,6 +4283,14 @@ public class Jass2 {
 						}
 						return null;
 					});
+			jassProgramVisitor.getJassNativeManager().createNative("IsTimerDialogDisplayed",
+					(arguments, globalScope, triggerScope) -> {
+						final CTimerDialog timerDialog = nullableWithWarning(arguments, 0, ObjectJassValueVisitor.getInstance(), globalScope, triggerScope);
+						if (timerDialog != null) {
+							return BooleanJassValue.of(timerDialog.isVisible());
+						}
+						return BooleanJassValue.FALSE;
+					});
 			jassProgramVisitor.getJassNativeManager().createNative("IsPlayerObserver",
 					(arguments, globalScope, triggerScope) -> {
 						final CPlayer player = nullable(arguments, 0, ObjectJassValueVisitor.getInstance());

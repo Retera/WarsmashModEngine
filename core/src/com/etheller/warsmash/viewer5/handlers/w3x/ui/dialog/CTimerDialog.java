@@ -32,6 +32,10 @@ public class CTimerDialog {
 		this.timerDialogFrame.setVisible(visible);
 	}
 
+	public boolean isVisible() {
+		return this.timerDialogFrame.isVisible();
+	}
+
 	public void update(final GameUI rootFrame, final CSimulation simulation) {
 		if (this.timerDialogFrame.isVisible() && (this.timer != null)) {
 			final float remaining = this.timer.getRemaining(simulation);

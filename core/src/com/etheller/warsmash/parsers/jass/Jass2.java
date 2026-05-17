@@ -908,9 +908,9 @@ public class Jass2 {
 					});
 			jassProgramVisitor.getJassNativeManager().createNative("GroupAddUnit",
 					(arguments, globalScope, triggerScope) -> {
-						final List<CUnit> group = nullable(arguments, 0,
-								ObjectJassValueVisitor.<List<CUnit>>getInstance());
-						final CUnit whichUnit = nullable(arguments, 1, ObjectJassValueVisitor.<CUnit>getInstance());
+						final List<CUnit> group = nullableWithWarning(arguments, 0,
+								ObjectJassValueVisitor.<List<CUnit>>getInstance(), globalScope, triggerScope);
+						final CUnit whichUnit = nullableWithWarning(arguments, 1, ObjectJassValueVisitor.<CUnit>getInstance(), globalScope, triggerScope);
 						if (group != null && whichUnit != null) {
 							if (!group.contains(whichUnit)) {
 								group.add(whichUnit);
@@ -920,10 +920,11 @@ public class Jass2 {
 					});
 			jassProgramVisitor.getJassNativeManager().createNative("GroupRemoveUnit",
 					(arguments, globalScope, triggerScope) -> {
-						final List<CUnit> group = arguments.get(0)
-								.visit(ObjectJassValueVisitor.<List<CUnit>>getInstance());
-						final CUnit whichUnit = arguments.get(1).visit(ObjectJassValueVisitor.<CUnit>getInstance());
-						group.remove(whichUnit);
+						final List<CUnit> group = nullableWithWarning(arguments, 0, ObjectJassValueVisitor.<List<CUnit>>getInstance(), globalScope, triggerScope);
+						final CUnit whichUnit = nullableWithWarning(arguments, 1, ObjectJassValueVisitor.<CUnit>getInstance(), globalScope, triggerScope);
+						if (group != null && whichUnit != null) {
+							group.remove(whichUnit);
+						}
 						return null;
 					});
 			final JassFunction groupAddGroupFast = (arguments, globalScope, triggerScope) -> {

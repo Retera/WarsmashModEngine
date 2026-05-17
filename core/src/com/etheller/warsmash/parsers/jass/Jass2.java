@@ -59,6 +59,7 @@ import com.etheller.warsmash.parsers.fdf.GameSkin;
 import com.etheller.warsmash.parsers.fdf.GameUI;
 import com.etheller.warsmash.parsers.fdf.datamodel.AnchorDefinition;
 import com.etheller.warsmash.parsers.fdf.datamodel.FramePoint;
+import com.etheller.warsmash.parsers.fdf.frames.AbstractRenderableFrame;
 import com.etheller.warsmash.parsers.fdf.frames.SetPoint;
 import com.etheller.warsmash.parsers.fdf.frames.StringFrame;
 import com.etheller.warsmash.parsers.fdf.frames.UIFrame;
@@ -4271,6 +4272,30 @@ public class Jass2 {
 						final String title = arguments.get(1).visit(StringJassValueVisitor.getInstance());
 						if (timerDialog != null) {
 							meleeUI.setTimerDialogTitle(timerDialog, title);
+						}
+						return null;
+					});
+			jassProgramVisitor.getJassNativeManager().createNative("TimerDialogSetTitleColor",
+					(arguments, globalScope, triggerScope) -> {
+						final CTimerDialog timerDialog = nullableWithWarning(arguments, 0, ObjectJassValueVisitor.getInstance(), globalScope, triggerScope);
+						final int red = arguments.get(1).visit(IntegerJassValueVisitor.getInstance());
+						final int green = arguments.get(2).visit(IntegerJassValueVisitor.getInstance());
+						final int blue = arguments.get(3).visit(IntegerJassValueVisitor.getInstance());
+						final int alpha = arguments.get(4).visit(IntegerJassValueVisitor.getInstance());
+						if (timerDialog != null) {
+							timerDialog.setTitleColor(AbstractRenderableFrame.createColor8888(red, green, blue, alpha));
+						}
+						return null;
+					});
+			jassProgramVisitor.getJassNativeManager().createNative("TimerDialogSetTimeColor",
+					(arguments, globalScope, triggerScope) -> {
+						final CTimerDialog timerDialog = nullableWithWarning(arguments, 0, ObjectJassValueVisitor.getInstance(), globalScope, triggerScope);
+						final int red = arguments.get(1).visit(IntegerJassValueVisitor.getInstance());
+						final int green = arguments.get(2).visit(IntegerJassValueVisitor.getInstance());
+						final int blue = arguments.get(3).visit(IntegerJassValueVisitor.getInstance());
+						final int alpha = arguments.get(4).visit(IntegerJassValueVisitor.getInstance());
+						if (timerDialog != null) {
+							timerDialog.setValueColor(AbstractRenderableFrame.createColor8888(red, green, blue, alpha));
 						}
 						return null;
 					});

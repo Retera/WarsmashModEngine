@@ -5,6 +5,7 @@ import com.etheller.warsmash.parsers.fdf.frames.StringFrame;
 import com.etheller.warsmash.parsers.fdf.frames.UIFrame;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.timers.CTimer;
+import com.badlogic.gdx.graphics.Color;
 
 public class CTimerDialog {
 	private final CTimer timer;
@@ -24,8 +25,16 @@ public class CTimerDialog {
 		rootFrame.setText(this.titleFrame, title);
 	}
 
+	public void setTitleColor(final Color color) {
+		this.titleFrame.setColor(color);
+	}
+
 	public void setValue(final GameUI rootFrame, final String value) {
 		rootFrame.setText(this.valueFrame, value);
+	}
+
+	public void setValueColor(final Color color) {
+		this.valueFrame.setColor(color);
 	}
 
 	public void setVisible(final boolean visible) {

@@ -2,6 +2,7 @@ package com.etheller.warsmash.parsers.fdf.frames;
 
 import java.util.EnumMap;
 
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
@@ -398,5 +399,9 @@ public abstract class AbstractRenderableFrame implements UIFrame {
 
 	public Rectangle getRenderBounds() {
 		return this.renderBounds;
+	}
+
+	public static Color createColor8888(int r, int g, int b, int a) {
+		return new Color(r / 255f, g / 255f, b / 255f, a / 255f);
 	}
 }

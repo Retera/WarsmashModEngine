@@ -4256,9 +4256,15 @@ public class Jass2 {
 			});
 			jassProgramVisitor.getJassNativeManager().createNative("Preloader",
 					(arguments, globalScope, triggerScope) -> {
-						final String filename = arguments.get(0).visit(StringJassValueVisitor.getInstance());
-						doPreloadScript(dataSource, uiViewport, uiScene, war3MapViewer, filename, meleeUI,
-								originalFiles, jassProgramVisitor, "PreloadFiles");
+						final String filename = nullableWithWarning(arguments, 0, StringJassValueVisitor.getInstance(), globalScope, triggerScope);
+						if (filename != null) {
+							if (dataSource.has(filename)) {
+								doPreloadScript(dataSource, uiViewport, uiScene, war3MapViewer, filename, meleeUI,
+										originalFiles, jassProgramVisitor, "PreloadFiles");
+							} else {
+								System.err.println("Missing file " + filename + " to be used in Preloader.");
+							}
+						}
 						return null;
 					});
 			jassProgramVisitor.getJassNativeManager().createNative("CreateTimerDialog",
@@ -6523,8 +6529,12 @@ public class Jass2 {
 							}
 						}
 						if (filePath != null) {
-							doPreloadScript(dataSource, uiViewport, uiScene, war3MapViewer, filePath, meleeUI,
-									originalFiles, jassProgramVisitor, funcToCall);
+							if (dataSource.has(filePath)) {
+								doPreloadScript(dataSource, uiViewport, uiScene, war3MapViewer, filePath, meleeUI,
+										originalFiles, jassProgramVisitor, funcToCall);
+							} else {
+								System.err.println("Missing file " + filePath + " to be used in LoadScriptFile call.");
+							}
 						}
 						return null;
 					});

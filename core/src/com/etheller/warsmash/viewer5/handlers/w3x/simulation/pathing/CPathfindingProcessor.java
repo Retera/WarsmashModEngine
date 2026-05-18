@@ -16,7 +16,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWorldCollision;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehaviorMove;
 
-public class CPathfindingProcessor {
+public class CPathfindingProcessor implements PathingProcessor {
 	private static final Rectangle tempRect = new Rectangle();
 	private final PathingGrid pathingGrid;
 	private final CWorldCollision worldCollision;
@@ -66,6 +66,7 @@ public class CPathfindingProcessor {
 	 * @param queueItem
 	 * @return
 	 */
+	@Override
 	public void findNaiveSlowPath(final CUnit ignoreIntersectionsWithThisUnit,
 			final CUnit ignoreIntersectionsWithThisSecondUnit, final float startX, final float startY,
 			final Point2D.Float goal, final PathingGrid.MovementType movementType, final float collisionSize,
@@ -74,6 +75,7 @@ public class CPathfindingProcessor {
 				startX, startY, goal, movementType, collisionSize, allowSmoothing, queueItem));
 	}
 
+	@Override
 	public void removeFromPathfindingQueue(final CBehaviorMove behaviorMove) {
 		// TODO because of silly java things, this remove is O(N) for now,
 		// we could do some refactors to make it O(1) but do we care?
@@ -212,6 +214,7 @@ public class CPathfindingProcessor {
 		};
 	}
 
+	@Override
 	public void update(final CSimulation simulation) {
 		int workIterations = 0;
 		JobsLoop: while (!this.moveQueue.isEmpty()) {

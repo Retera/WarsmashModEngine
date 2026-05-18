@@ -105,7 +105,7 @@ public class CSimulation implements CPlayerAPI, CFogMaskSettings {
 	private int gameTurnTick = 0;
 	private final PathingGrid pathingGrid;
 	private final CWorldCollision worldCollision;
-	private final CPathfindingProcessor[] pathfindingProcessors;
+	private final PathingProcessor[] pathfindingProcessors;
 	private final int mapVersion;
 	private final CGameplayConstants gameplayConstants;
 	private final Random seededRandom;
@@ -537,7 +537,7 @@ public class CSimulation implements CPlayerAPI, CFogMaskSettings {
 		}
 		this.projectiles.addAll(this.newProjectiles);
 		this.newProjectiles.clear();
-		for (final CPathfindingProcessor pathfindingProcessor : this.pathfindingProcessors) {
+		for (final PathingProcessor pathfindingProcessor : this.pathfindingProcessors) {
 			pathfindingProcessor.update(this);
 		}
 		this.gameTurnTick++;

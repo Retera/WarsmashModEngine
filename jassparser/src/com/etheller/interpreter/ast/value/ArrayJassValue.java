@@ -52,7 +52,7 @@ public class ArrayJassValue implements JassValue {
 					+ (valueType == null ? "null" : valueType.getName()));
 		}
 		if (index >= this.data.length) {
-			throw new JassException(globalScope, "Max jass array size " + this.data.length + " exceeded",
+			throw new JassException(globalScope, "Maximum JASS array size " + this.data.length + " exceeded with index " + index,
 					new ArrayIndexOutOfBoundsException(index));
 		}
 		this.data[index] = value;

@@ -31,19 +31,16 @@ public final class ImageUtils {
 	public static final String DEFAULT_ICON_PATH = "ReplaceableTextures\\CommandButtons\\BTNTemp.blp";
 
 	public static Texture getAnyExtensionTexture(final DataSource dataSource, final String path) {
-		if (dataSource.has(path)) {
-			BufferedImage image;
-			try {
-				final AnyExtensionImage imageInfo = getAnyExtensionImageFixRGB(dataSource, path, "texture");
-				image = imageInfo.getImageData();
-				if (image != null) {
-					return ImageUtils.getTexture(image, imageInfo.isNeedsSRGBFix());
-				}
-			} catch (final IOException e) {
-				return null;
+		BufferedImage image;
+		try {
+			final AnyExtensionImage imageInfo = getAnyExtensionImageFixRGB(dataSource, path, "texture");
+			image = imageInfo.getImageData();
+			if (image != null) {
+				return ImageUtils.getTexture(image, imageInfo.isNeedsSRGBFix());
 			}
-		} else {
-			System.err.println("Missing texture " + path);
+		} catch (final IOException e) {
+			System.err.println("Failed to load texture image " + path+ ": " + e.getMessage());
+			return null;
 		}
 		return null;
 	}

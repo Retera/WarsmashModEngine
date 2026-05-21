@@ -231,7 +231,7 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 			String line;
 			int tocLines = 0;
 			while ((line = reader.readLine()) != null) {
-				if (this.dataSource.has(line)) {
+				if (!line.isEmpty() && this.dataSource.has(line)) {
 					final FDFParser firstFileParser = dataSourceFDFParserBuilder.build(line);
 					fdfVisitor.visit(firstFileParser.program());
 				} else {

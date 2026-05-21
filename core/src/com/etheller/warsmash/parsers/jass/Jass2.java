@@ -10704,8 +10704,12 @@ public class Jass2 {
 		});
 		jassProgramVisitor.getJassNativeManager().createNative("StringLength",
 				(arguments, globalScope, triggerScope) -> {
-					final String s = arguments.get(0).visit(StringJassValueVisitor.getInstance());
-					return IntegerJassValue.of(s.length());
+					final String s = nullableWithWarning(arguments, 0, StringJassValueVisitor.getInstance(), globalScope, triggerScope);
+					if (s != null) {
+						return IntegerJassValue.of(s.length());
+					}
+
+					return IntegerJassValue.ZERO;
 				});
 		jassProgramVisitor.getJassNativeManager().createNative("StringCase", (arguments, globalScope, triggerScope) -> {
 			final String s = arguments.get(0).visit(StringJassValueVisitor.getInstance());

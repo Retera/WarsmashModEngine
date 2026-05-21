@@ -3082,7 +3082,9 @@ public class Jass2 {
 						final War3ID rawcodeId = new War3ID(rawcode);
 						final CUnit newUnit = CommonEnvironment.this.simulation.createUnitSimple(rawcodeId,
 								player.getId(), (float) x, (float) y, (float) facing);
-						newUnit.kill(this.simulation);
+						if (newUnit != null) {
+							newUnit.kill(this.simulation);
+						}
 						return new HandleJassValue(unitType, newUnit);
 					});
 			jassProgramVisitor.getJassNativeManager().createNative("BlzCreateUnitWithSkin",

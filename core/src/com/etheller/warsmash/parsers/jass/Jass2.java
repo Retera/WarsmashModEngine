@@ -3344,10 +3344,16 @@ public class Jass2 {
 					});
 			jassProgramVisitor.getJassNativeManager().createNative("SetUnitBlendTime",
 					(arguments, globalScope, triggerScope) -> {
-						final CUnit whichUnit = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());
+						final CUnit whichUnit = nullableWithWarning(arguments, 0, ObjectJassValueVisitor.getInstance(), globalScope, triggerScope);
 						final float blendTime = arguments.get(1).visit(RealJassValueVisitor.getInstance()).floatValue();
-						final RenderUnit renderPeer = war3MapViewer.getRenderPeer(whichUnit);
-						renderPeer.instance.setBlendTime(blendTime);
+
+						if (whichUnit != null) {
+							final RenderUnit renderPeer = war3MapViewer.getRenderPeer(whichUnit);
+							if (renderPeer != null) {
+								renderPeer.instance.setBlendTime(blendTime);
+							}
+						}
+
 						return null;
 					});
 			jassProgramVisitor.getJassNativeManager().createNative("SetUnitVertexColor",

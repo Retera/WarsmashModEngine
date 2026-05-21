@@ -3888,6 +3888,21 @@ public class Jass2 {
 						}
 						return null;
 					});
+
+			// Frames
+			jassProgramVisitor.getJassNativeManager().createNative("BlzLoadTOCFile",
+					(arguments, globalScope, triggerScope) -> {
+						final String tocFileName = nullableWithWarning(arguments, 0, StringJassValueVisitor.getInstance(), globalScope, triggerScope);
+						if (tocFileName != null) {
+							try {
+								this.gameUI.loadTOCFile(tocFileName);
+							} catch (final IOException e) {
+								throw new RuntimeException(e);
+							}
+						}
+						return BooleanJassValue.TRUE;
+					});
+
 			jassProgramVisitor.getJassNativeManager().createNative("AddPlayerTechResearched",
 					(arguments, globalScope, triggerScope) -> {
 						final CPlayer player = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());

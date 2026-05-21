@@ -231,8 +231,12 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 			String line;
 			int tocLines = 0;
 			while ((line = reader.readLine()) != null) {
-				final FDFParser firstFileParser = dataSourceFDFParserBuilder.build(line);
-				fdfVisitor.visit(firstFileParser.program());
+				if (this.dataSource.has(line)) {
+					final FDFParser firstFileParser = dataSourceFDFParserBuilder.build(line);
+					fdfVisitor.visit(firstFileParser.program());
+				} else {
+					System.err.println("Missing FDF file " + line + " loaded from TOC file " + tocFilePath);
+				}
 				tocLines++;
 			}
 			System.out.println("TOC file loaded " + tocLines + " lines");

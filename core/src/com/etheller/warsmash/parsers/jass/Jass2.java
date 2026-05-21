@@ -5174,14 +5174,22 @@ public class Jass2 {
 					});
 			jassProgramVisitor.getJassNativeManager().createNative("DisplayTextToPlayer",
 					(arguments, globalScope, triggerScope) -> {
-						final CPlayer whichPlayer = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());
+						final CPlayer whichPlayer = nullableWithWarning(arguments, 0, ObjectJassValueVisitor.getInstance(), globalScope, triggerScope);
 						final float x = arguments.get(1).visit(RealJassValueVisitor.getInstance()).floatValue();
 						final float y = arguments.get(2).visit(RealJassValueVisitor.getInstance()).floatValue();
-						final String message = CommonEnvironment.this.gameUI
-								.getTrigStr(arguments.get(3).visit(StringJassValueVisitor.getInstance()));
-						if (whichPlayer == CommonEnvironment.this.simulation
-								.getPlayer(war3MapViewer.getLocalPlayerIndex())) {
-							meleeUI.displayTimedText(x, y, (message.length() / 6) + 5, message);
+						String message = nullableWithWarning(arguments, 3, StringJassValueVisitor.getInstance(), globalScope, triggerScope);
+						if (message == null) {
+							message = "";
+						}
+						String actualMessage = CommonEnvironment.this.gameUI
+								.getTrigStr(message);
+						if (actualMessage == null) {
+							System.err.println("DisplayTextToPlayer message=" + message + " leads to null.");
+							actualMessage = "";
+						}
+						if (whichPlayer != null && whichPlayer == CommonEnvironment.this.simulation
+									.getPlayer(war3MapViewer.getLocalPlayerIndex())) {
+								meleeUI.displayTimedText(x, y, (actualMessage.length() / 6) + 5, actualMessage);
 						}
 						return null;
 					});

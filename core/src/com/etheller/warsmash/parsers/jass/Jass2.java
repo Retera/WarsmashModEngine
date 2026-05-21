@@ -9617,44 +9617,60 @@ public class Jass2 {
 				});
 		jassProgramVisitor.getJassNativeManager().createNative("DestroyTrigger",
 				(arguments, globalScope, triggerScope) -> {
-					final Trigger trigger = arguments.get(0).visit(ObjectJassValueVisitor.<Trigger>getInstance());
-					trigger.destroy();
+					final Trigger trigger = nullableWithWarning(arguments, 0, ObjectJassValueVisitor.<Trigger>getInstance(), globalScope, triggerScope);
+					if (trigger != null) {
+						trigger.destroy();
+					}
 					return null;
 				});
 		jassProgramVisitor.getJassNativeManager().createNative("ResetTrigger",
 				(arguments, globalScope, triggerScope) -> {
-					final Trigger trigger = arguments.get(0).visit(ObjectJassValueVisitor.<Trigger>getInstance());
-					trigger.reset();
+					final Trigger trigger = nullableWithWarning(arguments, 0, ObjectJassValueVisitor.<Trigger>getInstance(), globalScope, triggerScope);
+					if (trigger != null) {
+						trigger.reset();
+					}
 					return null;
 				});
 		jassProgramVisitor.getJassNativeManager().createNative("EnableTrigger",
 				(arguments, globalScope, triggerScope) -> {
-					final Trigger trigger = arguments.get(0).visit(ObjectJassValueVisitor.<Trigger>getInstance());
-					trigger.setEnabled(true);
+					final Trigger trigger = nullableWithWarning(arguments, 0, ObjectJassValueVisitor.<Trigger>getInstance(), globalScope, triggerScope);
+					if (trigger != null) {
+						trigger.setEnabled(true);
+					}
 					return null;
 				});
 		jassProgramVisitor.getJassNativeManager().createNative("DisableTrigger",
 				(arguments, globalScope, triggerScope) -> {
-					final Trigger trigger = arguments.get(0).visit(ObjectJassValueVisitor.<Trigger>getInstance());
-					trigger.setEnabled(false);
+					final Trigger trigger = nullableWithWarning(arguments, 0, ObjectJassValueVisitor.<Trigger>getInstance(), globalScope, triggerScope);
+					if (trigger != null) {
+						trigger.setEnabled(false);
+					}
 					return null;
 				});
 		jassProgramVisitor.getJassNativeManager().createNative("IsTriggerEnabled",
 				(arguments, globalScope, triggerScope) -> {
-					final Trigger trigger = arguments.get(0).visit(ObjectJassValueVisitor.<Trigger>getInstance());
-					return BooleanJassValue.of(trigger.isEnabled());
+					final Trigger trigger = nullableWithWarning(arguments, 0, ObjectJassValueVisitor.<Trigger>getInstance(), globalScope, triggerScope);
+					if (trigger != null) {
+						return BooleanJassValue.of(trigger.isEnabled());
+					}
+					return BooleanJassValue.FALSE;
 				});
 		jassProgramVisitor.getJassNativeManager().createNative("TriggerWaitOnSleeps",
 				(arguments, globalScope, triggerScope) -> {
-					final Trigger trigger = arguments.get(0).visit(ObjectJassValueVisitor.<Trigger>getInstance());
+					final Trigger trigger = nullableWithWarning(arguments, 0, ObjectJassValueVisitor.<Trigger>getInstance(), globalScope, triggerScope);
 					final Boolean value = arguments.get(1).visit(BooleanJassValueVisitor.getInstance());
-					trigger.setWaitOnSleeps(value.booleanValue());
+					if (trigger != null) {
+						trigger.setWaitOnSleeps(value.booleanValue());
+					}
 					return null;
 				});
 		jassProgramVisitor.getJassNativeManager().createNative("IsTriggerWaitOnSleeps",
 				(arguments, globalScope, triggerScope) -> {
-					final Trigger trigger = arguments.get(0).visit(ObjectJassValueVisitor.<Trigger>getInstance());
-					return BooleanJassValue.of(trigger.isWaitOnSleeps());
+					final Trigger trigger = nullableWithWarning(arguments, 0, ObjectJassValueVisitor.<Trigger>getInstance(), globalScope, triggerScope);
+					if (trigger != null) {
+						return BooleanJassValue.of(trigger.isWaitOnSleeps());
+					}
+					return BooleanJassValue.FALSE;
 				});
 		jassProgramVisitor.getJassNativeManager().createNative("GetTriggeringTrigger",
 				(arguments, globalScope, triggerScope) -> {
@@ -9667,13 +9683,19 @@ public class Jass2 {
 				});
 		jassProgramVisitor.getJassNativeManager().createNative("GetTriggerEvalCount",
 				(arguments, globalScope, triggerScope) -> {
-					final Trigger trigger = arguments.get(0).visit(ObjectJassValueVisitor.<Trigger>getInstance());
-					return IntegerJassValue.of(trigger.getEvalCount());
+					final Trigger trigger = nullableWithWarning(arguments, 0, ObjectJassValueVisitor.<Trigger>getInstance(), globalScope, triggerScope);
+					if (trigger != null) {
+						return IntegerJassValue.of(trigger.getEvalCount());
+					}
+					return IntegerJassValue.ZERO;
 				});
 		jassProgramVisitor.getJassNativeManager().createNative("GetTriggerExecCount",
 				(arguments, globalScope, triggerScope) -> {
-					final Trigger trigger = arguments.get(0).visit(ObjectJassValueVisitor.<Trigger>getInstance());
-					return IntegerJassValue.of(trigger.getExecCount());
+					final Trigger trigger = nullableWithWarning(arguments, 0, ObjectJassValueVisitor.<Trigger>getInstance(), globalScope, triggerScope);
+					if (trigger != null) {
+						return IntegerJassValue.of(trigger.getExecCount());
+					}
+					return IntegerJassValue.ZERO;
 				});
 		jassProgramVisitor.getJassNativeManager().createNative("ExecuteFunc",
 				(arguments, globalScope, triggerScope) -> {

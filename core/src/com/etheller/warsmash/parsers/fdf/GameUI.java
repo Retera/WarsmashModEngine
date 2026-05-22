@@ -222,22 +222,26 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 	}
 
 	public void loadTOCFile(final String tocFilePath) throws IOException {
-		final DataSourceFDFParserBuilder dataSourceFDFParserBuilder = new DataSourceFDFParserBuilder(this.dataSource);
-		final FrameDefinitionVisitor fdfVisitor = new FrameDefinitionVisitor(this.templates,
-				dataSourceFDFParserBuilder);
-		System.out.println("Loading TOC file: " + tocFilePath);
-		try (BufferedReader reader = new BufferedReader(
-				new InputStreamReader(this.dataSource.getResourceAsStream(tocFilePath)))) {
-			String line;
-			int tocLines = 0;
-			while ((line = reader.readLine()) != null) {
-				final FDFParser firstFileParser = dataSourceFDFParserBuilder.build(line);
-				if (firstFileParser != null) {
-					fdfVisitor.visit(firstFileParser.program());
+		if (this.dataSource.has(tocFilePath)) {
+			final DataSourceFDFParserBuilder dataSourceFDFParserBuilder = new DataSourceFDFParserBuilder(this.dataSource);
+			final FrameDefinitionVisitor fdfVisitor = new FrameDefinitionVisitor(this.templates,
+					dataSourceFDFParserBuilder);
+			System.out.println("Loading TOC file: " + tocFilePath);
+			try (BufferedReader reader = new BufferedReader(
+					new InputStreamReader(this.dataSource.getResourceAsStream(tocFilePath)))) {
+				String line;
+				int tocLines = 0;
+				while ((line = reader.readLine()) != null) {
+					final FDFParser firstFileParser = dataSourceFDFParserBuilder.build(line);
+					if (firstFileParser != null) {
+						fdfVisitor.visit(firstFileParser.program());
+					}
+					tocLines++;
 				}
-				tocLines++;
+				System.out.println("TOC file loaded " + tocLines + " lines");
 			}
-			System.out.println("TOC file loaded " + tocLines + " lines");
+		} else {
+			System.err.println("TOC file not found: " + tocFilePath);
 		}
 	}
 

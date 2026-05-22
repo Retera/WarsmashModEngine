@@ -39,7 +39,9 @@ public class Main {
 				String line;
 				while ((line = reader.readLine()) != null) {
 					final FDFParser firstFileParser = dataSourceFDFParserBuilder.build(line);
-					fdfVisitor.visit(firstFileParser.program());
+					if (firstFileParser != null) {
+						fdfVisitor.visit(firstFileParser.program());
+					}
 				}
 			}
 

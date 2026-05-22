@@ -1,6 +1,8 @@
 package com.etheller.warsmash.fdfparser;
 
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 import org.antlr.v4.runtime.BaseErrorListener;
 import org.antlr.v4.runtime.CharStreams;
@@ -15,13 +17,17 @@ public class TestFDFParserBuilder implements FDFParserBuilder {
 
 	@Override
 	public FDFParser build(final String path) {
-		FDFLexer lexer;
-		try {
-			lexer = new FDFLexer(CharStreams.fromFileName(path));
+		if (Files.exists(Path.of(path))) {
+			FDFLexer lexer;
+			try {
+				lexer = new FDFLexer(CharStreams.fromFileName(path));
+			} catch (final IOException e) {
+				throw new RuntimeException(e);
+			}
+			return new FDFParser(new CommonTokenStream(lexer));
+		} else {
+			System.err.println("File " + path + " does not exist.");
+			return null;
 		}
-		catch (final IOException e) {
-			throw new RuntimeException(e);
-		}
-		return new FDFParser(new CommonTokenStream(lexer));
 	}
 }

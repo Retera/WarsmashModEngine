@@ -58,8 +58,14 @@ public class ArrayJassValue implements JassValue {
 		this.data[index] = value;
 	}
 
-	public JassValue get(final int index) {
-		return this.data[index];
+	public JassValue get(final GlobalScope globalScope, final int index) {
+		if (index >= 0 && index <  this.data.length) {
+			return this.data[index];
+		} else {
+			System.err.println(JassException.message(globalScope, "Invalid JASS array index " + index + " when getting a value."));
+
+			return this.type.getNullValue();
+		}
 	}
 
 	public ArrayJassType getType() {

@@ -17,7 +17,7 @@ public class ArrayReferenceInstruction implements JassInstruction {
 		}
 		final ArrayJassValue arrayValue = referencedValue.visit(ArrayJassValueVisitor.getInstance());
 		if (arrayValue != null) {
-			thread.stackFrame.push(arrayValue.get(indexValue.visit(IntegerJassValueVisitor.getInstance())));
+			thread.stackFrame.push(arrayValue.get(thread.globalScope, indexValue.visit(IntegerJassValueVisitor.getInstance())));
 		}
 		else {
 			throw new RuntimeException("Not an array");

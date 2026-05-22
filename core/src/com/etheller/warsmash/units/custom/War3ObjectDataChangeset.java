@@ -8,6 +8,7 @@ import java.nio.CharBuffer;
 import java.nio.charset.Charset;
 import java.nio.charset.CharsetEncoder;
 import java.nio.charset.CodingErrorAction;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -28,6 +29,7 @@ import com.google.common.io.LittleEndianDataOutputStream;
  *
  * @author Eric
  *
+ * Reforged spec: https://github.com/stijnherfst/HiveWE/wiki/war3map(skin).w3*-Modifications
  */
 public final class War3ObjectDataChangeset {
 	public static final int VAR_TYPE_INT = 0;
@@ -480,10 +482,8 @@ public final class War3ObjectDataChangeset {
 			final WTS wts, final boolean inlineWTS) throws IOException {
 		final War3ID noid = new War3ID(0);
 		final StringBuilder stringBuilder = new StringBuilder();
-		int ptr;
 		final int count = stream.readInt();
 		for (int i = 0; i < count; i++) {
-			final long nanoTime = System.nanoTime();
 			War3ID origid;
 			War3ID newid = null;
 			origid = readWar3ID(stream);
@@ -497,8 +497,7 @@ public final class War3ObjectDataChangeset {
 					existingObject = new ObjectDataChangeEntry(origid, noid);
 				}
 				existingObject.setNewId(readWar3ID(stream));
-			}
-			else {
+			} else {
 				newid = readWar3ID(stream);
 				if (noid.equals(origid) || noid.equals(newid)) {
 					throw new IOException("the input stream might be screwed");
@@ -508,118 +507,134 @@ public final class War3ObjectDataChangeset {
 					existingObject = new ObjectDataChangeEntry(origid, newid);
 				}
 			}
+
+			int setsCount = 1;
+
 			if (this.version >= 3) {
-				final int reforged133JunkCount = stream.readInt();
-				for (int reforged133JunkIndex = 0; reforged133JunkIndex < reforged133JunkCount; reforged133JunkIndex++) {
-					final int reforgedJunk = stream.readInt();
-				}
+				setsCount = stream.readInt();
 			}
-			final int ccount = stream.readInt();// Retera: I assume this is change count?
-			if ((ccount == 0) && isOriginal) {
-				// throw new IOException("we seem to have reached the end of the stream and get
-				// zeroes");
-				System.err.println("we seem to have reached the end of the stream and get zeroes");
-			}
-			if (isOriginal) {
-				debugprint("StandardUnit \"" + origid + "\" " + ccount + " {");
-			}
-			else {
-				debugprint("CustomUnit \"" + origid + ":" + newid + "\" " + ccount + " {");
-			}
-			for (int j = 0; j < ccount; j++) {
-				final War3ID chid = readWar3ID(stream);
-				if (noid.equals(chid)) {
-					throw new IOException("the input stream might be screwed");
-				}
-				if (!this.detected) {
-					this.detected = detectKind(chid);
+
+			debugprint("setsCount " + setsCount);
+
+			for (int setIndex = 0; setIndex < setsCount; setIndex++) {
+
+				if (this.version >= 3) {
+					final int setFlag = stream.readInt();
+
+					debugprint("setFlag " + setFlag);
 				}
 
-				final Change newlyReadChange = new Change();
-				newlyReadChange.setId(chid);
-				newlyReadChange.setVartype(stream.readInt());
-				debugprint("\t\"" + chid + "\" {");
-				debugprint("\t\tType " + newlyReadChange.getVartype() + ",");
-				if (extended()) {
-					newlyReadChange.setLevel(stream.readInt());
-					newlyReadChange.setDataptr(stream.readInt());
-					debugprint("\t\tLevel " + newlyReadChange.getLevel() + ",");
-					debugprint("\t\tData " + newlyReadChange.getDataptr() + ",");
-				}
+				final int ccount = stream.readInt();// Retera: I assume this is change count?
 
-				switch (newlyReadChange.getVartype()) {
-				case 0:
-					newlyReadChange.setLongval(stream.readInt());
-					debugprint("\t\tValue " + newlyReadChange.getLongval() + ",");
-					break;
-				case 3:
-					ptr = 0;
-					stringBuilder.setLength(0);
-					int charRead;
-					while ((charRead = stream.read()) != 0) {
-						stringBuilder.append((char) charRead);
+				debugprint("ccount " + ccount);
+
+				if ((ccount == 0) && isOriginal) {
+					// tdauth: This seems to happen if object data has been reset in the World Editor but still is stored with zero modifications in the object data.
+					// throw new IOException("we seem to have reached the end of the stream and get
+					// zeroes");
+					//System.err.println("we seem to have reached the end of the stream and get zeroes");
+				}
+				if (isOriginal) {
+					debugprint("(" + i + "/" + count + ") StandardObject \"" + origid + "\" " + ccount + " {");
+				} else {
+					debugprint("(" + i + "/" + count + ") CustomObject \"" + origid + ":" + newid + "\" " + ccount + " {");
+				}
+				for (int j = 0; j < ccount; j++) {
+					final War3ID chid = readWar3ID(stream);
+					if (noid.equals(chid)) {
+						throw new IOException("the input stream might be screwed");
 					}
-					newlyReadChange.setStrval(stringBuilder.toString());
-					if (inlineWTS && (newlyReadChange.getStrval().length() > 8)
-							&& "TRIGSTR_".equals(newlyReadChange.getStrval().substring(0, 8))) {
-						final int key = getWTSValue(newlyReadChange);
-						newlyReadChange.setStrval(wts.get(key));
-						if ((newlyReadChange.getStrval() != null)
-								&& (newlyReadChange.getStrval().length() > MAX_STR_LEN)) {
-							newlyReadChange.setStrval(newlyReadChange.getStrval().substring(0, MAX_STR_LEN - 1));
+					if (!this.detected) {
+						this.detected = detectKind(chid);
+					}
+
+					final Change newlyReadChange = new Change();
+					newlyReadChange.setId(chid);
+					newlyReadChange.setVartype(stream.readInt());
+					debugprint("\t\"" + chid + "\" {");
+					debugprint("\t\tType " + newlyReadChange.getVartype() + ",");
+					if (extended()) {
+						newlyReadChange.setLevel(stream.readInt());
+						newlyReadChange.setDataptr(stream.readInt());
+						debugprint("\t\tLevel " + newlyReadChange.getLevel() + ",");
+						debugprint("\t\tData " + newlyReadChange.getDataptr() + ",");
+					}
+
+					switch (newlyReadChange.getVartype()) {
+						case 0: {
+							newlyReadChange.setLongval(stream.readInt());
+							debugprint("\t\tValue " + newlyReadChange.getLongval() + ",");
+							break;
+						}
+						case 3: {
+							stringBuilder.setLength(0);
+							int charRead;
+							while ((charRead = stream.read()) != 0) {
+								stringBuilder.append((char) charRead);
+							}
+							newlyReadChange.setStrval(stringBuilder.toString());
+							if (inlineWTS && (newlyReadChange.getStrval().length() > 8)
+									&& "TRIGSTR_".equals(newlyReadChange.getStrval().substring(0, 8))) {
+								final int key = getWTSValue(newlyReadChange);
+								newlyReadChange.setStrval(wts.get(key));
+								if ((newlyReadChange.getStrval() != null)
+										&& (newlyReadChange.getStrval().length() > MAX_STR_LEN)) {
+									newlyReadChange.setStrval(newlyReadChange.getStrval().substring(0, MAX_STR_LEN - 1));
+								}
+							}
+							debugprint("\t\tValue \"" + newlyReadChange.getStrval() + "\",");
+							break;
+						}
+						case 4: {
+							newlyReadChange.setBoolval(stream.readInt() == 1);
+							debugprint("\t\tValue " + newlyReadChange.isBoolval() + ",");
+							break;
+						}
+						default: {
+							newlyReadChange.setRealval(stream.readFloat());
+							debugprint("\t\tValue " + newlyReadChange.getRealval() + ",");
+							break;
 						}
 					}
-					debugprint("\t\tValue \"" + newlyReadChange.getStrval() + "\",");
-					break;
-				case 4:
-					newlyReadChange.setBoolval(stream.readInt() == 1);
-					debugprint("\t\tValue " + newlyReadChange.isBoolval() + ",");
-					break;
-				default:
-					newlyReadChange.setRealval(stream.readFloat());
-					debugprint("\t\tValue " + newlyReadChange.getRealval() + ",");
-					break;
-				}
-				final War3ID crap = readWar3ID(stream);
-				debugprint("\t\tExtra \"" + crap + "\",");
-				newlyReadChange.setJunkDNA(crap);
-				List<Change> existingChanges = existingObject.getChanges().get(chid);
-				if (existingChanges == null) {
-					existingChanges = new ArrayList<>();
-				}
-				Change bestTargetChange = null;
-				for (final Change targetChange : existingChanges) {
-					if (targetChange.getLevel() == newlyReadChange.getLevel()) {
-						bestTargetChange = targetChange;
-						break;
+					final War3ID crap = readWar3ID(stream);
+					debugprint("\t\tExtra \"" + crap + "\",");
+					newlyReadChange.setJunkDNA(crap);
+					List<Change> existingChanges = existingObject.getChanges().get(chid);
+					if (existingChanges == null) {
+						existingChanges = new ArrayList<>();
 					}
-				}
-				if (bestTargetChange != null) {
-					bestTargetChange.copyFrom(newlyReadChange);
-				}
-				else {
-					existingChanges.add(newlyReadChange.clone());
-					if (existingChanges.size() == 1) {
-						existingObject.getChanges().add(chid, existingChanges);
-					}
-				}
-				if (!crap.equals(existingObject.getOldId()) && !crap.equals(existingObject.getNewId())
-						&& !crap.equals(noid)) {
-					for (int charIndex = 0; charIndex < 4; charIndex++) {
-						if ((crap.charAt(charIndex) < 32) || (crap.charAt(charIndex) > 126)) {
-							return false;
+					Change bestTargetChange = null;
+					for (final Change targetChange : existingChanges) {
+						if (targetChange.getLevel() == newlyReadChange.getLevel()) {
+							bestTargetChange = targetChange;
+							break;
 						}
 					}
+					if (bestTargetChange != null) {
+						bestTargetChange.copyFrom(newlyReadChange);
+					} else {
+						existingChanges.add(newlyReadChange.clone());
+						if (existingChanges.size() == 1) {
+							existingObject.getChanges().add(chid, existingChanges);
+						}
+					}
+					if (!crap.equals(existingObject.getOldId()) && !crap.equals(existingObject.getNewId())
+							&& !crap.equals(noid)) {
+						for (int charIndex = 0; charIndex < 4; charIndex++) {
+							if ((crap.charAt(charIndex) < 32) || (crap.charAt(charIndex) > 126)) {
+								return false;
+							}
+						}
+					}
+					debugprint("\t}");
 				}
-				debugprint("\t}");
 			}
+
 			debugprint("}");
 			if ((newid == null) && !isOriginal) {
 				throw new IllegalStateException("custom unit has no ID!");
 			}
 			map.put(isOriginal ? origid : newid, existingObject);
-			final long endNanoTime = System.nanoTime();
-			final long deltaNanoTime = endNanoTime - nanoTime;
 		}
 		return true;
 	}
@@ -710,8 +725,20 @@ public final class War3ObjectDataChangeset {
 		final CharBuffer charBuffer = CharBuffer.allocate(1024);
 		final ByteBuffer byteBuffer = ByteBuffer.allocate(1024);
 		final War3ID noid = new War3ID(0);
-		int count;
-		count = map.size();
+		int count = 0;
+
+		for (final Map.Entry<War3ID, ObjectDataChangeEntry> entry : map) {
+			final ObjectDataChangeEntry cl = entry.getValue();
+			int totalSize = 0;
+			for (final Map.Entry<War3ID, List<Change>> changeEntry : cl.getChanges()) {
+				totalSize += changeEntry.getValue().size();
+			}
+
+			if ((totalSize > 0) || !isOriginal) {
+				count++;
+			}
+		}
+
 		outputStream.writeInt(count);
 		for (final Map.Entry<War3ID, ObjectDataChangeEntry> entry : map) {
 			final ObjectDataChangeEntry cl = entry.getValue();
@@ -723,12 +750,11 @@ public final class War3ObjectDataChangeset {
 				ParseUtils.writeWar3ID(outputStream, cl.getOldId());
 				ParseUtils.writeWar3ID(outputStream, cl.getNewId());
 				if (this.version >= 3) {
-					outputStream.writeInt(1);
-					outputStream.writeInt(0);
+					outputStream.writeInt(1); // set count
+					outputStream.writeInt(0); // set flag for the first set
 				}
-				count = totalSize;// cl.getChanges().size();
-				outputStream.writeInt(count);
-				for (final Map.Entry<War3ID, List<Change>> changes : entry.getValue().getChanges()) {
+				outputStream.writeInt(totalSize);
+				for (final Map.Entry<War3ID, List<Change>> changes : cl.getChanges()) {
 					for (final Change change : changes.getValue()) {
 						ParseUtils.writeWar3ID(outputStream, change.getId());
 						outputStream.writeInt(change.getVartype());
@@ -737,30 +763,34 @@ public final class War3ObjectDataChangeset {
 							outputStream.writeInt(change.getDataptr());
 						}
 						switch (change.getVartype()) {
-						case 0:
-							outputStream.writeInt(change.getLongval());
-							break;
-						case 3:
-							charBuffer.clear();
-							byteBuffer.clear();
-							charBuffer.put(change.getStrval());
-							charBuffer.flip();
-							encoder.encode(charBuffer, byteBuffer, false);
-							byteBuffer.flip();
-							final byte[] stringBytes = new byte[byteBuffer.remaining() + 1];
-							int i = 0;
-							while (byteBuffer.hasRemaining()) {
-								stringBytes[i++] = byteBuffer.get();
+							case 0: {
+								outputStream.writeInt(change.getLongval());
+								break;
 							}
-							stringBytes[i] = 0;
-							outputStream.write(stringBytes);
-							break;
-						case 4:
-							outputStream.writeInt(change.isBoolval() ? 1 : 0);
-							break;
-						default:
-							outputStream.writeFloat(change.getRealval());
-							break;
+							case 3: {
+								charBuffer.clear();
+								byteBuffer.clear();
+								charBuffer.put(change.getStrval());
+								charBuffer.flip();
+								encoder.encode(charBuffer, byteBuffer, false);
+								byteBuffer.flip();
+								final byte[] stringBytes = new byte[byteBuffer.remaining() + 1];
+								int i = 0;
+								while (byteBuffer.hasRemaining()) {
+									stringBytes[i++] = byteBuffer.get();
+								}
+								stringBytes[i] = 0;
+								outputStream.write(stringBytes);
+								break;
+							}
+							case 4: {
+								outputStream.writeInt(change.isBoolval() ? 1 : 0);
+								break;
+							}
+							default: {
+								outputStream.writeFloat(change.getRealval());
+								break;
+							}
 						}
 						// if (change.getJunkDNA() == null) {
 						// saveWriteChars(outputStream, cl.getNewId().asStringValue().toCharArray());
@@ -801,6 +831,6 @@ public final class War3ObjectDataChangeset {
 	}
 
 	private static void debugprint(final String s) {
-
+		//System.out.println(s);
 	}
 }

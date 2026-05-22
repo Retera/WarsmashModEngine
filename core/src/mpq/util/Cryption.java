@@ -104,8 +104,9 @@ public class Cryption {
 		int seed1 = 0x7FED7FED;
 		int seed2 = 0xEEEEEEEE;
 		for (final byte ch : in) {
-			seed1 = CRYPT_TABLE[(HashType * 0x100) + ch] ^ (seed1 + seed2);
-			seed2 = ch + seed1 + seed2 + (seed2 << 5) + 3;
+			int unsignedCh = ch & 0xFF; // tdauth: Fix  ArrayIndexOutOfBoundsException: Index -30 out of bounds for length 1280.
+			seed1 = CRYPT_TABLE[(HashType * 0x100) + unsignedCh] ^ (seed1 + seed2);
+			seed2 = unsignedCh + seed1 + seed2 + (seed2 << 5) + 3;
 		}
 		return seed1;
 	}

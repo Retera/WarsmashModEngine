@@ -5,11 +5,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.etheller.warsmash.util.ParseUtils;
+import com.etheller.warsmash.util.War3ID;
 import com.google.common.io.LittleEndianDataInputStream;
 import com.google.common.io.LittleEndianDataOutputStream;
 
 /**
  * war3map.w3i - the general map information file.
+ * https://github.com/ChiefOfGxBxL/WC3MapSpecification/blob/master/Info/0-33.md
  */
 public class War3MapW3i {
 	private int version;
@@ -33,7 +35,7 @@ public class War3MapW3i {
 	private String loadingScreenText;
 	private String loadingScreenTitle;
 	private String loadingScreenSubtitle;
-	private int gameDataSet;
+	private int gameDataSet = 0;
 	private String prologueScreenModel;
 	private String prologueScreenText;
 	private String prologueScreenTitle;
@@ -42,13 +44,16 @@ public class War3MapW3i {
 	private final float[] fogHeight = new float[2];
 	private float fogDensity;
 	private final short[] fogColor = new short[4];
-	private int globalWeather;
+	private War3ID globalWeather;
 	private String soundEnvironment;
 	private char lightEnvironmentTileset;
 	private final short[] waterVertexColor = new short[4];
-	private final short[] unknown2ProbablyLua = new short[4];
-	private long supportedModes;
-	private long gameDataVersion;
+	private int scriptLanguage = 0; // 0 = JASS, 1 = Lua
+	private long supportedModes; // 1=SD, 2=HD, 3=SD+HD
+	private long gameDataVersion = 0; // 0=ROC, 1=TFT
+	private int forceDefaultCameraZoom;
+	private int forceMaxCameraZoom;
+	private int forceMinCameraZoom;
 	private final List<Player> players = new ArrayList<>();
 	private final List<Force> forces = new ArrayList<>();
 	private final List<UpgradeAvailabilityChange> upgradeAvailabilityChanges = new ArrayList<>();
@@ -83,45 +88,78 @@ public class War3MapW3i {
 		ParseUtils.readInt32Array(stream, this.playableSize);
 		this.flags = ParseUtils.readUInt32(stream);
 		this.tileset = (char) stream.read();
-		this.campaignBackground = stream.readInt();
 
-		if (this.version > 24) {
+		if (this.version >= 17) {
+			this.campaignBackground = stream.readInt();
+		}
+
+		if (this.version >= 10 && this.version != 18 && this.version != 19) {
 			this.loadingScreenModel = ParseUtils.readUntilNull(stream);
 		}
 
-		this.loadingScreenText = ParseUtils.readUntilNull(stream);
-		this.loadingScreenTitle = ParseUtils.readUntilNull(stream);
-		this.loadingScreenSubtitle = ParseUtils.readUntilNull(stream);
-		this.gameDataSet = stream.readInt();
+		if (this.version >= 10) {
+			this.loadingScreenText = ParseUtils.readUntilNull(stream);
+		}
 
-		if (this.version > 24) {
+		if (this.version >= 11) {
+			this.loadingScreenTitle = ParseUtils.readUntilNull(stream);
+			this.loadingScreenSubtitle = ParseUtils.readUntilNull(stream);
+		}
+
+		if (this.version >= 17) {
+			this.gameDataSet = stream.readInt();
+		}
+
+		if (this.version >= 13 && this.version != 18 && this.version != 19) {
 			this.prologueScreenModel = ParseUtils.readUntilNull(stream);
 		}
 
-		this.prologueScreenText = ParseUtils.readUntilNull(stream);
-		this.prologueScreenTitle = ParseUtils.readUntilNull(stream);
-		this.prologueScreenSubtitle = ParseUtils.readUntilNull(stream);
+		if (this.version >= 13) {
+			this.prologueScreenText = ParseUtils.readUntilNull(stream);
+			this.prologueScreenTitle = ParseUtils.readUntilNull(stream);
+			this.prologueScreenSubtitle = ParseUtils.readUntilNull(stream);
+		}
 
-		if (this.version > 24) {
+		if (this.version >= 19) {
 			this.useTerrainFog = stream.readInt();
 			ParseUtils.readFloatArray(stream, this.fogHeight);
 			this.fogDensity = stream.readFloat();
 			ParseUtils.readUInt8Array(stream, this.fogColor);
-			this.globalWeather = stream.readInt(); // TODO probably war3id, right?
+		}
+
+		if (this.version >= 21) {
+			this.globalWeather = ParseUtils.readWar3ID(stream);
+		}
+
+		if (this.version >= 22) {
 			this.soundEnvironment = ParseUtils.readUntilNull(stream);
+		}
+
+		if (this.version >= 23) {
 			this.lightEnvironmentTileset = (char) stream.read();
+		}
+
+		if (this.version >= 25) {
 			ParseUtils.readUInt8Array(stream, this.waterVertexColor);
 		}
 
-		if (this.version > 27) {
-			ParseUtils.readUInt8Array(stream, this.unknown2ProbablyLua);
+		if (this.version >= 28) {
+			this.scriptLanguage = stream.readInt();
 		}
-		if (this.version > 30) {
+		if (this.version >= 29) {
 			this.supportedModes = ParseUtils.readUInt32(stream);
+		}
+		if (this.version >= 30) {
 			this.gameDataVersion = ParseUtils.readUInt32(stream);
 		}
-		else {
-			this.gameDataVersion = -1; // indicate to the outside that this was unspecified
+
+		if (this.version >= 32) {
+			this.forceDefaultCameraZoom = stream.readInt();
+			this.forceMaxCameraZoom = stream.readInt();
+		}
+
+		if (this.version >= 33) {
+			this.forceMinCameraZoom = stream.readInt();
 		}
 
 		for (int i = 0, l = stream.readInt(); i < l; i++) {
@@ -144,6 +182,7 @@ public class War3MapW3i {
 			// some kind of really stupid protected map???
 			return;
 		}
+
 		if (stream.available() > 0) {
 			for (int i = 0, l = stream.readInt(); i < l; i++) {
 				final UpgradeAvailabilityChange upgradeAvailabilityChange = new UpgradeAvailabilityChange();
@@ -208,49 +247,86 @@ public class War3MapW3i {
 		ParseUtils.writeInt32Array(stream, this.playableSize);
 		ParseUtils.writeUInt32(stream, this.flags);
 		stream.write((byte) this.tileset);
-		stream.writeInt(this.campaignBackground);
 
-		if (this.version > 24) {
+		if (this.version >= 17) {
+			stream.writeInt(this.campaignBackground);
+		}
+
+		if (this.version >= 10 && this.version != 18 && this.version != 19) {
 			ParseUtils.writeWithNullTerminator(stream, this.loadingScreenModel);
 		}
 
-		ParseUtils.writeWithNullTerminator(stream, this.loadingScreenText);
-		ParseUtils.writeWithNullTerminator(stream, this.loadingScreenTitle);
-		ParseUtils.writeWithNullTerminator(stream, this.loadingScreenSubtitle);
-		stream.writeInt(this.gameDataSet);
+		if (this.version >= 10) {
+			ParseUtils.writeWithNullTerminator(stream, this.loadingScreenText);
+		}
 
-		if (this.version > 24) {
+		if (this.version >= 11) {
+			ParseUtils.writeWithNullTerminator(stream, this.loadingScreenTitle);
+			ParseUtils.writeWithNullTerminator(stream, this.loadingScreenSubtitle);
+		}
+
+		if (this.version >= 17) {
+			stream.writeInt(this.gameDataSet);
+		}
+
+		if (this.version >= 13 && this.version != 18 && this.version != 19) {
 			ParseUtils.writeWithNullTerminator(stream, this.prologueScreenModel);
 		}
 
-		ParseUtils.writeWithNullTerminator(stream, this.prologueScreenText);
-		ParseUtils.writeWithNullTerminator(stream, this.prologueScreenTitle);
-		ParseUtils.writeWithNullTerminator(stream, this.prologueScreenSubtitle);
+		if (this.version >= 13) {
+			ParseUtils.writeWithNullTerminator(stream, this.prologueScreenText);
+			ParseUtils.writeWithNullTerminator(stream, this.prologueScreenTitle);
+			ParseUtils.writeWithNullTerminator(stream, this.prologueScreenSubtitle);
+		}
 
-		if (this.version > 24) {
+		if (this.version >= 19) {
 			stream.writeInt(this.useTerrainFog);
 			ParseUtils.writeFloatArray(stream, this.fogHeight);
 			stream.writeFloat(this.fogDensity);
 			ParseUtils.writeUInt8Array(stream, this.fogColor);
-			stream.writeInt(this.globalWeather); // TODO War3ID???
+		}
+
+		if (this.version >= 21) {
+			ParseUtils.writeWar3ID(stream, this.globalWeather);
+		}
+
+		if (this.version >= 22) {
 			ParseUtils.writeWithNullTerminator(stream, this.soundEnvironment);
+		}
+
+		if (this.version >= 23) {
 			stream.write((byte) this.lightEnvironmentTileset);
+		}
+
+		if (this.version >= 25) {
 			ParseUtils.writeUInt8Array(stream, this.waterVertexColor);
 		}
 
-		if (this.version > 27) {
-			ParseUtils.writeUInt8Array(stream, this.unknown2ProbablyLua);
+		if (this.version >= 28) {
+			ParseUtils.writeUInt32(stream, this.scriptLanguage);
 		}
 
-		if (this.version > 30) {
+		if (this.version >= 29) {
 			ParseUtils.writeUInt32(stream, this.supportedModes);
+		}
+
+		if (this.version >= 30) {
 			ParseUtils.writeUInt32(stream, this.gameDataVersion);
+		}
+
+		if (this.version >= 32) {
+			ParseUtils.writeUInt32(stream, this.forceDefaultCameraZoom);
+			ParseUtils.writeUInt32(stream, this.forceMaxCameraZoom);
+		}
+
+		if (this.version >= 33) {
+			ParseUtils.writeUInt32(stream, this.forceMinCameraZoom);
 		}
 
 		ParseUtils.writeUInt32(stream, this.players.size());
 
 		for (final Player player : this.players) {
-			player.save(stream);
+			player.save(stream, this.version);
 		}
 
 		ParseUtils.writeUInt32(stream, this.forces.size());
@@ -284,41 +360,6 @@ public class War3MapW3i {
 				table.save(stream);
 			}
 		}
-
-	}
-
-	public int getByteLength() {
-		int size = 111 + this.name.length() + this.author.length() + this.description.length()
-				+ this.recommendedPlayers.length() + this.loadingScreenText.length() + this.loadingScreenTitle.length()
-				+ this.loadingScreenSubtitle.length() + this.prologueScreenText.length()
-				+ this.prologueScreenTitle.length() + this.prologueScreenSubtitle.length();
-
-		for (final Player player : this.players) {
-			size += player.getByteLength();
-		}
-
-		for (final Force force : this.forces) {
-			size += force.getByteLength();
-		}
-
-		size += this.upgradeAvailabilityChanges.size() * 16;
-
-		size += this.techAvailabilityChanges.size() * 8;
-
-		for (final RandomUnitTable table : this.randomUnitTables) {
-			size += table.getByteLength();
-		}
-
-		if (this.version > 24) {
-			size += 36 + this.loadingScreenModel.length() + this.prologueScreenModel.length()
-					+ this.soundEnvironment.length();
-
-			for (final RandomItemTable table : this.randomItemTables) {
-				size += table.getByteLength();
-			}
-		}
-
-		return size;
 	}
 
 	public int getVersion() {
@@ -429,7 +470,7 @@ public class War3MapW3i {
 		return this.fogColor;
 	}
 
-	public int getGlobalWeather() {
+	public War3ID getGlobalWeather() {
 		return this.globalWeather;
 	}
 
@@ -445,8 +486,8 @@ public class War3MapW3i {
 		return this.waterVertexColor;
 	}
 
-	public short[] getUnknown2() {
-		return this.unknown2ProbablyLua;
+	public int getScriptLanguage() {
+		return this.scriptLanguage;
 	}
 
 	public long getSupportedModes() {

@@ -10,7 +10,7 @@ public class JassException extends RuntimeException {
 		super(message(globalScope, message), javaCause);
 	}
 
-	private static String message(final GlobalScope globalScope, final String message) {
+	public static String message(final GlobalScope globalScope, final String message) {
 		final List<JassStackElement> stackTrace = globalScope.copyJassStack();
 		final StringBuilder sb = new StringBuilder(message);
 		for (final JassStackElement element : stackTrace) {

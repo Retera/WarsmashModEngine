@@ -121,15 +121,22 @@ public class MeleeUIMinimap {
 					if (simUnit.isBuilding()) {
 						dimensions = 10;
 					}
+					if (this.teamColors[unit.getSimulationUnit().getPlayerIndex()] == null) {
+						System.err.println("Warning: minimapIcon team colors icon for player " + unit.getSimulationUnit().getPlayerIndex() + "is null");
+					}
 					minimapIcon = this.teamColors[unit.getSimulationUnit().getPlayerIndex()];
 				}
 				final int offset = dimensions / 2;
-				batch.draw(minimapIcon,
-						(this.minimapFilledArea.x + (((unit.location[0] - this.playableMapArea.getX())
-								/ (this.playableMapArea.getWidth())) * this.minimapFilledArea.width)) - offset,
-						(this.minimapFilledArea.y + (((unit.location[1] - this.playableMapArea.getY())
-								/ (this.playableMapArea.getHeight())) * this.minimapFilledArea.height)) - offset,
-						dimensions, dimensions);
+				if (minimapIcon != null) {
+					batch.draw(minimapIcon,
+							(this.minimapFilledArea.x + (((unit.location[0] - this.playableMapArea.getX())
+									/ (this.playableMapArea.getWidth())) * this.minimapFilledArea.width)) - offset,
+							(this.minimapFilledArea.y + (((unit.location[1] - this.playableMapArea.getY())
+									/ (this.playableMapArea.getHeight())) * this.minimapFilledArea.height)) - offset,
+							dimensions, dimensions);
+				} else {
+					System.err.println("Warning: minimapIcon is null for unit " + simUnit.getName() + " with type " + simUnit.getUnitType().getTypeId());
+				}
 				batch.setColor(1, 1, 1, 1);
 			}
 		}

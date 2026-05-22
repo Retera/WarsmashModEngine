@@ -25,7 +25,11 @@ public class MdlxLayer extends MdlxAnimatedObject {
 		}
 
 		public static FilterMode fromId(final int id) {
-			return values()[id];
+			if (id >= 0 && id < FilterMode.values().length) {
+				return values()[id];
+			}
+
+			return FilterMode.NONE;
 		}
 
 		public static int nameToId(final String name) {

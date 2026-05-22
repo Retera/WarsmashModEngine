@@ -45,6 +45,8 @@ public interface WarsmashUI extends CommandErrorListener, WarsmashBaseUI {
 
 	CTimerDialog createTimerDialog(CTimer timer);
 
+	void setTimerDialogTitle(CTimerDialog timerDialog, String title);
+
 	void removedUnit(CUnit whichUnit);
 
 	void removedItem(CItem whichItem);

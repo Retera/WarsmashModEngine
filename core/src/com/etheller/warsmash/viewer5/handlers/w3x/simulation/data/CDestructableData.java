@@ -71,7 +71,7 @@ public class CDestructableData {
 			final int lumberRepairCost = unitType.getFieldAsInteger(LUMBER_REPAIR, 0);
 			final float occlusionHeight = unitType.getFieldAsFloat(OCCLUSION_HEIGHT, 0);
 
-			unitTypeInstance = new CDestructableType(name, life, targetedAs, armorType, buildTime, goldRepairCost,
+			unitTypeInstance = new CDestructableType(typeId, name, life, targetedAs, armorType, buildTime, goldRepairCost,
 					lumberRepairCost, repairTime, occlusionHeight, buildingPathingPixelMap,
 					buildingPathingDeathPixelMap);
 			this.unitIdToUnitType.put(typeId, unitTypeInstance);

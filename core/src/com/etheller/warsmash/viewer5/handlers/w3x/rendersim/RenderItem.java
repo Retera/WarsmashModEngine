@@ -30,25 +30,27 @@ public class RenderItem implements RenderWidget {
 			final float angle, final CItem simulationItem) {
 		this.portraitModel = itemType.getPortraitModel();
 		this.simulationItem = simulationItem;
-		final MdxComplexInstance instance = (MdxComplexInstance) itemType.getModel().addInstance();
-
 		this.location[0] = x;
 		this.location[1] = y;
 		this.location[2] = z;
-		instance.move(this.location);
-//		instance.localRotation.setFromAxisRad(RenderMathUtils.VEC3_UNIT_Z, angle);
-		instance.rotate(new Quaternion().setFromAxisRad(RenderMathUtils.VEC3_UNIT_Z, angle));
-		instance.setScene(map.worldScene);
+		this.radius = 1 * 36;
 
-		if (itemType != null) {
+		if (itemType.getModel() != null) {
+			final MdxComplexInstance instance = (MdxComplexInstance) itemType.getModel().addInstance();
+
+			instance.move(this.location);
+			//		instance.localRotation.setFromAxisRad(RenderMathUtils.VEC3_UNIT_Z, angle);
+			instance.rotate(new Quaternion().setFromAxisRad(RenderMathUtils.VEC3_UNIT_Z, angle));
+			instance.setScene(map.worldScene);
+			this.instance = instance;
+
 			final Vector3 tintingColor = itemType.getTintingColor();
 			instance.setVertexColor(new float[] { tintingColor.x, tintingColor.y, tintingColor.z });
 			instance.uniformScale(itemType.getModelScale());
-
-			this.radius = 1 * 36;
+		} else {
+			this.instance = null;
+			System.err.println("Warning: Item type " + simulationItem.getTypeId() + " has no model.");
 		}
-
-		this.instance = instance;
 	}
 
 	@Override

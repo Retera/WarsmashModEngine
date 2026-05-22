@@ -1,10 +1,22 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.util;
 
+import com.etheller.interpreter.ast.util.CHandle;
+
 import java.util.HashMap;
 import java.util.Map;
 
-public class CHashtable {
+public class CHashtable implements CHandle {
+	private final int handleId;
 	private final Map<Integer, Map<Integer, Object>> parentKeyToChildTable = new HashMap<>();
+
+	public CHashtable(final int handleId) {
+		this.handleId = handleId;
+	}
+
+	@Override
+	public int getHandleId() {
+		return handleId;
+	}
 
 	public void save(final Integer parentKey, final Integer childKey, final Object object) {
 		Map<Integer, Object> childTable = this.parentKeyToChildTable.get(parentKey);

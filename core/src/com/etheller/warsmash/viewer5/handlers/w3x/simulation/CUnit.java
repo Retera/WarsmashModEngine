@@ -140,6 +140,7 @@ public class CUnit extends CWidget {
 	private static RegionCheckerImpl regionCheckerImpl = new RegionCheckerImpl();
 
 	private War3ID typeId;
+	private String name;
 	private float facing; // degrees
 	private float mana;
 	private int baseMaximumLife;
@@ -312,6 +313,7 @@ public class CUnit extends CWidget {
 		this.turnRate = unitType.getTurnRate();
 		this.propWindow = unitType.getPropWindow();
 		this.unitType = unitType;
+		this.name = unitType.getName();
 		this.defenseType = unitType.getDefenseType();
 		this.classifications.addAll(unitType.getClassifications());
 		this.targetedAs.addAll(unitType.getTargetedAs());
@@ -326,6 +328,14 @@ public class CUnit extends CWidget {
 		addPreDamageListener(CUnitAttackPreDamageListenerPriority.ACCURACY, new CUnitDefaultAccuracyCheckListener());
 		this.attackFogMod = new CUnitAttackVisionFogModifier(this, playerIndex);
 		computeAllDerivedFields();
+	}
+
+	public String getName() {
+		return this.name;
+	}
+
+	public void setName(String name) {
+		this.name = name;
 	}
 
 	private void beginBehavior(final CSimulation game, final CBehavior behavior) {
@@ -1763,6 +1773,7 @@ public class CUnit extends CWidget {
 		final float manaRatio = this.maximumMana == 0 ? Float.NaN : this.mana / this.maximumMana;
 		final CUnitType previousUnitType = getUnitType();
 		this.unitType = game.getUnitData().getUnitType(typeId);
+		this.name = this.unitType.getName();
 		this.maximumMana = this.unitType.getManaMaximum();
 		this.maximumLife = this.unitType.getMaxLife();
 		this.life = lifeRatio * this.maximumLife;

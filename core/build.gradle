@@ -2,8 +2,15 @@
 
 sourceCompatibility = 1.17
 
-sourceSets.main.java.srcDirs = [ "src/" ]
-
+sourceSets {
+    main {
+        java.srcDirs = [ "src/" ]
+    }
+    test {
+        java.srcDirs = [ "test/" ]
+        resources.srcDirs = [ "test/resources" ]
+    }
+}
 
 eclipse.project {
     name = appName + "-core"

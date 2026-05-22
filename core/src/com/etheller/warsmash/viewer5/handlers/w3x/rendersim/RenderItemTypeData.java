@@ -29,7 +29,7 @@ public class RenderItemTypeData extends RenderWidgetTypeData<RenderItemType> {
 	protected RenderItemType createTypeData(War3ID key, GameObject row) {
 		String path = row.getFieldAsString(ITEM_FILE, 0);
 
-		if (path.toLowerCase().endsWith(".mdl") || path.toLowerCase().endsWith(".mdx")) {
+		if (path.length() >= 4 && (path.toLowerCase().endsWith(".mdl") || path.toLowerCase().endsWith(".mdx"))) {
 			path = path.substring(0, path.length() - 4);
 		}
 		final MdxModel model = this.mapViewer.loadModelMdx(path);

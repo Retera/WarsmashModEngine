@@ -11,6 +11,7 @@ import com.google.common.io.LittleEndianDataOutputStream;
 
 /**
  * war3map.w3e - the environment file.
+ * https://github.com/ChiefOfGxBxL/WC3MapSpecification/blob/master/Terrain/12.md
  */
 public class War3MapW3e {
 	private static final War3ID MAGIC_NUMBER = War3ID.fromString("W3E!");
@@ -57,7 +58,7 @@ public class War3MapW3e {
 			for (int column = 0, columns = this.mapSize[0]; column < columns; column++) {
 				final Corner corner = new Corner();
 
-				corner.load(stream);
+				corner.load(stream, this.version);
 
 				this.corners[row][column] = corner;
 			}
@@ -88,14 +89,9 @@ public class War3MapW3e {
 
 		for (final Corner[] row : this.corners) {
 			for (final Corner corner : row) {
-				corner.save(stream);
+				corner.save(stream, this.version);
 			}
 		}
-	}
-
-	public int getByteLength() {
-		return 37 + (this.groundTiles.size() * 4) + (this.cliffTiles.size() * 4)
-				+ (this.mapSize[0] * this.mapSize[1] * 7);
 	}
 
 	public int getVersion() {

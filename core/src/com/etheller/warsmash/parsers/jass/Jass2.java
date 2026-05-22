@@ -10775,23 +10775,29 @@ public class Jass2 {
 		});
 		jassProgramVisitor.getJassNativeManager().createNative("GetLocalizedString",
 				(arguments, globalScope, triggerScope) -> {
-					final String key = arguments.get(0).visit(StringJassValueVisitor.getInstance());
-					// TODO this might be wrong, or a subset of the needed return values
-					final String decoratedString = gameUI.getTemplates().getDecoratedString(key);
-					if (key.equals(decoratedString)) {
-						System.err.println("GetLocalizedString: NOT FOUND: " + key);
+					final String key = nullableWithWarning(arguments, 0, StringJassValueVisitor.getInstance(), globalScope, triggerScope);
+					if (key != null) {
+						// TODO this might be wrong, or a subset of the needed return values
+						final String decoratedString = gameUI.getTemplates().getDecoratedString(key);
+						if (key.equals(decoratedString)) {
+							System.err.println(JassException.message(globalScope, "GetLocalizedString: NOT FOUND: " + key));
+						}
+						return new StringJassValue(decoratedString);
 					}
-					return new StringJassValue(decoratedString);
+					return StringJassValue.EMPTY_STRING;
 				});
 		jassProgramVisitor.getJassNativeManager().createNative("GetLocalizedHotkey",
 				(arguments, globalScope, triggerScope) -> {
-					final String key = arguments.get(0).visit(StringJassValueVisitor.getInstance());
-					// TODO this might be wrong, or a subset of the needed return values
-					final String decoratedString = gameUI.getTemplates().getDecoratedString(key);
-					if (key.equals(decoratedString)) {
-						System.err.println("GetLocalizedHotkey: NOT FOUND: " + key);
+					final String key = nullableWithWarning(arguments, 0, StringJassValueVisitor.getInstance(), globalScope, triggerScope);
+					if (key != null) {
+						// TODO this might be wrong, or a subset of the needed return values
+						final String decoratedString = gameUI.getTemplates().getDecoratedString(key);
+						if (key.equals(decoratedString)) {
+							System.err.println(JassException.message(globalScope, "GetLocalizedHotkey: NOT FOUND: " + key));
+						}
+						return IntegerJassValue.of(decoratedString.charAt(0));
 					}
-					return IntegerJassValue.of(decoratedString.charAt(0));
+					return IntegerJassValue.ZERO;
 				});
 	}
 }

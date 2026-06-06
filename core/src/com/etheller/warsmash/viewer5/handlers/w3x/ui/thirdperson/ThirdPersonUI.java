@@ -126,25 +126,37 @@ public class ThirdPersonUI implements WarsmashToggleableUI {
 		else {
 			final float[] startLocation = this.war3MapViewer.simulation
 					.getPlayer(this.war3MapViewer.getLocalPlayerIndex()).getStartLocation();
+//			pawnUnits.add(this.war3MapViewer.simulation.createUnitSimple(this.pawnId,
+//					this.war3MapViewer.getLocalPlayerIndex(), startLocation[0], startLocation[1], 0));
 
 			// WESTFALL====
 			// -31797.357, -341638.3
-			//pawnUnits.add(this.war3MapViewer.simulation.createUnitSimple(this.pawnId,
-			//		this.war3MapViewer.getLocalPlayerIndex(), startLocation[0] - 31797.357f,
-			//		startLocation[1] - 341638.3f, 0));
+			// pawnUnits.add(this.war3MapViewer.simulation.createUnitSimple(this.pawnId,
+			// this.war3MapViewer.getLocalPlayerIndex(), startLocation[0] - 31797.357f,
+			// startLocation[1] - 341638.3f, 0));
 
 			// IF=====
 
-			//pawnUnits.add(this.war3MapViewer.simulation.createUnitSimple(this.pawnId,
-			//		this.war3MapViewer.getLocalPlayerIndex(), startLocation[0] + 24126.52f,
-			//		startLocation[1] - 172875.25f, 0));
 			pawnUnits.add(this.war3MapViewer.simulation.createUnitSimple(this.pawnId,
-					this.war3MapViewer.getLocalPlayerIndex(), startLocation[0] + 3250, startLocation[1] - 29795.25f,
-					0));
+					this.war3MapViewer.getLocalPlayerIndex(), startLocation[0] + 24126.52f,
+					startLocation[1] - 172875.25f, 0));
+//			pawnUnits.add(this.war3MapViewer.simulation.createUnitSimple(this.pawnId,
+//					this.war3MapViewer.getLocalPlayerIndex(), startLocation[0] + 3250, startLocation[1] - 29795.25f,
+//					0));
 //			pawnUnits.add(this.war3MapViewer.simulation.createUnitSimple(this.pawnId,
 //					this.war3MapViewer.getLocalPlayerIndex(), startLocation[0] + 96242.28f,
 //					startLocation[1] -202859.8f, 0));
-//			this.war3MapViewer.getLocalPlayerIndex(), startLocation[0] + 80000, startLocation[1] - 400000, 0));
+
+			// Stranglethorn cave:
+//				pawnUnits.add(this.war3MapViewer.simulation.createUnitSimple(this.pawnId,
+//					this.war3MapViewer.getLocalPlayerIndex(), 19943.59f, -415891.3f, 74.39996f));// 20000, -425481.5f,
+			// 96.36743f));//
+			// startLocation[0]
+			// +
+			// 60000,
+			// startLocation[1]
+			// -
+			// 420000, 0));
 //			this.war3MapViewer.simulation.createUnitSimple(War3ID.fromString("hwtw"),
 //			this.war3MapViewer.getLocalPlayerIndex(), startLocation[0], startLocation[1], 0);
 //			this.war3MapViewer.simulation.createUnitSimple(War3ID.fromString("hpea"),

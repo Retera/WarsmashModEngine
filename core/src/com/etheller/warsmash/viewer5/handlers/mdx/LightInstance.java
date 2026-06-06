@@ -6,8 +6,8 @@ import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector3;
 import com.etheller.warsmash.viewer5.Scene;
 import com.etheller.warsmash.viewer5.SceneLightInstance;
+import com.etheller.warsmash.viewer5.SceneLightManager;
 import com.etheller.warsmash.viewer5.UpdatableObject;
-import com.etheller.warsmash.viewer5.handlers.w3x.W3xScenePortraitLightManager;
 
 public class LightInstance implements UpdatableObject, SceneLightInstance {
 	private static final Matrix4 matrix4Heap = new Matrix4();
@@ -17,7 +17,7 @@ public class LightInstance implements UpdatableObject, SceneLightInstance {
 	protected final MdxNode node;
 	protected final Light light;
 	private boolean visible;
-	private boolean loadedInScene;
+	private SceneLightManager loadedInThisManager;
 	private final MdxComplexInstance instance;
 
 	public LightInstance(final MdxComplexInstance instance, final Light light) {
@@ -105,29 +105,24 @@ public class LightInstance implements UpdatableObject, SceneLightInstance {
 	}
 
 	private void updateVisibility(final Scene scene, final boolean visible) {
-		if (this.light.isModelOnly()) {
-			final W3xScenePortraitLightManager lightManager = this.instance.modelOnlyLightManager;
-			if (this.loadedInScene != visible) {
-				if (visible) {
-					lightManager.add(this);
-				}
-				else {
-					lightManager.remove(this);
-				}
-				this.loadedInScene = visible;
-				lightManager.update();
+		SceneLightManager lightManager;
+		if (visible) {
+			lightManager = this.instance.modelOnlyLightManager;
+			if ((lightManager == null) && (scene != null)) {
+				lightManager = scene.getLightManager();
 			}
 		}
-		else if (scene != null) {
-			if (this.loadedInScene != visible) {
-				if (visible) {
-					scene.addLight(this);
-				}
-				else {
-					scene.removeLight(this);
-				}
-				this.loadedInScene = visible;
+		else {
+			lightManager = null;
+		}
+		if (this.loadedInThisManager != lightManager) {
+			if (this.loadedInThisManager != null) {
+				this.loadedInThisManager.remove(this);
 			}
+			if (lightManager != null) {
+				lightManager.add(this);
+			}
+			this.loadedInThisManager = lightManager;
 		}
 	}
 }

@@ -1016,6 +1016,7 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 			renderDoodad.instance.rotate(
 					new Quaternion().setFromAxisRad(RenderMathUtils.VEC3_UNIT_X, (float) Math.toRadians(rotation[0])));
 			final Rectangle entireMap = this.terrain.getEntireMap();
+			final boolean groupIsExterior = FlagUtils.hasFlag(groupModel.getFlags(), WmoGroupInfo.Flags.IsExterior);
 			for (final MdlxCollisionGeometry collisionGeometry : model.getCollisionGeometries()) {
 				final Bounds bounds = new Bounds();
 				final float[] min = new float[] { Float.MAX_VALUE, Float.MAX_VALUE, Float.MAX_VALUE };
@@ -1038,12 +1039,17 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 				if (entireMap.overlaps(geosetRotatedBounds)) {
 					final CollidableDoodadComponent collidableComponent = new CollidableDoodadCollisionComponent(
 							(MdxComplexInstance) renderDoodad.instance, collisionGeometry, geosetRotatedBounds,
-							geosetBoundingBox, min, max,
-							!FlagUtils.hasFlag(groupModel.getFlags(), WmoGroupInfo.Flags.IsExterior));
+							geosetBoundingBox, min, max, !groupIsExterior);
 					this.walkableComponentTree.add(collidableComponent, geosetRotatedBounds);
 					renderDoodad.add(collidableComponent);
 				}
 			}
+			final W3xSceneLightManager modelOnlyLightManager = ((MdxComplexInstance) renderDoodad.instance).modelOnlyLightManager;
+//			final int lightOmit = ((MdxComplexInstance) renderDoodad.instance).lights.size();
+			if (groupIsExterior && (this.dncUnit != null)) {
+				modelOnlyLightManager.add(this.dncUnit.lights.get(0));
+			}
+//			((MdxComplexInstance) renderDoodad.instance).setLightOmitOffsetOverride(lightOmit);
 			this.doodads.add(renderDoodad);
 			this.decals.add(renderDoodad);
 			renderDoodads.add(renderDoodad);
@@ -1065,6 +1071,8 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 								// this case
 							} // else if (aComponent > groupModel.get)
 						}
+						((MdxComplexInstance) renderDoodadInGroup.instance)
+								.setModelOnlyLightManager(modelOnlyLightManager);
 					}
 				}
 			}

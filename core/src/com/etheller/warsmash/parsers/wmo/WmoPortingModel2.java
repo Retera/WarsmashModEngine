@@ -566,7 +566,6 @@ public class WmoPortingModel2 extends com.etheller.warsmash.viewer5.Model<WmoPor
 		light.intensity = wmoLight.getIntensity();
 		light.attenuation[0] = wmoLight.getAttenStart();
 		light.attenuation[1] = wmoLight.getAttenEnd();
-		light.setModelOnly(true);
 
 		final float[] wmoLightPosition = wmoLight.getPosition();
 		portedModel.pivotPoints.add(new float[] { wmoLightPosition[0] - extentCenter.x,

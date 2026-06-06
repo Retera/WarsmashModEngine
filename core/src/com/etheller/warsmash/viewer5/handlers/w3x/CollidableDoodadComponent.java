@@ -13,5 +13,5 @@ public interface CollidableDoodadComponent {
 
 	boolean isInterior();
 
-	W3xScenePortraitLightManager getModelOnlyLightManager();
+	W3xSceneLightManager getModelOnlyLightManager();
 }

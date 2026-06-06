@@ -53,7 +53,7 @@ public class CollidableDoodadCollisionComponent implements CollidableDoodadCompo
 	}
 
 	@Override
-	public W3xScenePortraitLightManager getModelOnlyLightManager() {
+	public W3xSceneLightManager getModelOnlyLightManager() {
 		return this.instance.modelOnlyLightManager;
 	}
 }

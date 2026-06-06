@@ -45,10 +45,14 @@ public class CBehaviorAttack extends CAbstractRangedBehavior {
 		this.thisOrderCooldownEndTime = 0;
 		setDisableMove(disableMove);
 		if (this.unit.getFirstAbilityOfType(CAbilityPlayerPawn.class) != null) {
-			this.primaryTag = PrimaryTag.ATTACKBOW;
-			this.readyTag = PrimaryTag.HOLDBOW;
-			this.readyTagWrongFacing = PrimaryTag.READYBOW;
-			this.readyTagPostAttack = PrimaryTag.LOADBOW;
+//			this.primaryTag = PrimaryTag.ATTACKBOW;
+//			this.readyTag = PrimaryTag.HOLDBOW;
+//			this.readyTagWrongFacing = PrimaryTag.READYBOW;
+//			this.readyTagPostAttack = PrimaryTag.LOADBOW;
+			this.primaryTag = PrimaryTag.ATTACK1H;
+			this.readyTag = PrimaryTag.READY1H;
+			this.readyTagWrongFacing = PrimaryTag.READY1H;
+			this.readyTagPostAttack = PrimaryTag.READY1H;
 		}
 		else {
 			this.primaryTag = PrimaryTag.ATTACK;

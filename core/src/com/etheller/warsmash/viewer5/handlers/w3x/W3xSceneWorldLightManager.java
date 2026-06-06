@@ -109,4 +109,10 @@ public class W3xSceneWorldLightManager implements SceneLightManager, W3xSceneLig
 	public int getTerrainLightCount() {
 		return this.terrainLightCount;
 	}
+
+	@Override
+	public void dispose() {
+		this.unitLightsTexture.delete();
+		this.terrainLightsTexture.delete();
+	}
 }

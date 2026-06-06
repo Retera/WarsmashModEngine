@@ -15,6 +15,7 @@ import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.math.collision.Ray;
 import com.etheller.warsmash.util.Descriptor;
 import com.etheller.warsmash.util.WarsmashConstants;
+import com.etheller.warsmash.viewer5.AutoUpdateSceneLightManager;
 import com.etheller.warsmash.viewer5.Bounds;
 import com.etheller.warsmash.viewer5.GenericNode;
 import com.etheller.warsmash.viewer5.ModelInstance;
@@ -29,6 +30,7 @@ import com.etheller.warsmash.viewer5.UpdatableObject;
 import com.etheller.warsmash.viewer5.gl.DataTexture;
 import com.etheller.warsmash.viewer5.gl.DataTexturePool;
 import com.etheller.warsmash.viewer5.handlers.w3x.DynamicShadowManager;
+import com.etheller.warsmash.viewer5.handlers.w3x.W3xSceneLightManager;
 import com.etheller.warsmash.viewer5.handlers.w3x.W3xScenePortraitLightManager;
 import com.hiveworkshop.rms.parsers.mdlx.MdlxCollisionGeometry;
 import com.hiveworkshop.rms.parsers.mdlx.MdlxGeoset;
@@ -84,8 +86,10 @@ public class MdxComplexInstance extends ModelInstance {
 	public float unshadedOverride = 0.0f;
 	public int lightOmitOffsetOverride = 0;
 	private boolean hasAnyUnselectableMesh = false;
+	private boolean wmo = false;
 	private final Descriptor<MdxNode> mdxNodeDescriptor;
-	public W3xScenePortraitLightManager modelOnlyLightManager = null;
+	public W3xSceneLightManager modelOnlyLightManager = null;
+	public W3xSceneLightManager providingModelOnlyLightManager = null;
 
 	public MdxComplexInstance(final MdxModel model) {
 		this(model, MdxNodeDescriptor.INSTANCE);
@@ -105,6 +109,9 @@ public class MdxComplexInstance extends ModelInstance {
 			this.geosetColors[i] = new float[4];
 			if (model.geosets.get(i).unselectable) {
 				this.hasAnyUnselectableMesh = true;
+			}
+			if (model.geosets.get(i).mdlxGeoset.wmo) {
+				this.wmo = true;
 			}
 		}
 
@@ -133,17 +140,15 @@ public class MdxComplexInstance extends ModelInstance {
 			this.initNode(this.nodes, this.nodes[nodeIndex++], bone);
 		}
 
-		boolean modelOnlyLights = false;
 		for (final Light light : model.lights) {
 			final LightInstance lightInstance = new LightInstance(this, light);
 			this.lights.add(lightInstance);
 			this.initNode(this.nodes, this.nodes[nodeIndex++], light, lightInstance);
-			if (light.isModelOnly()) {
-				modelOnlyLights = true;
-			}
 		}
-		if (modelOnlyLights) {
-			this.modelOnlyLightManager = new W3xScenePortraitLightManager(Gdx.gl);
+		if (this.wmo) {
+			final W3xScenePortraitLightManager wrappedManager = new W3xScenePortraitLightManager(Gdx.gl);
+			this.modelOnlyLightManager = new AutoUpdateSceneLightManager(wrappedManager);
+			this.providingModelOnlyLightManager = this.modelOnlyLightManager;
 		}
 
 		for (final Helper helper : model.helpers) {
@@ -710,6 +715,9 @@ public class MdxComplexInstance extends ModelInstance {
 		for (final LightInstance light : this.lights) {
 			light.update(scene);
 		}
+		if (this.providingModelOnlyLightManager != null) {
+			this.providingModelOnlyLightManager.update();
+		}
 	}
 
 	@Override
@@ -1129,7 +1137,7 @@ public class MdxComplexInstance extends ModelInstance {
 		}
 	}
 
-	public void setModelOnlyLightManager(final W3xScenePortraitLightManager sceneLightManager) {
+	public void setModelOnlyLightManager(final W3xSceneLightManager sceneLightManager) {
 		this.modelOnlyLightManager = sceneLightManager;
 		for (final ModelInstance childInstance : this.childrenInstances) {
 			if (childInstance instanceof MdxComplexInstance) {

@@ -10,6 +10,8 @@ public class AnimationTokens {
 		READYBOW,
 		HOLDBOW,
 		LOADBOW,
+		ATTACK1H,
+		READY1H,
 		BIRTH,
 //		CINEMATIC,
 		DEATH,

@@ -19,6 +19,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.CollidableDoodadComponent;
 import com.etheller.warsmash.viewer5.handlers.w3x.SequenceUtils;
 import com.etheller.warsmash.viewer5.handlers.w3x.SplatModel.SplatMover;
 import com.etheller.warsmash.viewer5.handlers.w3x.UnitSoundset;
+import com.etheller.warsmash.viewer5.handlers.w3x.W3xSceneLightManager;
 import com.etheller.warsmash.viewer5.handlers.w3x.War3MapViewer;
 import com.etheller.warsmash.viewer5.handlers.w3x.environment.BuildingShadow;
 import com.etheller.warsmash.viewer5.handlers.w3x.environment.PathingGrid;
@@ -327,12 +328,7 @@ public class RenderUnit implements RenderWidget {
 					currentWalkableUnder = null;
 				}
 				if (currentWalkableUnder != null) {
-					if (currentWalkableUnder.isInterior()) {
-						this.instance.setModelOnlyLightManager(currentWalkableUnder.getModelOnlyLightManager());
-					}
-					else {
-						this.instance.setModelOnlyLightManager(null);
-					}
+					this.instance.setModelOnlyLightManager(currentWalkableUnder.getModelOnlyLightManager());
 //					this.instance.setLightOmitOffsetOverride(currentWalkableUnder.isInterior() ? 1 : 0);
 				}
 				else {

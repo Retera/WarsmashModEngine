@@ -34,7 +34,6 @@ public class MdlxLight extends MdlxGenericObject {
 	public float intensity = 0;
 	public float[] ambientColor = new float[3];
 	public float ambientIntensity = 0;
-	public boolean modelOnly = false;
 
 	public MdlxLight() {
 		super(0x200);
@@ -195,13 +194,5 @@ public class MdlxLight extends MdlxGenericObject {
 
 	public float getAmbientIntensity() {
 		return this.ambientIntensity;
-	}
-
-	public void setModelOnly(final boolean modelOnly) {
-		this.modelOnly = modelOnly;
-	}
-
-	public boolean isModelOnly() {
-		return this.modelOnly;
 	}
 }

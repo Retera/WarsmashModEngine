@@ -353,7 +353,7 @@ public class TerrainWdt extends TerrainInterface {
 				}
 			}
 		}
-		if (hit) {
+		if (hit && !isWdtHole(normalHeap1.x, normalHeap1.y)) {
 			out.set(normalHeap1);
 		}
 	}
@@ -2445,5 +2445,46 @@ public class TerrainWdt extends TerrainInterface {
 				}
 			}
 		}
+	}
+	public boolean isWdtHole(final float x, final float y) {
+		final double userCellSpaceXWc3 = (StrictMath.floor(x) - this.centerOffset[0]) / 128.0;
+		final double userCellSpaceYWc3 = (StrictMath.floor(y) - this.centerOffset[1]) / 128.0;
+		final int cellXWc3 = (int) StrictMath.floor(userCellSpaceXWc3);
+		final int cellYWc3 = (int) StrictMath.floor(userCellSpaceYWc3);
+
+		if ((cellXWc3 >= 0) && (cellXWc3 < (this.mapSize[0] - 1)) && (cellYWc3 >= 0)
+				&& (cellYWc3 < (this.mapSize[1] - 1))) {
+			final int worldGridCellX = this.worldGrid.getCellX(x);
+			final int worldGridCellY = this.worldGrid.getCellY(y);
+			if ((worldGridCellX >= 0) && (worldGridCellX < this.tiles.length)) {
+				final Tile[] column = this.tiles[worldGridCellX];
+				if ((worldGridCellY >= 0) && (worldGridCellY < column.length)) {
+					final Tile tile = column[worldGridCellY];
+					if (tile != null) {
+						final float cornerX = this.worldGrid.getCornerX(worldGridCellX);
+						final float cornerY = this.worldGrid.getCornerY(worldGridCellY);
+						final double xWithinBlock = StrictMath.floor(x) - cornerX;
+						final double yWithinBlock = StrictMath.floor(y) - cornerY;
+
+						final float chunkSize = 128.0f * 8;
+						final int chunkX = (int) StrictMath.floor(xWithinBlock / chunkSize);
+						final int chunkY = (int) StrictMath.floor(yWithinBlock / chunkSize);
+						final Chunk chunk = tile.chunks[chunkX][chunkY];
+						if (chunk != null) {
+							final double userCellSpaceX = (xWithinBlock - (chunkX * chunkSize)) / 128.0;
+							final double userCellSpaceY = (yWithinBlock - (chunkY * chunkSize)) / 128.0;
+							final int cellX = (int) StrictMath.floor(userCellSpaceX);
+							final int cellY = (int) StrictMath.floor(userCellSpaceY);
+
+							final int holes = chunk.getHoles();
+							final int holeCellX = (cellX / 2);
+							final int holeCellY = (7 - cellY) / 2;
+							return (((holes >> ((holeCellY) * 4)) >> (holeCellX)) & 1) == 1;
+						}
+					}
+				}
+			}
+		}
+		return false;
 	}
 }

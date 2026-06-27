@@ -42,6 +42,8 @@ public class WmoPortingModel2 extends com.etheller.warsmash.viewer5.Model<WmoPor
 	private List<WmoDoodadDefinition> doodadDefinitions;
 	private LongMap<String> doodadFileNamesOffsetLookup;
 	private List<WmoDoodadSet> doodadSets;
+	/** MOHD ambient light color (linear RGB 0..1), the WMO's own data-defined interior ambient floor. */
+	private final float[] ambientColor = { 0, 0, 0 };
 
 	public WmoPortingModel2(final WmoPortingHandler handler, final ModelViewer viewer, final String extension,
 			final PathSolver pathSolver, final String fetchUrl) {
@@ -83,6 +85,11 @@ public class WmoPortingModel2 extends com.etheller.warsmash.viewer5.Model<WmoPor
 		return this.doodadFileNamesOffsetLookup;
 	}
 
+	/** The WMO's MOHD ambient color (linear RGB 0..1). */
+	public float[] getAmbientColor() {
+		return this.ambientColor;
+	}
+
 	@Override
 	public void load(final SourcedData src, final Object options) {
 		final WorldModelObject parser = new WorldModelObject(src.read());
@@ -91,6 +98,10 @@ public class WmoPortingModel2 extends com.etheller.warsmash.viewer5.Model<WmoPor
 		this.doodadFileNamesOffsetLookup = parser.getHeaders().getDoodadFileNamesOffsetLookup();
 		this.doodadDefinitions = parser.getHeaders().getDoodadDefinitions();
 		this.doodadSets = parser.getHeaders().getDoodadSets();
+		final short[] amb = parser.getHeaders().getAmbColor(); // BGRA, unsigned 0..255
+		this.ambientColor[0] = amb[2] / 255f;
+		this.ambientColor[1] = amb[1] / 255f;
+		this.ambientColor[2] = amb[0] / 255f;
 		this.portedModels = new GroupModel[portedModelsData.length];
 		for (int i = 0; i < portedModelsData.length; i++) {
 			final MdxModel mdxModel = new MdxModel(this.handler.getMdxHandler(), this.viewer, "mdx", this.pathSolver,
@@ -620,7 +631,7 @@ public class WmoPortingModel2 extends com.etheller.warsmash.viewer5.Model<WmoPor
 				final long dni = mats.get(matId).getDiffuseNameIndex();
 				texturePath = parser.getHeaders().getTextureFileNamesOffsetLookup().get(dni);
 			}
-			final boolean lava = (texturePath != null) && texturePath.toLowerCase().contains("lava");
+			final boolean lava = (texturePath != null) && (texturePath.toLowerCase().contains("lava") || texturePath.toLowerCase().contains("ironforge"));
 			if (!lava && (texturePath == null)) {
 				continue; // nothing meaningful to draw
 			}

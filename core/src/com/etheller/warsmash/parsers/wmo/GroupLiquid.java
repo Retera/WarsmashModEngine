@@ -7,7 +7,7 @@ import com.hiveworkshop.rms.parsers.mdlx.mdl.MdlTokenOutputStream;
 import com.hiveworkshop.rms.util.BinaryReader;
 import com.hiveworkshop.rms.util.BinaryWriter;
 
-public class GroupLiquid<T> implements MdlxBlock, MdlxChunk {
+public class GroupLiquid implements MdlxBlock, MdlxChunk {
 	private final int[] vertexCount = new int[2];
 	private final int[] tileCount = new int[2];
 	private final float[] corner = new float[3];

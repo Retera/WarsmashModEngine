@@ -1061,10 +1061,15 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 					renderDoodad.add(collidableComponent);
 				}
 			}
-			final W3xSceneLightManager modelOnlyLightManager = ((MdxComplexInstance) renderDoodad.instance).modelOnlyLightManager;
+			// Hand the surface's SERVED manager to the doodads/units on it (for WMO surfaces this includes
+			// the WMO's MOLT lights, which the surface itself is not lit by - it uses its baked MOCV colors).
+			final W3xSceneLightManager servedLightManager = ((MdxComplexInstance) renderDoodad.instance)
+					.getServedModelOnlyLightManager();
 //			final int lightOmit = ((MdxComplexInstance) renderDoodad.instance).lights.size();
 			if (groupIsExterior && (this.dncUnit != null)) {
-				modelOnlyLightManager.add(this.dncUnit.lights.get(0));
+				// The sun is an external light, not a WMO MOLT light: adding it via the served facade routes
+				// it to BOTH the surface and the served entities, so exterior surfaces still get daylight.
+				servedLightManager.add(this.dncUnit.lights.get(0));
 			}
 //			((MdxComplexInstance) renderDoodad.instance).setLightOmitOffsetOverride(lightOmit);
 			this.doodads.add(renderDoodad);
@@ -1080,16 +1085,49 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 								.get(doodadIdx);
 						final int ourAppliedIndex = doodadIdx - (int) wmoDoodadSet.getStartIndex();
 						final RenderDoodad renderDoodadInGroup = renderDoodads.get(ourAppliedIndex);
-						if (!renderDoodadInGroup.exterior) {
+						if (!groupIsExterior) {
+							// Interior WMO doodad: no sunlight, only the group's sparse short-range MOLT
+							// lights, so without help it renders solid black. Light it from the WMO's own
+							// baked data, decomposed into an ambient floor + a directional 'extra' (wowdev's
+							// A==255 rule: shade by the look-at vector from the group bounds center to the
+							// doodad). The center-facing side reaches the full baked MODD color; the far side
+							// falls to the WMO's MOHD ambient -> gives form instead of flat fill. Added on top
+							// of the MOLT lights in the shader. Both endpoints come straight from the data.
+							//
+							// MODD color is BGRA (unsigned 0..255); every entry in these v14 alpha WMOs has
+							// alpha==255 and a literal RGB (no MOLT-index case), so the RGB is used directly.
+							final float[] amb = worldModelObject.getAmbientColor(); // RGB 0..1 (MOHD)
 							final short[] color = wmoDoodadDefinition.getColor();
-							final short aComponent = color[3];
-							if (aComponent == 0xFF) {
-								// supposed to make shading direction based on group center rather than sun in
-								// this case
-							} // else if (aComponent > groupModel.get)
+							final float baseR = color[2] / 255f, baseG = color[1] / 255f, baseB = color[0] / 255f;
+							// Directional 'extra' = baked color above the ambient floor.
+							final float extraR = Math.max(baseR - amb[0], 0f);
+							final float extraG = Math.max(baseG - amb[1], 0f);
+							final float extraB = Math.max(baseB - amb[2], 0f);
+							// Direction toward the group center, in WORLD space: vsComplex dots u_interiorDir
+							// with the vertex normal, and that normal is WORLD-space (the bone matrices are full
+							// world matrices and u_mvp is just the view-projection, so a_normal is rotated all the
+							// way to world by the bone transform). 'usedCenter' is the group's center offset and
+							// the doodad's offset is computed with the SAME WMO rotation sequence, so the shared
+							// world 'location' cancels and their difference is already the correct world-space dir.
+							final Vector3 doodadOffset = new Vector3(wmoDoodadDefinition.getPosition());
+							doodadOffset.scl(scale);
+							doodadOffset.rotateRad(RenderMathUtils.VEC3_UNIT_X, (float) Math.toRadians(rotation[0]));
+							doodadOffset.rotateRad(RenderMathUtils.VEC3_UNIT_Y, (float) Math.toRadians(rotation[2]));
+							doodadOffset.rotateRad(RenderMathUtils.VEC3_UNIT_Z, facingRadians);
+							final Vector3 dir = new Vector3(usedCenter).sub(doodadOffset);
+							final float nearestUsedCenterDistance = dir.len2();
+							if (nearestUsedCenterDistance > 1e-8f) {
+								dir.nor();
+							}
+							else {
+								dir.set(0, 0, 1);
+							}
+							((MdxComplexInstance) renderDoodadInGroup.instance).setInteriorLighting(amb[0], amb[1],
+									amb[2], extraR, extraG, extraB, dir.x, dir.y, dir.z, nearestUsedCenterDistance);
+							renderDoodadInGroup.exterior = false;
 						}
 						((MdxComplexInstance) renderDoodadInGroup.instance)
-								.setModelOnlyLightManager(modelOnlyLightManager);
+								.setModelOnlyLightManager(servedLightManager);
 					}
 				}
 			}

@@ -75,7 +75,12 @@ public class GenericObject extends AnimatedObject implements GenericIndexed {
 		this.lineEmitter = flags & 0x20000;
 		this.unfogged = flags & 0x40000;
 		this.modelSpace = flags & 0x80000;
-		this.xYQuad = flags & 0x100000;
+		if (model.wow) {
+			this.xYQuad = flags & 0x08000000;
+		}
+		else {
+			this.xYQuad = flags & 0x100000;
+		}
 
 		this.anyBillboarding = (this.billboarded != 0) || (this.billboardedX != 0) || (this.billboardedY != 0)
 				|| (this.billboardedZ != 0);

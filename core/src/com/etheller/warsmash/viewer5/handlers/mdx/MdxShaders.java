@@ -281,6 +281,9 @@ public class MdxShaders {
 				"uniform sampler2D u_environmentMap;\r\n" + //
 				"uniform float u_filterMode;\r\n" + //
 				"uniform float u_unshaded;\r\n" + //
+				// Flat per-instance interior light (WMO MODD baked color), added to the diffuse lighting
+				// term so models inside WMO interiors are not rendered black. (0,0,0) for everything else.
+				"uniform vec3 u_interiorAmbient;\r\n" + //
 				"// uniform sampler2D u_lutMap;\r\n" + //
 				"// uniform sampler2D u_envDiffuseMap;\r\n" + //
 				"// uniform sampler2D u_envSpecularMap;\r\n" + //
@@ -596,6 +599,7 @@ public class MdxShaders {
 						"      diffuse = diffuse * (1.0 - tcFactor) + diffuse * tc * tcFactor;\r\n" + //
 						"    }\r\n" : "\r\n")
 				+ //
+				"  lambertFactorSum += u_interiorAmbient;\r\n" + //
 				"  color = clamp(color, 0.0, 1.0) + diffuse * ((1.0 - u_unshaded) * lambertFactorSum + u_unshaded) + emissive;\r\n"
 				+ //
 				"  gl_FragColor = vec4(color, baseColor.a);\r\n" + //
@@ -669,6 +673,18 @@ public class MdxShaders {
 				"    uniform bool u_hasBones;\r\n" + //
 				"    uniform float u_unshaded;\r\n" + //
 				"    uniform float u_lightOmitOffset;\r\n" + //
+				// Per-instance interior lighting added on top of the scene/MOLT lights, for doodads spawned
+				// inside WMO interiors (no sun, sparse short-range MOLT lights) which otherwise render black.
+				// Modelled from the WMO's own data: u_interiorAmbient = MOHD ambient floor (flat); plus a
+				// directional 'extra' u_interiorDirColor = max(MODD baked color - ambient, 0) applied via a
+				// lambert term toward u_interiorDir (world-space dir to the group bounds center, per wowdev's
+				// A==255 rule; 'normal' here is world-space because the bone matrices are full world matrices
+				// and u_mvp is just the view-projection). So the center-facing side reaches the full baked
+				// color and the far side falls
+				// to the WMO ambient -> form, not flat fill. All three default to 0 so overworld is unaffected.
+				"    uniform vec3 u_interiorAmbient;\r\n" + //
+				"    uniform vec3 u_interiorDirColor;\r\n" + //
+				"    uniform vec3 u_interiorDir;\r\n" + //
 				"    attribute vec3 a_position;\r\n" + //
 				"    attribute vec3 a_normal;\r\n" + //
 				"    attribute vec2 a_uv;\r\n" + //
@@ -750,7 +766,9 @@ public class MdxShaders {
 								"u_lightCount", " + u_lightOmitOffset", false) + "\r\n")
 						: "")
 				+ //
-				"        v_color.xyz *= (1.0 - u_unshaded) * clamp(lightFactor, 0.0, 1.0) + u_unshaded;\r\n" + //
+				"        float interiorNdotL = clamp(dot(normalize(normal), u_interiorDir), 0.0, 1.0);\r\n" + //
+				"        vec3 interiorLight = u_interiorAmbient + u_interiorDirColor * interiorNdotL;\r\n" + //
+				"        v_color.xyz *= (1.0 - u_unshaded) * clamp(lightFactor + interiorLight, 0.0, 1.0) + u_unshaded;\r\n" + //
 				(VERTEX_LIGHTS_NOT_FRAGMENT_LIGHTS ? "" : //
 						"		 v_position = position;\r\n" + //
 								"		 v_normal = normal;\r\n")

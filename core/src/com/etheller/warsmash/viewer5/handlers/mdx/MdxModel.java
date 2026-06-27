@@ -33,6 +33,7 @@ import com.hiveworkshop.rms.parsers.mdlx.MdlxTextureAnimation;
 
 public class MdxModel extends com.etheller.warsmash.viewer5.Model<MdxHandler> {
 	public boolean reforged = false;
+	public boolean wow = false;
 	public SolverParams solverParams = new SolverParams();
 	public String name = "";
 	public long blendTime;
@@ -104,6 +105,7 @@ public class MdxModel extends com.etheller.warsmash.viewer5.Model<MdxHandler> {
 		final boolean reforged = (parser.getVersion() > 800) && (parser.getVersion() != 1300);
 
 		this.reforged = reforged;
+		this.wow = parser.getVersion() >= 1300;
 		this.name = parser.getName();
 		this.blendTime = parser.getBlendTime();
 

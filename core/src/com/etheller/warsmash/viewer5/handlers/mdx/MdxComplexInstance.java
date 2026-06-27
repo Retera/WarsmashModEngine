@@ -27,6 +27,7 @@ import com.etheller.warsmash.viewer5.SkeletalNode;
 import com.etheller.warsmash.viewer5.Texture;
 import com.etheller.warsmash.viewer5.TextureMapper;
 import com.etheller.warsmash.viewer5.UpdatableObject;
+import com.etheller.warsmash.viewer5.WmoSplitLightManager;
 import com.etheller.warsmash.viewer5.gl.DataTexture;
 import com.etheller.warsmash.viewer5.gl.DataTexturePool;
 import com.etheller.warsmash.viewer5.handlers.w3x.DynamicShadowManager;
@@ -61,6 +62,14 @@ public class MdxComplexInstance extends ModelInstance {
 	public SequenceLoopMode sequenceLoopMode = SequenceLoopMode.NEVER_LOOP;
 	public boolean sequenceEnded = false;
 	public float[] vertexColor = { 1, 1, 1, 1 };
+	/** Interior lighting added on top of the scene lights for this instance (for doodads inside WMO
+	 * interiors). interiorAmbient = flat WMO ambient floor; interiorDirColor*lambert(normal,interiorDir)
+	 * = the directional 'extra' up to the full baked color toward the group center. All (0,0,0) for
+	 * everything else, so overworld lighting is unchanged. See MdxShaders.vsComplex. */
+	public final float[] interiorAmbient = { 0, 0, 0 };
+	public final float[] interiorDirColor = { 0, 0, 0 };
+	public final float[] interiorDir = { 0, 0, 1 };
+	public float nearestUsedCenterDistance = Float.MAX_VALUE;;
 	// Particles do not spawn when the sequence is -1, or when the sequence finished
 	// and it's not repeating
 	public boolean allowParticleSpawn = false;
@@ -89,7 +98,13 @@ public class MdxComplexInstance extends ModelInstance {
 	private boolean wmo = false;
 	private final Descriptor<MdxNode> mdxNodeDescriptor;
 	public W3xSceneLightManager modelOnlyLightManager = null;
-	public W3xSceneLightManager providingModelOnlyLightManager = null;
+	/** The light manager this instance hands out to OTHER entities sitting on/over it (doodads spawned for
+	 * it, units walking on it). For WMO surfaces this is the "served" facade that includes the WMO's MOLT
+	 * lights, distinct from modelOnlyLightManager (the surface's own, MOLT-free manager). Null for normal
+	 * instances, which serve their own modelOnlyLightManager unchanged. This instance OWNS this manager (it
+	 * created it), so it is also the one we tick each frame in updateLights (a borrower never sets it, so a
+	 * borrowed manager is never double-ticked). See WmoSplitLightManager. */
+	public W3xSceneLightManager servedModelOnlyLightManager = null;
 
 	public MdxComplexInstance(final MdxModel model) {
 		this(model, MdxNodeDescriptor.INSTANCE);
@@ -146,9 +161,20 @@ public class MdxComplexInstance extends ModelInstance {
 			this.initNode(this.nodes, this.nodes[nodeIndex++], light, lightInstance);
 		}
 		if (this.wmo) {
-			final W3xScenePortraitLightManager wrappedManager = new W3xScenePortraitLightManager(Gdx.gl);
-			this.modelOnlyLightManager = new AutoUpdateSceneLightManager(wrappedManager);
-			this.providingModelOnlyLightManager = this.modelOnlyLightManager;
+			// Two underlying managers so the WMO surface and the entities on top of it are lit differently:
+			// selfManager lights the surface (no MOLT - the surface is pre-lit by its baked MOCV colors);
+			// servedManager lights doodads/units (MOLT lamps + external dynamic lights). See WmoSplitLightManager.
+			final W3xSceneLightManager selfManager = new AutoUpdateSceneLightManager(
+					new W3xScenePortraitLightManager(Gdx.gl));
+			final W3xSceneLightManager servedManager = new AutoUpdateSceneLightManager(
+					new W3xScenePortraitLightManager(Gdx.gl));
+			// Surface facade: renders from selfManager; this instance's own MOLT lights (registered through
+			// modelOnlyLightManager) go to servedManager only, so they do not double-light the surface.
+			this.modelOnlyLightManager = new WmoSplitLightManager(selfManager, selfManager, servedManager, false, true);
+			// Served facade (handed to doodads/units): renders from servedManager; their dynamic lights go to
+			// BOTH managers so a torch/spell on a doodad or unit also lights the surface.
+			this.servedModelOnlyLightManager = new WmoSplitLightManager(servedManager, selfManager, servedManager, true,
+					false);
 		}
 
 		for (final Helper helper : model.helpers) {
@@ -715,8 +741,8 @@ public class MdxComplexInstance extends ModelInstance {
 		for (final LightInstance light : this.lights) {
 			light.update(scene);
 		}
-		if (this.providingModelOnlyLightManager != null) {
-			this.providingModelOnlyLightManager.update();
+		if (this.servedModelOnlyLightManager != null) {
+			this.servedModelOnlyLightManager.update();
 		}
 	}
 
@@ -1128,6 +1154,31 @@ public class MdxComplexInstance extends ModelInstance {
 		}
 	}
 
+	/** Sets the interior lighting (ambient floor + directional 'extra' toward a world-space direction)
+	 * propagated to this instance and its children. See the field docs and MdxShaders.vsComplex. */
+	public void setInteriorLighting(final float ambR, final float ambG, final float ambB, final float dirColR,
+			final float dirColG, final float dirColB, final float dirX, final float dirY, final float dirZ,
+			final float usedCenterDistance) {
+		if (usedCenterDistance < this.nearestUsedCenterDistance) {
+			this.interiorAmbient[0] = ambR;
+			this.interiorAmbient[1] = ambG;
+			this.interiorAmbient[2] = ambB;
+			this.interiorDirColor[0] = dirColR;
+			this.interiorDirColor[1] = dirColG;
+			this.interiorDirColor[2] = dirColB;
+			this.interiorDir[0] = dirX;
+			this.interiorDir[1] = dirY;
+			this.interiorDir[2] = dirZ;
+			this.nearestUsedCenterDistance = usedCenterDistance;
+		}
+		for (final ModelInstance childInstance : this.childrenInstances) {
+			if (childInstance instanceof MdxComplexInstance) {
+				((MdxComplexInstance) childInstance).setInteriorLighting(ambR, ambG, ambB, dirColR, dirColG, dirColB,
+						dirX, dirY, dirZ, usedCenterDistance);
+			}
+		}
+	}
+
 	public void setUnshadedOverride(final float unshadedOverride) {
 		this.unshadedOverride = unshadedOverride;
 		for (final ModelInstance childInstance : this.childrenInstances) {
@@ -1144,5 +1195,12 @@ public class MdxComplexInstance extends ModelInstance {
 				((MdxComplexInstance) childInstance).setModelOnlyLightManager(sceneLightManager);
 			}
 		}
+	}
+
+	/** The light manager to hand to OTHER entities resting on/over this instance (doodads, units). For WMO
+	 * surfaces this is the "served" facade (includes the WMO MOLT lights); for everything else it is just
+	 * this instance's own modelOnlyLightManager, so non-WMO walkables behave exactly as before. */
+	public W3xSceneLightManager getServedModelOnlyLightManager() {
+		return this.servedModelOnlyLightManager != null ? this.servedModelOnlyLightManager : this.modelOnlyLightManager;
 	}
 }

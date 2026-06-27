@@ -57,6 +57,8 @@ public class CollidableDoodadGeosetComponent implements CollidableDoodadComponen
 
 	@Override
 	public W3xSceneLightManager getModelOnlyLightManager() {
-		return this.instance.modelOnlyLightManager;
+		// Serve the "served" manager (for WMO surfaces this includes the WMO MOLT lights) so units walking
+		// onto this surface are lit like the doodads on it, not like the surface itself.
+		return this.instance.getServedModelOnlyLightManager();
 	}
 }

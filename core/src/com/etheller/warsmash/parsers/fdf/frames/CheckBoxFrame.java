@@ -99,8 +99,26 @@ public class CheckBoxFrame extends GlueButtonFrame {
 		table.set("SetChecked", new TwoArgFunction() {
 			@Override
 			public LuaValue call(final LuaValue thistable, final LuaValue arg) {
-				final String flag = arg.checkjstring();
-				setChecked("true".equals(flag));
+				// WoW callers pass SetChecked a number (0/1), boolean, or nil -- not the
+				// string "true". Interpret WoW-style: nil/false/0 -> unchecked, anything
+				// else -> checked. (The old "true".equals(...) test always failed for the
+				// numeric 1 the bag/inventory buttons pass, so the checked highlight never
+				// appeared.)
+				final boolean newChecked;
+				if (arg.isnil()) {
+					newChecked = false;
+				}
+				else if (arg.isboolean()) {
+					newChecked = arg.toboolean();
+				}
+				else if (arg.isnumber()) {
+					newChecked = arg.todouble() != 0.0;
+				}
+				else {
+					final String flag = arg.tojstring();
+					newChecked = !flag.isEmpty() && !"false".equalsIgnoreCase(flag) && !"0".equals(flag);
+				}
+				setChecked(newChecked);
 				return null;
 			}
 		});

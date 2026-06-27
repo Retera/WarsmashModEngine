@@ -6,6 +6,7 @@ import org.luaj.vm2.LuaTable;
 import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.lib.ThreeArgFunction;
 import org.luaj.vm2.lib.TwoArgFunction;
+import org.luaj.vm2.lib.ZeroArgFunction;
 
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
@@ -15,6 +16,7 @@ import com.badlogic.gdx.utils.viewport.Viewport;
 import com.etheller.warsmash.parsers.fdf.GameUI;
 import com.etheller.warsmash.parsers.fdf.LuaEnvironment;
 import com.etheller.warsmash.parsers.fdf.UIFrameLuaWrapper;
+import com.etheller.warsmash.parsers.fdf.UIFrameScripts;
 import com.etheller.warsmash.parsers.fdf.datamodel.FramePoint;
 import com.etheller.warsmash.viewer5.Scene;
 import com.etheller.warsmash.viewer5.handlers.mdx.MdxComplexInstance;
@@ -30,6 +32,7 @@ public class SpriteFrame extends AbstractUIFrame {
 	protected final Viewport uiViewport;
 	private MdxComplexInstance instance;
 	private float zDepth;
+	private boolean lastSequenceEnded;
 
 	public SpriteFrame(final String name, final UIFrame parent, final Scene scene, final Viewport uiViewport) {
 		super(name, parent);
@@ -184,18 +187,78 @@ public class SpriteFrame extends AbstractUIFrame {
 		table.set("SetSequence", new TwoArgFunction() {
 			@Override
 			public LuaValue call(final LuaValue thistable, final LuaValue sequenceIndex) {
-				setSequence(sequenceIndex.checkint());
+				final int index = sequenceIndex.checkint();
+				// A script-driven model (the cooldown swipe) is re-armed every poll via
+				// CooldownFrame_SetTimer's SetSequence(0). Snapping it back to frame 0 here
+				// would show the reset for one frame before OnUpdateModel re-poses it, which
+				// reads as a flicker. OnUpdateModel sets the exact pose each frame anyway, so
+				// keep the current pose when the sequence is unchanged.
+				if (isModelScriptDriven() && (SpriteFrame.this.instance != null)
+						&& (SpriteFrame.this.instance.sequence == index)) {
+					return LuaValue.NIL;
+				}
+				setSequence(index);
 				return LuaValue.NIL;
 			}
 		});
 		table.set("SetSequenceTime", new ThreeArgFunction() {
 			@Override
 			public LuaValue call(final LuaValue thistable, final LuaValue sequenceIndex, final LuaValue time) {
-				setSequence(sequenceIndex.checkint());
-				setFrameWithinSequence(time.checkint());
+				final int index = sequenceIndex.checkint();
+				// Only (re)start the sequence when it actually changes; re-starting the same
+				// sequence each frame would needlessly snap to frame 0 before the ratio is
+				// re-applied below.
+				if ((SpriteFrame.this.instance == null) || (SpriteFrame.this.instance.sequence != index)) {
+					setSequence(index);
+				}
+				// WoW passes the time as (fractionCompleted * 1000) -- see Cooldown.lua. Map
+				// it proportionally onto the sequence so the swipe is correct regardless of
+				// the model's actual sequence length, mirroring the working command card
+				// cooldown which positions by ratio.
+				final float ratio = Math.max(0f, Math.min(1f, time.tofloat() / 1000.0f));
+				setFrameByRatio(ratio);
 				return LuaValue.NIL;
 			}
 		});
+		table.set("AdvanceTime", new ZeroArgFunction() {
+			@Override
+			public LuaValue call() {
+				// Hand control of the playhead back to the scene so the finish ("stopping")
+				// animation plays out on its own; OnAnimFinished then hides the frame.
+				if (SpriteFrame.this.instance != null) {
+					SpriteFrame.this.instance.setAnimationSpeed(1.0f);
+				}
+				return LuaValue.NIL;
+			}
+		});
+	}
+
+	private boolean isModelScriptDriven() {
+		final UIFrameScripts scripts = getScripts();
+		return (scripts != null) && (scripts.OnUpdateModel != null);
+	}
+
+	@Override
+	protected void prepareModelScriptUpdate() {
+		if (this.instance != null) {
+			// While the OnUpdateModel script drives the model (setting the swipe pose every
+			// frame), stop the scene from auto-advancing it and from looping, so the
+			// Lua-set pose is authoritative. AdvanceTime() re-enables stepping when the
+			// script wants the finish animation to play.
+			this.instance.setAnimationSpeed(0f);
+			this.instance.setSequenceLoopMode(SequenceLoopMode.NEVER_LOOP);
+		}
+	}
+
+	@Override
+	protected boolean pollSequenceJustEnded() {
+		if (this.instance == null) {
+			return false;
+		}
+		final boolean ended = this.instance.sequenceEnded;
+		final boolean justEnded = ended && !this.lastSequenceEnded;
+		this.lastSequenceEnded = ended;
+		return justEnded;
 	}
 
 }

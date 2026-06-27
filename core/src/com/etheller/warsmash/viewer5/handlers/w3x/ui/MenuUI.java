@@ -8,9 +8,12 @@ import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 import java.nio.channels.SeekableByteChannel;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 import java.util.zip.CRC32C;
+
+import org.apache.commons.compress.utils.SeekableInMemoryByteChannel;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
@@ -29,8 +32,10 @@ import com.etheller.warsmash.SingleModelScreen;
 import com.etheller.warsmash.WarsmashGdxMapScreen;
 import com.etheller.warsmash.WarsmashGdxMenuScreen;
 import com.etheller.warsmash.WarsmashGdxMultiScreenGame;
+import com.etheller.warsmash.datasources.CompoundDataSource;
 import com.etheller.warsmash.datasources.DataSource;
 import com.etheller.warsmash.datasources.FolderDataSource;
+import com.etheller.warsmash.datasources.MpqDataSource;
 import com.etheller.warsmash.networking.GameTurnManager;
 import com.etheller.warsmash.networking.WarsmashClient;
 import com.etheller.warsmash.networking.WarsmashClientSendingOrderListener;
@@ -101,6 +106,8 @@ import com.etheller.warsmash.viewer5.handlers.w3x.ui.menu.CampaignMenuUI;
 import com.etheller.warsmash.viewer5.handlers.w3x.ui.menu.CampaignMission;
 import com.etheller.warsmash.viewer5.handlers.w3x.ui.sound.KeyedSounds;
 
+import mpq.MPQArchive;
+import mpq.MPQException;
 import net.warsmash.map.NetMapDownloader;
 import net.warsmash.uberserver.AccountCreationFailureReason;
 import net.warsmash.uberserver.ChannelServerMessageType;
@@ -1684,10 +1691,29 @@ public class MenuUI {
 			if (mapFilename.toLowerCase().endsWith(WdtMap.EXTENSION)) {
 				viewer.loadWorldEditData();
 
-				final File file = new File(mapFilename);
-				final WdtMap map = new WdtMap(
-						(file.exists() ? new FolderDataSource(file.getParentFile().toPath()) : this.dataSource)
-								.read(file.getName()));
+				// The map ships wrapped in an extra MPQ layer named "<name>.wdt.MPQ".
+				// Mount that archive and compound it over the game data (map files win),
+				// mirroring how War3Map mounts a .w3x archive, so that the interior WDT
+				// plus its sibling assets such as war3map.j resolve through the viewer's
+				// data source.
+				final String mpqFileName = mapFilename + ".MPQ";
+				final File mpqFile = new File(mpqFileName);
+				final ByteBuffer mpqBytes = (mpqFile.exists()
+						? new FolderDataSource(mpqFile.getParentFile().toPath()).read(mpqFile.getName())
+						: codebase.read(mpqFileName));
+				final SeekableByteChannel mpqChannel = new SeekableInMemoryByteChannel(mpqBytes.array());
+				final MpqDataSource mapMpqDataSource;
+				try {
+					mapMpqDataSource = new MpqDataSource(new MPQArchive(mpqChannel), mpqChannel);
+				}
+				catch (final MPQException e) {
+					throw new IOException(e);
+				}
+				viewer.setDataSource(new CompoundDataSource(Arrays.asList(codebase, mapMpqDataSource)));
+
+				// The interior WDT is hashed under the outer name with ".MPQ" stripped.
+				final String interiorWdtName = new File(mapFilename).getName();
+				final WdtMap map = new WdtMap(mapMpqDataSource.read(interiorWdtName));
 				this.loadingMap = new LoadingMap(viewer, map);
 			}
 			else {

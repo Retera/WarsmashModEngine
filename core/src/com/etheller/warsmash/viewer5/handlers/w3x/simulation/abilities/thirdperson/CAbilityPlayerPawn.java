@@ -8,6 +8,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.AbstractGenericNoIconAbility;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.inventory.CAbilityBag;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.skills.CAbilitySpell;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityPointTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehavior;
@@ -20,12 +21,25 @@ public class CAbilityPlayerPawn extends AbstractGenericNoIconAbility implements 
 	public static final War3ID CODE = War3ID.fromString("Apwn");
 
 	private static final int RENDER_MOVE_SPEED = (int) (18 * (1 / WarsmashConstants.SIMULATION_STEP_TIME));
+	/** WoW's default backpack holds 16 slots. */
+	public static final int BACKPACK_SLOT_COUNT = 16;
 	private float z = 20000;
 	private CBehaviorPlayerPawn behaviorPlayerPawn;
 	private static final Vector3 tempVec = new Vector3();
 
+	/**
+	 * The always-present, built-in backpack bag (WoW container id 0). Unlike the
+	 * other bags, it is intrinsic to the pawn rather than provided by a carried
+	 * Warcraft III item, so the pawn owns it directly.
+	 */
+	private CAbilityBag backpack;
+
 	public CAbilityPlayerPawn(final int handleId, final War3ID alias) {
 		super(handleId, alias, alias);
+	}
+
+	public CAbilityBag getBackpack() {
+		return this.backpack;
 	}
 
 	@Override
@@ -71,6 +85,12 @@ public class CAbilityPlayerPawn extends AbstractGenericNoIconAbility implements 
 		else if (orderId == OrderIds.pawnSitPressed) {
 			receiver.targetOk(null);
 		}
+		else if (orderId == OrderIds.pawnLootPressed) {
+			receiver.targetOk(null);
+		}
+		else if (orderId == OrderIds.pawnLootReleased) {
+			receiver.targetOk(null);
+		}
 		else if (orderId == OrderIds.pawnDownReleased) {
 			receiver.targetOk(null);
 		}
@@ -93,6 +113,14 @@ public class CAbilityPlayerPawn extends AbstractGenericNoIconAbility implements 
 		this.behaviorPlayerPawn = new CBehaviorPlayerPawn(unit, this);
 		unit.setDefaultBehavior(this.behaviorPlayerPawn);
 		game.setupPlayerPawn(unit, this, this.behaviorPlayerPawn);
+		if (this.backpack == null) {
+			this.backpack = new CAbilityBag(game.getHandleIdAllocator().createId(), CODE, CODE, BACKPACK_SLOT_COUNT);
+			this.backpack.setIconShowing(false);
+			// Add the backpack as a real (but command-card-invisible) ability so it joins
+			// the unit's ability iteration: when the hero's inventory is full, a pickup
+			// order falls through to the backpack and is stored there automatically.
+			unit.add(game, this.backpack);
+		}
 	}
 
 	@Override
@@ -169,6 +197,14 @@ public class CAbilityPlayerPawn extends AbstractGenericNoIconAbility implements 
 		}
 		else if (orderId == OrderIds.pawnSitPressed) {
 			this.behaviorPlayerPawn.sit();
+			return this.behaviorPlayerPawn;
+		}
+		else if (orderId == OrderIds.pawnLootPressed) {
+			this.behaviorPlayerPawn.loot();
+			return this.behaviorPlayerPawn;
+		}
+		else if (orderId == OrderIds.pawnLootReleased) {
+			this.behaviorPlayerPawn.lootReleased();
 			return this.behaviorPlayerPawn;
 		}
 		else {

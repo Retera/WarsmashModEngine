@@ -12,9 +12,13 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.viewport.ExtendViewport;
+import com.etheller.interpreter.ast.scope.trigger.Trigger;
+import com.etheller.interpreter.ast.value.JassType;
+import com.etheller.interpreter.ast.value.JassValue;
 import com.etheller.warsmash.parsers.dbc.DbcParser;
 import com.etheller.warsmash.parsers.dbc.decoders.DbcDecoderSoundEntries;
 import com.etheller.warsmash.parsers.fdf.GameUI;
@@ -23,7 +27,9 @@ import com.etheller.warsmash.parsers.fdf.frames.SimpleFrame;
 import com.etheller.warsmash.parsers.fdf.frames.SimpleStatusBarFrame;
 import com.etheller.warsmash.parsers.fdf.frames.SpriteFrame;
 import com.etheller.warsmash.parsers.fdf.frames.StringFrame;
+import com.etheller.warsmash.parsers.fdf.frames.TextureFrame;
 import com.etheller.warsmash.parsers.fdf.frames.UIFrame;
+import com.etheller.warsmash.parsers.jass.scope.CommonTriggerExecutionScope;
 import com.etheller.warsmash.units.DataTable;
 import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.util.WarsmashConstants;
@@ -33,6 +39,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.War3MapViewer;
 import com.etheller.warsmash.viewer5.handlers.w3x.camera.ThirdPersonCameraManager;
 import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.RenderUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.RenderWidget;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CItem;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidgetFilterFunction;
@@ -43,6 +50,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.OrderIds;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CAllianceType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayer;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayerUnitOrderListener;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.JassGameEventsWar3;
 import com.etheller.warsmash.viewer5.handlers.w3x.ui.WarsmashToggleableUI;
 import com.etheller.warsmash.viewer5.handlers.w3x.ui.command.ClickableActionFrame;
 import com.etheller.warsmash.viewer5.handlers.w3x.ui.command.ClickableFrame;
@@ -66,6 +74,8 @@ public class ThirdPersonUI implements WarsmashToggleableUI {
 	private boolean showing = false;
 	private GameUI rootFrame;
 	private SpriteFrame cursorFrame;
+	private TextureFrame cursorItemIconFrame;
+	private boolean holdingCursorItem;
 	private boolean touchDown;
 //	private final ModelInstance skyModelInstance;
 	private SimpleFrame mainMenuBar;
@@ -88,6 +98,11 @@ public class ThirdPersonUI implements WarsmashToggleableUI {
 	private final AnyClickableUnitFilter anyClickableUnitFilter;
 	private final AnyTargetableUnitFilter anyTargetableUnitFilter;
 	private KeyedSounds uiSounds;
+	private static final float COOLDOWN_REFRESH_INTERVAL = 0.1f;
+	private float cooldownRefreshTimer;
+	private static final float BAG_REFRESH_INTERVAL = 0.25f;
+	private boolean autoSpinLeft = false;
+	private boolean autoSpinRight = false;
 
 	public ThirdPersonUI(final War3MapViewer war3MapViewer, final Scene uiScene, final ExtendViewport uiViewport,
 			final Scene portraitScene, final CPlayerUnitOrderListener uiOrderListener, final War3ID pawnId) {
@@ -131,9 +146,9 @@ public class ThirdPersonUI implements WarsmashToggleableUI {
 
 			// WESTFALL====
 			// -31797.357, -341638.3
-			// pawnUnits.add(this.war3MapViewer.simulation.createUnitSimple(this.pawnId,
-			// this.war3MapViewer.getLocalPlayerIndex(), startLocation[0] - 31797.357f,
-			// startLocation[1] - 341638.3f, 0));
+//			pawnUnits.add(this.war3MapViewer.simulation.createUnitSimple(this.pawnId,
+//			this.war3MapViewer.getLocalPlayerIndex(), startLocation[0] - 31797.357f,
+//			startLocation[1] - 341638.3f, 0));
 
 			// IF=====
 
@@ -307,6 +322,42 @@ public class ThirdPersonUI implements WarsmashToggleableUI {
 		final UIFrame mainMenuBarFixed = this.rootFrame.getFrameByName("MainMenuBar", 0);
 		mainMenuBarFixed.setVisible(true);
 
+		// At the time when we do our setup here, the GlobalScope has not yet been created.
+		Gdx.app.postRunnable(new Runnable() {
+			@Override
+			public void run() {
+				Trigger refreshBagsTrigger = new Trigger();
+				refreshBagsTrigger.addAction((arguments, globalScope, triggerScope) -> {
+					rootFrame.getLuaGlobals().notifyBagsChanged();
+					return null;
+				});
+				pawnUnit.addEvent(war3MapViewer.simulation.getGlobalScope(), refreshBagsTrigger,
+						JassGameEventsWar3.EVENT_UNIT_DROP_ITEM);
+				pawnUnit.addEvent(war3MapViewer.simulation.getGlobalScope(), refreshBagsTrigger,
+						JassGameEventsWar3.EVENT_UNIT_PICKUP_ITEM);
+				pawnUnit.addEvent(war3MapViewer.simulation.getGlobalScope(), refreshBagsTrigger,
+						JassGameEventsWar3.EVENT_UNIT_PAWN_ITEM);
+				pawnUnit.addEvent(war3MapViewer.simulation.getGlobalScope(), refreshBagsTrigger,
+						JassGameEventsWar3.EVENT_UNIT_USE_ITEM);
+
+				Trigger refreshBagPositionsTrigger = new Trigger();
+				refreshBagPositionsTrigger.addAction((arguments, globalScope, triggerScope) -> {
+					int issuedOrderId = ((CommonTriggerExecutionScope) triggerScope).getIssuedOrderId();
+					// Refresh after the swap is actually applied by the simulation (orders may be
+					// delayed a tick), for both the unit-inventory itemdrag and the within-bag
+					// bagitemdrag (CAbilityBag) drags.
+					if ((issuedOrderId >= OrderIds.itemdrag00 && issuedOrderId <= OrderIds.itemdrag05)
+							|| (issuedOrderId >= OrderIds.bagitemdrag00
+									&& issuedOrderId < OrderIds.bagitemdrag00 + 256)) {
+						rootFrame.getLuaGlobals().notifyBagsChanged();
+					}
+					return null;
+				});
+				pawnUnit.addEvent(war3MapViewer.simulation.getGlobalScope(), refreshBagPositionsTrigger,
+						JassGameEventsWar3.EVENT_UNIT_ISSUED_TARGET_ORDER);
+			}
+		});
+
 		this.tooltipFrame = this.rootFrame.createFrame("GameTooltip", this.rootFrame, 0, 0);
 //		this.uiParent.add(this.tooltipFrame);
 		this.tooltipFrame1 = (StringFrame) this.rootFrame.getFrameByName("$parentTextLeft1", 0);
@@ -318,6 +369,19 @@ public class ThirdPersonUI implements WarsmashToggleableUI {
 		this.cursorFrame.setZDepth(1.0f);
 		this.cursorFrame.setVisible(false);
 
+		// The WoW cursor model has no "carry the item icon" mechanism (its sequences are
+		// Point/Pickup/etc. and it has no replaceable-id texture slot), and the FrameXML
+		// never draws the held item either — in real WoW the C client paints it. So we
+		// draw it ourselves: a small texture that follows the cursor while an item is held
+		// (positioned in update(), rendered on top in render()). Not added to the frame
+		// tree; we drive its bounds/render manually.
+		this.cursorItemIconFrame = new TextureFrame("SmashTPCursorItemIcon", this.rootFrame, false,
+				TextureFrame.DEFAULT_TEX_COORDS);
+		this.cursorItemIconFrame.setVisible(true);
+
+		// Let the bag UI paint a dragged item onto the cursor (see setCursorItem).
+		this.rootFrame.getLuaGlobals().setCursorItemDisplayListener(this::setCursorItem);
+
 		this.rootFrame.positionBounds(this.rootFrame, this.uiViewport);
 		this.rootFrame.positionBounds(this.rootFrame, this.uiViewport);
 	}
@@ -326,6 +390,16 @@ public class ThirdPersonUI implements WarsmashToggleableUI {
 	public void update(final float deltaTime) {
 		if (this.showing) {
 			this.cameraManager.updateCamera();
+
+			// The engine has no native ability-cooldown-changed hook into the WoW Lua UI,
+			// so periodically tell the action buttons to re-check their cooldowns. Once a
+			// cooldown is armed, the cooldown frame's OnUpdateModel script animates the
+			// swipe every render frame on its own.
+			this.cooldownRefreshTimer += deltaTime;
+			if ((this.cooldownRefreshTimer >= COOLDOWN_REFRESH_INTERVAL) && (this.rootFrame != null)) {
+				this.cooldownRefreshTimer = 0;
+				this.rootFrame.getLuaGlobals().notifyActionBarCooldownsChanged();
+			}
 		}
 
 		final int baseMouseX = Gdx.input.getX();
@@ -338,8 +412,83 @@ public class ThirdPersonUI implements WarsmashToggleableUI {
 		this.cursorFrame.setFramePointX(FramePoint.LEFT, screenCoordsVector.x);
 		this.cursorFrame.setFramePointY(FramePoint.BOTTOM, screenCoordsVector.y);
 
+		if (this.holdingCursorItem) {
+			// Follow the cursor with the held-item icon (drawn in render()). Size relative
+			// to the UI world height so it scales with resolution (~a 36px icon at 720p).
+			final float iconSize = this.uiViewport.getMinWorldHeight() * 0.05f;
+			this.cursorItemIconFrame.getRenderBounds().set(screenCoordsVector.x - (iconSize / 2),
+					screenCoordsVector.y - (iconSize / 2), iconSize, iconSize);
+		}
+
 		if (this.showing) {
 			this.cursorFrame.setVisible(!this.touchDown);
+		}
+
+		boolean wasAutoSpinRight = this.autoSpinRight;
+		boolean wasAutoSpinLeft = this.autoSpinLeft;
+		if (this.touchDown && Gdx.input.isButtonPressed(Input.Buttons.RIGHT)) {
+			float targetAngle = (float) Math.toDegrees(this.cameraManager.horizontalAngle);
+			float currentAngle = this.pawnUnit.getFacing();
+			targetAngle = ((targetAngle % 360) + 360) % 360;
+			currentAngle = ((currentAngle % 360) + 360) % 360;
+			if (targetAngle < currentAngle - 180) {
+				targetAngle += 360;
+			}
+			if (targetAngle > currentAngle + 180) {
+				targetAngle -= 360;
+			}
+			float delta = targetAngle - currentAngle;
+			boolean newAutoSpinLeft = delta > 10;
+			boolean newAutoSpinRight = delta < -10;
+			autoSpinLeft = newAutoSpinLeft;
+			autoSpinRight = newAutoSpinRight;
+		} else {
+			autoSpinLeft = autoSpinRight = false;
+		}
+		if (autoSpinLeft != wasAutoSpinLeft) {
+			if (autoSpinLeft) {
+				this.uiOrderListener.issueImmediateOrder(this.pawnUnit.getHandleId(), this.abilityPlayerPawn.getHandleId(),
+						OrderIds.pawnLeftPressed, false);
+			} else {
+				this.uiOrderListener.issueImmediateOrder(this.pawnUnit.getHandleId(), this.abilityPlayerPawn.getHandleId(),
+						OrderIds.pawnLeftReleased, false);
+			} 
+		}
+		if (autoSpinRight != wasAutoSpinRight) {
+			if (autoSpinRight) {
+				this.uiOrderListener.issueImmediateOrder(this.pawnUnit.getHandleId(), this.abilityPlayerPawn.getHandleId(),
+						OrderIds.pawnRightPressed, false);
+			} else {
+				this.uiOrderListener.issueImmediateOrder(this.pawnUnit.getHandleId(), this.abilityPlayerPawn.getHandleId(),
+						OrderIds.pawnRightReleased, false);
+			}
+		}
+	}
+
+	/**
+	 * Reflects the held bag item on the mouse cursor by driving the WoW cursor model's
+	 * own animation, the same way {@code MeleeUI} drives the WC3 cursor's HoldItem
+	 * sequence — but we keep this UI's WoW 0.5.3 cursor model
+	 * ({@code Interface\Cursor\Cursor.mdx}) and play ITS corresponding sequence. That
+	 * model's sequences are Point, Cast, Pickup, Attack, Buy, Interact, Speak, ...; the
+	 * item-drag analogue is "Pickup". A null/empty path returns to "Point".
+	 *
+	 * <p>
+	 * The WoW cursor model can't carry the item's icon (no replaceable-id slot, and the
+	 * FrameXML doesn't draw it — that's the C client's job in real WoW), so in addition
+	 * to the "Pickup" hand animation we show the actual item icon via a small overlay
+	 * texture ({@link #cursorItemIconFrame}) that tracks the cursor.
+	 */
+	private void setCursorItem(final String itemIconPath) {
+		if ((itemIconPath != null) && !itemIconPath.isEmpty()) {
+			this.cursorItemIconFrame.setTexture(itemIconPath, this.rootFrame);
+			this.holdingCursorItem = true;
+			this.uiSounds.getSound("igAbilityIconPickup").play(this.uiScene.audioContext, 0, 0, 0);
+		}
+		else {
+			this.cursorItemIconFrame.setTexture((TextureRegion) null);
+			this.holdingCursorItem = false;
+			this.uiSounds.getSound("igAbilityIconDrop").play(this.uiScene.audioContext, 0, 0, 0);
 		}
 	}
 
@@ -359,6 +508,10 @@ public class ThirdPersonUI implements WarsmashToggleableUI {
 			font.setColor(originalColor);
 		}
 		this.rootFrame.render(batch, this.rootFrame.getFont20(), glyphLayout);
+		// Draw the held-item icon last so it sits on top of the cursor and all UI.
+		if (this.holdingCursorItem) {
+			this.cursorItemIconFrame.render(batch, this.rootFrame.getFont20(), glyphLayout);
+		}
 		final float worldWidth = this.uiViewport.getMinWorldWidth();
 		final float worldHeight = this.uiViewport.getMinWorldHeight();
 	}
@@ -493,6 +646,25 @@ public class ThirdPersonUI implements WarsmashToggleableUI {
 		}
 	}
 
+	/**
+	 * If a lootable world item is under the cursor, target it (so the loot natives see
+	 * it) and start the loot interaction (hero loot animation + loot window). Returns
+	 * true if an item was found and loot was initiated.
+	 */
+	private boolean tryLootUnderCursor(final int screenX, final float worldScreenY) {
+		final RenderWidget picked = this.war3MapViewer.rayPickUnit(screenX, worldScreenY, this.anyTargetableUnitFilter);
+		if (picked == null) {
+			return false;
+		}
+		final CItem item = picked.getSimulationWidget().visit(AbilityTargetVisitor.ITEM);
+		if ((item == null) || item.isDead() || item.isHidden()) {
+			return false;
+		}
+		setTarget(picked);
+		this.rootFrame.getLuaGlobals().beginLootInteraction();
+		return true;
+	}
+
 	@Override
 	public boolean touchUp(final int screenX, final int screenY, final float worldScreenY, final int button) {
 		screenCoordsVector.set(screenX, screenY);
@@ -510,6 +682,17 @@ public class ThirdPersonUI implements WarsmashToggleableUI {
 		}
 		else {
 			this.touchDown = false;
+			// Right-click (without a camera drag) on a lootable world item: target it and
+			// open the loot window. Handled before the camera/select logic below.
+			if ((button == Input.Buttons.RIGHT) && (this.touchDownX == screenX) && (this.touchDownY == screenY)
+					&& tryLootUnderCursor(screenX, worldScreenY)) {
+				if (this.cameraManager.isTouchDown()) {
+					this.cameraManager.setTouchDown(false);
+				}
+				Gdx.input.setCursorPosition(this.touchDownX, this.touchDownY);
+				this.mouseDownUIFrame = null;
+				return false;
+			}
 			if (button == Input.Buttons.LEFT) {
 				updateMouseOverUnit(screenX, worldScreenY);
 			}
@@ -567,7 +750,6 @@ public class ThirdPersonUI implements WarsmashToggleableUI {
 			else if (this.button == Input.Buttons.RIGHT) {
 				this.cameraManager.horizontalAngle -= Math.toRadians(dx * 0.15 * 2);
 				this.cameraManager.verticalAngle -= Math.toRadians(dy * 0.15 * 2);
-				this.pawnUnit.setFacing((float) Math.toDegrees(this.cameraManager.horizontalAngle));
 			}
 			this.lastX = newX;
 			this.lastY = newY;
@@ -585,6 +767,21 @@ public class ThirdPersonUI implements WarsmashToggleableUI {
 	public boolean mouseMoved(final int screenX, final int screenY, final float worldScreenY) {
 		this.lastX = screenX;
 		this.lastY = screenY;
+		updateHoverFrame(screenX, screenY);
+		updateMouseOverUnit(screenX, worldScreenY);
+		return false;
+	}
+
+	/**
+	 * Recomputes which UI frame is under the cursor and fires mouseEnter/mouseExit
+	 * accordingly (driving the engine's mouse-over HighlightTexture). Run both on
+	 * discrete mouseMoved events AND every frame from update(): the dynamically
+	 * generated bag item buttons could otherwise keep a stale highlight if a single
+	 * move event off them is ever missed, since their HighlightTexture is shown purely
+	 * while the frame's mouseOver flag is set (it is not a Lua/checkbox state and no
+	 * Lua event resets it).
+	 */
+	private void updateHoverFrame(final int screenX, final int screenY) {
 		screenCoordsVector.set(screenX, screenY);
 		this.uiViewport.unproject(screenCoordsVector);
 		final UIFrame mousedUIFrame = this.rootFrame.getFrameChildUnderMouse(screenCoordsVector.x,
@@ -595,9 +792,7 @@ public class ThirdPersonUI implements WarsmashToggleableUI {
 			}
 			if (mousedUIFrame instanceof ClickableFrame) {
 				this.mouseOverUIFrame = (ClickableFrame) mousedUIFrame;
-				if (this.mouseOverUIFrame != null) {
-					this.mouseOverUIFrame.mouseEnter(this.rootFrame, this.uiViewport);
-				}
+				this.mouseOverUIFrame.mouseEnter(this.rootFrame, this.uiViewport);
 				if (mousedUIFrame instanceof ClickableActionFrame) {
 					loadTooltip((ClickableActionFrame) mousedUIFrame);
 				}
@@ -609,10 +804,6 @@ public class ThirdPersonUI implements WarsmashToggleableUI {
 				}
 			}
 		}
-		if (mousedUIFrame == null) {
-		}
-		updateMouseOverUnit(screenX, worldScreenY);
-		return false;
 	}
 
 	private void loadTooltip(final ClickableActionFrame mousedUIFrame) {
@@ -677,7 +868,7 @@ public class ThirdPersonUI implements WarsmashToggleableUI {
 		@Override
 		public boolean call(final CWidget unit) {
 			final RenderWidget renderPeer = ThirdPersonUI.this.war3MapViewer.getRenderPeer(unit);
-			return !unit.isDead() && renderPeer.isSelectable(ThirdPersonUI.this.war3MapViewer.simulation,
+			return /*!unit.isDead() && */renderPeer.isSelectable(ThirdPersonUI.this.war3MapViewer.simulation,
 					ThirdPersonUI.this.war3MapViewer.getLocalPlayerIndex());
 		}
 	}
@@ -685,12 +876,12 @@ public class ThirdPersonUI implements WarsmashToggleableUI {
 	private final class AnyTargetableUnitFilter implements CWidgetFilterFunction {
 		@Override
 		public boolean call(final CWidget unit) {
-			return !unit.isDead();
+			return true;//!unit.isDead();
 		}
 	}
 
 	private boolean isUnitSelectable(final RenderWidget mouseOverUnit) {
 		return mouseOverUnit.isSelectable(this.war3MapViewer.simulation, this.war3MapViewer.getLocalPlayerIndex())
-				&& !mouseOverUnit.getSimulationWidget().isDead();
+				/*&& !mouseOverUnit.getSimulationWidget().isDead()*/;
 	}
 }

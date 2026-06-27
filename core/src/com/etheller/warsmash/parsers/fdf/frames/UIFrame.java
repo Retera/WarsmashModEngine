@@ -69,4 +69,6 @@ public interface UIFrame {
 	int getID();
 
 	void setID(int x);
+	
+	void checkLoad();
 }

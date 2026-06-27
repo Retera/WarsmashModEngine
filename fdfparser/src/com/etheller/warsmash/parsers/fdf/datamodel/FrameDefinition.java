@@ -9,7 +9,9 @@ import java.util.Map;
 import java.util.Set;
 
 import com.etheller.warsmash.parsers.fdf.datamodel.fields.FrameDefinitionField;
+import com.etheller.warsmash.parsers.fdf.datamodel.fields.FrameDefinitionFieldVisitor;
 import com.etheller.warsmash.parsers.fdf.datamodel.fields.RepeatingFrameDefinitionField;
+import com.etheller.warsmash.parsers.fdf.datamodel.fields.StringFrameDefinitionField;
 import com.etheller.warsmash.parsers.fdf.datamodel.fields.StringPairFrameDefinitionField;
 import com.etheller.warsmash.parsers.fdf.datamodel.fields.visitor.GetFloatFieldVisitor;
 import com.etheller.warsmash.parsers.fdf.datamodel.fields.visitor.GetFontFieldVisitor;
@@ -202,6 +204,24 @@ public class FrameDefinition {
 	}
 
 	public void setScriptDefinition(final FrameDefinition scriptDefinition) {
+		// inheritFrom() copies the inherited template's scriptDefinition onto this frame.
+		// When this frame then declares its OWN <Scripts> block, merge the two instead of
+		// replacing wholesale: keep inherited handlers (e.g. OnEvent from a grandparent
+		// template) that this frame's block does not redefine. The frame's own handlers
+		// win on conflict. Without this, a child template that defines OnLoad/OnClick would
+		// silently drop an inherited OnEvent, so events like BAG_UPDATE never reach it.
+		if ((this.scriptDefinition != null) && (scriptDefinition != null)
+				&& (this.scriptDefinition != scriptDefinition)) {
+			for (final Map.Entry<String, FrameDefinitionField> entry : this.scriptDefinition.nameToField.entrySet()) {
+				FrameDefinitionField incomingScript = scriptDefinition.nameToField.get(entry.getKey());
+				if(incomingScript != null) {
+					
+					scriptDefinition.nameToField.put(entry.getKey(), new StringFrameDefinitionField(entry.getValue().visit(GetStringFieldVisitor.INSTANCE) + "\n\n" + incomingScript.visit(GetStringFieldVisitor.INSTANCE)));
+				} else {
+					scriptDefinition.nameToField.put(entry.getKey(), entry.getValue());
+				}
+			}
+		}
 		this.scriptDefinition = scriptDefinition;
 	}
 

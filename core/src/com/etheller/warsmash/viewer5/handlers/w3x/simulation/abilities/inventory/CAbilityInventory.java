@@ -32,7 +32,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.BooleanAbility
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.CommandStringErrorKeys;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.ExternStringMsgAbilityActivationReceiver;
 
-public class CAbilityInventory extends AbstractGenericNoIconAbility {
+public class CAbilityInventory extends AbstractGenericNoIconAbility implements CItemSlotHolder {
 	private final boolean canDropItems;
 	private final boolean canGetItems;
 	private final boolean canUseItems;
@@ -83,11 +83,11 @@ public class CAbilityInventory extends AbstractGenericNoIconAbility {
 	public boolean checkBeforeQueue(final CSimulation game, final CUnit caster, final int playerIndex,
 			final int orderId, final boolean autoOrder, final AbilityTarget target) {
 		if ((orderId >= OrderIds.itemdrag00) && (orderId <= OrderIds.itemdrag05)) {
+			final int dragDropDestinationIndex = orderId - OrderIds.itemdrag00;
 			for (int i = 0; i < this.itemsHeld.length; i++) {
 				if (this.itemsHeld[i] == target) {
 					final CItem temp = this.itemsHeld[i];
 					final List<CAbility> swapList = this.itemsHeldAbilities[i];
-					final int dragDropDestinationIndex = orderId - OrderIds.itemdrag00;
 					this.itemsHeld[i] = this.itemsHeld[dragDropDestinationIndex];
 					this.itemsHeldAbilities[i] = this.itemsHeldAbilities[dragDropDestinationIndex];
 					this.itemsHeld[dragDropDestinationIndex] = temp;
@@ -95,6 +95,12 @@ public class CAbilityInventory extends AbstractGenericNoIconAbility {
 					return false;
 				}
 			}
+			// The item is not in this inventory: it's being dragged in from a bag, so move
+			// it (and swap any occupant back out) across the container boundary.
+			if (target instanceof CItem) {
+				CItemSlotHolder.transfer(game, caster, (CItem) target, this, dragDropDestinationIndex);
+			}
+			return false;
 		}
 		else if ((orderId >= OrderIds.itemuse00) && (orderId <= OrderIds.itemuse05)) {
 			final int slot = orderId - OrderIds.itemuse00;
@@ -152,6 +158,61 @@ public class CAbilityInventory extends AbstractGenericNoIconAbility {
 			return null;
 		}
 		return this.itemsHeld[slotIndex];
+	}
+
+	/** Index of the first free inventory slot, or -1 when the inventory is full. */
+	@Override
+	public int getFirstEmptySlot() {
+		for (int i = 0; i < this.itemsHeld.length; i++) {
+			if (this.itemsHeld[i] == null) {
+				return i;
+			}
+		}
+		return -1;
+	}
+
+	@Override
+	public int getSlotCount() {
+		return this.itemsHeld.length;
+	}
+
+	@Override
+	public int getSlotOf(final CItem item) {
+		return getSlot(item);
+	}
+
+	@Override
+	public void removeItemForMove(final CSimulation game, final CUnit hero, final CItem item) {
+		for (int i = 0; i < this.itemsHeld.length; i++) {
+			if (this.itemsHeld[i] == item) {
+				this.itemsHeld[i] = null;
+				for (final CAbility ability : this.itemsHeldAbilities[i]) {
+					hero.remove(game, ability);
+				}
+				this.itemsHeldAbilities[i].clear();
+				item.setContainedInventory(null, null);
+				return;
+			}
+		}
+	}
+
+	@Override
+	public void placeItemForMove(final CSimulation game, final CUnit hero, final CItem item, final int slotIndex) {
+		this.itemsHeld[slotIndex] = item;
+		item.setHidden(true);
+		item.setContainedInventory(this, hero);
+		if (this.canUseItems) {
+			for (final War3ID abilityId : item.getItemType().getAbilityList()) {
+				final CAbilityType<?> abilityType = game.getAbilityData().getAbilityType(abilityId);
+				if (abilityType != null) {
+					final CAbility abilityFromItem = abilityType.createAbility(game.getHandleIdAllocator().createId());
+					abilityFromItem.setIconShowing(false);
+					abilityFromItem.setItemAbility(item, slotIndex);
+					hero.add(game, abilityFromItem);
+					this.itemsHeldAbilities[slotIndex].add(abilityFromItem);
+				}
+			}
+		}
 	}
 
 	public boolean isDropItemsOnDeath() {
@@ -243,7 +304,19 @@ public class CAbilityInventory extends AbstractGenericNoIconAbility {
 				if (this.canGetItems) {
 					final CItem targetItem = (CItem) target;
 					if (!targetItem.isHidden()) {
-						receiver.targetOk(target);
+						// Reject the pickup when the inventory is full so the order system keeps
+						// iterating the unit's abilities and a CAbilityBag (which shares these
+						// order ids) can take the item as overflow. Items that auto-use on
+						// acquisition need no free slot, so still accept those.
+						final CItemType targetItemType = targetItem.getItemType();
+						final boolean autoUseOnAcquire = this.canUseItems
+								&& targetItemType.isUseAutomaticallyWhenAcquired() && targetItemType.isActivelyUsed();
+						if (autoUseOnAcquire || (getFirstEmptySlot() != -1)) {
+							receiver.targetOk(target);
+						}
+						else {
+							receiver.targetCheckFailed(CommandStringErrorKeys.INVENTORY_IS_FULL);
+						}
 					}
 					else {
 						receiver.orderIdNotAccepted();

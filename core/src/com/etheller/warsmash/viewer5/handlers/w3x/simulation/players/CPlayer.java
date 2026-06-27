@@ -510,6 +510,16 @@ public class CPlayer extends CBasePlayer {
 		}
 	}
 
+	public void fireDropItemEvents(final CUnit unit, final CItem item, final CSimulation game) {
+		final List<CPlayerEvent> eventList = getEventList(JassGameEventsWar3.EVENT_PLAYER_UNIT_DROP_ITEM);
+		if (eventList != null) {
+			for (final CPlayerEvent event : eventList) {
+				event.fire(unit, CommonTriggerExecutionScope.unitPickupItemScope(
+						JassGameEventsWar3.EVENT_PLAYER_UNIT_DROP_ITEM, event.getTrigger(), unit, item));
+			}
+		}
+	}
+
 	private List<CPlayerEvent> getOrCreateEventList(final JassGameEventsWar3 eventType) {
 		List<CPlayerEvent> playerEvents = this.eventTypeToEvents.get(eventType);
 		if (playerEvents == null) {

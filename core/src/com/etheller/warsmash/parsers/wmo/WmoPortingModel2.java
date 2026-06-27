@@ -304,9 +304,16 @@ public class WmoPortingModel2 extends com.etheller.warsmash.viewer5.Model<WmoPor
 					portedGeoset.extent.max[1] -= extentCenter.y;
 					portedGeoset.extent.max[2] -= extentCenter.z;
 
-					final int minIndex = gxBatch.getVertStart();
-					final int maxIndex = (minIndex + gxBatch.getVertCount()) - 1;
-					final int usedVertexCount = ((maxIndex - minIndex) + 1);
+					// Allocate only the vertices THIS batch actually references, not the whole
+					// gxBatch window. The faces below are sequential (groupVertexIndices is the
+					// identity list "stupidestFaces"), so this batch's triangles reference exactly
+					// the contiguous vertex run [startIndex, startIndex+count). Using the wider
+					// gxBatch.getVertStart()/getVertCount() made every batch in a window duplicate
+					// that window's entire vertex range (e.g. 84 batches x 16383 verts), ballooning
+					// a 19k-vertex group into ~1.4M verts (~63MB) -- enough that the largest WMOs
+					// (e.g. Blackrock Mountain) silently failed to allocate GL buffers and vanished.
+					final int minIndex = (int) groupBatch.getStartIndex();
+					final int usedVertexCount = groupBatch.getCount();
 
 					portedGeoset.vertices = new float[usedVertexCount * 3];
 					System.arraycopy(group.getVertices(), minIndex * 3, portedGeoset.vertices, 0, usedVertexCount * 3);
@@ -377,9 +384,16 @@ public class WmoPortingModel2 extends com.etheller.warsmash.viewer5.Model<WmoPor
 					portedGeoset.extent.max[1] -= extentCenter.y;
 					portedGeoset.extent.max[2] -= extentCenter.z;
 
-					final int minIndex = gxBatch.getVertStart();
-					final int maxIndex = (minIndex + gxBatch.getVertCount()) - 1;
-					final int usedVertexCount = ((maxIndex - minIndex) + 1);
+					// Allocate only the vertices THIS batch actually references, not the whole
+					// gxBatch window. The faces below are sequential (groupVertexIndices is the
+					// identity list "stupidestFaces"), so this batch's triangles reference exactly
+					// the contiguous vertex run [startIndex, startIndex+count). Using the wider
+					// gxBatch.getVertStart()/getVertCount() made every batch in a window duplicate
+					// that window's entire vertex range (e.g. 84 batches x 16383 verts), ballooning
+					// a 19k-vertex group into ~1.4M verts (~63MB) -- enough that the largest WMOs
+					// (e.g. Blackrock Mountain) silently failed to allocate GL buffers and vanished.
+					final int minIndex = (int) groupBatch.getStartIndex();
+					final int usedVertexCount = groupBatch.getCount();
 
 					portedGeoset.vertices = new float[usedVertexCount * 3];
 					System.arraycopy(group.getVertices(), minIndex * 3, portedGeoset.vertices, 0, usedVertexCount * 3);
@@ -519,7 +533,7 @@ public class WmoPortingModel2 extends com.etheller.warsmash.viewer5.Model<WmoPor
 				}
 			}
 
-			if (true) {
+			if (false) { // debug: dump each ported group as an .mdx under /tmp/dumbwmo
 				final File dst = new File("/tmp/dumbwmo/" + fetchUrl + groupIndex + ".mdx");
 				dst.getParentFile().mkdirs();
 				try (FileOutputStream fos = new FileOutputStream(dst)) {

@@ -4946,6 +4946,7 @@ public class CUnit extends CWidget {
 		if (playUserUISounds) {
 			game.unitDropItemEvent(this, droppedItem);
 		}
+		fireDropItemEvents(game, droppedItem);
 	}
 
 	public boolean isInRegion(final CRegion region) {
@@ -5676,6 +5677,18 @@ public class CUnit extends CWidget {
 			}
 		}
 		game.getPlayer(this.playerIndex).firePickUpItemEvents(this, item, game);
+	}
+
+	public void fireDropItemEvents(final CSimulation game, final CItem item) {
+		final List<CWidgetEvent> eventList = getEventList(JassGameEventsWar3.EVENT_UNIT_DROP_ITEM);
+		if (eventList != null) {
+			for (int i = eventList.size() - 1; i >= 0; i--) {
+				CWidgetEvent event = eventList.get(i);
+				event.fire(this, CommonTriggerExecutionScope.unitDropItemScope(
+						JassGameEventsWar3.EVENT_UNIT_DROP_ITEM, event.getTrigger(), this, item));
+			}
+		}
+		game.getPlayer(this.playerIndex).fireDropItemEvents(this, item, game);
 	}
 
 	public void fireOrderEvents(final CSimulation game, final COrderNoTarget order) {

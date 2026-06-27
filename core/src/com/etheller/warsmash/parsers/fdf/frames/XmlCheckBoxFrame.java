@@ -145,7 +145,7 @@ public class XmlCheckBoxFrame extends CheckBoxFrame {
 	}
 
 	@Override
-	protected void checkLoad() {
+	public void checkLoad() {
 		super.checkLoad();
 		for (final UIFrame child : this.childFrames) {
 			if (child instanceof AbstractRenderableFrame) {

@@ -136,8 +136,14 @@ public class GlueButtonFrame extends AbstractRenderableFrame implements Clickabl
 	@Override
 	public void mouseUp(final GameUI gameUI, final Viewport uiViewport) {
 		if (this.enabled) {
+			// Restore the un-pushed look. Some buttons (e.g. the WoW item-slot buttons) have
+			// no ControlBackdrop wired, so fall back to null rather than leaving the pushed
+			// texture stuck as the active child (this matches setEnabled/innerPositionBounds).
 			if (this.controlBackdrop != null) {
 				this.activeChild = this.controlBackdrop;
+			}
+			else {
+				this.activeChild = null;
 			}
 			this.buttonListener.mouseUp(gameUI, uiViewport);
 		}

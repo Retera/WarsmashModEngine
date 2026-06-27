@@ -28,8 +28,18 @@ public class MapListContainer {
 		final Collection<String> listfile = dataSource.getListfile();
 		final List<String> displayItemPaths = new ArrayList<>();
 		for (final String file : listfile) {
-			if ((((file.toLowerCase().endsWith(".w3x") || file.toLowerCase().endsWith(".w3m")) && !WDT_ONLY)
-					|| file.toLowerCase().endsWith(".wdt")) && !file.contains("/") && !file.contains("\\")) {
+			if (file.contains("/") || file.contains("\\")) {
+				continue;
+			}
+			final String fileLower = file.toLowerCase();
+			// Maps ship wrapped in an extra MPQ layer ("<name>.wdt.MPQ"); list them under
+			// their logical ".wdt" name so the rest of the pipeline keys on .wdt and the
+			// loader can re-append the ".MPQ" suffix to find the archive on disk.
+			if (fileLower.endsWith(".wdt.mpq")) {
+				displayItemPaths.add(file.substring(0, file.length() - ".MPQ".length()));
+			}
+			else if (((fileLower.endsWith(".w3x") || fileLower.endsWith(".w3m")) && !WDT_ONLY)
+					|| fileLower.endsWith(".wdt")) {
 				displayItemPaths.add(file);
 			}
 		}

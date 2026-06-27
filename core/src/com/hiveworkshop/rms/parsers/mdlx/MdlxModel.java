@@ -163,7 +163,18 @@ public class MdlxModel {
 				loadStaticObjects(this.textures, MdlxBlockDescriptor.TEXTURE, reader, size / 268);
 				break;
 			case TXAN:
-				loadDynamicObjects(this.textureAnimations, MdlxBlockDescriptor.TEXTURE_ANIMATION, reader, size);
+				if (this.version == 1300) {
+					// Version 1300 prefixes the chunk with a uint32 element count, like the
+					// other dynamic-object chunks. Without consuming it, the count word is
+					// misread as the first texture animation's size, producing a phantom
+					// empty animation and shifting every real animation's index by one
+					// (which breaks layer texture-animation bindings, e.g. cooldown swipes).
+					final long count = reader.readUInt32();
+					loadNDynamicObjects(this.textureAnimations, MdlxBlockDescriptor.TEXTURE_ANIMATION, reader, count);
+				}
+				else {
+					loadDynamicObjects(this.textureAnimations, MdlxBlockDescriptor.TEXTURE_ANIMATION, reader, size);
+				}
 				break;
 			case GEOS:
 				if (this.version == 1300) {

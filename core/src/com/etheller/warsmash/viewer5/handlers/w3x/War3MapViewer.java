@@ -943,9 +943,13 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 					WmoDoodadDefinition.Flags.Unknown_0x2);
 			final Vector3 usedCenter = new Vector3(wmoDoodadDefinition.getPosition());
 			usedCenter.scl(scale);
-			usedCenter.rotateRad(RenderMathUtils.VEC3_UNIT_Z, facingRadians);
-			usedCenter.rotateRad(RenderMathUtils.VEC3_UNIT_Y, (float) Math.toRadians(rotation[2]));
+			// Same fix as the group offset below: rotate X, Y, Z (call order) so the doodad's
+			// position within the WMO is rotated identically to the WMO geometry; the old
+			// Z,Y,X order applied the reverse rotation, sliding doodads out of place when the
+			// WMO had any pitch/roll.
 			usedCenter.rotateRad(RenderMathUtils.VEC3_UNIT_X, (float) Math.toRadians(rotation[0]));
+			usedCenter.rotateRad(RenderMathUtils.VEC3_UNIT_Y, (float) Math.toRadians(rotation[2]));
+			usedCenter.rotateRad(RenderMathUtils.VEC3_UNIT_Z, facingRadians);
 
 			final float[] specificLocation = { location[0] + usedCenter.x, location[1] + usedCenter.y,
 					location[2] + usedCenter.z };
@@ -1001,9 +1005,15 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 			final Vector3 extentCenter = groupModel.getExtentCenter();
 			final Vector3 usedCenter = new Vector3(extentCenter);
 			usedCenter.scl(scale);
-			usedCenter.rotateRad(RenderMathUtils.VEC3_UNIT_Z, facingRadians);
-			usedCenter.rotateRad(RenderMathUtils.VEC3_UNIT_Y, (float) Math.toRadians(rotation[2]));
+			// Rotate the group's center offset with the SAME composition the instance uses.
+			// instance.rotate(Z) then (Y) then (X) post-multiplies to localRotation = Rz*Ry*Rx,
+			// i.e. the vertex is rotated X, then Y, then Z. Vector3.rotateRad applies in call
+			// order, so we must call X, Y, Z here (the old Z,Y,X order produced the reverse
+			// rotation, so each group's offset diverged from its geometry under any non-yaw
+			// rotation -> the pieces separated / seams in rotated WMOs).
 			usedCenter.rotateRad(RenderMathUtils.VEC3_UNIT_X, (float) Math.toRadians(rotation[0]));
+			usedCenter.rotateRad(RenderMathUtils.VEC3_UNIT_Y, (float) Math.toRadians(rotation[2]));
+			usedCenter.rotateRad(RenderMathUtils.VEC3_UNIT_Z, facingRadians);
 			final float[] specificLocation = { location[0] + usedCenter.x, location[1] + usedCenter.y,
 					location[2] + usedCenter.z };
 

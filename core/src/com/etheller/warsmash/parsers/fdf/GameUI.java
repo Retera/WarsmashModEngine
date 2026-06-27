@@ -1,5 +1,6 @@
 package com.etheller.warsmash.parsers.fdf;
 
+import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -120,6 +121,7 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 	private final int racialCommandIndex;
 	private final FrameTemplateEnvironment templates;
 	private final Map<String, Texture> pathToTexture = new HashMap<>();
+	private final Map<String, Texture> pathToCircularTexture = new HashMap<>();
 	private boolean autoPosition = true;
 	private final FontGeneratorHolder fontGenerator;
 	private final FreeTypeFontParameter fontParam;
@@ -321,7 +323,14 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 									}
 								}
 								for (final Runnable job : this.pendingScriptLoads) {
-									job.run();
+									try {
+										job.run();
+									}
+									catch (final Exception e) {
+										// One frame's OnLoad throwing (e.g. a missing native) must not
+										// abort the remaining frames' OnLoad initialization.
+										e.printStackTrace();
+									}
 								}
 								this.pendingScriptLoads.clear();
 
@@ -1147,6 +1156,13 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 					frameDefinition.set("BackgroundArt", new StringFrameDefinitionField(attribText));
 				}
 			}
+			final Node scaleItem = getAttributesNamedItem(attributes, "scale");
+			if (scaleItem != null) {
+				final String scaleText = getAttributeText(scaleItem);
+				if (scaleText != null) {
+					frameDefinition.set("ModelScale", new FloatFrameDefinitionField(Float.parseFloat(scaleText)));
+				}
+			}
 		}
 		else if ("Slider".equals(baseXmlNodeName)) {
 			final Node orientationItem = getAttributesNamedItem(attributes, "orientation");
@@ -1485,6 +1501,10 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 					}
 					if (backgroundArt != null) {
 						setSpriteFrameModel(spriteFrame, backgroundArt);
+					}
+					final Float modelScale = frameDefinition.getFloat("ModelScale");
+					if (modelScale != null) {
+						spriteFrame.setModelScale(modelScale);
 					}
 					viewport2 = this.viewport; // TODO was fdfCoordinateResolutionDummyViewport here previously, but is
 												// that
@@ -2645,15 +2665,9 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 			if (frameDefinition.has("XMLHidden")) {
 				fInflatedFrame.setVisible(false);
 			}
-			else {
-				this.pendingScriptLoads.add(() -> {
-					if (fInflatedFrame.isVisibleOnScreen()) {
-						if (fInflatedFrame.getScripts() != null) {
-							fInflatedFrame.getScripts().onLoad();
-						}
-					}
-				});
-			}
+			this.pendingScriptLoads.add(() -> {
+				fInflatedFrame.checkLoad();
+			});
 			if ((inflatedFrame instanceof FocusableFrame) && (frameDefinition.get("TabFocusNext") != null)) {
 				this.focusableFrames.add((FocusableFrame) inflatedFrame);
 			}
@@ -2698,7 +2712,15 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 				}
 				anyAnchors = true;
 			}
-			if (!anyAnchors && frameDefinition.has("FromXML")) {
+			// Auto-stretch an anchorless frame to fill its parent ONLY if it has no
+			// explicit size. A sized-but-anchorless frame (e.g. ContainerFrame, 256x256)
+			// is positioned later by a runtime SetPoint; giving it a full SetAllPoints set
+			// here makes its LEFT anchor win in positionBounds and pins it to (0,0),
+			// overriding that SetPoint. (Both cases fall back to the same default position
+			// when never repositioned, so this only frees runtime SetPoint to take effect.)
+			final boolean hasExplicitSize = (frameDefinition.getFloat("Width") != null)
+					|| (frameDefinition.getFloat("Height") != null);
+			if (!anyAnchors && frameDefinition.has("FromXML") && !hasExplicitSize) {
 				inflatedFrame.setSetAllPoints(true);
 			}
 			this.nameToFrame.put(frameDefinitionName, inflatedFrame);
@@ -2828,6 +2850,59 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 			}
 		}
 		return texture;
+	}
+
+	/**
+	 * Loads an icon and returns a copy whose corners are masked out to a circle
+	 * (transparent outside, 1px antialiased rim), cached by path. Used for the round
+	 * unit portraits: the engine has to do the cropping itself — the frame's ring art
+	 * does NOT clip the square texture. We bake a generated circular alpha mask into
+	 * the texture once at load (rather than masking per-frame on the GPU) because the
+	 * portrait icon is static and this needs no batch/blend-state juggling.
+	 */
+	public Texture loadCircularMaskedTexture(final String path) {
+		Texture texture = this.pathToCircularTexture.get(path);
+		if (texture != null) {
+			return texture;
+		}
+		final int lastDotIndex = path.lastIndexOf('.');
+		final String blpPath = (lastDotIndex == -1 ? path : path.substring(0, lastDotIndex)) + ".blp";
+		try {
+			final ImageUtils.AnyExtensionImage info = ImageUtils.getAnyExtensionImageFixRGB(this.dataSource, blpPath,
+					"texture");
+			if ((info != null) && (info.getImageData() != null)) {
+				final BufferedImage masked = circleMask(info.getImageData());
+				texture = ImageUtils.getTexture(masked, info.isNeedsSRGBFix());
+				this.pathToCircularTexture.put(path, texture);
+			}
+		}
+		catch (final Exception exc) {
+			// leave null; the caller clears the portrait
+		}
+		return texture;
+	}
+
+	/** Returns an ARGB copy of src with alpha zeroed outside the largest inscribed circle. */
+	private static BufferedImage circleMask(final BufferedImage src) {
+		final int w = src.getWidth();
+		final int h = src.getHeight();
+		final BufferedImage out = new BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB);
+		final float cx = (w - 1) / 2.0f;
+		final float cy = (h - 1) / 2.0f;
+		final float radius = Math.min(w, h) / 2.0f;
+		for (int y = 0; y < h; y++) {
+			for (int x = 0; x < w; x++) {
+				final int argb = src.getRGB(x, y);
+				final float dx = x - cx;
+				final float dy = y - cy;
+				final float edge = radius - (float) Math.sqrt((dx * dx) + (dy * dy)); // >0 inside
+				final float coverage = edge >= 1.0f ? 1.0f : (edge <= 0.0f ? 0.0f : edge);
+				final int srcAlpha = (argb >>> 24) & 0xFF;
+				final int newAlpha = Math.round(srcAlpha * coverage);
+				out.setRGB(x, y, (newAlpha << 24) | (argb & 0x00FFFFFF));
+			}
+		}
+		return out;
 	}
 
 	@Override

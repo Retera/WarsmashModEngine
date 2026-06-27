@@ -891,6 +891,15 @@ public class OrderIds {
 	public static final int pawnDownReleased = 999999010;
 	public static final int pawnSitPressed = 999999011;
 	public static final int pawnJumpReleased = 999999012;
+	public static final int pawnLootPressed = 999999013;
+	public static final int pawnLootReleased = 999999014;
+
+	// Base id for moving an item between slots WITHIN a WoW bag/container (CAbilityBag),
+	// analogous to itemdrag00..05 for the unit inventory but covering arbitrary slot
+	// counts (the backpack has 16). The destination slot index is the offset from this
+	// base; the dragged item is the order target. A dedicated high range is used because
+	// itemdrag00 + index would overrun into the itemuse ids past 6 slots.
+	public static final int bagitemdrag00 = 999999100;
 
 	public static final int genericpaircommand = 852214008;
 }

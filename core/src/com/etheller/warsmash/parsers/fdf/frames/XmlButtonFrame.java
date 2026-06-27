@@ -57,10 +57,10 @@ public class XmlButtonFrame extends GlueTextButtonFrame {
 
 	@Override
 	protected void internalRender(final SpriteBatch batch, final BitmapFont baseFont, final GlyphLayout glyphLayout) {
-		super.internalRender(batch, baseFont, glyphLayout);
 		for (final UIFrame childFrame : this.childFrames) {
 			childFrame.render(batch, baseFont, glyphLayout);
 		}
+		super.internalRender(batch, baseFont, glyphLayout);
 	}
 
 	@Override
@@ -138,7 +138,7 @@ public class XmlButtonFrame extends GlueTextButtonFrame {
 	}
 
 	@Override
-	protected void checkLoad() {
+	public void checkLoad() {
 		super.checkLoad();
 		for (final UIFrame child : this.childFrames) {
 			if (child instanceof AbstractRenderableFrame) {

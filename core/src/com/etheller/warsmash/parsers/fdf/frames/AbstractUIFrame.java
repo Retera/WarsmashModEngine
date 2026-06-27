@@ -48,7 +48,7 @@ public abstract class AbstractUIFrame extends AbstractRenderableFrame implements
 	}
 
 	@Override
-	protected void checkLoad() {
+	public void checkLoad() {
 		super.checkLoad();
 		for (final UIFrame child : this.childFrames) {
 			if (child instanceof AbstractRenderableFrame) {

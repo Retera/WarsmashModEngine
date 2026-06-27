@@ -382,7 +382,7 @@ public abstract class AbstractRenderableFrame implements UIFrame {
 		}
 	}
 
-	protected void checkLoad() {
+	public void checkLoad() {
 		final UIFrameScripts scripts = getScripts();
 		if ((scripts != null) && !scripts.isLoaded()) {
 			scripts.onLoad();
@@ -399,10 +399,39 @@ public abstract class AbstractRenderableFrame implements UIFrame {
 			internalRender(batch, font20, glyphLayout);
 
 			final UIFrameScripts scripts = getScripts();
-			if ((scripts != null) && (scripts.OnUpdate != null)) {
-				scripts.onUpdate(Gdx.graphics.getDeltaTime() * 1000.0);
+			if (scripts != null) {
+				if (scripts.OnUpdate != null) {
+					scripts.onUpdate(Gdx.graphics.getDeltaTime() * 1000.0);
+				}
+				// WoW Model frames (e.g. the cooldown swipe) are driven each frame by their
+				// OnUpdateModel script, and notified once when an animation sequence ends via
+				// OnAnimFinished. These were previously parsed but never invoked.
+				if (scripts.OnUpdateModel != null) {
+					prepareModelScriptUpdate();
+					scripts.onUpdateModel();
+				}
+				if ((scripts.OnAnimFinished != null) && pollSequenceJustEnded()) {
+					scripts.onAnimFinished();
+				}
 			}
 		}
+	}
+
+	/**
+	 * Hook invoked just before a frame's OnUpdateModel Lua script runs each frame.
+	 * Model-backed frames override this to take authoritative control of their MDX
+	 * instance so the script's posing is not clobbered by scene auto-advance.
+	 */
+	protected void prepareModelScriptUpdate() {
+	}
+
+	/**
+	 * Hook used to fire OnAnimFinished exactly once when the frame's underlying
+	 * model animation sequence has just finished. Default frames never report a
+	 * finished sequence; model-backed frames override this.
+	 */
+	protected boolean pollSequenceJustEnded() {
+		return false;
 	}
 
 	@Override
@@ -530,16 +559,21 @@ public abstract class AbstractRenderableFrame implements UIFrame {
 		table.set("SetHeight", new TwoArgFunction() {
 			@Override
 			public LuaValue call(final LuaValue thistable, final LuaValue arg) {
-				setHeight(GameUI.convertXMLCoordY((float) arg.checkdouble()));
-				// TODO positionBounds
+				// XML->renderBounds is a two-step convert: pixels -> FDF (convertXMLCoordY)
+				// -> world space (convertY by the viewport), exactly as frame inflation does
+				// (GameUI: setHeight(convertY(viewport, fdfHeight))). The runtime Lua binding
+				// previously stored the FDF value directly, making frames ~1000x too small
+				// (e.g. SetWidth(192) -> 0.15 world units, an invisible ContainerFrame).
+				setHeight(GameUI.convertY(luaEnvironment.getUiViewport(),
+						GameUI.convertXMLCoordY((float) arg.checkdouble())));
 				return LuaValue.NIL;
 			}
 		});
 		table.set("SetWidth", new TwoArgFunction() {
 			@Override
 			public LuaValue call(final LuaValue thistable, final LuaValue arg) {
-				setWidth(GameUI.convertXMLCoordX((float) arg.checkdouble()));
-				// TODO positionBounds
+				setWidth(GameUI.convertX(luaEnvironment.getUiViewport(),
+						GameUI.convertXMLCoordX((float) arg.checkdouble())));
 				return LuaValue.NIL;
 			}
 		});
@@ -574,10 +608,15 @@ public abstract class AbstractRenderableFrame implements UIFrame {
 			public LuaValue call(final LuaValue thistable, final LuaValue myPoint, final LuaValue otherName,
 					final LuaValue otherPoint, final LuaValue xValue, final LuaValue yValue) {
 				final UIFrame other = luaEnvironment.getRootFrame().getFrameByName(otherName.checkjstring(), 0);
+				// Offsets are pixels and must reach world space the same two-step way as
+				// width/height (convertXMLCoord -> FDF, then convertX/Y by the viewport),
+				// since getFramePointX/Y returns world-space coordinates.
 				addSetPoint(new SetPoint(FramePoint.valueOf(myPoint.checkjstring()), other,
 						FramePoint.valueOf(otherPoint.checkjstring()),
-						GameUI.convertXMLCoordX((float) xValue.checkdouble()),
-						GameUI.convertXMLCoordY((float) yValue.checkdouble())));
+						GameUI.convertX(luaEnvironment.getUiViewport(),
+								GameUI.convertXMLCoordX((float) xValue.checkdouble())),
+						GameUI.convertY(luaEnvironment.getUiViewport(),
+								GameUI.convertXMLCoordY((float) yValue.checkdouble()))));
 				positionBounds(luaEnvironment.getRootFrame(), luaEnvironment.getUiViewport());
 				// TODO positionBounds
 				return LuaValue.NIL;

@@ -89,13 +89,16 @@ public class UIFrameScripts {
 
 		this.frameDef = null;
 		if (this.OnLoad != null) {
-			this.luaEnvironment.load(this.thisFrame);
+			final LuaValue prevThis = this.luaEnvironment.loadSavingThis(this.thisFrame);
 			try {
 				this.OnLoad.call();
 			}
 			catch (final Exception exc) {
 				System.err.println("Who called load??? " + this.thisFrame.getFrame().getName());
 				exc.printStackTrace();
+			}
+			finally {
+				this.luaEnvironment.restoreThis(prevThis);
 			}
 		}
 
@@ -107,7 +110,7 @@ public class UIFrameScripts {
 
 	public void onClick(final ThirdPersonLuaXmlButton button) {
 		if (this.OnClick != null) {
-			this.luaEnvironment.load(this.thisFrame);
+			final LuaValue prevThis = this.luaEnvironment.loadSavingThis(this.thisFrame);
 			try {
 				this.luaEnvironment.getGlobals().set("arg1", button.name());
 				this.OnClick.call();
@@ -115,17 +118,45 @@ public class UIFrameScripts {
 			catch (final Exception exc) {
 				exc.printStackTrace();
 			}
+			finally {
+				this.luaEnvironment.restoreThis(prevThis);
+			}
+		}
+	}
+
+	/**
+	 * Fires a StatusBar's OnValueChanged handler with the new value as arg1 (WoW passes
+	 * the raw value). This is what lets e.g. HealthBar_OnValueChanged run its
+	 * SetStatusBarColor logic, so health bars are tinted (green) instead of rendering
+	 * the bare white bar texture.
+	 */
+	public void onValueChanged(final LuaValue value) {
+		if (this.OnValueChanged != null) {
+			final LuaValue prevThis = this.luaEnvironment.loadSavingThis(this.thisFrame);
+			try {
+				this.luaEnvironment.getGlobals().set("arg1", value);
+				this.OnValueChanged.call();
+			}
+			catch (final Exception exc) {
+				exc.printStackTrace();
+			}
+			finally {
+				this.luaEnvironment.restoreThis(prevThis);
+			}
 		}
 	}
 
 	public void onShow() {
 		if (this.OnShow != null) {
-			this.luaEnvironment.load(this.thisFrame);
+			final LuaValue prevThis = this.luaEnvironment.loadSavingThis(this.thisFrame);
 			try {
 				this.OnShow.call();
 			}
 			catch (final Exception exc) {
 				exc.printStackTrace();
+			}
+			finally {
+				this.luaEnvironment.restoreThis(prevThis);
 			}
 		}
 	}
@@ -133,12 +164,15 @@ public class UIFrameScripts {
 	public void onHide() {
 
 		if (this.OnHide != null) {
-			this.luaEnvironment.load(this.thisFrame);
+			final LuaValue prevThis = this.luaEnvironment.loadSavingThis(this.thisFrame);
 			try {
 				this.OnHide.call();
 			}
 			catch (final Exception exc) {
 				exc.printStackTrace();
+			}
+			finally {
+				this.luaEnvironment.restoreThis(prevThis);
 			}
 		}
 	}
@@ -146,19 +180,22 @@ public class UIFrameScripts {
 	public void onSizeChanged() {
 
 		if (this.OnSizeChanged != null) {
-			this.luaEnvironment.load(this.thisFrame);
+			final LuaValue prevThis = this.luaEnvironment.loadSavingThis(this.thisFrame);
 			try {
 				this.OnSizeChanged.call();
 			}
 			catch (final Exception exc) {
 				exc.printStackTrace();
 			}
+			finally {
+				this.luaEnvironment.restoreThis(prevThis);
+			}
 		}
 	}
 
 	public void onEvent(final ThirdPersonLuaXmlEvent event, final LuaValue arg1) {
 		if (this.OnEvent != null) {
-			this.luaEnvironment.load(this.thisFrame);
+			final LuaValue prevThis = this.luaEnvironment.loadSavingThis(this.thisFrame);
 			try {
 				this.luaEnvironment.getGlobals().set("event", event.name());
 				this.luaEnvironment.getGlobals().set("arg1", arg1);
@@ -167,18 +204,54 @@ public class UIFrameScripts {
 			catch (final Exception exc) {
 				exc.printStackTrace();
 			}
+			finally {
+				this.luaEnvironment.restoreThis(prevThis);
+			}
 		}
 	}
 
 	public void onUpdate(final double elapsedMillis) {
 		if (this.OnUpdate != null) {
-			this.luaEnvironment.load(this.thisFrame);
+			final LuaValue prevThis = this.luaEnvironment.loadSavingThis(this.thisFrame);
 			try {
 				this.luaEnvironment.getGlobals().set("arg1", LuaValue.valueOf(elapsedMillis));
 				this.OnUpdate.call();
 			}
 			catch (final Exception exc) {
 				exc.printStackTrace();
+			}
+			finally {
+				this.luaEnvironment.restoreThis(prevThis);
+			}
+		}
+	}
+
+	public void onUpdateModel() {
+		if (this.OnUpdateModel != null) {
+			final LuaValue prevThis = this.luaEnvironment.loadSavingThis(this.thisFrame);
+			try {
+				this.OnUpdateModel.call();
+			}
+			catch (final Exception exc) {
+				exc.printStackTrace();
+			}
+			finally {
+				this.luaEnvironment.restoreThis(prevThis);
+			}
+		}
+	}
+
+	public void onAnimFinished() {
+		if (this.OnAnimFinished != null) {
+			final LuaValue prevThis = this.luaEnvironment.loadSavingThis(this.thisFrame);
+			try {
+				this.OnAnimFinished.call();
+			}
+			catch (final Exception exc) {
+				exc.printStackTrace();
+			}
+			finally {
+				this.luaEnvironment.restoreThis(prevThis);
 			}
 		}
 	}

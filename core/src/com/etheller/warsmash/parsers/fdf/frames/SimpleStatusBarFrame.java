@@ -1,7 +1,10 @@
 package com.etheller.warsmash.parsers.fdf.frames;
 
+import org.luaj.vm2.LuaFunction;
 import org.luaj.vm2.LuaTable;
 import org.luaj.vm2.LuaValue;
+import org.luaj.vm2.Varargs;
+import org.luaj.vm2.lib.OneArgFunction;
 import org.luaj.vm2.lib.ThreeArgFunction;
 import org.luaj.vm2.lib.TwoArgFunction;
 
@@ -10,6 +13,7 @@ import com.badlogic.gdx.utils.viewport.Viewport;
 import com.etheller.warsmash.parsers.fdf.GameUI;
 import com.etheller.warsmash.parsers.fdf.LuaEnvironment;
 import com.etheller.warsmash.parsers.fdf.UIFrameLuaWrapper;
+import com.etheller.warsmash.parsers.fdf.UIFrameScripts;
 import com.etheller.warsmash.parsers.fdf.datamodel.FramePoint;
 import com.etheller.warsmash.parsers.fdf.datamodel.Vector4Definition;
 import com.etheller.warsmash.parsers.fdf.lua.FourArgFunction;
@@ -21,6 +25,7 @@ public class SimpleStatusBarFrame extends AbstractUIFrame {
 	private final float barInset;
 	private float lastValue = Float.NaN;
 	private float luaMin, luaMax;
+	private float luaCurrentValue;
 
 	public SimpleStatusBarFrame(final String name, final UIFrame parent, final boolean decorateFileNames,
 			final boolean borderBelow, final float barInset) {
@@ -85,9 +90,31 @@ public class SimpleStatusBarFrame extends AbstractUIFrame {
 		table.set("SetValue", new TwoArgFunction() {
 			@Override
 			public LuaValue call(final LuaValue thisTable, final LuaValue currValue) {
-				setValue((currValue.tofloat() - SimpleStatusBarFrame.this.luaMin)
+				SimpleStatusBarFrame.this.luaCurrentValue = currValue.tofloat();
+				setValue((SimpleStatusBarFrame.this.luaCurrentValue - SimpleStatusBarFrame.this.luaMin)
 						/ (SimpleStatusBarFrame.this.luaMax - SimpleStatusBarFrame.this.luaMin));
+				// Fire OnValueChanged so the bar's color/text scripts run (e.g.
+				// HealthBar_OnValueChanged -> SetStatusBarColor tints the bar).
+				final UIFrameScripts scripts = getScripts();
+				if (scripts != null) {
+					scripts.onValueChanged(currValue);
+				}
 				return null;
+			}
+		});
+		table.set("GetValue", new OneArgFunction() {
+			@Override
+			public LuaValue call(final LuaValue thisTable) {
+				return LuaValue.valueOf(SimpleStatusBarFrame.this.luaCurrentValue);
+			}
+		});
+		table.set("GetMinMaxValues", new LuaFunction() {
+			@Override
+			public Varargs invoke(final Varargs args) {
+				// Always read in an assignment (local min,max = bar:GetMinMaxValues()), so the
+				// multi-return invoke() path is fine here.
+				return LuaValue.varargsOf(new LuaValue[] { LuaValue.valueOf(SimpleStatusBarFrame.this.luaMin),
+						LuaValue.valueOf(SimpleStatusBarFrame.this.luaMax) });
 			}
 		});
 		table.set("SetStatusBarColor", new FourArgFunction() {

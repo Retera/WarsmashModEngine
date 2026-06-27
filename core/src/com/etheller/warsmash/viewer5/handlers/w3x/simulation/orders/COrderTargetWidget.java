@@ -61,8 +61,11 @@ public class COrderTargetWidget implements COrder {
 		if (ability == null) {
 			if (!caster.order(game, this.orderId, this.getTarget(game))) {
 				game.getCommandErrorListener().showInterfaceError(caster.getPlayerIndex(), "NOTEXTERN: No such ability");
+				return caster.pollNextOrderBehavior(game);
+			} else {
+				// NOTE: weird/ possibly wrong to return current here, but polling next was doing an always-interrupt that was undesired
+				return caster.getCurrentBehavior();
 			}
-			return caster.pollNextOrderBehavior(game);
 		}
 		ability.checkCanUse(game, caster, this.playerIndex, this.orderId, this.autoOrder, abilityActivationReceiver.reset());
 		if (abilityActivationReceiver.isUseOk()) {

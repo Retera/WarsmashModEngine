@@ -126,7 +126,7 @@ public class XmlTextAreaFrame extends TextAreaFrame {
 	}
 
 	@Override
-	protected void checkLoad() {
+	public void checkLoad() {
 		super.checkLoad();
 		for (final UIFrame child : this.childFrames) {
 			if (child instanceof AbstractRenderableFrame) {

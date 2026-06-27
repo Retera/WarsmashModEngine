@@ -48,6 +48,7 @@ public class CBehaviorPlayerPawn implements CBehavior {
 	private War3MapViewer viewerWorldAccess;
 	private MdxCharacterInstance characterModelInstance;
 	private boolean sitting;
+	private boolean looting;
 	private MdxCharacterNode handR;
 	private MdxCharacterNode handL;
 
@@ -118,6 +119,10 @@ public class CBehaviorPlayerPawn implements CBehavior {
 		}
 		else {
 			this.forwardSpeed = (0);
+		}
+		// Moving cancels the held loot crouch (mirrors how sitting ends on movement).
+		if ((walking != 0) || (shuffle != 0)) {
+			this.looting = false;
 		}
 		final float absForwardSpeed = Math.abs(this.forwardSpeed);
 		if (this.lastIntersectedUnit != null) {
@@ -251,7 +256,12 @@ public class CBehaviorPlayerPawn implements CBehavior {
 						break;
 					case 0:
 						PrimaryTag primaryTag;
-						if (this.sitting) {
+						if (this.looting) {
+							primaryTag = PrimaryTag.LOOT;
+							return this;
+//							return this.unit.pollNextOrderBehavior(game); // don't repeat
+						}
+						else if (this.sitting) {
 							primaryTag = PrimaryTag.SITGROUND;
 						}
 						else if (swimming) {
@@ -282,6 +292,7 @@ public class CBehaviorPlayerPawn implements CBehavior {
 
 	@Override
 	public void end(final CSimulation game, final boolean interrupted) {
+		looting = false;
 		this.unit.setDefaultBehavior(this);
 	}
 
@@ -309,6 +320,7 @@ public class CBehaviorPlayerPawn implements CBehavior {
 	}
 
 	public void jump() {
+		this.looting = false;
 		final boolean swimming = isSwimming();
 		if (!this.wasFalling || swimming) {
 			setVelocityZ(20);
@@ -324,7 +336,26 @@ public class CBehaviorPlayerPawn implements CBehavior {
 		}
 	}
 
+	/**
+	 * Plays (and holds) the looting crouch using the model's "Loot" sequence. Mirrors
+	 * {@link #sit()}; the pose is held by the update() stand-case while {@link #looting}
+	 * is set, and is cleared on movement, jumping, sitting, or {@link #lootReleased()}
+	 * (which the loot window's close path invokes).
+	 */
+	public void loot() {
+		if (!this.wasFalling && !this.wasAirborn) {
+			this.sitting = false;
+			this.looting = true;
+			this.unit.getUnitAnimationListener().playAnimation(true, PrimaryTag.LOOT, SequenceUtils.EMPTY, 1.0f, true);
+		}
+	}
+
+	public void lootReleased() {
+		this.looting = false;
+	}
+
 	public void sit() {
+		this.looting = false;
 		final boolean swimming = isSwimming();
 		if (swimming) {
 			setVelocityZ(-20);

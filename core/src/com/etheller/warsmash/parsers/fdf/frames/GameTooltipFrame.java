@@ -6,7 +6,7 @@ import org.luaj.vm2.lib.TwoArgFunction;
 
 import com.etheller.warsmash.parsers.fdf.LuaEnvironment;
 import com.etheller.warsmash.parsers.fdf.UIFrameLuaWrapper;
-import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
 
 public class GameTooltipFrame extends SimpleFrame {
 	private StringFrame text;
@@ -30,8 +30,8 @@ public class GameTooltipFrame extends SimpleFrame {
 		table.set("SetUnit", new TwoArgFunction() {
 			@Override
 			public LuaValue call(final LuaValue thistable, final LuaValue unitKey) {
-				final CUnit unit = luaEnvironment.getUnit(unitKey.checkjstring());
-				luaEnvironment.getRootFrame().setText(GameTooltipFrame.this.text, luaEnvironment.getUnitName(unit));
+				final CWidget unit = luaEnvironment.getWidget(unitKey.checkjstring());
+				luaEnvironment.getRootFrame().setText(GameTooltipFrame.this.text, luaEnvironment.getWidgetName(unit));
 				return LuaValue.NIL;
 			}
 		});

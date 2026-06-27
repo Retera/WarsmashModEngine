@@ -119,9 +119,19 @@ public class TextureFrame extends AbstractRenderableFrame {
 		table.set("SetTexture", new TwoArgFunction() {
 			@Override
 			public LuaValue call(final LuaValue thistable, final LuaValue arg) {
-				final String text = arg.checkjstring();
-				setTexture(text, luaEnvironment.getRootFrame());
-				System.err.println("setTexture finished: '" + text + "'");
+				// WoW's Texture:SetTexture(nil) clears the texture (e.g. empty item-button
+				// slots pass nil from SetItemButtonTexture). An empty-string path means the
+				// same thing (bag-bar buttons have no empty-slot background art, so
+				// SetItemButtonTexture passes ""). Treat both as "clear" so a slot that
+				// loses its item actually blanks out instead of keeping the stale icon.
+				// Tolerating nil also avoids erroring on checkjstring, which would abort the
+				// caller (e.g. ContainerFrame_GenerateFrame) before it could Show().
+				if (arg.isnil() || arg.checkjstring().isEmpty()) {
+					setTexture((TextureRegion) null);
+				}
+				else {
+					setTexture(arg.checkjstring(), luaEnvironment.getRootFrame());
+				}
 				return LuaValue.NIL;
 			}
 		});

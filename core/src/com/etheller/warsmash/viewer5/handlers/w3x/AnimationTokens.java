@@ -38,7 +38,8 @@ public class AnimationTokens {
 		SWIMIDLE,
 		SITGROUNDDOWN,
 		SITGROUND,
-		SITGROUNDUP;
+		SITGROUNDUP,
+		LOOT;
 
 		@Override
 		public int getHandleId() {

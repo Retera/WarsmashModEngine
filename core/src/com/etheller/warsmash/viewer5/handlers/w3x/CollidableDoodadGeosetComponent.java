@@ -61,4 +61,15 @@ public class CollidableDoodadGeosetComponent implements CollidableDoodadComponen
 		// onto this surface are lit like the doodads on it, not like the surface itself.
 		return this.instance.getServedModelOnlyLightManager();
 	}
+
+	@Override
+	public float[] getServedInteriorAmbient() {
+		return this.instance.servedInteriorAmbient;
+	}
+
+	@Override
+	public boolean sampleNearestFloorColor(final float x, final float y, final float z, final float[] exteriorColor,
+			final float[] outRgb) {
+		return false;
+	}
 }

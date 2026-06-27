@@ -90,6 +90,29 @@ public class LightInstance implements UpdatableObject, SceneLightInstance {
 		floatBuffer.put(offset + 15, ambientIntensity);
 	}
 
+	/** Writes this light's current (animated) colour scaled by its intensity into out3, the way bind() would
+	 * upload it. Used as an approximate "exterior light colour" for the day/night sun. */
+	public void getWorldColor(final float[] out3) {
+		final int sequence = this.instance.sequence;
+		final int frame = this.instance.frame;
+		final int counter = this.instance.counter;
+		this.light.getColor(out3, sequence, frame, counter);
+		this.light.getIntensity(scalarHeap, sequence, frame, counter);
+		final float intensity = scalarHeap[0];
+		out3[0] *= intensity;
+		out3[1] *= intensity;
+		out3[2] *= intensity;
+	}
+
+	/** Writes this light's current world direction into out (for a DIRECTIONAL light, the way the sun points),
+	 * matching the direction bind() uploads. Meaningful for DIRECTIONAL lights; for others it is just the
+	 * node's forward axis. */
+	public void getWorldDirection(final Vector3 out) {
+		out.set(0, 0, 1);
+		this.node.localRotation.transform(out);
+		out.nor();
+	}
+
 	@Override
 	public void update(final float dt, final boolean visible) {
 	}

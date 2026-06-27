@@ -281,9 +281,12 @@ public class MdxShaders {
 				"uniform sampler2D u_environmentMap;\r\n" + //
 				"uniform float u_filterMode;\r\n" + //
 				"uniform float u_unshaded;\r\n" + //
-				// Flat per-instance interior light (WMO MODD baked color), added to the diffuse lighting
-				// term so models inside WMO interiors are not rendered black. (0,0,0) for everything else.
+				// Per-instance interior light (ambient floor + directional 'extra' along u_interiorDir), added
+				// to the diffuse lighting so models inside WMO interiors are not rendered black. All zero for
+				// everything else. v_normal is world-space (bone matrices are world matrices), as is u_interiorDir.
 				"uniform vec3 u_interiorAmbient;\r\n" + //
+				"uniform vec3 u_interiorDirColor;\r\n" + //
+				"uniform vec3 u_interiorDir;\r\n" + //
 				"// uniform sampler2D u_lutMap;\r\n" + //
 				"// uniform sampler2D u_envDiffuseMap;\r\n" + //
 				"// uniform sampler2D u_envSpecularMap;\r\n" + //
@@ -599,7 +602,8 @@ public class MdxShaders {
 						"      diffuse = diffuse * (1.0 - tcFactor) + diffuse * tc * tcFactor;\r\n" + //
 						"    }\r\n" : "\r\n")
 				+ //
-				"  lambertFactorSum += u_interiorAmbient;\r\n" + //
+				"  lambertFactorSum += u_interiorAmbient + u_interiorDirColor * clamp(dot(normalize(v_normal), u_interiorDir), 0.0, 1.0);\r\n"
+				+ //
 				"  color = clamp(color, 0.0, 1.0) + diffuse * ((1.0 - u_unshaded) * lambertFactorSum + u_unshaded) + emissive;\r\n"
 				+ //
 				"  gl_FragColor = vec4(color, baseColor.a);\r\n" + //

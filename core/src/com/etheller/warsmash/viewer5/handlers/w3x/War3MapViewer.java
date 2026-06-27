@@ -923,6 +923,36 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 		return renderDoodad;
 	}
 
+	/** The alpha (0.5.3) client floored every interior light colour component at 24/255 (wowdev: "The client
+	 * enforces a minimum of 24 for each colour component"). We reuse that documented floor so interior WMO
+	 * lighting is dim rather than pitch black. */
+	private static final float WMO_INTERIOR_MIN_LIGHT = 24f / 255f;
+
+	private static float[] flooredInteriorAmbient(final float[] ambientRgb) {
+		return new float[] { Math.max(ambientRgb[0], WMO_INTERIOR_MIN_LIGHT),
+				Math.max(ambientRgb[1], WMO_INTERIOR_MIN_LIGHT), Math.max(ambientRgb[2], WMO_INTERIOR_MIN_LIGHT) };
+	}
+
+	/** Writes the current world-space sun direction (from the day/night-cycle unit light, the same one
+	 * W3xSceneWorldLightManager shades the world with) into out; returns false if there is no DNC sun yet. */
+	public boolean getSunWorldDirection(final Vector3 out) {
+		if ((this.dncUnit != null) && !this.dncUnit.lights.isEmpty()) {
+			this.dncUnit.lights.get(0).getWorldDirection(out);
+			return true;
+		}
+		return false;
+	}
+
+	/** Writes the current outdoor/sun light colour (day/night animated) into out3; returns false if there is
+	 * no DNC sun yet. Used as the "exterior" colour for WMO vertices/units flagged exterior (MOCV alpha 0). */
+	public boolean getExteriorLightColor(final float[] out3) {
+		if ((this.dncUnit != null) && !this.dncUnit.lights.isEmpty()) {
+			this.dncUnit.lights.get(0).getWorldColor(out3);
+			return true;
+		}
+		return false;
+	}
+
 	public List<RenderDoodad> createWdtWorldModelObject(final GameObject row, final int doodadVariation,
 			final float[] location, final float[] rotation, final float scale, final boolean shrubbery,
 			final long uniqueId, final int doodadSet) {
@@ -1034,6 +1064,27 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 			}
 			final Rectangle entireMap = this.terrain.getEntireMap();
 			final boolean groupIsExterior = FlagUtils.hasFlag(groupModel.getFlags(), WmoGroupInfo.Flags.IsExterior);
+			// Place this group's floor light samples (group-local) into WORLD space using the same transform
+			// the geometry uses, so a unit standing here can sample the local ground colour. Built once,
+			// shared by the group's collision components.
+			final float[] localFloorXYZ = groupModel.getFloorSampleXYZ();
+			final float[] floorSampleRGB = groupModel.getFloorSampleRGB();
+			final float[] floorSampleExterior = groupModel.getFloorSampleExterior();
+			float[] worldFloorXYZ = null;
+			if ((localFloorXYZ != null) && (localFloorXYZ.length > 0)) {
+				worldFloorXYZ = new float[localFloorXYZ.length];
+				final Vector3 sampleHeap = new Vector3();
+				for (int i = 0; i < localFloorXYZ.length; i += 3) {
+					sampleHeap.set(localFloorXYZ[i], localFloorXYZ[i + 1], localFloorXYZ[i + 2]);
+					sampleHeap.scl(scale);
+					sampleHeap.rotateRad(RenderMathUtils.VEC3_UNIT_X, (float) Math.toRadians(rotation[0]));
+					sampleHeap.rotateRad(RenderMathUtils.VEC3_UNIT_Y, (float) Math.toRadians(rotation[2]));
+					sampleHeap.rotateRad(RenderMathUtils.VEC3_UNIT_Z, facingRadians);
+					worldFloorXYZ[i] = specificLocation[0] + sampleHeap.x;
+					worldFloorXYZ[i + 1] = specificLocation[1] + sampleHeap.y;
+					worldFloorXYZ[i + 2] = specificLocation[2] + sampleHeap.z;
+				}
+			}
 			for (final MdlxCollisionGeometry collisionGeometry : model.getCollisionGeometries()) {
 				final Bounds bounds = new Bounds();
 				final float[] min = new float[] { Float.MAX_VALUE, Float.MAX_VALUE, Float.MAX_VALUE };
@@ -1054,9 +1105,10 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 				final Rectangle geosetRotatedBounds = getRotatedBoundingBox(specificLocation[0], specificLocation[1],
 						scale3D, facingRadians, geosetBoundingBox);
 				if (entireMap.overlaps(geosetRotatedBounds)) {
-					final CollidableDoodadComponent collidableComponent = new CollidableDoodadCollisionComponent(
+					final CollidableDoodadCollisionComponent collidableComponent = new CollidableDoodadCollisionComponent(
 							(MdxComplexInstance) renderDoodad.instance, collisionGeometry, geosetRotatedBounds,
 							geosetBoundingBox, min, max, !groupIsExterior);
+					collidableComponent.setFloorLightSamples(worldFloorXYZ, floorSampleRGB, floorSampleExterior);
 					this.walkableComponentTree.add(collidableComponent, geosetRotatedBounds);
 					renderDoodad.add(collidableComponent);
 				}
@@ -1072,6 +1124,15 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 				servedLightManager.add(this.dncUnit.lights.get(0));
 			}
 //			((MdxComplexInstance) renderDoodad.instance).setLightOmitOffsetOverride(lightOmit);
+			if (!groupIsExterior) {
+				// Hand units that walk onto this interior surface a flat ambient (the WMO's MOHD ambient,
+				// floored to the alpha client's documented minimum of 24/255 per component) so they are not
+				// near-black underground. They still get the served MOLT lamps on top via the light manager.
+				// This is a flat per-WMO ambient, not a per-spot sample of the floor's baked lighting (which
+				// would need decoding MOLM/MOLD lightmaps or correlating the collision mesh to MOCV colors).
+				((MdxComplexInstance) renderDoodad.instance).servedInteriorAmbient = flooredInteriorAmbient(
+						worldModelObject.getAmbientColor());
+			}
 			this.doodads.add(renderDoodad);
 			this.decals.add(renderDoodad);
 			renderDoodads.add(renderDoodad);
@@ -1096,7 +1157,10 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 							//
 							// MODD color is BGRA (unsigned 0..255); every entry in these v14 alpha WMOs has
 							// alpha==255 and a literal RGB (no MOLT-index case), so the RGB is used directly.
-							final float[] amb = worldModelObject.getAmbientColor(); // RGB 0..1 (MOHD)
+							// MOHD ambient, floored to the alpha client's documented minimum of 24/255 per
+							// component (the same "don't go fully dark" rule the client applied to interior
+							// lightmap colors), so deeply-shadowed doodads are dim rather than pitch black.
+							final float[] amb = flooredInteriorAmbient(worldModelObject.getAmbientColor());
 							final short[] color = wmoDoodadDefinition.getColor();
 							final float baseR = color[2] / 255f, baseG = color[1] / 255f, baseB = color[0] / 255f;
 							// Directional 'extra' = baked color above the ambient floor.

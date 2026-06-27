@@ -108,7 +108,8 @@ public class WmoPortingModel2 extends com.etheller.warsmash.viewer5.Model<WmoPor
 					this.fetchUrl);
 			final GroupModelLoader groupModelLoader = portedModelsData[i];
 			this.portedModels[i] = new GroupModel(mdxModel, groupModelLoader.extentCenter, groupModelLoader.flags,
-					groupModelLoader.doodadReferences, groupModelLoader.animatedLiquid);
+					groupModelLoader.doodadReferences, groupModelLoader.animatedLiquid, groupModelLoader.floorSampleXYZ,
+					groupModelLoader.floorSampleRGB, groupModelLoader.floorSampleExterior);
 			try {
 				mdxModel.load(portedModelsData[i].model);
 				mdxModel.ok = true;
@@ -578,11 +579,55 @@ public class WmoPortingModel2 extends com.etheller.warsmash.viewer5.Model<WmoPor
 				}
 			}
 
+			// Floor-light samples for UNITS: retain the baked MOCV colour of upward-facing (floor) vertices,
+			// in group-local space (extentCenter-subtracted, like the rendered geometry), so a unit standing
+			// on this group can sample the local ground light instead of using only the flat WMO ambient.
+			final float[][] floorSamples = buildFloorLightSamples(group, extentCenter);
+
 			portedModels[groupIndex] = new GroupModelLoader(portedModel, extentCenter, group.getFlags(),
-					group.getDoodadReferences(), animatedLiquid);
+					group.getDoodadReferences(), animatedLiquid, floorSamples[0], floorSamples[1], floorSamples[2]);
 		}
 
 		return portedModels;
+	}
+
+	/** Returns {localXYZ, rgb, exterior} for the group's upward-facing (floor) vertices that carry baked MOCV
+	 * colours, in group-local space. exterior[i] is 1 if that vertex is an EXTERIOR vertex (MOCV alpha 0 / rgb
+	 * 0 -> lit by the dynamic skylight, not the static MOCV), else 0. Empty arrays if the group has no colours. */
+	private static float[][] buildFloorLightSamples(final ModelObjectGroup group, final Vector3 extentCenter) {
+		final float[] verts = group.getVertices();
+		final float[] normals = group.getNormals();
+		final int[] colors = group.getVertexColors();
+		if ((verts == null) || (normals == null) || (colors == null)) {
+			return new float[][] { new float[0], new float[0], new float[0] };
+		}
+		final int vCount = Math.min(verts.length, normals.length) / 3;
+		int floorCount = 0;
+		for (int i = 0; i < vCount; i++) {
+			if ((i < colors.length) && (normals[(i * 3) + 2] > 0.7f)) {
+				floorCount++;
+			}
+		}
+		final float[] xyz = new float[floorCount * 3];
+		final float[] rgb = new float[floorCount * 3];
+		final float[] exterior = new float[floorCount];
+		int s = 0;
+		for (int i = 0; i < vCount; i++) {
+			if ((i < colors.length) && (normals[(i * 3) + 2] > 0.7f)) {
+				xyz[(s * 3) + 0] = verts[(i * 3) + 0] - extentCenter.x;
+				xyz[(s * 3) + 1] = verts[(i * 3) + 1] - extentCenter.y;
+				xyz[(s * 3) + 2] = verts[(i * 3) + 2] - extentCenter.z;
+				final int c = colors[i]; // 0xAARRGGBB (same unpack as the rendered MOCV lighting)
+				rgb[(s * 3) + 0] = ((c >> 16) & 0xFF) / 255f;
+				rgb[(s * 3) + 1] = ((c >> 8) & 0xFF) / 255f;
+				rgb[(s * 3) + 2] = ((c >> 0) & 0xFF) / 255f;
+				// Exterior vertices have MOCV alpha 0 (== rgb 0 in this data); they are lit by the dynamic
+				// skylight, so a unit standing here should use the day/night colour, not the static (black) MOCV.
+				exterior[s] = (((c >> 24) & 0xFF) == 0) ? 1f : 0f;
+				s++;
+			}
+		}
+		return new float[][] { xyz, rgb, exterior };
 	}
 
 	/** MLIQ liquid-grid tile spacing in WMO-local units (verified from corner alignment). */
@@ -856,14 +901,21 @@ public class WmoPortingModel2 extends com.etheller.warsmash.viewer5.Model<WmoPor
 		private final int flags;
 		private final int[] doodadReferences;
 		private final boolean animatedLiquid;
+		private final float[] floorSampleXYZ;
+		private final float[] floorSampleRGB;
+		private final float[] floorSampleExterior;
 
 		private GroupModel(final MdxModel model, final Vector3 extentCenter, final int flags,
-				final int[] doodadReferences, final boolean animatedLiquid) {
+				final int[] doodadReferences, final boolean animatedLiquid, final float[] floorSampleXYZ,
+				final float[] floorSampleRGB, final float[] floorSampleExterior) {
 			this.model = model;
 			this.extentCenter = extentCenter;
 			this.flags = flags;
 			this.doodadReferences = doodadReferences;
 			this.animatedLiquid = animatedLiquid;
+			this.floorSampleXYZ = floorSampleXYZ;
+			this.floorSampleRGB = floorSampleRGB;
+			this.floorSampleExterior = floorSampleExterior;
 		}
 
 		/** True if this group has an animated (flipbook) liquid surface that needs the instance to
@@ -887,6 +939,22 @@ public class WmoPortingModel2 extends com.etheller.warsmash.viewer5.Model<WmoPor
 		public int[] getDoodadReferences() {
 			return this.doodadReferences;
 		}
+
+		/** Group-local positions (x,y,z triples) of floor vertices that carry baked light colour. */
+		public float[] getFloorSampleXYZ() {
+			return this.floorSampleXYZ;
+		}
+
+		/** Baked floor light colour (r,g,b triples) parallel to getFloorSampleXYZ(). */
+		public float[] getFloorSampleRGB() {
+			return this.floorSampleRGB;
+		}
+
+		/** 1 per floor sample (parallel to getFloorSampleXYZ()): 1 = exterior vertex (use dynamic skylight),
+		 * 0 = interior (use the baked colour). */
+		public float[] getFloorSampleExterior() {
+			return this.floorSampleExterior;
+		}
 	}
 
 	private static final class GroupModelLoader {
@@ -895,14 +963,21 @@ public class WmoPortingModel2 extends com.etheller.warsmash.viewer5.Model<WmoPor
 		private final int flags;
 		private final int[] doodadReferences;
 		private final boolean animatedLiquid;
+		private final float[] floorSampleXYZ;
+		private final float[] floorSampleRGB;
+		private final float[] floorSampleExterior;
 
 		public GroupModelLoader(final MdlxModel model, final Vector3 extentCenter, final int flags,
-				final int[] doodadReferences, final boolean animatedLiquid) {
+				final int[] doodadReferences, final boolean animatedLiquid, final float[] floorSampleXYZ,
+				final float[] floorSampleRGB, final float[] floorSampleExterior) {
 			this.model = model;
 			this.extentCenter = extentCenter;
 			this.flags = flags;
 			this.doodadReferences = doodadReferences;
 			this.animatedLiquid = animatedLiquid;
+			this.floorSampleXYZ = floorSampleXYZ;
+			this.floorSampleRGB = floorSampleRGB;
+			this.floorSampleExterior = floorSampleExterior;
 		}
 	}
 

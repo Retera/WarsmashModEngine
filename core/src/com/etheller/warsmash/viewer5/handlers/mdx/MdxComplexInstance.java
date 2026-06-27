@@ -69,6 +69,11 @@ public class MdxComplexInstance extends ModelInstance {
 	public final float[] interiorAmbient = { 0, 0, 0 };
 	public final float[] interiorDirColor = { 0, 0, 0 };
 	public final float[] interiorDir = { 0, 0, 1 };
+	/** Flat interior ambient (RGB 0..1) this surface hands to UNITS standing on it, so a unit walking into
+	 * a WMO interior is lit like the interior instead of staying near-black. Null on non-interior surfaces
+	 * (units there keep their normal outdoor lighting). Distinct from interiorAmbient, which is THIS
+	 * instance's own lighting; this is what it serves out. See RenderUnit's walkable-under handling. */
+	public float[] servedInteriorAmbient = null;
 	public float nearestUsedCenterDistance = Float.MAX_VALUE;;
 	// Particles do not spawn when the sequence is -1, or when the sequence finished
 	// and it's not repeating
@@ -1175,6 +1180,51 @@ public class MdxComplexInstance extends ModelInstance {
 			if (childInstance instanceof MdxComplexInstance) {
 				((MdxComplexInstance) childInstance).setInteriorLighting(ambR, ambG, ambB, dirColR, dirColG, dirColB,
 						dirX, dirY, dirZ, usedCenterDistance);
+			}
+		}
+	}
+
+	/** Sets a FLAT interior ambient unconditionally (clears the directional term and the nearest-group
+	 * arbitration), for DYNAMIC entities such as units that re-evaluate their lighting every frame as they
+	 * move. Unlike setInteriorLighting (which keeps the nearest group's bake for a static doodad), this
+	 * always overwrites, so a unit's ambient tracks whatever surface it is currently standing on. */
+	public void setInteriorAmbientFlat(final float r, final float g, final float b) {
+		this.interiorAmbient[0] = r;
+		this.interiorAmbient[1] = g;
+		this.interiorAmbient[2] = b;
+		this.interiorDirColor[0] = 0;
+		this.interiorDirColor[1] = 0;
+		this.interiorDirColor[2] = 0;
+		this.interiorDir[0] = 0;
+		this.interiorDir[1] = 0;
+		this.interiorDir[2] = 1;
+		this.nearestUsedCenterDistance = Float.MAX_VALUE;
+		for (final ModelInstance childInstance : this.childrenInstances) {
+			if (childInstance instanceof MdxComplexInstance) {
+				((MdxComplexInstance) childInstance).setInteriorAmbientFlat(r, g, b);
+			}
+		}
+	}
+
+	/** Sets interior lighting unconditionally (no nearest-group arbitration), for DYNAMIC entities such as
+	 * units: an ambient floor plus a directional 'extra' (e.g. the sampled ground colour) along dir (e.g. the
+	 * world sun direction). Re-evaluated each poll as the unit moves. See RenderUnit. */
+	public void setInteriorLightingDynamic(final float ambR, final float ambG, final float ambB, final float dirColR,
+			final float dirColG, final float dirColB, final float dirX, final float dirY, final float dirZ) {
+		this.interiorAmbient[0] = ambR;
+		this.interiorAmbient[1] = ambG;
+		this.interiorAmbient[2] = ambB;
+		this.interiorDirColor[0] = dirColR;
+		this.interiorDirColor[1] = dirColG;
+		this.interiorDirColor[2] = dirColB;
+		this.interiorDir[0] = dirX;
+		this.interiorDir[1] = dirY;
+		this.interiorDir[2] = dirZ;
+		this.nearestUsedCenterDistance = Float.MAX_VALUE;
+		for (final ModelInstance childInstance : this.childrenInstances) {
+			if (childInstance instanceof MdxComplexInstance) {
+				((MdxComplexInstance) childInstance).setInteriorLightingDynamic(ambR, ambG, ambB, dirColR, dirColG,
+						dirColB, dirX, dirY, dirZ);
 			}
 		}
 	}

@@ -110,6 +110,8 @@ public class BatchGroup extends GenericGroup {
 			shader.setUniformMatrix("u_MV", camera.viewMatrix);
 
 			shader.setUniform3fv("u_interiorAmbient", instance.interiorAmbient, 0, 3);
+			shader.setUniform3fv("u_interiorDirColor", instance.interiorDirColor, 0, 3);
+			shader.setUniform3fv("u_interiorDir", instance.interiorDir, 0, 3);
 
 			tempFloat3Array[0] = camera.location.x;
 			tempFloat3Array[1] = camera.location.y;

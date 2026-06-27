@@ -102,6 +102,7 @@ import com.etheller.warsmash.viewer5.handlers.mdx.Layer;
 import com.etheller.warsmash.viewer5.handlers.mdx.Light;
 import com.etheller.warsmash.viewer5.handlers.mdx.Material;
 import com.etheller.warsmash.viewer5.handlers.mdx.MdxCharacterInstance;
+import com.etheller.warsmash.viewer5.handlers.mdx.BatchGroup;
 import com.etheller.warsmash.viewer5.handlers.mdx.MdxComplexInstance;
 import com.etheller.warsmash.viewer5.handlers.mdx.MdxHandler;
 import com.etheller.warsmash.viewer5.handlers.mdx.MdxHandler.ShaderEnvironmentType;
@@ -1679,6 +1680,9 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 				this.dncUnit.setFrameByRatio(
 						this.simulation.getGameTimeOfDay() / this.simulation.getGameplayConstants().getGameDayHours());
 				this.dncUnit.update(rawDeltaTime, null);
+				// Publish the current outdoor light colour for WMO surfaces to light their exterior vertices
+				// (a_vertexLightingColors.a == 1) with the live skylight instead of baked-black MOCV.
+				getExteriorLightColor(BatchGroup.wmoExteriorLightColor);
 			}
 
 			if (this.dncTarget != null) {

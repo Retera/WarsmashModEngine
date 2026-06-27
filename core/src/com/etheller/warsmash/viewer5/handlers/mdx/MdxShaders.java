@@ -853,7 +853,8 @@ public class MdxShaders {
 					"    attribute vec4 a_weights;\r\n" : //
 					"    attribute float a_boneNumber;\r\n")
 			+ //
-			"    attribute vec3 a_vertexLightingColors;\r\n" + //
+			"    attribute vec4 a_vertexLightingColors;\r\n" + // .rgb=baked MOCV, .a=exterior blend (1=skylight)
+			"    uniform vec3 u_exteriorColor;\r\n" + //
 			"    varying vec2 v_uv;\r\n" + //
 			"    varying vec4 v_color;\r\n" + //
 			(!VERTEX_LIGHTS_NOT_FRAGMENT_LIGHTS ? ("    varying vec3 v_position;\r\n" + //
@@ -924,7 +925,13 @@ public class MdxShaders {
 							"u_lightCount", " + u_lightOmitOffset", false) + "\r\n")
 					: "")
 			+ //
-			"        v_color.xyz *= (1.0 - u_unshaded) * clamp(u_lightOmitOffset == 0 ? (lightFactor + a_vertexLightingColors) : a_vertexLightingColors, 0.0, 1.0) + u_unshaded;\r\n"
+			// Per-vertex blend between the static interior MOCV colour and the dynamic exterior skylight,
+			// driven by a_vertexLightingColors.a (1 on exterior verts). The blend is interpolated across faces,
+			// so the indoor/outdoor border gradients smoothly and the exterior part tracks time of day instead
+			// of being baked black.
+			"        vec3 bakedOrSky = mix(a_vertexLightingColors.rgb, u_exteriorColor, a_vertexLightingColors.a);\r\n"
+			+ //
+			"        v_color.xyz *= (1.0 - u_unshaded) * clamp(u_lightOmitOffset == 0 ? (lightFactor + bakedOrSky) : bakedOrSky, 0.0, 1.0) + u_unshaded;\r\n"
 			+ //
 			(VERTEX_LIGHTS_NOT_FRAGMENT_LIGHTS ? "" : //
 					"		 v_position = position;\r\n" + //
@@ -997,7 +1004,8 @@ public class MdxShaders {
 			"    uniform float u_lightTextureHeight;\r\n" + //
 			"    attribute vec3 a_position;\r\n" + //
 			"    attribute vec3 a_normal;\r\n" + //
-			"    attribute vec3 a_vertexLightingColors;\r\n" + //
+			"    attribute vec4 a_vertexLightingColors;\r\n" + // .rgb=baked MOCV, .a=exterior blend (1=skylight)
+			"    uniform vec3 u_exteriorColor;\r\n" + //
 			"    attribute vec2 a_uv;\r\n" + //
 			"    varying vec2 v_uv;\r\n" + //
 			"    varying vec4 v_color;\r\n" + //

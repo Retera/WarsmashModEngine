@@ -16,6 +16,9 @@ import com.etheller.warsmash.viewer5.handlers.w3x.W3xSceneLightManager;
 
 public class BatchGroup extends GenericGroup {
 	private static float[] tempFloat3Array = new float[3];
+	/** Current outdoor/skylight colour (day-night animated), used to light EXTERIOR vertices of WMO surfaces
+	 * (a_vertexLightingColors.a == 1). Updated once per frame by War3MapViewer; read by the WMO shader bind. */
+	public static final float[] wmoExteriorLightColor = { 0, 0, 0 };
 
 	private final MdxModel model;
 	public final SkinningType skinningType;
@@ -218,6 +221,9 @@ public class BatchGroup extends GenericGroup {
 			shader.setUniform3fv("u_interiorAmbient", instance.interiorAmbient, 0, 3);
 			shader.setUniform3fv("u_interiorDirColor", instance.interiorDirColor, 0, 3);
 			shader.setUniform3fv("u_interiorDir", instance.interiorDir, 0, 3);
+			// For WMO surfaces: the dynamic skylight colour blended in per-vertex for exterior verts (no-op
+			// for non-WMO shaders, which lack u_exteriorColor; pedantic is off so the bind is harmless there).
+			shader.setUniform3fv("u_exteriorColor", wmoExteriorLightColor, 0, 3);
 
 			for (final int index : this.objects) {
 				final Batch batch = batches.get(index);

@@ -68,7 +68,7 @@ public class SetupGeosets {
 						}
 					}
 					if (geoset.isWmo()) {
-						vertexLightingColorBytes += vertices * 12;
+						vertexLightingColorBytes += vertices * 16; // vec4: rgb + per-vertex exterior blend (.a)
 						batchTypes[i] = SkinningType.Wmo;
 					}
 

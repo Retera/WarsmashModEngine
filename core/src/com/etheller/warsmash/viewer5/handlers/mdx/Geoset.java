@@ -129,7 +129,8 @@ public class Geoset {
 		shader.setVertexAttribute("a_bones", 4, this.openGLSkinType, false, this.skinStride, this.skinOffset);
 		shader.setVertexAttribute("a_boneNumber", 1, this.openGLSkinType, false, this.skinStride,
 				this.skinOffset + this.boneCountOffsetBytes);
-		shader.setVertexAttribute("a_vertexLightingColors", 3, GL20.GL_FLOAT, false, 0,
+		// vec4: .rgb = baked MOCV colour, .a = per-vertex exterior blend (1 = exterior -> dynamic skylight).
+		shader.setVertexAttribute("a_vertexLightingColors", 4, GL20.GL_FLOAT, false, 0,
 				this.vertexLightingColorsOffset);
 	}
 

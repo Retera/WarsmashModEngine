@@ -350,14 +350,17 @@ public class WmoPortingModel2 extends com.etheller.warsmash.viewer5.Model<WmoPor
 						portedGeoset.vertices[i + 1] -= extentCenter.y;
 						portedGeoset.vertices[i + 2] -= extentCenter.z;
 					}
-					portedGeoset.vertexLightingColors = new float[usedVertexCount * 3];
+					portedGeoset.vertexLightingColors = new float[usedVertexCount * 4];
 					final int[] vertexColors = group.getVertexColors();
 					for (int i = 0; i < usedVertexCount; i++) {
 						final int vertexIndex = minIndex + i;
 						final int colorInt = vertexColors[vertexIndex];
-						portedGeoset.vertexLightingColors[(i * 3) + 0] = ((colorInt >> 16) & 0xFF) / 255f;
-						portedGeoset.vertexLightingColors[(i * 3) + 1] = ((colorInt >> 8) & 0xFF) / 255f;
-						portedGeoset.vertexLightingColors[(i * 3) + 2] = ((colorInt >> 0) & 0xFF) / 255f;
+						portedGeoset.vertexLightingColors[(i * 4) + 0] = ((colorInt >> 16) & 0xFF) / 255f;
+						portedGeoset.vertexLightingColors[(i * 4) + 1] = ((colorInt >> 8) & 0xFF) / 255f;
+						portedGeoset.vertexLightingColors[(i * 4) + 2] = ((colorInt >> 0) & 0xFF) / 255f;
+						// .a = exterior blend: 1 for exterior vertices (MOCV alpha 0) -> use the dynamic skylight,
+						// 0 for interior -> use the static MOCV rgb above. Interpolated across border triangles.
+						portedGeoset.vertexLightingColors[(i * 4) + 3] = (((colorInt >> 24) & 0xFF) == 0) ? 1f : 0f;
 					}
 					portedGeoset.normals = new float[usedVertexCount * 3];
 					System.arraycopy(group.getNormals(), minIndex * 3, portedGeoset.normals, 0, usedVertexCount * 3);
@@ -430,14 +433,17 @@ public class WmoPortingModel2 extends com.etheller.warsmash.viewer5.Model<WmoPor
 						portedGeoset.vertices[i + 1] -= extentCenter.y;
 						portedGeoset.vertices[i + 2] -= extentCenter.z;
 					}
-					portedGeoset.vertexLightingColors = new float[usedVertexCount * 3];
+					portedGeoset.vertexLightingColors = new float[usedVertexCount * 4];
 					final int[] vertexColors = group.getVertexColors();
 					for (int i = 0; i < usedVertexCount; i++) {
 						final int vertexIndex = minIndex + i;
 						final int colorInt = vertexColors[vertexIndex];
-						portedGeoset.vertexLightingColors[(i * 3) + 0] = ((colorInt >> 16) & 0xFF) / 255f;
-						portedGeoset.vertexLightingColors[(i * 3) + 1] = ((colorInt >> 8) & 0xFF) / 255f;
-						portedGeoset.vertexLightingColors[(i * 3) + 2] = ((colorInt >> 0) & 0xFF) / 255f;
+						portedGeoset.vertexLightingColors[(i * 4) + 0] = ((colorInt >> 16) & 0xFF) / 255f;
+						portedGeoset.vertexLightingColors[(i * 4) + 1] = ((colorInt >> 8) & 0xFF) / 255f;
+						portedGeoset.vertexLightingColors[(i * 4) + 2] = ((colorInt >> 0) & 0xFF) / 255f;
+						// .a = exterior blend: 1 for exterior vertices (MOCV alpha 0) -> use the dynamic skylight,
+						// 0 for interior -> use the static MOCV rgb above. Interpolated across border triangles.
+						portedGeoset.vertexLightingColors[(i * 4) + 3] = (((colorInt >> 24) & 0xFF) == 0) ? 1f : 0f;
 					}
 					portedGeoset.normals = new float[usedVertexCount * 3];
 					System.arraycopy(group.getNormals(), minIndex * 3, portedGeoset.normals, 0, usedVertexCount * 3);

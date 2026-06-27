@@ -893,6 +893,7 @@ public class OrderIds {
 	public static final int pawnJumpReleased = 999999012;
 	public static final int pawnLootPressed = 999999013;
 	public static final int pawnLootReleased = 999999014;
+	public static final int pawnCheesyRightMouseTurn = 999999015;
 
 	// Base id for moving an item between slots WITHIN a WoW bag/container (CAbilityBag),
 	// analogous to itemdrag00..05 for the unit inventory but covering arbitrary slot

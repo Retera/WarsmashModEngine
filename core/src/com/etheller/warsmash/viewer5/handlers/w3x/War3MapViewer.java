@@ -1025,6 +1025,13 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 					new Quaternion().setFromAxisRad(RenderMathUtils.VEC3_UNIT_Y, (float) Math.toRadians(rotation[2])));
 			renderDoodad.instance.rotate(
 					new Quaternion().setFromAxisRad(RenderMathUtils.VEC3_UNIT_X, (float) Math.toRadians(rotation[0])));
+			if (groupModel.hasAnimatedLiquid()) {
+				// Play the (static-geometry) Stand sequence on a loop so the counter advances and the
+				// lava flipbook's global-sequence texture animation runs (only while on-screen).
+				final MdxComplexInstance liquidInstance = (MdxComplexInstance) renderDoodad.instance;
+				liquidInstance.setSequence(0);
+				liquidInstance.setSequenceLoopMode(SequenceLoopMode.ALWAYS_LOOP);
+			}
 			final Rectangle entireMap = this.terrain.getEntireMap();
 			final boolean groupIsExterior = FlagUtils.hasFlag(groupModel.getFlags(), WmoGroupInfo.Flags.IsExterior);
 			for (final MdlxCollisionGeometry collisionGeometry : model.getCollisionGeometries()) {

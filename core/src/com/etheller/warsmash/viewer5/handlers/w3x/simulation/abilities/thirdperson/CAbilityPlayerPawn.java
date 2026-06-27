@@ -11,6 +11,8 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.A
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.inventory.CAbilityBag;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.skills.CAbilitySpell;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityPointTarget;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTarget;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTargetVisitor;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehavior;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.thirdperson.CBehaviorPlayerPawn;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.OrderIds;
@@ -59,6 +61,19 @@ public class CAbilityPlayerPawn extends AbstractGenericNoIconAbility implements 
 			final boolean autoOrder, final AbilityPointTarget target,
 			final AbilityTargetCheckReceiver<AbilityPointTarget> receiver) {
 		receiver.orderIdNotAccepted();
+	}
+	
+	@Override
+	public boolean checkBeforeQueue(CSimulation game, CUnit caster, int playerIndex, int orderId, boolean autoOrder,
+			AbilityTarget target) {
+		if (orderId == OrderIds.pawnCheesyRightMouseTurn) {
+			AbilityPointTarget point = target.visit(AbilityTargetVisitor.POINT);
+			if (point != null) {
+				caster.setFacing(point.y);
+				return false;
+			}
+		}
+		return super.checkBeforeQueue(game, caster, playerIndex, orderId, autoOrder, target);
 	}
 
 	@Override

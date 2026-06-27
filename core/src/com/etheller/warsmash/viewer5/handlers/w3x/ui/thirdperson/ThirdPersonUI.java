@@ -58,6 +58,8 @@ import com.etheller.warsmash.viewer5.handlers.w3x.ui.sound.KeyedSounds;
 import com.hiveworkshop.rms.util.BinaryReader;
 
 public class ThirdPersonUI implements WarsmashToggleableUI {
+	// looks pretty but might break multiplayer (altho maybe I fixed it so it wont):
+	private static final boolean ALLOW_INSTANT_REDIRECT = true;
 	private static final boolean ALL_PLAYERS = false;
 	private static final Vector2 screenCoordsVector = new Vector2();
 	private ThirdPersonCameraManager cameraManager;
@@ -149,12 +151,20 @@ public class ThirdPersonUI implements WarsmashToggleableUI {
 //			pawnUnits.add(this.war3MapViewer.simulation.createUnitSimple(this.pawnId,
 //			this.war3MapViewer.getLocalPlayerIndex(), startLocation[0] - 31797.357f,
 //			startLocation[1] - 341638.3f, 0));
+			
+			// SW======
+//			pawnUnits.add(this.war3MapViewer.simulation.createUnitSimple(this.pawnId,
+//			this.war3MapViewer.getLocalPlayerIndex(), -9385.966f, -298138.1f, 0));
+			
+			// BR======
+			pawnUnits.add(this.war3MapViewer.simulation.createUnitSimple(this.pawnId,
+			this.war3MapViewer.getLocalPlayerIndex(), 31608.973f, -262313.06f, 0));
 
 			// IF=====
 
-			pawnUnits.add(this.war3MapViewer.simulation.createUnitSimple(this.pawnId,
-					this.war3MapViewer.getLocalPlayerIndex(), startLocation[0] + 24126.52f,
-					startLocation[1] - 172875.25f, 0));
+//			pawnUnits.add(this.war3MapViewer.simulation.createUnitSimple(this.pawnId,
+//					this.war3MapViewer.getLocalPlayerIndex(), startLocation[0] + 24126.52f,
+//					startLocation[1] - 172875.25f, 0));
 //			pawnUnits.add(this.war3MapViewer.simulation.createUnitSimple(this.pawnId,
 //					this.war3MapViewer.getLocalPlayerIndex(), startLocation[0] + 3250, startLocation[1] - 29795.25f,
 //					0));
@@ -426,7 +436,7 @@ public class ThirdPersonUI implements WarsmashToggleableUI {
 
 		boolean wasAutoSpinRight = this.autoSpinRight;
 		boolean wasAutoSpinLeft = this.autoSpinLeft;
-		if (this.touchDown && Gdx.input.isButtonPressed(Input.Buttons.RIGHT)) {
+		if (!ALLOW_INSTANT_REDIRECT && this.touchDown && Gdx.input.isButtonPressed(Input.Buttons.RIGHT)) {
 			float targetAngle = (float) Math.toDegrees(this.cameraManager.horizontalAngle);
 			float currentAngle = this.pawnUnit.getFacing();
 			targetAngle = ((targetAngle % 360) + 360) % 360;
@@ -750,6 +760,12 @@ public class ThirdPersonUI implements WarsmashToggleableUI {
 			else if (this.button == Input.Buttons.RIGHT) {
 				this.cameraManager.horizontalAngle -= Math.toRadians(dx * 0.15 * 2);
 				this.cameraManager.verticalAngle -= Math.toRadians(dy * 0.15 * 2);
+				if (ALLOW_INSTANT_REDIRECT) {
+					float targetAngle = (float) Math.toDegrees(this.cameraManager.horizontalAngle);
+//					pawnUnit.setFacing(targetAngle);
+					this.uiOrderListener.issuePointOrder(this.pawnUnit.getHandleId(), this.abilityPlayerPawn.getHandleId(),
+							OrderIds.pawnCheesyRightMouseTurn, 0, targetAngle, false);
+				}
 			}
 			this.lastX = newX;
 			this.lastY = newY;

@@ -4,7 +4,11 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.math.Vector3;
@@ -16,6 +20,8 @@ import com.etheller.warsmash.viewer5.ModelInstance;
 import com.etheller.warsmash.viewer5.ModelViewer;
 import com.etheller.warsmash.viewer5.PathSolver;
 import com.etheller.warsmash.viewer5.handlers.mdx.MdxModel;
+import com.hiveworkshop.rms.parsers.mdlx.AnimationMap;
+import com.hiveworkshop.rms.parsers.mdlx.InterpolationType;
 import com.hiveworkshop.rms.parsers.mdlx.MdlxBone;
 import com.hiveworkshop.rms.parsers.mdlx.MdlxCollisionGeometry;
 import com.hiveworkshop.rms.parsers.mdlx.MdlxExtent;
@@ -29,6 +35,7 @@ import com.hiveworkshop.rms.parsers.mdlx.MdlxModel;
 import com.hiveworkshop.rms.parsers.mdlx.MdlxSequence;
 import com.hiveworkshop.rms.parsers.mdlx.MdlxTexture;
 import com.hiveworkshop.rms.parsers.mdlx.MdlxTexture.WrapMode;
+import com.hiveworkshop.rms.parsers.mdlx.timeline.MdlxUInt32Timeline;
 
 public class WmoPortingModel2 extends com.etheller.warsmash.viewer5.Model<WmoPortingHandler> {
 	private GroupModel[] portedModels;
@@ -90,7 +97,7 @@ public class WmoPortingModel2 extends com.etheller.warsmash.viewer5.Model<WmoPor
 					this.fetchUrl);
 			final GroupModelLoader groupModelLoader = portedModelsData[i];
 			this.portedModels[i] = new GroupModel(mdxModel, groupModelLoader.extentCenter, groupModelLoader.flags,
-					groupModelLoader.doodadReferences);
+					groupModelLoader.doodadReferences, groupModelLoader.animatedLiquid);
 			try {
 				mdxModel.load(portedModelsData[i].model);
 				mdxModel.ok = true;
@@ -134,6 +141,15 @@ public class WmoPortingModel2 extends com.etheller.warsmash.viewer5.Model<WmoPor
 		final String namePrefix = fetchUrl.length() > 76 ? fetchUrl.substring(fetchUrl.length() - 76) : fetchUrl;
 
 		final List<ModelObjectGroup> groups = parser.getGroups();
+		// Liquid cells claimed across all groups of this WMO. Groups share one coordinate space and
+		// their MLIQ grids overlap (the real client hides overlaps via portal/group visibility, which
+		// we don't do); without dedup the same lava tile is drawn by 2+ group instances -> Z-fighting
+		// and flickery patches. First group to claim a global cell wins.
+		final Set<Long> claimedLiquidCells = new HashSet<>();
+		// One shared liquid surface height for the whole WMO (median of the per-tile heights). Liquid
+		// is level, so flattening all groups to this removes the step-seams between groups that store
+		// slightly different base heights. See addLiquidGeosets.
+		final float wmoLiquidSurfaceHeight = computeLiquidSurfaceHeight(groups);
 		for (int groupIndex = 0; groupIndex < parser.getHeaders().getnGroups(); groupIndex++) {
 			final MdlxModel portedModel = new MdlxModel();
 			portedModel.name = namePrefix + Integer.toString(groupIndex);
@@ -442,6 +458,12 @@ public class WmoPortingModel2 extends com.etheller.warsmash.viewer5.Model<WmoPor
 				}
 			}
 
+			// Liquids (MLIQ): bake each liquid surface as an extra geoset in this group's
+			// model so it shares the group's transform, culling, batching, and unload
+			// lifecycle (no separate per-frame system to leak).
+			final boolean animatedLiquid = addLiquidGeosets(portedModel, group, extentCenter, parser,
+					claimedLiquidCells, wmoLiquidSurfaceHeight);
+
 			// NOTE: for now, instead of building BSP we are being very dumb, creating
 			// corresponding
 			// "CollisionGeometry" in our engine (TODO should be BSP instead later)
@@ -546,10 +568,240 @@ public class WmoPortingModel2 extends com.etheller.warsmash.viewer5.Model<WmoPor
 			}
 
 			portedModels[groupIndex] = new GroupModelLoader(portedModel, extentCenter, group.getFlags(),
-					group.getDoodadReferences());
+					group.getDoodadReferences(), animatedLiquid);
 		}
 
 		return portedModels;
+	}
+
+	/** MLIQ liquid-grid tile spacing in WMO-local units (verified from corner alignment). */
+	private static final float LIQUID_TILE_SIZE = 100.0f / 24.0f; // ~4.16667
+	/**
+	 * Lava flipbook frames. 0.5.3 ships XTextures\lava\lava.1.blp .. lava.30.blp (the
+	 * BURNINGSTEPPSLAVA02 the Blackrock build's liquid material references is absent). We cycle these
+	 * as an animated texture via a global sequence + a stepped KMTF (texture-id) timeline on the lava
+	 * layer, so it flows like the terrain water without depending on the model playing a sequence.
+	 */
+	private static final int LAVA_FRAME_COUNT = 30;
+	private static final int LAVA_FRAME_MS = 80; // ~12.5 fps
+	/** Small upward nudge so the flat liquid surface doesn't Z-fight the basin floor at the shoreline. */
+	private static final float LIQUID_SURFACE_LIFT = 0.5f;
+
+	/**
+	 * Bakes each MLIQ liquid surface of a WMO group into the group's model as a flat textured
+	 * geoset. The liquid texture/shading is taken from the group's own liquid material (MLIQ
+	 * materialId -> MOMT); a lava material (texture path contains "lava") becomes an unshaded,
+	 * opaque, glowing surface using {@link #LAVA_TEXTURE}, anything else a translucent surface
+	 * using the WMO's own texture. Geometry is built in the same centered local space as the
+	 * group geometry (vertices minus the group's extentCenter), so the group instance transform
+	 * places it correctly.
+	 */
+	private static boolean addLiquidGeosets(final MdlxModel portedModel, final ModelObjectGroup group,
+			final Vector3 extentCenter, final WorldModelObject parser, final Set<Long> claimedLiquidCells,
+			final float wmoSurfaceHeight) {
+		final List<GroupLiquid> liquids = group.getLiquids();
+		if (liquids.isEmpty()) {
+			return false;
+		}
+		boolean animated = false;
+		final List<WmoMaterial> mats = parser.getHeaders().getMaterials();
+		for (final GroupLiquid liquid : liquids) {
+			final int[] vc = liquid.getVertexCount(); // [rows(i=Y), cols(j=X)]
+			final int[] tc = liquid.getTileCount();
+			if ((vc[0] <= 0) || (vc[1] <= 0) || (tc[0] <= 0) || (tc[1] <= 0)) {
+				continue;
+			}
+			final float[] corner = liquid.getCorner();
+
+			// Liquid texture / shading from the WMO's own liquid material.
+			String texturePath = null;
+			final int matId = liquid.getMaterialId();
+			if ((matId >= 0) && (matId < mats.size())) {
+				final long dni = mats.get(matId).getDiffuseNameIndex();
+				texturePath = parser.getHeaders().getTextureFileNamesOffsetLookup().get(dni);
+			}
+			final boolean lava = (texturePath != null) && texturePath.toLowerCase().contains("lava");
+			if (!lava && (texturePath == null)) {
+				continue; // nothing meaningful to draw
+			}
+
+			final int rows = vc[0]; // i -> Y
+			final int cols = vc[1]; // j -> X
+
+			// Faces over every tile in the grid. (We render all tiles: the per-tile MLIQ byte's low
+			// bits are a liquid-type/flow field, NOT a reliable "no liquid" flag for these v14 WMOs --
+			// skipping by it left missing strips, so we draw the whole grid and let the height-snap
+			// flatten the un-set vertices.) All groups share the WMO coordinate space and corners are
+			// TS-aligned, so each tile maps to a global cell (gx,gy); skip cells another group already
+			// claimed to avoid overlapping (Z-fighting) surfaces.
+			final int cgx = Math.round(corner[0] / LIQUID_TILE_SIZE);
+			final int cgy = Math.round(corner[1] / LIQUID_TILE_SIZE);
+			final int[] faceTmp = new int[tc[0] * tc[1] * 6];
+			int fc = 0;
+			for (int i = 0; i < tc[0]; i++) {
+				for (int j = 0; j < tc[1]; j++) {
+					final long cellKey = ((long) (cgx - j) << 32) ^ ((cgy + i) & 0xFFFFFFFFL);
+					if (!claimedLiquidCells.add(cellKey)) {
+						continue; // already drawn by another group -> avoid Z-fight/flicker
+					}
+					final int v00 = (i * cols) + j;
+					final int v10 = ((i + 1) * cols) + j;
+					final int v01 = (i * cols) + (j + 1);
+					final int v11 = ((i + 1) * cols) + (j + 1);
+					faceTmp[fc++] = v00;
+					faceTmp[fc++] = v10;
+					faceTmp[fc++] = v01;
+					faceTmp[fc++] = v10;
+					faceTmp[fc++] = v11;
+					faceTmp[fc++] = v01;
+				}
+			}
+			if (fc == 0) {
+				continue; // fully hidden liquid
+			}
+
+			// Texture(s) + material/layer.
+			final MdlxLayer layer = new MdlxLayer();
+			layer.flags |= MdlxLayer.Flags.TWO_SIDED;
+			if (lava) {
+				// Add the 30 lava frames; the layer's texture id is animated through them by a
+				// stepped KMTF timeline bound to a fresh global sequence, so it cycles continuously
+				// (independent of model playback, paused only when the instance is off-screen).
+				final int baseTextureId = portedModel.textures.size();
+				for (int f = 1; f <= LAVA_FRAME_COUNT; f++) {
+					final MdlxTexture frame = new MdlxTexture();
+					frame.path = "XTextures\\lava\\lava." + f + ".blp";
+					frame.replaceableId = 0;
+					frame.wrapMode = WrapMode.WRAP_BOTH;
+					portedModel.textures.add(frame);
+				}
+				layer.textureId = baseTextureId; // static fallback = frame 1
+				layer.filterMode = FilterMode.NONE;
+				layer.alpha = 1.0f;
+				layer.flags |= MdlxLayer.Flags.UNSHADED; // glow, ignore scene lighting
+				layer.flags |= MdlxLayer.Flags.UNFOGGED;
+
+				final int globalSequenceId = portedModel.globalSequences.size();
+				portedModel.globalSequences.add((long) (LAVA_FRAME_COUNT * LAVA_FRAME_MS));
+				final MdlxUInt32Timeline kmtf = new MdlxUInt32Timeline();
+				kmtf.name = AnimationMap.KMTF.getWar3id();
+				kmtf.interpolationType = InterpolationType.DONT_INTERP; // stepped (no blend between frames)
+				kmtf.globalSequenceId = globalSequenceId;
+				kmtf.frames = new long[LAVA_FRAME_COUNT];
+				kmtf.values = new long[LAVA_FRAME_COUNT][];
+				for (int f = 0; f < LAVA_FRAME_COUNT; f++) {
+					kmtf.frames[f] = (long) f * LAVA_FRAME_MS;
+					kmtf.values[f] = new long[] { baseTextureId + f };
+				}
+				layer.timelines.add(kmtf);
+				animated = true;
+			}
+			else {
+				final MdlxTexture texture = new MdlxTexture();
+				texture.path = texturePath;
+				texture.replaceableId = 0;
+				texture.wrapMode = WrapMode.WRAP_BOTH;
+				layer.textureId = portedModel.textures.size();
+				portedModel.textures.add(texture);
+				layer.filterMode = FilterMode.BLEND;
+				layer.alpha = 0.65f;
+			}
+			final MdlxMaterial material = new MdlxMaterial();
+			material.layers.add(layer);
+			final int materialId = portedModel.materials.size();
+			portedModel.materials.add(material);
+
+			// Geoset: indexed grid (vertex (i,j) at local (corner.x - j*TS, corner.y + i*TS, height)).
+			final int vCount = rows * cols;
+			final MdlxGeoset geoset = new MdlxGeoset();
+			geoset.wmo = true;
+			geoset.materialId = materialId;
+			geoset.vertices = new float[vCount * 3];
+			geoset.normals = new float[vCount * 3];
+			geoset.uvSets = new float[1][vCount * 2];
+			geoset.vertexLightingColors = new float[vCount * 3];
+			geoset.vertexGroups = new short[vCount];
+			geoset.matrixGroups = new long[] { 1 };
+			geoset.matrixIndices = new long[] { 0 };
+			// A liquid surface is physically level, so flatten the whole WMO's liquid to one shared
+			// height (in centered local space). This removes the visible step-seams where groups with
+			// different per-group base heights (corner.z) meet, removes the per-group precision
+			// mismatch at boundaries, and makes the data's stray/unset vertex heights irrelevant.
+			final float surfaceZ = (wmoSurfaceHeight + LIQUID_SURFACE_LIFT) - extentCenter.z;
+			for (int i = 0; i < rows; i++) {
+				for (int j = 0; j < cols; j++) {
+					final int vi = (i * cols) + j;
+					geoset.vertices[(vi * 3) + 0] = (corner[0] - (j * LIQUID_TILE_SIZE)) - extentCenter.x;
+					geoset.vertices[(vi * 3) + 1] = (corner[1] + (i * LIQUID_TILE_SIZE)) - extentCenter.y;
+					geoset.vertices[(vi * 3) + 2] = surfaceZ;
+					geoset.normals[(vi * 3) + 2] = 1.0f; // flat, facing up
+					// Global tile-grid UVs so the texture pattern flows continuously across groups.
+					geoset.uvSets[0][(vi * 2) + 0] = (cgx - j) / 5.0f;
+					geoset.uvSets[0][(vi * 2) + 1] = (cgy + i) / 5.0f;
+					geoset.vertexLightingColors[(vi * 3) + 0] = 1.0f;
+					geoset.vertexLightingColors[(vi * 3) + 1] = 1.0f;
+					geoset.vertexLightingColors[(vi * 3) + 2] = 1.0f;
+				}
+			}
+			geoset.faces = new int[fc];
+			System.arraycopy(faceTmp, 0, geoset.faces, 0, fc);
+			geoset.faceGroups = new long[fc / 3];
+			geoset.faceTypeGroups = new long[] { GL20.GL_TRIANGLES };
+
+			// Geoset extent from the referenced (rendered) vertices.
+			final float[] gmin = { Float.MAX_VALUE, Float.MAX_VALUE, Float.MAX_VALUE };
+			final float[] gmax = { -Float.MAX_VALUE, -Float.MAX_VALUE, -Float.MAX_VALUE };
+			for (int k = 0; k < fc; k++) {
+				final int vi = geoset.faces[k];
+				for (int c = 0; c < 3; c++) {
+					final float v = geoset.vertices[(vi * 3) + c];
+					if (v < gmin[c]) {
+						gmin[c] = v;
+					}
+					if (v > gmax[c]) {
+						gmax[c] = v;
+					}
+				}
+			}
+			for (int c = 0; c < 3; c++) {
+				geoset.extent.min[c] = gmin[c];
+				geoset.extent.max[c] = gmax[c];
+			}
+			portedModel.geosets.add(geoset);
+		}
+		return animated;
+	}
+
+	/**
+	 * One representative liquid surface height for the whole WMO: the median of all MLIQ per-tile
+	 * vertex heights (ignoring unset 0 fillers). Liquid is level, so every group flattens to this,
+	 * eliminating the step-seams between groups whose stored base heights differ slightly.
+	 */
+	private static float computeLiquidSurfaceHeight(final List<ModelObjectGroup> groups) {
+		final List<Float> heights = new ArrayList<>();
+		for (final ModelObjectGroup g : groups) {
+			for (final GroupLiquid lq : g.getLiquids()) {
+				for (final GroupLiquid.Vertex[] row : lq.getLiquidVertices()) {
+					for (final GroupLiquid.Vertex v : row) {
+						if (Math.abs(v.getHeight()) > 0.001f) { // skip unset (0) filler vertices
+							heights.add(v.getHeight());
+						}
+					}
+				}
+			}
+		}
+		if (heights.isEmpty()) {
+			for (final ModelObjectGroup g : groups) {
+				for (final GroupLiquid lq : g.getLiquids()) {
+					heights.add(lq.getCorner()[2]);
+				}
+			}
+		}
+		if (heights.isEmpty()) {
+			return 0f;
+		}
+		Collections.sort(heights);
+		return heights.get(heights.size() / 2);
 	}
 
 	private static void loadLight(final WorldModelObject parser, final MdlxModel portedModel,
@@ -592,13 +844,21 @@ public class WmoPortingModel2 extends com.etheller.warsmash.viewer5.Model<WmoPor
 		private final Vector3 extentCenter;
 		private final int flags;
 		private final int[] doodadReferences;
+		private final boolean animatedLiquid;
 
 		private GroupModel(final MdxModel model, final Vector3 extentCenter, final int flags,
-				final int[] doodadReferences) {
+				final int[] doodadReferences, final boolean animatedLiquid) {
 			this.model = model;
 			this.extentCenter = extentCenter;
 			this.flags = flags;
 			this.doodadReferences = doodadReferences;
+			this.animatedLiquid = animatedLiquid;
+		}
+
+		/** True if this group has an animated (flipbook) liquid surface that needs the instance to
+		 * play a looping sequence so its global-sequence texture animation advances. */
+		public boolean hasAnimatedLiquid() {
+			return this.animatedLiquid;
 		}
 
 		public MdxModel getModel() {
@@ -623,13 +883,15 @@ public class WmoPortingModel2 extends com.etheller.warsmash.viewer5.Model<WmoPor
 		private final Vector3 extentCenter;
 		private final int flags;
 		private final int[] doodadReferences;
+		private final boolean animatedLiquid;
 
 		public GroupModelLoader(final MdlxModel model, final Vector3 extentCenter, final int flags,
-				final int[] doodadReferences) {
+				final int[] doodadReferences, final boolean animatedLiquid) {
 			this.model = model;
 			this.extentCenter = extentCenter;
 			this.flags = flags;
 			this.doodadReferences = doodadReferences;
+			this.animatedLiquid = animatedLiquid;
 		}
 	}
 

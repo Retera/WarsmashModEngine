@@ -333,14 +333,19 @@ public class TerrainWdt extends TerrainInterface {
 //		out.add(gdxRayHeap.direction);
 		normalHeap1.set(gdxRayHeap.origin);
 		normalHeap1.add(gdxRayHeap.direction);
+		float ox = normalHeap1.x, oy = normalHeap1.y, oz = normalHeap1.z;
+		float rayLengthIfDesired = gdxRayHeap.direction.len2();
+		if (rayLengthIfDesired < 2) {
+			rayLengthIfDesired = Float.MAX_VALUE;
+		}
 		gdxRayHeap.direction.nor();
 		boolean hit = false;
-		double lastD2 = Float.MAX_VALUE;
+		double lastD2 = rayLengthIfDesired;
 		for (final Tile tile : this.activeTiles) {
 			if (tile.activeTile != null) {
 				if (tile.activeTile.intersectRayTerrain(gdxRayHeap, normalHeap2, intersectWithWater)) {
 					final float dst2 = normalHeap2.dst2(gdxRayHeap.origin);
-					if (dst2 < lastD2 && dst2 != 0) {
+					if (dst2 < lastD2) {
 						normalHeap1.set(normalHeap2);
 						hit = true;
 						lastD2 = dst2;

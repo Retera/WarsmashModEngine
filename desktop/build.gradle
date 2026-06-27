@@ -84,3 +84,48 @@ task afterEclipseImport(description: "Post processing after project generation",
     printer.print(classpath)
   }
 }
+
+// WMO <-> MDX800 round-trip editing tools (for hand-editing WMO geometry in ReteraModelStudio).
+task runWmoToMdx(dependsOn: classes, type: JavaExec) {
+    main = "com.etheller.warsmash.tools.WmoToMdx"
+    classpath = sourceSets.main.runtimeClasspath
+    workingDir = project.assetsDir
+    jvmArgs = ["-Xmx2g"]
+    ignoreExitValue = true
+    args (project.hasProperty("args") ? project.getProperty("args").split() : [])
+}
+
+task runMdxGeoDiff(dependsOn: classes, type: JavaExec) {
+    main = "com.etheller.warsmash.tools.MdxGeoDiff"
+    classpath = sourceSets.main.runtimeClasspath
+    workingDir = project.assetsDir
+    ignoreExitValue = true
+    args (project.hasProperty("args") ? project.getProperty("args").split() : [])
+}
+
+task runMdxToWmo(dependsOn: classes, type: JavaExec) {
+    main = "com.etheller.warsmash.tools.MdxToWmo"
+    classpath = sourceSets.main.runtimeClasspath
+    workingDir = project.assetsDir
+    jvmArgs = ["-Xmx2g"]
+    ignoreExitValue = true
+    args (project.hasProperty("args") ? project.getProperty("args").split() : [])
+}
+
+task runWmoDeleteGroups(dependsOn: classes, type: JavaExec) {
+    main = "com.etheller.warsmash.tools.WmoDeleteGroups"
+    classpath = sourceSets.main.runtimeClasspath
+    workingDir = project.assetsDir
+    jvmArgs = ["-Xmx2g"]
+    ignoreExitValue = true
+    args (project.hasProperty("args") ? project.getProperty("args").split() : [])
+}
+
+
+task runMdxTo800(dependsOn: classes, type: JavaExec) {
+    main = "com.etheller.warsmash.tools.MdxTo800"
+    classpath = sourceSets.main.runtimeClasspath
+    workingDir = project.assetsDir
+    ignoreExitValue = true
+    args (project.hasProperty("args") ? project.getProperty("args").split() : [])
+}

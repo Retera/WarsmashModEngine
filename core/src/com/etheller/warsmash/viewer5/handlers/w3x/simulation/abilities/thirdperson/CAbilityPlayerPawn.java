@@ -1,9 +1,14 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.thirdperson;
 
+import java.util.EnumSet;
+
 import com.badlogic.gdx.math.Vector3;
 import com.etheller.warsmash.units.GameObject;
 import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.util.WarsmashConstants;
+import com.etheller.warsmash.viewer5.handlers.w3x.AnimationTokens.PrimaryTag;
+import com.etheller.warsmash.viewer5.handlers.w3x.AnimationTokens.SecondaryTag;
+import com.etheller.warsmash.viewer5.handlers.w3x.SequenceUtils;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
@@ -35,6 +40,8 @@ public class CAbilityPlayerPawn extends AbstractGenericNoIconAbility implements 
 	 * Warcraft III item, so the pawn owns it directly.
 	 */
 	private CAbilityBag backpack;
+	private PrimaryTag runTag = PrimaryTag.RUN;
+	private EnumSet<SecondaryTag> runSecondaryTags = SequenceUtils.EMPTY;
 
 	public CAbilityPlayerPawn(final int handleId, final War3ID alias) {
 		super(handleId, alias, alias);
@@ -62,12 +69,12 @@ public class CAbilityPlayerPawn extends AbstractGenericNoIconAbility implements 
 			final AbilityTargetCheckReceiver<AbilityPointTarget> receiver) {
 		receiver.orderIdNotAccepted();
 	}
-	
+
 	@Override
-	public boolean checkBeforeQueue(CSimulation game, CUnit caster, int playerIndex, int orderId, boolean autoOrder,
-			AbilityTarget target) {
+	public boolean checkBeforeQueue(final CSimulation game, final CUnit caster, final int playerIndex,
+			final int orderId, final boolean autoOrder, final AbilityTarget target) {
 		if (orderId == OrderIds.pawnCheesyRightMouseTurn) {
-			AbilityPointTarget point = target.visit(AbilityTargetVisitor.POINT);
+			final AbilityPointTarget point = target.visit(AbilityTargetVisitor.POINT);
 			if (point != null) {
 				caster.setFacing(point.y);
 				return false;
@@ -246,5 +253,18 @@ public class CAbilityPlayerPawn extends AbstractGenericNoIconAbility implements 
 	public float getRenderMoveSpeed() {
 		return Math.max(getBehaviorPlayerPawn().getVelocity().len(),
 				getBehaviorPlayerPawn().getPreviousVelocity().len()) / WarsmashConstants.SIMULATION_STEP_TIME;
+	}
+
+	public void setRunTags(final PrimaryTag runTag, final EnumSet<SecondaryTag> runSecondaryTags) {
+		this.runTag = runTag;
+		this.runSecondaryTags = runSecondaryTags;
+	}
+
+	public PrimaryTag getRunTag() {
+		return this.runTag;
+	}
+
+	public EnumSet<SecondaryTag> getRunSecondaryTags() {
+		return this.runSecondaryTags;
 	}
 }

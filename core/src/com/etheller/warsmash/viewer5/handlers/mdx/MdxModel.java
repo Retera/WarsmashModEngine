@@ -6,6 +6,7 @@ import java.util.List;
 
 import com.badlogic.gdx.graphics.GL20;
 import com.etheller.warsmash.datasources.SourcedData;
+import com.etheller.warsmash.util.FlagUtils;
 import com.etheller.warsmash.viewer5.ModelInstance;
 import com.etheller.warsmash.viewer5.ModelViewer;
 import com.etheller.warsmash.viewer5.PathSolver;
@@ -140,6 +141,10 @@ public class MdxModel extends com.etheller.warsmash.viewer5.Model<MdxHandler> {
 
 			for (final MdlxLayer layer : material.getLayers()) {
 				final Layer vLayer = new Layer(this, layer, layerId++, material.getPriorityPlane());
+
+				if (reforged && FlagUtils.hasFlag(material.getFlags(), MdlxMaterial.Flags.TWO_SIDED_REFORGED)) {
+					vLayer.twoSided = 1;
+				}
 
 				layers.add(vLayer);
 

@@ -140,6 +140,12 @@ public class BatchGroup extends GenericGroup {
 					else {
 						shader.setUniformf("u_unshaded", 0);
 					}
+					if (instance.lightOmitOffsetOverride != 0) {
+						shader.setUniformf("u_lightOmitOffset", instance.lightOmitOffsetOverride);
+					}
+					else {
+						shader.setUniformf("u_lightOmitOffset", 0);
+					}
 
 					final int diffuseId = Math.max(0, instance.layerTextures[diffuseLayer.index]);
 					final int normalsId = Math.max(0, instance.layerTextures[normalsLayer.index]);

@@ -51,14 +51,21 @@ public class CollidableDoodadGeosetComponent implements CollidableDoodadComponen
 	}
 
 	@Override
+	public int getLightOmitOffsetOverride() {
+		return this.instance.lightOmitOffsetOverride;
+	}
+
+	@Override
 	public boolean isInterior() {
 		return this.interior;
 	}
 
 	@Override
 	public W3xSceneLightManager getModelOnlyLightManager() {
-		// Serve the "served" manager (for WMO surfaces this includes the WMO MOLT lights) so units walking
-		// onto this surface are lit like the doodads on it, not like the surface itself.
+		// Serve the "served" manager (for WMO surfaces this includes the WMO MOLT
+		// lights) so units walking
+		// onto this surface are lit like the doodads on it, not like the surface
+		// itself.
 		return this.instance.getServedModelOnlyLightManager();
 	}
 

@@ -1164,6 +1164,27 @@ public class MenuUI {
 								}
 							}
 						}
+						// WDT maps have no .w3i, but their war3map.j config() still defines
+						// start locations; run it against the wrapping MPQ + codebase so
+						// the camera (and player pawn) starts where the map says.
+						try {
+							final String mpqFileName = newSelectedItem + ".MPQ";
+							final File mpqFile = new File(mpqFileName);
+							final ByteBuffer mpqBytes = (mpqFile.exists()
+									? new FolderDataSource(mpqFile.getParentFile().toPath()).read(mpqFile.getName())
+									: MenuUI.this.dataSource.read(mpqFileName));
+							final SeekableByteChannel mpqChannel = new SeekableInMemoryByteChannel(mpqBytes.array());
+							final MpqDataSource mapMpqDataSource = new MpqDataSource(new MPQArchive(mpqChannel),
+									mpqChannel);
+							final DataSource configDataSource = new CompoundDataSource(
+									Arrays.asList(MenuUI.this.dataSource, mapMpqDataSource));
+							Jass2.loadConfig(configDataSource, MenuUI.this.uiViewport, MenuUI.this.uiScene,
+									MenuUI.this.rootFrame, war3MapConfig, WarsmashConstants.JASS_FILE_LIST).config();
+						}
+						catch (final Exception exc) {
+							System.err.println("Unable to run config() for WDT map, using defaults: " + exc);
+							exc.printStackTrace();
+						}
 					}
 					else {
 						try {
@@ -1790,6 +1811,27 @@ public class MenuUI {
 					player.setController(CMapControl.USER);
 					player.setRacePref(WarsmashConstants.RACE_MANAGER.getRacePreference(4));
 				}
+				// WDT maps have no .w3i, but their war3map.j config() still defines
+				// start locations; run it against the wrapping MPQ + codebase so
+				// the camera (and player pawn) starts where the map says.
+				try {
+					final String mpqFileName = mapFilename + ".MPQ";
+					final File mpqFile = new File(mpqFileName);
+					final ByteBuffer mpqBytes = (mpqFile.exists()
+							? new FolderDataSource(mpqFile.getParentFile().toPath()).read(mpqFile.getName())
+							: MenuUI.this.dataSource.read(mpqFileName));
+					final SeekableByteChannel mpqChannel = new SeekableInMemoryByteChannel(mpqBytes.array());
+					final MpqDataSource mapMpqDataSource = new MpqDataSource(new MPQArchive(mpqChannel), mpqChannel);
+					final DataSource configDataSource = new CompoundDataSource(
+							Arrays.asList(MenuUI.this.dataSource, mapMpqDataSource));
+					Jass2.loadConfig(configDataSource, MenuUI.this.uiViewport, MenuUI.this.uiScene,
+							MenuUI.this.rootFrame, war3MapConfig, WarsmashConstants.JASS_FILE_LIST).config();
+				}
+				catch (final Exception exc) {
+					System.err.println("Unable to run config() for WDT map, using defaults: " + exc);
+					exc.printStackTrace();
+				}
+
 			}
 			else {
 				loadAndCacheMapConfigs(mapFilename);

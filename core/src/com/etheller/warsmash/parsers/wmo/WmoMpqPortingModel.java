@@ -10,6 +10,7 @@ import org.apache.commons.compress.utils.SeekableInMemoryByteChannel;
 import com.etheller.warsmash.datasources.SourcedData;
 import com.etheller.warsmash.viewer5.ModelViewer;
 import com.etheller.warsmash.viewer5.PathSolver;
+import com.etheller.warsmash.viewer5.handlers.w3x.environment.WdtLiquidType;
 
 import mpq.ArchivedFile;
 import mpq.ArchivedFileExtractor;
@@ -20,8 +21,8 @@ import mpq.MPQException;
 
 public class WmoMpqPortingModel extends WmoPortingModel2 {
 	public WmoMpqPortingModel(final WmoPortingHandler handler, final ModelViewer viewer, final String extension,
-			final PathSolver pathSolver, final String fetchUrl) {
-		super(handler, viewer, extension, pathSolver, fetchUrl);
+			final PathSolver pathSolver, final String fetchUrl, final WdtLiquidType liquidType) {
+		super(handler, viewer, extension, pathSolver, fetchUrl, liquidType);
 	}
 
 	@Override

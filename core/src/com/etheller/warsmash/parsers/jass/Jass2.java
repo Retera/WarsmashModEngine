@@ -4740,6 +4740,18 @@ public class Jass2 {
 						}
 						return null;
 					});
+			jassProgramVisitor.getJassNativeManager().createNative("Wow3AddSpecialEffect",
+					(arguments, globalScope, triggerScope) -> {
+						final String modelName = arguments.get(0).visit(StringJassValueVisitor.getInstance());
+						final float x = arguments.get(1).visit(RealJassValueVisitor.getInstance()).floatValue();
+						final float y = arguments.get(2).visit(RealJassValueVisitor.getInstance()).floatValue();
+						final float z = arguments.get(3).visit(RealJassValueVisitor.getInstance()).floatValue();
+						final float yaw = arguments.get(4).visit(RealJassValueVisitor.getInstance()).floatValue();
+						final RenderSpellEffect effect = war3MapViewer.addSpecialEffect(modelName, x, y, yaw);
+						effect.setHeight(z);
+						effect.applyLightingThirdPerson(war3MapViewer);
+						return new HandleJassValue(effectType, effect);
+					});
 			jassProgramVisitor.getJassNativeManager().createNative("SetDestructableInvulnerable",
 					(arguments, globalScope, triggerScope) -> {
 						final CDestructable whichWidget = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());

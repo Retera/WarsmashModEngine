@@ -79,7 +79,7 @@ public abstract class ModelInstance extends Node {
 	@Override
 	protected final void updateObject(final float dt, final Scene scene) {
 		if (this.updateFrame < this.model.viewer.frame) {
-			if (this.rendered && !this.paused) {
+			if (this.rendered && !this.paused && ((scene == null) || (this.depth <= scene.camera.animationStopDepth))) {
 				this.updateAnimations(dt);
 			}
 		}

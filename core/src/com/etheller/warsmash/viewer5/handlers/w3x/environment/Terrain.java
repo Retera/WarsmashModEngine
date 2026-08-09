@@ -1784,4 +1784,9 @@ public class Terrain extends TerrainInterface {
 	public void setWdtHole(final float worldX, final float worldY, final boolean hole) {
 
 	}
+
+	@Override
+	public WdtLiquidType getLiquidType(final float x, final float y) {
+		return null;
+	}
 }

@@ -19,7 +19,6 @@ import com.etheller.warsmash.viewer5.handlers.w3x.CollidableDoodadComponent;
 import com.etheller.warsmash.viewer5.handlers.w3x.SequenceUtils;
 import com.etheller.warsmash.viewer5.handlers.w3x.SplatModel.SplatMover;
 import com.etheller.warsmash.viewer5.handlers.w3x.UnitSoundset;
-import com.etheller.warsmash.viewer5.handlers.w3x.W3xSceneLightManager;
 import com.etheller.warsmash.viewer5.handlers.w3x.War3MapViewer;
 import com.etheller.warsmash.viewer5.handlers.w3x.environment.BuildingShadow;
 import com.etheller.warsmash.viewer5.handlers.w3x.environment.PathingGrid;
@@ -44,19 +43,31 @@ public class RenderUnit implements RenderWidget {
 	public static final Color DEFAULT = new Color(1, 1, 1, 1);
 	public static final Quaternion tempQuat = new Quaternion();
 	private static final float[] heapZ = new float[3];
-	private static final Vector3 sunDirHeap = new Vector3();
-	private static final float[] exteriorColorHeap = new float[3];
-	/** Re-sample the interior ground light only after the unit has moved this far (squared world units),
-	 * so a moving unit doesn't run the nearest-floor-vertex scan every frame. */
+	public static final Vector3 sunDirHeap = new Vector3();
+	public static final float[] exteriorColorHeap = new float[3];
+	/**
+	 * Re-sample the interior ground light only after the unit has moved this far
+	 * (squared world units), so a moving unit doesn't run the nearest-floor-vertex
+	 * scan every frame.
+	 */
 	private static final float INTERIOR_RESAMPLE_DISTANCE_SQ = 16f;
-	/** Fraction of the sampled ground colour applied as FLAT ambient (the rest is directional). Higher =
-	 * the unit's shadow side is more lit by the local ground colour, but less directional form. */
-	private static final float INTERIOR_GROUND_AMBIENT_FRACTION = 0.5f;
-	/** Ease time-constant (seconds) for blending the applied ground colour toward the latest sample, so the
-	 * unit's interior lighting flows between sample points instead of snapping. */
+	/**
+	 * Fraction of the sampled ground colour applied as FLAT ambient (the rest is
+	 * directional). Higher = the unit's shadow side is more lit by the local ground
+	 * colour, but less directional form.
+	 */
+	public static final float INTERIOR_GROUND_AMBIENT_FRACTION = 0.5f;
+	/**
+	 * Ease time-constant (seconds) for blending the applied ground colour toward
+	 * the latest sample, so the unit's interior lighting flows between sample
+	 * points instead of snapping.
+	 */
 	private static final float INTERIOR_FADE_TAU = 0.15f;
 	private final float[] sampledGroundColor = new float[3];
-	/** Smoothed (eased) ground colour actually applied; chases sampledGroundColor each frame. */
+	/**
+	 * Smoothed (eased) ground colour actually applied; chases sampledGroundColor
+	 * each frame.
+	 */
 	private final float[] currentGroundColor = new float[3];
 	private boolean currentGroundColorValid = false;
 	private boolean hasSampledGround = false;
@@ -348,21 +359,30 @@ public class RenderUnit implements RenderWidget {
 				}
 				if (currentWalkableUnder != null) {
 					this.instance.setModelOnlyLightManager(currentWalkableUnder.getModelOnlyLightManager());
+					// always do 1 omit offset on unit, because WMO always has skylight in list
 //					this.instance.setLightOmitOffsetOverride(currentWalkableUnder.isInterior() ? 1 : 0);
-					// Inside a WMO interior the unit gets only sparse MOLT lamps, so without help it is
-					// near-black. Light it from the surface: a flat ambient floor (the WMO MOHD ambient) plus a
-					// directional 'extra' from the baked colour of the ground it stands on, shaded along the
-					// world sun direction so it matches outdoor shading. The lamps still add on top via the
-					// light manager. The ground colour is re-sampled only after the unit moves a bit (perf).
+					// Inside a WMO interior the unit gets only sparse MOLT lamps, so without help
+					// it is
+					// near-black. Light it from the surface: a flat ambient floor (the WMO MOHD
+					// ambient) plus a
+					// directional 'extra' from the baked colour of the ground it stands on, shaded
+					// along the
+					// world sun direction so it matches outdoor shading. The lamps still add on top
+					// via the
+					// light manager. The ground colour is re-sampled only after the unit moves a
+					// bit (perf).
 					final float[] interiorAmbient = currentWalkableUnder.getServedInteriorAmbient();
 					if (interiorAmbient != null) {
+						this.instance.setLightOmitOffsetOverride(1);
 						final float groundDx = this.location[0] - this.lastGroundSampleX;
 						final float groundDy = this.location[1] - this.lastGroundSampleY;
 						final float groundDz = groundHeight - this.lastGroundSampleZ;
 						if (!this.hasSampledGround || (((groundDx * groundDx) + (groundDy * groundDy)
 								+ (groundDz * groundDz)) > INTERIOR_RESAMPLE_DISTANCE_SQ)) {
-							// If the ground vertex under the unit is an exterior one (baked colour is black), use
-							// the current daylight colour instead so we don't sample black at the entrance border.
+							// If the ground vertex under the unit is an exterior one (baked colour is
+							// black), use
+							// the current daylight colour instead so we don't sample black at the entrance
+							// border.
 							final boolean haveExterior = map.getExteriorLightColor(exteriorColorHeap);
 							this.hasSampledGround = currentWalkableUnder.sampleNearestFloorColor(this.location[0],
 									this.location[1], groundHeight, haveExterior ? exteriorColorHeap : null,
@@ -376,14 +396,20 @@ public class RenderUnit implements RenderWidget {
 						final float sunY = haveSun ? sunDirHeap.y : 0f;
 						final float sunZ = haveSun ? sunDirHeap.z : 1f;
 						if (this.hasSampledGround) {
-							// Ease the applied ground colour toward the latest sample so it flows between sample
-							// points instead of snapping. Snap on first acquisition (entering the interior), then
-							// blend frame-rate-independently. interiorAmbient (MOHD) is stable, so it isn't eased.
+							// Ease the applied ground colour toward the latest sample so it flows between
+							// sample
+							// points instead of snapping. Snap on first acquisition (entering the
+							// interior), then
+							// blend frame-rate-independently. interiorAmbient (MOHD) is stable, so it isn't
+							// eased.
 							if (this.currentGroundColorValid) {
 								final float a = 1f - (float) Math.exp(-Gdx.graphics.getDeltaTime() / INTERIOR_FADE_TAU);
-								this.currentGroundColor[0] += (this.sampledGroundColor[0] - this.currentGroundColor[0]) * a;
-								this.currentGroundColor[1] += (this.sampledGroundColor[1] - this.currentGroundColor[1]) * a;
-								this.currentGroundColor[2] += (this.sampledGroundColor[2] - this.currentGroundColor[2]) * a;
+								this.currentGroundColor[0] += (this.sampledGroundColor[0] - this.currentGroundColor[0])
+										* a;
+								this.currentGroundColor[1] += (this.sampledGroundColor[1] - this.currentGroundColor[1])
+										* a;
+								this.currentGroundColor[2] += (this.sampledGroundColor[2] - this.currentGroundColor[2])
+										* a;
 							}
 							else {
 								this.currentGroundColor[0] = this.sampledGroundColor[0];
@@ -391,9 +417,12 @@ public class RenderUnit implements RenderWidget {
 								this.currentGroundColor[2] = this.sampledGroundColor[2];
 								this.currentGroundColorValid = true;
 							}
-							// Split the eased ground colour: part as flat ambient (lights ALL sides, so the side
-							// facing away from the sun is still lit by the local ground colour, not just the dim
-							// MOHD floor), the rest as the directional 'extra'. The lit side total is unchanged
+							// Split the eased ground colour: part as flat ambient (lights ALL sides, so the
+							// side
+							// facing away from the sun is still lit by the local ground colour, not just
+							// the dim
+							// MOHD floor), the rest as the directional 'extra'. The lit side total is
+							// unchanged
 							// (MOHD + ground); only the dark side is lifted.
 							final float f = INTERIOR_GROUND_AMBIENT_FRACTION;
 							this.instance.setInteriorLightingDynamic(
@@ -409,6 +438,7 @@ public class RenderUnit implements RenderWidget {
 						}
 					}
 					else {
+						this.instance.setLightOmitOffsetOverride(currentWalkableUnder.getLightOmitOffsetOverride());
 						this.instance.setInteriorAmbientFlat(0, 0, 0);
 						this.hasSampledGround = false;
 						this.lastGroundSampleX = Float.MAX_VALUE;
@@ -418,7 +448,9 @@ public class RenderUnit implements RenderWidget {
 				else {
 //					this.instance.setLightOmitOffsetOverride(0);
 					this.instance.setModelOnlyLightManager(null);
-					// Back outdoors: clear any interior ambient so the unit returns to normal sky lighting.
+					this.instance.setLightOmitOffsetOverride(0);
+					// Back outdoors: clear any interior ambient so the unit returns to normal sky
+					// lighting.
 					this.instance.setInteriorAmbientFlat(0, 0, 0);
 					this.hasSampledGround = false;
 					this.lastGroundSampleX = Float.MAX_VALUE;
@@ -708,7 +740,8 @@ public class RenderUnit implements RenderWidget {
 						groundHeight/* + map.imageWalkableZOffset */);
 			}
 			else {
-				this.shadow.setHeightAbsolute(currentWalkableUnder != null, groundHeight + map.imageWalkableZOffset);
+				this.shadow.setHeightAbsolute(currentWalkableUnder != null,
+						groundHeight/* + map.imageWalkableZOffset */);
 			}
 		}
 		if (this.selectionCircle != null) {
@@ -1077,6 +1110,10 @@ public class RenderUnit implements RenderWidget {
 
 	public void setupPlayerPawn(final CAbilityPlayerPawn abilityPlayerPawn) {
 		this.playerPawn = abilityPlayerPawn;
+		final Sequence runSeq = SequenceUtils.randomSequence(this.instance, PrimaryTag.RUN);
+		if (runSeq == null) {
+			abilityPlayerPawn.setRunTags(PrimaryTag.WALK, SequenceUtils.FAST);
+		}
 	}
 
 	public float getMaxPitch() {

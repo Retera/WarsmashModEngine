@@ -15,10 +15,9 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.utils.TimeUtils;
 import com.badlogic.gdx.utils.viewport.ExtendViewport;
 import com.etheller.interpreter.ast.scope.trigger.Trigger;
-import com.etheller.interpreter.ast.value.JassType;
-import com.etheller.interpreter.ast.value.JassValue;
 import com.etheller.warsmash.parsers.dbc.DbcParser;
 import com.etheller.warsmash.parsers.dbc.decoders.DbcDecoderSoundEntries;
 import com.etheller.warsmash.parsers.fdf.GameUI;
@@ -105,6 +104,10 @@ public class ThirdPersonUI implements WarsmashToggleableUI {
 	private static final float BAG_REFRESH_INTERVAL = 0.25f;
 	private boolean autoSpinLeft = false;
 	private boolean autoSpinRight = false;
+	private boolean trace = false;
+	private long lastMoveTraceMillis;
+	private String moveTraceFxnName;
+	private final StringBuilder moveTraceBuilder = new StringBuilder();
 
 	public ThirdPersonUI(final War3MapViewer war3MapViewer, final Scene uiScene, final ExtendViewport uiViewport,
 			final Scene portraitScene, final CPlayerUnitOrderListener uiOrderListener, final War3ID pawnId) {
@@ -151,18 +154,20 @@ public class ThirdPersonUI implements WarsmashToggleableUI {
 //			pawnUnits.add(this.war3MapViewer.simulation.createUnitSimple(this.pawnId,
 //			this.war3MapViewer.getLocalPlayerIndex(), startLocation[0] - 31797.357f,
 //			startLocation[1] - 341638.3f, 0));
-			
+
 			// SW======
 //			pawnUnits.add(this.war3MapViewer.simulation.createUnitSimple(this.pawnId,
-//			this.war3MapViewer.getLocalPlayerIndex(), -9385.966f, -298138.1f, 0));
-			
+//					this.war3MapViewer.getLocalPlayerIndex(), -9385.966f, -298138.1f, 0));
+
 			// BR======
 //			pawnUnits.add(this.war3MapViewer.simulation.createUnitSimple(this.pawnId,
-//			this.war3MapViewer.getLocalPlayerIndex(), 31608.973f, -262313.06f, 0));
-			
+//					this.war3MapViewer.getLocalPlayerIndex(), 31608.973f, -262313.06f, 0));
+
 			// lights hope chapel======
 //			pawnUnits.add(this.war3MapViewer.simulation.createUnitSimple(this.pawnId,
-//			this.war3MapViewer.getLocalPlayerIndex(), 163337.72f, 53530.742f, 0));
+//					this.war3MapViewer.getLocalPlayerIndex(), 163337.72f, 53530.742f, 0));
+//			pawnUnits.add(this.war3MapViewer.simulation.createUnitSimple(this.pawnId,
+//					this.war3MapViewer.getLocalPlayerIndex(), 163137.72f, 53130.742f, 0));
 
 			// IF=====
 
@@ -170,14 +175,29 @@ public class ThirdPersonUI implements WarsmashToggleableUI {
 //					this.war3MapViewer.getLocalPlayerIndex(), startLocation[0] + 24126.52f,
 //					startLocation[1] - 172875.25f, 0));
 			// IF airfield
-			pawnUnits.add(this.war3MapViewer.simulation.createUnitSimple(this.pawnId,
-					this.war3MapViewer.getLocalPlayerIndex(), 50387.85f, -165933.2f, 2.8147888f));
+//			pawnUnits.add(this.war3MapViewer.simulation.createUnitSimple(this.pawnId,
+//					this.war3MapViewer.getLocalPlayerIndex(), 50387.85f, -165933.2f, 2.8147888f));
 //			pawnUnits.add(this.war3MapViewer.simulation.createUnitSimple(this.pawnId,
 //					this.war3MapViewer.getLocalPlayerIndex(), startLocation[0] + 3250, startLocation[1] - 29795.25f,
 //					0));
 //			pawnUnits.add(this.war3MapViewer.simulation.createUnitSimple(this.pawnId,
 //					this.war3MapViewer.getLocalPlayerIndex(), startLocation[0] + 96242.28f,
 //					startLocation[1] -202859.8f, 0));
+			CUnit createdPawn = null;
+			for (final CUnit existingUnit : this.war3MapViewer.simulation.getUnits()) {
+				if ((existingUnit.getFirstAbilityOfType(CAbilityPlayerPawn.class) != null)
+						&& (existingUnit.getPlayerIndex() == this.war3MapViewer.getLocalPlayerIndex())) {
+					createdPawn = existingUnit;
+					break;
+				}
+			}
+			if (createdPawn == null) {
+				createdPawn = this.war3MapViewer.simulation.createUnitSimple(this.pawnId,
+						this.war3MapViewer.getLocalPlayerIndex(), startLocation[0], startLocation[1], 0);
+			}
+			if (createdPawn != null) {
+				pawnUnits.add(createdPawn);
+			}
 
 			// Stranglethorn cave:
 //				pawnUnits.add(this.war3MapViewer.simulation.createUnitSimple(this.pawnId,
@@ -229,6 +249,47 @@ public class ThirdPersonUI implements WarsmashToggleableUI {
 										ThirdPersonUI.this.war3MapViewer.terrain.setWdtHole(
 												ThirdPersonUI.this.pawnUnit.getX(), ThirdPersonUI.this.pawnUnit.getY(),
 												isHole);
+									}
+									else if ("CreateCameraSetup".equals(bits[0])) {
+										final String name = "gg_cam_" + bits[1];
+										final float rotation = (float) Math
+												.toDegrees(ThirdPersonUI.this.cameraManager.horizontalAngle);
+										final float aoa = 360 - (90 - (float) Math
+												.toDegrees(ThirdPersonUI.this.cameraManager.verticalAngle));
+										final float targetDistance = ThirdPersonUI.this.cameraManager.distance;
+										// there's a divide by 2 in the meleeui 4 some reason
+										final float fov = ThirdPersonUI.this.cameraManager.getFov() * 2;
+										final float farz = ThirdPersonUI.this.cameraManager.getFarZ();
+//										this.target.set(this.pawnUnit.getX(), this.pawnUnit.getY(), this.pawnUnit.getZ());
+//										this.target.z += this.abilityPlayerPawn.getBehaviorPlayerPawn().getHeight();
+										final float zoff = (ThirdPersonUI.this.abilityPlayerPawn.getBehaviorPlayerPawn()
+												.getHeight() + ThirdPersonUI.this.abilityPlayerPawn.getZ())
+												- ThirdPersonUI.this.war3MapViewer.terrain.getGroundHeight(
+														ThirdPersonUI.this.pawnUnit.getX(),
+														+ThirdPersonUI.this.pawnUnit.getY());
+										System.out.println("camerasetup " + name + " = null");
+										System.out.println("    set " + name + " = CreateCameraSetup(  )\n"
+												+ "    call CameraSetupSetField( " + name + ", CAMERA_FIELD_ZOFFSET, "
+												+ zoff + ", 0.0 )\n" + "    call CameraSetupSetField( " + name
+												+ ", CAMERA_FIELD_ROTATION, " + rotation + ", 0.0 )\n"
+												+ "    call CameraSetupSetField( " + name
+												+ ", CAMERA_FIELD_ANGLE_OF_ATTACK, " + aoa + ", 0.0 )\n"
+												+ "    call CameraSetupSetField( " + name
+												+ ", CAMERA_FIELD_TARGET_DISTANCE, " + targetDistance + ", 0.0 )\n"
+												+ "    call CameraSetupSetField( " + name
+												+ ", CAMERA_FIELD_ROLL, 0.0, 0.0 )\n" + "    call CameraSetupSetField( "
+												+ name + ", CAMERA_FIELD_FIELD_OF_VIEW, " + fov + ", 0.0 )\n"
+												+ "    call CameraSetupSetField( " + name + ", CAMERA_FIELD_FARZ, "
+												+ farz + ", 0.0 )\n" + "    call CameraSetupSetDestPosition( " + name
+												+ ", " + ThirdPersonUI.this.pawnUnit.getX() + ", "
+												+ ThirdPersonUI.this.pawnUnit.getY() + ", " + 0.0 + " )\n" + "");
+									}
+									else if ("Wow3AddSpecialEffect".equals(bits[0])) {
+										System.out.println("call Wow3AddSpecialEffect(\"" + bits[1] + "\", "
+												+ +ThirdPersonUI.this.pawnUnit.getX() + ", "
+												+ ThirdPersonUI.this.pawnUnit.getY() + ", "
+												+ ThirdPersonUI.this.abilityPlayerPawn.getZ() + ", "
+												+ ThirdPersonUI.this.pawnUnit.getFacing() + " * bj_DEGTORAD)");
 									}
 									else {
 
@@ -339,39 +400,40 @@ public class ThirdPersonUI implements WarsmashToggleableUI {
 		final UIFrame mainMenuBarFixed = this.rootFrame.getFrameByName("MainMenuBar", 0);
 		mainMenuBarFixed.setVisible(true);
 
-		// At the time when we do our setup here, the GlobalScope has not yet been created.
+		// At the time when we do our setup here, the GlobalScope has not yet been
+		// created.
 		Gdx.app.postRunnable(new Runnable() {
 			@Override
 			public void run() {
-				Trigger refreshBagsTrigger = new Trigger();
+				final Trigger refreshBagsTrigger = new Trigger();
 				refreshBagsTrigger.addAction((arguments, globalScope, triggerScope) -> {
-					rootFrame.getLuaGlobals().notifyBagsChanged();
+					ThirdPersonUI.this.rootFrame.getLuaGlobals().notifyBagsChanged();
 					return null;
 				});
-				pawnUnit.addEvent(war3MapViewer.simulation.getGlobalScope(), refreshBagsTrigger,
-						JassGameEventsWar3.EVENT_UNIT_DROP_ITEM);
-				pawnUnit.addEvent(war3MapViewer.simulation.getGlobalScope(), refreshBagsTrigger,
-						JassGameEventsWar3.EVENT_UNIT_PICKUP_ITEM);
-				pawnUnit.addEvent(war3MapViewer.simulation.getGlobalScope(), refreshBagsTrigger,
-						JassGameEventsWar3.EVENT_UNIT_PAWN_ITEM);
-				pawnUnit.addEvent(war3MapViewer.simulation.getGlobalScope(), refreshBagsTrigger,
-						JassGameEventsWar3.EVENT_UNIT_USE_ITEM);
+				ThirdPersonUI.this.pawnUnit.addEvent(ThirdPersonUI.this.war3MapViewer.simulation.getGlobalScope(),
+						refreshBagsTrigger, JassGameEventsWar3.EVENT_UNIT_DROP_ITEM);
+				ThirdPersonUI.this.pawnUnit.addEvent(ThirdPersonUI.this.war3MapViewer.simulation.getGlobalScope(),
+						refreshBagsTrigger, JassGameEventsWar3.EVENT_UNIT_PICKUP_ITEM);
+				ThirdPersonUI.this.pawnUnit.addEvent(ThirdPersonUI.this.war3MapViewer.simulation.getGlobalScope(),
+						refreshBagsTrigger, JassGameEventsWar3.EVENT_UNIT_PAWN_ITEM);
+				ThirdPersonUI.this.pawnUnit.addEvent(ThirdPersonUI.this.war3MapViewer.simulation.getGlobalScope(),
+						refreshBagsTrigger, JassGameEventsWar3.EVENT_UNIT_USE_ITEM);
 
-				Trigger refreshBagPositionsTrigger = new Trigger();
+				final Trigger refreshBagPositionsTrigger = new Trigger();
 				refreshBagPositionsTrigger.addAction((arguments, globalScope, triggerScope) -> {
-					int issuedOrderId = ((CommonTriggerExecutionScope) triggerScope).getIssuedOrderId();
+					final int issuedOrderId = ((CommonTriggerExecutionScope) triggerScope).getIssuedOrderId();
 					// Refresh after the swap is actually applied by the simulation (orders may be
 					// delayed a tick), for both the unit-inventory itemdrag and the within-bag
 					// bagitemdrag (CAbilityBag) drags.
-					if ((issuedOrderId >= OrderIds.itemdrag00 && issuedOrderId <= OrderIds.itemdrag05)
-							|| (issuedOrderId >= OrderIds.bagitemdrag00
-									&& issuedOrderId < OrderIds.bagitemdrag00 + 256)) {
-						rootFrame.getLuaGlobals().notifyBagsChanged();
+					if (((issuedOrderId >= OrderIds.itemdrag00) && (issuedOrderId <= OrderIds.itemdrag05))
+							|| ((issuedOrderId >= OrderIds.bagitemdrag00)
+									&& (issuedOrderId < (OrderIds.bagitemdrag00 + 256)))) {
+						ThirdPersonUI.this.rootFrame.getLuaGlobals().notifyBagsChanged();
 					}
 					return null;
 				});
-				pawnUnit.addEvent(war3MapViewer.simulation.getGlobalScope(), refreshBagPositionsTrigger,
-						JassGameEventsWar3.EVENT_UNIT_ISSUED_TARGET_ORDER);
+				ThirdPersonUI.this.pawnUnit.addEvent(ThirdPersonUI.this.war3MapViewer.simulation.getGlobalScope(),
+						refreshBagPositionsTrigger, JassGameEventsWar3.EVENT_UNIT_ISSUED_TARGET_ORDER);
 			}
 		});
 
@@ -386,10 +448,13 @@ public class ThirdPersonUI implements WarsmashToggleableUI {
 		this.cursorFrame.setZDepth(1.0f);
 		this.cursorFrame.setVisible(false);
 
-		// The WoW cursor model has no "carry the item icon" mechanism (its sequences are
-		// Point/Pickup/etc. and it has no replaceable-id texture slot), and the FrameXML
+		// The WoW cursor model has no "carry the item icon" mechanism (its sequences
+		// are
+		// Point/Pickup/etc. and it has no replaceable-id texture slot), and the
+		// FrameXML
 		// never draws the held item either — in real WoW the C client paints it. So we
-		// draw it ourselves: a small texture that follows the cursor while an item is held
+		// draw it ourselves: a small texture that follows the cursor while an item is
+		// held
 		// (positioned in update(), rendered on top in render()). Not added to the frame
 		// tree; we drive its bounds/render manually.
 		this.cursorItemIconFrame = new TextureFrame("SmashTPCursorItemIcon", this.rootFrame, false,
@@ -441,60 +506,64 @@ public class ThirdPersonUI implements WarsmashToggleableUI {
 			this.cursorFrame.setVisible(!this.touchDown);
 		}
 
-		boolean wasAutoSpinRight = this.autoSpinRight;
-		boolean wasAutoSpinLeft = this.autoSpinLeft;
+		final boolean wasAutoSpinRight = this.autoSpinRight;
+		final boolean wasAutoSpinLeft = this.autoSpinLeft;
 		if (!ALLOW_INSTANT_REDIRECT && this.touchDown && Gdx.input.isButtonPressed(Input.Buttons.RIGHT)) {
 			float targetAngle = (float) Math.toDegrees(this.cameraManager.horizontalAngle);
 			float currentAngle = this.pawnUnit.getFacing();
 			targetAngle = ((targetAngle % 360) + 360) % 360;
 			currentAngle = ((currentAngle % 360) + 360) % 360;
-			if (targetAngle < currentAngle - 180) {
+			if (targetAngle < (currentAngle - 180)) {
 				targetAngle += 360;
 			}
-			if (targetAngle > currentAngle + 180) {
+			if (targetAngle > (currentAngle + 180)) {
 				targetAngle -= 360;
 			}
-			float delta = targetAngle - currentAngle;
-			boolean newAutoSpinLeft = delta > 10;
-			boolean newAutoSpinRight = delta < -10;
-			autoSpinLeft = newAutoSpinLeft;
-			autoSpinRight = newAutoSpinRight;
-		} else {
-			autoSpinLeft = autoSpinRight = false;
+			final float delta = targetAngle - currentAngle;
+			final boolean newAutoSpinLeft = delta > 10;
+			final boolean newAutoSpinRight = delta < -10;
+			this.autoSpinLeft = newAutoSpinLeft;
+			this.autoSpinRight = newAutoSpinRight;
 		}
-		if (autoSpinLeft != wasAutoSpinLeft) {
-			if (autoSpinLeft) {
-				this.uiOrderListener.issueImmediateOrder(this.pawnUnit.getHandleId(), this.abilityPlayerPawn.getHandleId(),
-						OrderIds.pawnLeftPressed, false);
-			} else {
-				this.uiOrderListener.issueImmediateOrder(this.pawnUnit.getHandleId(), this.abilityPlayerPawn.getHandleId(),
-						OrderIds.pawnLeftReleased, false);
-			} 
+		else {
+			this.autoSpinLeft = this.autoSpinRight = false;
 		}
-		if (autoSpinRight != wasAutoSpinRight) {
-			if (autoSpinRight) {
-				this.uiOrderListener.issueImmediateOrder(this.pawnUnit.getHandleId(), this.abilityPlayerPawn.getHandleId(),
-						OrderIds.pawnRightPressed, false);
-			} else {
-				this.uiOrderListener.issueImmediateOrder(this.pawnUnit.getHandleId(), this.abilityPlayerPawn.getHandleId(),
-						OrderIds.pawnRightReleased, false);
+		if (this.autoSpinLeft != wasAutoSpinLeft) {
+			if (this.autoSpinLeft) {
+				this.uiOrderListener.issueImmediateOrder(this.pawnUnit.getHandleId(),
+						this.abilityPlayerPawn.getHandleId(), OrderIds.pawnLeftPressed, false);
+			}
+			else {
+				this.uiOrderListener.issueImmediateOrder(this.pawnUnit.getHandleId(),
+						this.abilityPlayerPawn.getHandleId(), OrderIds.pawnLeftReleased, false);
+			}
+		}
+		if (this.autoSpinRight != wasAutoSpinRight) {
+			if (this.autoSpinRight) {
+				this.uiOrderListener.issueImmediateOrder(this.pawnUnit.getHandleId(),
+						this.abilityPlayerPawn.getHandleId(), OrderIds.pawnRightPressed, false);
+			}
+			else {
+				this.uiOrderListener.issueImmediateOrder(this.pawnUnit.getHandleId(),
+						this.abilityPlayerPawn.getHandleId(), OrderIds.pawnRightReleased, false);
 			}
 		}
 	}
 
 	/**
-	 * Reflects the held bag item on the mouse cursor by driving the WoW cursor model's
-	 * own animation, the same way {@code MeleeUI} drives the WC3 cursor's HoldItem
-	 * sequence — but we keep this UI's WoW 0.5.3 cursor model
-	 * ({@code Interface\Cursor\Cursor.mdx}) and play ITS corresponding sequence. That
-	 * model's sequences are Point, Cast, Pickup, Attack, Buy, Interact, Speak, ...; the
-	 * item-drag analogue is "Pickup". A null/empty path returns to "Point".
+	 * Reflects the held bag item on the mouse cursor by driving the WoW cursor
+	 * model's own animation, the same way {@code MeleeUI} drives the WC3 cursor's
+	 * HoldItem sequence — but we keep this UI's WoW 0.5.3 cursor model
+	 * ({@code Interface\Cursor\Cursor.mdx}) and play ITS corresponding sequence.
+	 * That model's sequences are Point, Cast, Pickup, Attack, Buy, Interact, Speak,
+	 * ...; the item-drag analogue is "Pickup". A null/empty path returns to
+	 * "Point".
 	 *
 	 * <p>
-	 * The WoW cursor model can't carry the item's icon (no replaceable-id slot, and the
-	 * FrameXML doesn't draw it — that's the C client's job in real WoW), so in addition
-	 * to the "Pickup" hand animation we show the actual item icon via a small overlay
-	 * texture ({@link #cursorItemIconFrame}) that tracks the cursor.
+	 * The WoW cursor model can't carry the item's icon (no replaceable-id slot, and
+	 * the FrameXML doesn't draw it — that's the C client's job in real WoW), so in
+	 * addition to the "Pickup" hand animation we show the actual item icon via a
+	 * small overlay texture ({@link #cursorItemIconFrame}) that tracks the cursor.
 	 */
 	private void setCursorItem(final String itemIconPath) {
 		if ((itemIconPath != null) && !itemIconPath.isEmpty()) {
@@ -553,37 +622,67 @@ public class ThirdPersonUI implements WarsmashToggleableUI {
 		return this.tempRect;
 	}
 
+	private void traceOrderId(final int id) {
+		final long millis = TimeUtils.millis();
+		final long delta = millis - this.lastMoveTraceMillis;
+		this.lastMoveTraceMillis = millis;
+		this.moveTraceBuilder.append("    call TriggerSleepAction(" + (delta / 1000.0) + ")\n");
+		this.moveTraceBuilder.append("    call IssueImmediateOrderById(u, " + id + ")\n");
+	}
+
+	private void keyOrderId(final int id) {
+		this.uiOrderListener.issueImmediateOrder(this.pawnUnit.getHandleId(), this.abilityPlayerPawn.getHandleId(), id,
+				false);
+		if (this.trace) {
+			traceOrderId(id);
+		}
+	}
+
 	@Override
 	public boolean keyDown(final int keycode) {
 		if (keycode == Input.Keys.SPACE) {
-			this.uiOrderListener.issueImmediateOrder(this.pawnUnit.getHandleId(), this.abilityPlayerPawn.getHandleId(),
-					OrderIds.pawnJumpPressed, false);
+			keyOrderId(OrderIds.pawnJumpPressed);
 		}
 		else if (keycode == Input.Keys.X) {
-			this.uiOrderListener.issueImmediateOrder(this.pawnUnit.getHandleId(), this.abilityPlayerPawn.getHandleId(),
-					OrderIds.pawnSitPressed, false);
+			keyOrderId(OrderIds.pawnSitPressed);
 		}
 		if (keycode == Input.Keys.Z) {
 			CBehaviorPlayerPawn.HACKON = !CBehaviorPlayerPawn.HACKON;
 		}
+		if (keycode == Input.Keys.C) {
+			final long millis = TimeUtils.millis();
+			this.trace = !this.trace;
+			this.moveTraceFxnName = "MoveTrace" + Long.toHexString(millis);
+			this.lastMoveTraceMillis = millis;
+			if (this.trace) {
+				this.moveTraceBuilder.setLength(0);
+				this.moveTraceBuilder.append("function " + this.moveTraceFxnName + " takes unit u returns nothing\n");
+				this.moveTraceBuilder.append("    call SetUnitPosition(u, " + ThirdPersonUI.this.pawnUnit.getX() + ", "
+						+ ThirdPersonUI.this.pawnUnit.getY() + ")\n");
+				this.moveTraceBuilder
+						.append("    call SetPlayerPawnZ(u, " + ThirdPersonUI.this.abilityPlayerPawn.getZ() + ")\n");
+				this.moveTraceBuilder
+						.append("    call SetUnitFacing(u, " + ThirdPersonUI.this.pawnUnit.getFacing() + ")\n");
+			}
+			else {
+				this.moveTraceBuilder.append("endfunction\n");
+				System.out.println(this.moveTraceBuilder.toString());
+			}
+		}
 		if ((keycode == Input.Keys.LEFT) || (keycode == Input.Keys.A)) {
-			this.uiOrderListener.issueImmediateOrder(this.pawnUnit.getHandleId(), this.abilityPlayerPawn.getHandleId(),
-					OrderIds.pawnLeftPressed, false);
+			keyOrderId(OrderIds.pawnLeftPressed);
 			return true;
 		}
 		else if ((keycode == Input.Keys.RIGHT) || (keycode == Input.Keys.D)) {
-			this.uiOrderListener.issueImmediateOrder(this.pawnUnit.getHandleId(), this.abilityPlayerPawn.getHandleId(),
-					OrderIds.pawnRightPressed, false);
+			keyOrderId(OrderIds.pawnRightPressed);
 			return true;
 		}
 		else if ((keycode == Input.Keys.DOWN) || (keycode == Input.Keys.S)) {
-			this.uiOrderListener.issueImmediateOrder(this.pawnUnit.getHandleId(), this.abilityPlayerPawn.getHandleId(),
-					OrderIds.pawnDownPressed, false);
+			keyOrderId(OrderIds.pawnDownPressed);
 			return true;
 		}
 		else if ((keycode == Input.Keys.UP) || (keycode == Input.Keys.W)) {
-			this.uiOrderListener.issueImmediateOrder(this.pawnUnit.getHandleId(), this.abilityPlayerPawn.getHandleId(),
-					OrderIds.pawnUpPressed, false);
+			keyOrderId(OrderIds.pawnUpPressed);
 			return true;
 		}
 		return false;
@@ -592,27 +691,22 @@ public class ThirdPersonUI implements WarsmashToggleableUI {
 	@Override
 	public boolean keyUp(final int keycode) {
 		if (keycode == Input.Keys.SPACE) {
-			this.uiOrderListener.issueImmediateOrder(this.pawnUnit.getHandleId(), this.abilityPlayerPawn.getHandleId(),
-					OrderIds.pawnJumpReleased, false);
+			keyOrderId(OrderIds.pawnJumpReleased);
 		}
 		else if ((keycode == Input.Keys.LEFT) || (keycode == Input.Keys.A)) {
-			this.uiOrderListener.issueImmediateOrder(this.pawnUnit.getHandleId(), this.abilityPlayerPawn.getHandleId(),
-					OrderIds.pawnLeftReleased, false);
+			keyOrderId(OrderIds.pawnLeftReleased);
 			return true;
 		}
 		else if ((keycode == Input.Keys.RIGHT) || (keycode == Input.Keys.D)) {
-			this.uiOrderListener.issueImmediateOrder(this.pawnUnit.getHandleId(), this.abilityPlayerPawn.getHandleId(),
-					OrderIds.pawnRightReleased, false);
+			keyOrderId(OrderIds.pawnRightReleased);
 			return true;
 		}
 		else if ((keycode == Input.Keys.DOWN) || (keycode == Input.Keys.S)) {
-			this.uiOrderListener.issueImmediateOrder(this.pawnUnit.getHandleId(), this.abilityPlayerPawn.getHandleId(),
-					OrderIds.pawnDownReleased, false);
+			keyOrderId(OrderIds.pawnDownReleased);
 			return true;
 		}
 		else if ((keycode == Input.Keys.UP) || (keycode == Input.Keys.W)) {
-			this.uiOrderListener.issueImmediateOrder(this.pawnUnit.getHandleId(), this.abilityPlayerPawn.getHandleId(),
-					OrderIds.pawnUpReleased, false);
+			keyOrderId(OrderIds.pawnUpReleased);
 			return true;
 		}
 		else {
@@ -664,9 +758,9 @@ public class ThirdPersonUI implements WarsmashToggleableUI {
 	}
 
 	/**
-	 * If a lootable world item is under the cursor, target it (so the loot natives see
-	 * it) and start the loot interaction (hero loot animation + loot window). Returns
-	 * true if an item was found and loot was initiated.
+	 * If a lootable world item is under the cursor, target it (so the loot natives
+	 * see it) and start the loot interaction (hero loot animation + loot window).
+	 * Returns true if an item was found and loot was initiated.
 	 */
 	private boolean tryLootUnderCursor(final int screenX, final float worldScreenY) {
 		final RenderWidget picked = this.war3MapViewer.rayPickUnit(screenX, worldScreenY, this.anyTargetableUnitFilter);
@@ -768,10 +862,19 @@ public class ThirdPersonUI implements WarsmashToggleableUI {
 				this.cameraManager.horizontalAngle -= Math.toRadians(dx * 0.15 * 2);
 				this.cameraManager.verticalAngle -= Math.toRadians(dy * 0.15 * 2);
 				if (ALLOW_INSTANT_REDIRECT) {
-					float targetAngle = (float) Math.toDegrees(this.cameraManager.horizontalAngle);
+					final float targetAngle = (float) Math.toDegrees(this.cameraManager.horizontalAngle);
 //					pawnUnit.setFacing(targetAngle);
-					this.uiOrderListener.issuePointOrder(this.pawnUnit.getHandleId(), this.abilityPlayerPawn.getHandleId(),
-							OrderIds.pawnCheesyRightMouseTurn, 0, targetAngle, false);
+					this.uiOrderListener.issuePointOrder(this.pawnUnit.getHandleId(),
+							this.abilityPlayerPawn.getHandleId(), OrderIds.pawnCheesyRightMouseTurn, 0, targetAngle,
+							false);
+					if (this.trace) {
+						final long millis = TimeUtils.millis();
+						final long delta = millis - this.lastMoveTraceMillis;
+						this.lastMoveTraceMillis = millis;
+						this.moveTraceBuilder.append("    call TriggerSleepAction(" + (delta / 1000.0) + ")\n");
+						this.moveTraceBuilder.append("    call IssuePointOrderById(u, "
+								+ OrderIds.pawnCheesyRightMouseTurn + ", 0, " + targetAngle + ")\n");
+					}
 				}
 			}
 			this.lastX = newX;
@@ -800,9 +903,9 @@ public class ThirdPersonUI implements WarsmashToggleableUI {
 	 * accordingly (driving the engine's mouse-over HighlightTexture). Run both on
 	 * discrete mouseMoved events AND every frame from update(): the dynamically
 	 * generated bag item buttons could otherwise keep a stale highlight if a single
-	 * move event off them is ever missed, since their HighlightTexture is shown purely
-	 * while the frame's mouseOver flag is set (it is not a Lua/checkbox state and no
-	 * Lua event resets it).
+	 * move event off them is ever missed, since their HighlightTexture is shown
+	 * purely while the frame's mouseOver flag is set (it is not a Lua/checkbox
+	 * state and no Lua event resets it).
 	 */
 	private void updateHoverFrame(final int screenX, final int screenY) {
 		screenCoordsVector.set(screenX, screenY);
@@ -891,7 +994,7 @@ public class ThirdPersonUI implements WarsmashToggleableUI {
 		@Override
 		public boolean call(final CWidget unit) {
 			final RenderWidget renderPeer = ThirdPersonUI.this.war3MapViewer.getRenderPeer(unit);
-			return /*!unit.isDead() && */renderPeer.isSelectable(ThirdPersonUI.this.war3MapViewer.simulation,
+			return /* !unit.isDead() && */renderPeer.isSelectable(ThirdPersonUI.this.war3MapViewer.simulation,
 					ThirdPersonUI.this.war3MapViewer.getLocalPlayerIndex());
 		}
 	}
@@ -899,12 +1002,12 @@ public class ThirdPersonUI implements WarsmashToggleableUI {
 	private final class AnyTargetableUnitFilter implements CWidgetFilterFunction {
 		@Override
 		public boolean call(final CWidget unit) {
-			return true;//!unit.isDead();
+			return true;// !unit.isDead();
 		}
 	}
 
 	private boolean isUnitSelectable(final RenderWidget mouseOverUnit) {
 		return mouseOverUnit.isSelectable(this.war3MapViewer.simulation, this.war3MapViewer.getLocalPlayerIndex())
-				/*&& !mouseOverUnit.getSimulationWidget().isDead()*/;
+		/* && !mouseOverUnit.getSimulationWidget().isDead() */;
 	}
 }

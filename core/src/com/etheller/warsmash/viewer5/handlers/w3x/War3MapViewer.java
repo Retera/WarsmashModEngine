@@ -120,6 +120,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.environment.Terrain;
 import com.etheller.warsmash.viewer5.handlers.w3x.environment.TerrainInterface;
 import com.etheller.warsmash.viewer5.handlers.w3x.environment.TerrainInterface.Splat;
 import com.etheller.warsmash.viewer5.handlers.w3x.environment.TerrainWdt;
+import com.etheller.warsmash.viewer5.handlers.w3x.environment.WdtLiquidType;
 import com.etheller.warsmash.viewer5.handlers.w3x.lightning.LightningEffectModel;
 import com.etheller.warsmash.viewer5.handlers.w3x.lightning.LightningEffectModelHandler;
 import com.etheller.warsmash.viewer5.handlers.w3x.lightning.LightningEffectNode;
@@ -318,9 +319,9 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 
 		final MdxHandler mdxHandler = new MdxHandler();
 		addHandler(mdxHandler);
-		final WmoPortingHandler wmoHandler = new WmoPortingHandler(mdxHandler);
-		addHandler(wmoHandler);
-		addHandler(new WmoMpqPortingHandler(mdxHandler, wmoHandler));
+		this.wmoHandler = new WmoPortingHandler(mdxHandler);
+		addHandler(this.wmoHandler);
+		addHandler(new WmoMpqPortingHandler(mdxHandler, this.wmoHandler));
 
 		this.wc3PathSolver = PathSolver.DEFAULT;
 
@@ -923,9 +924,12 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 		return renderDoodad;
 	}
 
-	/** The alpha (0.5.3) client floored every interior light colour component at 24/255 (wowdev: "The client
-	 * enforces a minimum of 24 for each colour component"). We reuse that documented floor so interior WMO
-	 * lighting is dim rather than pitch black. */
+	/**
+	 * The alpha (0.5.3) client floored every interior light colour component at
+	 * 24/255 (wowdev: "The client enforces a minimum of 24 for each colour
+	 * component"). We reuse that documented floor so interior WMO lighting is dim
+	 * rather than pitch black.
+	 */
 	private static final float WMO_INTERIOR_MIN_LIGHT = 24f / 255f;
 
 	private static float[] flooredInteriorAmbient(final float[] ambientRgb) {
@@ -933,8 +937,11 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 				Math.max(ambientRgb[1], WMO_INTERIOR_MIN_LIGHT), Math.max(ambientRgb[2], WMO_INTERIOR_MIN_LIGHT) };
 	}
 
-	/** Writes the current world-space sun direction (from the day/night-cycle unit light, the same one
-	 * W3xSceneWorldLightManager shades the world with) into out; returns false if there is no DNC sun yet. */
+	/**
+	 * Writes the current world-space sun direction (from the day/night-cycle unit
+	 * light, the same one W3xSceneWorldLightManager shades the world with) into
+	 * out; returns false if there is no DNC sun yet.
+	 */
 	public boolean getSunWorldDirection(final Vector3 out) {
 		if ((this.dncUnit != null) && !this.dncUnit.lights.isEmpty()) {
 			this.dncUnit.lights.get(0).getWorldDirection(out);
@@ -943,8 +950,11 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 		return false;
 	}
 
-	/** Writes the current outdoor/sun light colour (day/night animated) into out3; returns false if there is
-	 * no DNC sun yet. Used as the "exterior" colour for WMO vertices/units flagged exterior (MOCV alpha 0). */
+	/**
+	 * Writes the current outdoor/sun light colour (day/night animated) into out3;
+	 * returns false if there is no DNC sun yet. Used as the "exterior" colour for
+	 * WMO vertices/units flagged exterior (MOCV alpha 0).
+	 */
 	public boolean getExteriorLightColor(final float[] out3) {
 		if ((this.dncUnit != null) && !this.dncUnit.lights.isEmpty()) {
 			this.dncUnit.lights.get(0).getWorldColor(out3);
@@ -955,8 +965,9 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 
 	public List<RenderDoodad> createWdtWorldModelObject(final GameObject row, final int doodadVariation,
 			final float[] location, final float[] rotation, final float scale, final boolean shrubbery,
-			final long uniqueId, final int doodadSet) {
+			final long uniqueId, final int doodadSet, final WdtLiquidType liquidType) {
 		final String file = row.readSLKTag("file").replace("/", "\\");
+		this.wmoHandler.setCurrentLiquidType(liquidType);
 		final WmoPortingModel2 worldModelObject = (WmoPortingModel2) load(file, this.mapPathSolver, this.solverParams);
 		final float maxPitch = row.readSLKTagFloat("maxPitch");
 		final float maxRoll = row.readSLKTagFloat("maxRoll");
@@ -973,9 +984,11 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 					WmoDoodadDefinition.Flags.Unknown_0x2);
 			final Vector3 usedCenter = new Vector3(wmoDoodadDefinition.getPosition());
 			usedCenter.scl(scale);
-			// Same fix as the group offset below: rotate X, Y, Z (call order) so the doodad's
+			// Same fix as the group offset below: rotate X, Y, Z (call order) so the
+			// doodad's
 			// position within the WMO is rotated identically to the WMO geometry; the old
-			// Z,Y,X order applied the reverse rotation, sliding doodads out of place when the
+			// Z,Y,X order applied the reverse rotation, sliding doodads out of place when
+			// the
 			// WMO had any pitch/roll.
 			usedCenter.rotateRad(RenderMathUtils.VEC3_UNIT_X, (float) Math.toRadians(rotation[0]));
 			usedCenter.rotateRad(RenderMathUtils.VEC3_UNIT_Y, (float) Math.toRadians(rotation[2]));
@@ -1036,8 +1049,10 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 			final Vector3 usedCenter = new Vector3(extentCenter);
 			usedCenter.scl(scale);
 			// Rotate the group's center offset with the SAME composition the instance uses.
-			// instance.rotate(Z) then (Y) then (X) post-multiplies to localRotation = Rz*Ry*Rx,
-			// i.e. the vertex is rotated X, then Y, then Z. Vector3.rotateRad applies in call
+			// instance.rotate(Z) then (Y) then (X) post-multiplies to localRotation =
+			// Rz*Ry*Rx,
+			// i.e. the vertex is rotated X, then Y, then Z. Vector3.rotateRad applies in
+			// call
 			// order, so we must call X, Y, Z here (the old Z,Y,X order produced the reverse
 			// rotation, so each group's offset diverged from its geometry under any non-yaw
 			// rotation -> the pieces separated / seams in rotated WMOs).
@@ -1056,16 +1071,20 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 			renderDoodad.instance.rotate(
 					new Quaternion().setFromAxisRad(RenderMathUtils.VEC3_UNIT_X, (float) Math.toRadians(rotation[0])));
 			if (groupModel.hasAnimatedLiquid()) {
-				// Play the (static-geometry) Stand sequence on a loop so the counter advances and the
-				// lava flipbook's global-sequence texture animation runs (only while on-screen).
+				// Play the (static-geometry) Stand sequence on a loop so the counter advances
+				// and the
+				// lava flipbook's global-sequence texture animation runs (only while
+				// on-screen).
 				final MdxComplexInstance liquidInstance = (MdxComplexInstance) renderDoodad.instance;
 				liquidInstance.setSequence(0);
 				liquidInstance.setSequenceLoopMode(SequenceLoopMode.ALWAYS_LOOP);
 			}
 			final Rectangle entireMap = this.terrain.getEntireMap();
 			final boolean groupIsExterior = FlagUtils.hasFlag(groupModel.getFlags(), WmoGroupInfo.Flags.IsExterior);
-			// Place this group's floor light samples (group-local) into WORLD space using the same transform
-			// the geometry uses, so a unit standing here can sample the local ground colour. Built once,
+			// Place this group's floor light samples (group-local) into WORLD space using
+			// the same transform
+			// the geometry uses, so a unit standing here can sample the local ground
+			// colour. Built once,
 			// shared by the group's collision components.
 			final float[] localFloorXYZ = groupModel.getFloorSampleXYZ();
 			final float[] floorSampleRGB = groupModel.getFloorSampleRGB();
@@ -1113,23 +1132,32 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 					renderDoodad.add(collidableComponent);
 				}
 			}
-			// Hand the surface's SERVED manager to the doodads/units on it (for WMO surfaces this includes
-			// the WMO's MOLT lights, which the surface itself is not lit by - it uses its baked MOCV colors).
+			// Hand the surface's SERVED manager to the doodads/units on it (for WMO
+			// surfaces this includes
+			// the WMO's MOLT lights, which the surface itself is not lit by - it uses its
+			// baked MOCV colors).
 			final W3xSceneLightManager servedLightManager = ((MdxComplexInstance) renderDoodad.instance)
 					.getServedModelOnlyLightManager();
 //			final int lightOmit = ((MdxComplexInstance) renderDoodad.instance).lights.size();
-			if (groupIsExterior && (this.dncUnit != null)) {
-				// The sun is an external light, not a WMO MOLT light: adding it via the served facade routes
-				// it to BOTH the surface and the served entities, so exterior surfaces still get daylight.
+			if ((groupIsExterior || true) && (this.dncUnit != null)) {
+				// The sun is an external light, not a WMO MOLT light: adding it via the served
+				// facade routes
+				// it to BOTH the surface and the served entities, so exterior surfaces still
+				// get daylight.
 				servedLightManager.add(this.dncUnit.lights.get(0));
 			}
 //			((MdxComplexInstance) renderDoodad.instance).setLightOmitOffsetOverride(lightOmit);
 			if (!groupIsExterior) {
-				// Hand units that walk onto this interior surface a flat ambient (the WMO's MOHD ambient,
-				// floored to the alpha client's documented minimum of 24/255 per component) so they are not
-				// near-black underground. They still get the served MOLT lamps on top via the light manager.
-				// This is a flat per-WMO ambient, not a per-spot sample of the floor's baked lighting (which
-				// would need decoding MOLM/MOLD lightmaps or correlating the collision mesh to MOCV colors).
+				// Hand units that walk onto this interior surface a flat ambient (the WMO's
+				// MOHD ambient,
+				// floored to the alpha client's documented minimum of 24/255 per component) so
+				// they are not
+				// near-black underground. They still get the served MOLT lamps on top via the
+				// light manager.
+				// This is a flat per-WMO ambient, not a per-spot sample of the floor's baked
+				// lighting (which
+				// would need decoding MOLM/MOLD lightmaps or correlating the collision mesh to
+				// MOCV colors).
 				((MdxComplexInstance) renderDoodad.instance).servedInteriorAmbient = flooredInteriorAmbient(
 						worldModelObject.getAmbientColor());
 			}
@@ -1146,17 +1174,49 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 								.get(doodadIdx);
 						final int ourAppliedIndex = doodadIdx - (int) wmoDoodadSet.getStartIndex();
 						final RenderDoodad renderDoodadInGroup = renderDoodads.get(ourAppliedIndex);
-						if (!groupIsExterior) {
+
+						boolean doodadIsExterior;
+
+						if ((worldFloorXYZ == null) || (worldFloorXYZ.length == 0)) {
+							doodadIsExterior = groupIsExterior;
+						}
+						else {
+							int nearest = -1;
+							float nearestDistSq = Float.MAX_VALUE;
+							for (int i = 0; i < worldFloorXYZ.length; i += 3) {
+								final float dx = worldFloorXYZ[i] - renderDoodadInGroup.instance.worldLocation.x;
+								final float dy = worldFloorXYZ[i + 1] - renderDoodadInGroup.instance.worldLocation.y;
+								final float dz = worldFloorXYZ[i + 2] - renderDoodadInGroup.instance.worldLocation.z;
+								final float distSq = (dx * dx) + (dy * dy) + (dz * dz);
+								if (distSq < nearestDistSq) {
+									nearestDistSq = distSq;
+									nearest = i;
+								}
+							}
+							if (nearest < 0) {
+								doodadIsExterior = groupIsExterior;
+							}
+							final int sampleIndex = nearest / 3;
+							doodadIsExterior = (floorSampleExterior != null)
+									&& (sampleIndex < floorSampleExterior.length)
+									&& (floorSampleExterior[sampleIndex] != 0f);
+						}
+
+						if (!doodadIsExterior) {
 							// Interior WMO doodad: no sunlight, only the group's sparse short-range MOLT
 							// lights, so without help it renders solid black. Light it from the WMO's own
-							// baked data, decomposed into an ambient floor + a directional 'extra' (wowdev's
+							// baked data, decomposed into an ambient floor + a directional 'extra'
+							// (wowdev's
 							// A==255 rule: shade by the look-at vector from the group bounds center to the
-							// doodad). The center-facing side reaches the full baked MODD color; the far side
-							// falls to the WMO's MOHD ambient -> gives form instead of flat fill. Added on top
+							// doodad). The center-facing side reaches the full baked MODD color; the far
+							// side
+							// falls to the WMO's MOHD ambient -> gives form instead of flat fill. Added on
+							// top
 							// of the MOLT lights in the shader. Both endpoints come straight from the data.
 							//
 							// MODD color is BGRA (unsigned 0..255); every entry in these v14 alpha WMOs has
-							// alpha==255 and a literal RGB (no MOLT-index case), so the RGB is used directly.
+							// alpha==255 and a literal RGB (no MOLT-index case), so the RGB is used
+							// directly.
 							// MOHD ambient, floored to the alpha client's documented minimum of 24/255 per
 							// component (the same "don't go fully dark" rule the client applied to interior
 							// lightmap colors), so deeply-shadowed doodads are dim rather than pitch black.
@@ -1167,12 +1227,18 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 							final float extraR = Math.max(baseR - amb[0], 0f);
 							final float extraG = Math.max(baseG - amb[1], 0f);
 							final float extraB = Math.max(baseB - amb[2], 0f);
-							// Direction toward the group center, in WORLD space: vsComplex dots u_interiorDir
-							// with the vertex normal, and that normal is WORLD-space (the bone matrices are full
-							// world matrices and u_mvp is just the view-projection, so a_normal is rotated all the
-							// way to world by the bone transform). 'usedCenter' is the group's center offset and
-							// the doodad's offset is computed with the SAME WMO rotation sequence, so the shared
-							// world 'location' cancels and their difference is already the correct world-space dir.
+							// Direction toward the group center, in WORLD space: vsComplex dots
+							// u_interiorDir
+							// with the vertex normal, and that normal is WORLD-space (the bone matrices are
+							// full
+							// world matrices and u_mvp is just the view-projection, so a_normal is rotated
+							// all the
+							// way to world by the bone transform). 'usedCenter' is the group's center
+							// offset and
+							// the doodad's offset is computed with the SAME WMO rotation sequence, so the
+							// shared
+							// world 'location' cancels and their difference is already the correct
+							// world-space dir.
 							final Vector3 doodadOffset = new Vector3(wmoDoodadDefinition.getPosition());
 							doodadOffset.scl(scale);
 							doodadOffset.rotateRad(RenderMathUtils.VEC3_UNIT_X, (float) Math.toRadians(rotation[0]));
@@ -1189,6 +1255,16 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 							((MdxComplexInstance) renderDoodadInGroup.instance).setInteriorLighting(amb[0], amb[1],
 									amb[2], extraR, extraG, extraB, dir.x, dir.y, dir.z, nearestUsedCenterDistance);
 							renderDoodadInGroup.exterior = false;
+							((MdxComplexInstance) renderDoodadInGroup.instance).setLightOmitOffsetOverride(1);
+							((MdxComplexInstance) renderDoodadInGroup.instance).servedInteriorAmbient = flooredInteriorAmbient(
+									amb);
+							for (final CollidableDoodadComponent component : renderDoodadInGroup
+									.getWalkableComponents()) {
+								((CollidableDoodadCollisionComponent) component).setFloorLightSamples(worldFloorXYZ,
+										floorSampleRGB, floorSampleExterior);
+							}
+						}
+						else {
 						}
 						((MdxComplexInstance) renderDoodadInGroup.instance)
 								.setModelOnlyLightManager(servedLightManager);
@@ -1550,9 +1626,10 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 //							"Item\\ObjectComponents\\Weapon\\Bow_1H_Standard_A_01.mdx", simulationUnit, "_handl");
 //					weaponModel.setReplaceableId(2, "Item\\ObjectComponents\\Weapon\\Bow_1H_Standard_A_01Black.blp");
 
-					final RenderSpellEffect weaponModel = addSpecialEffectTarget("SwordAshbringerReforged.mdx",
-							simulationUnit, "_handr");
-					weaponModel.setReplaceableId(2, "Item\\ObjectComponents\\Weapon\\Bow_1H_Standard_A_01Black.blp");
+//					final RenderSpellEffect weaponModel = addSpecialEffectTarget("SwordAshbringerReforged.mdx",
+//							simulationUnit, "_handr");
+//					weaponModel.setReplaceableId(2, "Item\\ObjectComponents\\Weapon\\Bow_1H_Standard_A_01Black.blp");
+
 //					final RenderSpellEffect ammoModel = addSpecialEffectTarget(
 //							"Item\\ObjectComponents\\Ammo\\ArrowFlight_01.mdx", simulationUnit, "_arrow");
 //					ammoModel.setReplaceableId(2, "Item\\ObjectComponents\\Ammo\\Arrow_A_01Brown.blp");
@@ -2204,6 +2281,8 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 	private RenderItemTypeData renderItemTypeData;
 
 	public ModelInstance skyInstance;
+
+	private final WmoPortingHandler wmoHandler;
 
 	/**
 	 * Returns a power of two size for the given target capacity.

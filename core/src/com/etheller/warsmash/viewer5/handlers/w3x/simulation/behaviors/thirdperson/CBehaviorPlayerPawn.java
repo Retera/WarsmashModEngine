@@ -60,27 +60,54 @@ public class CBehaviorPlayerPawn implements CBehavior {
 		this.previousVelocity = new Vector3();
 	}
 
+	public MdxCharacterNode getHandL() {
+		return this.handL;
+	}
+
+	public MdxCharacterNode getHandR() {
+		return this.handR;
+	}
+
+	public IndexedSequence selectSequence(final String key) {
+		final MdxModel model = (MdxModel) this.characterModelInstance.model;
+		final IndexedSequence handsClosedAnim = SequenceUtils.selectSequence(key, model.sequences);
+		return handsClosedAnim;
+	}
+
+	public void setSequence(final MdxCharacterNode node, final int index) {
+		final MdxModel model = (MdxModel) this.characterModelInstance.model;
+		node.subSequencer.setSequence(index, model, this.characterModelInstance);
+	}
+
 	public void setViewerWorldAccess(final War3MapViewer viewerWorldAccess) {
 		this.viewerWorldAccess = viewerWorldAccess;
 
 		final RenderUnit renderPeer = viewerWorldAccess.getRenderPeer(this.unit);
 		this.spineLow = (MdxCharacterNode) renderPeer.instance.inefficientlyGetNodeByNameSearch("spinelow");
 		this.characterModelInstance = (MdxCharacterInstance) renderPeer.instance;
+		final MdxModel model = (MdxModel) this.characterModelInstance.model;
+		final IndexedSequence standAnim = SequenceUtils.selectSequence("stand", model.sequences);
 		if (this.spineLow != null) {
 			this.spineLow.createSubSequencer(this.characterModelInstance);
+			this.spineLow.subSequencer.setSequence(-1, model, this.characterModelInstance);
 		}
 		this.handR = (MdxCharacterNode) renderPeer.instance.inefficientlyGetNodeByNameSearch("handr");
 		if (this.handR != null) {
 			this.handR.createSubSequencer(this.characterModelInstance);
-			final MdxModel model = (MdxModel) this.characterModelInstance.model;
-			final IndexedSequence handsClosedAnim = SequenceUtils.selectSequence("handsclosed", model.sequences);
-			if ((handsClosedAnim != null) && (handsClosedAnim.index != -1)) {
-				this.handR.subSequencer.setSequence(handsClosedAnim.index, model, this.characterModelInstance);
+			if (false) {
+				final IndexedSequence handsClosedAnim = SequenceUtils.selectSequence("handsclosed", model.sequences);
+				if ((handsClosedAnim != null) && (handsClosedAnim.index != -1)) {
+					this.handR.subSequencer.setSequence(handsClosedAnim.index, model, this.characterModelInstance);
+				}
+			}
+			else {
+				this.handR.subSequencer.setSequence(-1, model, this.characterModelInstance);
 			}
 		}
 		this.handL = (MdxCharacterNode) renderPeer.instance.inefficientlyGetNodeByNameSearch("handl");
 		if (this.handL != null) {
 			this.handL.createSubSequencer(this.characterModelInstance);
+			this.handL.subSequencer.setSequence(-1, model, this.characterModelInstance);
 		}
 	}
 
@@ -243,7 +270,8 @@ public class CBehaviorPlayerPawn implements CBehavior {
 			else {
 				if (walking != 0) {
 					this.unit.getUnitAnimationListener().playAnimation(false,
-							walking > 0 ? PrimaryTag.RUN : PrimaryTag.WALKBACKWARDS, secondaryTags,
+							walking > 0 ? this.playerPawn.getRunTag() : PrimaryTag.WALKBACKWARDS,
+							swimming ? SequenceUtils.SWIM : this.playerPawn.getRunSecondaryTags(),
 							1.0f /* baseUnitSpeed / 218.0f */, true);
 					this.sitting = false;
 				}
@@ -292,7 +320,7 @@ public class CBehaviorPlayerPawn implements CBehavior {
 
 	@Override
 	public void end(final CSimulation game, final boolean interrupted) {
-		looting = false;
+		this.looting = false;
 		this.unit.setDefaultBehavior(this);
 	}
 
@@ -337,10 +365,10 @@ public class CBehaviorPlayerPawn implements CBehavior {
 	}
 
 	/**
-	 * Plays (and holds) the looting crouch using the model's "Loot" sequence. Mirrors
-	 * {@link #sit()}; the pose is held by the update() stand-case while {@link #looting}
-	 * is set, and is cleared on movement, jumping, sitting, or {@link #lootReleased()}
-	 * (which the loot window's close path invokes).
+	 * Plays (and holds) the looting crouch using the model's "Loot" sequence.
+	 * Mirrors {@link #sit()}; the pose is held by the update() stand-case while
+	 * {@link #looting} is set, and is cleared on movement, jumping, sitting, or
+	 * {@link #lootReleased()} (which the loot window's close path invokes).
 	 */
 	public void loot() {
 		if (!this.wasFalling && !this.wasAirborn) {

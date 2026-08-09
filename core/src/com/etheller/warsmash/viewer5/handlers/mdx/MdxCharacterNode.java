@@ -23,7 +23,7 @@ public class MdxCharacterNode extends MdxNode implements SequencedCharacterNode 
 		public float floatingFrame = 0;
 		public int frame;
 		public int sequence = -1;
-		public boolean sequenceEnded = false;
+		public boolean sequenceEnded = true;
 		protected float animationSpeed = 1.0f;
 		protected float blendTimeRemaining;
 		final Set<SkeletalNode> children = new LinkedHashSet<>();
@@ -86,6 +86,7 @@ public class MdxCharacterNode extends MdxNode implements SequencedCharacterNode 
 				if ((id < 0) || (id > (sequences.size() - 1))) {
 					this.sequence = -1;
 					this.floatingFrame = 0;
+					this.sequenceEnded = true;
 				}
 				else {
 					// TODO blend

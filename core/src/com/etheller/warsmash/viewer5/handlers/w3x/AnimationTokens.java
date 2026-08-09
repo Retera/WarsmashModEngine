@@ -39,7 +39,8 @@ public class AnimationTokens {
 		SITGROUNDDOWN,
 		SITGROUND,
 		SITGROUNDUP,
-		LOOT;
+		LOOT,
+		EMOTECHEER;
 
 		@Override
 		public int getHandleId() {

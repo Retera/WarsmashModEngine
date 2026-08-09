@@ -28,7 +28,7 @@ public class WmoMpqPortingHandler extends ModelHandler {
 	@Override
 	public HandlerResource<?> construct(final ResourceHandlerConstructionParams params) {
 		return new WmoMpqPortingModel(this.wmoPortingHandler, params.getViewer(), params.getExtension(),
-				params.getPathSolver(), params.getFetchUrl());
+				params.getPathSolver(), params.getFetchUrl(), this.wmoPortingHandler.getCurrentLiquidType());
 	}
 
 }

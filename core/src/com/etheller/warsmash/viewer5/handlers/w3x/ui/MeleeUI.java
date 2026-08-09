@@ -2948,12 +2948,16 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 		}
 
 		public void setCinematicTalkingHead(final MdxModel portraitModel, final int teamColorIndex,
-				final EnumSet<SecondaryTag> secondaryTags, final float faceLockTime) {
+				final EnumSet<SecondaryTag> secondaryTags, final List<RenderUnitReplaceableTex> replaceableTextures,
+				final float faceLockTime) {
 			this.cinematicScenePanel.setVisible(true);
 			this.portraitShowDuration = (long) (1000 * faceLockTime);
 			this.secondaryTags = secondaryTags;
 			this.cinematicPortrait.setModel(portraitModel);
 			this.cinematicPortrait.setTeamColor(teamColorIndex);
+			for (final RenderUnitReplaceableTex replaceableTex : replaceableTextures) {
+				this.cinematicPortrait.setReplaceableId(replaceableTex.getReplaceableId(), replaceableTex.getPath());
+			}
 		}
 	}
 
@@ -5419,7 +5423,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 			this.rootFrame.setText(this.cinematicDialogueText, text);
 			this.cinematicPortrait.setCinematicTalkingHead(
 					unitTypeData == null ? null : unitTypeData.getPortraitModel(), color.getHandleId(),
-					unitTypeData.getRequiredAnimationNames(), sceneDuration);
+					unitTypeData.getRequiredAnimationNames(), unitTypeData.getReplaceableTextures(), sceneDuration);
 			this.cinematicPortrait.talk(null, voiceoverDuration);
 		}
 		else {
@@ -5446,6 +5450,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 
 	@Override
 	public void enableUserControl(final boolean value) {
+		this.cameraManager.enableUserControl(value);
 		this.userControlEnabled = value;
 		this.cursorFrame.setVisible(value);
 		if (!value) {

@@ -14,6 +14,7 @@ public class MdxShaders {
 			"    uniform sampler2D u_lightTexture;\r\n" + //
 			"    uniform float u_lightTextureHeight;\r\n" + //
 			"    uniform float u_layerAlpha;\r\n" + //
+			"    uniform float u_lightOmitOffset;\r\n" + //
 			"    uniform bool u_hasBones;\r\n" + //
 			"    " + //
 			"    attribute vec3 a_position;\r\n" + //
@@ -89,24 +90,25 @@ public class MdxShaders {
 			"      vec4 lightPosition = texture2D(u_lightTexture, vec2(0.125, rowPos));\r\n" + //
 			"      vec4 lightExtra = texture2D(u_lightTexture, vec2(0.375, rowPos));\r\n" + //
 			"      vec3 lightDir;\r\n" + //
-			"      if(lightExtra.x > 0.5) {\r\n" + //
-			"          // Sunlight ('directional')\r\n" + //
-			"      	   lightDir = normalize(mv * lightPosition.xyz);\r\n" + //
-			"          v_lightDist = 1.0;\r\n" + //
-			"          v_lightDir = vec4(normalize(TBN(lightDir, t, b, n)), 1.0);\r\n" + //
-			"      } else {\r\n" + //
-			"          // Point light ('omnidirectional')\r\n" + //
-			"          vec3 delta = vec3(u_MV * vec4(lightPosition.xyz, 1)) - position_mv;\r\n" + //
-			"          lightDir = normalize(delta);\r\n" + //
-			"          v_lightDist = length(lightPosition.xyz - position) / 64.0 + 1.0;\r\n" + //
-			"          v_lightDir = vec4(normalize(TBN(lightDir, t, b, n)), 1.0);\r\n" + //
+			"      if(u_lightOmitOffset < 0.5) {\r\n" + //
+			"          if(lightExtra.x > 0.5) {\r\n" + //
+			"              // Sunlight ('directional')\r\n" + //
+			"          	   lightDir = normalize(mv * lightPosition.xyz);\r\n" + //
+			"              v_lightDist = 1.0;\r\n" + //
+			"              v_lightDir = vec4(normalize(TBN(lightDir, t, b, n)), 1.0);\r\n" + //
+			"          } else {\r\n" + //
+			"              // Point light ('omnidirectional')\r\n" + //
+			"              vec3 delta = vec3(u_MV * vec4(lightPosition.xyz, 1)) - position_mv;\r\n" + //
+			"              lightDir = normalize(delta);\r\n" + //
+			"              v_lightDist = length(lightPosition.xyz - position) / 64.0 + 1.0;\r\n" + //
+			"              v_lightDir = vec4(normalize(TBN(lightDir, t, b, n)), 1.0);\r\n" + //
+			"          }\r\n" + //
 			"      }\r\n" + //
 			"      \r\n" + //
 			"      if( u_lightTextureHeight > 1.5 ) {\r\n" + //
 			"          float rowPos = (1.5) / u_lightTextureHeight;\r\n" + //
 			"          vec4 lightPosition2 = texture2D(u_lightTexture, vec2(0.125, rowPos));\r\n" + //
 			"          vec4 lightExtra2 = texture2D(u_lightTexture, vec2(0.375, rowPos));\r\n" + //
-
 			"          vec3 lightDir2;\r\n" + //
 			"          if(lightExtra2.x > 0.5) {\r\n" + //
 			"              // Sunlight ('directional')\r\n" + //
@@ -281,12 +283,16 @@ public class MdxShaders {
 				"uniform sampler2D u_environmentMap;\r\n" + //
 				"uniform float u_filterMode;\r\n" + //
 				"uniform float u_unshaded;\r\n" + //
-				// Per-instance interior light (ambient floor + directional 'extra' along u_interiorDir), added
-				// to the diffuse lighting so models inside WMO interiors are not rendered black. All zero for
-				// everything else. v_normal is world-space (bone matrices are world matrices), as is u_interiorDir.
+				// Per-instance interior light (ambient floor + directional 'extra' along
+				// u_interiorDir), added
+				// to the diffuse lighting so models inside WMO interiors are not rendered
+				// black. All zero for
+				// everything else. v_normal is world-space (bone matrices are world matrices),
+				// as is u_interiorDir.
 				"uniform vec3 u_interiorAmbient;\r\n" + //
 				"uniform vec3 u_interiorDirColor;\r\n" + //
 				"uniform vec3 u_interiorDir;\r\n" + //
+				"uniform float u_lightOmitOffset;\r\n" + //
 				"// uniform sampler2D u_lutMap;\r\n" + //
 				"// uniform sampler2D u_envDiffuseMap;\r\n" + //
 				"// uniform sampler2D u_envSpecularMap;\r\n" + //
@@ -546,13 +552,15 @@ public class MdxShaders {
 				"  float rowPos = (0.5) / u_lightTextureHeight;\r\n" + //
 				"  vec4 lightColor = texture2D(u_lightTexture, vec2(0.625, rowPos));\r\n" + //
 				"  vec4 lightAmbColor = texture2D(u_lightTexture, vec2(0.875, rowPos));\r\n" + //
+				"    if(u_lightOmitOffset < 0.5) {\r\n" + //
 				"  applyLight(lightColor, lightAmbColor, v_lightDir, v_lightDist, normal, baseColor.rgb, tc, orm, environmentMapColor, tcFactor, color, lambertFactorSum);\r\n"
 				+ //
+				"    }\r\n" + //
 				"  if( u_lightTextureHeight > 1.5 ) {\r\n" + //
-				"    rowPos = (1.5) / u_lightTextureHeight;\r\n" + //
-				"    lightColor = texture2D(u_lightTexture, vec2(0.625, rowPos));\r\n" + //
-				"    lightAmbColor = texture2D(u_lightTexture, vec2(0.875, rowPos));\r\n" + //
-				"    applyLight(lightColor, lightAmbColor, v_lightDir2, v_lightDist2, normal, baseColor.rgb, tc, orm, environmentMapColor, tcFactor, color, lambertFactorSum);\r\n"
+				"      rowPos = (1.5) / u_lightTextureHeight;\r\n" + //
+				"      lightColor = texture2D(u_lightTexture, vec2(0.625, rowPos));\r\n" + //
+				"      lightAmbColor = texture2D(u_lightTexture, vec2(0.875, rowPos));\r\n" + //
+				"      applyLight(lightColor, lightAmbColor, v_lightDir2, v_lightDist2, normal, baseColor.rgb, tc, orm, environmentMapColor, tcFactor, color, lambertFactorSum);\r\n"
 				+ //
 				"    if( u_lightTextureHeight > 2.5 ) {\r\n" + //
 				"      rowPos = (2.5) / u_lightTextureHeight;\r\n" + //
@@ -677,15 +685,23 @@ public class MdxShaders {
 				"    uniform bool u_hasBones;\r\n" + //
 				"    uniform float u_unshaded;\r\n" + //
 				"    uniform float u_lightOmitOffset;\r\n" + //
-				// Per-instance interior lighting added on top of the scene/MOLT lights, for doodads spawned
-				// inside WMO interiors (no sun, sparse short-range MOLT lights) which otherwise render black.
-				// Modelled from the WMO's own data: u_interiorAmbient = MOHD ambient floor (flat); plus a
-				// directional 'extra' u_interiorDirColor = max(MODD baked color - ambient, 0) applied via a
-				// lambert term toward u_interiorDir (world-space dir to the group bounds center, per wowdev's
-				// A==255 rule; 'normal' here is world-space because the bone matrices are full world matrices
-				// and u_mvp is just the view-projection). So the center-facing side reaches the full baked
+				// Per-instance interior lighting added on top of the scene/MOLT lights, for
+				// doodads spawned
+				// inside WMO interiors (no sun, sparse short-range MOLT lights) which otherwise
+				// render black.
+				// Modelled from the WMO's own data: u_interiorAmbient = MOHD ambient floor
+				// (flat); plus a
+				// directional 'extra' u_interiorDirColor = max(MODD baked color - ambient, 0)
+				// applied via a
+				// lambert term toward u_interiorDir (world-space dir to the group bounds
+				// center, per wowdev's
+				// A==255 rule; 'normal' here is world-space because the bone matrices are full
+				// world matrices
+				// and u_mvp is just the view-projection). So the center-facing side reaches the
+				// full baked
 				// color and the far side falls
-				// to the WMO ambient -> form, not flat fill. All three default to 0 so overworld is unaffected.
+				// to the WMO ambient -> form, not flat fill. All three default to 0 so
+				// overworld is unaffected.
 				"    uniform vec3 u_interiorAmbient;\r\n" + //
 				"    uniform vec3 u_interiorDirColor;\r\n" + //
 				"    uniform vec3 u_interiorDir;\r\n" + //
@@ -772,7 +788,8 @@ public class MdxShaders {
 				+ //
 				"        float interiorNdotL = clamp(dot(normalize(normal), u_interiorDir), 0.0, 1.0);\r\n" + //
 				"        vec3 interiorLight = u_interiorAmbient + u_interiorDirColor * interiorNdotL;\r\n" + //
-				"        v_color.xyz *= (1.0 - u_unshaded) * clamp(lightFactor + interiorLight, 0.0, 1.0) + u_unshaded;\r\n" + //
+				"        v_color.xyz *= (1.0 - u_unshaded) * clamp(lightFactor + interiorLight, 0.0, 1.0) + u_unshaded;\r\n"
+				+ //
 				(VERTEX_LIGHTS_NOT_FRAGMENT_LIGHTS ? "" : //
 						"		 v_position = position;\r\n" + //
 								"		 v_normal = normal;\r\n")
@@ -921,13 +938,17 @@ public class MdxShaders {
 			"      //if(!u_unshaded) {\r\n" + //
 			(VERTEX_LIGHTS_NOT_FRAGMENT_LIGHTS
 					? (Shaders.lightSystem("normal", "position", "u_lightTexture", "u_lightTextureHeight",
-							"u_lightCount", " + u_lightOmitOffset", false) + "\r\n")
+							"u_lightCount", " + (a_vertexLightingColors.a > 0.5 ? 0.0 : 1.0)", false) + "\r\n")
 					: "")
 			+ //
-			// Interior surface lighting = scene lights (MOLT lamps; for exterior groups also the dynamic sun
-			// which dims at night) + the static baked MOCV colour. The earlier flat u_exteriorColor add was
-			// removed: it double-lit exterior-group verts (which already get the dynamic sun) and didn't dim at
-			// night -> glow. a_vertexLightingColors.a (the per-vertex exterior flag) is kept for the MOLD path.
+				// Interior surface lighting = scene lights (MOLT lamps; for exterior groups
+				// also the dynamic sun
+				// which dims at night) + the static baked MOCV colour. The earlier flat
+				// u_exteriorColor add was
+				// removed: it double-lit exterior-group verts (which already get the dynamic
+				// sun) and didn't dim at
+				// night -> glow. a_vertexLightingColors.a (the per-vertex exterior flag) is
+				// kept for the MOLD path.
 			"        v_color.xyz *= (1.0 - u_unshaded) * clamp(u_lightOmitOffset == 0 ? (lightFactor + a_vertexLightingColors.rgb) : a_vertexLightingColors.rgb, 0.0, 1.0) + u_unshaded;\r\n"
 			+ //
 			(VERTEX_LIGHTS_NOT_FRAGMENT_LIGHTS ? "" : //

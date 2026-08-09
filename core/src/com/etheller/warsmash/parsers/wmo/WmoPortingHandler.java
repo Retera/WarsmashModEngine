@@ -7,9 +7,12 @@ import com.etheller.warsmash.viewer5.ModelViewer;
 import com.etheller.warsmash.viewer5.handlers.ModelHandler;
 import com.etheller.warsmash.viewer5.handlers.ResourceHandlerConstructionParams;
 import com.etheller.warsmash.viewer5.handlers.mdx.MdxHandler;
+import com.etheller.warsmash.viewer5.handlers.w3x.environment.WdtLiquidType;
 
 public class WmoPortingHandler extends ModelHandler {
 	private final MdxHandler mdxHandler;
+	// used as pass-thru for the currently constructing thing
+	private WdtLiquidType currentLiquidType;
 
 	public WmoPortingHandler(final MdxHandler mdxHandler) {
 		this.mdxHandler = mdxHandler;
@@ -26,10 +29,18 @@ public class WmoPortingHandler extends ModelHandler {
 	@Override
 	public HandlerResource<?> construct(final ResourceHandlerConstructionParams params) {
 		return new WmoPortingModel2(this, params.getViewer(), params.getExtension(), params.getPathSolver(),
-				params.getFetchUrl());
+				params.getFetchUrl(), this.currentLiquidType);
 	}
 
 	public MdxHandler getMdxHandler() {
 		return this.mdxHandler;
+	}
+
+	public void setCurrentLiquidType(final WdtLiquidType liquidType) {
+		this.currentLiquidType = liquidType;
+	}
+
+	public WdtLiquidType getCurrentLiquidType() {
+		return this.currentLiquidType;
 	}
 }

@@ -36,8 +36,6 @@ import com.etheller.warsmash.parsers.fdf.frames.TextureFrame;
 import com.etheller.warsmash.parsers.fdf.frames.UIFrame;
 import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.viewer5.Scene;
-import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.RenderDestructable;
-import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.RenderItem;
 import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.RenderUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.RenderWidget;
 import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.ability.AbilityDataUI;
@@ -63,6 +61,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.thirdpers
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.COrder;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.OrderIds;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CAllianceType;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayer;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayerUnitOrderListener;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityActivationReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.CommandStringErrorKeys;
@@ -75,12 +74,21 @@ public class LuaEnvironment {
 	private static final String UNITKEY_TARGET = "target";
 	private static final String UNITKEY_MOUSEOVER = "mouseover";
 
-	/** Large stand-in screen size for WoW's GetScreenHeight/Width (container column wrapping only). */
+	/**
+	 * Large stand-in screen size for WoW's GetScreenHeight/Width (container column
+	 * wrapping only).
+	 */
 	private static final float SCREEN_HEIGHT_FALLBACK = 100000f;
 	private static final float SCREEN_WIDTH_FALLBACK = 100000f;
-	/** Synthetic inventory-slot id of the first equipped-bag bar button (WoW's Bag0Slot). */
+	/**
+	 * Synthetic inventory-slot id of the first equipped-bag bar button (WoW's
+	 * Bag0Slot).
+	 */
 	private static final int BAG_SLOT_INVENTORY_BASE = 20;
-	/** WoW offset mapping a container/bag id (1..) to its equipped-bag inventory slot id. */
+	/**
+	 * WoW offset mapping a container/bag id (1..) to its equipped-bag inventory
+	 * slot id.
+	 */
 	private static final int CONTAINER_BAG_INVENTORY_OFFSET = 19;
 
 	private final CSimulation game;
@@ -102,20 +110,27 @@ public class LuaEnvironment {
 	 * The item currently "held" on the mouse cursor by the WoW bag UI, or null. We
 	 * never remove the item from its slot while it is on the cursor; the pickup is
 	 * purely a UI state, and the actual move happens as a single Warcraft III order
-	 * when the item is dropped onto a destination slot. The source is remembered only
-	 * so the lifted slot can render empty: {@link #cursorBagId} is the source WoW
-	 * container id (0 = backpack, 1..4 = carried bags) with {@link #cursorSlot} the
-	 * 1-based bag slot; OR {@link #cursorBagId} is {@link #CURSOR_SOURCE_INVENTORY}
-	 * (-1) when the item was lifted off a bag-bar button, with {@link #cursorSlot}
-	 * then the 0-based Warcraft III inventory slot.
+	 * when the item is dropped onto a destination slot. The source is remembered
+	 * only so the lifted slot can render empty: {@link #cursorBagId} is the source
+	 * WoW container id (0 = backpack, 1..4 = carried bags) with {@link #cursorSlot}
+	 * the 1-based bag slot; OR {@link #cursorBagId} is
+	 * {@link #CURSOR_SOURCE_INVENTORY} (-1) when the item was lifted off a bag-bar
+	 * button, with {@link #cursorSlot} then the 0-based Warcraft III inventory
+	 * slot.
 	 */
 	private CItem cursorItem;
 	private int cursorBagId;
 	private int cursorSlot;
-	/** {@link #cursorBagId} sentinel: the item was lifted off the bag bar (unit inventory). */
+	/**
+	 * {@link #cursorBagId} sentinel: the item was lifted off the bag bar (unit
+	 * inventory).
+	 */
 	private static final int CURSOR_SOURCE_INVENTORY = -1;
 
-	/** Receives the held item's icon path (or null to clear) so the owning UI can paint the cursor. */
+	/**
+	 * Receives the held item's icon path (or null to clear) so the owning UI can
+	 * paint the cursor.
+	 */
 	public interface CursorItemDisplayListener {
 		void onCursorItemChanged(String itemIconPath);
 	}
@@ -300,18 +315,19 @@ public class LuaEnvironment {
 				}
 				final TextureFrame portrait = (TextureFrame) frame;
 				String iconPath = null;
-				CWidget widget = getWidget(unitKey.optjstring(""));
+				final CWidget widget = getWidget(unitKey.optjstring(""));
 				if (widget != null) {
-					CUnit unit = widget.visit(AbilityTargetVisitor.UNIT);
+					final CUnit unit = widget.visit(AbilityTargetVisitor.UNIT);
 					if (unit != null) {
 						final UnitIconUI unitUI = LuaEnvironment.this.abilityDataUI.getUnitUI(unit.getTypeId());
 						if (unitUI != null) {
 							iconPath = unitUI.getIconPath();
 						}
-					} else {
-						CItem item = widget.visit(AbilityTargetVisitor.ITEM);
+					}
+					else {
+						final CItem item = widget.visit(AbilityTargetVisitor.ITEM);
 						if (item != null) {
-							ItemUI itemUI = abilityDataUI.getItemUI(item.getTypeId());
+							final ItemUI itemUI = abilityDataUI.getItemUI(item.getTypeId());
 							if (itemUI != null) {
 								iconPath = itemUI.getIconUI().getIconPath();
 							}
@@ -325,6 +341,26 @@ public class LuaEnvironment {
 					portrait.setTexture((TextureRegion) null);
 				}
 				return LuaValue.NIL;
+			}
+		});
+		this.globals.set("UnitMoney", new OneArgFunction() {
+			@Override
+			public LuaValue call(final LuaValue unitKey) {
+				final CUnit unit = getUnit(unitKey.checkjstring());
+				final CPlayer player = game.getPlayer(unit.getPlayerIndex());
+				return LuaValue.valueOf(player.getGold());
+			}
+		});
+		this.globals.set("GetCursorMoney", new ZeroArgFunction() {
+			@Override
+			public LuaValue call() {
+				return LuaValue.valueOf(0);
+			}
+		});
+		this.globals.set("GetPlayerTradeMoney", new ZeroArgFunction() {
+			@Override
+			public LuaValue call() {
+				return LuaValue.valueOf(0);
 			}
 		});
 		this.globals.set("PutItemInBag", new OneArgFunction() {
@@ -453,7 +489,8 @@ public class LuaEnvironment {
 		});
 		// Natives invoked while a container window is being built/shown or hidden. They
 		// are visual niceties we don't need yet, but they MUST exist or the open path
-		// (ContainerFrame_GenerateFrame -> SetBagPortaitTexture, updateContainerFrameAnchors
+		// (ContainerFrame_GenerateFrame -> SetBagPortaitTexture,
+		// updateContainerFrameAnchors
 		// -> GetScreenHeight) throws on a nil global and the bag window never appears.
 		this.globals.set("SetBagPortaitTexture", new TwoArgFunction() {
 			@Override
@@ -485,13 +522,15 @@ public class LuaEnvironment {
 			@Override
 			public Varargs invoke(final Varargs varargs) {
 				// WoW expects MULTIPLE return values (start, duration, enable) as NUMBERS, e.g.
-				// `local start, duration, enable = GetContainerItemCooldown(bag, slot)`. Returning
+				// `local start, duration, enable = GetContainerItemCooldown(bag, slot)`.
+				// Returning
 				// a single table here made `start` a table, and CooldownFrame_SetTimer's
 				// `start > 0` comparison threw, aborting ContainerFrame_GenerateFrame before
 				// frame:Show() (so a bag holding any item refused to open) and aborting the
 				// slot loop in ContainerFrame_Update (so drags refreshed only partially). No
 				// container cooldowns are tracked yet, so report none. TODO real lookup.
-				return LuaValue.varargsOf(new LuaValue[] { LuaValue.valueOf(0), LuaValue.valueOf(0), LuaValue.valueOf(0) });
+				return LuaValue
+						.varargsOf(new LuaValue[] { LuaValue.valueOf(0), LuaValue.valueOf(0), LuaValue.valueOf(0) });
 			}
 		});
 		// ===========
@@ -568,7 +607,8 @@ public class LuaEnvironment {
 
 		this.globals.set("GetActionTexture", new OneArgFunction() {
 			@Override
-			public LuaValue call(final LuaValue id) {				final CAbility ability = getAbility(id.checkint(), "ability?");
+			public LuaValue call(final LuaValue id) {
+				final CAbility ability = getAbility(id.checkint(), "ability?");
 				if (ability != null) {
 					final IconUI iconUI = getIconUI(abilityDataUI, ability);
 					return LuaString.valueOf(iconUI.getIconPath());
@@ -703,9 +743,11 @@ public class LuaEnvironment {
 		});
 		this.globals.set("GetSpellTexture", new TwoArgFunction() {
 			@Override
-			public LuaValue call(final LuaValue id, final LuaValue bookType) {				final CAbility ability = getAbility(id.checkint(), bookType.checkjstring());
+			public LuaValue call(final LuaValue id, final LuaValue bookType) {
+				final CAbility ability = getAbility(id.checkint(), bookType.checkjstring());
 				if (ability != null) {
-					final IconUI iconUI = getIconUI(abilityDataUI, ability);					return LuaString.valueOf(iconUI.getIconPath());
+					final IconUI iconUI = getIconUI(abilityDataUI, ability);
+					return LuaString.valueOf(iconUI.getIconPath());
 				}
 				return LuaValue.NIL;
 			}
@@ -909,7 +951,7 @@ public class LuaEnvironment {
 				if (unit == null) {
 					return LuaValue.ZERO;
 				}
-				return LuaValue.valueOf(Math.max(0, unit.getLife()));
+				return LuaValue.valueOf(Math.max(0, Math.ceil(unit.getLife())));
 			}
 		});
 		this.globals.set("UnitExists", new OneArgFunction() {
@@ -939,7 +981,7 @@ public class LuaEnvironment {
 				if (unit == null) {
 					return LuaValue.ZERO;
 				}
-				return LuaValue.valueOf(unit.getMana());
+				return LuaValue.valueOf(Math.ceil(unit.getMana()));
 			}
 		});
 		this.globals.set("UnitManaMax", new OneArgFunction() {
@@ -981,7 +1023,7 @@ public class LuaEnvironment {
 			public LuaValue call(final LuaValue unitKey, final LuaValue otherUnitKey) {
 				final CUnit target = getUnit(unitKey.checkjstring());
 				final CUnit player = getUnit(otherUnitKey.checkjstring());
-				if (target == null || player == null) {
+				if ((target == null) || (player == null)) {
 					return LuaValue.valueOf(4);
 				}
 
@@ -1119,7 +1161,7 @@ public class LuaEnvironment {
 			public LuaValue call(final LuaValue unitKey, final LuaValue otherUnitKey) {
 				final CUnit unit = getUnit(unitKey.checkjstring());
 				final CUnit otherUnit = getUnit(otherUnitKey.checkjstring());
-				if (unit == null || otherUnit == null) {
+				if ((unit == null) || (otherUnit == null)) {
 					return LuaBoolean.FALSE;
 				}
 				return LuaBoolean.valueOf(otherUnit.isUnitAlly(game.getPlayer(unit.getPlayerIndex())));
@@ -1195,7 +1237,8 @@ public class LuaEnvironment {
 		});
 		// ===========
 		// Loot window — the lootable subject is whatever lootable item is currently the
-		// player's target (set by right-clicking a world item, see beginLootInteraction).
+		// player's target (set by right-clicking a world item, see
+		// beginLootInteraction).
 		// There is exactly one slot: the targeted item itself.
 		this.globals.set("GetNumLootItems", new ZeroArgFunction() {
 			@Override
@@ -1242,11 +1285,16 @@ public class LuaEnvironment {
 				return LuaValue.FALSE;
 			}
 		});
-		// NOTE: LootSlot/CloseLoot are called as bare Lua STATEMENTS (no return captured),
-		// which luaj dispatches via call(...) rather than invoke(); the abstract LuaFunction
-		// base does not route call(...) to invoke (only the *ArgFunction subclasses do), so
-		// these must extend TwoArgFunction/OneArgFunction or the call throws "attempt to call
-		// function". (Natives invoked inside assignments, e.g. GetLootSlotInfo, can stay LuaFunction.)
+		// NOTE: LootSlot/CloseLoot are called as bare Lua STATEMENTS (no return
+		// captured),
+		// which luaj dispatches via call(...) rather than invoke(); the abstract
+		// LuaFunction
+		// base does not route call(...) to invoke (only the *ArgFunction subclasses
+		// do), so
+		// these must extend TwoArgFunction/OneArgFunction or the call throws "attempt
+		// to call
+		// function". (Natives invoked inside assignments, e.g. GetLootSlotInfo, can
+		// stay LuaFunction.)
 		this.globals.set("LootSlot", new TwoArgFunction() {
 			@Override
 			public LuaValue call(final LuaValue slot, final LuaValue confirm) {
@@ -1334,9 +1382,9 @@ public class LuaEnvironment {
 
 	/**
 	 * Returns the Warcraft III inventory item shown on an equipped-bag bar button,
-	 * given that button's synthetic inventory slot id (>= {@link #BAG_SLOT_INVENTORY_BASE}).
-	 * Each WoW bag button maps to one Warcraft III inventory slot; returns null when
-	 * out of range or empty.
+	 * given that button's synthetic inventory slot id (>=
+	 * {@link #BAG_SLOT_INVENTORY_BASE}). Each WoW bag button maps to one Warcraft
+	 * III inventory slot; returns null when out of range or empty.
 	 */
 	private CItem getEquippedBagItem(final int inventorySlotId) {
 		final int slotIndex = inventorySlotId - BAG_SLOT_INVENTORY_BASE;
@@ -1354,13 +1402,13 @@ public class LuaEnvironment {
 	}
 
 	/**
-	 * WoW's PickupContainerItem toggle for a bag popup (bagId, 1-based slot): with an
-	 * empty cursor it lifts the item there onto the cursor; with an item already held
-	 * it drops it into that slot. The drop issues a Warcraft III bagitemdrag order on
-	 * the destination {@link CAbilityBag}; that ability swaps within itself, or pulls
-	 * the item across from whichever container currently holds it (another bag or the
-	 * unit inventory) — see {@link CItemSlotHolder#transfer}. Stays authoritative in
-	 * the lockstep sim.
+	 * WoW's PickupContainerItem toggle for a bag popup (bagId, 1-based slot): with
+	 * an empty cursor it lifts the item there onto the cursor; with an item already
+	 * held it drops it into that slot. The drop issues a Warcraft III bagitemdrag
+	 * order on the destination {@link CAbilityBag}; that ability swaps within
+	 * itself, or pulls the item across from whichever container currently holds it
+	 * (another bag or the unit inventory) — see {@link CItemSlotHolder#transfer}.
+	 * Stays authoritative in the lockstep sim.
 	 */
 	private void handleContainerPickupOrDrop(final int bagId, final int slot) {
 		final CAbilityBag bag = resolveBag(bagId);
@@ -1431,7 +1479,10 @@ public class LuaEnvironment {
 		}
 	}
 
-	/** Clears the held-item state and the cursor visual. The item never left its slot. */
+	/**
+	 * Clears the held-item state and the cursor visual. The item never left its
+	 * slot.
+	 */
 	private void clearCursorItemState() {
 		this.cursorItem = null;
 		this.cursorBagId = 0;
@@ -1823,9 +1874,10 @@ public class LuaEnvironment {
 	}
 
 	/**
-	 * The current target as a lootable item: non-null only when the player's target is
-	 * a CItem that is still lying in the world (not picked up). This is what makes an
-	 * item "target" lootable to the WoW loot natives (GetNumLootItems, LootSlot, ...).
+	 * The current target as a lootable item: non-null only when the player's target
+	 * is a CItem that is still lying in the world (not picked up). This is what
+	 * makes an item "target" lootable to the WoW loot natives (GetNumLootItems,
+	 * LootSlot, ...).
 	 */
 	private CItem getTargetItem() {
 		if (this.targetUnit == null) {
@@ -1839,9 +1891,10 @@ public class LuaEnvironment {
 	}
 
 	/**
-	 * Begins a loot interaction on the currently targeted item (set just before this by
-	 * right-clicking the item): plays the hero's loot crouch and opens the WoW loot
-	 * window (which then reads the loot natives above to show the single item).
+	 * Begins a loot interaction on the currently targeted item (set just before
+	 * this by right-clicking the item): plays the hero's loot crouch and opens the
+	 * WoW loot window (which then reads the loot natives above to show the single
+	 * item).
 	 */
 	public void beginLootInteraction() {
 		if (getTargetItem() == null) {
@@ -1874,9 +1927,10 @@ public class LuaEnvironment {
 
 	/**
 	 * Fires the WoW ACTIONBAR_UPDATE_COOLDOWN event to every frame registered for
-	 * it (the action buttons). Their OnEvent handlers re-query GetActionCooldown and
-	 * call CooldownFrame_SetTimer, which arms the cooldown swipe model. The engine
-	 * has no native cooldown-changed callback, so callers poll this periodically.
+	 * it (the action buttons). Their OnEvent handlers re-query GetActionCooldown
+	 * and call CooldownFrame_SetTimer, which arms the cooldown swipe model. The
+	 * engine has no native cooldown-changed callback, so callers poll this
+	 * periodically.
 	 */
 	public void notifyActionBarCooldownsChanged() {
 		final LinkedHashSet<UIFrameLuaWrapper> registered = getRegistered(
@@ -1927,12 +1981,12 @@ public class LuaEnvironment {
 		if (widget == null) {
 			return "NO UNIT";
 		}
-		CUnit unit = widget.visit(AbilityTargetVisitor.UNIT);
+		final CUnit unit = widget.visit(AbilityTargetVisitor.UNIT);
 		if (unit == null) {
-			CItem item = widget.visit(AbilityTargetVisitor.ITEM);
+			final CItem item = widget.visit(AbilityTargetVisitor.ITEM);
 			if (item != null) {
 //				return "Item";
-				ItemUI itemUI = abilityDataUI.getItemUI(item.getTypeId());
+				final ItemUI itemUI = this.abilityDataUI.getItemUI(item.getTypeId());
 				return itemUI.getName();
 			}
 		}

@@ -93,6 +93,8 @@ public abstract class TerrainInterface {
 
 	public abstract void intersectRayTerrain(Ray gdxRayHeap, final Vector3 out, final boolean intersectWithWater);
 
+	public abstract WdtLiquidType getLiquidType(float x, float y);
+
 	public static final class SoftwareGroundMesh {
 		public final float[] vertices;
 		public final int[] indices;

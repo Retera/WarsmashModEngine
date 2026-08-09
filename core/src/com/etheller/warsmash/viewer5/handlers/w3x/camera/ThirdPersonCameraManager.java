@@ -7,8 +7,8 @@ import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.RenderUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.thirdperson.CAbilityPlayerPawn;
 
 public final class ThirdPersonCameraManager extends CameraManager {
-	private final float fov = 70;
-	private final float nearZ = 50;
+	private final float fov = 84.4f;
+	private final float nearZ = 5;
 	private final float farZ = 30000;
 	private boolean touchDown;
 	private final War3MapViewer war3MapViewer;
@@ -70,7 +70,7 @@ public final class ThirdPersonCameraManager extends CameraManager {
 		this.position = this.position.add(this.target);
 		this.war3MapViewer.rayTest(this.target, this.position, this.position);
 
-		this.camera.perspective(this.fov, this.camera.getAspect(), this.nearZ, this.farZ);
+		this.camera.perspective((float) Math.toRadians(this.fov), this.camera.getAspect(), this.nearZ, this.farZ);
 
 		this.camera.moveToAndFace(this.position, this.target, this.worldUp);
 	}
@@ -85,6 +85,18 @@ public final class ThirdPersonCameraManager extends CameraManager {
 
 	public boolean isTouchDown() {
 		return this.touchDown;
+	}
+
+	public float getFov() {
+		return this.fov;
+	}
+
+	public float getNearZ() {
+		return this.nearZ;
+	}
+
+	public float getFarZ() {
+		return this.farZ;
 	}
 
 }

@@ -64,6 +64,7 @@ public class Camera {
 
 	public final Vector4[] planes;
 	private boolean dirty;
+	public float animationStopDepth = 10000f;
 
 	public Camera() {
 		// rencered viewport

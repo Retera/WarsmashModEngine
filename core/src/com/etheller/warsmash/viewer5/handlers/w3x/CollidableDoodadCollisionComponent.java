@@ -15,11 +15,17 @@ public class CollidableDoodadCollisionComponent implements CollidableDoodadCompo
 	private final BoundingBox geosetBoundingBox;
 	private final IntersectableBox collision;
 	private final boolean interior;
-	/** World-space floor light samples for this surface (x,y,z triples) and their colours (r,g,b triples),
-	 * parallel arrays. Null until set. Used to light units by the ground they stand on. */
+	/**
+	 * World-space floor light samples for this surface (x,y,z triples) and their
+	 * colours (r,g,b triples), parallel arrays. Null until set. Used to light units
+	 * by the ground they stand on.
+	 */
 	private float[] floorSampleWorldXYZ;
 	private float[] floorSampleRGB;
-	/** 1 per floor sample: 1 = exterior vertex (use the dynamic skylight colour), 0 = interior (use rgb). */
+	/**
+	 * 1 per floor sample: 1 = exterior vertex (use the dynamic skylight colour), 0
+	 * = interior (use rgb).
+	 */
 	private float[] floorSampleExterior;
 
 	public CollidableDoodadCollisionComponent(final MdxComplexInstance instance,
@@ -50,7 +56,7 @@ public class CollidableDoodadCollisionComponent implements CollidableDoodadCompo
 	@Override
 	public boolean intersectRayWithCollision(final Ray ray, final Vector3 intersection, final boolean b,
 			final boolean c) {
-		return this.collision.checkIntersect(ray, this.instance, intersection);
+		return this.instance.intersectRayWithCollisionGeometrySlow(ray, this.collisionGeometry, intersection);
 	}
 
 	@Override
@@ -60,8 +66,10 @@ public class CollidableDoodadCollisionComponent implements CollidableDoodadCompo
 
 	@Override
 	public W3xSceneLightManager getModelOnlyLightManager() {
-		// Serve the "served" manager (for WMO surfaces this includes the WMO MOLT lights) so units walking
-		// onto this surface are lit like the doodads on it, not like the surface itself.
+		// Serve the "served" manager (for WMO surfaces this includes the WMO MOLT
+		// lights) so units walking
+		// onto this surface are lit like the doodads on it, not like the surface
+		// itself.
 		return this.instance.getServedModelOnlyLightManager();
 	}
 
@@ -70,9 +78,16 @@ public class CollidableDoodadCollisionComponent implements CollidableDoodadCompo
 		return this.instance.servedInteriorAmbient;
 	}
 
-	/** Provides this surface's floor light samples in WORLD space (x,y,z triples) with parallel colours
-	 * (r,g,b triples) and exterior flags (1 per sample). See WmoPortingModel2 floor samples + War3MapViewer
-	 * placement. */
+	@Override
+	public int getLightOmitOffsetOverride() {
+		return this.instance.lightOmitOffsetOverride;
+	}
+
+	/**
+	 * Provides this surface's floor light samples in WORLD space (x,y,z triples)
+	 * with parallel colours (r,g,b triples) and exterior flags (1 per sample). See
+	 * WmoPortingModel2 floor samples + War3MapViewer placement.
+	 */
 	public void setFloorLightSamples(final float[] worldXYZ, final float[] rgb, final float[] exterior) {
 		this.floorSampleWorldXYZ = worldXYZ;
 		this.floorSampleRGB = rgb;
@@ -106,7 +121,8 @@ public class CollidableDoodadCollisionComponent implements CollidableDoodadCompo
 		final boolean exterior = (this.floorSampleExterior != null) && (sampleIndex < this.floorSampleExterior.length)
 				&& (this.floorSampleExterior[sampleIndex] != 0f);
 		if (exterior && (exteriorColor != null)) {
-			// Exterior floor vertex: its baked MOCV is black; use the dynamic daylight colour instead so a unit
+			// Exterior floor vertex: its baked MOCV is black; use the dynamic daylight
+			// colour instead so a unit
 			// at the indoor/outdoor border is lit by the sky, not flashed black.
 			outRgb[0] = exteriorColor[0];
 			outRgb[1] = exteriorColor[1];

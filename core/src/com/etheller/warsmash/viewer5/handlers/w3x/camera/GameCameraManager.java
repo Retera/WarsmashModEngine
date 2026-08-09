@@ -224,7 +224,16 @@ public final class GameCameraManager extends CameraManager {
 	}
 
 	public void updateTargetZ(final float groundHeight) {
-		this.target.z = groundHeight + this.presets[this.currentPreset].getHeight() + this.targetZOffset;
+		float appliedZOffset;
+		if (this.zOffsetDestination != null) {
+			appliedZOffset = this.zOffsetRate <= 0.001 ? this.zOffsetDestination
+					: applyAtRate(this.targetZOffset, this.zOffsetDestination, this.zOffsetRate);
+			this.targetZOffset = appliedZOffset;
+		}
+		else {
+			appliedZOffset = this.presets[this.currentPreset].getHeight();
+		}
+		this.target.z = groundHeight + appliedZOffset;
 	}
 
 	public void scrolled(final int amount) {
@@ -301,6 +310,7 @@ public final class GameCameraManager extends CameraManager {
 	private void clearCustomSetup() {
 		this.customSetup = null;
 		this.customCameraRates = null;
+		this.zOffsetDestination = null;
 		clearPan();
 	}
 
@@ -322,11 +332,11 @@ public final class GameCameraManager extends CameraManager {
 	}
 
 	public void setTargetZOffset(final float targetZOffset) {
-		this.zOffsetDestination = null;
-		this.targetZOffset = targetZOffset;
+		this.zOffsetDestination = targetZOffset;
+		this.zOffsetRate = 0.0f;
 	}
 
-	public void setTargetZOffset(float targetZOffset, float duration) {
+	public void setTargetZOffset(final float targetZOffset, final float duration) {
 		final float rate = Math.abs((targetZOffset - this.targetZOffset) / duration);
 		this.zOffsetDestination = targetZOffset;
 		this.zOffsetRate = rate;
@@ -345,34 +355,41 @@ public final class GameCameraManager extends CameraManager {
 					Math.abs(distanceRate), this.cameraRates.forward, this.cameraRates.strafe);
 			if (doPan) {
 				panToTimed(cameraSetup.getDestPositionX(), cameraSetup.getDestPositionY(), forceDuration);
+				setTargetZOffset(cameraSetup.getHeight(), forceDuration);
 			}
 		}
 		else {
 			updateCamera(this.customSetup, CameraRates.INFINITY);
 			if (doPan) {
 				setTarget(cameraSetup.getDestPositionX(), cameraSetup.getDestPositionY());
+				setTargetZOffset(cameraSetup.getHeight());
 			}
 		}
 	}
 
-	public void applyCameraSetup(CustomCameraSetup cameraSetup, boolean doPan, boolean panTimed) {
+	public void applyCameraSetup(final CustomCameraSetup cameraSetup, final boolean doPan, final boolean panTimed) {
 		this.customSetup = cameraSetup;
 		if (doPan) {
 			if (panTimed) {
 				panTo(cameraSetup.getDestPositionX(), cameraSetup.getDestPositionY());
+				this.zOffsetDestination = cameraSetup.getHeight();
+				this.zOffsetRate = this.cameraRates.distance;
 			}
 			else {
 				setTarget(cameraSetup.getDestPositionX(), cameraSetup.getDestPositionY());
+				setTargetZOffset(cameraSetup.getHeight());
 			}
 		}
 	}
 
-	public void resetToGameCamera(float duration) {
+	public void resetToGameCamera(final float duration) {
 		final CameraSetup previousSetup = getCurrentSetup();
 		clearCustomSetup();
 		if (duration == 0) {
 			this.customCameraRates = new CameraRates(9999, 9999, 9999, 9999, this.cameraRates.forward,
 					this.cameraRates.strafe);
+			this.zOffsetDestination = null;
+			this.targetZOffset = 0;
 		}
 		else {
 			final CameraSetup cameraSetup = getCurrentSetup();
@@ -384,10 +401,11 @@ public final class GameCameraManager extends CameraManager {
 			final float distanceRate = (cameraSetup.getDistance() - previousSetup.getDistance()) / duration;
 			this.customCameraRates = new CameraRates(Math.abs(aoaRate), Math.abs(fovRate), Math.abs(rotationRate),
 					Math.abs(distanceRate), this.cameraRates.forward, this.cameraRates.strafe);
+			setTargetZOffset(0, duration);
 		}
 	}
 
-	public void panToTimed(float x, float y, float duration) {
+	public void panToTimed(final float x, final float y, final float duration) {
 		if (duration == 0) {
 			setTarget(x, y);
 		}
@@ -399,14 +417,23 @@ public final class GameCameraManager extends CameraManager {
 		}
 	}
 
-	private void setTarget(float x, float y) {
+	private void setTarget(final float x, final float y) {
 		this.target.x = x;
 		this.target.y = y;
 	}
 
-	public void panTo(float x, float y) {
+	public void panTo(final float x, final float y) {
 		clearPan();
 		this.panDestination = new Vector2(x, y);
 		this.panRate = new Vector2(this.cameraRates.strafe, this.cameraRates.forward);
+	}
+
+	public void enableUserControl(final boolean value) {
+		this.cameraPanControls.left = false;
+		this.cameraPanControls.right = false;
+		this.cameraPanControls.down = false;
+		this.cameraPanControls.up = false;
+		this.cameraPanControls.insertDown = false;
+		this.cameraPanControls.deleteDown = false;
 	}
 }

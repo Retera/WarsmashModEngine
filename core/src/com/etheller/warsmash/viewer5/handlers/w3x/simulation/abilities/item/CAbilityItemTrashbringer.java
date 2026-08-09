@@ -1,0 +1,115 @@
+package com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.item;
+
+import com.etheller.warsmash.util.War3ID;
+import com.etheller.warsmash.viewer5.handlers.w3x.IndexedSequence;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.AbstractGenericNoIconAbility;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityPointTarget;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.thirdperson.CAbilityPlayerPawn;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehavior;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.thirdperson.CBehaviorPlayerPawn;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.attacks.CUnitAttack;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CEffectType;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityActivationReceiver;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityTargetCheckReceiver;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.SimulationRenderComponentModel;
+
+public class CAbilityItemTrashbringer extends AbstractGenericNoIconAbility {
+	private final int damageBonus;
+	private SimulationRenderComponentModel fx;
+
+	public CAbilityItemTrashbringer(final int handleId, final War3ID code, final War3ID alias, final int damageBonus) {
+		super(handleId, code, alias);
+		this.damageBonus = damageBonus;
+	}
+
+	@Override
+	public void onAdd(final CSimulation game, final CUnit unit) {
+		for (final CUnitAttack attack : unit.getUnitSpecificAttacks()) {
+			attack.setTemporaryDamageBonus(attack.getTemporaryDamageBonus() + this.damageBonus);
+		}
+		this.fx = game.createPersistentSpellEffectOnUnit(unit, getAlias(), CEffectType.TARGET);
+		final CAbilityPlayerPawn playerPawnAbil = unit.getFirstAbilityOfType(CAbilityPlayerPawn.class);
+		if (playerPawnAbil != null) {
+			final CBehaviorPlayerPawn behaviorPlayerPawn = playerPawnAbil.getBehaviorPlayerPawn();
+			final IndexedSequence handsClosedAnim = behaviorPlayerPawn.selectSequence("handsclosed");
+			if ((handsClosedAnim != null) && (handsClosedAnim.index != -1)) {
+				behaviorPlayerPawn.setSequence(behaviorPlayerPawn.getHandR(), handsClosedAnim.index);
+			}
+		}
+	}
+
+	@Override
+	public void onRemove(final CSimulation game, final CUnit unit) {
+		for (final CUnitAttack attack : unit.getUnitSpecificAttacks()) {
+			attack.setTemporaryDamageBonus(attack.getTemporaryDamageBonus() - this.damageBonus);
+		}
+		if (this.fx != null) {
+			this.fx.remove();
+			this.fx = null;
+		}
+		final CAbilityPlayerPawn playerPawnAbil = unit.getFirstAbilityOfType(CAbilityPlayerPawn.class);
+		if (playerPawnAbil != null) {
+			final CBehaviorPlayerPawn behaviorPlayerPawn = playerPawnAbil.getBehaviorPlayerPawn();
+			behaviorPlayerPawn.setSequence(behaviorPlayerPawn.getHandR(), -1);
+		}
+	}
+
+	@Override
+	public void onTick(final CSimulation game, final CUnit unit) {
+	}
+
+	@Override
+	public CBehavior begin(final CSimulation game, final CUnit caster, final int playerIndex, final int orderId,
+			final boolean autoOrder, final CWidget target) {
+		return null;
+	}
+
+	@Override
+	public CBehavior begin(final CSimulation game, final CUnit caster, final int playerIndex, final int orderId,
+			final boolean autoOrder, final AbilityPointTarget point) {
+		return null;
+	}
+
+	@Override
+	public CBehavior beginNoTarget(final CSimulation game, final CUnit caster, final int playerIndex, final int orderId,
+			final boolean autoOrder) {
+		return null;
+	}
+
+	@Override
+	public void checkCanTarget(final CSimulation game, final CUnit unit, final int playerIndex, final int orderId,
+			final boolean autoOrder, final CWidget target, final AbilityTargetCheckReceiver<CWidget> receiver) {
+		receiver.orderIdNotAccepted();
+	}
+
+	@Override
+	public void checkCanTarget(final CSimulation game, final CUnit unit, final int playerIndex, final int orderId,
+			final boolean autoOrder, final AbilityPointTarget target,
+			final AbilityTargetCheckReceiver<AbilityPointTarget> receiver) {
+		receiver.orderIdNotAccepted();
+	}
+
+	@Override
+	public void checkCanTargetNoTarget(final CSimulation game, final CUnit unit, final int playerIndex,
+			final int orderId, final boolean autoOrder, final AbilityTargetCheckReceiver<Void> receiver) {
+		receiver.orderIdNotAccepted();
+	}
+
+	@Override
+	protected void innerCheckCanUse(final CSimulation game, final CUnit unit, final int playerIndex, final int orderId,
+			final AbilityActivationReceiver receiver) {
+		receiver.notAnActiveAbility();
+	}
+
+	@Override
+	public void onCancelFromQueue(final CSimulation game, final CUnit unit, final int playerIndex, final int orderId) {
+	}
+
+	@Override
+	public void onDeath(final CSimulation game, final CUnit cUnit) {
+	}
+
+}

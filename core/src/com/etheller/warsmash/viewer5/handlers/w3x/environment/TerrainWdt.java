@@ -333,7 +333,7 @@ public class TerrainWdt extends TerrainInterface {
 //		out.add(gdxRayHeap.direction);
 		normalHeap1.set(gdxRayHeap.origin);
 		normalHeap1.add(gdxRayHeap.direction);
-		float ox = normalHeap1.x, oy = normalHeap1.y, oz = normalHeap1.z;
+		final float ox = normalHeap1.x, oy = normalHeap1.y, oz = normalHeap1.z;
 		float rayLengthIfDesired = gdxRayHeap.direction.len2();
 		if (rayLengthIfDesired < 2) {
 			rayLengthIfDesired = Float.MAX_VALUE;
@@ -2194,6 +2194,7 @@ public class TerrainWdt extends TerrainInterface {
 							}
 						}
 						final long[] mapObjReferences = chunk.getMapObjReferences();
+						final WdtLiquidType liquidType = getLiquidType(chunk);
 						if (mapObjReferences != null) {
 							for (final long ref : mapObjReferences) {
 								if (ref < ActiveTile.this.tile.tileHeader.mapObjectDefinitions.size()) {
@@ -2226,8 +2227,8 @@ public class TerrainWdt extends TerrainInterface {
 
 										final List<RenderDoodad> renderDoodads = TerrainWdt.this.viewer
 												.createWdtWorldModelObject(row, 0, location, rotation, finalScale,
-														(doodad.getFlags() & 0x2) != 0, uniqueId,
-														doodad.getDoodadSet());
+														(doodad.getFlags() & 0x2) != 0, uniqueId, doodad.getDoodadSet(),
+														liquidType);
 										activeWmo = new ActiveWmo(renderDoodads, 1, uniqueId);
 										ActiveTile.this.renderWmoDoodads.add(activeWmo);
 										TerrainWdt.this.wmoUniqueIdToUsage.put(uniqueId, activeWmo);
@@ -2332,7 +2333,7 @@ public class TerrainWdt extends TerrainInterface {
 
 					final List<RenderDoodad> renderDoodads = TerrainWdt.this.viewer.createWdtWorldModelObject(row, 0,
 							location, rotation, finalScale, (doodad.getFlags() & 0x2) != 0, uniqueId,
-							doodad.getDoodadSet());
+							doodad.getDoodadSet(), getLiquidType(location[0], location[1]));
 					activeWmo = new ActiveWmo(renderDoodads, 1, uniqueId);
 					ActiveTile.this.renderWmoDoodads.add(activeWmo);
 					TerrainWdt.this.wmoUniqueIdToUsage.put(uniqueId, activeWmo);
@@ -2446,6 +2447,7 @@ public class TerrainWdt extends TerrainInterface {
 			}
 		}
 	}
+
 	public boolean isWdtHole(final float x, final float y) {
 		final double userCellSpaceXWc3 = (StrictMath.floor(x) - this.centerOffset[0]) / 128.0;
 		final double userCellSpaceYWc3 = (StrictMath.floor(y) - this.centerOffset[1]) / 128.0;
@@ -2486,5 +2488,51 @@ public class TerrainWdt extends TerrainInterface {
 			}
 		}
 		return false;
+	}
+
+	@Override
+	public WdtLiquidType getLiquidType(final float x, final float y) {
+		final double userCellSpaceXWc3 = (StrictMath.floor(x) - this.centerOffset[0]) / 128.0;
+		final double userCellSpaceYWc3 = (StrictMath.floor(y) - this.centerOffset[1]) / 128.0;
+		final int cellXWc3 = (int) StrictMath.floor(userCellSpaceXWc3);
+		final int cellYWc3 = (int) StrictMath.floor(userCellSpaceYWc3);
+
+		if ((cellXWc3 >= 0) && (cellXWc3 < (this.mapSize[0] - 1)) && (cellYWc3 >= 0)
+				&& (cellYWc3 < (this.mapSize[1] - 1))) {
+			final int worldGridCellX = this.worldGrid.getCellX(x);
+			final int worldGridCellY = this.worldGrid.getCellY(y);
+			if ((worldGridCellX >= 0) && (worldGridCellX < this.tiles.length)) {
+				final Tile[] column = this.tiles[worldGridCellX];
+				if ((worldGridCellY >= 0) && (worldGridCellY < column.length)) {
+					final Tile tile = column[worldGridCellY];
+					if (tile != null) {
+						final float cornerX = this.worldGrid.getCornerX(worldGridCellX);
+						final float cornerY = this.worldGrid.getCornerY(worldGridCellY);
+						final double xWithinBlock = StrictMath.floor(x) - cornerX;
+						final double yWithinBlock = StrictMath.floor(y) - cornerY;
+
+						final float chunkSize = 128.0f * 8;
+						final int chunkX = (int) StrictMath.floor(xWithinBlock / chunkSize);
+						final int chunkY = (int) StrictMath.floor(yWithinBlock / chunkSize);
+						final Chunk chunk = tile.chunks[chunkX][chunkY];
+						if (chunk != null) {
+							return getLiquidType(chunk);
+						}
+					}
+				}
+			}
+		}
+		return null;
+	}
+
+	private static WdtLiquidType getLiquidType(final Chunk chunk) {
+		WdtLiquidType liquidType = null;
+		if (FlagUtils.hasFlag((int) chunk.getFlags(), Chunk.Flags.IsMagma)) {
+			liquidType = WdtLiquidType.LAVA;
+		}
+		else if (FlagUtils.hasFlag((int) chunk.getFlags(), Chunk.Flags.IsMagma)) {
+			liquidType = WdtLiquidType.OCEAN;
+		}
+		return liquidType;
 	}
 }

@@ -15,6 +15,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.generic.G
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.skills.CAbilitySpell;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityPointTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTargetVisitor;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.thirdperson.CAbilityPlayerPawn;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.types.definitions.impl.AbilityFields;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.CBehavior;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.OrderIds;
@@ -76,7 +77,8 @@ public class CAbilityWayGate extends AbstractGenericAliasedAbility
 			final boolean autoOrder, final CWidget target) {
 		final CUnit unitTarget = target.visit(AbilityTargetVisitor.UNIT);
 		if (unitTarget != null) {
-			if (!unitTarget.isMovementDisabled()) {
+			if (!unitTarget.isMovementDisabled()
+					|| (unitTarget.getFirstAbilityOfType(CAbilityPlayerPawn.class) != null)) {
 				final float targetX = target.getX();
 				if (Math.abs(targetX - caster.getX()) <= (this.teleportAreaWidth / 2)) {
 					final float targetY = target.getY();
@@ -111,7 +113,8 @@ public class CAbilityWayGate extends AbstractGenericAliasedAbility
 		if (orderId == ORDER_ID) {
 			final CUnit unitTarget = target.visit(AbilityTargetVisitor.UNIT);
 			if (unitTarget != null) {
-				if (!unitTarget.isMovementDisabled()) {
+				if (!unitTarget.isMovementDisabled()
+						|| (unitTarget.getFirstAbilityOfType(CAbilityPlayerPawn.class) != null)) {
 					final float targetX = target.getX();
 					if (Math.abs(targetX - caster.getX()) <= (this.teleportAreaWidth / 2)) {
 						final float targetY = target.getY();

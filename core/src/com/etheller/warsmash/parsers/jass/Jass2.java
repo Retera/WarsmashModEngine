@@ -5072,6 +5072,23 @@ public class Jass2 {
 						}
 						return null;
 					});
+			jassProgramVisitor.getJassNativeManager().createNative("SetUnitUseFood",
+					(arguments, globalScope, triggerScope) -> {
+						final CUnit whichUnit = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());
+						final boolean use = arguments.get(1).visit(BooleanJassValueVisitor.getInstance());
+
+						final CPlayer player = this.simulation.getPlayer(whichUnit.getPlayerIndex());
+						int usage;
+						if (use) {
+							usage = whichUnit.getUnitType().getFoodUsed();
+						}
+						else {
+							usage = 0;
+						}
+						player.setUnitFoodUsed(whichUnit, usage);
+
+						return null;
+					});
 			jassProgramVisitor.getJassNativeManager().createNative("GetDestructableLife",
 					(arguments, globalScope, triggerScope) -> {
 						final CDestructable whichDestructable = nullable(arguments, 0,

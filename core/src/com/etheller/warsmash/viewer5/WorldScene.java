@@ -85,7 +85,8 @@ public class WorldScene extends Scene {
 			if (instance.rendered && (instance.cullFrame < this.frame) && instance.isVisible(WorldScene.this.camera)) {
 				instance.cullFrame = this.frame;
 
-				if (instance.updateFrame < this.frame) {
+				if ((instance.updateFrame < this.frame)
+						&& (instance.depth < (WorldScene.this.camera.animationStopDepth / 2))) {
 					instance.update(this.dt, WorldScene.this);
 					if (!instance.rendered) {
 						// it became hidden while it updated

@@ -10,6 +10,7 @@ import java.io.UnsupportedEncodingException;
 import java.nio.channels.SeekableByteChannel;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -965,8 +966,14 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 
 	public List<RenderDoodad> createWdtWorldModelObject(final GameObject row, final int doodadVariation,
 			final float[] location, final float[] rotation, final float scale, final boolean shrubbery,
-			final long uniqueId, final int doodadSet, final WdtLiquidType liquidType) {
+			final long uniqueId, final int doodadSet, WdtLiquidType liquidType) {
 		final String file = row.readSLKTag("file").replace("/", "\\");
+		if (file.toLowerCase().contains("stormwind")) {
+			return Collections.emptyList();
+		}
+		else if (file.toLowerCase().contains("ironforge") || file.toLowerCase().contains("blackrock")) {
+			liquidType = WdtLiquidType.LAVA;
+		}
 		this.wmoHandler.setCurrentLiquidType(liquidType);
 		final WmoPortingModel2 worldModelObject = (WmoPortingModel2) load(file, this.mapPathSolver, this.solverParams);
 		final float maxPitch = row.readSLKTagFloat("maxPitch");

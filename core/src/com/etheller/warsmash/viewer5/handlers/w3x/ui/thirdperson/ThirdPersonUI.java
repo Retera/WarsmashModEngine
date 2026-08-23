@@ -812,6 +812,18 @@ public class ThirdPersonUI implements WarsmashToggleableUI {
 		}
 		else {
 			this.touchDown = false;
+			// A click on the world (no UI frame) while the cursor carries a spell/item puts
+			// it away, like WoW (a lifted bag item simply reappears in its slot; a lifted
+			// action is gone from the bar). The click is consumed.
+			if ((this.touchDownX == screenX) && (this.touchDownY == screenY)
+					&& this.rootFrame.getLuaGlobals().cursorHasPayload()) {
+				this.rootFrame.getLuaGlobals().clearCursor();
+				if (this.cameraManager.isTouchDown()) {
+					this.cameraManager.setTouchDown(false);
+				}
+				this.mouseDownUIFrame = null;
+				return false;
+			}
 			// Right-click (without a camera drag) on a lootable world item: target it and
 			// open the loot window. Handled before the camera/select logic below.
 			if ((button == Input.Buttons.RIGHT) && (this.touchDownX == screenX) && (this.touchDownY == screenY)

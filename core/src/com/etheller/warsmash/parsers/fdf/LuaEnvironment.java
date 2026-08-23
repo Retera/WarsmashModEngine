@@ -3,6 +3,7 @@ package com.etheller.warsmash.parsers.fdf;
 import java.io.Reader;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
 
 import org.luaj.vm2.Globals;
@@ -118,16 +119,84 @@ public class LuaEnvironment {
 	 * the 1-based bag slot; OR {@link #cursorBagId} is
 	 * {@link #CURSOR_SOURCE_INVENTORY} (-1) when the item was lifted off a bag-bar
 	 * button, with {@link #cursorSlot} then the 0-based Warcraft III inventory
-	 * slot.
+	 * slot; OR {@link #cursorBagId} is {@link #CURSOR_SOURCE_ACTIONBAR} (-2) when
+	 * the item was lifted off an action button (no source slot to grey out: the
+	 * action slot is cleared immediately, as the bar is pure UI state).
+	 *
+	 * <p>
+	 * At most one of {@link #cursorItem} / {@link #cursorSpell} is non-null.
 	 */
 	private CItem cursorItem;
 	private int cursorBagId;
 	private int cursorSlot;
 	/**
+	 * The spell (a castable ability of the pawn) currently "held" on the cursor
+	 * after PickupSpell (spellbook) or PickupAction (action bar), or null. Dropping
+	 * it on an action button files it into that slot.
+	 */
+	private CAbility cursorSpell;
+	/**
 	 * {@link #cursorBagId} sentinel: the item was lifted off the bag bar (unit
 	 * inventory).
 	 */
 	private static final int CURSOR_SOURCE_INVENTORY = -1;
+	/** {@link #cursorBagId} sentinel: the item was lifted off the action bar. */
+	private static final int CURSOR_SOURCE_ACTIONBAR = -2;
+
+	/**
+	 * Number of WoW action slots: NUM_ACTIONBAR_PAGES (6) x NUM_ACTIONBAR_BUTTONS
+	 * (12), with room for the bonus bars ActionButton_GetPagedID can address.
+	 */
+	private static final int NUM_ACTION_SLOTS = 120;
+	/**
+	 * The user-customizable WoW action bar, indexed by 1-based WoW action slot id
+	 * (null = empty). Unlike the spellbook, which always lists the pawn's castable
+	 * abilities, the bar is pure UI state owned here: the player arranges it by
+	 * dragging spells (from the spellbook) and items (from the bags) onto it, and
+	 * learning a new ability does NOT auto-place it. It is seeded once from the
+	 * pawn's castable abilities so the initial bar matches the spellbook order.
+	 */
+	private final ActionSlotContent[] actionBar = new ActionSlotContent[NUM_ACTION_SLOTS + 1];
+	/**
+	 * Whether the action buttons are currently showing their empty-slot grid
+	 * (ACTIONBAR_SHOWGRID was sent and not yet ACTIONBAR_HIDEGRID). WoW shows the
+	 * grid while the cursor carries something so empty slots are visible drop
+	 * targets; the FrameXML hides empty buttons otherwise.
+	 */
+	private boolean actionBarGridShown;
+	/**
+	 * Last charge count shown per item slot, so the periodic cooldown poll can
+	 * notice a consumed charge (the engine fires no use-item event) and redraw
+	 * that button's count.
+	 */
+	private final int[] actionBarLastItemCount = new int[NUM_ACTION_SLOTS + 1];
+
+	/** One action-bar slot: exactly one of {@link #spell} / {@link #item} is set. */
+	private static final class ActionSlotContent {
+		private final CAbility spell;
+		private final CItem item;
+
+		private ActionSlotContent(final CAbility spell, final CItem item) {
+			this.spell = spell;
+			this.item = item;
+		}
+	}
+
+	/**
+	 * How to issue an order for something on the bar: for a spell, the ability
+	 * itself and its base order; for an item, the {@link CItemSlotHolder} ability
+	 * currently carrying it (unit inventory or a bag) and that holder's use-item
+	 * order for the item's slot, which the holder forwards to the item's ability.
+	 */
+	private static final class ActionOrder {
+		private final CAbility orderAbility;
+		private final int orderId;
+
+		private ActionOrder(final CAbility orderAbility, final int orderId) {
+			this.orderAbility = orderAbility;
+			this.orderId = orderId;
+		}
+	}
 
 	/**
 	 * Receives the held item's icon path (or null to clear) so the owning UI can
@@ -560,7 +629,15 @@ public class LuaEnvironment {
 		this.globals.set("UseContainerItem", new TwoArgFunction() {
 			@Override
 			public LuaValue call(final LuaValue bagArg, final LuaValue slotArg) {
-				return LuaValue.NIL; // TODO right-click to use/consume the item
+				// Right-click on a bag slot: use the item straight out of the bag. The
+				// bagitemuse order is addressed to the CAbilityBag, which forwards it to the
+				// ability the item grants (see CAbilityBag), like itemuseNN for the inventory.
+				final CAbilityBag bag = resolveBag(bagArg.checkint());
+				final int slotIndex = slotArg.checkint() - 1;
+				if ((bag != null) && (bag.getItemInSlot(slotIndex) != null)) {
+					issueOrder(new ActionOrder(bag, bag.getUseItemOrderId(slotIndex)));
+				}
+				return LuaValue.NIL;
 			}
 		});
 		this.globals.set("SplitContainerItem", new ZeroArgFunction() {
@@ -581,16 +658,28 @@ public class LuaEnvironment {
 				return LuaValue.valueOf(LuaEnvironment.this.cursorItem != null);
 			}
 		});
+		this.globals.set("CursorHasSpell", new ZeroArgFunction() {
+			@Override
+			public LuaValue call() {
+				return LuaValue.valueOf(LuaEnvironment.this.cursorSpell != null);
+			}
+		});
 		this.globals.set("ClearCursor", new ZeroArgFunction() {
 			@Override
 			public LuaValue call() {
-				clearCursorItemState();
+				clearCursor();
 				return LuaValue.NIL;
 			}
 		});
 		this.globals.set("GetCursorInfo", new LuaFunction() {
 			@Override
 			public Varargs invoke(final Varargs varargs) {
+				if (LuaEnvironment.this.cursorSpell != null) {
+					final IconUI iconUI = getIconUI(abilityDataUI, LuaEnvironment.this.cursorSpell);
+					return LuaValue.varargsOf(new LuaValue[] { LuaValue.valueOf("spell"),
+							LuaValue.valueOf(LuaEnvironment.this.cursorSpell.getHandleId()),
+							LuaValue.valueOf(iconUI.getToolTip()) });
+				}
 				if (LuaEnvironment.this.cursorItem == null) {
 					return LuaValue.NIL;
 				}
@@ -605,52 +694,66 @@ public class LuaEnvironment {
 			}
 		});
 		// ===========
-		// Action bar
+		// Action bar. Every native here takes a 1-based WoW action slot id
+		// (ActionButton_GetPagedID) and reads the user-arranged slot contents in
+		// this.actionBar; see getActionOrder for how spells vs items are issued.
 
 		this.globals.set("GetActionTexture", new OneArgFunction() {
 			@Override
 			public LuaValue call(final LuaValue id) {
-				final CAbility ability = getAbility(id.checkint(), "ability?");
-				if (ability != null) {
-					final IconUI iconUI = getIconUI(abilityDataUI, ability);
-					return LuaString.valueOf(iconUI.getIconPath());
+				final ActionSlotContent content = getActionSlot(id.checkint());
+				if (content == null) {
+					return LuaValue.NIL;
 				}
-				return LuaValue.NIL;
+				if (content.spell != null) {
+					return LuaString.valueOf(getIconUI(abilityDataUI, content.spell).getIconPath());
+				}
+				final ItemUI itemUI = abilityDataUI.getItemUI(content.item.getTypeId());
+				if ((itemUI != null) && (itemUI.getItemIconPathForDragging() != null)
+						&& !itemUI.getItemIconPathForDragging().isEmpty()) {
+					return LuaString.valueOf(itemUI.getItemIconPathForDragging());
+				}
+				return LuaString.valueOf("Textures\\BTNTemp.blp");
 			}
 		});
 		this.globals.set("HasAction", new OneArgFunction() {
 			@Override
 			public LuaValue call(final LuaValue id) {
-				final CAbility ability = getAbility(id.checkint(), "ability?");
-				return LuaValue.valueOf(ability != null);
+				return LuaValue.valueOf(getActionSlot(id.checkint()) != null);
 			}
 		});
 		this.globals.set("IsAttackAction", new OneArgFunction() {
 			@Override
 			public LuaValue call(final LuaValue id) {
-				final CAbility ability = getAbility(id.checkint(), "ability?");
-				return LuaValue.valueOf(ability instanceof CAbilityAttack);
+				final ActionSlotContent content = getActionSlot(id.checkint());
+				return LuaValue.valueOf((content != null) && (content.spell instanceof CAbilityAttack));
 			}
 		});
 		this.globals.set("GetActionCount", new OneArgFunction() {
 			@Override
 			public LuaValue call(final LuaValue id) {
+				// Items show their remaining charges (0 once the item is used up / no longer
+				// carried, which greys the button like WoW); spells have no count.
+				final ActionSlotContent content = getActionSlot(id.checkint());
+				if ((content != null) && (content.item != null)) {
+					if (CItemSlotHolder.findHolderOf(pawnUnit, content.item) == null) {
+						return LuaValue.ZERO;
+					}
+					return LuaValue.valueOf(content.item.getCharges());
+				}
 				return LuaValue.ZERO;
 			}
 		});
 		this.globals.set("GetActionCooldown", new LuaFunction() {
 			@Override
 			public Varargs invoke(final Varargs varargs) {
-				final CAbility ability = getAbility(varargs.arg(1).checkint(), "ability?");
+				final ActionOrder action = getActionOrder(varargs.arg(1).checkint());
 				long start = 0, duration = 0;
 				long enable = 0;
-				if (ability != null) {
+				if (action != null) {
 					final AbilityActivationGetter activationGetter = AbilityActivationGetter.INSTANCE.reset();
-					int orderId = OrderIds.smart;
-					if (ability instanceof SingleOrderAbility) {
-						orderId = ((SingleOrderAbility) ability).getBaseOrderId();
-					}
-					ability.checkCanUse(game, pawnUnit, pawnUnit.getPlayerIndex(), orderId, false, activationGetter);
+					action.orderAbility.checkCanUse(game, pawnUnit, pawnUnit.getPlayerIndex(), action.orderId, false,
+							activationGetter);
 					if (activationGetter.cooldownRemaining > 0) {
 						duration = (long) (activationGetter.cooldown * 1000);
 						start = System.currentTimeMillis()
@@ -668,14 +771,11 @@ public class LuaEnvironment {
 			public Varargs invoke(final Varargs varargs) {
 				boolean isUsable = false;
 				boolean notEnoughMana = false;
-				final CAbility ability = getAbility(varargs.arg(1).checkint(), "ability?");
-				if (ability != null) {
+				final ActionOrder action = getActionOrder(varargs.arg(1).checkint());
+				if (action != null) {
 					final AbilityActivationGetter activationGetter = AbilityActivationGetter.INSTANCE.reset();
-					int orderId = OrderIds.smart;
-					if (ability instanceof SingleOrderAbility) {
-						orderId = ((SingleOrderAbility) ability).getBaseOrderId();
-					}
-					ability.checkCanUse(game, pawnUnit, pawnUnit.getPlayerIndex(), orderId, false, activationGetter);
+					action.orderAbility.checkCanUse(game, pawnUnit, pawnUnit.getPlayerIndex(), action.orderId, false,
+							activationGetter);
 					isUsable = activationGetter.ok;
 					notEnoughMana = activationGetter.commandStringErrorKey == CommandStringErrorKeys.NOT_ENOUGH_MANA;
 				}
@@ -687,11 +787,16 @@ public class LuaEnvironment {
 		this.globals.set("IsCurrentAction", new OneArgFunction() {
 			@Override
 			public LuaValue call(final LuaValue id) {
-				final CAbility ability = getAbility(id.checkint(), "ability?");
-				if (ability != null) {
+				final ActionSlotContent content = getActionSlot(id.checkint());
+				final ActionOrder action = getActionOrder(id.checkint());
+				if ((content != null) && (action != null)) {
 					final COrder currentOrder = pawnUnit.getCurrentOrder();
-					return LuaBoolean.valueOf(
-							(currentOrder != null) && (currentOrder.getAbilityHandleId() == ability.getHandleId()));
+					// A spell is "current" when its ability is being ordered; an item only when
+					// its holder is being ordered with THAT slot's use-item order (the holder
+					// carries several items and handles other orders too).
+					return LuaBoolean.valueOf((currentOrder != null)
+							&& (currentOrder.getAbilityHandleId() == action.orderAbility.getHandleId())
+							&& ((content.spell != null) || (currentOrder.getOrderId() == action.orderId)));
 				}
 				return LuaValue.FALSE;
 			}
@@ -699,16 +804,39 @@ public class LuaEnvironment {
 		this.globals.set("UseAction", new OneArgFunction() {
 			@Override
 			public LuaValue call(final LuaValue id) {
-				final int actionId = id.checkint();
-				useAction(game, rootFrame, pawnUnit, uiOrderListener, actionId);
+				useAction(id.checkint());
 				return LuaValue.NIL;
 			}
 		});
 		this.globals.set("PickupAction", new OneArgFunction() {
 			@Override
 			public LuaValue call(final LuaValue id) {
-				handleContainerPickupOrDrop(bagArg.checkint(), slotArg.checkint());
+				// Shift-click / drag-start on an action button. With an empty cursor this
+				// lifts the slot's spell or item onto the cursor and empties the slot. With
+				// something already held it behaves as a drop (WoW routes that through
+				// OnReceiveDrag -> PlaceAction, but a shift-click while holding lands here).
+				if (cursorHasPayload()) {
+					placeAction(id.checkint());
+				}
+				else {
+					pickupAction(id.checkint());
+				}
 				return LuaValue.NIL;
+			}
+		});
+		this.globals.set("PlaceAction", new OneArgFunction() {
+			@Override
+			public LuaValue call(final LuaValue id) {
+				// Drop (OnReceiveDrag) onto an action button: file the held spell/item into
+				// the slot, swapping any previous occupant onto the cursor like WoW does.
+				placeAction(id.checkint());
+				return LuaValue.NIL;
+			}
+		});
+		this.globals.set("PrecacheSpellArt", new OneArgFunction() {
+			@Override
+			public LuaValue call(final LuaValue id) {
+				return LuaValue.NIL; // textures load on demand; nothing to precache
 			}
 		});
 
@@ -772,64 +900,30 @@ public class LuaEnvironment {
 			}
 		});
 		this.globals.set("CastSpell", new TwoArgFunction() {
-
 			@Override
 			public LuaValue call(final LuaValue id, final LuaValue bookType) {
 				final CAbility ability = getAbility(id.checkint(), bookType.checkjstring());
 				if (ability != null) {
-
-					int orderId = OrderIds.smart;
-					if (ability instanceof SingleOrderAbility) {
-						orderId = ((SingleOrderAbility) ability).getBaseOrderId();
-					}
-
-					final ExternStringMsgAbilityActivationReceiver activationReceiver = ExternStringMsgAbilityActivationReceiver.INSTANCE
-							.reset();
-					ability.checkCanUse(game, pawnUnit, pawnUnit.getPlayerIndex(), orderId, false, activationReceiver);
-					if (activationReceiver.isUseOk()) {
-						if (LuaEnvironment.this.targetUnit != null) {
-							final ExternStringMsgTargetCheckReceiver<CWidget> targetReceiver = ExternStringMsgTargetCheckReceiver
-									.<CWidget>getInstance().reset();
-							ability.checkCanTarget(game, pawnUnit, pawnUnit.getPlayerIndex(), orderId, false,
-									LuaEnvironment.this.targetUnit.getSimulationWidget(), targetReceiver);
-							if (targetReceiver.getTarget() != null) {
-								uiOrderListener.issueTargetOrder(pawnUnit.getHandleId(), ability.getHandleId(), orderId,
-										targetReceiver.getTarget().getHandleId(), false);
-							}
-							else {
-								final ExternStringMsgTargetCheckReceiver<Void> noTargetReceiver = ExternStringMsgTargetCheckReceiver
-										.<Void>getInstance().reset();
-								ability.checkCanTargetNoTarget(game, pawnUnit, pawnUnit.getPlayerIndex(), orderId,
-										false, noTargetReceiver);
-								if (noTargetReceiver.getExternStringKey() == null) {
-									uiOrderListener.issueImmediateOrder(pawnUnit.getHandleId(), ability.getHandleId(),
-											orderId, false);
-								}
-								else {
-									rootFrame.getUiSounds().getSound("HumanFemale_CantUseGeneric")
-											.play(rootFrame.getUiScene().audioContext, 0, 0, 0);
-								}
-							}
-						}
-						else {
-							final ExternStringMsgTargetCheckReceiver<Void> noTargetReceiver = ExternStringMsgTargetCheckReceiver
-									.<Void>getInstance().reset();
-							ability.checkCanTargetNoTarget(game, pawnUnit, pawnUnit.getPlayerIndex(), orderId, false,
-									noTargetReceiver);
-							if (noTargetReceiver.getExternStringKey() == null) {
-								uiOrderListener.issueImmediateOrder(pawnUnit.getHandleId(), ability.getHandleId(),
-										orderId, false);
-							}
-							else {
-								rootFrame.getUiSounds().getSound("HumanFemale_CantCastGenericNoTa")
-										.play(rootFrame.getUiScene().audioContext, 0, 0, 0);
-							}
-						}
-					}
-					else {
-						rootFrame.getUiSounds().getSound("HumanFemale_CantUseGeneric")
-								.play(rootFrame.getUiScene().audioContext, 0, 0, 0);
-					}
+					issueOrder(new ActionOrder(ability, getBaseOrderId(ability)));
+				}
+				return LuaValue.NIL;
+			}
+		});
+		this.globals.set("PickupSpell", new TwoArgFunction() {
+			@Override
+			public LuaValue call(final LuaValue id, final LuaValue bookType) {
+				// Shift-click / drag-start on a spellbook entry: lift the spell onto the
+				// cursor so it can be dropped on an action button. A click on the spellbook
+				// while already holding something just puts it away (the spellbook never
+				// takes a drop -- the spell stays in the book regardless).
+				if (cursorHasPayload()) {
+					clearCursor();
+					return LuaValue.NIL;
+				}
+				final CAbility ability = getAbility(id.checkint(), bookType.checkjstring());
+				if (ability != null) {
+					LuaEnvironment.this.cursorSpell = ability;
+					updateCursorVisual();
 				}
 				return LuaValue.NIL;
 			}
@@ -1353,6 +1447,7 @@ public class LuaEnvironment {
 			}
 		});
 		this.pawnUnit.addStateListener(new CUnitStateListenerImplementation(UNITKEY_PLAYER));
+		seedActionBarFromAbilities();
 		for (int i = 1; i <= 12; i++) {
 			final String binding = "ACTIONBUTTON" + (i);
 			this.bindingKeys.put(binding, Integer.toString(i));
@@ -1428,6 +1523,11 @@ public class LuaEnvironment {
 		if (bag == null) {
 			return;
 		}
+		if (this.cursorSpell != null) {
+			// A spell can't be filed into a bag; put it away instead of swallowing the click.
+			clearCursor();
+			return;
+		}
 		final int slotIndex = slot - 1;
 		if ((slotIndex < 0) || (slotIndex >= bag.getSlotCount())) {
 			return;
@@ -1458,8 +1558,7 @@ public class LuaEnvironment {
 			this.uiOrderListener.issueTargetOrder(this.pawnUnit.getHandleId(), bag.getHandleId(),
 					OrderIds.bagitemdrag00 + slotIndex, this.cursorItem.getHandleId(), false);
 		}
-		clearCursorItemState();
-		notifyBagsChanged(); // a same-slot (no-op) drop still needs the slot un-greyed
+		clearCursor(); // also un-greys the source slot for a same-slot (no-op) drop
 	}
 
 	/**
@@ -1474,15 +1573,23 @@ public class LuaEnvironment {
 			this.uiOrderListener.issueTargetOrder(this.pawnUnit.getHandleId(), inventory.getHandleId(),
 					OrderIds.itemdrag00 + inventorySlotIndex, this.cursorItem.getHandleId(), false);
 		}
-		clearCursorItemState();
-		notifyBagsChanged();
+		clearCursor();
 	}
 
-	/** Pushes the current cursor item's icon (or null) to the display listener. */
+	/**
+	 * Pushes the held spell's / item's icon (or null) to the display listener and
+	 * shows/hides the action bar's empty-slot grid to match (empty action buttons
+	 * are hidden by ActionButton_Update unless the grid is shown, so without this
+	 * there would be nothing to drop a spell onto).
+	 */
 	private void updateCursorVisual() {
+		syncActionBarGrid();
 		if (this.cursorItemDisplayListener != null) {
 			String iconPath = null;
-			if (this.cursorItem != null) {
+			if (this.cursorSpell != null) {
+				iconPath = getIconUI(this.abilityDataUI, this.cursorSpell).getIconPath();
+			}
+			else if (this.cursorItem != null) {
 				final ItemUI itemUI = this.abilityDataUI.getItemUI(this.cursorItem.getTypeId());
 				if (itemUI != null) {
 					iconPath = itemUI.getItemIconPathForDragging();
@@ -1492,15 +1599,205 @@ public class LuaEnvironment {
 		}
 	}
 
+	/** Whether a spell or an item is currently held on the cursor. */
+	public boolean cursorHasPayload() {
+		return (this.cursorItem != null) || (this.cursorSpell != null);
+	}
+
 	/**
-	 * Clears the held-item state and the cursor visual. The item never left its
-	 * slot.
+	 * Puts away whatever is on the cursor (WoW's ClearCursor): a lifted bag item
+	 * simply renders in its slot again (it never left), a lifted action is gone
+	 * from the bar (WoW semantics -- it can be re-dragged from the spellbook/bags).
 	 */
-	private void clearCursorItemState() {
+	public void clearCursor() {
+		final boolean hadPayload = cursorHasPayload();
+		final boolean greyedSlot = (this.cursorItem != null) && (this.cursorBagId != CURSOR_SOURCE_ACTIONBAR);
 		this.cursorItem = null;
+		this.cursorSpell = null;
 		this.cursorBagId = 0;
 		this.cursorSlot = 0;
+		if (hadPayload) {
+			updateCursorVisual();
+		}
+		if (greyedSlot) {
+			notifyBagsChanged(); // un-grey the source slot (it never left)
+		}
+	}
+
+	// ===========
+	// Action bar model
+
+	private ActionSlotContent getActionSlot(final int slotId) {
+		if ((slotId < 1) || (slotId > NUM_ACTION_SLOTS)) {
+			return null;
+		}
+		return this.actionBar[slotId];
+	}
+
+	private void setActionSlot(final int slotId, final ActionSlotContent content) {
+		if ((slotId < 1) || (slotId > NUM_ACTION_SLOTS)) {
+			return;
+		}
+		this.actionBar[slotId] = content;
+		notifyActionBarSlotChanged(slotId);
+	}
+
+	private static int getBaseOrderId(final CAbility ability) {
+		if (ability instanceof SingleOrderAbility) {
+			return ((SingleOrderAbility) ability).getBaseOrderId();
+		}
+		return OrderIds.smart;
+	}
+
+	/**
+	 * Resolves how to order the contents of an action slot, or null when the slot
+	 * is empty or holds an item the pawn no longer carries / that grants nothing.
+	 */
+	private ActionOrder getActionOrder(final int slotId) {
+		final ActionSlotContent content = getActionSlot(slotId);
+		if (content == null) {
+			return null;
+		}
+		if (content.spell != null) {
+			return new ActionOrder(content.spell, getBaseOrderId(content.spell));
+		}
+		return getCarriedItemOrder(content.item);
+	}
+
+	/**
+	 * The order that uses a carried item wherever it currently sits (unit inventory
+	 * slot -> itemuseNN on the inventory; bag slot -> bagitemuseNN on that bag), or
+	 * null if the pawn isn't carrying it or it grants no ability.
+	 */
+	private ActionOrder getCarriedItemOrder(final CItem item) {
+		final CItemSlotHolder holder = CItemSlotHolder.findHolderOf(this.pawnUnit, item);
+		if (holder == null) {
+			return null;
+		}
+		final int slot = holder.getSlotOf(item);
+		final List<CAbility> itemAbilities = holder.getItemAbilitiesInSlot(slot);
+		if (itemAbilities.isEmpty() || !(holder instanceof CAbility)) {
+			return null;
+		}
+		return new ActionOrder((CAbility) holder, holder.getUseItemOrderId(slot));
+	}
+
+	/**
+	 * Fills the bar from the pawn's castable abilities in spellbook order (slot 1 =
+	 * first ability, ...). Called once at startup so the bar starts out populated
+	 * the way it was when it mirrored the spellbook directly.
+	 */
+	private void seedActionBarFromAbilities() {
+		int slotId = 1;
+		for (final CAbility ability : this.pawnUnit.getAbilities()) {
+			if (slotId > NUM_ACTION_SLOTS) {
+				break;
+			}
+			if (!Boolean.TRUE.equals(ability.visit(CommandCardIconVisibilityVisitor.INSTANCE))) {
+				continue;
+			}
+			this.actionBar[slotId++] = new ActionSlotContent(ability, null);
+		}
+	}
+
+	/**
+	 * Drops bar entries whose spell the pawn no longer has (an ability was removed)
+	 * and tells every action button to redraw (ACTIONBAR_SLOT_CHANGED -1). Items
+	 * are kept even when no longer carried, greyed like WoW, so a re-acquired
+	 * consumable lands back on its button.
+	 */
+	private void refreshActionBarAfterAbilitiesChanged() {
+		final List<CAbility> abilities = this.pawnUnit.getAbilities();
+		for (int slotId = 1; slotId <= NUM_ACTION_SLOTS; slotId++) {
+			final ActionSlotContent content = this.actionBar[slotId];
+			if ((content != null) && (content.spell != null) && !abilities.contains(content.spell)) {
+				this.actionBar[slotId] = null;
+			}
+		}
+		if ((this.cursorSpell != null) && !abilities.contains(this.cursorSpell)) {
+			clearCursor();
+		}
+		notifyActionBarSlotChanged(-1);
+	}
+
+	private void pickupAction(final int slotId) {
+		final ActionSlotContent content = getActionSlot(slotId);
+		if (content == null) {
+			return;
+		}
+		if (content.spell != null) {
+			this.cursorSpell = content.spell;
+		}
+		else {
+			this.cursorItem = content.item;
+			this.cursorBagId = CURSOR_SOURCE_ACTIONBAR;
+			this.cursorSlot = 0;
+		}
+		// Show the empty-slot grid BEFORE emptying the slot so the button stays visible
+		// (ActionButton_Update hides an empty button while the grid is hidden).
 		updateCursorVisual();
+		setActionSlot(slotId, null);
+	}
+
+	private void placeAction(final int slotId) {
+		if (!cursorHasPayload() || (slotId < 1) || (slotId > NUM_ACTION_SLOTS)) {
+			return;
+		}
+		final ActionSlotContent previous = getActionSlot(slotId);
+		final ActionSlotContent placed = (this.cursorSpell != null) ? new ActionSlotContent(this.cursorSpell, null)
+				: new ActionSlotContent(null, this.cursorItem);
+		final boolean liftedFromContainer = (this.cursorItem != null) && (this.cursorBagId != CURSOR_SOURCE_ACTIONBAR);
+		// Take the payload off the cursor WITHOUT the clearCursor bookkeeping, then
+		// swap the slot's previous occupant (if any) onto the cursor.
+		this.cursorItem = null;
+		this.cursorSpell = null;
+		this.cursorBagId = 0;
+		this.cursorSlot = 0;
+		setActionSlot(slotId, placed);
+		if (previous != null) {
+			if (previous.spell != null) {
+				this.cursorSpell = previous.spell;
+			}
+			else {
+				this.cursorItem = previous.item;
+				this.cursorBagId = CURSOR_SOURCE_ACTIONBAR;
+			}
+		}
+		updateCursorVisual();
+		if (liftedFromContainer) {
+			notifyBagsChanged(); // the bag slot the item was lifted from renders again
+		}
+	}
+
+	private void syncActionBarGrid() {
+		final boolean shouldShow = cursorHasPayload();
+		if (shouldShow != this.actionBarGridShown) {
+			this.actionBarGridShown = shouldShow;
+			fireEvent(shouldShow ? ThirdPersonLuaXmlEvent.ACTIONBAR_SHOWGRID : ThirdPersonLuaXmlEvent.ACTIONBAR_HIDEGRID,
+					LuaValue.NIL);
+		}
+	}
+
+	/**
+	 * Fires ACTIONBAR_SLOT_CHANGED to the action buttons with the 1-based slot id
+	 * as arg1 (-1 = every slot), so they re-read the slot through the natives.
+	 */
+	public void notifyActionBarSlotChanged(final int slotId) {
+		fireEvent(ThirdPersonLuaXmlEvent.ACTIONBAR_SLOT_CHANGED, LuaValue.valueOf(slotId));
+	}
+
+	/** Dispatches the event with arg1 to every registered frame, isolating handler errors. */
+	private void fireEvent(final ThirdPersonLuaXmlEvent event, final LuaValue arg1) {
+		final LinkedHashSet<UIFrameLuaWrapper> registered = getRegistered(event);
+		for (final UIFrameLuaWrapper frameLuaWrapper : registered) {
+			try {
+				frameLuaWrapper.getFrame().getScripts().onEvent(event, arg1);
+			}
+			catch (final Exception e) {
+				// One frame's handler throwing must not abort the dispatch to the rest.
+				e.printStackTrace();
+			}
+		}
 	}
 
 	public void setCursorItemDisplayListener(final CursorItemDisplayListener listener) {
@@ -1707,7 +2004,19 @@ public class LuaEnvironment {
 		public void abilitiesChanged() {
 			final LinkedHashSet<UIFrameLuaWrapper> registered = getRegistered(ThirdPersonLuaXmlEvent.SPELLS_CHANGED);
 			for (final UIFrameLuaWrapper frameLuaWrapper : registered) {
-				frameLuaWrapper.getFrame().getScripts().onEvent(ThirdPersonLuaXmlEvent.SPELLS_CHANGED, this.unitKey);
+				try {
+					frameLuaWrapper.getFrame().getScripts().onEvent(ThirdPersonLuaXmlEvent.SPELLS_CHANGED,
+							this.unitKey);
+				}
+				catch (final Exception e) {
+					e.printStackTrace();
+				}
+			}
+			if (UNITKEY_PLAYER.equals(this.unitKey.tojstring())) {
+				// The bar is separate state from the spellbook, so it must be told too: drop
+				// spells the pawn lost and redraw (item abilities come and go as items move
+				// between bags/inventory, which also changes what is usable).
+				refreshActionBarAfterAbilitiesChanged();
 			}
 		}
 
@@ -1979,17 +2288,34 @@ public class LuaEnvironment {
 	 * periodically.
 	 */
 	public void notifyActionBarCooldownsChanged() {
-		final LinkedHashSet<UIFrameLuaWrapper> registered = getRegistered(
-				ThirdPersonLuaXmlEvent.ACTIONBAR_UPDATE_COOLDOWN);
-		for (final UIFrameLuaWrapper frameLuaWrapper : registered) {
-			try {
-				frameLuaWrapper.getFrame().getScripts().onEvent(ThirdPersonLuaXmlEvent.ACTIONBAR_UPDATE_COOLDOWN,
-						LuaValue.NIL);
+		fireEvent(ThirdPersonLuaXmlEvent.ACTIONBAR_UPDATE_COOLDOWN, LuaValue.NIL);
+		pollActionBarItemCounts();
+	}
+
+	/**
+	 * Redraws any item action button whose charge count changed since the last
+	 * poll (a consumable used from the bar/bag), and the bags with it, since there
+	 * is no engine event for a consumed charge.
+	 */
+	private void pollActionBarItemCounts() {
+		boolean anyChanged = false;
+		for (int slotId = 1; slotId <= NUM_ACTION_SLOTS; slotId++) {
+			final ActionSlotContent content = this.actionBar[slotId];
+			int count = 0;
+			if ((content != null) && (content.item != null)
+					&& (CItemSlotHolder.findHolderOf(this.pawnUnit, content.item) != null)) {
+				count = content.item.getCharges();
 			}
-			catch (final Exception e) {
-				// One frame's handler throwing must not abort the dispatch to the rest.
-				e.printStackTrace();
+			if (count != this.actionBarLastItemCount[slotId]) {
+				this.actionBarLastItemCount[slotId] = count;
+				if (content != null) {
+					notifyActionBarSlotChanged(slotId);
+					anyChanged = true;
+				}
 			}
+		}
+		if (anyChanged) {
+			notifyBagsChanged();
 		}
 	}
 
@@ -2118,63 +2444,71 @@ public class LuaEnvironment {
 		return unit.getUnitType().getLevel();
 	}
 
-	private void useAction(final CSimulation game, final GameUI rootFrame, final CUnit pawnUnit,
-			final CPlayerUnitOrderListener uiOrderListener, final int actionId) {
-		final CAbility ability = getAbility(actionId, "ability?");
-		if (ability != null) {
+	/** Uses the contents of the given 1-based action slot (button click / hotkey). */
+	private void useAction(final int actionId) {
+		final ActionOrder action = getActionOrder(actionId);
+		if (action != null) {
+			issueOrder(action);
+		}
+	}
 
-			int orderId = OrderIds.smart;
-			if (ability instanceof SingleOrderAbility) {
-				orderId = ((SingleOrderAbility) ability).getBaseOrderId();
-			}
-
-			final ExternStringMsgAbilityActivationReceiver activationReceiver = ExternStringMsgAbilityActivationReceiver.INSTANCE
-					.reset();
-			ability.checkCanUse(game, pawnUnit, pawnUnit.getPlayerIndex(), orderId, false, activationReceiver);
-			if (activationReceiver.isUseOk()) {
-				if (LuaEnvironment.this.targetUnit != null) {
-					final ExternStringMsgTargetCheckReceiver<CWidget> targetReceiver = ExternStringMsgTargetCheckReceiver
-							.<CWidget>getInstance().reset();
-					ability.checkCanTarget(game, pawnUnit, pawnUnit.getPlayerIndex(), orderId, false,
-							LuaEnvironment.this.targetUnit.getSimulationWidget(), targetReceiver);
-					if (targetReceiver.getTarget() != null) {
-						uiOrderListener.issueTargetOrder(pawnUnit.getHandleId(), ability.getHandleId(), orderId,
-								targetReceiver.getTarget().getHandleId(), false);
-					}
-					else {
-						final ExternStringMsgTargetCheckReceiver<Void> noTargetReceiver = ExternStringMsgTargetCheckReceiver
-								.<Void>getInstance().reset();
-						ability.checkCanTargetNoTarget(game, pawnUnit, pawnUnit.getPlayerIndex(), orderId, false,
-								noTargetReceiver);
-						if (noTargetReceiver.getExternStringKey() == null) {
-							uiOrderListener.issueImmediateOrder(pawnUnit.getHandleId(), ability.getHandleId(), orderId,
-									false);
-						}
-						else {
-							rootFrame.getUiSounds().getSound("HumanFemale_CantUseGeneric")
-									.play(rootFrame.getUiScene().audioContext, 0, 0, 0);
-						}
-					}
+	/**
+	 * Issues the order through the UI order listener the way a command-card click
+	 * would: checks usability, then targets the current target if the ability
+	 * accepts it, else casts with no target; plays the WoW "can't" voice lines on
+	 * failure. For items, {@code action.orderAbility} is the inventory/bag holding
+	 * the item and the order id its use-item order, which the holder forwards.
+	 */
+	private void issueOrder(final ActionOrder action) {
+		final CAbility ability = action.orderAbility;
+		final int orderId = action.orderId;
+		final ExternStringMsgAbilityActivationReceiver activationReceiver = ExternStringMsgAbilityActivationReceiver.INSTANCE
+				.reset();
+		ability.checkCanUse(this.game, this.pawnUnit, this.pawnUnit.getPlayerIndex(), orderId, false,
+				activationReceiver);
+		if (activationReceiver.isUseOk()) {
+			if (this.targetUnit != null) {
+				final ExternStringMsgTargetCheckReceiver<CWidget> targetReceiver = ExternStringMsgTargetCheckReceiver
+						.<CWidget>getInstance().reset();
+				ability.checkCanTarget(this.game, this.pawnUnit, this.pawnUnit.getPlayerIndex(), orderId, false,
+						this.targetUnit.getSimulationWidget(), targetReceiver);
+				if (targetReceiver.getTarget() != null) {
+					this.uiOrderListener.issueTargetOrder(this.pawnUnit.getHandleId(), ability.getHandleId(), orderId,
+							targetReceiver.getTarget().getHandleId(), false);
 				}
 				else {
 					final ExternStringMsgTargetCheckReceiver<Void> noTargetReceiver = ExternStringMsgTargetCheckReceiver
 							.<Void>getInstance().reset();
-					ability.checkCanTargetNoTarget(game, pawnUnit, pawnUnit.getPlayerIndex(), orderId, false,
-							noTargetReceiver);
+					ability.checkCanTargetNoTarget(this.game, this.pawnUnit, this.pawnUnit.getPlayerIndex(), orderId,
+							false, noTargetReceiver);
 					if (noTargetReceiver.getExternStringKey() == null) {
-						uiOrderListener.issueImmediateOrder(pawnUnit.getHandleId(), ability.getHandleId(), orderId,
-								false);
+						this.uiOrderListener.issueImmediateOrder(this.pawnUnit.getHandleId(), ability.getHandleId(),
+								orderId, false);
 					}
 					else {
-						rootFrame.getUiSounds().getSound("HumanFemale_CantCastGenericNoTa")
-								.play(rootFrame.getUiScene().audioContext, 0, 0, 0);
+						this.rootFrame.getUiSounds().getSound("HumanFemale_CantUseGeneric")
+								.play(this.rootFrame.getUiScene().audioContext, 0, 0, 0);
 					}
 				}
 			}
 			else {
-				rootFrame.getUiSounds().getSound("HumanFemale_CantUseGeneric").play(rootFrame.getUiScene().audioContext,
-						0, 0, 0);
+				final ExternStringMsgTargetCheckReceiver<Void> noTargetReceiver = ExternStringMsgTargetCheckReceiver
+						.<Void>getInstance().reset();
+				ability.checkCanTargetNoTarget(this.game, this.pawnUnit, this.pawnUnit.getPlayerIndex(), orderId,
+						false, noTargetReceiver);
+				if (noTargetReceiver.getExternStringKey() == null) {
+					this.uiOrderListener.issueImmediateOrder(this.pawnUnit.getHandleId(), ability.getHandleId(),
+							orderId, false);
+				}
+				else {
+					this.rootFrame.getUiSounds().getSound("HumanFemale_CantCastGenericNoTa")
+							.play(this.rootFrame.getUiScene().audioContext, 0, 0, 0);
+				}
 			}
+		}
+		else {
+			this.rootFrame.getUiSounds().getSound("HumanFemale_CantUseGeneric")
+					.play(this.rootFrame.getUiScene().audioContext, 0, 0, 0);
 		}
 	}
 
@@ -2183,7 +2517,7 @@ public class LuaEnvironment {
 		if (binding != null) {
 			if (binding.startsWith("ACTIONBUTTON")) {
 				final String keyText = binding.substring(12);
-				useAction(this.game, this.rootFrame, this.pawnUnit, this.uiOrderListener, Integer.parseInt(keyText));
+				useAction(Integer.parseInt(keyText));
 			}
 		}
 	}

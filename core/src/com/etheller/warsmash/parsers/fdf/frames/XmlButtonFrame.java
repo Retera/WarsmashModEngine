@@ -23,7 +23,7 @@ public class XmlButtonFrame extends GlueTextButtonFrame {
 			public void accept(final ThirdPersonLuaXmlButton button) {
 				final UIFrameScripts scripts = getScripts();
 				if (scripts != null) {
-					scripts.onClick(button);
+					scripts.onClickOrReceiveDrag(button);
 				}
 			}
 		});

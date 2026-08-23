@@ -182,6 +182,19 @@ public class CAbilityInventory extends AbstractGenericNoIconAbility implements C
 	}
 
 	@Override
+	public List<CAbility> getItemAbilitiesInSlot(final int slotIndex) {
+		if ((slotIndex < 0) || (slotIndex >= this.itemsHeldAbilities.length)) {
+			return new ArrayList<>();
+		}
+		return this.itemsHeldAbilities[slotIndex];
+	}
+
+	@Override
+	public int getUseItemOrderId(final int slotIndex) {
+		return OrderIds.itemuse00 + slotIndex;
+	}
+
+	@Override
 	public void removeItemForMove(final CSimulation game, final CUnit hero, final CItem item) {
 		for (int i = 0; i < this.itemsHeld.length; i++) {
 			if (this.itemsHeld[i] == item) {

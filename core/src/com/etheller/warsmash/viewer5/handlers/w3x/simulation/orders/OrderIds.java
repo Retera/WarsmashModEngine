@@ -901,6 +901,12 @@ public class OrderIds {
 	// base; the dragged item is the order target. A dedicated high range is used because
 	// itemdrag00 + index would overrun into the itemuse ids past 6 slots.
 	public static final int bagitemdrag00 = 999999100;
+	// Base id for USING the item held in a WoW bag/container slot (CAbilityBag),
+	// analogous to itemuse00..05 for the unit inventory. The slot index is the offset
+	// from this base; the order is addressed to the bag ability by handle id, which
+	// forwards it to the first ability granted by the item in that slot. Bags of up to
+	// 100 slots fit before the next reserved range.
+	public static final int bagitemuse00 = 999999300;
 
 	public static final int genericpaircommand = 852214008;
 }

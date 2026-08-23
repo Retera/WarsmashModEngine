@@ -1,5 +1,7 @@
 package com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.inventory;
 
+import java.util.List;
+
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CItem;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CSimulation;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
@@ -13,9 +15,11 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.CAbility;
  * UI can drag an item from any bag/inventory slot to any other.
  *
  * <p>
- * Crossing into the unit inventory grants the item's abilities (so it becomes
- * usable); crossing out of it removes them (items sit dormant in bags). Bag
- * implementations leave abilities alone.
+ * Every holder grants the carrier the abilities of the items it holds (so they
+ * are usable from the unit inventory and from any bag alike); moving an item out
+ * of a holder revokes the abilities that holder had granted for it and the
+ * destination holder grants them afresh, so an item's ability instances are
+ * always owned by exactly one holder slot.
  */
 public interface CItemSlotHolder {
 	int getSlotCount();
@@ -27,15 +31,29 @@ public interface CItemSlotHolder {
 	int getFirstEmptySlot();
 
 	/**
-	 * Removes the item from this holder for relocation: clears its slot and (for the
-	 * unit inventory) removes the abilities it had granted. The item is left hidden;
-	 * the caller re-files it into another holder.
+	 * The abilities currently granted to the carrier by the item in the given slot
+	 * (empty for an empty slot). The first one is the item's "use" ability that the
+	 * holder's item-use orders forward to.
+	 */
+	List<CAbility> getItemAbilitiesInSlot(int slotIndex);
+
+	/**
+	 * The Warcraft III order id that uses the item in the given slot of this holder
+	 * (itemuseNN for the unit inventory, bagitemuseNN for bags); address the order
+	 * to this holder's ability handle id.
+	 */
+	int getUseItemOrderId(int slotIndex);
+
+	/**
+	 * Removes the item from this holder for relocation: clears its slot and removes
+	 * the abilities it had granted. The item is left hidden; the caller re-files it
+	 * into another holder.
 	 */
 	void removeItemForMove(CSimulation game, CUnit hero, CItem item);
 
 	/**
 	 * Files the item into the given (assumed empty) slot, granting the item's
-	 * abilities if this holder is the unit inventory.
+	 * abilities to the carrier.
 	 */
 	void placeItemForMove(CSimulation game, CUnit hero, CItem item, int slotIndex);
 

@@ -27,6 +27,7 @@ public class RenderItem implements RenderWidget {
 	public SplatMover selectionPreviewHighlight;
 	private boolean hidden;
 	private boolean dead;
+	private boolean usingHeightOverride = false;
 
 	public RenderItem(final War3MapViewer map, final RenderItemType itemType, final float x, final float y,
 			final float z, final float angle, final CItem simulationItem) {
@@ -52,12 +53,13 @@ public class RenderItem implements RenderWidget {
 		}
 
 		this.instance = instance;
+		SequenceUtils.randomBirthSequence(instance);
 	}
-	
-	public void updateItemModel(final War3MapViewer map, RenderItemType itemType) {
+
+	public void updateItemModel(final War3MapViewer map, final RenderItemType itemType) {
 		this.instance.detach();
 		this.portraitModel.detach();
-		
+
 		this.portraitModel = itemType.getPortraitModel();
 		final MdxComplexInstance instance = (MdxComplexInstance) itemType.getModel().addInstance();
 		instance.move(this.location);
@@ -96,6 +98,7 @@ public class RenderItem implements RenderWidget {
 		if ((hidden || fogHidden) != this.hidden) {
 			this.hidden = hidden || fogHidden;
 			if (this.hidden) {
+				this.usingHeightOverride = false;
 				this.instance.hide();
 				if (this.shadow != null) {
 					this.shadow.hide();
@@ -145,7 +148,9 @@ public class RenderItem implements RenderWidget {
 			groundHeight = groundHeightTerrainAndWater;
 			currentWalkableUnder = null;
 		}
-		this.location[2] = this.simulationItem.getFlyHeight() + groundHeight;
+		if (!this.usingHeightOverride) {
+			this.location[2] = this.simulationItem.getFlyHeight() + groundHeight;
+		}
 
 		this.instance.moveTo(this.location);
 		if (this.shadow != null) {
@@ -177,6 +182,14 @@ public class RenderItem implements RenderWidget {
 	@Override
 	public float getZ() {
 		return this.location[2];
+	}
+
+	public void overrideZHeight(final float absoluteWorldHeight) {
+		this.location[2] = absoluteWorldHeight;
+		this.usingHeightOverride = true;
+		if (this.shadow != null) {
+			this.shadow.hide();
+		}
 	}
 
 	@Override

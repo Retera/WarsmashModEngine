@@ -4127,7 +4127,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 					final boolean shiftDown = isShiftDown();
 					this.activeCommandUnitTargetFilter.reset();
 					final RenderWidget rayPickUnit = this.war3MapViewer.rayPickUnit(screenX, worldScreenY,
-							this.activeCommandUnitTargetFilter);
+							this.activeCommandUnitTargetFilter, false);
 					if (rayPickUnit != null) {
 						useActiveCommandOnUnit(shiftDown, rayPickUnit);
 					}
@@ -4253,10 +4253,10 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 									.hasAlliance(getSelectedUnit().getSimulationUnit().getPlayerIndex(),
 											CAllianceType.SHARED_CONTROL))) {
 						RenderWidget rayPickUnit = this.war3MapViewer.rayPickUnit(screenX, worldScreenY,
-								this.anyClickableUnitFilter);
+								this.anyClickableUnitFilter, false);
 						if (rayPickUnit == null) {
 							rayPickUnit = this.war3MapViewer.rayPickUnit(screenX, worldScreenY,
-									this.anyTargetableUnitFilter);
+									this.anyTargetableUnitFilter, false);
 						}
 						if (rayPickUnit != null) {
 							boolean ordered = false;
@@ -4862,7 +4862,8 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 	private void updateMouseOverUnit(final int screenX, final float worldScreenY) {
 		final RenderWidget newMouseOverUnit;
 		if (this.userControlEnabled) {
-			newMouseOverUnit = this.war3MapViewer.rayPickUnit(screenX, worldScreenY, this.anyClickableUnitFilter);
+			newMouseOverUnit = this.war3MapViewer.rayPickUnit(screenX, worldScreenY, this.anyClickableUnitFilter,
+					false);
 		}
 		else {
 			newMouseOverUnit = null;

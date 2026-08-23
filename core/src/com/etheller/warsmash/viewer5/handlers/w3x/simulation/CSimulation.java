@@ -823,7 +823,7 @@ public class CSimulation implements CPlayerAPI, CFogMaskSettings {
 	}
 
 	public void unitGainLevelEvent(final CUnit unit, final boolean showEffect) {
-		this.players.get(unit.getPlayerIndex()).fireHeroLevelEvents(unit);
+		unit.fireHeroLevelEvents(this);
 		if (showEffect) {
 			this.simulationRenderController.spawnGainLevelEffect(unit);
 		}
@@ -1329,6 +1329,10 @@ public class CSimulation implements CPlayerAPI, CFogMaskSettings {
 				}
 			}
 		});
+	}
+
+	public void runPostUpdate(final Runnable runnable) {
+		this.postUpdateCallbacks.add(runnable);
 	}
 
 	public void setupPlayerPawn(final CUnit unit, final CAbilityPlayerPawn abilityPlayerPawn,

@@ -93,6 +93,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.War3MapViewer;
 import com.etheller.warsmash.viewer5.handlers.w3x.camera.CustomCameraSetup;
 import com.etheller.warsmash.viewer5.handlers.w3x.environment.PathingGrid;
 import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.RenderDestructable;
+import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.RenderItem;
 import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.RenderSpellEffect;
 import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.RenderUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.ability.AbilityDataUI;
@@ -1032,6 +1033,41 @@ public class Jass2 {
 						}
 						return BooleanJassValue.of(abilityHandleId != 0);
 					});
+			final JassFunction issuePointOrder = (arguments, globalScope, triggerScope) -> {
+				final CUnit whichUnit = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());
+				if (whichUnit == null) {
+					return BooleanJassValue.FALSE;
+				}
+				final String orderIdString = arguments.get(1).visit(StringJassValueVisitor.getInstance());
+				final double whichLocationX = arguments.get(2).visit(RealJassValueVisitor.getInstance());
+				final double whichLocationY = arguments.get(3).visit(RealJassValueVisitor.getInstance());
+				final CPlayerUnitOrderExecutor defaultPlayerUnitOrderExecutor = CommonEnvironment.this.simulation
+						.getDefaultPlayerUnitOrderExecutor(whichUnit.getPlayerIndex());
+				final BooleanAbilityActivationReceiver activationReceiver = BooleanAbilityActivationReceiver.INSTANCE;
+				int abilityHandleId = 0;
+				final int orderId = OrderIdUtils.getOrderId(orderIdString);
+				AbilityPointTarget targetAsPoint = new AbilityPointTarget((float) whichLocationX,
+						(float) whichLocationY);
+				for (final CAbility ability : whichUnit.getAbilities()) {
+					ability.checkCanUse(CommonEnvironment.this.simulation, whichUnit, whichUnit.getPlayerIndex(),
+							orderId, false, activationReceiver);
+					if (activationReceiver.isOk()) {
+						final PointAbilityTargetCheckReceiver targetReceiver = PointAbilityTargetCheckReceiver.INSTANCE;
+						ability.checkCanTarget(CommonEnvironment.this.simulation, whichUnit, whichUnit.getPlayerIndex(),
+								orderId, false, targetAsPoint, targetReceiver.reset());
+						if (targetReceiver.getTarget() != null) {
+							targetAsPoint = targetReceiver.getTarget();
+							abilityHandleId = ability.getHandleId();
+						}
+					}
+				}
+				if (abilityHandleId != 0) {
+					defaultPlayerUnitOrderExecutor.issuePointOrder(whichUnit.getHandleId(), abilityHandleId, orderId,
+							targetAsPoint.x, targetAsPoint.y, false);
+				}
+				return BooleanJassValue.of(abilityHandleId != 0);
+			};
+			jassProgramVisitor.getJassNativeManager().createNative("IssuePointOrder", issuePointOrder);
 			final JassFunction issuePointOrderById = (arguments, globalScope, triggerScope) -> {
 				final CUnit whichUnit = arguments.get(0).visit(ObjectJassValueVisitor.getInstance());
 				if (whichUnit == null) {
@@ -3235,6 +3271,16 @@ public class Jass2 {
 								final RenderUnit renderPeer = war3MapViewer.getRenderPeer(whichUnit);
 								renderPeer.location[2] = positionX;
 							}
+						}
+						return null;
+					});
+			jassProgramVisitor.getJassNativeManager().createNative("SetItemRenderZ",
+					(arguments, globalScope, triggerScope) -> {
+						final CItem whichItem = nullable(arguments, 0, ObjectJassValueVisitor.getInstance());
+						final float positionX = arguments.get(1).visit(RealJassValueVisitor.getInstance()).floatValue();
+						if (whichItem != null) {
+							final RenderItem renderItem = war3MapViewer.getRenderPeer(whichItem);
+							renderItem.overrideZHeight(positionX);
 						}
 						return null;
 					});

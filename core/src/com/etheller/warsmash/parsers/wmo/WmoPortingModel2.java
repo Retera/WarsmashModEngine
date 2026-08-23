@@ -502,7 +502,9 @@ public class WmoPortingModel2 extends com.etheller.warsmash.viewer5.Model<WmoPor
 			// lifecycle (no separate per-frame system to leak).
 			final boolean animatedLiquid = addLiquidGeosets(portedModel, group, extentCenter, parser,
 					claimedLiquidCells, wmoLiquidSurfaceHeight,
-					terrainInterface.getLiquidType(extentCenter.x, extentCenter.y));
+					liquidType/*
+								 * , terrainInterface.getLiquidType(extentCenter.x, extentCenter.y)
+								 */);
 
 			// NOTE: for now, instead of building BSP we are being very dumb, creating
 			// corresponding

@@ -113,6 +113,7 @@ import com.etheller.warsmash.viewer5.handlers.tga.TgaFile;
 import com.etheller.warsmash.viewer5.handlers.w3x.AnimationTokens.SecondaryTag;
 import com.etheller.warsmash.viewer5.handlers.w3x.SplatModel.SplatMover;
 import com.etheller.warsmash.viewer5.handlers.w3x.environment.BuildingShadow;
+import com.etheller.warsmash.viewer5.handlers.w3x.environment.CompoundTerrainInterface;
 import com.etheller.warsmash.viewer5.handlers.w3x.environment.PathingGrid;
 import com.etheller.warsmash.viewer5.handlers.w3x.environment.PathingGrid.PathingType;
 import com.etheller.warsmash.viewer5.handlers.w3x.environment.PathingGrid.RemovablePathingMapInstance;
@@ -596,6 +597,18 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 		this.lastLoadedMapInformation = war3MapW3i;
 
 		return new MapLoaderWdt(wdtMap, war3MapW3i, localPlayerIndex);
+	}
+
+	public MapLoaderInterface createWdtMapsLoader(final List<WdtMap> wdtMaps, final int localPlayerIndex)
+			throws IOException {
+		this.localPlayerIndex = localPlayerIndex;
+		this.mapMpq = this.dataSource;
+		final War3MapW3i war3MapW3i = new War3MapW3i(null);
+		war3MapW3i.generateDefaultEmpty();
+
+		this.lastLoadedMapInformation = war3MapW3i;
+
+		return new MapLoaderMultiWdt(wdtMaps, war3MapW3i, localPlayerIndex);
 	}
 
 	public SimulationRenderComponentLightning createLightning(final War3ID lightningId,
@@ -2164,11 +2177,12 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 		this.confirmationInstance.vertexColor[2] = blue;
 	}
 
-	public RenderWidget rayPickUnit(final float x, final float y) {
-		return this.rayPickUnit(x, y, CWidgetFilterFunction.ACCEPT_ALL);
+	public RenderWidget rayPickUnit(final float x, final float y, final boolean allowUnderground) {
+		return this.rayPickUnit(x, y, CWidgetFilterFunction.ACCEPT_ALL, allowUnderground);
 	}
 
-	public RenderWidget rayPickUnit(final float x, final float y, final CWidgetFilterFunction filter) {
+	public RenderWidget rayPickUnit(final float x, final float y, final CWidgetFilterFunction filter,
+			final boolean allowUnderground) {
 		final float[] ray = rayHeap;
 		mousePosHeap.set(x, y);
 		this.worldScene.camera.screenToWorldRay(ray, mousePosHeap);
@@ -2183,14 +2197,14 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 					&& instance.intersectRayWithCollisionSimple(gdxRayHeap, intersectionHeap)) {
 				if (filter.call(unit.getSimulationWidget())) {
 					final float groundHeight = this.terrain.getGroundHeight(intersectionHeap.x, intersectionHeap.y);
-					if (intersectionHeap.z > groundHeight) {
+					if (allowUnderground || (intersectionHeap.z > groundHeight)) {
 						if ((entity == null) && !unit.isIntersectedOnMeshAlways()) {
 							entity = unit;
 						}
 						else {
 							if (instance.intersectRayWithMeshSlow(gdxRayHeap, intersectionHeap)) {
-								if (intersectionHeap.z > this.terrain.getGroundHeight(intersectionHeap.x,
-										intersectionHeap.y)) {
+								if (allowUnderground || (intersectionHeap.z > this.terrain
+										.getGroundHeight(intersectionHeap.x, intersectionHeap.y))) {
 									this.worldScene.camera.worldToCamera(intersectionHeap, intersectionHeap);
 									if ((entity == null) || (intersectionHeap.z < intersectionHeap2.z)) {
 										entity = unit;
@@ -3326,7 +3340,9 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 						? SequenceUtils.EMPTY
 						: renderUnit.getTypeData().getRequiredAnimationNamesForAttachments();
 				final RenderMountEffect renderMountEffect = new RenderMountEffect(modelInstance, unitModelInstance,
-						renderUnit, War3MapViewer.this, RenderMountEffect.DEFAULT_ANIMATION_QUEUE,
+						renderUnit, War3MapViewer.this,
+						modelName.toLowerCase().startsWith("fishboat") ? RenderMountEffect.DEFAULT_ANIMATION_QUEUE2
+								: RenderMountEffect.DEFAULT_ANIMATION_QUEUE,
 						requiredAnimationNamesForAttachments);
 				War3MapViewer.this.projectiles.add(renderMountEffect);
 				return renderMountEffect;
@@ -3890,6 +3906,281 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 						System.out.println("Max: " + Arrays.toString(doodadMax));
 					}
 
+					War3MapViewer.this.doodadsReady = true;
+					War3MapViewer.this.anyReady = true;
+				}
+				else {
+					throw new IllegalStateException(
+							"transcription of JS has not loaded a map and has no JS async promises");
+				}
+			});
+
+			this.loadMapTasks.add(() -> {
+				loadSounds();
+			});
+
+			this.loadMapTasks.add(() -> {
+				War3MapViewer.this.terrain.createWaves();
+			});
+			this.loadMapTasks.add(() -> {
+				loadUnitsAndItems(null, War3MapViewer.this.allObjectData, War3MapViewer.this.lastLoadedMapInformation);
+			});
+
+			this.startingTaskCount = this.loadMapTasks.size();
+		}
+
+		@Override
+		public boolean process() throws IOException {
+			final LoadMapTask nextTask = this.loadMapTasks.pollFirst();
+			nextTask.run();
+			return this.loadMapTasks.isEmpty();
+		}
+
+		@Override
+		public void addLoadTask(final LoadMapTask task) {
+			this.loadMapTasks.add(task);
+		}
+
+		@Override
+		public float getCompletionRatio() {
+			return 1.0f - (this.loadMapTasks.size() / (float) this.startingTaskCount);
+		}
+
+		@Override
+		public char getTileset() {
+			return this.tileset;
+		}
+	}
+
+	public final class MapLoaderMultiWdt implements MapLoaderInterface {
+
+		private static final int IRONFORGE_FRONT = 381;
+		private static final int ELWYNN_GOLDSHIRE = 511;
+		private static final int ZUL_GURUB_ENTRANCE = 600;
+		private static final int STRANGLETHORN_SOMEWHERE = ZUL_GURUB_ENTRANCE - 1;
+		private static final int SKY_FISH_HORDE_BASE = 615;
+		private static final int WESTFALL_SOMEWHERE = 543;
+		private static final int WESTFALL_GRYPHON_CAR_AREA = 544;
+		private static final int DUSKWOOD_SOMEWHERE = 545;
+		private static final int HINTERLANDS_TROLLS = 233;
+		private static final int WETLANDS_SOMEWHERE = 319;
+		private static final int SOME_ARBITRARY_BLOCK_INDEX = IRONFORGE_FRONT;
+		private final LinkedList<LoadMapTask> loadMapTasks = new LinkedList<>();
+		private final int startingTaskCount;
+
+		private char tileset;
+
+		private War3MapW3e terrainData;
+		private final War3MapW3e[] terrainDatas;
+
+		private War3MapWpm terrainPathing;
+
+		List<TerrainWdt> terrainWdts = new ArrayList<>();
+		CompoundTerrainInterface compoundTerrain;
+
+		private MapLoaderMultiWdt(final List<WdtMap> maps, final War3MapW3i w3iFile, final int localPlayerIndex) {
+			final PathSolver wc3PathSolver = War3MapViewer.this.wc3PathSolver;
+
+//		final TileHeader tileHeader = map.tileHeaders.get(SOME_ARBITRARY_BLOCK_INDEX);
+
+			this.loadMapTasks.add(() -> {
+				this.tileset = w3iFile.getTileset();
+			});
+
+			this.loadMapTasks.add(() -> {
+				War3MapViewer.this.worldEditStrings = new WorldEditStrings(War3MapViewer.this.dataSource);
+			});
+			this.loadMapTasks.add(() -> {
+				loadSLKs(War3MapViewer.this.worldEditStrings);
+			});
+
+			this.loadMapTasks.add(() -> {
+				War3MapViewer.this.solverParams.tileset = Character.toLowerCase(this.tileset);
+			});
+
+			this.loadMapTasks.add(() -> {
+				this.terrainData = War3MapW3e.generateConverted(maps);
+			});
+			int mapIdx = 0;
+			final float widthAllMaps = 64 * 16 * 8 * 128f * maps.size();
+			this.terrainDatas = new War3MapW3e[maps.size()];
+			for (final WdtMap map : maps) {
+				final int fMapIdx = mapIdx;
+				this.loadMapTasks.add(() -> {
+					this.terrainDatas[fMapIdx] = War3MapW3e.generateConverted(map);
+					// We need to offset the terrain datas by some amount, so the maps don't
+					// coincide
+					final float offsetInAllMapsWidth = (64 * 16 * 8 * 128f) * fMapIdx;
+					final float offset = offsetInAllMapsWidth - (widthAllMaps / 2.0f);
+					this.terrainDatas[fMapIdx].getCenterOffset()[0] += offset;
+				});
+				mapIdx++;
+			}
+
+			this.loadMapTasks.add(() -> {
+				this.terrainPathing = War3MapWpm.generateConverted(null, this.terrainData);
+			});
+
+			this.loadMapTasks.add(() -> {
+				final float[] centerOffset = this.terrainData.getCenterOffset();
+				final int[] mapSize = this.terrainData.getMapSize();
+
+				War3MapViewer.this.anyReady = true;
+				War3MapViewer.this.cliffsReady = true;
+
+				// Override the grid based on the map.
+				War3MapViewer.this.worldScene.grid = new Grid(centerOffset[0], centerOffset[1],
+						(mapSize[0] * 128) - 128, (mapSize[1] * 128) - 128, 16 * 8 * 128, 16 * 8 * 128);
+			});
+
+			mapIdx = 0;
+			for (final WdtMap map : maps) {
+				final int fMapIdx = mapIdx;
+				this.loadMapTasks.add(() -> {
+					System.out.println("Reading terrain " + fMapIdx);
+					this.terrainWdts.add(new TerrainWdt(map, this.terrainDatas[fMapIdx], this.terrainPathing, w3iFile,
+							War3MapViewer.this.webGL, War3MapViewer.this.dataSource,
+							War3MapViewer.this.worldEditStrings, War3MapViewer.this, War3MapViewer.this.worldEditData));
+				});
+				mapIdx++;
+			}
+			this.loadMapTasks.add(() -> {
+				this.compoundTerrain = new CompoundTerrainInterface(this.terrainWdts, this.terrainDatas,
+						this.terrainData, this.terrainPathing);
+				War3MapViewer.this.terrain = this.compoundTerrain;
+				War3MapViewer.this.terrainReady = true;
+			});
+
+			this.loadMapTasks.add(() -> {
+				System.out.println("Configuring confirmation instance");
+				final MdxModel confirmation = (MdxModel) load("UI\\Feedback\\Confirmation\\Confirmation.mdx",
+						PathSolver.DEFAULT, null);
+				War3MapViewer.this.confirmationInstance = (MdxComplexInstance) confirmation.addInstance();
+				War3MapViewer.this.confirmationInstance
+						.setSequenceLoopMode(SequenceLoopMode.NEVER_LOOP_AND_HIDE_WHEN_DONE);
+				War3MapViewer.this.confirmationInstance.setSequence(0);
+				War3MapViewer.this.confirmationInstance.setScene(War3MapViewer.this.worldScene);
+			});
+
+			this.loadMapTasks.add(() -> {
+				System.out.println("Loading all object data");
+				if (War3MapViewer.this.preloadedWTS != null) {
+					War3MapViewer.this.allObjectData = Warcraft3MapRuntimeObjectData.load(War3MapViewer.this.dataSource,
+							true, War3MapViewer.this.preloadedWTS);
+				}
+				else {
+					War3MapViewer.this.allObjectData = Warcraft3MapRuntimeObjectData.load(War3MapViewer.this.dataSource,
+							true);
+				}
+			});
+			this.loadMapTasks.add(() -> {
+				System.out.println("creating CSimulation");
+				War3MapViewer.this.simulation = new CSimulation(War3MapViewer.this.mapConfig, w3iFile.getVersion(),
+						War3MapViewer.this.miscData, War3MapViewer.this.allObjectData.getUnits(),
+						War3MapViewer.this.allObjectData.getItems(),
+						War3MapViewer.this.allObjectData.getDestructibles(),
+						War3MapViewer.this.allObjectData.getAbilities(), War3MapViewer.this.allObjectData.getUpgrades(),
+						War3MapViewer.this.allObjectData.getStandardUpgradeEffectMeta(),
+						new SimulationRenderControllerImplementation(localPlayerIndex),
+						War3MapViewer.this.terrain.pathingGrid, War3MapViewer.this.terrain.getEntireMap(),
+						War3MapViewer.this.seededRandom, War3MapViewer.this.commandErrorListener, true);
+				System.out.println("finished creating CSimulation");
+			});
+
+			this.loadMapTasks.add(() -> {
+				System.out.println("creating doodads ");
+				final Rectangle entireMap = War3MapViewer.this.terrain.getEntireMap();
+				War3MapViewer.this.walkableObjectsTree = new Quadtree<>(War3MapViewer.this.terrain.getEntireMap());
+				final Vector2 center = entireMap.getCenter(mousePosHeap);
+				War3MapViewer.this.walkableComponentTree = new Quadtree<>(
+						new Rectangle(center.x - (entireMap.getWidth()), center.y - (entireMap.getHeight()),
+								(entireMap.getWidth() * 2), (entireMap.getHeight() * 2)));
+			});
+			mapIdx = 0;
+			this.loadMapTasks.add(() -> {
+				int fMapIndex = 0;
+				War3ID baseDoodadId = War3ID.fromString("0000");
+				final Map<String, War3ID> doodadNameToId = new HashMap<>();
+				for (final WdtMap subMap : maps) {
+					final List<War3ID> doodadNameKeys = new ArrayList<>();
+					final List<War3ID> worldModelObjectNameKeys = new ArrayList<>();
+					final TerrainWdt terrain = this.terrainWdts.get(fMapIndex);
+					if (War3MapViewer.this.doodadsAndDestructiblesLoaded) {
+
+						final long minX = Integer.MAX_VALUE, minY = Integer.MAX_VALUE;
+						for (final String name : subMap.doodadModelFileNames) {
+							War3ID cloneIdBase = doodadNameToId.get(name);
+							if (cloneIdBase == null) {
+								final ObjectData war3Doodads = War3MapViewer.this.allObjectData.getDoodads();
+								cloneIdBase = MutableObjectData.advanceId(baseDoodadId);
+								final String cloneId = cloneIdBase.toString();
+								war3Doodads.cloneUnit("YOtf", cloneId);
+								final GameObject createdDoodad = war3Doodads.get(cloneId);
+								createdDoodad.setField("file", name);
+								createdDoodad.setField("soundLoop", "_"); // YOtf has a sound we dont want
+								createdDoodad.setField("minScale", "0.0");
+								createdDoodad.setField("maxScale", "10000.0");
+								baseDoodadId = cloneIdBase;
+							}
+							doodadNameKeys.add(cloneIdBase);
+						}
+						for (final String name : subMap.worldModelFileNames) {
+							War3ID cloneIdBase = doodadNameToId.get(name);
+							if (cloneIdBase == null) {
+								final ObjectData war3Doodads = War3MapViewer.this.allObjectData.getDoodads();
+								cloneIdBase = MutableObjectData.advanceId(baseDoodadId);
+								final String cloneId = cloneIdBase.toString();
+								war3Doodads.cloneUnit("YOtf", cloneId);
+								final GameObject createdDoodad = war3Doodads.get(cloneId);
+								String filepath = name;
+								if (!filepath.toLowerCase().endsWith(".mpq")) {
+									filepath += ".mpq";
+								}
+								createdDoodad.setField("file", filepath);
+								createdDoodad.setField("soundLoop", "_"); // YOtf has a sound we dont want
+								createdDoodad.setField("minScale", "0.0");
+								createdDoodad.setField("maxScale", "10000.0");
+								baseDoodadId = cloneIdBase;
+							}
+							worldModelObjectNameKeys.add(cloneIdBase);
+						}
+						for (final TileHeader tileHeader : subMap.tileHeaders) {
+							System.out.println("loading doodads from tile header: " + tileHeader.idx);
+//					tileHeader.
+
+							terrain.doodadNameKeys = doodadNameKeys;// tileHeaderToDoodadIds.put(tileHeader,
+																	// doodadNameKeys);
+							terrain.worldModelObjectNameKeys = worldModelObjectNameKeys;
+
+							final float[] centerOffset = this.terrainData.getCenterOffset();
+							final float tilesize = 533.3333f;
+							final float wowToWc3Factor = 128.0f / ((tilesize / 16) / 8);
+//					final int tileIdx = tileHeader.idx;
+							final float wowXOffset = 0;// (tileIdx % 64) * tilesize;
+							final float wowYOffset = 0;// (tileIdx / 64) * tilesize;
+							final float halfWorldSize = tilesize * 32;
+							final float worldSize = tilesize * 64;
+							final float[] doodadMin = new float[3];
+							final float[] doodadMax = new float[3];
+							Arrays.fill(doodadMin, Integer.MAX_VALUE);
+							Arrays.fill(doodadMax, Integer.MIN_VALUE);
+							final Set<Long> usedSet = new HashSet<>();
+							System.out.println("Min: " + Arrays.toString(doodadMin));
+							System.out.println("Max: " + Arrays.toString(doodadMax));
+						}
+
+						War3MapViewer.this.doodadsReady = true;
+						War3MapViewer.this.anyReady = true;
+					}
+					else {
+						throw new IllegalStateException(
+								"transcription of JS has not loaded a map and has no JS async promises");
+					}
+					fMapIndex++;
+				}
+			});
+			this.loadMapTasks.add(() -> {
+				if (War3MapViewer.this.doodadsAndDestructiblesLoaded) {
 					War3MapViewer.this.doodadsReady = true;
 					War3MapViewer.this.anyReady = true;
 				}

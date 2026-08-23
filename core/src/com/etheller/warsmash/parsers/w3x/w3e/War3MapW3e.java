@@ -324,4 +324,54 @@ public class War3MapW3e {
 
 		return terrainFile;
 	}
+
+	public static War3MapW3e generateConverted(final List<WdtMap> maps) {
+		War3MapW3e terrainFile;
+		try {
+			terrainFile = new War3MapW3e(null);
+		}
+		catch (final IOException e) {
+			throw new RuntimeException(e);
+		}
+
+		final float tilesize = 533.3333f;
+		final float wowToWc3Factor = 128.0f / ((tilesize / 16) / 8);
+		int minX = Integer.MAX_VALUE, minY = Integer.MAX_VALUE;
+		int maxX = Integer.MIN_VALUE, maxY = Integer.MIN_VALUE;
+		int mapIndex = 0;
+		for (final WdtMap map : maps) {
+			for (final TileHeader header : map.tileHeaders) {
+				final int mapBaseX = mapIndex * 64;
+				final int tileIdx = header.idx;
+				final int blockX = mapBaseX + (tileIdx % 64);
+				final float wowXOffset = blockX * tilesize;
+				final int blockY = 63 - (tileIdx / 64);
+				final float wowYOffset = blockY * tilesize;
+
+				minX = Math.min(blockX, minX);
+				minY = Math.min(blockY, minY);
+				maxX = Math.max(blockX, maxX);
+				maxY = Math.max(blockY, maxY);
+			}
+			mapIndex++;
+		}
+
+		terrainFile.version = 0; // TODO
+		terrainFile.tileset = 'I';
+		terrainFile.hasCustomTileset = 1;
+
+		terrainFile.groundTiles.add(War3ID.fromString("Wsnw"));
+		terrainFile.cliffTiles.add(War3ID.fromString("CLdi"));
+
+//		terrainFile.mapSize[0] = (((maxX - minX) + 1) * 16 * 8) + 1;
+//		terrainFile.mapSize[1] = (((maxY - minY) + 1) * 16 * 8) + 1;
+		terrainFile.mapSize[0] = (((63) + 1) * 16 * 8 * maps.size()) + 1;
+		terrainFile.mapSize[1] = (((63) + 1) * 16 * 8) + 1;
+		terrainFile.centerOffset[0] = (-minX * 16 * 8 * 128f) + ((-(((maxX - minX) + 1) * 16 * 8) * 128f) / 2.0f);
+		terrainFile.centerOffset[1] = (-minY * 16 * 8 * 128f) + ((-(((maxY - minY) + 1) * 16 * 8) * 128f) / 2.0f);
+
+		terrainFile.corners = null;
+
+		return terrainFile;
+	}
 }

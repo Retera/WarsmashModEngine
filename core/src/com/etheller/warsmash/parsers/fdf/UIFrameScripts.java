@@ -125,10 +125,10 @@ public class UIFrameScripts {
 	}
 
 	/**
-	 * Fires a StatusBar's OnValueChanged handler with the new value as arg1 (WoW passes
-	 * the raw value). This is what lets e.g. HealthBar_OnValueChanged run its
-	 * SetStatusBarColor logic, so health bars are tinted (green) instead of rendering
-	 * the bare white bar texture.
+	 * Fires a StatusBar's OnValueChanged handler with the new value as arg1 (WoW
+	 * passes the raw value). This is what lets e.g. HealthBar_OnValueChanged run
+	 * its SetStatusBarColor logic, so health bars are tinted (green) instead of
+	 * rendering the bare white bar texture.
 	 */
 	public void onValueChanged(final LuaValue value) {
 		if (this.OnValueChanged != null) {
@@ -199,6 +199,28 @@ public class UIFrameScripts {
 			try {
 				this.luaEnvironment.getGlobals().set("event", event.name());
 				this.luaEnvironment.getGlobals().set("arg1", arg1);
+				this.OnEvent.call();
+			}
+			catch (final Exception exc) {
+				exc.printStackTrace();
+			}
+			finally {
+				this.luaEnvironment.restoreThis(prevThis);
+			}
+		}
+	}
+
+	public void onEvent(final ThirdPersonLuaXmlEvent event, final LuaValue arg1, final LuaValue arg2,
+			final LuaValue arg3, final LuaValue arg4, final LuaValue arg5) {
+		if (this.OnEvent != null) {
+			final LuaValue prevThis = this.luaEnvironment.loadSavingThis(this.thisFrame);
+			try {
+				this.luaEnvironment.getGlobals().set("event", event.name());
+				this.luaEnvironment.getGlobals().set("arg1", arg1);
+				this.luaEnvironment.getGlobals().set("arg2", arg2);
+				this.luaEnvironment.getGlobals().set("arg3", arg3);
+				this.luaEnvironment.getGlobals().set("arg4", arg4);
+				this.luaEnvironment.getGlobals().set("arg5", arg5);
 				this.OnEvent.call();
 			}
 			catch (final Exception exc) {

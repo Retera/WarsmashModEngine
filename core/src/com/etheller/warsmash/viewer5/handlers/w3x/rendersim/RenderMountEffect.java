@@ -15,6 +15,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.War3MapViewer;
 
 public class RenderMountEffect implements RenderEffect {
 	public static final PrimaryTag[] DEFAULT_ANIMATION_QUEUE = { PrimaryTag.SPELLCASTOMNI, PrimaryTag.MOUNT };
+	public static final PrimaryTag[] DEFAULT_ANIMATION_QUEUE2 = { PrimaryTag.SPELLCASTOMNI, PrimaryTag.READY1H };
 	private final SequenceLoopMode sequenceLoopMode;
 	private final MdxComplexInstance mountModelInstance;
 	private final MdxComplexInstance unitModelInstance;

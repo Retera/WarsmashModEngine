@@ -124,6 +124,8 @@ import net.warsmash.uberserver.LoginFailureReason;
 import net.warsmash.uberserver.ServerErrorMessageType;
 
 public class MenuUI {
+	private static final String AZEROTH_AND_KALIMDOR = "azeroth_and_kalimdor";
+	private static final String[] AZEROTH_AND_KALIMDOR_FILENAMES = { "Kalimdor.wdt", "Azeroth.wdt" };
 	private static final Vector2 screenCoordsVector = new Vector2();
 	private static boolean ENABLE_NOT_YET_IMPLEMENTED_BUTTONS = false;
 
@@ -1709,7 +1711,39 @@ public class MenuUI {
 			viewer.enableAudio();
 		}
 		try {
-			if (mapFilename.toLowerCase().endsWith(WdtMap.EXTENSION)) {
+			if (mapFilename.toLowerCase().equals(AZEROTH_AND_KALIMDOR)) {
+				viewer.loadWorldEditData();
+
+				final List<DataSource> dataSources = new ArrayList<>();
+				final List<WdtMap> maps = new ArrayList<>();
+				dataSources.add(codebase);
+				for (final String subMapFilename : AZEROTH_AND_KALIMDOR_FILENAMES) {
+
+					final String mpqFileName = subMapFilename + ".MPQ";
+					final File mpqFile = new File(mpqFileName);
+					final ByteBuffer mpqBytes = (mpqFile.exists()
+							? new FolderDataSource(mpqFile.getParentFile().toPath()).read(mpqFile.getName())
+							: codebase.read(mpqFileName));
+					final SeekableByteChannel mpqChannel = new SeekableInMemoryByteChannel(mpqBytes.array());
+					final MpqDataSource mapMpqDataSource;
+					try {
+						mapMpqDataSource = new MpqDataSource(new MPQArchive(mpqChannel), mpqChannel);
+					}
+					catch (final MPQException e) {
+						throw new IOException(e);
+					}
+					dataSources.add(mapMpqDataSource);
+
+					final String interiorWdtName = new File(subMapFilename).getName();
+					final WdtMap map = new WdtMap(mapMpqDataSource.read(interiorWdtName));
+					maps.add(map);
+				}
+				viewer.setDataSource(new CompoundDataSource(dataSources));
+
+				// The interior WDT is hashed under the outer name with ".MPQ" stripped.
+				this.loadingMap = new LoadingMap(viewer, maps);
+			}
+			else if (mapFilename.toLowerCase().endsWith(WdtMap.EXTENSION)) {
 				viewer.loadWorldEditData();
 
 				// The map ships wrapped in an extra MPQ layer named "<name>.wdt.MPQ".
@@ -1803,7 +1837,42 @@ public class MenuUI {
 		this.mainMenuFrame.setVisible(false);
 
 		try {
-			if (mapFilename.toLowerCase().endsWith(WdtMap.EXTENSION)) {
+			if (mapFilename.toLowerCase().equals(AZEROTH_AND_KALIMDOR)) {
+				final War3MapConfig war3MapConfig = new War3MapConfig(WarsmashConstants.MAX_PLAYERS);
+				MenuUI.this.currentMapConfig = war3MapConfig;
+				for (int i = 0; i < WarsmashConstants.MAX_PLAYERS; i++) {
+					final CBasePlayer player = this.currentMapConfig.getPlayer(i);
+					player.setController(CMapControl.USER);
+					player.setRacePref(WarsmashConstants.RACE_MANAGER.getRacePreference(4));
+				}
+				// WDT maps have no .w3i, but their war3map.j config() still defines
+				// start locations; run it against the wrapping MPQ + codebase so
+				// the camera (and player pawn) starts where the map says.
+				try {
+					final List<DataSource> allDataSources = new ArrayList<>();
+					allDataSources.add(MenuUI.this.dataSource);
+					for (final String subMapFilename : AZEROTH_AND_KALIMDOR_FILENAMES) {
+						final String mpqFileName = subMapFilename + ".MPQ";
+						final File mpqFile = new File(mpqFileName);
+						final ByteBuffer mpqBytes = (mpqFile.exists()
+								? new FolderDataSource(mpqFile.getParentFile().toPath()).read(mpqFile.getName())
+								: MenuUI.this.dataSource.read(mpqFileName));
+
+						final SeekableByteChannel mpqChannel = new SeekableInMemoryByteChannel(mpqBytes.array());
+						final MpqDataSource mapMpqDataSource = new MpqDataSource(new MPQArchive(mpqChannel),
+								mpqChannel);
+						allDataSources.add(mapMpqDataSource);
+					}
+					final DataSource configDataSource = new CompoundDataSource(allDataSources);
+					Jass2.loadConfig(configDataSource, MenuUI.this.uiViewport, MenuUI.this.uiScene,
+							MenuUI.this.rootFrame, war3MapConfig, WarsmashConstants.JASS_FILE_LIST).config();
+				}
+				catch (final Exception exc) {
+					System.err.println("Unable to run config() for WDT map, using defaults: " + exc);
+					exc.printStackTrace();
+				}
+			}
+			else if (mapFilename.toLowerCase().endsWith(WdtMap.EXTENSION)) {
 				final War3MapConfig war3MapConfig = new War3MapConfig(WarsmashConstants.MAX_PLAYERS);
 				MenuUI.this.currentMapConfig = war3MapConfig;
 				for (int i = 0; i < WarsmashConstants.MAX_PLAYERS; i++) {
@@ -2088,6 +2157,42 @@ public class MenuUI {
 									this.loadingMap.viewer.worldScene.fogSettings.end = 10000;
 									this.loadingMap.viewer.worldScene.fogSettings
 											.setStyleByIndex(FogStyle.LINEAR.ordinal());
+
+									this.loadingMap.viewer.worldScene.fogSettings.color = new Color(0.33f, 0.5f, 0.7f,
+											1.0f);
+									this.loadingMap.viewer.worldScene.fogSettings.density = 0.5f;
+									this.loadingMap.viewer.worldScene.fogSettings.start = 10000;
+									this.loadingMap.viewer.worldScene.fogSettings.end = 20000;
+									this.loadingMap.viewer.worldScene.fogSettings
+											.setStyleByIndex(FogStyle.LINEAR.ordinal());
+								});
+							}
+							else if (this.loadingMap.mapsWdt != null) {
+								this.loadingMap.activeMapLoader = this.loadingMap.viewer
+										.createWdtMapsLoader(this.loadingMap.mapsWdt, localPlayerIndex);
+
+								this.loadingMap.activeMapLoader.addLoadTask(() -> {
+									this.loadingMap.viewer.simulation.setFogEnabled(false);
+									this.loadingMap.viewer.simulation.setFogMaskEnabled(false);
+
+									final DataTable worldEditData = this.loadingMap.viewer.getWorldEditData();
+
+									final Element unitLights = worldEditData.get("UnitLights");
+									final Element terrainLights = worldEditData.get("TerrainLights");
+									final String tilesetString = String
+											.valueOf(this.loadingMap.activeMapLoader.getTileset());
+									final String unitLightString = unitLights.getField(tilesetString);
+									final String terrainLightString = terrainLights.getField(tilesetString);
+									this.loadingMap.viewer.setDayNightModels(terrainLightString, unitLightString);
+
+									this.loadingMap.viewer.setSkyModel(
+											"Environment\\Sky\\LordaeronSummerSky\\LordaeronSummerSky.mdx");
+									this.loadingMap.viewer.simulation
+											.setGameTimeOfDay((this.loadingMap.viewer.simulation.getGameplayConstants()
+													.getDawnTimeGameHours()
+													+ this.loadingMap.viewer.simulation.getGameplayConstants()
+															.getDuskTimeGameHours())
+													/ 2);
 
 									this.loadingMap.viewer.worldScene.fogSettings.color = new Color(0.33f, 0.5f, 0.7f,
 											1.0f);
@@ -2727,6 +2832,7 @@ public class MenuUI {
 		private final War3Map map;
 		private final War3MapW3i mapInfo;
 		private final WdtMap mapWdt;
+		private final List<WdtMap> mapsWdt;
 
 		private MapLoaderInterface activeMapLoader = null;
 
@@ -2735,11 +2841,21 @@ public class MenuUI {
 			this.map = map;
 			this.mapInfo = mapInfo;
 			this.mapWdt = null;
+			this.mapsWdt = null;
 		}
 
 		public LoadingMap(final War3MapViewer viewer, final WdtMap map) {
 			this.viewer = viewer;
 			this.mapWdt = map;
+			this.map = null;
+			this.mapInfo = null;
+			this.mapsWdt = null;
+		}
+
+		public LoadingMap(final War3MapViewer viewer, final List<WdtMap> mapsWdt) {
+			this.viewer = viewer;
+			this.mapsWdt = mapsWdt;
+			this.mapWdt = null;
 			this.map = null;
 			this.mapInfo = null;
 		}

@@ -1723,13 +1723,13 @@ public class Terrain extends TerrainInterface {
 	}
 
 	@Override
-	public void intersectRayTerrain(final Ray gdxRayHeap, final Vector3 out, final boolean intersectWithWater) {
+	public boolean intersectRayTerrain(final Ray gdxRayHeap, final Vector3 out, final boolean intersectWithWater) {
 		if (intersectWithWater) {
-			RenderMathUtils.intersectRayTriangles(gdxRayHeap, this.softwareWaterAndGroundMesh.vertices,
+			return RenderMathUtils.intersectRayTriangles(gdxRayHeap, this.softwareWaterAndGroundMesh.vertices,
 					this.softwareWaterAndGroundMesh.indices, 3, out);
 		}
 		else {
-			RenderMathUtils.intersectRayTriangles(gdxRayHeap, this.softwareGroundMesh.vertices,
+			return RenderMathUtils.intersectRayTriangles(gdxRayHeap, this.softwareGroundMesh.vertices,
 					this.softwareGroundMesh.indices, 3, out);
 		}
 	}

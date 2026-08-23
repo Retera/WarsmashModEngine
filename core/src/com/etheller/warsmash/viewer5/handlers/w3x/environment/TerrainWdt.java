@@ -328,7 +328,7 @@ public class TerrainWdt extends TerrainInterface {
 	}
 
 	@Override
-	public void intersectRayTerrain(final Ray gdxRayHeap, final Vector3 out, final boolean intersectWithWater) {
+	public boolean intersectRayTerrain(final Ray gdxRayHeap, final Vector3 out, final boolean intersectWithWater) {
 //		out.set(gdxRayHeap.origin);
 //		out.add(gdxRayHeap.direction);
 		normalHeap1.set(gdxRayHeap.origin);
@@ -355,7 +355,9 @@ public class TerrainWdt extends TerrainInterface {
 		}
 		if (hit && !isWdtHole(normalHeap1.x, normalHeap1.y)) {
 			out.set(normalHeap1);
+			return true;
 		}
+		return false;
 	}
 
 	@Override
@@ -581,6 +583,12 @@ public class TerrainWdt extends TerrainInterface {
 	}
 
 	private Tile getCurrentTile() {
+		if ((this.lastCameraCellX < 0) || (this.lastCameraCellX >= this.tiles.length)) {
+			return null;
+		}
+		if ((this.lastCameraCellY < 0) || (this.lastCameraCellY >= this.tiles[this.lastCameraCellX].length)) {
+			return null;
+		}
 		final Tile tile = this.tiles[this.lastCameraCellX][this.lastCameraCellY];
 		return tile;
 	}

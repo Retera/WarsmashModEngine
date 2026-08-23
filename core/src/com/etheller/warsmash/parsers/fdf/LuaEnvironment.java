@@ -32,6 +32,7 @@ import com.badlogic.gdx.Graphics.DisplayMode;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.utils.viewport.Viewport;
+import com.etheller.interpreter.ast.scope.trigger.Trigger;
 import com.etheller.warsmash.parsers.fdf.frames.TextureFrame;
 import com.etheller.warsmash.parsers.fdf.frames.UIFrame;
 import com.etheller.warsmash.util.War3ID;
@@ -63,6 +64,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.OrderIds;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CAllianceType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayer;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayerUnitOrderListener;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.JassGameEventsWar3;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.AbilityActivationReceiver;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.CommandStringErrorKeys;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.util.ExternStringMsgAbilityActivationReceiver;
@@ -705,6 +707,7 @@ public class LuaEnvironment {
 		this.globals.set("PickupAction", new OneArgFunction() {
 			@Override
 			public LuaValue call(final LuaValue id) {
+				handleContainerPickupOrDrop(bagArg.checkint(), slotArg.checkint());
 				return LuaValue.NIL;
 			}
 		});
@@ -1139,7 +1142,8 @@ public class LuaEnvironment {
 				}
 				final CAbilityHero heroData = unit.getHeroData();
 				if (heroData != null) {
-					return LuaValue.valueOf(game.getGameplayConstants().getNeedHeroXP(heroData.getHeroLevel()));
+					return LuaValue.valueOf(game.getGameplayConstants().getNeedHeroXP(heroData.getHeroLevel())
+							- game.getGameplayConstants().getNeedHeroXP(heroData.getHeroLevel() - 1));
 				}
 				return LuaValue.ZERO;
 			}
@@ -1354,6 +1358,15 @@ public class LuaEnvironment {
 			this.bindingKeys.put(binding, Integer.toString(i));
 			this.keysToBinding.put(Input.Keys.valueOf("" + i), binding);
 		}
+
+		game.runPostUpdate(() -> {
+			final Trigger heroLevelTrigger = new Trigger();
+			this.pawnUnit.addEvent(game.getGlobalScope(), heroLevelTrigger, JassGameEventsWar3.EVENT_UNIT_HERO_LEVEL);
+			heroLevelTrigger.addAction((arguments, globalScope, triggerScope) -> {
+				notifyLevelUp(pawnUnit);
+				return null;
+			});
+		});
 	}
 
 	/**
@@ -1434,7 +1447,7 @@ public class LuaEnvironment {
 			dropCursorItemIntoBag(bagId, slotIndex);
 		}
 	}
-
+	
 	/**
 	 * Issues the order that moves the held cursor item into the bag's 0-based slot
 	 * (within-bag swap or cross-container move), then clears the cursor.
@@ -1925,6 +1938,39 @@ public class LuaEnvironment {
 		fireLootEvent(ThirdPersonLuaXmlEvent.LOOT_CLOSED);
 	}
 
+	public void notifyLevelUp(final CUnit source) {
+		if (source == this.pawnUnit) {
+			{
+				final ThirdPersonLuaXmlEvent event = ThirdPersonLuaXmlEvent.PLAYER_LEVEL_UP;
+				final LinkedHashSet<UIFrameLuaWrapper> registered = getRegistered(event);
+				for (final UIFrameLuaWrapper frameLuaWrapper : registered) {
+					try {
+						frameLuaWrapper.getFrame().getScripts().onEvent(event,
+								LuaInteger.valueOf(source.getHeroData().getHeroLevel()), LuaInteger.ZERO,
+								LuaInteger.ZERO, LuaInteger.ZERO, LuaInteger.ZERO);// LuaString.valueOf(UNITKEY_PLAYER));
+					}
+					catch (final Exception e) {
+						e.printStackTrace();
+					}
+				}
+			}
+			{
+				final ThirdPersonLuaXmlEvent event = ThirdPersonLuaXmlEvent.UNIT_LEVEL;
+				final LinkedHashSet<UIFrameLuaWrapper> registered = getRegistered(event);
+				for (final UIFrameLuaWrapper frameLuaWrapper : registered) {
+					try {
+						frameLuaWrapper.getFrame().getScripts().onEvent(event, LuaString.valueOf(UNITKEY_PLAYER),
+								LuaInteger.valueOf(source.getHeroData().getHeroLevel()), LuaInteger.ZERO,
+								LuaInteger.ZERO, LuaInteger.ZERO);
+					}
+					catch (final Exception e) {
+						e.printStackTrace();
+					}
+				}
+			}
+		}
+	}
+
 	/**
 	 * Fires the WoW ACTIONBAR_UPDATE_COOLDOWN event to every frame registered for
 	 * it (the action buttons). Their OnEvent handlers re-query GetActionCooldown
@@ -2062,6 +2108,9 @@ public class LuaEnvironment {
 	}
 
 	private int getUnitLevel(final CUnit unit) {
+		if (unit == null) {
+			return 0;
+		}
 		final CAbilityHero heroData = unit.getHeroData();
 		if (heroData != null) {
 			return heroData.getHeroLevel();

@@ -38,10 +38,12 @@ import com.etheller.warsmash.viewer5.handlers.w3x.War3MapViewer;
 import com.etheller.warsmash.viewer5.handlers.w3x.camera.ThirdPersonCameraManager;
 import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.RenderUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.RenderWidget;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CDestructable;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CItem;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidgetFilterFunction;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidgetVisitor;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTargetVisitor;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.thirdperson.CAbilityPlayerPawn;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.thirdperson.CBehaviorPlayerPawn;
@@ -98,6 +100,7 @@ public class ThirdPersonUI implements WarsmashToggleableUI {
 	private final boolean userControlEnabled = true;
 	private final AnyClickableUnitFilter anyClickableUnitFilter;
 	private final AnyTargetableUnitFilter anyTargetableUnitFilter;
+	private final AnyLootableUnitFilter anyLootableUnitFilter;
 	private KeyedSounds uiSounds;
 	private static final float COOLDOWN_REFRESH_INTERVAL = 0.1f;
 	private float cooldownRefreshTimer;
@@ -119,6 +122,7 @@ public class ThirdPersonUI implements WarsmashToggleableUI {
 		this.pawnId = pawnId;
 		this.anyClickableUnitFilter = new AnyClickableUnitFilter();
 		this.anyTargetableUnitFilter = new AnyTargetableUnitFilter();
+		this.anyLootableUnitFilter = new AnyLootableUnitFilter();
 
 //		final MdxModel skyModel = war3MapViewer
 //				.loadModelMdx("environment\\sky\\lordaeronsummersky\\lordaeronsummersky.mdx");
@@ -283,6 +287,20 @@ public class ThirdPersonUI implements WarsmashToggleableUI {
 												+ farz + ", 0.0 )\n" + "    call CameraSetupSetDestPosition( " + name
 												+ ", " + ThirdPersonUI.this.pawnUnit.getX() + ", "
 												+ ThirdPersonUI.this.pawnUnit.getY() + ", " + 0.0 + " )\n" + "");
+									}
+									else if ("xyz".equals(bits[0])) {
+										try {
+											final float x = Float.parseFloat(bits[1]);
+											final float y = Float.parseFloat(bits[2]);
+											final float z = Float.parseFloat(bits[3]);
+											ThirdPersonUI.this.pawnUnit.setPoint(x, y,
+													ThirdPersonUI.this.war3MapViewer.simulation.getWorldCollision(),
+													ThirdPersonUI.this.war3MapViewer.simulation.getRegionManager());
+											ThirdPersonUI.this.abilityPlayerPawn.setZ(z);
+										}
+										catch (final Exception e) {
+											e.printStackTrace();
+										}
 									}
 									else if ("Wow3AddSpecialEffect".equals(bits[0])) {
 										System.out.println("call Wow3AddSpecialEffect(\"" + bits[1] + "\", "
@@ -742,7 +760,7 @@ public class ThirdPersonUI implements WarsmashToggleableUI {
 	private void updateMouseOverUnit(final int screenX, final float worldScreenY) {
 		final RenderWidget newMouseOverUnit;
 		if (this.userControlEnabled) {
-			newMouseOverUnit = this.war3MapViewer.rayPickUnit(screenX, worldScreenY, this.anyClickableUnitFilter);
+			newMouseOverUnit = this.war3MapViewer.rayPickUnit(screenX, worldScreenY, this.anyClickableUnitFilter, true);
 		}
 		else {
 			newMouseOverUnit = null;
@@ -763,7 +781,8 @@ public class ThirdPersonUI implements WarsmashToggleableUI {
 	 * Returns true if an item was found and loot was initiated.
 	 */
 	private boolean tryLootUnderCursor(final int screenX, final float worldScreenY) {
-		final RenderWidget picked = this.war3MapViewer.rayPickUnit(screenX, worldScreenY, this.anyTargetableUnitFilter);
+		final RenderWidget picked = this.war3MapViewer.rayPickUnit(screenX, worldScreenY, this.anyLootableUnitFilter,
+				true);
 		if (picked == null) {
 			return false;
 		}
@@ -1003,6 +1022,28 @@ public class ThirdPersonUI implements WarsmashToggleableUI {
 		@Override
 		public boolean call(final CWidget unit) {
 			return true;// !unit.isDead();
+		}
+	}
+
+	private final class AnyLootableUnitFilter implements CWidgetFilterFunction, CWidgetVisitor<Boolean> {
+		@Override
+		public boolean call(final CWidget unit) {
+			return unit.visit(this);
+		}
+
+		@Override
+		public Boolean accept(final CUnit target) {
+			return false; // todo loot units
+		}
+
+		@Override
+		public Boolean accept(final CDestructable target) {
+			return false;
+		}
+
+		@Override
+		public Boolean accept(final CItem target) {
+			return !target.isDead() && !target.isHidden();
 		}
 	}
 

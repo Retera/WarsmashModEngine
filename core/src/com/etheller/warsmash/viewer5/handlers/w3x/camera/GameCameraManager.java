@@ -363,6 +363,7 @@ public final class GameCameraManager extends CameraManager {
 			if (doPan) {
 				setTarget(cameraSetup.getDestPositionX(), cameraSetup.getDestPositionY());
 				setTargetZOffset(cameraSetup.getHeight());
+				this.targetZOffset = this.zOffsetDestination;
 			}
 		}
 	}

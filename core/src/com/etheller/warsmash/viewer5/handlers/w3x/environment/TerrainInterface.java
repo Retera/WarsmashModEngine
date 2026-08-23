@@ -91,7 +91,7 @@ public abstract class TerrainInterface {
 
 	public abstract boolean inActivePlayableArea(float x, float y);
 
-	public abstract void intersectRayTerrain(Ray gdxRayHeap, final Vector3 out, final boolean intersectWithWater);
+	public abstract boolean intersectRayTerrain(Ray gdxRayHeap, final Vector3 out, final boolean intersectWithWater);
 
 	public abstract WdtLiquidType getLiquidType(float x, float y);
 

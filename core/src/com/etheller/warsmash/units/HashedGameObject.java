@@ -18,7 +18,7 @@ public abstract class HashedGameObject implements GameObject {
 		this.parentTable = table;
 	}
 
-	public int size(){
+	public int size() {
 		return this.fields.size();
 	}
 
@@ -27,6 +27,7 @@ public abstract class HashedGameObject implements GameObject {
 		setField(field, value);
 	}
 
+	@Override
 	public void setField(final String field, final String value) {
 		final StringKey key = new StringKey(field);
 		List<String> list = this.fields.get(key);
@@ -147,6 +148,7 @@ public abstract class HashedGameObject implements GameObject {
 			}
 			else {
 				list = new ArrayList<>();
+				this.fields.put(key, list);
 				for (int k = 0; k < index; k++) {
 					list.add("");
 				}

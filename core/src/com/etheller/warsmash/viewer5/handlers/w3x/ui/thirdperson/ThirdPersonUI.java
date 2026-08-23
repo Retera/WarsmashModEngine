@@ -170,8 +170,26 @@ public class ThirdPersonUI implements WarsmashToggleableUI {
 //					this.war3MapViewer.getLocalPlayerIndex(), startLocation[0] + 24126.52f,
 //					startLocation[1] - 172875.25f, 0));
 			// IF airfield
-			pawnUnits.add(this.war3MapViewer.simulation.createUnitSimple(this.pawnId,
-					this.war3MapViewer.getLocalPlayerIndex(), 50387.85f, -165933.2f, 2.8147888f));
+//			pawnUnits.add(this.war3MapViewer.simulation.createUnitSimple(this.pawnId,
+//					this.war3MapViewer.getLocalPlayerIndex(), 50387.85f, -165933.2f, 2.8147888f));
+			// Spawn the pawn at the map-defined start location (war3map.j config's
+			// DefineStartLocation) so that custom WDT maps place the player correctly;
+			// if the map script already spawned a pawn-ability unit, adopt it instead.
+			CUnit createdPawn = null;
+			for (final CUnit existingUnit : this.war3MapViewer.simulation.getUnits()) {
+				if ((existingUnit.getFirstAbilityOfType(CAbilityPlayerPawn.class) != null)
+						&& (existingUnit.getPlayerIndex() == this.war3MapViewer.getLocalPlayerIndex())) {
+					createdPawn = existingUnit;
+					break;
+				}
+			}
+			if (createdPawn == null) {
+				createdPawn = this.war3MapViewer.simulation.createUnitSimple(this.pawnId,
+						this.war3MapViewer.getLocalPlayerIndex(), startLocation[0], startLocation[1], 0);
+			}
+			if (createdPawn != null) {
+				pawnUnits.add(createdPawn);
+			}
 //			pawnUnits.add(this.war3MapViewer.simulation.createUnitSimple(this.pawnId,
 //					this.war3MapViewer.getLocalPlayerIndex(), startLocation[0] + 3250, startLocation[1] - 29795.25f,
 //					0));

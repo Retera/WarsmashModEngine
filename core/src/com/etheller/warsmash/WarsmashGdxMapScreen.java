@@ -200,8 +200,19 @@ public class WarsmashGdxMapScreen implements InputProcessor, Screen {
 						WarsmashGdxMapScreen.this.screenManager.setScreen(WarsmashGdxMapScreen.this.menuScreen);
 					}
 				});
-		final ThirdPersonUI thirdPersonUI = new ThirdPersonUI(this.viewer, this.uiScene, this.uiViewport, portraitScene,
-				this.uiOrderListener, PLAYER_PAWN_ID);
+		// Only offer the third-person UI when the player pawn unit type exists in
+		// the loaded unit data; otherwise (e.g. plain WC3 data sets) boot straight
+		// into the classic melee UI instead of crashing on the missing pawn.
+		final boolean pawnTypeAvailable = this.viewer.getAllObjectData().getUnits()
+				.get(PLAYER_PAWN_ID.asStringValue()) != null;
+		final ThirdPersonUI thirdPersonUI = pawnTypeAvailable
+				? new ThirdPersonUI(this.viewer, this.uiScene, this.uiViewport, portraitScene, this.uiOrderListener,
+						PLAYER_PAWN_ID)
+				: null;
+		if (!pawnTypeAvailable) {
+			System.err.println("Player pawn type " + PLAYER_PAWN_ID
+					+ " not found in unit data; third-person UI disabled for this session.");
+		}
 //		final ThirdPersonUI thirdPersonUI = new ThirdPersonUI(this.viewer, this.uiScene, this.uiViewport, portraitScene,
 //				"Creature\\TempScarletCrusaderLight\\ScarletCrusaderLight.mdx");
 //		final MdxComplexInstance pawnComplexInstance = thirdPersonUI.getPlayerPawn().getPawnComplexInstance();
@@ -211,7 +222,8 @@ public class WarsmashGdxMapScreen implements InputProcessor, Screen {
 //		pawnComplexInstance.setReplaceableTexture(6, "Creature\\HighElf\\BloodElfMaleHair.blp");
 //		pawnComplexInstance.setReplaceableTexture(11, "Creature\\HighElf\\BloodElfFemaleWarrior.blp");
 //		pawnComplexInstance.setUniformScale(50.0f);
-		final MeleeToggleUI toggleUI = new MeleeToggleUI(baseMeleeUI, Arrays.asList(baseMeleeUI, thirdPersonUI));
+		final MeleeToggleUI toggleUI = new MeleeToggleUI(baseMeleeUI,
+				thirdPersonUI != null ? Arrays.asList(baseMeleeUI, thirdPersonUI) : Arrays.asList(baseMeleeUI));
 		this.meleeUI = toggleUI;
 		this.viewer.getCommandErrorListener().setDelegate(this.meleeUI);
 		final ModelInstance libgdxContentInstance = new LibGDXContentLayerModel(null, this.viewer, "",

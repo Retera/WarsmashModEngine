@@ -108,6 +108,38 @@ public class UIFrameScripts {
 		return this.frameDef == null;
 	}
 
+	/**
+	 * Click entry point for XML buttons. WoW delivers a click on a frame while the
+	 * cursor is carrying a spell/item (PickupSpell/PickupAction/PickupContainerItem)
+	 * as a DROP -- the frame's OnReceiveDrag runs instead of OnClick. The FrameXML
+	 * relies on that (action buttons call PlaceAction only from OnReceiveDrag), so
+	 * mirror it here; frames without an OnReceiveDrag script get the plain click.
+	 */
+	public void onClickOrReceiveDrag(final ThirdPersonLuaXmlButton button) {
+		if ((this.OnReceiveDrag != null) && this.luaEnvironment.cursorHasPayload()) {
+			onReceiveDrag(button);
+		}
+		else {
+			onClick(button);
+		}
+	}
+
+	public void onReceiveDrag(final ThirdPersonLuaXmlButton button) {
+		if (this.OnReceiveDrag != null) {
+			final LuaValue prevThis = this.luaEnvironment.loadSavingThis(this.thisFrame);
+			try {
+				this.luaEnvironment.getGlobals().set("arg1", button.name());
+				this.OnReceiveDrag.call();
+			}
+			catch (final Exception exc) {
+				exc.printStackTrace();
+			}
+			finally {
+				this.luaEnvironment.restoreThis(prevThis);
+			}
+		}
+	}
+
 	public void onClick(final ThirdPersonLuaXmlButton button) {
 		if (this.OnClick != null) {
 			final LuaValue prevThis = this.luaEnvironment.loadSavingThis(this.thisFrame);

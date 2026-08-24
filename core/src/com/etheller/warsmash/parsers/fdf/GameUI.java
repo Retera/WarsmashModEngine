@@ -283,6 +283,11 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 						}
 						this.luaGlobals = new LuaEnvironment(game, this, this.viewport, this.uiScene, this.uiSounds,
 								this.pawnUnit, this.abilityPlayerPawn, this.abilityDataUI, this.uiOrderListener);
+						if (this.modelViewer instanceof War3MapViewer) {
+							((War3MapViewer) this.modelViewer).addZoneTextListener((zoneText, subZoneText) -> {
+								this.luaGlobals.setZoneText(zoneText, subZoneText);
+							});
+						}
 						loadLuaFile("Interface/FrameXML/GlobalStrings.lua");// didn't see the link for what loads this
 					}
 					final DocumentBuilderFactory newInstance = DocumentBuilderFactory.newInstance();
@@ -2854,11 +2859,12 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 
 	/**
 	 * Loads an icon and returns a copy whose corners are masked out to a circle
-	 * (transparent outside, 1px antialiased rim), cached by path. Used for the round
-	 * unit portraits: the engine has to do the cropping itself — the frame's ring art
-	 * does NOT clip the square texture. We bake a generated circular alpha mask into
-	 * the texture once at load (rather than masking per-frame on the GPU) because the
-	 * portrait icon is static and this needs no batch/blend-state juggling.
+	 * (transparent outside, 1px antialiased rim), cached by path. Used for the
+	 * round unit portraits: the engine has to do the cropping itself — the frame's
+	 * ring art does NOT clip the square texture. We bake a generated circular alpha
+	 * mask into the texture once at load (rather than masking per-frame on the GPU)
+	 * because the portrait icon is static and this needs no batch/blend-state
+	 * juggling.
 	 */
 	public Texture loadCircularMaskedTexture(final String path) {
 		Texture texture = this.pathToCircularTexture.get(path);
@@ -2882,7 +2888,10 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 		return texture;
 	}
 
-	/** Returns an ARGB copy of src with alpha zeroed outside the largest inscribed circle. */
+	/**
+	 * Returns an ARGB copy of src with alpha zeroed outside the largest inscribed
+	 * circle.
+	 */
 	private static BufferedImage circleMask(final BufferedImage src) {
 		final int w = src.getWidth();
 		final int h = src.getHeight();

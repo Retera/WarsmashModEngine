@@ -11,8 +11,11 @@ import com.etheller.warsmash.viewer5.handlers.w3x.AnimationTokens.PrimaryTag;
 import com.etheller.warsmash.viewer5.handlers.w3x.IndexedSequence;
 import com.etheller.warsmash.viewer5.handlers.w3x.SequenceUtils;
 import com.etheller.warsmash.viewer5.handlers.w3x.War3MapViewer;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CWidget;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTargetUnitVisitor;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTargetWidgetVisitor;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.thirdperson.CAbilityPlayerPawn;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.projectile.CProjectile;
 
 public class RenderProjectile implements RenderEffect {
@@ -51,6 +54,7 @@ public class RenderProjectile implements RenderEffect {
 		final float d2DToTarget = (float) StrictMath.sqrt((dxToTarget * dxToTarget) + (dyToTarget * dyToTarget));
 		final float startingDistance = d2DToTarget + this.totalTravelDistance;
 		final CWidget widgetTarget = this.simulationProjectile.getTarget().visit(AbilityTargetWidgetVisitor.INSTANCE);
+		final CUnit unitTarget = this.simulationProjectile.getTarget().visit(AbilityTargetUnitVisitor.INSTANCE);
 		float impactZ;
 		float flyHeight;
 		if (widgetTarget == null) {
@@ -61,18 +65,27 @@ public class RenderProjectile implements RenderEffect {
 			impactZ = widgetTarget.getImpactZ();
 			flyHeight = widgetTarget.getFlyHeight();
 		}
-		this.targetHeight = (war3MapViewer.terrain.getGroundHeight(targetX, targetY) + flyHeight + impactZ);
+		this.targetHeight = (war3MapViewer.getGroundHeightOrHighestWalkableHeight(targetX, targetY) + flyHeight
+				+ impactZ);
+		if (unitTarget != null) {
+			// if it's a player pawn underground or something, update accordingly
+			final CAbilityPlayerPawn targetPlayerPawnData = unitTarget.getPlayerPawnData();
+			if (targetPlayerPawnData != null) {
+				this.targetHeight = targetPlayerPawnData.getZ() + impactZ;
+			}
+		}
 		this.arcPeakHeight = arc * startingDistance;
 		this.yaw = (float) StrictMath.atan2(dyToTarget, dxToTarget);
 		this.deathTime = war3MapViewer.simulation.getGameplayConstants().getBulletDeathTime();
 	}
 
-	public void setDeathTime(float time) {
+	public void setDeathTime(final float time) {
 		this.deathTime = time;
 	}
 
-	public void setImpactZ(final War3MapViewer war3MapViewer, float impactZ) {
-		this.targetHeight = (war3MapViewer.terrain.getGroundHeight(this.simulationProjectile.getTargetX(), this.simulationProjectile.getTargetY()) + impactZ);
+	public void setImpactZ(final War3MapViewer war3MapViewer, final float impactZ) {
+		this.targetHeight = (war3MapViewer.getGroundHeightOrHighestWalkableHeight(
+				this.simulationProjectile.getTargetX(), this.simulationProjectile.getTargetY()) + impactZ);
 	}
 
 	@Override
@@ -138,8 +151,8 @@ public class RenderProjectile implements RenderEffect {
 		this.modelInstance.rotate(pitchHeap.setFromAxisRad(0, -1, 0, this.pitch));
 		war3MapViewer.worldScene.instanceMoved(this.modelInstance, this.x, this.y);
 
-		final boolean everythingDone = this.simulationProjectile.isDone() && (this.modelInstance.sequenceEnded
-				|| (this.deathTimeElapsed >= this.deathTime));
+		final boolean everythingDone = this.simulationProjectile.isDone()
+				&& (this.modelInstance.sequenceEnded || (this.deathTimeElapsed >= this.deathTime));
 		if (everythingDone) {
 			war3MapViewer.worldScene.removeInstance(this.modelInstance);
 		}

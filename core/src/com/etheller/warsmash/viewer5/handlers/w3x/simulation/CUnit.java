@@ -54,6 +54,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.nightelf.
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityPointTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTarget;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTargetVisitor;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.thirdperson.CAbilityPlayerPawn;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.buff.ABGenericTimedBuff;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilitybuilder.buff.CPausedTickingBuff;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.behaviors.BehaviorAbilityVisitor;
@@ -3957,25 +3958,30 @@ public class CUnit extends CWidget {
 				&& !targetsAllowed.contains(CTargetType.STRUCTURE) && !targetsAllowed.contains(CTargetType.AIR))) {
 			final int sourcePlayerIndex = source.getPlayerIndex();
 			final CPlayer sourcePlayer = simulation.getPlayer(sourcePlayerIndex);
-			if (!targetsAllowed.contains(CTargetType.ENEMIES)
-					|| !sourcePlayer.hasAlliance(this.fakePlayerIndex, CAllianceType.PASSIVE)
-					|| (targetsAllowed.contains(CTargetType.FRIEND)
-							&& sourcePlayer.hasAlliance(this.fakePlayerIndex, CAllianceType.SHARED_SPELLS))
-					|| (targetsAllowed.contains(CTargetType.NEUTRAL)
-							&& !sourcePlayer.hasAlliance(this.fakePlayerIndex, CAllianceType.SHARED_SPELLS))) {
-				if (!targetsAllowed.contains(CTargetType.FRIEND)
-						|| sourcePlayer.hasAlliance(this.fakePlayerIndex, CAllianceType.SHARED_SPELLS)
-						|| (targetsAllowed.contains(CTargetType.ENEMIES)
-								&& !sourcePlayer.hasAlliance(this.fakePlayerIndex, CAllianceType.PASSIVE))
-						|| (targetsAllowed.contains(CTargetType.NEUTRAL)
-								&& sourcePlayer.hasAlliance(this.fakePlayerIndex, CAllianceType.PASSIVE))) {
-					if (!targetsAllowed.contains(CTargetType.NEUTRAL)
-							|| (sourcePlayer.hasAlliance(this.fakePlayerIndex, CAllianceType.PASSIVE)
-									&& !sourcePlayer.hasAlliance(this.fakePlayerIndex, CAllianceType.SHARED_SPELLS))
-							|| (targetsAllowed.contains(CTargetType.ENEMIES)
-									&& !sourcePlayer.hasAlliance(this.fakePlayerIndex, CAllianceType.PASSIVE))
-							|| (targetsAllowed.contains(CTargetType.FRIEND)
-									&& sourcePlayer.hasAlliance(this.fakePlayerIndex, CAllianceType.SHARED_SPELLS))) {
+			boolean actuallyPassive = sourcePlayer.hasAlliance(this.fakePlayerIndex, CAllianceType.PASSIVE);
+			boolean actuallyFriend = sourcePlayer.hasAlliance(this.fakePlayerIndex, CAllianceType.SHARED_SPELLS);
+			boolean listContainsEnemy = targetsAllowed.contains(CTargetType.ENEMIES);
+			boolean listContainsFriend = targetsAllowed.contains(CTargetType.FRIEND);
+			boolean listContainsNeutral = targetsAllowed.contains(CTargetType.NEUTRAL);
+			if (!listContainsEnemy
+					|| !actuallyPassive
+					|| (listContainsFriend
+							&& actuallyFriend)
+					|| (listContainsNeutral
+							&& !actuallyFriend)) {
+				if (!listContainsFriend
+						|| actuallyFriend
+						|| (listContainsEnemy
+								&& !actuallyPassive)
+						|| (listContainsNeutral
+								&& actuallyPassive)) {
+					if (!listContainsNeutral
+							|| (actuallyPassive
+									&& !actuallyFriend)
+							|| (listContainsEnemy
+									&& !actuallyPassive)
+							|| (listContainsFriend
+									&& actuallyFriend)) {
 						if (!targetsAllowed.contains(CTargetType.MECHANICAL)
 								|| this.classifications.contains(CUnitClassification.MECHANICAL)) {
 							if (!targetsAllowed.contains(CTargetType.ORGANIC)
@@ -5030,6 +5036,10 @@ public class CUnit extends CWidget {
 			}
 		}
 		return null;
+	}
+
+	public CAbilityPlayerPawn getPlayerPawnData() {
+		return getFirstAbilityOfType(CAbilityPlayerPawn.class);
 	}
 
 	public CAbilityRoot getRootData() {

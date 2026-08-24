@@ -166,12 +166,14 @@ public class LuaEnvironment {
 	private boolean actionBarGridShown;
 	/**
 	 * Last charge count shown per item slot, so the periodic cooldown poll can
-	 * notice a consumed charge (the engine fires no use-item event) and redraw
-	 * that button's count.
+	 * notice a consumed charge (the engine fires no use-item event) and redraw that
+	 * button's count.
 	 */
 	private final int[] actionBarLastItemCount = new int[NUM_ACTION_SLOTS + 1];
 
-	/** One action-bar slot: exactly one of {@link #spell} / {@link #item} is set. */
+	/**
+	 * One action-bar slot: exactly one of {@link #spell} / {@link #item} is set.
+	 */
 	private static final class ActionSlotContent {
 		private final CAbility spell;
 		private final CItem item;
@@ -210,6 +212,9 @@ public class LuaEnvironment {
 
 	private final Map<String, String> bindingKeys = new HashMap<>();
 	private final Map<Integer, String> keysToBinding = new HashMap<>();
+
+	private String zoneText = "Warsmash";
+	private String subZoneText = "Absolutely Somewhere";
 
 	public LuaEnvironment(final CSimulation game, final GameUI rootFrame, final Viewport uiViewport,
 			final Scene uiScene, final KeyedSounds uiSounds, final CUnit pawnUnit,
@@ -1190,13 +1195,13 @@ public class LuaEnvironment {
 		this.globals.set("GetZoneText", new ZeroArgFunction() {
 			@Override
 			public LuaValue call() {
-				return LuaValue.valueOf("Warsmash");
+				return LuaValue.valueOf(LuaEnvironment.this.zoneText);
 			}
 		});
 		this.globals.set("GetSubZoneText", new ZeroArgFunction() {
 			@Override
 			public LuaValue call() {
-				return LuaValue.valueOf("Absolutely Somewhere");
+				return LuaValue.valueOf(LuaEnvironment.this.subZoneText);
 			}
 		});
 		this.globals.set("GetMinimapZoneText", new ZeroArgFunction() {
@@ -1236,8 +1241,7 @@ public class LuaEnvironment {
 				}
 				final CAbilityHero heroData = unit.getHeroData();
 				if (heroData != null) {
-					return LuaValue.valueOf(game.getGameplayConstants().getNeedHeroXP(heroData.getHeroLevel())
-							- game.getGameplayConstants().getNeedHeroXP(heroData.getHeroLevel() - 1));
+					return LuaValue.valueOf(game.getGameplayConstants().getNeedHeroXP(heroData.getHeroLevel()));
 				}
 				return LuaValue.ZERO;
 			}
@@ -1524,7 +1528,8 @@ public class LuaEnvironment {
 			return;
 		}
 		if (this.cursorSpell != null) {
-			// A spell can't be filed into a bag; put it away instead of swallowing the click.
+			// A spell can't be filed into a bag; put it away instead of swallowing the
+			// click.
 			clearCursor();
 			return;
 		}
@@ -1547,7 +1552,7 @@ public class LuaEnvironment {
 			dropCursorItemIntoBag(bagId, slotIndex);
 		}
 	}
-	
+
 	/**
 	 * Issues the order that moves the held cursor item into the bag's 0-based slot
 	 * (within-bag swap or cross-container move), then clears the cursor.
@@ -1773,7 +1778,8 @@ public class LuaEnvironment {
 		final boolean shouldShow = cursorHasPayload();
 		if (shouldShow != this.actionBarGridShown) {
 			this.actionBarGridShown = shouldShow;
-			fireEvent(shouldShow ? ThirdPersonLuaXmlEvent.ACTIONBAR_SHOWGRID : ThirdPersonLuaXmlEvent.ACTIONBAR_HIDEGRID,
+			fireEvent(
+					shouldShow ? ThirdPersonLuaXmlEvent.ACTIONBAR_SHOWGRID : ThirdPersonLuaXmlEvent.ACTIONBAR_HIDEGRID,
 					LuaValue.NIL);
 		}
 	}
@@ -1786,7 +1792,10 @@ public class LuaEnvironment {
 		fireEvent(ThirdPersonLuaXmlEvent.ACTIONBAR_SLOT_CHANGED, LuaValue.valueOf(slotId));
 	}
 
-	/** Dispatches the event with arg1 to every registered frame, isolating handler errors. */
+	/**
+	 * Dispatches the event with arg1 to every registered frame, isolating handler
+	 * errors.
+	 */
 	private void fireEvent(final ThirdPersonLuaXmlEvent event, final LuaValue arg1) {
 		final LinkedHashSet<UIFrameLuaWrapper> registered = getRegistered(event);
 		for (final UIFrameLuaWrapper frameLuaWrapper : registered) {
@@ -2293,9 +2302,9 @@ public class LuaEnvironment {
 	}
 
 	/**
-	 * Redraws any item action button whose charge count changed since the last
-	 * poll (a consumable used from the bar/bag), and the bags with it, since there
-	 * is no engine event for a consumed charge.
+	 * Redraws any item action button whose charge count changed since the last poll
+	 * (a consumable used from the bar/bag), and the bags with it, since there is no
+	 * engine event for a consumed charge.
 	 */
 	private void pollActionBarItemCounts() {
 		boolean anyChanged = false;
@@ -2444,7 +2453,9 @@ public class LuaEnvironment {
 		return unit.getUnitType().getLevel();
 	}
 
-	/** Uses the contents of the given 1-based action slot (button click / hotkey). */
+	/**
+	 * Uses the contents of the given 1-based action slot (button click / hotkey).
+	 */
 	private void useAction(final int actionId) {
 		final ActionOrder action = getActionOrder(actionId);
 		if (action != null) {
@@ -2494,8 +2505,8 @@ public class LuaEnvironment {
 			else {
 				final ExternStringMsgTargetCheckReceiver<Void> noTargetReceiver = ExternStringMsgTargetCheckReceiver
 						.<Void>getInstance().reset();
-				ability.checkCanTargetNoTarget(this.game, this.pawnUnit, this.pawnUnit.getPlayerIndex(), orderId,
-						false, noTargetReceiver);
+				ability.checkCanTargetNoTarget(this.game, this.pawnUnit, this.pawnUnit.getPlayerIndex(), orderId, false,
+						noTargetReceiver);
 				if (noTargetReceiver.getExternStringKey() == null) {
 					this.uiOrderListener.issueImmediateOrder(this.pawnUnit.getHandleId(), ability.getHandleId(),
 							orderId, false);
@@ -2518,6 +2529,22 @@ public class LuaEnvironment {
 			if (binding.startsWith("ACTIONBUTTON")) {
 				final String keyText = binding.substring(12);
 				useAction(Integer.parseInt(keyText));
+			}
+		}
+	}
+
+	public void setZoneText(final String zoneText, final String subZoneText) {
+		this.zoneText = zoneText;
+		this.subZoneText = subZoneText;
+
+		final ThirdPersonLuaXmlEvent event = ThirdPersonLuaXmlEvent.ZONE_CHANGED;
+		final LinkedHashSet<UIFrameLuaWrapper> registered = getRegistered(event);
+		for (final UIFrameLuaWrapper frameLuaWrapper : registered) {
+			try {
+				frameLuaWrapper.getFrame().getScripts().onEvent(event, LuaValue.NIL);
+			}
+			catch (final Exception e) {
+				e.printStackTrace();
 			}
 		}
 	}

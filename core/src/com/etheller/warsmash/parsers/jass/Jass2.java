@@ -3293,6 +3293,13 @@ public class Jass2 {
 						war3MapViewer.terrain.setWdtHole(worldX, worldY, hole);
 						return null;
 					});
+			jassProgramVisitor.getJassNativeManager().createNative("SetZoneText",
+					(arguments, globalScope, triggerScope) -> {
+						final String zoneText = nullable(arguments, 0, StringJassValueVisitor.getInstance());
+						final String subZoneText = nullable(arguments, 1, StringJassValueVisitor.getInstance());
+						war3MapViewer.setZoneText(zoneText, subZoneText);
+						return null;
+					});
 			jassProgramVisitor.getJassNativeManager().createNative("SetUnitPosition",
 					(arguments, globalScope, triggerScope) -> {
 						final CUnit whichUnit = nullable(arguments, 0, ObjectJassValueVisitor.getInstance());

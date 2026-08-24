@@ -40,6 +40,7 @@ public class CommandCardIcon extends AbstractRenderableFrame implements Clickabl
 	private int tipFoodCost;
 	private int tipManaCost;
 	private char hotkey;
+	private boolean spritesHidden = false;
 
 	public CommandCardIcon(final String name, final UIFrame parent,
 			final CommandCardCommandListener commandCardCommandListener) {
@@ -97,7 +98,7 @@ public class CommandCardIcon extends AbstractRenderableFrame implements Clickabl
 			this.numberOverlayStringFrame.setText(Integer.toString(numberOverlay));
 		}
 		if (this.autocastFrame != null) {
-			this.autocastFrame.setVisible(autoCastOrderId != 0);
+			this.autocastFrame.setVisible((autoCastOrderId != 0) && !this.spritesHidden);
 			if (autoCastOrderId != 0) {
 				if (this.autoCastActive != autoCastActive) {
 					if (autoCastActive) {
@@ -109,9 +110,12 @@ public class CommandCardIcon extends AbstractRenderableFrame implements Clickabl
 				}
 				this.autoCastActive = autoCastActive;
 			}
+			else {
+				this.autoCastActive = false;
+			}
 		}
 		if (cooldownRemaining > 0) {
-			this.cooldownFrame.setVisible(true);
+			this.cooldownFrame.setVisible(!this.spritesHidden);
 			this.cooldownFrame.setAnimationSpeed(1.0f / cooldownMax);
 			this.cooldownFrame.setSequence(PrimaryTag.STAND);
 			this.cooldownFrame.setFrameByRatio(1.0f - (cooldownRemaining / cooldownMax));
@@ -303,5 +307,17 @@ public class CommandCardIcon extends AbstractRenderableFrame implements Clickabl
 	@Override
 	public String getSoundKey() {
 		return SOUND_KEY_INTERFACE_CLICK;
+	}
+
+	public void hideSprites() {
+		this.cooldownFrame.setVisible(false);
+		this.autocastFrame.setVisible(false);
+		this.spritesHidden = true;
+	}
+
+	public void showSprites() {
+		this.cooldownFrame.setVisible(this.cooldownActive);
+		this.autocastFrame.setVisible(this.autoCastActive);
+		this.spritesHidden = false;
 	}
 }

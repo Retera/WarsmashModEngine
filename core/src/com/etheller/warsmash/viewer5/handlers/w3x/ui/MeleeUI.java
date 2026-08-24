@@ -432,6 +432,8 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 	private boolean subtitleDisplayOverride;
 	private UIFrame cinematicScenePanel;
 	private CinematicPortrait cinematicPortrait;
+	private boolean lastShowInterfaceFlag = true;
+	private boolean hiddenByToggleUI = false;
 
 	public MeleeUI(final DataSource dataSource, final ExtendViewport uiViewport, final Scene uiScene,
 			final Scene portraitScene, final CameraPreset[] cameraPresets, final CameraRates cameraRates,
@@ -5384,6 +5386,13 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 		this.showing = false;
 		this.war3MapViewer.deselect();
 		this.war3MapViewer.clearUnitMouseOverHighlight();
+		for (final CommandCardIcon[] commandCardIconsRow : this.commandCard) {
+			for (final CommandCardIcon commandCardIcon : commandCardIconsRow) {
+				commandCardIcon.hideSprites();
+			}
+		}
+		this.hiddenByToggleUI = true;
+		showInterface(this.lastShowInterfaceFlag, 0.0f);
 	}
 
 	@Override
@@ -5392,11 +5401,19 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 		this.cursorFrame.setVisible(true);
 		this.showing = true;
 		this.war3MapViewer.doSelectUnit(new ArrayList<>(this.selectedUnits));
+		for (final CommandCardIcon[] commandCardIconsRow : this.commandCard) {
+			for (final CommandCardIcon commandCardIcon : commandCardIconsRow) {
+				commandCardIcon.showSprites();
+			}
+		}
+		this.hiddenByToggleUI = false;
+		showInterface(this.lastShowInterfaceFlag, 0.0f);
 	}
 
 	@Override
 	public void showInterface(final boolean show, final float fadeDuration) {
-		updateInterfaceVisibility(show);
+		this.lastShowInterfaceFlag = show;
+		updateInterfaceVisibility(this.lastShowInterfaceFlag && !this.hiddenByToggleUI);
 	}
 
 	private void updateInterfaceVisibility(final boolean show) {

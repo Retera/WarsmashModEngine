@@ -310,6 +310,8 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 
 	private int successfulFrames = 0;
 
+	private final List<ZoneTextListener> zoneTextListeners = new ArrayList<>();
+
 	public War3MapViewer(final DataSource dataSource, final CanvasProvider canvas, final War3MapConfig mapConfig,
 			final GameTurnManager gameTurnManager) {
 		super(dataSource, canvas);
@@ -1798,12 +1800,12 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 			}
 			if (this.skyInstance != null) {
 				this.skyInstance.setLocation(worldScene.camera.location);
+				this.skyInstance.scene = worldScene;
 				if (this.skyInstance.dirty) {
 					this.skyInstance.wasDirty = true;
 					this.skyInstance.updateAnimations(Gdx.graphics.getDeltaTime());
 					this.skyInstance.recalculateTransformation();
 				}
-				this.skyInstance.scene = worldScene;
 				this.skyInstance.renderOpaque(worldScene.camera.viewProjectionMatrix);
 				this.skyInstance.renderTranslucent();
 				this.skyInstance.scene = null;
@@ -4323,7 +4325,8 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 			final float x = launchX + (projectileLaunchY * cosFacing) + (projectileLaunchX * sinFacing);
 			final float y = (launchY + (projectileLaunchY * sinFacing)) - (projectileLaunchX * cosFacing);
 
-			final float height = War3MapViewer.this.terrain.getGroundHeight(x, y)
+			final CAbilityPlayerPawn playerPawn = source.getPlayerPawnData();
+			final float height = (playerPawn != null ? playerPawn.getZ() : getGroundHeightOrHighestWalkableHeight(x, y))
 					+ (settings.getZ() != null ? settings.getZ() : (source.getFlyHeight() + projectileLaunchZ));
 			final CAttackProjectile simulationAttackProjectile = new CAttackProjectileMissile(x, y, projectileSpeed,
 					target, source, damage, unitAttack, bounceIndex, attackListener, settings);
@@ -4377,8 +4380,12 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 			final float x = launchX + (projectileLaunchY * cosFacing) + (projectileLaunchX * sinFacing);
 			final float y = (launchY + (projectileLaunchY * sinFacing)) - (projectileLaunchX * cosFacing);
 
-			final float height = War3MapViewer.this.terrain.getGroundHeight(x, y) + source.getFlyHeight()
-					+ projectileLaunchZ;
+			final CAbilityPlayerPawn playerPawn = source.getPlayerPawnData();
+			final float groundHeight = playerPawn != null ? playerPawn.getZ()
+					: getGroundHeightOrHighestWalkableHeight(x, y);
+
+			final float height = groundHeight + source.getFlyHeight() + projectileLaunchZ;
+
 			final CAbilityProjectile simulationAbilityProjectile = new CAbilityProjectile(x, y, pSpeed, target, pHome,
 					source, projectileListener);
 
@@ -4417,7 +4424,8 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 			final float x = launchX + (projectileLaunchY * cosFacing) + (projectileLaunchX * sinFacing);
 			final float y = (launchY + (projectileLaunchY * sinFacing)) - (projectileLaunchX * cosFacing);
 
-			final float height = War3MapViewer.this.terrain.getGroundHeight(x, y)
+			final CAbilityPlayerPawn playerPawn = source.getPlayerPawnData();
+			final float height = (playerPawn != null ? playerPawn.getZ() : getGroundHeightOrHighestWalkableHeight(x, y))
 					+ (settings.getZ() != null ? settings.getZ() : (source.getFlyHeight() + projectileLaunchZ));
 			final CAbilityProjectile simulationAbilityProjectile = new CAbilityProjectile(x, y, projectileSpeed, target,
 					homing, source, projectileListener);
@@ -5398,5 +5406,38 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 
 	public boolean canPawnMoveAt(final float x, final float y) {
 		return this.terrain.inActivePlayableArea(x, y);
+	}
+
+	public float getGroundHeightOrHighestWalkableHeight(final float x, final float y) {
+		final float groundHeightTerrain = War3MapViewer.this.terrain.getGroundHeight(x, y);
+		// mimic the basics from RenderUnit for where we launch projectile starting from
+		CollidableDoodadComponent currentWalkableUnder = getHighestWalkableUnder(x, y);
+		final float downwardRayTestHeight = 40960;
+
+		War3MapViewer.gdxRayHeap.set(x, y, downwardRayTestHeight, 0, 0, -81920);
+		float groundHeight;
+		if ((currentWalkableUnder != null) && currentWalkableUnder.intersectRayWithGeosetSlow(War3MapViewer.gdxRayHeap,
+				War3MapViewer.intersectionHeap) && (War3MapViewer.intersectionHeap.z > groundHeightTerrain)) {
+			groundHeight = War3MapViewer.intersectionHeap.z;
+		}
+		else {
+			groundHeight = groundHeightTerrain;
+			currentWalkableUnder = null;
+		}
+		return groundHeight;
+	}
+
+	public void setZoneText(final String zoneText, final String subZoneText) {
+		for (final ZoneTextListener listener : this.zoneTextListeners) {
+			listener.setZoneText(zoneText, subZoneText);
+		}
+	}
+
+	public void addZoneTextListener(final ZoneTextListener zoneTextListener) {
+		this.zoneTextListeners.add(zoneTextListener);
+	}
+
+	public static interface ZoneTextListener {
+		void setZoneText(String zoneText, String subZoneText);
 	}
 }

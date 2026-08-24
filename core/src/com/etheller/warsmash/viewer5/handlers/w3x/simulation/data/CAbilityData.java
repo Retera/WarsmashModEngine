@@ -138,6 +138,8 @@ public class CAbilityData {
 				new CAbilityTypeDefinitionSpellBase((handleId, alias) -> new CAbilityMount(handleId, alias)));
 		this.codeToAbilityTypeDefinition.put(War3ID.fromString("AM02"),
 				new CAbilityTypeDefinitionSpellBase((handleId, alias) -> new CAbilityMount(handleId, alias)));
+		this.codeToAbilityTypeDefinition.put(War3ID.fromString("AM03"),
+				new CAbilityTypeDefinitionSpellBase((handleId, alias) -> new CAbilityMount(handleId, alias)));
 
 		// Blood Mage:
 		this.codeToAbilityTypeDefinition.put(War3ID.fromString("Apxf"), new CAbilityTypeDefinitionPhoenixFire());

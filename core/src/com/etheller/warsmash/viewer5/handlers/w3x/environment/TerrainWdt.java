@@ -1802,7 +1802,9 @@ public class TerrainWdt extends TerrainInterface {
 			TerrainWdt.this.tasks.add(new DynamicTask() {
 				@Override
 				public boolean run() {
-					ActiveTile.this.loadingFinished = true;
+					if (!ActiveTile.this.disposed) {
+						ActiveTile.this.loadingFinished = true;
+					}
 					return true;
 				}
 			});

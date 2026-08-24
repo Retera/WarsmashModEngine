@@ -59,6 +59,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.inventory
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.inventory.CAbilityInventory;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.inventory.CItemSlotHolder;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTargetVisitor;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.targeting.AbilityTargetWidgetVisitor;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.abilities.thirdperson.CAbilityPlayerPawn;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.COrder;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.orders.OrderIds;
@@ -1213,7 +1214,7 @@ public class LuaEnvironment {
 		this.globals.set("UnitLevel", new OneArgFunction() {
 			@Override
 			public LuaValue call(final LuaValue unitKey) {
-				final CUnit unit = getUnit(unitKey.checkjstring());
+				final CWidget unit = getWidget(unitKey.checkjstring());
 				return LuaValue.valueOf(getUnitLevel(unit));
 			}
 		});
@@ -2445,6 +2446,24 @@ public class LuaEnvironment {
 	private int getUnitLevel(final CUnit unit) {
 		if (unit == null) {
 			return 0;
+		}
+		final CAbilityHero heroData = unit.getHeroData();
+		if (heroData != null) {
+			return heroData.getHeroLevel();
+		}
+		return unit.getUnitType().getLevel();
+	}
+
+	private int getUnitLevel(final CWidget widget) {
+		final CUnit unit = widget.visit(AbilityTargetWidgetVisitor.UNIT);
+		if (unit == null) {
+			final CItem item = widget.visit(AbilityTargetWidgetVisitor.ITEM);
+			if (item == null) {
+				return 0;
+			}
+			else {
+				return item.getItemType().getLevel();
+			}
 		}
 		final CAbilityHero heroData = unit.getHeroData();
 		if (heroData != null) {

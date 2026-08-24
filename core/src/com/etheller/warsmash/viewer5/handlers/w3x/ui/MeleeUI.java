@@ -5391,6 +5391,11 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 				commandCardIcon.hideSprites();
 			}
 		}
+		for (final CommandCardIcon[] commandCardIconsRow : this.inventoryIcons) {
+			for (final CommandCardIcon commandCardIcon : commandCardIconsRow) {
+				commandCardIcon.hideSprites();
+			}
+		}
 		this.hiddenByToggleUI = true;
 		showInterface(this.lastShowInterfaceFlag, 0.0f);
 	}
@@ -5402,6 +5407,11 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 		this.showing = true;
 		this.war3MapViewer.doSelectUnit(new ArrayList<>(this.selectedUnits));
 		for (final CommandCardIcon[] commandCardIconsRow : this.commandCard) {
+			for (final CommandCardIcon commandCardIcon : commandCardIconsRow) {
+				commandCardIcon.showSprites();
+			}
+		}
+		for (final CommandCardIcon[] commandCardIconsRow : this.inventoryIcons) {
 			for (final CommandCardIcon commandCardIcon : commandCardIconsRow) {
 				commandCardIcon.showSprites();
 			}

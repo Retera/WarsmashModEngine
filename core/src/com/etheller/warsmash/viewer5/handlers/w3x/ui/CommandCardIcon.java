@@ -311,13 +311,17 @@ public class CommandCardIcon extends AbstractRenderableFrame implements Clickabl
 
 	public void hideSprites() {
 		this.cooldownFrame.setVisible(false);
-		this.autocastFrame.setVisible(false);
+		if (this.autocastFrame != null) {
+			this.autocastFrame.setVisible(false);
+		}
 		this.spritesHidden = true;
 	}
 
 	public void showSprites() {
 		this.cooldownFrame.setVisible(this.cooldownActive);
-		this.autocastFrame.setVisible(this.autoCastActive);
+		if (this.autocastFrame != null) {
+			this.autocastFrame.setVisible(this.autoCastActive);
+		}
 		this.spritesHidden = false;
 	}
 }

@@ -3958,30 +3958,19 @@ public class CUnit extends CWidget {
 				&& !targetsAllowed.contains(CTargetType.STRUCTURE) && !targetsAllowed.contains(CTargetType.AIR))) {
 			final int sourcePlayerIndex = source.getPlayerIndex();
 			final CPlayer sourcePlayer = simulation.getPlayer(sourcePlayerIndex);
-			boolean actuallyPassive = sourcePlayer.hasAlliance(this.fakePlayerIndex, CAllianceType.PASSIVE);
-			boolean actuallyFriend = sourcePlayer.hasAlliance(this.fakePlayerIndex, CAllianceType.SHARED_SPELLS);
-			boolean listContainsEnemy = targetsAllowed.contains(CTargetType.ENEMIES);
-			boolean listContainsFriend = targetsAllowed.contains(CTargetType.FRIEND);
-			boolean listContainsNeutral = targetsAllowed.contains(CTargetType.NEUTRAL);
-			if (!listContainsEnemy
-					|| !actuallyPassive
-					|| (listContainsFriend
-							&& actuallyFriend)
-					|| (listContainsNeutral
-							&& !actuallyFriend)) {
-				if (!listContainsFriend
-						|| actuallyFriend
-						|| (listContainsEnemy
-								&& !actuallyPassive)
-						|| (listContainsNeutral
-								&& actuallyPassive)) {
-					if (!listContainsNeutral
-							|| (actuallyPassive
-									&& !actuallyFriend)
-							|| (listContainsEnemy
-									&& !actuallyPassive)
-							|| (listContainsFriend
-									&& actuallyFriend)) {
+			final boolean actuallyPassive = sourcePlayer.hasAlliance(this.fakePlayerIndex, CAllianceType.PASSIVE);
+			final boolean actuallyFriend = sourcePlayer.hasAlliance(this.fakePlayerIndex, CAllianceType.SHARED_SPELLS);
+			final boolean listContainsEnemy = targetsAllowed.contains(CTargetType.ENEMIES);
+			final boolean listContainsFriend = targetsAllowed.contains(CTargetType.FRIEND)
+					|| targetsAllowed.contains(CTargetType.ALLIES); // TODO friend and ally probably need legitimate
+																	// distinction, ally may be the reverse
+			final boolean listContainsNeutral = targetsAllowed.contains(CTargetType.NEUTRAL);
+			if (!listContainsEnemy || !actuallyPassive || (listContainsFriend && actuallyFriend)
+					|| (listContainsNeutral && !actuallyFriend)) {
+				if (!listContainsFriend || actuallyFriend || (listContainsEnemy && !actuallyPassive)
+						|| (listContainsNeutral && actuallyPassive)) {
+					if (!listContainsNeutral || (actuallyPassive && !actuallyFriend)
+							|| (listContainsEnemy && !actuallyPassive) || (listContainsFriend && actuallyFriend)) {
 						if (!targetsAllowed.contains(CTargetType.MECHANICAL)
 								|| this.classifications.contains(CUnitClassification.MECHANICAL)) {
 							if (!targetsAllowed.contains(CTargetType.ORGANIC)

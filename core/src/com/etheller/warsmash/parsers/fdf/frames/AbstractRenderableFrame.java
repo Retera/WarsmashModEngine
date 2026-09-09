@@ -638,15 +638,15 @@ public abstract class AbstractRenderableFrame implements UIFrame {
 		table.set("GetCenter", new org.luaj.vm2.lib.VarArgFunction() {
 			@Override
 			public org.luaj.vm2.Varargs invoke(final org.luaj.vm2.Varargs args) {
-				// WoW returns the frame center in UI coordinates; renderBounds is already
-				// in the shared UI viewport space that GetWidth/GetHeight and
-				// GetCursorPosition use.
+				// WoW returns the frame center in the same 1024x768-style XML coordinate
+				// units GetWidth/GetHeight/SetPoint use (renderBounds is in the tiny
+				// 0.8x0.6 viewport space; mixing the two made every map click land on
+				// the map's center).
 				return org.luaj.vm2.LuaValue.varargsOf(
-						LuaValue.valueOf(
-								AbstractRenderableFrame.this.renderBounds.x
-										+ (AbstractRenderableFrame.this.renderBounds.width / 2)),
-						LuaValue.valueOf(AbstractRenderableFrame.this.renderBounds.y
-								+ (AbstractRenderableFrame.this.renderBounds.height / 2)));
+						LuaValue.valueOf(GameUI.unconvertXMLCoordX(AbstractRenderableFrame.this.renderBounds.x
+								+ (AbstractRenderableFrame.this.renderBounds.width / 2))),
+						LuaValue.valueOf(GameUI.unconvertXMLCoordY(AbstractRenderableFrame.this.renderBounds.y
+								+ (AbstractRenderableFrame.this.renderBounds.height / 2))));
 			}
 		});
 		table.set("GetID", new ZeroArgFunction() {

@@ -76,6 +76,7 @@ import com.etheller.warsmash.parsers.fdf.frames.PopupMenuFrame;
 import com.etheller.warsmash.parsers.fdf.frames.ScrollBarFrame;
 import com.etheller.warsmash.parsers.fdf.frames.SetPoint;
 import com.etheller.warsmash.parsers.fdf.frames.SimpleButtonFrame;
+import com.etheller.warsmash.parsers.fdf.frames.MinimapFrame;
 import com.etheller.warsmash.parsers.fdf.frames.SimpleFrame;
 import com.etheller.warsmash.parsers.fdf.frames.SimpleStatusBarFrame;
 import com.etheller.warsmash.parsers.fdf.frames.SpriteFrame;
@@ -592,7 +593,7 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 		}
 		else if ("Minimap".equals(baseXmlNodeName)) {
 			frameClass = FrameClass.Frame;
-			frameType = "SIMPLEFRAME";
+			frameType = "MINIMAP";
 		}
 		else if ("Model".equals(baseXmlNodeName)) {
 			frameClass = FrameClass.Frame;
@@ -1361,6 +1362,18 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 		final String frameDefinitionName = checkNameString(parent, frameDefinition.getName());
 		switch (frameDefinition.getFrameClass()) {
 		case Frame:
+			if ("MINIMAP".equals(frameDefinition.getFrameType())) {
+				// WoW <Minimap>: renders the terrain minimap art around the player inside
+				// a circle; its XML children (ring border, zoom buttons, ping) draw over it.
+				final MinimapFrame minimapFrame = new MinimapFrame(frameDefinitionName, parent, this);
+				this.nameToFrame.put(frameDefinitionName, minimapFrame);
+				inflateScriptsIfAvailable(frameDefinition, minimapFrame);
+				for (final FrameDefinition childDefinition : frameDefinition.getInnerFrames()) {
+					minimapFrame.add(inflate(childDefinition, minimapFrame, frameDefinition,
+							inDecorateFileNames || childDefinition.has("DecorateFileNames")));
+				}
+				inflatedFrame = minimapFrame;
+			}
 			if ("SIMPLEFRAME".equals(frameDefinition.getFrameType())) {
 				final SimpleFrame simpleFrame = new SimpleFrame(frameDefinitionName, parent);
 				// TODO: we should not need to put ourselves in this map 2x, but we do

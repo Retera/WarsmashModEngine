@@ -42,6 +42,7 @@ import com.etheller.warsmash.parsers.fdf.frames.TextureFrame;
 import com.etheller.warsmash.parsers.fdf.frames.UIFrame;
 import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.viewer5.Scene;
+import com.etheller.warsmash.viewer5.handlers.AbstractMdxModelViewer;
 import com.etheller.warsmash.viewer5.handlers.w3x.War3MapViewer;
 import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.RenderUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.RenderWidget;
@@ -236,6 +237,9 @@ public class LuaEnvironment {
 	/** Last zone name the pawn stood in, to fire MINIMAP_ZONE_CHANGED on change. */
 	private String lastPawnZoneText;
 	private static final Vector2 cursorPositionHeap = new Vector2();
+	private float cursorUiX;
+	private float cursorUiY;
+	private boolean cursorUiPositionSet;
 	/** Real pixel extent of the 4x3 world map detail art (the rest is pow2 padding). */
 	private static final float WORLD_MAP_DETAIL_WIDTH = 1002f;
 	private static final float WORLD_MAP_DETAIL_HEIGHT = 668f;
@@ -1258,6 +1262,10 @@ public class LuaEnvironment {
 		this.globals.set("GetSubZoneText", new ZeroArgFunction() {
 			@Override
 			public LuaValue call() {
+				final String subZone = getPawnSubZoneText();
+				if (!subZone.isEmpty()) {
+					return LuaValue.valueOf(subZone);
+				}
 				return LuaValue.valueOf("Absolutely Somewhere");
 			}
 		});
@@ -1592,10 +1600,19 @@ public class LuaEnvironment {
 		this.globals.set("GetCursorPosition", new LuaFunction() {
 			@Override
 			public Varargs invoke(final Varargs varargs) {
-				cursorPositionHeap.set(Gdx.input.getX(), Gdx.input.getY());
-				LuaEnvironment.this.uiViewport.unproject(cursorPositionHeap);
-				return LuaValue.varargsOf(LuaValue.valueOf(cursorPositionHeap.x),
-						LuaValue.valueOf(cursorPositionHeap.y));
+				// Reported in the 1024x768-style XML coordinate units that frame
+				// GetCenter/GetWidth/SetPoint use, so the FrameXML's cursor math works.
+				// The owning UI feeds the cursor's viewport-space position from its own
+				// input events/polling (see setCursorUiPosition), which is what the
+				// frames were laid out and hit-tested against.
+				if (!LuaEnvironment.this.cursorUiPositionSet) {
+					cursorPositionHeap.set(Gdx.input.getX(), Gdx.input.getY());
+					LuaEnvironment.this.uiViewport.unproject(cursorPositionHeap);
+					LuaEnvironment.this.cursorUiX = cursorPositionHeap.x;
+					LuaEnvironment.this.cursorUiY = cursorPositionHeap.y;
+				}
+				return LuaValue.varargsOf(LuaValue.valueOf(GameUI.unconvertXMLCoordX(LuaEnvironment.this.cursorUiX)),
+						LuaValue.valueOf(GameUI.unconvertXMLCoordY(LuaEnvironment.this.cursorUiY)));
 			}
 		});
 		this.globals.set("GetMapInfo", new LuaFunction() {
@@ -1713,6 +1730,7 @@ public class LuaEnvironment {
 			this.bindingKeys.put(binding, Integer.toString(i));
 			this.keysToBinding.put(Input.Keys.valueOf("" + i), binding);
 		}
+		loadBindings();
 
 		game.runPostUpdate(() -> {
 			final Trigger heroLevelTrigger = new Trigger();
@@ -2377,13 +2395,103 @@ public class LuaEnvironment {
 	}
 
 	// ===========
+	// Key bindings
+
+	/** Lua bodies from Interface\\Bindings.xml by binding name (e.g. TOGGLEWORLDMAP). */
+	private final Map<String, LuaValue> bindingScripts = new HashMap<>();
+
+	/**
+	 * The 2003 Bindings.xml declares the binding names and their Lua bodies but
+	 * no keys (the client shipped those separately), so the WoW defaults for the
+	 * bindings we can honor are listed here.
+	 */
+	private static final Object[][] DEFAULT_BINDING_KEYS = { { Input.Keys.M, "TOGGLEWORLDMAP" },
+			{ Input.Keys.B, "TOGGLEBACKPACK" }, { Input.Keys.P, "TOGGLEABILITYBOOK" } };
+
+	private void loadBindings() {
+		final AbstractMdxModelViewer viewer = this.rootFrame.getModelViewer();
+		if (viewer == null) {
+			return;
+		}
+		try (java.io.InputStream stream = viewer.dataSource.getResourceAsStream("Interface\\Bindings.xml")) {
+			if (stream == null) {
+				return;
+			}
+			final org.w3c.dom.Document document = javax.xml.parsers.DocumentBuilderFactory.newInstance()
+					.newDocumentBuilder().parse(stream);
+			final org.w3c.dom.NodeList bindings = document.getElementsByTagName("Binding");
+			for (int i = 0; i < bindings.getLength(); i++) {
+				final org.w3c.dom.Element binding = (org.w3c.dom.Element) bindings.item(i);
+				final String name = binding.getAttribute("name");
+				final String body = binding.getTextContent();
+				if ((name == null) || name.isEmpty() || (body == null) || body.trim().isEmpty()) {
+					continue;
+				}
+				try {
+					this.bindingScripts.put(name, load(body));
+				}
+				catch (final Exception exc) {
+					System.err.println("Unable to compile binding " + name + ": " + exc.getMessage());
+				}
+			}
+		}
+		catch (final Exception exc) {
+			System.err.println("Unable to load Interface\\Bindings.xml: " + exc);
+		}
+		for (final Object[] defaultBinding : DEFAULT_BINDING_KEYS) {
+			final int keycode = (Integer) defaultBinding[0];
+			final String name = (String) defaultBinding[1];
+			if (this.bindingScripts.containsKey(name)) {
+				this.keysToBinding.put(keycode, name);
+				this.bindingKeys.put(name, Input.Keys.toString(keycode).toUpperCase());
+			}
+		}
+	}
+
+	/** Runs a Bindings.xml body (keystate "up"/"down" the way the FrameXML reads it). */
+	private void runBinding(final String name, final String keystate) {
+		final LuaValue script = this.bindingScripts.get(name);
+		if (script == null) {
+			return;
+		}
+		try {
+			this.globals.set("keystate", keystate);
+			this.globals.set("arg1", LuaValue.NIL);
+			script.call();
+		}
+		catch (final Exception exc) {
+			exc.printStackTrace();
+		}
+	}
+
+	// ===========
 	// World map / zone helpers
 
-	private War3MapViewer getWar3MapViewer() {
+	public War3MapViewer getWar3MapViewer() {
 		if (this.rootFrame.getModelViewer() instanceof War3MapViewer) {
 			return (War3MapViewer) this.rootFrame.getModelViewer();
 		}
 		return null;
+	}
+
+	public CUnit getPawnUnit() {
+		return this.pawnUnit;
+	}
+
+	/**
+	 * Records the cursor position in UI (viewport world) space. Called by the
+	 * owning UI every frame and on every mouse event, using the same unprojection
+	 * it lays frames out with, so GetCursorPosition agrees with GetCenter/GetWidth.
+	 */
+	public void setCursorUiPosition(final float x, final float y) {
+		this.cursorUiX = x;
+		this.cursorUiY = y;
+		this.cursorUiPositionSet = true;
+	}
+
+	/** Fires MINIMAP_UPDATE_ZOOM so the zoom buttons re-check their enabled state. */
+	public void notifyMinimapZoomChanged() {
+		fireEvent(ThirdPersonLuaXmlEvent.MINIMAP_UPDATE_ZOOM, LuaValue.NIL);
 	}
 
 	private WorldMapDbcData getWorldMapData() {
@@ -2530,13 +2638,9 @@ public class LuaEnvironment {
 		}
 		final float tileX = rect[0] + (fractionX * rect[2]);
 		final float tileY = rect[1] + (fractionY * rect[3]);
-		final List<WorldMapDbcData.Zone> zones = getZonesForContinentIndex(this.worldMapContinent);
-		for (int i = 0; i < zones.size(); i++) {
-			if (zones.get(i).containsTile(tileX, tileY)) {
-				return i + 1;
-			}
-		}
-		return 0;
+		final int best = WorldMapDbcData.findBestZoneIndex(getZonesForContinentIndex(this.worldMapContinent), tileX,
+				tileY);
+		return best == -1 ? 0 : best + 1;
 	}
 
 	/**
@@ -2618,24 +2722,49 @@ public class LuaEnvironment {
 		return LuaValue.varargsOf(LuaValue.valueOf(fractionX), LuaValue.valueOf(fractionY));
 	}
 
-	/** Zone (or continent) name at the pawn's position, or null off the wow maps. */
+	/**
+	 * Zone name at the pawn's position, or null off the wow maps. Uses the area id
+	 * baked into the terrain chunk under the pawn (what the real client does --
+	 * exact at every border), and only falls back to the coarse world-map rects
+	 * when the chunk carries no area (custom/generated maps).
+	 */
 	private String getPawnZoneText() {
 		final War3MapViewer.WdtWorldMapping mapping = getPawnWowTile(this.wowTileHeap);
-		if ((mapping == null) || (mapping.mapName == null)) {
+		if (mapping == null) {
 			return null;
 		}
 		final WorldMapDbcData data = getWorldMapData();
+		final int areaId = mapping.getAreaIdAt(this.pawnUnit.getX(), this.pawnUnit.getY());
+		if (areaId != 0) {
+			final String zoneName = data.getZoneNameForAreaId(areaId);
+			if (zoneName != null) {
+				return zoneName;
+			}
+		}
+		if (mapping.mapName == null) {
+			return null;
+		}
 		for (int i = 0; i < data.continents.size(); i++) {
 			if (data.continents.get(i).mapName.equalsIgnoreCase(mapping.mapName)) {
-				for (final WorldMapDbcData.Zone zone : data.getZonesForMapId(data.continents.get(i).mapId)) {
-					if (zone.containsTile(this.wowTileHeap[0], this.wowTileHeap[1])) {
-						return prettyMapName(zone.name);
-					}
+				final List<WorldMapDbcData.Zone> zones = getZonesForContinentIndex(i + 1);
+				final int best = WorldMapDbcData.findBestZoneIndex(zones, this.wowTileHeap[0], this.wowTileHeap[1]);
+				if (best != -1) {
+					return prettyMapName(zones.get(best).name);
 				}
 				return prettyMapName(data.continents.get(i).mapName);
 			}
 		}
 		return null;
+	}
+
+	/** Subzone name at the pawn's position (from the chunk area id), or "". */
+	private String getPawnSubZoneText() {
+		final War3MapViewer.WdtWorldMapping mapping = getPawnWowTile(this.wowTileHeap);
+		if (mapping == null) {
+			return "";
+		}
+		final int areaId = mapping.getAreaIdAt(this.pawnUnit.getX(), this.pawnUnit.getY());
+		return areaId == 0 ? "" : getWorldMapData().getSubZoneNameForAreaId(areaId);
 	}
 
 	/**
@@ -2644,7 +2773,13 @@ public class LuaEnvironment {
 	 * label follows the player.
 	 */
 	private void pollPawnZoneChanged() {
-		final String zoneText = getPawnZoneText();
+		String zoneText = getPawnZoneText();
+		if (zoneText != null) {
+			final String subZone = getPawnSubZoneText();
+			if (!subZone.isEmpty()) {
+				zoneText = zoneText + "|" + subZone;
+			}
+		}
 		if ((zoneText != null) && !zoneText.equals(this.lastPawnZoneText)) {
 			final boolean firstUpdate = this.lastPawnZoneText == null;
 			this.lastPawnZoneText = zoneText;
@@ -3110,6 +3245,9 @@ public class LuaEnvironment {
 			if (binding.startsWith("ACTIONBUTTON")) {
 				final String keyText = binding.substring(12);
 				useAction(Integer.parseInt(keyText));
+			}
+			else {
+				runBinding(binding, "up");
 			}
 		}
 	}

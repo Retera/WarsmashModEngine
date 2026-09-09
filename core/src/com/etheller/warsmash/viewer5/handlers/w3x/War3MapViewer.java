@@ -1864,10 +1864,49 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 		public final String mapName;
 		/** The terrain data center offset of this map's slice of the render space. */
 		public final float[] centerOffset;
+		private final WdtMap map;
+		private Map<Integer, TileHeader> tilesByIndex;
 
-		public WdtWorldMapping(final String mapName, final float[] centerOffset) {
+		public WdtWorldMapping(final String mapName, final float[] centerOffset, final WdtMap map) {
 			this.mapName = mapName;
 			this.centerOffset = centerOffset;
+			this.map = map;
+		}
+
+		/**
+		 * The AreaTable id of the terrain chunk under render-space (x, y) -- the
+		 * exact zone/subzone the WoW client would report there -- or 0 when the
+		 * position is off the loaded tiles or the chunk carries no area.
+		 */
+		public int getAreaIdAt(final float x, final float y) {
+			if (this.map == null) {
+				return 0;
+			}
+			if (this.tilesByIndex == null) {
+				this.tilesByIndex = new HashMap<>();
+				for (final TileHeader tileHeader : this.map.tileHeaders) {
+					this.tilesByIndex.put(tileHeader.idx, tileHeader);
+				}
+			}
+			final float[] tile = new float[2];
+			wc3ToWowTile(x, y, tile);
+			final int tileCol = (int) Math.floor(tile[0]);
+			final int tileRow = (int) Math.floor(tile[1]);
+			if ((tileCol < 0) || (tileCol >= 64) || (tileRow < 0) || (tileRow >= 64)) {
+				return 0;
+			}
+			final TileHeader tileHeader = this.tilesByIndex.get((tileRow * 64) + tileCol);
+			if (tileHeader == null) {
+				return 0;
+			}
+			final int chunkX = (int) Math.floor((tile[0] - tileCol) * 16);
+			final int chunkY = (int) Math.floor((tile[1] - tileRow) * 16);
+			for (final Chunk chunk : tileHeader.chunks) {
+				if ((chunk.getIndexX() == chunkX) && (chunk.getIndexY() == chunkY)) {
+					return (int) chunk.getAreaId();
+				}
+			}
+			return 0;
 		}
 
 		/**
@@ -2034,8 +2073,52 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 	 * its own tileset-driven circles.
 	 */
 	private static final String THIRD_PERSON_SELECT_TEXTURE = "Textures\\UnitSelectTexture.blp";
-	/** WoW's ground ring is wider than the unit; scale up the WC3 select radius to match. */
-	private static final float THIRD_PERSON_SELECT_SCALE = 2.0f;
+	/**
+	 * Ring tints matching the WoW target frame's name-plate colours
+	 * (TargetFrame_CheckFaction / UnitReactionColor): friendly player blue, enemy
+	 * red, ally with shared vision green, other ally "neutral" yellow.
+	 */
+	private static final float[] THIRD_PERSON_SELECT_COLOR_PLAYER = { 0f, 0f, 1f, 1f };
+	private static final float[] THIRD_PERSON_SELECT_COLOR_ENEMY = { 1f, 0f, 0f, 1f };
+	private static final float[] THIRD_PERSON_SELECT_COLOR_FRIEND = { 0f, 1f, 0f, 1f };
+	private static final float[] THIRD_PERSON_SELECT_COLOR_NEUTRAL = { 1f, 1f, 0f, 1f };
+
+	/**
+	 * The ring tint key/colour for a unit, mirroring the Lua target-frame logic
+	 * the WoW UI uses for its name plate so the two always agree.
+	 */
+	private String getThirdPersonReactionKey(final RenderWidget widget) {
+		if (!(widget instanceof RenderUnit)) {
+			return "n:";
+		}
+		final CUnit unit = ((RenderUnit) widget).getSimulationUnit();
+		final CPlayer localPlayer = this.simulation.getPlayer(this.localPlayerIndex);
+		final boolean ally = unit.isUnitAlly(localPlayer);
+		if (!ally) {
+			return "e:";
+		}
+		if (unit.getFirstAbilityOfType(CAbilityPlayerPawn.class) != null) {
+			return "p:";
+		}
+		if (this.simulation.getPlayer(unit.getPlayerIndex()).hasAlliance(this.localPlayerIndex,
+				CAllianceType.SHARED_VISION)) {
+			return "f:";
+		}
+		return "n:";
+	}
+
+	private static float[] getThirdPersonReactionColor(final String reactionKey) {
+		switch (reactionKey) {
+		case "p:":
+			return THIRD_PERSON_SELECT_COLOR_PLAYER;
+		case "e:":
+			return THIRD_PERSON_SELECT_COLOR_ENEMY;
+		case "f:":
+			return THIRD_PERSON_SELECT_COLOR_FRIEND;
+		default:
+			return THIRD_PERSON_SELECT_COLOR_NEUTRAL;
+		}
+	}
 
 	public void doSelectUnitThirdPerson(final List<RenderWidget> units) {
 		deselect();
@@ -2050,14 +2133,15 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 			// terrain splat system the Warcraft III circles use so it follows moving
 			// units and terrain height for free.
 			if (unit.getSelectionScale() > 0) {
-				String path = THIRD_PERSON_SELECT_TEXTURE;
+				// One splat model per reaction tint (the colour is per model), keyed the
+				// way the Warcraft III circles are.
+				String path = getThirdPersonReactionKey(unit) + THIRD_PERSON_SELECT_TEXTURE;
 				if (unit.isShowSelectionCircleAboveWater()) {
 					path = path + ":abovewater";
 				}
-				// WoW draws its ground ring noticeably wider than the model footprint;
-				// at the third-person camera's low angle a footprint-sized ring is
-				// almost entirely occluded by the unit, so widen it like the real client.
-				final float selectionSize = unit.getSelectionScale() * THIRD_PERSON_SELECT_SCALE;
+				// Same diameter the Warcraft III circle uses for this unit (its configured
+				// selection scale), so small and large units get proportionate rings.
+				final float selectionSize = unit.getSelectionScale();
 				final float x = unit.getX();
 				final float y = unit.getY();
 				final SplatModel existingModel = this.terrain.getSplatModel("selection:" + path);
@@ -2093,7 +2177,7 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 		}
 		for (final Map.Entry<String, Terrain.Splat> entry : splats.entrySet()) {
 			final String path = entry.getKey();
-			String filePath = path;
+			String filePath = path.substring(2);
 			if (filePath.endsWith(":abovewater")) {
 				filePath = filePath.substring(0, filePath.length() - 11);
 			}
@@ -2101,6 +2185,7 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 			final SplatModel model = new SplatModel(Gdx.gl30, (Texture) load(filePath, PathSolver.DEFAULT, null),
 					locations.locations, this.terrain.centerOffset, locations.unitMapping, true, false, true,
 					locations.aboveWater);
+			System.arraycopy(getThirdPersonReactionColor(path.substring(0, 2)), 0, model.color, 0, 4);
 			this.terrain.addSplatBatchModel("selection:" + path, model);
 			this.selectedSplatModelKeys.add("selection:" + path);
 		}
@@ -3830,7 +3915,7 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 			this.loadMapTasks.add(() -> {
 				this.terrainData = War3MapW3e.generateConverted(map);
 				War3MapViewer.this.wdtWorldMappings
-						.add(new WdtWorldMapping(map.mapName, this.terrainData.getCenterOffset()));
+						.add(new WdtWorldMapping(map.mapName, this.terrainData.getCenterOffset(), map));
 			});
 
 			this.loadMapTasks.add(() -> {
@@ -4129,8 +4214,8 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 					final float offsetInAllMapsWidth = (64 * 16 * 8 * 128f) * fMapIdx;
 					final float offset = offsetInAllMapsWidth - (widthAllMaps / 2.0f);
 					this.terrainDatas[fMapIdx].getCenterOffset()[0] += offset;
-					War3MapViewer.this.wdtWorldMappings
-							.add(new WdtWorldMapping(map.mapName, this.terrainDatas[fMapIdx].getCenterOffset()));
+					War3MapViewer.this.wdtWorldMappings.add(
+							new WdtWorldMapping(map.mapName, this.terrainDatas[fMapIdx].getCenterOffset(), map));
 				});
 				mapIdx++;
 			}

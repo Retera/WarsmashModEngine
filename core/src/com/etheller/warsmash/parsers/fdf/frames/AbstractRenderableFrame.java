@@ -635,6 +635,20 @@ public abstract class AbstractRenderableFrame implements UIFrame {
 				return LuaValue.valueOf(getLevel());
 			}
 		});
+		table.set("GetCenter", new org.luaj.vm2.lib.VarArgFunction() {
+			@Override
+			public org.luaj.vm2.Varargs invoke(final org.luaj.vm2.Varargs args) {
+				// WoW returns the frame center in UI coordinates; renderBounds is already
+				// in the shared UI viewport space that GetWidth/GetHeight and
+				// GetCursorPosition use.
+				return org.luaj.vm2.LuaValue.varargsOf(
+						LuaValue.valueOf(
+								AbstractRenderableFrame.this.renderBounds.x
+										+ (AbstractRenderableFrame.this.renderBounds.width / 2)),
+						LuaValue.valueOf(AbstractRenderableFrame.this.renderBounds.y
+								+ (AbstractRenderableFrame.this.renderBounds.height / 2)));
+			}
+		});
 		table.set("GetID", new ZeroArgFunction() {
 			@Override
 			public LuaValue call() {

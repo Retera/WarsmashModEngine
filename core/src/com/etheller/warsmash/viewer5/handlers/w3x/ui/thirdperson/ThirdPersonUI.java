@@ -38,6 +38,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.War3MapViewer;
 import com.etheller.warsmash.viewer5.handlers.w3x.camera.ThirdPersonCameraManager;
 import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.RenderUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.RenderWidget;
+import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.ability.ItemUI;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CDestructable;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CItem;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.CUnit;
@@ -430,6 +431,25 @@ public class ThirdPersonUI implements WarsmashToggleableUI {
 					ThirdPersonUI.this.rootFrame.getLuaGlobals().notifyBagsChanged();
 					return null;
 				});
+
+				// WoW prints looted items into the chat window; announce pickups there.
+				final Trigger lootChatTrigger = new Trigger();
+				lootChatTrigger.addAction((arguments, globalScope, triggerScope) -> {
+					if (triggerScope instanceof CommonTriggerExecutionScope) {
+						final CItem item = ((CommonTriggerExecutionScope) triggerScope).getManipulatedItem();
+						if (item != null) {
+							final ItemUI itemUI = ThirdPersonUI.this.war3MapViewer.getAbilityDataUI()
+									.getItemUI(item.getTypeId());
+							if (itemUI != null) {
+								ThirdPersonUI.this.rootFrame.getLuaGlobals()
+										.addSystemChatMessage("You receive item: " + itemUI.getName() + ".");
+							}
+						}
+					}
+					return null;
+				});
+				ThirdPersonUI.this.pawnUnit.addEvent(ThirdPersonUI.this.war3MapViewer.simulation.getGlobalScope(),
+						lootChatTrigger, JassGameEventsWar3.EVENT_UNIT_PICKUP_ITEM);
 				ThirdPersonUI.this.pawnUnit.addEvent(ThirdPersonUI.this.war3MapViewer.simulation.getGlobalScope(),
 						refreshBagsTrigger, JassGameEventsWar3.EVENT_UNIT_DROP_ITEM);
 				ThirdPersonUI.this.pawnUnit.addEvent(ThirdPersonUI.this.war3MapViewer.simulation.getGlobalScope(),
@@ -999,6 +1019,11 @@ public class ThirdPersonUI implements WarsmashToggleableUI {
 
 	@Override
 	public void onHide() {
+		// Drop the WoW-style ground selection ring (and the unshaded brightening)
+		// when switching over to the Warcraft III UI; MeleeUI manages its own
+		// selection circles and would otherwise show ours on top.
+		this.war3MapViewer.deselect();
+		this.war3MapViewer.clearUnitMouseOverHighlight();
 		this.war3MapViewer.simulation.setFogEnabled(true);
 		this.war3MapViewer.simulation.setFogMaskEnabled(true);
 		this.war3MapViewer.removeScene(this.uiScene);

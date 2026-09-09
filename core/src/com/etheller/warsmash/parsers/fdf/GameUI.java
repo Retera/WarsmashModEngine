@@ -693,6 +693,15 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 				}
 			}
 		}
+		final Node maxLinesItem = getAttributesNamedItem(attributes, "maxLines");
+		if (maxLinesItem != null) {
+			final String attribText = getAttributeText(maxLinesItem);
+			if (attribText != null) {
+				// ScrollingMessageFrame capacity (the chat box); mapped onto the FDF-style
+				// field that the XMLTEXTAREA inflater already reads.
+				frameDefinition.set("TextAreaMaxLines", new StringFrameDefinitionField(attribText));
+			}
+		}
 		final Node frameStrataItem = getAttributesNamedItem(attributes, "frameStrata");
 		if (frameStrataItem != null) {
 			final String attribText = getAttributeText(frameStrataItem);
@@ -1219,6 +1228,14 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 							line = line.substring(0, replaceStart) + "ipairs(" + toReplace + ")"
 									+ line.substring(replaceEnd);
 						}
+					}
+					// The 2003 FrameXML is Lua 5.0: vararg functions read the implicit
+					// `arg` table, which Lua 5.1 (luaj) no longer creates. Splice an
+					// equivalent local into the declaration line (same line, so error
+					// line numbers stay true).
+					if (line.contains("...")) {
+						line = line.replaceAll("(?:local\\s+)?function\\s+[\\w_.:]*\\s*\\([^)]*\\.\\.\\.\\s*\\)",
+								"$0 local arg = {...}; arg.n = select('#', ...);");
 					}
 					fileContents.append(line);
 					fileContents.append('\n');
@@ -2392,13 +2409,21 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 				if (textAreaMaxLines != null) {
 					controlFrame.setMaxLines(textAreaMaxLines.intValue());
 				}
+				else {
+					// A ScrollingMessageFrame with no declared capacity previously defaulted
+					// to zero, which discarded every AddMessage immediately (the chat box
+					// rendered permanently empty).
+					controlFrame.setMaxLines(128);
+				}
 
 				FontDefinition font = frameDefinition.getFont("FrameFont");
 				if ((font == null) && (parentDefinitionIfAvailable != null)) {
 					font = parentDefinitionIfAvailable.getFont("FrameFont");
 				}
+				// Default matches WoW's ChatFontNormal (14px in the 768-unit UI space)
+				// rather than the WC3 list-box 0.06 size, which is chat-window-filling huge.
 				this.fontParam.size = (int) convertY(viewport2,
-						(font == null ? (textAreaLineHeight == null ? 0.06f : textAreaLineHeight)
+						(font == null ? (textAreaLineHeight == null ? 0.011f : textAreaLineHeight)
 								: font.getFontSize()));
 				if (this.fontParam.size == 0) {
 					this.fontParam.size = 24;
@@ -3015,6 +3040,10 @@ public final class GameUI extends AbstractUIFrame implements UIFrame {
 
 	public LuaEnvironment getLuaGlobals() {
 		return this.luaGlobals;
+	}
+
+	public AbstractMdxModelViewer getModelViewer() {
+		return this.modelViewer;
 	}
 
 	public KeyedSounds getUiSounds() {

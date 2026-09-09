@@ -93,20 +93,23 @@ public class GlueTextButtonFrame extends GlueButtonFrame {
 		table.set("SetText", new TwoArgFunction() {
 			@Override
 			public LuaValue call(final LuaValue thistable, final LuaValue arg) {
-				final String text = arg.checkjstring();
+				final String text = arg.isnil() ? "" : arg.tojstring();
 				if (GlueTextButtonFrame.this.buttonText instanceof StringFrame) {
 					luaEnvironment.getRootFrame().setText((StringFrame) GlueTextButtonFrame.this.buttonText, text);
 				}
-				return null;
+				return LuaValue.NIL;
 			}
 		});
 		table.set("GetText", new ZeroArgFunction() {
 			@Override
 			public LuaValue call() {
 				if (GlueTextButtonFrame.this.buttonText instanceof StringFrame) {
-					return LuaValue.valueOf(((StringFrame) GlueTextButtonFrame.this.buttonText).getText());
+					final String text = ((StringFrame) GlueTextButtonFrame.this.buttonText).getText();
+					// A Java null return crashes luaj internals (e.g. Lua == comparisons);
+					// report "no text" as nil the way WoW does.
+					return text == null ? LuaValue.NIL : LuaValue.valueOf(text);
 				}
-				return null;
+				return LuaValue.NIL;
 			}
 		});
 		table.set("GetTextWidth", new ZeroArgFunction() {

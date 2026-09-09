@@ -249,6 +249,22 @@ public class SplatModel implements Comparable<SplatModel> {
 		for (final Batch b : this.batches) {
 			// Vertices
 			gl.glBindBuffer(GL30.GL_ARRAY_BUFFER, b.vertexBuffer);
+			// setVertexAttribute only sets the pointer; without an explicit enable the
+			// draw silently used whatever attribute arrays the previous pass left
+			// switched on, so whether a splat appeared depended on what happened to
+			// render before it (selection rings in the third-person UI vanished when
+			// they were the only model in their pass).
+			shader.enableVertexAttribute("a_position");
+			shader.enableVertexAttribute("a_uv");
+			shader.enableVertexAttribute("a_absoluteHeight");
+			// Particle/cliff batches set an instanced divisor of 1 on their attribute
+			// slots and don't all reset it; that state is global per attribute index, so
+			// a slot the splat shader reuses could still carry divisor=1 and collapse
+			// every splat vertex to the first (rings appeared only when another splat
+			// had rendered first and happened to clear the state). Force it back to 0.
+			gl.glVertexAttribDivisor(shader.getAttributeLocation("a_position"), 0);
+			gl.glVertexAttribDivisor(shader.getAttributeLocation("a_uv"), 0);
+			gl.glVertexAttribDivisor(shader.getAttributeLocation("a_absoluteHeight"), 0);
 			shader.setVertexAttribute("a_position", 3, GL30.GL_FLOAT, false, 12, 0);
 			shader.setVertexAttribute("a_uv", 2, GL30.GL_FLOAT, false, 8, b.uvsOffset);
 			shader.setVertexAttribute("a_absoluteHeight", 1, GL30.GL_FLOAT, false, 4, b.paramsOffset);

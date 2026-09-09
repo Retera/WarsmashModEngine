@@ -141,6 +141,21 @@ public class UIFrameScripts {
 	}
 
 	public void onClick(final ThirdPersonLuaXmlButton button) {
+		// WoW fires OnMouseUp before OnClick on release; some frames only script
+		// OnMouseUp (the world map's click-to-zoom does), so both must dispatch.
+		if (this.OnMouseUp != null) {
+			final LuaValue prevThis = this.luaEnvironment.loadSavingThis(this.thisFrame);
+			try {
+				this.luaEnvironment.getGlobals().set("arg1", button.name());
+				this.OnMouseUp.call();
+			}
+			catch (final Exception exc) {
+				exc.printStackTrace();
+			}
+			finally {
+				this.luaEnvironment.restoreThis(prevThis);
+			}
+		}
 		if (this.OnClick != null) {
 			final LuaValue prevThis = this.luaEnvironment.loadSavingThis(this.thisFrame);
 			try {
@@ -231,6 +246,30 @@ public class UIFrameScripts {
 			try {
 				this.luaEnvironment.getGlobals().set("event", event.name());
 				this.luaEnvironment.getGlobals().set("arg1", arg1);
+				this.OnEvent.call();
+			}
+			catch (final Exception exc) {
+				exc.printStackTrace();
+			}
+			finally {
+				this.luaEnvironment.restoreThis(prevThis);
+			}
+		}
+	}
+
+	/**
+	 * Fires OnEvent with up to six args (WoW chat events read arg1..arg6); unused
+	 * slots are cleared to nil so a handler never sees a previous event's args.
+	 */
+	public void onEventArgs(final ThirdPersonLuaXmlEvent event, final LuaValue[] args) {
+		if (this.OnEvent != null) {
+			final LuaValue prevThis = this.luaEnvironment.loadSavingThis(this.thisFrame);
+			try {
+				this.luaEnvironment.getGlobals().set("event", event.name());
+				for (int i = 0; i < 6; i++) {
+					this.luaEnvironment.getGlobals().set("arg" + (i + 1),
+							((i < args.length) && (args[i] != null)) ? args[i] : LuaValue.NIL);
+				}
 				this.OnEvent.call();
 			}
 			catch (final Exception exc) {

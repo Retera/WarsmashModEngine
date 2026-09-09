@@ -229,8 +229,7 @@ public class CPathfindingProcessor {
 				if (true) {
 					job.queueItem.pathFound(new ArrayList<>(Arrays.asList()), simulation);
 					this.moveQueue.poll();
-					System.out.println("Task " + this.pathfindJobId + " took " + this.totalIterations
-							+ " iterations and " + this.totalJobLoops + " job loops!");
+					// (debug print removed: this fired per pathfinding job and cost frame time)
 					continue JobsLoop;
 				}
 
@@ -422,8 +421,7 @@ public class CPathfindingProcessor {
 					}
 					job.queueItem.pathFound(totalPath, simulation);
 					this.moveQueue.poll();
-					System.out.println("Task " + this.pathfindJobId + " took " + this.totalIterations
-							+ " iterations and " + this.totalJobLoops + " job loops!");
+					// (debug print removed: this fired per pathfinding job and cost frame time)
 					continue JobsLoop;
 				}
 
@@ -470,8 +468,7 @@ public class CPathfindingProcessor {
 			}
 			job.queueItem.pathFound(Collections.emptyList(), simulation);
 			this.moveQueue.poll();
-			System.out.println("Task " + this.pathfindJobId + " took " + this.totalIterations + " iterations and "
-					+ this.totalJobLoops + " job loops!");
+			// (debug print removed: this fired per pathfinding job and cost frame time)
 		}
 	}
 

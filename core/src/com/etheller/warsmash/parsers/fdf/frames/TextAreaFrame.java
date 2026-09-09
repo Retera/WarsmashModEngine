@@ -192,12 +192,18 @@ public class TextAreaFrame extends ControlFrame implements ScrollBarFrame.Scroll
 
 	private int computeScrollOffset(final int numStringFrames) {
 		int scrollOffset;
-		if ((this.scrollBarFrame != null) && (this.listItems.size() > numStringFrames)) {
+		if (this.listItems.size() <= numStringFrames) {
+			scrollOffset = 0;
+		}
+		else if (this.scrollBarFrame != null) {
 			scrollOffset = (int) Math
 					.ceil(((100 - this.scrollBarFrame.getValue()) / 100f) * (this.listItems.size() - numStringFrames));
 		}
 		else {
-			scrollOffset = 0;
+			// No scroll bar (e.g. the WoW chat window): pin to the newest lines, the
+			// way a chat log behaves. Showing the head instead meant that once the
+			// backlog exceeded one screen, new messages were never visible.
+			scrollOffset = this.listItems.size() - numStringFrames;
 		}
 		return scrollOffset;
 	}
@@ -272,16 +278,22 @@ public class TextAreaFrame extends ControlFrame implements ScrollBarFrame.Scroll
 		table.set("ScrollUp", new OneArgFunction() {
 			@Override
 			public LuaValue call(final LuaValue thistable) {
-				TextAreaFrame.this.scrollBarFrame.setValue(TextAreaFrame.this.gameUI, TextAreaFrame.this.viewport,
-						TextAreaFrame.this.scrollBarFrame.getValue() - TextAreaFrame.this.scrollBarFrame.getStepSize());
+				if (TextAreaFrame.this.scrollBarFrame != null) {
+					TextAreaFrame.this.scrollBarFrame.setValue(TextAreaFrame.this.gameUI, TextAreaFrame.this.viewport,
+							TextAreaFrame.this.scrollBarFrame.getValue()
+									- TextAreaFrame.this.scrollBarFrame.getStepSize());
+				}
 				return LuaValue.NIL;
 			}
 		});
 		table.set("ScrollDown", new OneArgFunction() {
 			@Override
 			public LuaValue call(final LuaValue thistable) {
-				TextAreaFrame.this.scrollBarFrame.setValue(TextAreaFrame.this.gameUI, TextAreaFrame.this.viewport,
-						TextAreaFrame.this.scrollBarFrame.getValue() + TextAreaFrame.this.scrollBarFrame.getStepSize());
+				if (TextAreaFrame.this.scrollBarFrame != null) {
+					TextAreaFrame.this.scrollBarFrame.setValue(TextAreaFrame.this.gameUI, TextAreaFrame.this.viewport,
+							TextAreaFrame.this.scrollBarFrame.getValue()
+									+ TextAreaFrame.this.scrollBarFrame.getStepSize());
+				}
 				return LuaValue.NIL;
 			}
 		});

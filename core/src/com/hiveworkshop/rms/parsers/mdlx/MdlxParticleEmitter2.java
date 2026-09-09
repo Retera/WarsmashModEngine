@@ -99,9 +99,19 @@ public class MdlxParticleEmitter2 extends MdlxGenericObject {
 	public long replaceableId = 0;
 
 	public long emitterSize;
+	/**
+	 * MDLX v1300 (WoW alpha) emitter type: 1 = Plane, 2 = Sphere, 3 = Spline.
+	 * (Same enumeration later used by the M2 particle emitters, see
+	 * https://wowdev.wiki/MDX and https://wowdev.wiki/M2#Particle_emitters)
+	 */
 	public long emitterType;
-	public byte[] geometryMdl = new byte[104];
-	public byte[] recursionMdl = new byte[104];
+	// NOTE: these two model filename fields are char[0x104] = 260 bytes each in
+	// the v1300 format (https://wowdev.wiki/MDX); they were previously
+	// mis-parsed as byte[104], which shifted every subsequent field
+	// (twinkle/tumble/drag/spin/wind/follow/splines/squirt) into the string
+	// padding, discarding the real values into the trailing skip loop.
+	public byte[] geometryMdl = new byte[260];
+	public byte[] recursionMdl = new byte[260];
 	public float twinkleFPS; // default is 10.0
 	public float twinkleOnOff; // boolean, twinkle applies additional scaling to make a shrink and grow effect
 	public float twinkleScaleMin; // twinkle is not applied if twinkleScaleMax - twinkleScaleMin == 0.0
@@ -513,7 +523,10 @@ public class MdlxParticleEmitter2 extends MdlxGenericObject {
 	public long getByteLength(final int version) {
 		int extra = 0;
 		if (version == 1300) {
-			extra = 12 + 296 + (this.numSplines * 12);
+			// emitterSize(4) + emitterType(4) + longitude(4) + zSource(4)
+			// + geometryMdl(260) + recursionMdl(260) + 21 floats (84)
+			// + numSplines(4) + splines(numSplines * 12)
+			extra = 16 + 520 + 84 + 4 + (this.numSplines * 12);
 		}
 		return 175 + extra + super.getByteLength(version);
 	}

@@ -482,8 +482,17 @@ public class TerrainWdt extends TerrainInterface {
 		long lastMs = startMs;
 		while (!this.tasks.isEmpty()) {
 			final DynamicTask nextTask = this.tasks.peek();
-			if (nextTask.run()) {
+			try {
+				if (nextTask.run()) {
+					this.tasks.poll();
+				}
+			}
+			catch (final Exception exc) {
+				// A failing task (e.g. a doodad whose model file is absent from the
+				// data set) must not wedge the queue: drop it and keep loading.
 				this.tasks.poll();
+				System.err.println("Dropping failed terrain task " + nextTask.getClass().getSimpleName());
+				exc.printStackTrace();
 			}
 			if (this.tasks.isEmpty()) {
 				System.out.println("finished all tasks for now!!");

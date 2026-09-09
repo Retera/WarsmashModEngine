@@ -1895,6 +1895,8 @@ public class MenuUI {
 							Arrays.asList(MenuUI.this.dataSource, mapMpqDataSource));
 					Jass2.loadConfig(configDataSource, MenuUI.this.uiViewport, MenuUI.this.uiScene,
 							MenuUI.this.rootFrame, war3MapConfig, WarsmashConstants.JASS_FILE_LIST).config();
+					System.out.println("WDT map config() ran; start loc 0 = (" + war3MapConfig.getStartLoc(0).getX()
+							+ ", " + war3MapConfig.getStartLoc(0).getY() + ")");
 				}
 				catch (final Exception exc) {
 					System.err.println("Unable to run config() for WDT map, using defaults: " + exc);

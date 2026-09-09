@@ -162,6 +162,11 @@ public enum AnimationMap {
 	 */
 	KLIF("LifeSpan", MdlxTimelineDescriptor.FLOAT_TIMELINE),
 	/**
+	 * Particle emitter 2 z source (MDLX1300, WoW alpha; see
+	 * https://wowdev.wiki/MDX)
+	 */
+	KP2Z("ZSource", MdlxTimelineDescriptor.FLOAT_TIMELINE),
+	/**
 	 * Generic visibility from MDLX1300 (first historical vers number increase)
 	 */
 	KVIS("Visibility", MdlxTimelineDescriptor.FLOAT_TIMELINE),

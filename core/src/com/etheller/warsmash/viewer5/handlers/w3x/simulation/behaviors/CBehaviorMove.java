@@ -452,7 +452,7 @@ public class CBehaviorMove implements CBehavior {
 		this.path = waypoints;
 		if (this.firstPathfindJob) {
 			this.firstPathfindJob = false;
-			System.out.println("init path " + this.path);
+			// (debug print removed: fired for every unit move order)
 			// check for smoothing
 			if (!this.path.isEmpty()) {
 				float lastX = startFloatingX;

@@ -1736,6 +1736,7 @@ public class MenuUI {
 
 					final String interiorWdtName = new File(subMapFilename).getName();
 					final WdtMap map = new WdtMap(mapMpqDataSource.read(interiorWdtName));
+					map.mapName = stripWdtExtension(interiorWdtName);
 					maps.add(map);
 				}
 				viewer.setDataSource(new CompoundDataSource(dataSources));
@@ -1769,6 +1770,7 @@ public class MenuUI {
 				// The interior WDT is hashed under the outer name with ".MPQ" stripped.
 				final String interiorWdtName = new File(mapFilename).getName();
 				final WdtMap map = new WdtMap(mapMpqDataSource.read(interiorWdtName));
+				map.mapName = stripWdtExtension(interiorWdtName);
 				this.loadingMap = new LoadingMap(viewer, map);
 			}
 			else {
@@ -1824,6 +1826,13 @@ public class MenuUI {
 		catch (final IOException e) {
 			throw new RuntimeException(e);
 		}
+	}
+
+	private static String stripWdtExtension(final String fileName) {
+		if (fileName.toLowerCase().endsWith(WdtMap.EXTENSION)) {
+			return fileName.substring(0, fileName.length() - WdtMap.EXTENSION.length());
+		}
+		return fileName;
 	}
 
 	private static String getStringWithWTS(final WTS wts, String string) {

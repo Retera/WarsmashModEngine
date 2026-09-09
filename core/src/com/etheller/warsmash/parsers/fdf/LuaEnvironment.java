@@ -1,6 +1,8 @@
 package com.etheller.warsmash.parsers.fdf;
 
 import java.io.Reader;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -32,12 +34,15 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Graphics.DisplayMode;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.etheller.interpreter.ast.scope.trigger.Trigger;
+import com.etheller.warsmash.parsers.dbc.WorldMapDbcData;
 import com.etheller.warsmash.parsers.fdf.frames.TextureFrame;
 import com.etheller.warsmash.parsers.fdf.frames.UIFrame;
 import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.viewer5.Scene;
+import com.etheller.warsmash.viewer5.handlers.w3x.War3MapViewer;
 import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.RenderUnit;
 import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.RenderWidget;
 import com.etheller.warsmash.viewer5.handlers.w3x.rendersim.ability.AbilityDataUI;
@@ -211,6 +216,30 @@ public class LuaEnvironment {
 	private final Map<String, String> bindingKeys = new HashMap<>();
 	private final Map<Integer, String> keysToBinding = new HashMap<>();
 
+	/**
+	 * World map view state for the WoW map window (see the "World map" natives).
+	 * The 0.5.3 world map is tile-rect based: WorldMapContinent/WorldMapArea dbc
+	 * rows give each map's span of WDT tile indices, and unit positions convert
+	 * from the Warcraft III render space back to WoW tile coordinates through
+	 * {@link War3MapViewer.WdtWorldMapping}. Continent 0 = whole-world view;
+	 * otherwise 1-based index into the dbc continent list. Zone 0 = continent
+	 * view; otherwise 1-based index into that continent's zone list.
+	 */
+	private WorldMapDbcData worldMapData;
+	private int worldMapContinent = -1; // -1 = snap to the player's continent on first use
+	private int worldMapZone = 0;
+	private List<WorldMapDbcData.Zone> cachedContinentZones;
+	private int cachedContinentZonesIndex = -1;
+	private final float[] wowTileHeap = new float[2];
+	/** Highlight-art pixel sizes per zone, cached so hover never re-loads textures. */
+	private final Map<String, float[]> zoneHighlightTextureSizes = new HashMap<>();
+	/** Last zone name the pawn stood in, to fire MINIMAP_ZONE_CHANGED on change. */
+	private String lastPawnZoneText;
+	private static final Vector2 cursorPositionHeap = new Vector2();
+	/** Real pixel extent of the 4x3 world map detail art (the rest is pow2 padding). */
+	private static final float WORLD_MAP_DETAIL_WIDTH = 1002f;
+	private static final float WORLD_MAP_DETAIL_HEIGHT = 668f;
+
 	public LuaEnvironment(final CSimulation game, final GameUI rootFrame, final Viewport uiViewport,
 			final Scene uiScene, final KeyedSounds uiSounds, final CUnit pawnUnit,
 			final CAbilityPlayerPawn abilityPlayerPawn, final AbilityDataUI abilityDataUI,
@@ -333,6 +362,13 @@ public class LuaEnvironment {
 			@Override
 			public LuaValue call(final LuaValue arg) {
 				final String soundName = arg.checkjstring();
+				// TargetFrame_OnShow plays these when a friendly/neutral unit becomes the
+				// target; instead of WoW's generic click we voice the unit's Warcraft III
+				// sound set ("What" acknowledgement), riding the existing Lua lookup.
+				if (("igCharacterNPCSelect".equals(soundName) || "igCreatureNeutralSelect".equals(soundName))
+						&& playTargetWhatSound()) {
+					return LuaValue.NIL;
+				}
 				uiSounds.getSound(soundName).play(uiScene.audioContext, 0, 0, 0);
 				return LuaValue.NIL; // TODO
 			}
@@ -566,7 +602,32 @@ public class LuaEnvironment {
 		this.globals.set("SetBagPortaitTexture", new TwoArgFunction() {
 			@Override
 			public LuaValue call(final LuaValue textureFrame, final LuaValue bagId) {
-				return LuaValue.NIL; // TODO set the container portrait to the bag's icon
+				// (Blizzard's typo.) Paint the container window's round portrait with the
+				// icon of the bag it shows: the built-in backpack art for bag 0, else the
+				// carried Warcraft III bag item's icon.
+				final Object wsThis = textureFrame.get(UIFrameLuaWrapper.WS_THIS);
+				if (!(wsThis instanceof UIFrameLuaWrapper)
+						|| !(((UIFrameLuaWrapper) wsThis).getFrame() instanceof TextureFrame)) {
+					return LuaValue.NIL;
+				}
+				final TextureFrame portrait = (TextureFrame) ((UIFrameLuaWrapper) wsThis).getFrame();
+				String iconPath = "Interface\\Buttons\\Button-Backpack-Up";
+				final int bag = bagId.checkint();
+				if (bag != 0) {
+					final CAbilityBag bagAbility = resolveBag(bag);
+					if ((bagAbility == null) || (bagAbility.getItem() == null)) {
+						return LuaValue.NIL;
+					}
+					final ItemUI itemUI = LuaEnvironment.this.abilityDataUI
+							.getItemUI(bagAbility.getItem().getTypeId());
+					if ((itemUI == null) || (itemUI.getItemIconPathForDragging() == null)
+							|| itemUI.getItemIconPathForDragging().isEmpty()) {
+						return LuaValue.NIL;
+					}
+					iconPath = itemUI.getItemIconPathForDragging();
+				}
+				portrait.setTexture(iconPath, LuaEnvironment.this.rootFrame);
+				return LuaValue.NIL;
 			}
 		});
 		this.globals.set("UpdateBagButtonHighlight", new OneArgFunction() {
@@ -1190,7 +1251,8 @@ public class LuaEnvironment {
 		this.globals.set("GetZoneText", new ZeroArgFunction() {
 			@Override
 			public LuaValue call() {
-				return LuaValue.valueOf("Warsmash");
+				final String zoneText = getPawnZoneText();
+				return LuaValue.valueOf(zoneText != null ? zoneText : "Warsmash");
 			}
 		});
 		this.globals.set("GetSubZoneText", new ZeroArgFunction() {
@@ -1202,7 +1264,8 @@ public class LuaEnvironment {
 		this.globals.set("GetMinimapZoneText", new ZeroArgFunction() {
 			@Override
 			public LuaValue call() {
-				return LuaValue.valueOf("Eastern Nowhere");
+				final String zoneText = getPawnZoneText();
+				return LuaValue.valueOf(zoneText != null ? zoneText : "Eastern Nowhere");
 			}
 		});
 		this.globals.set("UnitLevel", new OneArgFunction() {
@@ -1446,6 +1509,203 @@ public class LuaEnvironment {
 						LuaValue.valueOf(bandwidthOut), LuaValue.valueOf(latency) });
 			}
 		});
+		// ===========
+		// Chat
+
+		this.globals.set("GetDefaultLanguage", new ZeroArgFunction() {
+			@Override
+			public LuaValue call() {
+				return LuaValue.valueOf("Common");
+			}
+		});
+		final OneArgFunction getLanguageByIndex = new OneArgFunction() {
+			@Override
+			public LuaValue call(final LuaValue index) {
+				return index.optint(0) == 1 ? LuaValue.valueOf("Common") : LuaValue.NIL;
+			}
+		};
+		this.globals.set("GetLanguageByIndex", getLanguageByIndex);
+		final ZeroArgFunction getNumLanguages = new ZeroArgFunction() {
+			@Override
+			public LuaValue call() {
+				return LuaValue.ONE;
+			}
+		};
+		this.globals.set("GetNumLanguages", getNumLanguages);
+		// The 2003 FrameXML misspells this one (LanguageMenu_OnLoad).
+		this.globals.set("GetNumLaguages", getNumLanguages);
+		this.globals.set("SendChatMessage", new LuaFunction() {
+			@Override
+			public Varargs invoke(final Varargs varargs) {
+				// Single player: there is no server to route through, so locally echo the
+				// message back as the matching CHAT_MSG event, which the chat frame prints.
+				final String message = varargs.arg(1).optjstring("");
+				final String type = varargs.arg(2).optjstring("SAY");
+				if (!message.isEmpty()) {
+					final String playerName = getWidgetName(LuaEnvironment.this.pawnUnit);
+					dispatchChatMessage("CHAT_MSG_" + type, message, playerName);
+				}
+				return LuaValue.NIL;
+			}
+		});
+		this.globals.set("RandomRoll", new TwoArgFunction() {
+			@Override
+			public LuaValue call(final LuaValue minArg, final LuaValue maxArg) {
+				final int min = minArg.optint(1);
+				final int max = Math.max(min, maxArg.optint(100));
+				final int roll = min + (int) (Math.random() * ((max - min) + 1));
+				addSystemChatMessage(
+						getWidgetName(LuaEnvironment.this.pawnUnit) + " rolls a " + roll + " (" + min + "-" + max + ")");
+				return LuaValue.NIL;
+			}
+		});
+		this.globals.set("RunScript", new OneArgFunction() {
+			@Override
+			public LuaValue call(final LuaValue script) {
+				try {
+					runLua(script.checkjstring());
+				}
+				catch (final Exception exc) {
+					addSystemChatMessage("Script error: " + exc.getMessage());
+				}
+				return LuaValue.NIL;
+			}
+		});
+		this.globals.set("DoEmote", new TwoArgFunction() {
+			@Override
+			public LuaValue call(final LuaValue token, final LuaValue none) {
+				return LuaValue.NIL; // no emote animations wired yet
+			}
+		});
+		this.globals.set("RequestTimePlayed", new ZeroArgFunction() {
+			@Override
+			public LuaValue call() {
+				return LuaValue.NIL; // no played-time tracking
+			}
+		});
+
+		// ===========
+		// World map. The map window art/state is driven by the dbc tile rects; unit
+		// positions cross from Warcraft III render space to WoW tile space through
+		// War3MapViewer.WdtWorldMapping (exact inverse of the terrain conversion).
+
+		this.globals.set("GetCursorPosition", new LuaFunction() {
+			@Override
+			public Varargs invoke(final Varargs varargs) {
+				cursorPositionHeap.set(Gdx.input.getX(), Gdx.input.getY());
+				LuaEnvironment.this.uiViewport.unproject(cursorPositionHeap);
+				return LuaValue.varargsOf(LuaValue.valueOf(cursorPositionHeap.x),
+						LuaValue.valueOf(cursorPositionHeap.y));
+			}
+		});
+		this.globals.set("GetMapInfo", new LuaFunction() {
+			@Override
+			public Varargs invoke(final Varargs varargs) {
+				ensureWorldMapView();
+				return LuaValue.valueOf(getCurrentMapFileName());
+			}
+		});
+		this.globals.set("GetCurrentMapContinent", new ZeroArgFunction() {
+			@Override
+			public LuaValue call() {
+				ensureWorldMapView();
+				return LuaValue.valueOf(LuaEnvironment.this.worldMapContinent);
+			}
+		});
+		this.globals.set("GetCurrentMapZone", new ZeroArgFunction() {
+			@Override
+			public LuaValue call() {
+				ensureWorldMapView();
+				return LuaValue.valueOf(LuaEnvironment.this.worldMapZone);
+			}
+		});
+		this.globals.set("GetMapContinents", new LuaFunction() {
+			@Override
+			public Varargs invoke(final Varargs varargs) {
+				final List<WorldMapDbcData.Continent> continents = getWorldMapData().continents;
+				final LuaValue[] names = new LuaValue[continents.size()];
+				for (int i = 0; i < continents.size(); i++) {
+					names[i] = LuaValue.valueOf(prettyMapName(continents.get(i).mapName));
+				}
+				return LuaValue.varargsOf(names);
+			}
+		});
+		this.globals.set("GetMapZones", new LuaFunction() {
+			@Override
+			public Varargs invoke(final Varargs varargs) {
+				final List<WorldMapDbcData.Zone> zones = getZonesForContinentIndex(varargs.arg(1).optint(0));
+				final LuaValue[] names = new LuaValue[zones.size()];
+				for (int i = 0; i < zones.size(); i++) {
+					names[i] = LuaValue.valueOf(prettyMapName(zones.get(i).name));
+				}
+				return LuaValue.varargsOf(names);
+			}
+		});
+		this.globals.set("SetMapZoom", new TwoArgFunction() {
+			@Override
+			public LuaValue call(final LuaValue continentArg, final LuaValue zoneArg) {
+				ensureWorldMapView();
+				final int continentCount = getWorldMapData().continents.size();
+				LuaEnvironment.this.worldMapContinent = Math.max(0,
+						Math.min(continentCount, continentArg.optint(0)));
+				final int zoneCount = getZonesForContinentIndex(LuaEnvironment.this.worldMapContinent).size();
+				LuaEnvironment.this.worldMapZone = Math.max(0, Math.min(zoneCount, zoneArg.optint(0)));
+				fireEvent(ThirdPersonLuaXmlEvent.WORLD_MAP_UPDATE, LuaValue.NIL);
+				return LuaValue.NIL;
+			}
+		});
+		this.globals.set("ProcessMapClick", new TwoArgFunction() {
+			@Override
+			public LuaValue call(final LuaValue xArg, final LuaValue yArg) {
+				ensureWorldMapView();
+				if (LuaEnvironment.this.worldMapContinent == 0) {
+					// Whole-world view: drill into the player's continent.
+					LuaEnvironment.this.worldMapContinent = resolvePawnContinentIndex();
+					LuaEnvironment.this.worldMapZone = 0;
+					fireEvent(ThirdPersonLuaXmlEvent.WORLD_MAP_UPDATE, LuaValue.NIL);
+				}
+				else if (LuaEnvironment.this.worldMapZone == 0) {
+					final int zoneIndex = findZoneIndexAtMapFraction(xArg.tofloat(), yArg.tofloat());
+					if (zoneIndex != 0) {
+						LuaEnvironment.this.worldMapZone = zoneIndex;
+						fireEvent(ThirdPersonLuaXmlEvent.WORLD_MAP_UPDATE, LuaValue.NIL);
+					}
+				}
+				return LuaValue.NIL;
+			}
+		});
+		this.globals.set("GetNumMapLandmarks", new ZeroArgFunction() {
+			@Override
+			public LuaValue call() {
+				return LuaValue.ZERO;
+			}
+		});
+		this.globals.set("GetMapLandmarkInfo", new OneArgFunction() {
+			@Override
+			public LuaValue call(final LuaValue index) {
+				return LuaValue.NIL;
+			}
+		});
+		this.globals.set("UpdateMapHighlight", new LuaFunction() {
+			@Override
+			public Varargs invoke(final Varargs varargs) {
+				return updateMapHighlight(varargs.arg(1).tofloat(), varargs.arg(2).tofloat());
+			}
+		});
+		this.globals.set("GetPlayerMapPosition", new LuaFunction() {
+			@Override
+			public Varargs invoke(final Varargs varargs) {
+				if (UNITKEY_PLAYER.equals(varargs.arg(1).optjstring(""))) {
+					ensureWorldMapView();
+					final Varargs position = getPlayerMapFraction();
+					if (position != null) {
+						return position;
+					}
+				}
+				return LuaValue.varargsOf(LuaValue.ZERO, LuaValue.ZERO);
+			}
+		});
+
 		this.pawnUnit.addStateListener(new CUnitStateListenerImplementation(UNITKEY_PLAYER));
 		seedActionBarFromAbilities();
 		for (int i = 1; i <= 12; i++) {
@@ -2116,6 +2376,337 @@ public class LuaEnvironment {
 
 	}
 
+	// ===========
+	// World map / zone helpers
+
+	private War3MapViewer getWar3MapViewer() {
+		if (this.rootFrame.getModelViewer() instanceof War3MapViewer) {
+			return (War3MapViewer) this.rootFrame.getModelViewer();
+		}
+		return null;
+	}
+
+	private WorldMapDbcData getWorldMapData() {
+		if (this.worldMapData == null) {
+			final War3MapViewer viewer = getWar3MapViewer();
+			this.worldMapData = viewer != null ? WorldMapDbcData.load(viewer.dataSource) : new WorldMapDbcData();
+		}
+		return this.worldMapData;
+	}
+
+	/** "DunMorogh" -> "Dun Morogh" for labels; art paths keep the raw dbc name. */
+	private static String prettyMapName(final String name) {
+		return name == null ? "" : name.replaceAll("(?<=[a-z])(?=[A-Z])", " ");
+	}
+
+	/** Zones of the 1-based continent index (dbc order == dropdown/zone-id order). */
+	private List<WorldMapDbcData.Zone> getZonesForContinentIndex(final int continentIndex) {
+		final WorldMapDbcData data = getWorldMapData();
+		if ((continentIndex < 1) || (continentIndex > data.continents.size())) {
+			return Collections.emptyList();
+		}
+		if (this.cachedContinentZonesIndex != continentIndex) {
+			this.cachedContinentZones = data.getZonesForMapId(data.continents.get(continentIndex - 1).mapId);
+			this.cachedContinentZonesIndex = continentIndex;
+		}
+		return this.cachedContinentZones;
+	}
+
+	/**
+	 * The pawn's WoW WDT tile coordinates (col/row into out), returning the WDT
+	 * slice it stands on, or null when not on a WDT (WoW data) map.
+	 */
+	private War3MapViewer.WdtWorldMapping getPawnWowTile(final float[] out) {
+		final War3MapViewer viewer = getWar3MapViewer();
+		if ((viewer == null) || (this.pawnUnit == null)) {
+			return null;
+		}
+		final War3MapViewer.WdtWorldMapping mapping = viewer.getWdtWorldMappingAt(this.pawnUnit.getX());
+		if (mapping == null) {
+			return null;
+		}
+		mapping.wc3ToWowTile(this.pawnUnit.getX(), this.pawnUnit.getY(), out);
+		return mapping;
+	}
+
+	/**
+	 * The 1-based continent index the pawn is on. Unknown or custom maps
+	 * (Vibecodia, Warcraft III maps) report Eastern Kingdoms ("Azeroth") by
+	 * standing convention, so the map window always has something to show.
+	 */
+	private int resolvePawnContinentIndex() {
+		final WorldMapDbcData data = getWorldMapData();
+		if (data.continents.isEmpty()) {
+			return 0;
+		}
+		final War3MapViewer.WdtWorldMapping mapping = getPawnWowTile(this.wowTileHeap);
+		final String mapName = mapping != null ? mapping.mapName : null;
+		if (mapName != null) {
+			for (int i = 0; i < data.continents.size(); i++) {
+				if (mapName.equalsIgnoreCase(data.continents.get(i).mapName)) {
+					return i + 1;
+				}
+			}
+		}
+		for (int i = 0; i < data.continents.size(); i++) {
+			if ("Azeroth".equalsIgnoreCase(data.continents.get(i).mapName)) {
+				return i + 1;
+			}
+		}
+		return 1;
+	}
+
+	/** First use of the map window snaps the view to wherever the player stands. */
+	private void ensureWorldMapView() {
+		if (this.worldMapContinent != -1) {
+			return;
+		}
+		final War3MapViewer viewer = getWar3MapViewer();
+		if ((viewer != null) && viewer.wdtWorldMappings.isEmpty()) {
+			// The UI loads while the terrain tasks are still running; leave the view
+			// unlatched so the first real open still snaps to the player's zone.
+			return;
+		}
+		this.worldMapContinent = resolvePawnContinentIndex();
+		this.worldMapZone = 0;
+		final War3MapViewer.WdtWorldMapping mapping = getPawnWowTile(this.wowTileHeap);
+		final WorldMapDbcData data = getWorldMapData();
+		if ((mapping != null) && (this.worldMapContinent >= 1) && (this.worldMapContinent <= data.continents.size())
+				&& data.continents.get(this.worldMapContinent - 1).mapName.equalsIgnoreCase(
+						mapping.mapName != null ? mapping.mapName : "")) {
+			final List<WorldMapDbcData.Zone> zones = getZonesForContinentIndex(this.worldMapContinent);
+			for (int i = 0; i < zones.size(); i++) {
+				if (zones.get(i).containsTile(this.wowTileHeap[0], this.wowTileHeap[1])) {
+					this.worldMapZone = i + 1;
+					break;
+				}
+			}
+		}
+	}
+
+	/** Art name under Interface\WorldMap\ for the current view. */
+	private String getCurrentMapFileName() {
+		final WorldMapDbcData data = getWorldMapData();
+		if ((this.worldMapContinent < 1) || (this.worldMapContinent > data.continents.size())) {
+			return "World";
+		}
+		if (this.worldMapZone >= 1) {
+			final List<WorldMapDbcData.Zone> zones = getZonesForContinentIndex(this.worldMapContinent);
+			if (this.worldMapZone <= zones.size()) {
+				return zones.get(this.worldMapZone - 1).name;
+			}
+		}
+		return data.continents.get(this.worldMapContinent - 1).mapName;
+	}
+
+	/**
+	 * The WDT tile rect the current view's art covers as {x1, y1, spanX, spanY}
+	 * (upper indices inclusive, hence span = (x2 - x1) + 1), or null in the
+	 * whole-world view where the alpha data gives no rect.
+	 */
+	private float[] getCurrentMapTileRect() {
+		final WorldMapDbcData data = getWorldMapData();
+		if ((this.worldMapContinent < 1) || (this.worldMapContinent > data.continents.size())) {
+			return null;
+		}
+		if (this.worldMapZone >= 1) {
+			final List<WorldMapDbcData.Zone> zones = getZonesForContinentIndex(this.worldMapContinent);
+			if (this.worldMapZone <= zones.size()) {
+				final WorldMapDbcData.Zone zone = zones.get(this.worldMapZone - 1);
+				return new float[] { zone.tileX1, zone.tileY1, (zone.tileX2 - zone.tileX1) + 1,
+						(zone.tileY2 - zone.tileY1) + 1 };
+			}
+		}
+		final WorldMapDbcData.Continent continent = data.continents.get(this.worldMapContinent - 1);
+		return new float[] { continent.tileX1, continent.tileY1, (continent.tileX2 - continent.tileX1) + 1,
+				(continent.tileY2 - continent.tileY1) + 1 };
+	}
+
+	/** 1-based zone index at a 0..1 map fraction of the continent view, or 0. */
+	private int findZoneIndexAtMapFraction(final float fractionX, final float fractionY) {
+		final float[] rect = getCurrentMapTileRect();
+		if (rect == null) {
+			return 0;
+		}
+		final float tileX = rect[0] + (fractionX * rect[2]);
+		final float tileY = rect[1] + (fractionY * rect[3]);
+		final List<WorldMapDbcData.Zone> zones = getZonesForContinentIndex(this.worldMapContinent);
+		for (int i = 0; i < zones.size(); i++) {
+			if (zones.get(i).containsTile(tileX, tileY)) {
+				return i + 1;
+			}
+		}
+		return 0;
+	}
+
+	/**
+	 * WorldMapButton hover: returns (name, artName, texPercentX, texPercentY,
+	 * sizeFractionX, sizeFractionY, offsetFractionX, offsetFractionY) for the
+	 * hovered zone of the continent view, or nil. The highlight art is authored at
+	 * the continent map's 1002x668 pixel scale and padded to power-of-two, so the
+	 * used portion of the texture is (zone px size / texture size).
+	 */
+	private Varargs updateMapHighlight(final float fractionX, final float fractionY) {
+		if (this.worldMapZone != 0) {
+			return LuaValue.NIL;
+		}
+		final int zoneIndex = findZoneIndexAtMapFraction(fractionX, fractionY);
+		if (zoneIndex == 0) {
+			return LuaValue.NIL;
+		}
+		final float[] rect = getCurrentMapTileRect();
+		final WorldMapDbcData.Zone zone = getZonesForContinentIndex(this.worldMapContinent).get(zoneIndex - 1);
+		final float sizeFractionX = ((zone.tileX2 - zone.tileX1) + 1) / rect[2];
+		final float sizeFractionY = ((zone.tileY2 - zone.tileY1) + 1) / rect[3];
+		final float offsetFractionX = (zone.tileX1 - rect[0]) / rect[2];
+		final float offsetFractionY = (zone.tileY1 - rect[1]) / rect[3];
+		final float[] textureSize = getZoneHighlightTextureSize(zone.name);
+		if (textureSize == null) {
+			return LuaValue.NIL;
+		}
+		final float texPercentX = Math.min(1f, (sizeFractionX * WORLD_MAP_DETAIL_WIDTH) / textureSize[0]);
+		final float texPercentY = Math.min(1f, (sizeFractionY * WORLD_MAP_DETAIL_HEIGHT) / textureSize[1]);
+		return LuaValue.varargsOf(new LuaValue[] { LuaValue.valueOf(prettyMapName(zone.name)),
+				LuaValue.valueOf(zone.name), LuaValue.valueOf(texPercentX), LuaValue.valueOf(texPercentY),
+				LuaValue.valueOf(sizeFractionX), LuaValue.valueOf(sizeFractionY), LuaValue.valueOf(offsetFractionX),
+				LuaValue.valueOf(offsetFractionY) });
+	}
+
+	private float[] getZoneHighlightTextureSize(final String zoneName) {
+		float[] size = this.zoneHighlightTextureSizes.get(zoneName);
+		if (size == null) {
+			size = new float[] { 0, 0 };
+			final War3MapViewer viewer = getWar3MapViewer();
+			if (viewer != null) {
+				try {
+					final com.etheller.warsmash.viewer5.Texture texture = (com.etheller.warsmash.viewer5.Texture) viewer
+							.load("Interface\\WorldMap\\" + zoneName + "\\" + zoneName + "Highlight.blp",
+									com.etheller.warsmash.viewer5.PathSolver.DEFAULT, null);
+					if (texture != null) {
+						size[0] = texture.getWidth();
+						size[1] = texture.getHeight();
+					}
+				}
+				catch (final Exception exc) {
+					// leave 0x0: no highlight for this zone
+				}
+			}
+			this.zoneHighlightTextureSizes.put(zoneName, size);
+		}
+		return (size[0] > 0) && (size[1] > 0) ? size : null;
+	}
+
+	/** Player fraction on the current map view, or null to hide the arrow. */
+	private Varargs getPlayerMapFraction() {
+		final float[] rect = getCurrentMapTileRect();
+		if (rect == null) {
+			return null;
+		}
+		final War3MapViewer.WdtWorldMapping mapping = getPawnWowTile(this.wowTileHeap);
+		if (mapping == null) {
+			return null;
+		}
+		final WorldMapDbcData.Continent continent = getWorldMapData().continents.get(this.worldMapContinent - 1);
+		if ((mapping.mapName == null) || !continent.mapName.equalsIgnoreCase(mapping.mapName)) {
+			return null;
+		}
+		final float fractionX = (this.wowTileHeap[0] - rect[0]) / rect[2];
+		final float fractionY = (this.wowTileHeap[1] - rect[1]) / rect[3];
+		if ((fractionX <= 0f) || (fractionX >= 1f) || (fractionY <= 0f) || (fractionY >= 1f)) {
+			return null;
+		}
+		return LuaValue.varargsOf(LuaValue.valueOf(fractionX), LuaValue.valueOf(fractionY));
+	}
+
+	/** Zone (or continent) name at the pawn's position, or null off the wow maps. */
+	private String getPawnZoneText() {
+		final War3MapViewer.WdtWorldMapping mapping = getPawnWowTile(this.wowTileHeap);
+		if ((mapping == null) || (mapping.mapName == null)) {
+			return null;
+		}
+		final WorldMapDbcData data = getWorldMapData();
+		for (int i = 0; i < data.continents.size(); i++) {
+			if (data.continents.get(i).mapName.equalsIgnoreCase(mapping.mapName)) {
+				for (final WorldMapDbcData.Zone zone : data.getZonesForMapId(data.continents.get(i).mapId)) {
+					if (zone.containsTile(this.wowTileHeap[0], this.wowTileHeap[1])) {
+						return prettyMapName(zone.name);
+					}
+				}
+				return prettyMapName(data.continents.get(i).mapName);
+			}
+		}
+		return null;
+	}
+
+	/**
+	 * Cheap zone-change watcher, driven by the third-person UI's 0.1s poll: fires
+	 * the minimap/zone events when the pawn crosses a zone boundary so the zone
+	 * label follows the player.
+	 */
+	private void pollPawnZoneChanged() {
+		final String zoneText = getPawnZoneText();
+		if ((zoneText != null) && !zoneText.equals(this.lastPawnZoneText)) {
+			final boolean firstUpdate = this.lastPawnZoneText == null;
+			this.lastPawnZoneText = zoneText;
+			fireEvent(ThirdPersonLuaXmlEvent.MINIMAP_ZONE_CHANGED, LuaValue.NIL);
+			if (!firstUpdate) {
+				fireEvent(ThirdPersonLuaXmlEvent.ZONE_CHANGED, LuaValue.valueOf(zoneText));
+			}
+		}
+	}
+
+	// ===========
+	// Chat helpers
+
+	/** Prints a yellow system line into the chat window (CHAT_MSG_SYSTEM). */
+	public void addSystemChatMessage(final String message) {
+		dispatchChatMessage("CHAT_MSG_SYSTEM", message, "");
+	}
+
+	/**
+	 * Fires a WoW chat event to every registered frame with the standard arg
+	 * layout (arg1 = message, arg2 = sender, arg3 = language, arg4/arg5 = "",
+	 * arg6 = AFK/DND flag) so ChatFrame_OnEvent formats it like the real client.
+	 */
+	private void dispatchChatMessage(final String eventName, final String message, final String senderName) {
+		final ThirdPersonLuaXmlEvent event;
+		try {
+			event = ThirdPersonLuaXmlEvent.valueOf(eventName);
+		}
+		catch (final IllegalArgumentException exc) {
+			return;
+		}
+		// arg3 (language) stays empty so the chat frame skips the "[Language]" header.
+		final LuaValue[] args = { LuaValue.valueOf(message), LuaValue.valueOf(senderName), LuaValue.valueOf(""),
+				LuaValue.valueOf(""), LuaValue.valueOf(""), LuaValue.valueOf("") };
+		for (final UIFrameLuaWrapper frameLuaWrapper : getRegistered(event)) {
+			try {
+				frameLuaWrapper.getFrame().getScripts().onEventArgs(event, args);
+			}
+			catch (final Exception e) {
+				e.printStackTrace();
+			}
+		}
+	}
+
+	/**
+	 * Voices the current target's Warcraft III sound set "What" acknowledgement
+	 * (the sound a friendly/neutral unit answers with when selected). Returns
+	 * false when the target has no sound set so the caller can fall back to the
+	 * WoW interface click.
+	 */
+	private boolean playTargetWhatSound() {
+		if (!(this.targetUnit instanceof RenderUnit)) {
+			return false;
+		}
+		final RenderUnit renderUnit = (RenderUnit) this.targetUnit;
+		if ((renderUnit.soundset == null) || (renderUnit.soundset.what == null)
+				|| (renderUnit.getInstance() == null) || (renderUnit.getInstance().scene == null)) {
+			return false;
+		}
+		return renderUnit.soundset.what.playUnitResponse(renderUnit.getInstance().scene.audioContext, renderUnit);
+	}
+
 	public CUnit getUnit(final String unitKey) {
 		switch (unitKey) {
 		case UNITKEY_TARGET:
@@ -2290,6 +2881,7 @@ public class LuaEnvironment {
 	public void notifyActionBarCooldownsChanged() {
 		fireEvent(ThirdPersonLuaXmlEvent.ACTIONBAR_UPDATE_COOLDOWN, LuaValue.NIL);
 		pollActionBarItemCounts();
+		pollPawnZoneChanged();
 	}
 
 	/**

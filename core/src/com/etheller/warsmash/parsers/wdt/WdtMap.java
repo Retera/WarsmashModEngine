@@ -45,6 +45,12 @@ public class WdtMap {
 	public List<TileHeader> tileHeaders = new ArrayList<>();
 	public List<Integer> usedIdx = new ArrayList<>();
 	public int usedIdxIdx = 0;
+	/**
+	 * The WoW map directory name this WDT came from ("Azeroth", "Kalimdor", ...),
+	 * set by the loader from the file name. Used to match the map to its dbc rows
+	 * (world map layout). Null for maps loaded without a known name.
+	 */
+	public String mapName;
 
 	public WdtMap() {
 

@@ -1852,6 +1852,54 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 		}
 	}
 
+	/**
+	 * For WDT (WoW data) maps: one entry per loaded continent WDT describing how the
+	 * converted Warcraft III render space maps back onto that WoW map's tile grid.
+	 * Empty for Warcraft III maps. See {@link #getWdtWorldMappingAt(float)}.
+	 */
+	public final List<WdtWorldMapping> wdtWorldMappings = new ArrayList<>();
+
+	public static final class WdtWorldMapping {
+		/** WoW map directory name, e.g. "Azeroth" (may be null for unnamed maps). */
+		public final String mapName;
+		/** The terrain data center offset of this map's slice of the render space. */
+		public final float[] centerOffset;
+
+		public WdtWorldMapping(final String mapName, final float[] centerOffset) {
+			this.mapName = mapName;
+			this.centerOffset = centerOffset;
+		}
+
+		/**
+		 * Converts render-space (x, y) to this map's WoW WDT tile coordinates:
+		 * out[0] = tile column (0..64, eastward), out[1] = tile row (0..64,
+		 * southward). This is the exact inverse of the terrain conversion in
+		 * TerrainWdt/War3MapW3e (wowToWc3Factor 30.72, tile row flipped, 16384
+		 * render units per 533.33-yard tile).
+		 */
+		public void wc3ToWowTile(final float x, final float y, final float[] out) {
+			final float renderUnitsPerTile = 16 * 8 * 128f;
+			out[0] = (x - this.centerOffset[0]) / renderUnitsPerTile;
+			out[1] = 64f - ((y - this.centerOffset[1]) / renderUnitsPerTile);
+		}
+	}
+
+	/**
+	 * The WDT map slice whose 64-tile render-space X range contains the given
+	 * render x (side-by-side multi-map loading offsets each map on X), or the
+	 * first mapping as a fallback; null when no WDT maps are loaded.
+	 */
+	public WdtWorldMapping getWdtWorldMappingAt(final float x) {
+		final float renderUnitsPerMap = 64 * 16 * 8 * 128f;
+		for (final WdtWorldMapping mapping : this.wdtWorldMappings) {
+			final float minX = mapping.centerOffset[0];
+			if ((x >= minX) && (x < (minX + renderUnitsPerMap))) {
+				return mapping;
+			}
+		}
+		return this.wdtWorldMappings.isEmpty() ? null : this.wdtWorldMappings.get(0);
+	}
+
 	public void deselect() {
 		for (final String key : this.selectedSplatModelKeys) {
 			this.terrain.removeSplatBatchModel(key);
@@ -1980,15 +2028,81 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 		}
 	}
 
+	/**
+	 * The WoW-style ground selection ring texture used by the third-person (WoW
+	 * emulation) UI, straight from the 0.5.3 client data. The Warcraft III UI keeps
+	 * its own tileset-driven circles.
+	 */
+	private static final String THIRD_PERSON_SELECT_TEXTURE = "Textures\\UnitSelectTexture.blp";
+	/** WoW's ground ring is wider than the unit; scale up the WC3 select radius to match. */
+	private static final float THIRD_PERSON_SELECT_SCALE = 2.0f;
+
 	public void doSelectUnitThirdPerson(final List<RenderWidget> units) {
 		deselect();
 		if (units.isEmpty()) {
 			return;
 		}
 
+		final Map<String, Terrain.Splat> splats = new HashMap<>();
 		for (final RenderWidget unit : units) {
 			unit.getInstance().setUnshadedOverride(1.0f);
+			// The WoW client draws one ground ring under the selected unit; reuse the
+			// terrain splat system the Warcraft III circles use so it follows moving
+			// units and terrain height for free.
+			if (unit.getSelectionScale() > 0) {
+				String path = THIRD_PERSON_SELECT_TEXTURE;
+				if (unit.isShowSelectionCircleAboveWater()) {
+					path = path + ":abovewater";
+				}
+				// WoW draws its ground ring noticeably wider than the model footprint;
+				// at the third-person camera's low angle a footprint-sized ring is
+				// almost entirely occluded by the unit, so widen it like the real client.
+				final float selectionSize = unit.getSelectionScale() * THIRD_PERSON_SELECT_SCALE;
+				final float x = unit.getX();
+				final float y = unit.getY();
+				final SplatModel existingModel = this.terrain.getSplatModel("selection:" + path);
+				if (existingModel != null) {
+					final SplatMover splatInstance = existingModel.add(x - (selectionSize / 2),
+							y - (selectionSize / 2), x + (selectionSize / 2), y + (selectionSize / 2), 5,
+							this.terrain.centerOffset);
+					unit.assignSelectionCircle(splatInstance);
+					if (unit.getInstance().hidden()) {
+						splatInstance.hide();
+					}
+				}
+				else {
+					if (!splats.containsKey(path)) {
+						splats.put(path, new Splat());
+					}
+					final Splat splat = splats.get(path);
+					if (unit.isShowSelectionCircleAboveWater()) {
+						splat.aboveWater = true;
+					}
+					splat.locations.add(new float[] { x - (selectionSize / 2), y - (selectionSize / 2),
+							x + (selectionSize / 2), y + (selectionSize / 2), 5 });
+					final RenderWidget finalUnit = unit;
+					splat.unitMapping.add(t -> {
+						finalUnit.assignSelectionCircle(t);
+						if (finalUnit.getInstance().hidden()) {
+							t.hide();
+						}
+					});
+				}
+			}
 			this.selected.add(unit);
+		}
+		for (final Map.Entry<String, Terrain.Splat> entry : splats.entrySet()) {
+			final String path = entry.getKey();
+			String filePath = path;
+			if (filePath.endsWith(":abovewater")) {
+				filePath = filePath.substring(0, filePath.length() - 11);
+			}
+			final Splat locations = entry.getValue();
+			final SplatModel model = new SplatModel(Gdx.gl30, (Texture) load(filePath, PathSolver.DEFAULT, null),
+					locations.locations, this.terrain.centerOffset, locations.unitMapping, true, false, true,
+					locations.aboveWater);
+			this.terrain.addSplatBatchModel("selection:" + path, model);
+			this.selectedSplatModelKeys.add("selection:" + path);
 		}
 	}
 
@@ -3715,6 +3829,8 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 
 			this.loadMapTasks.add(() -> {
 				this.terrainData = War3MapW3e.generateConverted(map);
+				War3MapViewer.this.wdtWorldMappings
+						.add(new WdtWorldMapping(map.mapName, this.terrainData.getCenterOffset()));
 			});
 
 			this.loadMapTasks.add(() -> {
@@ -4013,6 +4129,8 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 					final float offsetInAllMapsWidth = (64 * 16 * 8 * 128f) * fMapIdx;
 					final float offset = offsetInAllMapsWidth - (widthAllMaps / 2.0f);
 					this.terrainDatas[fMapIdx].getCenterOffset()[0] += offset;
+					War3MapViewer.this.wdtWorldMappings
+							.add(new WdtWorldMapping(map.mapName, this.terrainDatas[fMapIdx].getCenterOffset()));
 				});
 				mapIdx++;
 			}

@@ -597,16 +597,19 @@ public class StringFrame extends AbstractRenderableFrame {
 		table.set("SetText", new TwoArgFunction() {
 			@Override
 			public LuaValue call(final LuaValue thistable, final LuaValue arg) {
-				final String text = arg.checkjstring();
+				// WoW's FontString:SetText(nil) clears the text; erroring here put a
+				// stack trace in the log every frame from scripts that pass through a
+				// nil (e.g. UIDropDownMenu_SetText with an untexted button).
+				final String text = arg.isnil() ? "" : arg.tojstring();
 				luaEnvironment.getRootFrame().setText(StringFrame.this, text);
-				System.err.println("setText: '" + text + "'");
 				return LuaValue.NIL;
 			}
 		});
 		table.set("GetText", new ZeroArgFunction() {
 			@Override
 			public LuaValue call() {
-				return LuaValue.valueOf(StringFrame.this.getText());
+				final String text = StringFrame.this.getText();
+				return text == null ? LuaValue.NIL : LuaValue.valueOf(text);
 			}
 		});
 		table.set("SetTextColor", new FourArgFunction() {

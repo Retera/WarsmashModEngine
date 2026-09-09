@@ -19,6 +19,9 @@ import com.etheller.warsmash.parsers.fdf.lua.FiveArgFunction;
 import com.etheller.warsmash.parsers.fdf.lua.FourArgFunction;
 
 public class TextureFrame extends AbstractRenderableFrame {
+	/** Last path set through the Lua SetTexture native, to skip redundant reloads. */
+	private String luaSetTexturePath;
+
 	public static final Vector4Definition DEFAULT_TEX_COORDS = new Vector4Definition(0, 1, 0, 1);
 	private TextureRegion texture;
 	private final boolean decorateFileNames;
@@ -126,11 +129,18 @@ public class TextureFrame extends AbstractRenderableFrame {
 				// loses its item actually blanks out instead of keeping the stale icon.
 				// Tolerating nil also avoids erroring on checkjstring, which would abort the
 				// caller (e.g. ContainerFrame_GenerateFrame) before it could Show().
-				if (arg.isnil() || arg.checkjstring().isEmpty()) {
-					setTexture((TextureRegion) null);
+				final String newPath = arg.isnil() ? null : arg.checkjstring();
+				if ((newPath == null) || newPath.isEmpty()) {
+					if (TextureFrame.this.luaSetTexturePath != null) {
+						TextureFrame.this.luaSetTexturePath = null;
+						setTexture((TextureRegion) null);
+					}
 				}
-				else {
-					setTexture(arg.checkjstring(), luaEnvironment.getRootFrame());
+				// Skip the load when the path didn't change; scripts like
+				// WorldMapFrame_Update re-set the same texture every frame.
+				else if (!newPath.equals(TextureFrame.this.luaSetTexturePath)) {
+					TextureFrame.this.luaSetTexturePath = newPath;
+					setTexture(newPath, luaEnvironment.getRootFrame());
 				}
 				return LuaValue.NIL;
 			}

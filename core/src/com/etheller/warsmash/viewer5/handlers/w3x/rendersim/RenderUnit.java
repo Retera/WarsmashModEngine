@@ -8,6 +8,7 @@ import com.badlogic.gdx.math.Quaternion;
 import com.badlogic.gdx.math.Vector3;
 import com.etheller.warsmash.parsers.fdf.GameUI;
 import com.etheller.warsmash.util.RenderMathUtils;
+import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.viewer5.handlers.mdx.MdxCharacterInstance;
 import com.etheller.warsmash.viewer5.handlers.mdx.MdxComplexInstance;
 import com.etheller.warsmash.viewer5.handlers.mdx.MdxModel;
@@ -38,6 +39,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.timers.CTimer;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.trigger.enumtypes.CRarityControl;
 
 public class RenderUnit implements RenderWidget {
+	private static final War3ID PLAYER_ID_TYPE = War3ID.fromString("Plyr");
 	private static final RenderUnit[] intersectingUnit = new RenderUnit[1];
 	public static final Color ETHEREAL = new Color(0.75f, 1, 0.5f, 0.5f);
 	public static final Color DEFAULT = new Color(1, 1, 1, 1);
@@ -110,6 +112,7 @@ public class RenderUnit implements RenderWidget {
 	private float[] currentColor = { 1, 1, 1, 1 };
 	private float maxPitch;
 	private float maxRoll;
+	private int updateFrame;
 
 	public RenderUnit(final War3MapViewer map, final float x, final float y, final float z, final int playerIndex,
 			final CUnit simulationUnit, final RenderUnitType typeData, final BuildingShadow buildingShadow,
@@ -139,7 +142,8 @@ public class RenderUnit implements RenderWidget {
 		}
 		this.playerPawn = simulationUnit.getFirstAbilityOfType(CAbilityPlayerPawn.class);
 		final MdxModel model = typeData.getModel();
-		final boolean playerPawnFlag = simulationUnit.getTypeId().asStringValue().charAt(0) == 'P';
+		final boolean playerPawnFlag = (simulationUnit.getTypeId().asStringValue().charAt(0) == 'P')
+				|| (simulationUnit.getTypeId().asStringValue().charAt(0) == 'p');
 		final MdxComplexInstance instance = (MdxComplexInstance) (playerPawnFlag ? model.addInstance(2)
 				: model.addInstance());
 
@@ -265,11 +269,23 @@ public class RenderUnit implements RenderWidget {
 				repositioned(map);
 			}
 		}
+		final int framesSinceModelUpdated = map.frame - this.instance.updateFrame;
+		final int framesSinceUnitUpdated = map.frame - this.updateFrame;
+		final boolean modelOffscreen = framesSinceModelUpdated != 0;
+		final boolean unlagged = framesSinceUnitUpdated < 180;
+		if (modelOffscreen && unlagged && !wasHidden) {
+			return;
+		}
+		this.updateFrame = map.frame;
 		final float prevX = this.location[0];
 		final float prevY = this.location[1];
 		final float simulationX = this.simulationUnit.getX();
 		final float simulationY = this.simulationUnit.getY();
-		final float deltaTime = Gdx.graphics.getDeltaTime();
+		final boolean assumeUpToDate = (this.updateFrame == 0) || (!modelOffscreen && unlagged);
+		if (this.simulationUnit.getTypeId().equals(PLAYER_ID_TYPE) && !assumeUpToDate) {
+			System.out.println(assumeUpToDate + "," + framesSinceUnitUpdated);
+		}
+		final float deltaTime = Gdx.graphics.getDeltaTime() + (assumeUpToDate ? 0 : framesSinceUnitUpdated * 0.016f);
 		final float simDx = simulationX - this.location[0];
 		final float simDy = simulationY - this.location[1];
 		final float groundHeightTerrain;
@@ -637,14 +653,26 @@ public class RenderUnit implements RenderWidget {
 					rollSampleGroundHeight2 = 0;
 				}
 				else if (currentWalkableUnder != null) {
-					pitchSampleGroundHeight1 = getGroundHeightSample(map, groundHeight, currentWalkableUnder,
-							pitchSampleBackwardX, pitchSampleBackwardY, groundHeightTerrain);
-					pitchSampleGroundHeight2 = getGroundHeightSample(map, groundHeight, currentWalkableUnder,
-							pitchSampleForwardX, pitchSampleForwardY, groundHeightTerrain);
-					rollSampleGroundHeight1 = getGroundHeightSample(map, groundHeight, currentWalkableUnder,
-							rollSampleBackwardX, rollSampleBackwardY, groundHeightTerrain);
-					rollSampleGroundHeight2 = getGroundHeightSample(map, groundHeight, currentWalkableUnder,
-							rollSampleForwardX, rollSampleForwardY, groundHeightTerrain);
+					if (this.maxPitch != 0) {
+						pitchSampleGroundHeight1 = getGroundHeightSample(map, groundHeight, currentWalkableUnder,
+								pitchSampleBackwardX, pitchSampleBackwardY, groundHeightTerrain);
+						pitchSampleGroundHeight2 = getGroundHeightSample(map, groundHeight, currentWalkableUnder,
+								pitchSampleForwardX, pitchSampleForwardY, groundHeightTerrain);
+					}
+					else {
+						pitchSampleGroundHeight1 = 0;
+						pitchSampleGroundHeight2 = 0;
+					}
+					if (this.maxRoll != 0) {
+						rollSampleGroundHeight1 = getGroundHeightSample(map, groundHeight, currentWalkableUnder,
+								rollSampleBackwardX, rollSampleBackwardY, groundHeightTerrain);
+						rollSampleGroundHeight2 = getGroundHeightSample(map, groundHeight, currentWalkableUnder,
+								rollSampleForwardX, rollSampleForwardY, groundHeightTerrain);
+					}
+					else {
+						rollSampleGroundHeight1 = 0;
+						rollSampleGroundHeight2 = 0;
+					}
 				}
 				else {
 //				final float pitchGroundHeight1 = map.getNearestIntersectingZBeneath(pitchSampleBackwardX,
@@ -881,6 +909,9 @@ public class RenderUnit implements RenderWidget {
 		}
 		this.location[0] = this.simulationUnit.getX();
 		this.location[1] = this.simulationUnit.getY();
+		if (isPlayerPawn()) {
+			this.playerPawn.setZ(map.getGroundHeightOrHighestWalkableHeight(simulationX, simulationY));
+		}
 	}
 
 	@Override
@@ -1130,5 +1161,9 @@ public class RenderUnit implements RenderWidget {
 
 	public void setMaxRoll(final float maxRoll) {
 		this.maxRoll = maxRoll;
+	}
+
+	public int getUpdateFrame() {
+		return this.updateFrame;
 	}
 }

@@ -316,6 +316,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 	// TODO remove this & replace with FDF
 	private final Texture activeButtonTexture;
 	private UIFrame inventoryCover;
+	private boolean inventoryCoverShown;
 	private SpriteFrame cursorFrame;
 	private MeleeUIMinimap meleeUIMinimap;
 	private final CPlayerUnitOrderListener unitOrderListener;
@@ -3049,7 +3050,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 			this.heroInfoPanel.setVisible(false);
 			this.rallyPointInstance.hide();
 			this.rallyPointInstance.detach();
-			this.inventoryCover.setVisible(true);
+			this.inventoryCover.setVisible(this.inventoryCoverShown = true);
 			this.inventoryBarFrame.setVisible(false);
 			for (final MultiSelectionIcon iconFrame : this.selectedUnitFrames) {
 				iconFrame.setVisible(false);
@@ -3602,7 +3603,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 				}
 			}
 		}
-		this.inventoryCover.setVisible(inventory == null);
+		this.inventoryCover.setVisible(this.inventoryCoverShown = (inventory == null));
 		this.activationReceiverPreviewCallback.setup(this.war3MapViewer.simulation.getUnitData(),
 				this.war3MapViewer.simulation.getUpgradeData(), this.rootFrame.getTemplates());
 		if (inventory != null) {
@@ -5434,7 +5435,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 		this.smashSimpleInfoPanel.setVisible(show);
 		this.smashCommandButtons.setVisible(show);
 		this.upperButtonBar.setVisible(show);
-		this.inventoryCover.setVisible(show);
+		this.inventoryCover.setVisible(show && this.inventoryCoverShown);
 		this.inventoryBarFrame.setVisible(show);
 		this.inventoryTitleFrame.setVisible(show);
 		this.cinematicPanel.setVisible(!show);

@@ -1742,6 +1742,9 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 			}
 			for (final RenderDoodad item : this.doodads) {
 				final ModelInstance instance = item.instance;
+				if (instance.updateFrame != this.frame) {
+					continue;
+				}
 				if (instance instanceof MdxComplexInstance) {
 					final MdxComplexInstance mdxComplexInstance = (MdxComplexInstance) instance;
 					if ((mdxComplexInstance.sequence == -1) || (mdxComplexInstance.sequenceEnded
@@ -2872,12 +2875,12 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 		@Override
 		public boolean onIntersect(final CollidableDoodadComponent intersectingObject) {
 			if (intersectingObject.intersectRayWithCollision(this.ray, this.intersection, true, true)) {
-				if (intersectingObject.intersectRayWithGeosetSlow(this.ray, this.intersection)) {
-					if (this.intersection.z > this.z) {
-						this.z = this.intersection.z;
-						this.highestInstance = intersectingObject;
-					}
+//				if (intersectingObject.intersectRayWithGeosetSlow(this.ray, this.intersection)) {
+				if (this.intersection.z > this.z) {
+					this.z = this.intersection.z;
+					this.highestInstance = intersectingObject;
 				}
+//				}
 			}
 			return false;
 		}

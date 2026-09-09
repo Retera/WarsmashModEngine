@@ -95,7 +95,8 @@ public class RenderItem implements RenderWidget {
 		final int fogOfWarIndexY = pathingGrid.getFogOfWarIndexY(this.location[1]);
 		final boolean fogHidden = !fogOfWar.isVisible(map.simulation, fogOfWarIndexX, fogOfWarIndexY);
 		final boolean hidden = this.simulationItem.isHidden();
-		if ((hidden || fogHidden) != this.hidden) {
+		final boolean wasHidden = this.hidden;
+		if ((hidden || fogHidden) != wasHidden) {
 			this.hidden = hidden || fogHidden;
 			if (this.hidden) {
 				this.usingHeightOverride = false;
@@ -110,6 +111,9 @@ public class RenderItem implements RenderWidget {
 					this.shadow.show(map.terrain.centerOffset);
 				}
 			}
+		}
+		if ((this.instance.updateFrame != map.frame) && !wasHidden && (this.instance.updateFrame != 0)) {
+			return;
 		}
 		final boolean dead = this.simulationItem.isDead();
 		final MdxComplexInstance mdxComplexInstance = this.instance;

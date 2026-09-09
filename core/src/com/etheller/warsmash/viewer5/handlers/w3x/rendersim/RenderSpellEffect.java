@@ -26,6 +26,7 @@ public class RenderSpellEffect implements RenderEffect {
 	private int animationQueueIndex;
 	private final List<Sequence> sequences;
 	private boolean killWhenDone = true;
+	private int updateFrame = 0;
 
 	public RenderSpellEffect(final MdxComplexInstance modelInstance, final War3MapViewer war3MapViewer, final float yaw,
 			final PrimaryTag[] animationQueue, final EnumSet<SecondaryTag> requiredAnimationNames) {
@@ -47,6 +48,14 @@ public class RenderSpellEffect implements RenderEffect {
 
 	@Override
 	public boolean updateAnimations(final War3MapViewer war3MapViewer, final float deltaTime) {
+		if (this.modelInstance.updateFrame != war3MapViewer.frame) {
+			return false;
+		}
+		final int framesOffscreen = this.modelInstance.updateFrame - this.updateFrame;
+		if ((framesOffscreen > 0) && (this.updateFrame != 0)) {
+			this.modelInstance.updateAnimations(framesOffscreen * 0.016f);
+		}
+		this.updateFrame = this.modelInstance.updateFrame;
 		final boolean everythingDone = this.modelInstance.sequenceEnded
 				&& (this.animationQueueIndex >= this.animationQueue.length);
 		if (everythingDone) {

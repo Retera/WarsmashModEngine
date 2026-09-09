@@ -51,6 +51,7 @@ public class CBehaviorPlayerPawn implements CBehavior {
 	private boolean looting;
 	private MdxCharacterNode handR;
 	private MdxCharacterNode handL;
+	private int frameSkips = 0;
 
 	public CBehaviorPlayerPawn(final CUnit unit, final CAbilityPlayerPawn playerPawn) {
 		this.unit = unit;
@@ -114,8 +115,11 @@ public class CBehaviorPlayerPawn implements CBehavior {
 	@Override
 	public CBehavior update(final CSimulation game) {
 		final float prevX = this.unit.getX();
+
 		final float prevY = this.unit.getY();
-		if (!this.viewerWorldAccess.canPawnMoveAt(prevX, prevY)) {
+		if (!this.viewerWorldAccess.canPawnMoveAt(prevX, prevY)
+				|| ((this.characterModelInstance.updateFrame != this.viewerWorldAccess.frame)
+						&& ((this.frameSkips++ % 20) != 0))) {
 			return this;
 		}
 		final boolean swimming = isSwimming();

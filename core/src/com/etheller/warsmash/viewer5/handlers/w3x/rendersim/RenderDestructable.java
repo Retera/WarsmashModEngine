@@ -93,6 +93,9 @@ public class RenderDestructable extends RenderDoodad implements RenderWidget {
 
 	@Override
 	public void updateAnimations(final War3MapViewer war3MapViewer) {
+		if (this.instance.updateFrame != war3MapViewer.frame) {
+			return;
+		}
 		// TODO maybe move getAnimation behaviors to here and make this thing not a
 		// doodad
 

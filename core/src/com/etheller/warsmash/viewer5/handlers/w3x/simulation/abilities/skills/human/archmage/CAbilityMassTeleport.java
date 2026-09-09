@@ -38,19 +38,19 @@ public class CAbilityMassTeleport extends CAbilityTargetSpellBase {
 
 	@Override
 	public void populateData(final GameObject worldEditorAbility, final int level) {
-		numberOfUnitsTeleported = worldEditorAbility.getFieldAsInteger(AbilityFields.DATA_A + level, 0);
-		useTeleportClustering = worldEditorAbility.getFieldAsBoolean(AbilityFields.DATA_C + level, 0);
-		castingDelay = worldEditorAbility.getFieldAsFloat(AbilityFields.DATA_B + level, 0);
-		areaOfEffect = worldEditorAbility.getFieldAsFloat(AbilityFields.AREA_OF_EFFECT + level, 0);
+		this.numberOfUnitsTeleported = worldEditorAbility.getFieldAsInteger(AbilityFields.DATA_A + level, 0);
+		this.useTeleportClustering = worldEditorAbility.getFieldAsBoolean(AbilityFields.DATA_C + level, 0);
+		this.castingDelay = worldEditorAbility.getFieldAsFloat(AbilityFields.DATA_B + level, 0);
+		this.areaOfEffect = worldEditorAbility.getFieldAsFloat(AbilityFields.AREA_OF_EFFECT + level, 0);
 	}
 
 	@Override
 	public boolean doEffect(final CSimulation simulation, final CUnit caster, final AbilityTarget target) {
 		this.channelEndTick = simulation.getGameTurnTick()
-				+ (int) StrictMath.ceil(castingDelay / WarsmashConstants.SIMULATION_STEP_TIME);
-		sourceAreaEffectRenderComponent = simulation.spawnSpellEffectOnPoint(caster.getX(), caster.getY(), 0,
+				+ (int) StrictMath.ceil(this.castingDelay / WarsmashConstants.SIMULATION_STEP_TIME);
+		this.sourceAreaEffectRenderComponent = simulation.spawnSpellEffectOnPoint(caster.getX(), caster.getY(), 0,
 				getAlias(), CEffectType.AREA_EFFECT, 0);
-		targetAreaEffectRenderComponent = simulation.spawnSpellEffectOnPoint(target.getX(), target.getY(), 0,
+		this.targetAreaEffectRenderComponent = simulation.spawnSpellEffectOnPoint(target.getX(), target.getY(), 0,
 				getAlias(), CEffectType.AREA_EFFECT, 0);
 		simulation.createTemporarySpellEffectOnUnit(caster, getAlias(), CEffectType.CASTER);
 		final CUnit targetUnit = target.visit(AbilityTargetVisitor.UNIT);
@@ -63,17 +63,17 @@ public class CAbilityMassTeleport extends CAbilityTargetSpellBase {
 	@Override
 	public boolean doChannelTick(final CSimulation simulation, final CUnit caster, final AbilityTarget target) {
 		final int gameTurnTick = simulation.getGameTurnTick();
-		if (gameTurnTick >= channelEndTick) {
+		if (gameTurnTick >= this.channelEndTick) {
 			final List<CUnit> teleportingUnits = new ArrayList<>();
 			final float casterX = caster.getX();
 			final float casterY = caster.getY();
 			final float targetX = target.getX();
 			final float targetY = target.getY();
-			simulation.getWorldCollision().enumUnitsInRange(casterX, casterY, areaOfEffect, (enumUnit) -> {
+			simulation.getWorldCollision().enumUnitsInRange(casterX, casterY, this.areaOfEffect, (enumUnit) -> {
 				if ((enumUnit != caster) && enumUnit.canBeTargetedBy(simulation, caster, getTargetsAllowed())) {
 					teleportingUnits.add(enumUnit);
 				}
-				return (teleportingUnits.size() + 1) >= numberOfUnitsTeleported;
+				return (teleportingUnits.size() + 1) >= this.numberOfUnitsTeleported;
 			});
 			for (final CUnit teleportingUnit : teleportingUnits) {
 				simulation.spawnSpellEffectOnPoint(teleportingUnit.getX(), teleportingUnit.getY(), 0, getAlias(),
@@ -81,9 +81,10 @@ public class CAbilityMassTeleport extends CAbilityTargetSpellBase {
 			}
 			simulation.spawnSpellEffectOnPoint(casterX, casterY, 0, getAlias(), CEffectType.SPECIAL, 0).remove();
 			caster.setPointAndCheckUnstuck(targetX, targetY, simulation);
-			if (useTeleportClustering) {
+			if (this.useTeleportClustering) {
 				for (final CUnit teleportingUnit : teleportingUnits) {
 					teleportingUnit.setPointAndCheckUnstuck(targetX, targetY, simulation);
+					simulation.unitRepositioned(teleportingUnit);
 				}
 			}
 			else {
@@ -91,6 +92,7 @@ public class CAbilityMassTeleport extends CAbilityTargetSpellBase {
 					final float offsetX = teleportingUnit.getX() - casterX;
 					final float offsetY = teleportingUnit.getY() - casterY;
 					teleportingUnit.setPointAndCheckUnstuck(targetX + offsetX, targetY + offsetY, simulation);
+					simulation.unitRepositioned(teleportingUnit);
 				}
 			}
 			for (final CUnit teleportingUnit : teleportingUnits) {
@@ -107,10 +109,10 @@ public class CAbilityMassTeleport extends CAbilityTargetSpellBase {
 	@Override
 	public void doChannelEnd(final CSimulation game, final CUnit unit, final AbilityTarget target,
 			final boolean interrupted) {
-		sourceAreaEffectRenderComponent.remove();
-		sourceAreaEffectRenderComponent = null;
-		targetAreaEffectRenderComponent.remove();
-		targetAreaEffectRenderComponent = null;
+		this.sourceAreaEffectRenderComponent.remove();
+		this.sourceAreaEffectRenderComponent = null;
+		this.targetAreaEffectRenderComponent.remove();
+		this.targetAreaEffectRenderComponent = null;
 		final CUnit targetUnit = target.visit(AbilityTargetVisitor.UNIT);
 		if (targetUnit != null) {
 			targetUnit.setPaused(false);

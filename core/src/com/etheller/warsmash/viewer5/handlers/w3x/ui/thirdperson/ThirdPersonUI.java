@@ -296,6 +296,8 @@ public class ThirdPersonUI implements WarsmashToggleableUI {
 											ThirdPersonUI.this.pawnUnit.setPoint(x, y,
 													ThirdPersonUI.this.war3MapViewer.simulation.getWorldCollision(),
 													ThirdPersonUI.this.war3MapViewer.simulation.getRegionManager());
+											ThirdPersonUI.this.war3MapViewer.simulation
+													.unitRepositioned(ThirdPersonUI.this.pawnUnit);
 											ThirdPersonUI.this.abilityPlayerPawn.setZ(z);
 										}
 										catch (final Exception e) {

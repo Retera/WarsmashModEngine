@@ -5,7 +5,9 @@ import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import com.etheller.warsmash.datasources.DataSource;
 
@@ -29,6 +31,56 @@ public class WorldMapDbcData {
 
 	public final List<Continent> continents = new ArrayList<>();
 	public final List<Zone> zones = new ArrayList<>();
+	/** AreaTable.dbc rows by area id (the id the terrain's MCNK chunks carry). */
+	public final Map<Integer, Area> areas = new HashMap<>();
+	private final Map<Integer, Area> areasByKey = new HashMap<>();
+
+	/**
+	 * One AreaTable.dbc row. In 0.5.3 the table is [id, key, ?, parentKey, ...,
+	 * name(13), ...]: {@code key} is a packed (zoneIndex << 16 | subzoneIndex)
+	 * value and a subzone's {@code parentKey} is its zone's {@code key} (0 for a
+	 * top-level zone).
+	 */
+	public static final class Area {
+		public final int id;
+		public final int key;
+		public final int parentKey;
+		public final String name;
+
+		private Area(final int id, final int key, final int parentKey, final String name) {
+			this.id = id;
+			this.key = key;
+			this.parentKey = parentKey;
+			this.name = name;
+		}
+	}
+
+	/**
+	 * The zone name for a terrain chunk's area id (the top-level zone if the area
+	 * is a subzone), or null when the id is unknown.
+	 */
+	public String getZoneNameForAreaId(final int areaId) {
+		final Area area = this.areas.get(areaId);
+		if (area == null) {
+			return null;
+		}
+		if (area.parentKey != 0) {
+			final Area parent = this.areasByKey.get(area.parentKey);
+			if (parent != null) {
+				return parent.name;
+			}
+		}
+		return area.name;
+	}
+
+	/** The subzone name for a terrain chunk's area id, or "" when it is a top-level zone / unknown. */
+	public String getSubZoneNameForAreaId(final int areaId) {
+		final Area area = this.areas.get(areaId);
+		if ((area == null) || (area.parentKey == 0)) {
+			return "";
+		}
+		return area.name;
+	}
 
 	public static final class Continent {
 		public final int mapId;
@@ -81,6 +133,15 @@ public class WorldMapDbcData {
 			final DbcFile mapDbc = DbcFile.read(dataSource, "DBFilesClient\\Map.dbc");
 			final DbcFile continentDbc = DbcFile.read(dataSource, "DBFilesClient\\WorldMapContinent.dbc");
 			final DbcFile areaDbc = DbcFile.read(dataSource, "DBFilesClient\\WorldMapArea.dbc");
+			final DbcFile areaTableDbc = DbcFile.read(dataSource, "DBFilesClient\\AreaTable.dbc");
+			if (areaTableDbc != null) {
+				for (int i = 0; i < areaTableDbc.recordCount; i++) {
+					final Area area = new Area(areaTableDbc.getInt(i, 0), areaTableDbc.getInt(i, 1),
+							areaTableDbc.getInt(i, 3), areaTableDbc.getString(i, 13));
+					data.areas.put(area.id, area);
+					data.areasByKey.put(area.key, area);
+				}
+			}
 			if ((mapDbc == null) || (continentDbc == null) || (areaDbc == null)) {
 				return data;
 			}
@@ -127,6 +188,37 @@ public class WorldMapDbcData {
 			}
 		}
 		return null;
+	}
+
+	/**
+	 * The zone rect best matching a tile position among the given zones. The dbc
+	 * rects are coarse bounding boxes that overlap at the borders (Hillsbrad's box
+	 * overlaps Arathi's and Alterac's, Stranglethorn's overlaps Blasted Lands'), so
+	 * of the rects containing the point the one whose center is nearest wins,
+	 * rather than whichever happens to come first in the table. Returns the
+	 * 0-based index into {@code zones}, or -1.
+	 */
+	public static int findBestZoneIndex(final List<Zone> zones, final float tileX, final float tileY) {
+		int best = -1;
+		float bestDistance = Float.MAX_VALUE;
+		for (int i = 0; i < zones.size(); i++) {
+			final Zone zone = zones.get(i);
+			if (!zone.containsTile(tileX, tileY)) {
+				continue;
+			}
+			final float centerX = (zone.tileX1 + zone.tileX2 + 1) / 2f;
+			final float centerY = (zone.tileY1 + zone.tileY2 + 1) / 2f;
+			// Normalize by the rect's own extents so a big zone's center isn't
+			// penalized against a small neighbor sitting at its edge.
+			final float dx = (tileX - centerX) / ((zone.tileX2 - zone.tileX1) + 1);
+			final float dy = (tileY - centerY) / ((zone.tileY2 - zone.tileY1) + 1);
+			final float distance = (dx * dx) + (dy * dy);
+			if (distance < bestDistance) {
+				bestDistance = distance;
+				best = i;
+			}
+		}
+		return best;
 	}
 
 	public List<Zone> getZonesForMapId(final int mapId) {

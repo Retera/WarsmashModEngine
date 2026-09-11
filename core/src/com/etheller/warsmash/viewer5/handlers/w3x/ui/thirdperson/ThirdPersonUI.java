@@ -531,6 +531,9 @@ public class ThirdPersonUI implements WarsmashToggleableUI {
 
 		screenCoordsVector.set(mouseX, mouseY);
 		this.uiViewport.unproject(screenCoordsVector);
+		if (this.rootFrame.getLuaGlobals() != null) {
+			this.rootFrame.getLuaGlobals().setCursorUiPosition(screenCoordsVector.x, screenCoordsVector.y);
+		}
 		this.cursorFrame.setFramePointX(FramePoint.LEFT, screenCoordsVector.x);
 		this.cursorFrame.setFramePointY(FramePoint.BOTTOM, screenCoordsVector.y);
 
@@ -821,6 +824,11 @@ public class ThirdPersonUI implements WarsmashToggleableUI {
 	public boolean touchUp(final int screenX, final int screenY, final float worldScreenY, final int button) {
 		screenCoordsVector.set(screenX, screenY);
 		this.uiViewport.unproject(screenCoordsVector);
+		if (this.rootFrame.getLuaGlobals() != null) {
+			// The click handlers (e.g. the world map's OnMouseUp) read the cursor from
+			// Lua; give them this event's exact position.
+			this.rootFrame.getLuaGlobals().setCursorUiPosition(screenCoordsVector.x, screenCoordsVector.y);
+		}
 		final UIFrame clickedUIFrame = this.rootFrame.touchUp(screenCoordsVector.x, screenCoordsVector.y, button);
 		if (this.mouseDownUIFrame != null) {
 			if (clickedUIFrame == this.mouseDownUIFrame) {

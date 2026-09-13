@@ -58,6 +58,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.data.CItemData;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.data.CUnitData;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.data.CUpgradeData;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.pathing.CPathfindingProcessor;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.pathing.PathingProcessor;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CAllianceType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CMapControl;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayer;

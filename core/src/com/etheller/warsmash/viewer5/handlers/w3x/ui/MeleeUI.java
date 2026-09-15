@@ -1893,7 +1893,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 					if (!returnValue.isEmpty()) {
 						returnValue += "|n";
 					}
-					returnValue += simulationUnit.getUnitType().getName();
+					returnValue += simulationUnit.getName();
 					if (goldMineData != null) {
 						final String colonGold = this.rootFrame.getTemplates().getDecoratedString("COLON_GOLD");
 						returnValue += "|n" + colonGold + " " + goldMineData.getGold();
@@ -3223,7 +3223,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 			this.simpleInfoPanelDestructableDetail.setVisible(false);
 			this.simpleBuildQueueBackdrop.setVisible(true);
 			this.simpleInfoPanelUnitDetail.setVisible(false);
-			this.rootFrame.setText(this.simpleBuildingNameValue, simulationUnit.getUnitType().getName());
+			this.rootFrame.setText(this.simpleBuildingNameValue, simulationUnit.getName());
 			this.rootFrame.setText(this.simpleBuildingDescriptionValue, "");
 
 			this.simpleBuildingBuildTimeIndicator.setVisible(true);
@@ -3318,7 +3318,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 			this.smashBuffStatusBar.setVisible(!multiSelect && !simulationUnit.isBuilding() && !constructing);
 			final CAbilityCargoHold cargoData = simulationUnit.getCargoData();
 			if ((cargoData != null) && !cargoData.isEmpty() && !multiSelect && !constructing) {
-				final String unitTypeName = simulationUnit.getUnitType().getName();
+				final String unitTypeName = simulationUnit.getName();
 				this.attack1Icon.setVisible(false);
 				this.attack2Icon.setVisible(false);
 				this.armorIcon.setVisible(false);
@@ -3348,7 +3348,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 									.setUberTip("Level " + cargoContainedUnit.getHeroData().getHeroLevel());
 						}
 						else {
-							this.cargoUnitFrames[i].setToolTip(cargoContainedUnit.getUnitType().getName());
+							this.cargoUnitFrames[i].setToolTip(cargoContainedUnit.getName());
 							this.cargoUnitFrames[i].setUberTip(unitUI.getUberTip());
 						}
 						this.cargoUnitFrames[i].setLifeRatioRemaining(
@@ -3371,7 +3371,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 					this.cargoUnitFrames[i].setVisible(false);
 				}
 				final CUnitType unitType = simulationUnit.getUnitType();
-				final String unitTypeName = unitType.getName();
+				final String unitName = simulationUnit.getName();
 
 				final boolean anyAttacks = simulationUnit.getCurrentAttacks().size() > 0;
 				final UIFrame localArmorIcon = this.armorIcon;
@@ -3475,7 +3475,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 					final int heroLevel = heroData.getHeroLevel();
 					this.simpleClassValue.setVisible(true);
 					this.rootFrame.setText(this.simpleClassValue,
-							String.format(infopanelLevelClass, heroLevel, unitTypeName));
+							String.format(infopanelLevelClass, heroLevel, unitName));
 					this.rootFrame.setText(this.simpleNameValue, heroData.getProperName());
 					this.simpleHeroLevelBar.setVisible(true);
 					final CGameplayConstants gameplayConstants = this.war3MapViewer.simulation.getGameplayConstants();
@@ -3485,7 +3485,7 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 				}
 				else {
 					this.simpleClassValue.setVisible(!simulationUnit.isBuilding());
-					this.rootFrame.setText(this.simpleNameValue, unitTypeName);
+					this.rootFrame.setText(this.simpleNameValue, unitName);
 					String classText = null;
 					for (final CUnitClassification classification : simulationUnit.getClassifications()) {
 						if (classification.getDisplayName() != null) {
@@ -5151,6 +5151,11 @@ public class MeleeUI implements CUnitStateListener, CommandButtonListener, Comma
 		final StringFrame valueFrame = (StringFrame) this.rootFrame.getFrameByName("TimeDialogValue", 0);
 		final StringFrame titleFrame = (StringFrame) this.rootFrame.getFrameByName("TimerDialogTitle", 0);
 		return new CTimerDialog(timer, timerDialog, valueFrame, titleFrame);
+	}
+
+	@Override
+	public void setTimerDialogTitle(CTimerDialog timerDialog, String title) {
+		timerDialog.setTitle(this.rootFrame, title);
 	}
 
 	@Override

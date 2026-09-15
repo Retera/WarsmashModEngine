@@ -46,7 +46,9 @@ public class FrameDefinitionVisitor extends FDFBaseVisitor<FrameDefinition> {
 	public FrameDefinition visitIncludeStatement(final IncludeStatementContext ctx) {
 		final String includeFilePath = unquote(ctx.STRING_LITERAL().getText());
 		final FDFParser parser = this.fdfParserBuilder.build(includeFilePath);
-		visit(parser.program());
+		if (parser != null) {
+			visit(parser.program());
+		}
 		return null;
 	}
 

@@ -86,17 +86,12 @@ public class MdxModel extends com.etheller.warsmash.viewer5.Model<MdxHandler> {
 		}
 	}
 
-	public void load(final Object bufferOrParser) throws IOException {
-		MdlxModel parser;
+	public void load(final InputStream stream) throws IOException {
+		System.err.println("Wasting memory with conversion from InputStream to buffer in MdxModel");
+		load(new MdlxModel(ByteBuffer.wrap(IOUtils.toByteArray(stream))));
+	}
 
-		if (bufferOrParser instanceof MdlxModel) {
-			parser = (MdlxModel) bufferOrParser;
-		}
-		else {
-			System.err.println("Wasting memory with conversion from InputStream to buffer in MdxModel");
-			parser = new MdlxModel(ByteBuffer.wrap(IOUtils.toByteArray((InputStream) bufferOrParser)));
-		}
-
+	public void load(final MdlxModel parser) {
 		final ModelViewer viewer = this.viewer;
 		final PathSolver pathSolver = this.pathSolver;
 		final SolverParams solverParams = this.solverParams;

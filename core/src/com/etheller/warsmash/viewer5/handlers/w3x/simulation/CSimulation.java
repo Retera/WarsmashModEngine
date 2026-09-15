@@ -58,6 +58,7 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.data.CItemData;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.data.CUnitData;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.data.CUpgradeData;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.pathing.CPathfindingProcessor;
+import com.etheller.warsmash.viewer5.handlers.w3x.simulation.pathing.PathingProcessor;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CAllianceType;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CMapControl;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayer;
@@ -105,7 +106,7 @@ public class CSimulation implements CPlayerAPI, CFogMaskSettings {
 	private int gameTurnTick = 0;
 	private final PathingGrid pathingGrid;
 	private final CWorldCollision worldCollision;
-	private final CPathfindingProcessor[] pathfindingProcessors;
+	private final PathingProcessor[] pathfindingProcessors;
 	private final int mapVersion;
 	private final CGameplayConstants gameplayConstants;
 	private final Random seededRandom;
@@ -175,7 +176,7 @@ public class CSimulation implements CPlayerAPI, CFogMaskSettings {
 		for (int i = 0; i < WarsmashConstants.MAX_PLAYERS; i++) {
 			final CBasePlayer configPlayer = config.getPlayer(i);
 			final War3MapConfigStartLoc startLoc = config.getStartLoc(configPlayer.getStartLocationIndex());
-			CRace defaultRace = null;
+			CRace defaultRace =  WarsmashConstants.RACE_MANAGER.getRace(1); // Make sure this is not null if nothing matching is found.
 			if (configPlayer.isRacePrefSet(WarsmashConstants.RACE_MANAGER.getRandomRacePreference())) {
 				final CRaceManagerEntry raceEntry = WarsmashConstants.RACE_MANAGER
 						.get(seededRandom.nextInt(WarsmashConstants.RACE_MANAGER.getEntryCount()));
@@ -537,7 +538,7 @@ public class CSimulation implements CPlayerAPI, CFogMaskSettings {
 		}
 		this.projectiles.addAll(this.newProjectiles);
 		this.newProjectiles.clear();
-		for (final CPathfindingProcessor pathfindingProcessor : this.pathfindingProcessors) {
+		for (final PathingProcessor pathfindingProcessor : this.pathfindingProcessors) {
 			pathfindingProcessor.update(this);
 		}
 		this.gameTurnTick++;
@@ -706,6 +707,11 @@ public class CSimulation implements CPlayerAPI, CFogMaskSettings {
 
 	public void unitCancelUpgradingEvent(final CUnit cUnit, final War3ID upgradeIdType) {
 		this.simulationRenderController.unitCancelUpgradingEvent(cUnit, upgradeIdType);
+	}
+
+	@Override
+	public int getMaxPlayers() {
+		return this.players.size();
 	}
 
 	@Override

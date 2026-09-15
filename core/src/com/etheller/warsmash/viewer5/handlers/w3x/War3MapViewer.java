@@ -2115,7 +2115,7 @@ public class War3MapViewer extends AbstractMdxModelViewer implements MdxAssetLoa
 			final RenderUnit renderUnit = War3MapViewer.this.unitToRenderPeer.get(targetWidget);
 			if (renderUnit == null) {
 				final NullPointerException nullPointerException = new NullPointerException(
-						"renderUnit is null! targetWidget is \"" + ((CUnit) targetWidget).getUnitType().getName()
+						"renderUnit is null! targetWidget is \"" + ((CUnit) targetWidget).getName()
 								+ "\", attachPointName=\"" + attachPointNames + "\"");
 				if (WarsmashConstants.ENABLE_DEBUG) {
 					throw nullPointerException;

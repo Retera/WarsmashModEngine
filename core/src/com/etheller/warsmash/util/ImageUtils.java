@@ -38,8 +38,8 @@ public final class ImageUtils {
 			if (image != null) {
 				return ImageUtils.getTexture(image, imageInfo.isNeedsSRGBFix());
 			}
-		}
-		catch (final IOException e) {
+		} catch (final IOException e) {
+			System.err.println("Failed to load texture image " + path+ ": " + e.getMessage());
 			return null;
 		}
 		return null;

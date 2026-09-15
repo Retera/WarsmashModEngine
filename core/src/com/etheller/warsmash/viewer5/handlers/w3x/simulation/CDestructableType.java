@@ -3,10 +3,12 @@ package com.etheller.warsmash.viewer5.handlers.w3x.simulation;
 import java.awt.image.BufferedImage;
 import java.util.EnumSet;
 
+import com.etheller.warsmash.util.War3ID;
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.combat.CTargetType;
 
 public class CDestructableType {
 
+	private final War3ID typeId;
 	private final String name;
 	private final float maxLife;
 	private final EnumSet<CTargetType> targetedAs;
@@ -20,10 +22,11 @@ public class CDestructableType {
 	private final int lumberRepairCost;
 	private final int repairTime;
 
-	public CDestructableType(final String name, final float maxLife, final EnumSet<CTargetType> targetedAs,
-			final String armorType, final int buildTime, final int goldRepairCost, final int lumberRepairCost,
-			final int repairTime, final float occlusionHeight, final BufferedImage pathingPixelMap,
-			final BufferedImage pathingDeathPixelMap) {
+	public CDestructableType(final War3ID typeId, final String name, final float maxLife, final EnumSet<CTargetType> targetedAs,
+                             final String armorType, final int buildTime, final int goldRepairCost, final int lumberRepairCost,
+                             final int repairTime, final float occlusionHeight, final BufferedImage pathingPixelMap,
+                             final BufferedImage pathingDeathPixelMap) {
+		this.typeId = typeId;
 		this.name = name;
 		this.maxLife = maxLife;
 		this.targetedAs = targetedAs;
@@ -36,6 +39,8 @@ public class CDestructableType {
 		this.lumberRepairCost = lumberRepairCost;
 		this.repairTime = repairTime;
 	}
+
+	public War3ID getTypeId() { return this.typeId; }
 
 	public String getName() {
 		return this.name;

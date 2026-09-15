@@ -155,6 +155,11 @@ public class War3MapConfig implements CPlayerAPI {
 	}
 
 	@Override
+	public int getMaxPlayers() {
+		return this.players.length;
+	}
+
+	@Override
 	public CBasePlayer getPlayer(final int index) {
 		return this.players[index];
 	}

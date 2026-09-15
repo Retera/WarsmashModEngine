@@ -4,6 +4,8 @@ import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayerColo
 import com.etheller.warsmash.viewer5.handlers.w3x.simulation.players.CPlayerJass;
 
 public interface CPlayerAPI {
+	int getMaxPlayers();
+
 	CBasePlayer getPlayer(int index);
 
 	void setColor(CPlayerJass player, CPlayerColor color);

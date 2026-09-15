@@ -192,10 +192,14 @@ public class AbilityDataUI {
 			final int targetAttachmentIndexMax = Math.min(targetAttachmentCount - 1, targetArtPaths.size() - 1);
 			final int targetIteratorCount = Math.max(targetAttachmentCount, targetArtPaths.size());
 			for (int i = 0; i < targetIteratorCount; i++) {
-				final String modelPath = targetArtPaths.get(Math.max(0, Math.min(i, targetAttachmentIndexMax)));
-				final String attachmentPointKey = tryGet(TARGET_ART_ATTACHMENT_POINT, i);
-				final List<String> attachmentPoints = abilityTypeData.getFieldAsList(attachmentPointKey);
-				targetArt.add(new EffectAttachmentUI(modelPath, attachmentPoints));
+				final int index = Math.max(0, Math.min(i, targetAttachmentIndexMax));
+
+				if (index >= 0 && index < targetArtPaths.size()) {
+					final String modelPath = targetArtPaths.get(index);
+					final String attachmentPointKey = tryGet(TARGET_ART_ATTACHMENT_POINT, i);
+					final List<String> attachmentPoints = abilityTypeData.getFieldAsList(attachmentPointKey);
+					targetArt.add(new EffectAttachmentUI(modelPath, attachmentPoints));
+				}
 			}
 			final List<EffectAttachmentUI> specialArt = new ArrayList<>();
 			final List<String> specialArtPaths = Arrays

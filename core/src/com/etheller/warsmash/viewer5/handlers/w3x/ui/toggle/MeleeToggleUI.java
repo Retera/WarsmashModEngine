@@ -220,6 +220,11 @@ public class MeleeToggleUI implements WarsmashUI {
 	}
 
 	@Override
+	public void setTimerDialogTitle(CTimerDialog timerDialog, String title) {
+		this.meleeUI.setTimerDialogTitle(timerDialog, title);
+	}
+
+	@Override
 	public void removedUnit(final CUnit whichUnit) {
 		this.meleeUI.removedUnit(whichUnit);
 	}

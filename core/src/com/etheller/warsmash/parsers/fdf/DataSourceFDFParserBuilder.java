@@ -22,27 +22,32 @@ public class DataSourceFDFParserBuilder implements FDFParserBuilder {
 
 	@Override
 	public FDFParser build(final String path) {
-		FDFLexer lexer;
-		try {
-			lexer = new FDFLexer(CharStreams.fromStream(this.dataSource.getResourceAsStream(path)));
-		}
-		catch (final IOException e) {
-			throw new RuntimeException(e);
-		}
-		final FDFParser fdfParser = new FDFParser(new CommonTokenStream(lexer));
-		final BaseErrorListener errorListener = new BaseErrorListener() {
-			@Override
-			public void syntaxError(final Recognizer<?, ?> recognizer, final Object offendingSymbol, final int line,
-					final int charPositionInLine, final String msg, final RecognitionException e) {
-				String sourceName = path;
-				if (!sourceName.isEmpty()) {
-					sourceName = String.format("%s:%d:%d: ", sourceName, line, charPositionInLine);
-				}
-
-				System.err.println(sourceName + "line " + line + ":" + charPositionInLine + " " + msg);
+		if (this.dataSource.has(path)) {
+			System.out.println("Loading FDF file: " + path);
+			FDFLexer lexer;
+			try {
+				lexer = new FDFLexer(CharStreams.fromStream(this.dataSource.getResourceAsStream(path)));
+			} catch (final IOException e) {
+				throw new RuntimeException(e);
 			}
-		};
-		fdfParser.addErrorListener(errorListener);
-		return fdfParser;
+			final FDFParser fdfParser = new FDFParser(new CommonTokenStream(lexer));
+			final BaseErrorListener errorListener = new BaseErrorListener() {
+				@Override
+				public void syntaxError(final Recognizer<?, ?> recognizer, final Object offendingSymbol, final int line,
+				                        final int charPositionInLine, final String msg, final RecognitionException e) {
+					String sourceName = path;
+					if (!sourceName.isEmpty()) {
+						sourceName = String.format("%s:%d:%d: ", sourceName, line, charPositionInLine);
+					}
+
+					System.err.println(sourceName + "line " + line + ":" + charPositionInLine + " " + msg);
+				}
+			};
+			fdfParser.addErrorListener(errorListener);
+			return fdfParser;
+		} else {
+			System.err.println("Missing FDF file: " + path);
+			return null;
+		}
 	}
 }

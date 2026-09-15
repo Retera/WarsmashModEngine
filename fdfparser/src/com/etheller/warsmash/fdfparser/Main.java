@@ -36,7 +36,9 @@ public class Main {
 			final TestFDFParserBuilder testFDFParserBuilder = new TestFDFParserBuilder(errorListener);
 			final FrameDefinitionVisitor fdfVisitor = new FrameDefinitionVisitor(templates, testFDFParserBuilder);
 			final FDFParser firstFileParser = testFDFParserBuilder.build(args[0]);
-			fdfVisitor.visit(firstFileParser.program());
+			if (firstFileParser != null) {
+				fdfVisitor.visit(firstFileParser.program());
+			}
 			final FrameDefinition bnetChat = templates.getFrame("BattleNetTextAreaTemplate");
 			System.out.println("Value of BattleNetTextAreaTemplate: " + bnetChat);
 		}

@@ -5,8 +5,11 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import com.hiveworkshop.blizzard.casc.ConfigurationFile;
 import com.hiveworkshop.blizzard.casc.info.Info;
@@ -287,5 +290,38 @@ public class WarcraftIIICASC implements AutoCloseable {
 	 */
 	public FileSystem getRootFileSystem() {
 		return new FileSystem();
+	}
+
+	public static void main(String[] args) throws IOException {
+		// Extract Warcraft III: Reforged into a local directory.
+		final String homeDir = System.getProperty("user.home");
+		final Path wc3ReforgedDir = Paths.get(homeDir, "snap/steam/common/.local/share/Steam/steamapps/compatdata/2243394608/pfx/drive_c/Program Files (x86)/Warcraft III");
+		final Path targetDir = Path.of(homeDir, "Dokumente/Warcraft III/Reforged");
+		try (WarcraftIIICASC casc = new WarcraftIIICASC(wc3ReforgedDir, true)) {
+			for (var file : casc.getRootFileSystem().enumerateFiles()) {
+				try {
+					final Path targetFilePath = targetDir.resolve(file.replace('\\', '/'));
+
+					if (!Files.exists(targetFilePath)) {
+						final Path parentDir = targetFilePath.getParent();
+						System.out.println(file + ": " + targetFilePath + " -> " + parentDir);
+						Files.createDirectories(parentDir);
+						final ByteBuffer buffer = casc.getRootFileSystem().readFileData(file);
+
+						if (buffer != null && buffer.remaining() > 0) {
+							try (var channel = Files.newByteChannel(targetFilePath, StandardOpenOption.CREATE, StandardOpenOption.WRITE)) {
+								channel.write(buffer);
+							}
+						}
+					} else {
+						System.out.println(file + ": Ignoring existing file/directory");
+					}
+				} catch (final Exception e) {
+					e.printStackTrace();
+				}
+			}
+		} catch (final IOException e) {
+			e.printStackTrace();
+		}
 	}
 }

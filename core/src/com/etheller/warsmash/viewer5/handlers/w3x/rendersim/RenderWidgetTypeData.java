@@ -44,13 +44,12 @@ public abstract class RenderWidgetTypeData<T> {
 	}
 
 	protected final MdxModel getPortraitModel(final String path, final MdxModel model) {
-		MdxModel portraitModel;
-		final String portraitPath = path.substring(0, path.length() - 4) + "_portrait.mdx";
-		if (this.dataSource.has(portraitPath)) {
-			portraitModel = this.mapViewer.loadModelMdx(portraitPath);
-		}
-		else {
-			portraitModel = model;
+		MdxModel portraitModel = model;
+		if (path.length() >= 4) {
+			final String portraitPath = path.substring(0, path.length() - 4) + "_portrait.mdx";
+			if (this.dataSource.has(portraitPath)) {
+				portraitModel = this.mapViewer.loadModelMdx(portraitPath);
+			}
 		}
 		return portraitModel;
 	}

@@ -76,6 +76,13 @@ project(":core") {
         api "org.apache.commons:commons-compress:1.20"
         api "net.nikr:dds:1.0.0"
         api files(fileTree(dir:'../jars', includes: ['*.jar']))
+
+        testImplementation "org.junit.jupiter:junit-jupiter-api:5.10.2"
+        testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:5.10.2"
+    }
+
+    test {
+        useJUnitPlatform()
     }
 }
 

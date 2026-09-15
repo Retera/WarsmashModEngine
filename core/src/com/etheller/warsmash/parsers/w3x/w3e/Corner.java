@@ -8,6 +8,7 @@ import com.google.common.io.LittleEndianDataOutputStream;
 
 /**
  * A tile corner.
+ * https://github.com/ChiefOfGxBxL/WC3MapSpecification/blob/master/Terrain/12.md
  */
 public class Corner {
 	private float groundHeight;
@@ -42,21 +43,32 @@ public class Corner {
 		this.layerHeight = other.layerHeight;
 	}
 
-	public void load(final LittleEndianDataInputStream stream) throws IOException {
+	public void load(final LittleEndianDataInputStream stream, int version) throws IOException {
 		this.groundHeight = (stream.readShort() - 8192) / (float) 512;
 
 		final short waterAndEdge = stream.readShort();
 		this.waterHeight = ((waterAndEdge & 0x3FFF) - 8192) / (float) 512;
 		this.mapEdge = waterAndEdge & 0x4000;
 
-		final short textureAndFlags = ParseUtils.readUInt8(stream);
+		 if (version >= 12) {
+			final int textureAndFlags = ParseUtils.readUInt16(stream);
 
-		this.ramp = textureAndFlags & 0b00010000;
-		this.blight = textureAndFlags & 0b00100000;
-		this.water = textureAndFlags & 0b01000000;
-		this.boundary = textureAndFlags & 0b10000000;
+			 this.ramp = textureAndFlags & 0b00000000_01000000;
+			 this.blight = textureAndFlags & 0b00000000_10000000;
+			 this.water = textureAndFlags & 0b00000001_00000000;
+			 this.boundary = textureAndFlags & 0b00000010_00000000;
 
-		this.groundTexture = textureAndFlags & 0b00001111;
+			 this.groundTexture = textureAndFlags & 0b00111111;
+		} else {
+			final short textureAndFlags = ParseUtils.readUInt8(stream);
+
+			this.ramp = textureAndFlags & 0b00010000;
+			this.blight = textureAndFlags & 0b00100000;
+			this.water = textureAndFlags & 0b01000000;
+			this.boundary = textureAndFlags & 0b10000000;
+
+			this.groundTexture = textureAndFlags & 0b00001111;
+		}
 
 		final short variation = ParseUtils.readUInt8(stream);
 
@@ -70,16 +82,26 @@ public class Corner {
 
 	}
 
-	public void save(final LittleEndianDataOutputStream stream) throws IOException {
+	public void save(final LittleEndianDataOutputStream stream, int version) throws IOException {
 		stream.writeShort((short) ((this.groundHeight * 512f) + 8192f));
 		final int mapEdgeWrite = (this.mapEdge != 0) ? 0x4000 : 0;
 		stream.writeShort((short) ((int) ((this.waterHeight * 512f) + 8192f) | (mapEdgeWrite)));
-		final int rampWrite = (this.ramp != 0) ? 0b00010000 : 0;
-		final int blightWrite = (this.blight != 0) ? 0b00100000 : 0;
-		final int waterWrite = (this.water != 0) ? 0b01000000 : 0;
-		final int boundaryWrite = (this.boundary != 0) ? 0b10000000 : 0;
-		ParseUtils.writeUInt8(stream,
-				(short) ((rampWrite) | (blightWrite) | (waterWrite) | (boundaryWrite) | this.groundTexture));
+		int rampWrite = (this.ramp != 0) ? 0b00010000 : 0;
+		int blightWrite = (this.blight != 0) ? 0b00100000 : 0;
+		int waterWrite = (this.water != 0) ? 0b01000000 : 0;
+		int boundaryWrite = (this.boundary != 0) ? 0b10000000 : 0;
+		if (version >= 12) {
+			rampWrite     <<= 2;
+			blightWrite   <<= 2;
+			waterWrite    <<= 2;
+			boundaryWrite <<= 2;
+
+			ParseUtils.writeUInt16(stream,
+					(int) ((rampWrite) | (blightWrite) | (waterWrite) | (boundaryWrite) | this.groundTexture));
+		} else {
+			ParseUtils.writeUInt8(stream,
+					(short) ((rampWrite) | (blightWrite) | (waterWrite) | (boundaryWrite) | this.groundTexture));
+		}
 		ParseUtils.writeUInt8(stream, (short) ((this.cliffVariation << 5) | this.groundVariation));
 		ParseUtils.writeUInt8(stream, (short) ((this.cliffTexture << 4) + this.layerHeight));
 	}

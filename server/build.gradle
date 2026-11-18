@@ -23,9 +23,10 @@ application {
 }
 
 task dist(type: Jar) {
+    dependsOn configurations.runtimeClasspath
     from files(sourceSets.main.output.classesDirs)
     from files(sourceSets.main.output.resourcesDir)
-    from {configurations.compile.collect {zipTree(it)}}
+    from {configurations.runtimeClasspath.collect {zipTree(it)}}
  
     manifest {
         attributes 'Main-Class': project.mainClassName

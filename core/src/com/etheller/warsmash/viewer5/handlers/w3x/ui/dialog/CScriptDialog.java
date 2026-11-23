@@ -69,7 +69,7 @@ public class CScriptDialog {
 
 	public void onButtonClick(final CScriptDialogButton cScriptDialogButton) {
 		this.scriptDialogFrame.setVisible(false);
-		for (final Trigger trigger : this.eventTriggers) {
+		for (final Trigger trigger : new ArrayList<>(this.eventTriggers)) {
 			final CommonTriggerExecutionScope scope = CommonTriggerExecutionScope
 					.triggerDialogScope(JassGameEventsWar3.EVENT_DIALOG_CLICK, trigger, this, cScriptDialogButton);
 			this.globalScope.queueTrigger(null, null, trigger, scope, scope);
